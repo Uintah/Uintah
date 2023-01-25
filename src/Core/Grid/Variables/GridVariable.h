@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/LoopExecution.hpp>
 
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/OutputContext.h>
@@ -87,6 +88,9 @@ WARNING
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
       { return Array3<T>::rewindow(low, high); }
+
+    virtual bool rewindowExact(const IntVector& low, const IntVector& high)
+      { return Array3<T>::rewindowExact(low, high); }
 
     virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); }
 

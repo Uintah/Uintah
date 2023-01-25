@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,6 +66,8 @@ namespace Uintah {
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
 
+    virtual void restartInitialize(){};
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
 
@@ -86,8 +88,9 @@ namespace Uintah {
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    void createFile( const std::string& filename, FILE*& fp);
+    void createFile(std::string& filename, FILE*& fp);
 
+    void createDirectory(std::string& lineName, std::string& levelIndex);
 
     void printHeader( FILE*& fp,
                       const Uintah::TypeDescription::Type myType);
@@ -105,7 +108,7 @@ namespace Uintah {
       VarLabel* fileVarsStructLabel;
     };
 
-    lineExtractLabel* m_lb;
+    lineExtractLabel* ps_lb;
 
     struct line{
       std::string  name;
@@ -122,8 +125,10 @@ namespace Uintah {
     std::vector<line*>     d_lines;
     int                    d_col_width = 16;    //  column width
 
-    const Material  * d_matl         {nullptr};
-    MaterialSet     * d_matl_set     {nullptr};
+    const Material  * d_matl;
+    MaterialSet     * d_matl_set;
+    MaterialSubset  * d_zero_matl;
+    std::set<std::string> d_isDirCreated;
   };
 }
 

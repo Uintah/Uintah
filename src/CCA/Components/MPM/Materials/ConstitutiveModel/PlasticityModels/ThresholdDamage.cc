@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,8 +88,6 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
     }
   }
   ps->get("failure_seed",    d_epsf.seed);        // Seed for RN generator
-  d_epsf.localizeOrNot=true;
-  ps->get("LocalizeParticles", d_epsf.localizeOrNot);
 
 
   //__________________________________
@@ -129,7 +127,6 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("scaling",          d_epsf.scaling);
   dam_ps->appendElement("exponent",         d_epsf.exponent);
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
-  dam_ps->appendElement("LocalizeParticles",d_epsf.localizeOrNot);
 
   if(d_failure_criteria=="MohrColoumb"){
     dam_ps->appendElement("friction_angle", d_friction_angle);
@@ -330,84 +327,79 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
   // Copy failure strains to new dw
   pFailureStrain_new.copyData(pFailureStrain);
 
-  if(!d_epsf.localizeOrNot){
-    pLocalized_new.copyData(pLocalized);
-  } else {
+  //__________________________________
+  //
+  ParticleSubset::iterator iter = pset->begin();
+  for(; iter != pset->end(); iter++){
+    particleIndex idx = *iter;
 
-    //__________________________________
-    //
-    ParticleSubset::iterator iter = pset->begin();
-    for(; iter != pset->end(); iter++){
-      particleIndex idx = *iter;
+    defGrad = pDefGrad_new[idx];
+    Matrix3 Identity, zero(0.0); Identity.Identity();
 
-      defGrad = pDefGrad_new[idx];
-      Matrix3 Identity, zero(0.0); Identity.Identity();
+    // Find if the particle has failed
+    if(pLocalized_new[idx]==0){
+      pLocalized_new[idx] = pLocalized[idx];
+    }
 
-      // Find if the particle has failed
-      if(pLocalized_new[idx]==0){
-        pLocalized_new[idx] = pLocalized[idx];
+    if (pLocalized[idx] == 0 && pLocalized_new[idx] != -999){
+      if(d_failure_criteria=="MaximumPrincipalStress"){
+
+        double maxEigen=0., medEigen=0., minEigen=0.;
+        pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
+
+        //The first eigenvalue returned by "eigen" is always the largest
+        if ( maxEigen > pFailureStrain[idx] ){
+          pLocalized_new[idx] = 1;
+        }
+        if ( pLocalized[idx] != pLocalized_new[idx]) {
+          cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
+               << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
+        }
       }
+      else if( d_failure_criteria=="MaximumPrincipalStrain" ){
+        // Compute Finger tensor (left Cauchy-Green)
+        Matrix3 bb = defGrad * defGrad.Transpose();
 
-      if (pLocalized[idx] == 0 && pLocalized_new[idx] != -999){
-        if(d_failure_criteria=="MaximumPrincipalStress"){
-  
-          double maxEigen=0., medEigen=0., minEigen=0.;
-          pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
-  
-          //The first eigenvalue returned by "eigen" is always the largest
-          if ( maxEigen > pFailureStrain[idx] ){
-            pLocalized_new[idx] = 1;
-          }
-          if ( pLocalized[idx] != pLocalized_new[idx]) {
-            cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
-                 << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
-          }
+        // Compute Eulerian strain tensor
+        Matrix3 ee = (Identity - bb.Inverse())*0.5;
+
+        double maxEigen=0., medEigen=0., minEigen=0.;
+        ee.getEigenValues(maxEigen,medEigen,minEigen);
+
+        if ( maxEigen > pFailureStrain[idx] ){
+          pLocalized_new[idx] = 1;
         }
-        else if( d_failure_criteria=="MaximumPrincipalStrain" ){
-          // Compute Finger tensor (left Cauchy-Green)
-          Matrix3 bb = defGrad * defGrad.Transpose();
-  
-          // Compute Eulerian strain tensor
-          Matrix3 ee = (Identity - bb.Inverse())*0.5;
-  
-          double maxEigen=0., medEigen=0., minEigen=0.;
-          ee.getEigenValues(maxEigen,medEigen,minEigen);
-  
-          if ( maxEigen > pFailureStrain[idx] ){
-            pLocalized_new[idx] = 1;
-          }
-          if ( pLocalized[idx] != pLocalized_new[idx]) {
-            cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
-                 << " eps_f = " << pFailureStrain[idx] << endl;
-          }
+        if ( pLocalized[idx] != pLocalized_new[idx]) {
+          cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
+               << " eps_f = " << pFailureStrain[idx] << endl;
         }
-        else if( d_failure_criteria=="MohrColoumb" ){
-          double maxEigen=0., medEigen=0., minEigen=0.;
-          pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
-  
-          double cohesion = pFailureStrain[idx];
-  
-          double epsMax=0.;
-          // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
-          if (maxEigen > d_tensile_cutoff * cohesion){
-            pLocalized_new[idx] = 1;
-            epsMax = maxEigen;
-          }
+      }
+      else if( d_failure_criteria=="MohrColoumb" ){
+        double maxEigen=0., medEigen=0., minEigen=0.;
+        pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
 
-          //  Shear failure criteria (max shear > cohesion + friction)
-          double friction_angle = d_friction_angle*(M_PI/180.);
+        double cohesion = pFailureStrain[idx];
 
-          if ( (maxEigen - minEigen)/2.0 > cohesion * cos(friction_angle)
-               - (maxEigen + minEigen)*sin(friction_angle)/2.0){
-            pLocalized_new[idx] = 2;
-            epsMax = (maxEigen - minEigen)/2.0;
-          }
-          if (pLocalized[idx] != pLocalized_new[idx]) {
-            cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
-                 << epsMax << " cohesion = " << cohesion << endl;
-          }
-        } // Mohr-Coloumb
-      } // pLocalized==0
-    }  // pset loop
-  } // Do Localization
+        double epsMax=0.;
+        // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
+        if (maxEigen > d_tensile_cutoff * cohesion){
+          pLocalized_new[idx] = 1;
+          epsMax = maxEigen;
+        }
+
+        //  Shear failure criteria (max shear > cohesion + friction)
+        double friction_angle = d_friction_angle*(M_PI/180.);
+
+        if ( (maxEigen - minEigen)/2.0 > cohesion * cos(friction_angle)
+             - (maxEigen + minEigen)*sin(friction_angle)/2.0){
+          pLocalized_new[idx] = 2;
+          epsMax = (maxEigen - minEigen)/2.0;
+        }
+        if (pLocalized[idx] != pLocalized_new[idx]) {
+          cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
+               << epsMax << " cohesion = " << cohesion << endl;
+        }
+      } // Mohr-Coloumb
+    } // pLocalized==0
+  }  // pset loop
 }

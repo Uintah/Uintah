@@ -92,8 +92,7 @@ GaussQuadrature(int N, double* weights, double* abscissa ){
   work = (double*)malloc( lwork*sizeof(double) );
   //* Solve for eigenvalues */
   DGEEV( useVector,useVector, &N, A_Matrix, &lda, abscissa, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info );
-
-  free( (void*)work );
+  delete work; 
 
   // Eigenvalues are the  Abscissa and the first elements of the eigenvectors are used to compute the weights        
   for (int j=0; j<N; j++){

@@ -11,7 +11,7 @@ export NCURSES_NO_UTF8_ACS=1   # fix for dialog issue with certain terminals
 #
 # -t COMP1:TESTTYPE -t COMP2:TESTTYPE [...]
 #
-# ...where COMP? => MPM, ICE, ARCHES, etc
+# ...where COMP? => MPM, ICE, ARCHES, MPMARCHES, etc
 #          TESTTYPE? => NIGHTLYTESTS, DEBUGTESTS, LOCALTESTS [....]
 #
 # Note, if the environment variable TEST_COMPONENTS is set, then no

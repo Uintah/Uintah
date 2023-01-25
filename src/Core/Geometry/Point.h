@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -74,7 +74,6 @@ public:
   inline Point operator-() const;
   inline double& operator()(int idx);
   inline double operator()(int idx) const;
-  inline bool operator<(const Point&);
 
   inline void addscaled(const Point& p, const double scale);  // this += p * w;
 
@@ -177,28 +176,6 @@ inline Point& Point::operator=(const Point& p)
     y_=p.y_;
     z_=p.z_;
     return *this;
-}
-
-// This was added so that stl::set<Point> could be used.  Apologies to sparker
-inline bool operator<(Point p1, Point p2)
-{
-  {
-    if (p1.z() < p2.z()) {
-      return true;
-    }
-    else if (p1.z() > p2.z()) {
-      return false;
-    }
-    else if (p1.y() < p2.y()) {
-      return true;
-    }
-    else if (p1.y() > p2.y()) {
-      return false;
-    }
-    else {
-      return p1.x() < p2.x();
-    }
-  }
 }
 
 inline Vector Point::operator+(const Point& p) const

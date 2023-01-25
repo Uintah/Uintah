@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,29 +25,53 @@
 #ifndef CORE_GRID_TASK_H
 #define CORE_GRID_TASK_H
 
+#include <CCA/Ports/DataWarehouseP.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/ExecutionObject.h>
+#include <Core/Parallel/LoopExecution.hpp>
+#include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
-#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Parallel/SpaceTypes.h>
+#include <Core/Parallel/UintahParams.h>
 #include <Core/Util/constHandle.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/TupleHelpers.hpp>
+
+#include <sci_defs/gpu_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
+#if defined(HAVE_GPU)
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+  #ifdef TASK_MANAGES_EXECSPACE
+    #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+  #endif
+#endif
+
+#ifdef HAVE_KOKKOS
+  #include <Kokkos_Core.hpp>
+#endif
 
 #include <set>
 #include <vector>
 #include <string>
 #include <iostream>
 
+namespace {
+  Uintah::MasterLock kokkosInstances_mutex{};
+}
+
 namespace Uintah {
 
 class Level;
 class DataWarehouse;
+class OnDemandDataWarehouse;
 class ProcessorGroup;
 class Task;
-class DetailedTask;
 
 /**************************************
 
@@ -74,14 +98,11 @@ class Task {
 
 public: // class Task
 
-  enum CallBackEvent
-  {
-      CPU      // <- normal CPU task, happens when a GPU enabled task runs on CPU
-    , preGPU   // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
-    , GPU      // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
-    , postGPU  // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
+  enum GPUMemcpyKind {
+    GPUMemcpyUnknown      = 0,
+    GPUMemcpyHostToDevice = 1,
+    GPUMemcpyDeviceToHost = 2,
   };
-
 
 protected: // class Task
 
@@ -90,28 +111,133 @@ protected: // class Task
 
     public:
 
-      virtual ~ActionBase(){};
+      ActionBase() {};
+      ActionBase(Task *ptr) : taskPtr(ptr) {};
+      virtual ~ActionBase() {};
 
-      virtual void doit(       DetailedTask   * task
-                       ,       CallBackEvent    event
-                       , const ProcessorGroup * pg
-                       , const PatchSubset    * patches
+      virtual void doit( const PatchSubset    * patches
                        , const MaterialSubset * matls
                        ,       DataWarehouse  * fromDW
                        ,       DataWarehouse  * toDW
-                       ,       void           * oldTaskGpuDW
-                       ,       void           * newTaskGpuDW
-                       ,       void           * stream
-                       ,       int              deviceID
+                       ,       UintahParams   & uintahParams
                        ) = 0;
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+    virtual void assignDevicesAndInstances(intptr_t dTask) = 0;
+
+    virtual void assignDevicesAndInstances(intptr_t dTask,
+                                           unsigned int deviceNum) = 0;
+
+    virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
+                                               unsigned int deviceNum ) const = 0;
+    virtual void clearKokkosInstancesForThisTask(intptr_t dTask) = 0;
+
+    virtual bool checkKokkosInstanceDoneForThisTask(intptr_t dTask,
+                                                    unsigned int deviceNum ) const = 0;
+
+    virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const = 0;
+
+    virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                                   void* dst, void* src,
+                                   size_t count, GPUMemcpyKind kind) = 0;
+
+    virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                                void* dst, int dstDevice,
+                                          const void* src, int srcDevice,
+                                          size_t count ) = 0;
+
+    virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                            unsigned int deviceNum,
+                                            GPUDataWarehouse *taskgpudw) = 0;
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw) = 0;
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
+
+    protected:
+      Task *taskPtr {nullptr};
   };
 
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't
+// compile std::tuples with more than 2 template parameters
 
-private: // class Task
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used,
+// otherwise, the variatic templates are manually unwrapped.
+
+// Not that we can can't use the unwrapped templates exclusively, Alan
+// H mentioned the justification for going to variatic templates was
+// to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+#if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
+
+public: // private:
+
+  // CPU nonportable Action constructor
+  class ActionNonPortableBase : public ActionBase {
+
+  public:
+
+      ActionNonPortableBase() {};
+      ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
+      virtual ~ActionNonPortableBase() {};
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+    typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
+    typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
+
+    virtual void assignDevicesAndInstances(intptr_t dTask);
+
+    virtual void assignDevicesAndInstances(intptr_t dTask,
+                                           unsigned int deviceNum);
+
+    virtual void setKokkosInstanceForThisTask(intptr_t dTask,
+                                              unsigned int deviceNum);
+
+    virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
+                                               unsigned int deviceNum ) const;
+
+    virtual Kokkos::DefaultExecutionSpace
+    getKokkosInstanceForThisTask(intptr_t dTask,
+                                 unsigned int deviceNum ) const;
+
+    virtual void clearKokkosInstancesForThisTask(intptr_t dTask);
+
+    virtual bool checkKokkosInstanceDoneForThisTask(intptr_t dTask,
+                                                    unsigned int deviceNum ) const;
+
+    virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const;
+
+    virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                                   void* dst, void* src,
+                                   size_t count, GPUMemcpyKind kind);
+
+    virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                                void* dst, int dstDevice,
+                                          const void* src, int srcDevice,
+                                          size_t count );
+
+    virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                            unsigned int deviceNum,
+                                            GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
+  protected:
+    // The task is pointed to by multiple DetailedTasks. As such, the
+    // task has to keep track of the device and stream on a DetailedTask
+    // basis. The DetailedTask's pointer address is used as the key.
+    std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
+  };
 
   // CPU Action constructor
   template<typename T, typename... Args>
-  class Action : public ActionBase {
+  class Action : public ActionNonPortableBase {
 
       T * ptr;
       void (T::*pmf)( const ProcessorGroup * pg
@@ -126,7 +252,8 @@ private: // class Task
 
   public: // class Action
 
-    Action( T * ptr
+    Action( Task * taskPtr
+          , T * ptr
           , void (T::*pmf)( const ProcessorGroup * pg
                           , const PatchSubset    * patches
                           , const MaterialSubset * m_matls
@@ -136,7 +263,8 @@ private: // class Task
                           )
           , Args... args
           )
-      : ptr(ptr)
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
       , pmf(pmf)
       , m_args(std::forward<Args>(args)...)
     {}
@@ -145,22 +273,15 @@ private: // class Task
 
     //////////
     //
-    virtual void doit(       DetailedTask   * task
-                     ,       CallBackEvent    event
-                     , const ProcessorGroup * pg
-                     , const PatchSubset    * patches
+    virtual void doit( const PatchSubset    * patches
                      , const MaterialSubset * matls
                      ,       DataWarehouse  * fromDW
                      ,       DataWarehouse  * toDW
-                     ,       void           * oldTaskGpuDW
-                     ,       void           * newTaskGpuDW
-                     ,       void           * stream
-                     ,       int              deviceID
+                     ,       UintahParams   & uintahParams
                      )
     {
-      doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
+      doit_impl(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
     }
-
 
   private: // class Action
 
@@ -178,89 +299,1220 @@ private: // class Task
 
   };  // end CPU Action class
 
-  // GPU (device) Action constructor
-  template<typename T, typename... Args>
-  class ActionDevice : public ActionBase {
+
+  // Kokkos enabled task portable Action constructor
+  template<typename ExecSpace, typename MemSpace>
+  class ActionPortableBase : public ActionBase {
+
+  public:
+
+      ActionPortableBase() {};
+      ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
+      virtual ~ActionPortableBase() {};
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+    typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
+    typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
+
+    virtual void assignDevicesAndInstances(intptr_t dTask);
+
+    virtual void assignDevicesAndInstances(intptr_t dTask,
+                                           unsigned int deviceNum);
+
+    virtual void setKokkosInstanceForThisTask(intptr_t dTask,
+                                              unsigned int deviceNum);
+
+    virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
+                                               unsigned int deviceNum ) const;
+
+    virtual ExecSpace getKokkosInstanceForThisTask(intptr_t dTask,
+                                                   unsigned int deviceNum ) const;
+
+    virtual void clearKokkosInstancesForThisTask(intptr_t dTask);
+
+    // Need to have a method that matches the pure virtual. It calls
+    // the implementation method which is templated.
+    virtual bool checkKokkosInstanceDoneForThisTask(intptr_t dTask,
+                                                    unsigned int deviceNum ) const
+    {
+      return this->checkKokkosInstanceDoneForThisTask_impl(dTask, deviceNum );
+    };
+
+    // To use enable_if with a member function there needs to be a
+    // dummy template argument that is defaulted to ExecSpace which
+    // is used perform the SFINAE (Substitution failure is not an error).
+
+    // The reason is becasue there is no substitution occurring when
+    // instantiating the member function because the template
+    // argument ExecSpace is already known at that time.
+
+    // If UintahSpaces::CPU return true
+    template<typename ES = ExecSpace>
+    typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+    checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask,
+                                            unsigned int deviceNum) const;
+
+    // // If NOT UintahSpaces::CPU issue a fence
+    template<typename ES = ExecSpace>
+    typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+    checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask,
+                                            unsigned int deviceNum) const;
+
+    virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const;
+
+    // Need to have a method that matches the pure virtual. It calls
+    // the implementation method which is templated.
+    virtual void doKokkosDeepCopy(intptr_t dTask, unsigned int deviceNum,
+                                  void* dst, void* src,
+                                  size_t count, GPUMemcpyKind kind)
+    {
+      this->doKokkosDeepCopy_impl(dTask, deviceNum, dst, src, count, kind);
+    };
+
+    // To use enable_if with a member function there needs to be a
+    // dummy template argument that is defaulted to ExecSpace which
+    // is used perform the SFINAE (Substitution failure is not an error).
+
+    // The reason is becasue there is no substitution occurring when
+    // instantiating the member function because the template
+    // argument ExecSpace is already known at that time.
+
+    // If UintahSpaces::CPU or Kokkos::OpenMP do nothing
+    template<typename ES = ExecSpace>
+    typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value ||
+                            std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+    doKokkosDeepCopy_impl(intptr_t dTask, unsigned int deviceNum,
+                          void* dst, void* src,
+                          size_t count, GPUMemcpyKind kind);
+
+    // If NOT UintahSpaces::CPU and NOT Kokkos::OpenMP do Kokkos::deep_copy
+    template<typename ES = ExecSpace>
+    typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value &&
+                            !std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+    doKokkosDeepCopy_impl(intptr_t dTask, unsigned int deviceNum,
+                          void* dst, void* src,
+                          size_t count, GPUMemcpyKind kind);
+
+    virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                                void* dst, int dstDevice,
+                                          const void* src, int srcDevice,
+                                          size_t count );
+
+    virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                            unsigned int deviceNum,
+                                            GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
+
+  protected:
+    // The task is pointed to by multiple DetailedTasks. As such, the
+    // task has to keep track of the Kokkos intance on a DetailedTask
+    // basis. The DetailedTask's pointer address is used as the key.
+    std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
+  };
+
+  template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
+  class ActionPortable : public ActionPortableBase<ExecSpace, MemSpace> {
 
     T * ptr;
-    void (T::*pmf)(       DetailedTask   * dtask
-                  ,       CallBackEvent    event
-                  , const ProcessorGroup * pg
-                  , const PatchSubset    * patches
-                  , const MaterialSubset * m_matls
-                  ,       DataWarehouse  * fromDW
-                  ,       DataWarehouse  * toDW
-                  ,       void           * oldTaskGpuDW
-                  ,       void           * newTaskGpuDW
-                  ,       void           * stream
-                  ,       int              deviceID
-                  ,       Args...          args
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * m_matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Args...                                args
                   );
     std::tuple<Args...> m_args;
 
+  public: // class ActionPortable
 
-  public: // class ActionDevice
-
-    ActionDevice( T * ptr
-                , void (T::*pmf)(       DetailedTask   * dtask
-                                ,       CallBackEvent    event
-                                , const ProcessorGroup * pg
-                                , const PatchSubset    * patches
-                                , const MaterialSubset * m_matls
-                                ,       DataWarehouse  * fromDW
-                                ,       DataWarehouse  * toDW
-                                ,       void           * oldTaskGpuDW
-                                ,       void           * newTaskGpuDW
-                                ,       void           * stream
-                                ,       int              deviceID
-                                ,       Args...          args
-                                )
-               , Args... args
-               )
-      : ptr(ptr)
+    ActionPortable( Task * taskPtr
+                  , T * ptr
+                  , void (T::*pmf)( const PatchSubset                          * patches
+                                  , const MaterialSubset                       * m_matls
+                                  ,       OnDemandDataWarehouse                * fromDW
+                                  ,       OnDemandDataWarehouse                * toDW
+                                  ,       UintahParams                         & uintahParams
+                                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                  ,       Args...                                args
+                                  )
+                  , Args... args
+                  )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
       , pmf(pmf)
       , m_args(std::forward<Args>(args)...)
     {}
 
-    virtual ~ActionDevice() {}
+    virtual ~ActionPortable() {}
 
-    virtual void doit(       DetailedTask   * dtask
-                     ,       CallBackEvent    event
-                     , const ProcessorGroup * pg
-                     , const PatchSubset    * patches
-                     , const MaterialSubset * matls
-                     ,       DataWarehouse  * fromDW
-                     ,       DataWarehouse  * toDW
-                     ,       void           * oldTaskGpuDW
-                     ,       void           * newTaskGpuDW
-                     ,       void           * stream
-                     ,       int              deviceID
-                     )
+    void doit( const PatchSubset    * patches
+             , const MaterialSubset * matls
+             ,       DataWarehouse  * fromDW
+             ,       DataWarehouse  * toDW
+             ,       UintahParams   & uintahParams
+             )
     {
-      doit_impl(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, typename Tuple::gens<sizeof...(Args)>::type());
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      doit_impl(patches, matls, fromDW, toDW, uintahParams, execObj, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
-  private : // class ActionDevice
+  private : // class ActionPortable
 
     template<int... S>
-    void doit_impl(       DetailedTask   * dtask
-                  ,       CallBackEvent    event
-                  , const ProcessorGroup * pg
+    void doit_impl( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       DataWarehouse                        * fromDW
+                  ,       DataWarehouse                        * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Tuple::seq<S...>
+                  )
+      {
+        (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, std::get<S>(m_args)...);
+      }
+
+  };  // end Kokkos enabled task ActionPortable constructor
+
+#else  // If using nvcc compiler which can't use Tuple<>
+
+public: // private:
+
+  // begin old CPU only Action constructors
+  // CPU nonportable Action constructor
+  class ActionNonPortableBase : public ActionBase {
+
+  public:
+
+      ActionNonPortableBase() {};
+      ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
+      virtual ~ActionNonPortableBase() {};
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+    typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
+    typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
+
+    virtual void assignDevicesAndInstances(intptr_t dTask);
+
+    virtual void assignDevicesAndInstances(intptr_t dTask,
+                                           unsigned int deviceNum);
+
+    virtual void setKokkosInstanceForThisTask(intptr_t dTask,
+                                              unsigned int deviceNum);
+
+    virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
+                                               unsigned int deviceNum ) const;
+
+    virtual Kokkos::DefaultExecutionSpace
+    getKokkosInstanceForThisTask(intptr_t dTask,
+                                 unsigned int deviceNum ) const;
+
+    virtual void clearKokkosInstancesForThisTask(intptr_t dTask);
+
+    virtual bool checkKokkosInstanceDoneForThisTask(intptr_t dTask,
+                                                    unsigned int deviceNum ) const;
+
+    virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const;
+
+    virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                                   void* dst, void* src,
+                                   size_t count, GPUMemcpyKind kind);
+
+    virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                                void* dst, int dstDevice,
+                                          const void* src, int srcDevice,
+                                          size_t count );
+
+    virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                            unsigned int deviceNum,
+                                            GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
+
+  protected:
+    // The task is pointed to by multiple DetailedTasks. As such, the
+    // task has to keep track of the device and stream on a DetailedTask
+    // basis. The DetailedTask's pointer address is used as the key.
+    std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
+  };
+
+  template<class T>
+  class Action : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
                   , const PatchSubset    * patches
                   , const MaterialSubset * matls
                   ,       DataWarehouse  * fromDW
                   ,       DataWarehouse  * toDW
-                  ,       void           * oldTaskGpuDW
-                  ,       void           * newTaskGpuDW
-                  ,       void           * stream
-                  ,       int              deviceID
-                  ,       Tuple::seq<S...>
-                  )
-      {
-        (ptr->*pmf)(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, std::get<S>(m_args)...);
-      }
+                  );
 
-  };  // end GPU (device) Action constructor
+
+  public: // class Action
+
+    Action( Task * taskPtr
+          , T * ptr
+          , void (T::*pmf)( const ProcessorGroup * pg
+                          , const PatchSubset    * patches
+                          , const MaterialSubset * matls
+                          ,       DataWarehouse  * fromDW
+                          ,       DataWarehouse  * toDW
+                          )
+          )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+    {}
+
+    virtual ~Action() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW);
+    }
+  };  // end class Action
+
+  template<class T, class Arg1>
+  class Action1 : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Arg1             arg1
+                  );
+    Arg1 arg1;
+
+
+  public: // class Action1
+
+    Action1( Task * taskPtr
+           , T * ptr
+           , void (T::*pmf)( const ProcessorGroup * pg
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           ,       DataWarehouse  * fromDW
+                           ,       DataWarehouse  * toDW
+                           ,       Arg1             arg1
+                           )
+           , Arg1 arg1
+           )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+    {}
+
+    virtual ~Action1() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1);
+    }
+  };  // end class Action1
+
+  template<class T, class Arg1, class Arg2>
+  class Action2 : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Arg1             arg1
+                  ,       Arg2             arg2
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+
+
+  public: // class Action2
+
+    Action2( Task * taskPtr
+           , T * ptr
+           , void (T::*pmf)( const ProcessorGroup *
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           ,       DataWarehouse  *
+                           ,       DataWarehouse  *
+                           ,       Arg1
+                           ,       Arg2
+                           )
+           , Arg1 arg1
+           , Arg2 arg2
+           )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+    {}
+
+    virtual ~Action2() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2);
+    }
+  };  // end class Action2
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  class Action3 : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Arg1             arg1
+                  ,       Arg2             arg2
+                  ,       Arg3             arg3
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+
+
+  public: // class Action3
+
+    Action3( Task * taskPtr
+           , T * ptr
+           , void (T::*pmf)( const ProcessorGroup * pg
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           ,       DataWarehouse  * fromDW
+                           ,       DataWarehouse  * toDW
+                           ,       Arg1
+                           ,       Arg2
+                           ,       Arg3
+                           )
+           , Arg1 arg1
+           , Arg2 arg2
+           , Arg3 arg3
+           )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+    {}
+
+    virtual ~Action3() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3);
+    }
+  };  // end Action3
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  class Action4 : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Arg1             arg1
+                  ,       Arg2             arg2
+                  ,       Arg3             arg3
+                  ,       Arg4             arg4
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+    Arg4 arg4;
+
+
+  public: // class Action4
+
+    Action4( Task * taskPtr
+           , T * ptr
+           , void (T::*pmf)( const ProcessorGroup * pg
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           ,       DataWarehouse  * fromDW
+                           ,       DataWarehouse  * toDW
+                           ,       Arg1
+                           ,       Arg2
+                           ,       Arg3
+                           ,       Arg4
+                           )
+           , Arg1 arg1
+           , Arg2 arg2
+           , Arg3 arg3
+           , Arg4 arg4
+           )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+      , arg4(arg4)
+    {}
+
+    virtual ~Action4() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+    }
+  };  // end Action4
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  class Action5 : public ActionNonPortableBase {
+
+    T * ptr;
+    void (T::*pmf)( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Arg1             arg1
+                  ,       Arg2             arg2
+                  ,       Arg3             arg3
+                  ,       Arg4             arg4
+                  ,       Arg5             arg5
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+    Arg4 arg4;
+    Arg5 arg5;
+
+
+  public: // class Action5
+
+    Action5( Task * taskPtr
+           , T * ptr
+           , void (T::*pmf)( const ProcessorGroup * pg
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           ,       DataWarehouse  * fromDW
+                           ,       DataWarehouse  * toDW
+                           ,       Arg1
+                           ,       Arg2
+                           ,       Arg3
+                           ,       Arg4
+                           ,       Arg5
+                           )
+           , Arg1 arg1
+           , Arg2 arg2
+           , Arg3 arg3
+           , Arg4 arg4
+           , Arg5 arg5
+           )
+      : ActionNonPortableBase(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+      , arg4(arg4)
+      , arg5(arg5)
+    {}
+
+    virtual ~Action5() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      (ptr->*pmf)(uintahParams.getProcessorGroup(), patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+    }
+  };  // End Action5
+
+  // End old CPU only Action constructors
+
+  // ------------------------------------------------------------------------
+
+  // Begin Portable Action constructors
+
+  // Kokkos enabled task portable Action constructor
+  template<typename ExecSpace, typename MemSpace>
+  class ActionPortableBase : public ActionBase {
+
+  public:
+
+      ActionPortableBase() {};
+      ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
+      virtual ~ActionPortableBase() {};
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+    typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
+    typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
+
+    virtual void assignDevicesAndInstances(intptr_t dTask);
+
+    virtual void assignDevicesAndInstances(intptr_t dTask,
+                                           unsigned int deviceNum);
+
+    virtual void setKokkosInstanceForThisTask(intptr_t dTask,
+                                              unsigned int deviceNum);
+
+    virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
+                                               unsigned int deviceNum ) const;
+
+    virtual ExecSpace getKokkosInstanceForThisTask(intptr_t dTask,
+                                                   unsigned int deviceNum ) const;
+
+    virtual void clearKokkosInstancesForThisTask(intptr_t dTask);
+
+    virtual bool checkKokkosInstanceDoneForThisTask(intptr_t dTask,
+                                                    unsigned int deviceNum ) const
+    {
+      return this->checkKokkosInstanceDoneForThisTask_impl(dTask, deviceNum );
+    };
+
+    // To use enable_if with a member function there needs to be a
+    // dummy template argument that is defaulted to ExecSpace which
+    // is used perform the SFINAE (Substitution failure is not an error).
+
+    // The reason is becasue there is no substitution occurring when
+    // instantiating the member function because the template
+    // argument ExecSpace is already known at that time.
+
+    // If UintahSpaces::CPU return true
+    template<typename ES = ExecSpace>
+    typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+    checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask,
+                                            unsigned int deviceNum) const;
+
+    // // If NOT UintahSpaces::CPU issue a fence
+    template<typename ES = ExecSpace>
+    typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+    checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask,
+                                            unsigned int deviceNum) const;
+
+    virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const;
+
+    // Need to have a method that matches the pure virtual. It calls
+    // the implementation method which is templated.
+    virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                                   void* dst, void* src,
+                                   size_t count, GPUMemcpyKind kind)
+    {
+      this->doKokkosDeepCopy_impl( dTask, deviceNum, dst, src, count, kind);
+    };
+
+    // To use enable_if with a member function there needs to be a
+    // dummy template argument that is defaulted to ExecSpace which
+    // is used perform the SFINAE (Substitution failure is not an error).
+
+    // The reason is becasue there is no substitution occurring when
+    // instantiating the member function because the template
+    // argument ExecSpace is already known at that time.
+
+    // If UintahSpaces::CPU or Kokkos::OpenMP do nothing
+    template<typename ES = ExecSpace>
+    typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value ||
+                            std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+    doKokkosDeepCopy_impl( intptr_t dTask, unsigned int deviceNum,
+                           void* dst, void* src,
+                           size_t count, GPUMemcpyKind kind);
+
+    // If NOT UintahSpaces::CPU and NOT Kokkos::OpenMP do Kokkos::deep_copy
+    template<typename ES = ExecSpace>
+    typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value &&
+                            !std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+    doKokkosDeepCopy_impl( intptr_t dTask, unsigned int deviceNum,
+                           void* dst, void* src,
+                           size_t count, GPUMemcpyKind kind);
+
+    virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                                void* dst, int dstDevice,
+                                          const void* src, int srcDevice,
+                                          size_t count );
+
+    virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                            unsigned int deviceNum,
+                                            GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
+
+  protected:
+    // The task is pointed to by multiple DetailedTasks. As such, the
+    // task has to keep track of the Kokkos intance on a DetailedTask
+    // basis. The DetailedTask's pointer address is used as the key.
+    std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
+  };
+
+  template<class T, typename ExecSpace, typename MemSpace>
+  class ActionPortable : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  );
+
+
+  public: // class ActionPortable
+
+    ActionPortable( Task * taskPtr
+                  , T * ptr
+                  , void (T::*pmf)( const PatchSubset                          * patches
+                                  , const MaterialSubset                       * matls
+                                  ,       OnDemandDataWarehouse                * fromDW
+                                  ,       OnDemandDataWarehouse                * toDW
+                                  ,       UintahParams                         & uintahParams
+                                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                  )
+                  )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+    {}
+
+    virtual ~ActionPortable() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj);
+    }
+
+  };  // end class ActionPortable
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1>
+  class ActionPortable1 : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Arg1                                   arg1
+                  );
+    Arg1 arg1;
+
+
+  public: // class ActionPortable1
+
+    ActionPortable1( Task * taskPtr
+                   , T * ptr
+                   , void (T::*pmf)( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * fromDW
+                                   ,       OnDemandDataWarehouse                * toDW
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                   ,       Arg1                                   arg1
+                                   )
+                   , Arg1 arg1
+                   )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+    {}
+
+    virtual ~ActionPortable1() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1);
+    }
+
+  };  // end class ActionPortable1
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2>
+  class ActionPortable2 : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Arg1                                   arg1
+                  ,       Arg2                                   arg2
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+
+
+  public: // class ActionPortable2
+
+    ActionPortable2( Task * taskPtr
+                   , T * ptr
+                   , void (T::*pmf)( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * fromDW
+                                   ,       OnDemandDataWarehouse                * toDW
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                   ,       Arg1                                   arg1
+                                   ,       Arg2                                   arg2
+                                   )
+                   , Arg1 arg1
+                   , Arg2 arg2
+                   )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+    {}
+
+    virtual ~ActionPortable2() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2);
+    }
+
+  };  // end class ActionPortable2
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3>
+  class ActionPortable3 : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Arg1                                   arg1
+                  ,       Arg2                                   arg2
+                  ,       Arg3                                   arg3
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+
+
+  public: // class ActionPortable3
+
+    ActionPortable3( Task * taskPtr
+                   , T * ptr
+                   , void (T::*pmf)( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * fromDW
+                                   ,       OnDemandDataWarehouse                * toDW
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                   ,       Arg1                                   arg1
+                                   ,       Arg2                                   arg2
+                                   ,       Arg3                                   arg3
+                                   )
+                   , Arg1 arg1
+                   , Arg2 arg2
+                   , Arg3 arg3
+                   )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+    {}
+
+    virtual ~ActionPortable3() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3);
+    }
+
+  };  // end class ActionPortable3
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4>
+  class ActionPortable4 : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Arg1                                   arg1
+                  ,       Arg2                                   arg2
+                  ,       Arg3                                   arg3
+                  ,       Arg4                                   arg4
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+    Arg4 arg4;
+
+
+  public: // class ActionPortable4
+
+    ActionPortable4( Task * taskPtr
+                   , T * ptr
+                   , void (T::*pmf)( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * fromDW
+                                   ,       OnDemandDataWarehouse                * toDW
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                   ,       Arg1                                   arg1
+                                   ,       Arg2                                   arg2
+                                   ,       Arg3                                   arg3
+                                   ,       Arg4                                   arg4
+                                   )
+                   , Arg1 arg1
+                   , Arg2 arg2
+                   , Arg3 arg3
+                   , Arg4 arg4
+                   )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+      , arg4(arg4)
+    {}
+
+    virtual ~ActionPortable4() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3, arg4);
+    }
+
+  };  // end class ActionPortable4
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  class ActionPortable5 : public ActionPortableBase<ExecSpace, MemSpace> {
+
+    T * ptr;
+    void (T::*pmf)( const PatchSubset                          * patches
+                  , const MaterialSubset                       * matls
+                  ,       OnDemandDataWarehouse                * fromDW
+                  ,       OnDemandDataWarehouse                * toDW
+                  ,       UintahParams                         & uintahParams
+                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                  ,       Arg1                                   arg1
+                  ,       Arg2                                   arg2
+                  ,       Arg3                                   arg3
+                  ,       Arg4                                   arg4
+                  ,       Arg5                                   arg5
+                  );
+    Arg1 arg1;
+    Arg2 arg2;
+    Arg3 arg3;
+    Arg4 arg4;
+    Arg5 arg5;
+
+
+  public:
+
+    // class ActionPortable5
+    ActionPortable5( Task * taskPtr
+                   , T * ptr
+                   , void (T::*pmf)( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * fromDW
+                                   ,       OnDemandDataWarehouse                * toDW
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                                   ,       Arg1                                   arg1
+                                   ,       Arg2                                   arg2
+                                   ,       Arg3                                   arg3
+                                   ,       Arg4                                   arg4
+                                   ,       Arg5                                   arg5
+                                   )
+                   , Arg1 arg1
+                   , Arg2 arg2
+                   , Arg3 arg3
+                   , Arg4 arg4
+                   , Arg5 arg5
+                   )
+      : ActionPortableBase<ExecSpace, MemSpace>(taskPtr)
+      , ptr(ptr)
+      , pmf(pmf)
+      , arg1(arg1)
+      , arg2(arg2)
+      , arg3(arg3)
+      , arg4(arg4)
+      , arg5(arg5)
+    {}
+
+    virtual ~ActionPortable5() {}
+
+    //////////
+    //
+    virtual void doit( const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       UintahParams   & uintahParams
+                     )
+    {
+      ExecutionObject<ExecSpace, MemSpace> execObj;
+
+      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
+      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
+
+#ifdef TASK_MANAGES_EXECSPACE
+      const int numStreams = this->taskPtr->maxStreamsPerTask();
+      for (int i = 0; i < numStreams; i++) {
+#ifdef USE_KOKKOS_INSTANCE
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setInstance(instance, 0);
+#else
+        cudaStream_t* stream =
+          this->taskPtr->getCudaStreamForThisTask(uintahParams.getTaskIntPtr(), i);
+        execObj.setStream(stream, 0);
+#endif
+      }
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+      const int numStreams = uintahParams.getNumStreams();
+      for (int i = 0; i < numStreams; i++) {
+        execObj.setStream(uintahParams.getStream(i), 0);
+      }
+#endif
+      (ptr->*pmf)(patches, matls, reinterpret_cast<OnDemandDataWarehouse*>(fromDW), reinterpret_cast<OnDemandDataWarehouse*>(toDW), uintahParams, execObj, arg1, arg2, arg3, arg4, arg5);
+    }
+
+  };  // end class ActionPortable5
+
+#endif // end #if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
 
 
 public: // class Task
@@ -283,13 +1535,14 @@ public: // class Task
 
   enum TaskType {
       Normal
-    , Reduction             // tasks with MPI reductions
+    , Reduction
     , InitialSend
-    , OncePerProc           // make sure to pass a PerProcessor PatchSet to the addTask function
+    , OncePerProc // make sure to pass a PerProcessor PatchSet to the
+                  // addTask function
     , Output
-    , OutputGlobalVars   // task the outputs the reduction variables
-    , Spatial               // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
-    , Hypre
+    , Spatial     // e.g. Radiometer task (spatial scheduling); must
+                  // call task->setType(Task::Spatial)
+    , Hypre       // previously identified as a OncePerProc
   };
 
 
@@ -300,6 +1553,17 @@ public: // class Task
     d_tasktype = type;
     initialize();
   }
+
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't
+// compile std::tuples with more than 2 template parameters
+
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used,
+// otherwise, the variatic templates are manually unwrapped.
+
+// Not that we can can't use the unwrapped templates exclusively, Alan
+// H mentioned the justification for going to variatic templates was
+// to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+#if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
 
   // CPU Task constructor
   template<typename T, typename... Args>
@@ -315,37 +1579,309 @@ public: // class Task
        , Args... args
       )
      : m_task_name(taskName)
-     , m_action(scinew Action<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+     , m_action(scinew Action<T, Args...>(this, ptr, pmf, std::forward<Args>(args)...))
   {
     d_tasktype = Normal;
     initialize();
   }
 
-  // Device (GPU) Task constructor
-  template<typename T, typename... Args>
+  // Portable Task constructor
+  template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
   Task( const std::string & taskName
       , T * ptr
-      , void (T::*pmf)(       DetailedTask   * m_task
-                      ,       CallBackEvent    event
-                      , const ProcessorGroup * pg
-                      , const PatchSubset    * patches
+      , void (T::*pmf)( const PatchSubset    * patches
                       , const MaterialSubset * m_matls
-                      ,       DataWarehouse  * fromDW
-                      ,       DataWarehouse  * toDW
-                      ,       void           * old_TaskGpuDW
-                      ,       void           * new_TaskGpuDW
-                      ,       void           * stream
-                      ,       int              deviceID
+                      ,       OnDemandDataWarehouse  * fromDW
+                      ,       OnDemandDataWarehouse  * toDW
+                      ,       UintahParams& uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace>& execObj
                       ,       Args...          args
                       )
       , Args... args
       )
       : m_task_name(taskName)
-      , m_action(scinew ActionDevice<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+      , m_action(scinew ActionPortable<T, ExecSpace, MemSpace, Args...>(this, ptr, pmf, std::forward<Args>(args)...))
   {
     initialize();
     d_tasktype = Normal;
   }
+
+#else
+
+  // begin CPU only Task constructors
+  template<class T>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      )
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action<T>(this, ptr, pmf))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       Arg1             arg1
+                      )
+      , Arg1 arg1
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action1<T, Arg1>(this, ptr, pmf, arg1))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       Arg1
+                      ,       Arg2
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action2<T, Arg1, Arg2>(this, ptr, pmf, arg1, arg2))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       Arg1
+                      ,       Arg2
+                      ,       Arg3
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action3<T, Arg1, Arg2, Arg3>(this, ptr, pmf, arg1, arg2, arg3))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       Arg1
+                      ,       Arg2
+                      ,       Arg3
+                      ,       Arg4
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      , Arg4 arg4
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(this, ptr, pmf, arg1, arg2, arg3, arg4))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       Arg1
+                      ,       Arg2
+                      ,       Arg3
+                      ,       Arg4
+                      ,       Arg5
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      , Arg4 arg4
+      , Arg5 arg5
+      )
+    : m_task_name(taskName)
+    , m_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(this, ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+  // end CPU only Task constructors
+
+  // begin Portable Task constructors
+  template<class T, typename ExecSpace, typename MemSpace>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      )
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable<T, ExecSpace, MemSpace>(this, ptr, pmf))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      ,       Arg1                                   arg1
+                      )
+      , Arg1 arg1
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable1<T, ExecSpace, MemSpace, Arg1>(this, ptr, pmf, arg1))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      ,       Arg1                                   arg1
+                      ,       Arg2                                   arg2
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable2<T, ExecSpace, MemSpace, Arg1, Arg2>(this, ptr, pmf, arg1, arg2))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      ,       Arg1                                   arg1
+                      ,       Arg2                                   arg2
+                      ,       Arg3                                   arg3
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable3<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3>(this, ptr, pmf, arg1, arg2, arg3))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      ,       Arg1                                   arg1
+                      ,       Arg2                                   arg2
+                      ,       Arg3                                   arg3
+                      ,       Arg4                                   arg4
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      , Arg4 arg4
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable4<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3, Arg4>(this, ptr, pmf, arg1, arg2, arg3, arg4))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  template<class T, typename ExecSpace, typename MemSpace, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const PatchSubset                          * patches
+                      , const MaterialSubset                       * matls
+                      ,       OnDemandDataWarehouse                * fromDW
+                      ,       OnDemandDataWarehouse                * toDW
+                      ,       UintahParams                         & uintahParams
+                      ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                      ,       Arg1                                   arg1
+                      ,       Arg2                                   arg2
+                      ,       Arg3                                   arg3
+                      ,       Arg4                                   arg4
+                      ,       Arg5                                   arg5
+                      )
+      , Arg1 arg1
+      , Arg2 arg2
+      , Arg3 arg3
+      , Arg4 arg4
+      , Arg5 arg5
+      )
+    : m_task_name(taskName)
+    , m_action(scinew ActionPortable5<T, ExecSpace, MemSpace, Arg1, Arg2, Arg3, Arg4, Arg5>(this, ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+#endif  // end #if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
 
   void initialize();
 
@@ -360,12 +1896,28 @@ public: // class Task
          void usesThreads(bool state);
   inline bool usesThreads() const { return m_uses_threads; }
 
-         void usesDevice(bool state, int maxStreamsPerTask = 1);
+         void setExecutionAndMemorySpace( const TaskAssignedExecutionSpace & executionSpaceTypeName
+                                        , const TaskAssignedMemorySpace    & memorySpaceTypeName
+                                        );
+
+         TaskAssignedExecutionSpace getExecutionSpace() const;
+         TaskAssignedMemorySpace    getMemorySpace() const;
+
+         void usesDevice(bool state, int maxStreamsPerTask = -1);
   inline bool usesDevice() const { return m_uses_device; }
   inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
-  
-  inline void setDebugFlag( bool in ){m_debugFlag = in;}
-  inline bool getDebugFlag()const {return m_debugFlag;}
+
+         void usesSimVarPreloading(bool state);
+  inline bool usesSimVarPreloading() const { return m_preload_sim_vars; }
+
+         void usesKokkosOpenMP(bool state);
+  inline bool usesKokkosOpenMP() const { return m_uses_kokkos_openmp; }
+
+         void usesKokkosOpenMPTarget(bool state);
+  inline bool usesKokkosOpenMPTarget() const { return m_uses_kokkos_openmptarget; }
+
+         void usesKokkosCuda(bool state);
+  inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
 
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
@@ -379,11 +1931,6 @@ public: // class Task
     , OtherGridDomain  // for when we copy data to new grid after a regrid.
   };
 
-  enum class SearchTG{  
-      OldTG           // <- Search the OldTG for the computes if they aren't found in NewTG
-    , NewTG
-  };
-
   //////////
   // Most general case
   void requires( WhichDW
@@ -395,7 +1942,7 @@ public: // class Task
                , MaterialDomainSpec     matls_dom
                , Ghost::GhostType       gtype
                , int                    numGhostCells = 0
-               , SearchTG               whichTG = SearchTG::NewTG
+               , bool                   oldTG         = false
                );
 
   //////////
@@ -408,7 +1955,7 @@ public: // class Task
                ,       MaterialDomainSpec   matls_dom
                ,       Ghost::GhostType     gtype
                ,       int                  numGhostCells = 0
-               ,       SearchTG             whichTG = SearchTG::NewTG
+               ,       bool                 oldTG         = false
                );
 
   //////////
@@ -417,7 +1964,7 @@ public: // class Task
                , const VarLabel         *
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
+               ,       bool               oldTG         = false
                );
 
   //////////
@@ -428,7 +1975,7 @@ public: // class Task
                , const MaterialSubset   * matls
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
+               ,       bool               oldTG         = false
                );
 
   //////////
@@ -438,7 +1985,7 @@ public: // class Task
                , const PatchSubset      * patches
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
+               ,       bool               oldTG         = false
                );
 
   //////////
@@ -448,8 +1995,7 @@ public: // class Task
                , const MaterialSubset  * matls
                ,      Ghost::GhostType   gtype
                ,      int                numGhostCells = 0
-               ,      SearchTG           whichTG = SearchTG::NewTG
-               );
+               ,      bool               oldTG         = false);
 
   //////////
   //
@@ -459,7 +2005,7 @@ public: // class Task
                ,       MaterialDomainSpec   matls_dom
                ,       Ghost::GhostType     gtype
                ,       int                  numGhostCells = 0
-               ,       SearchTG             whichTG = SearchTG::NewTG
+               ,       bool                 oldTG         = false
                );
 
   //////////
@@ -469,7 +2015,7 @@ public: // class Task
                , const Level              * level     = nullptr
                , const MaterialSubset     * matls     = nullptr
                ,       MaterialDomainSpec   matls_dom = NormalDomain
-               ,       SearchTG             whichTG   = SearchTG::NewTG
+               ,       bool                 oldTG     = false
                );
 
   //////////
@@ -477,7 +2023,7 @@ public: // class Task
   void requires(       WhichDW
                , const VarLabel       *
                , const MaterialSubset * matls
-               ,       SearchTG        whichTG = SearchTG::NewTG
+               ,       bool             oldTG = false
                );
 
   //////////
@@ -558,7 +2104,7 @@ public: // class Task
                                ,       MaterialDomainSpec   matls_domain
                                ,       Ghost::GhostType     gtype
                                ,       int                  numGhostCells
-                               ,       SearchTG             whichTG = SearchTG::NewTG
+                               ,       bool                 oldTG = false
                                );
 
   void computesWithScratchGhost( const VarLabel           *
@@ -566,7 +2112,7 @@ public: // class Task
                                ,       MaterialDomainSpec   matls_domain
                                ,       Ghost::GhostType     gtype
                                ,       int                  numGhostCells
-                               ,       SearchTG             whichTG = SearchTG::NewTG
+                               ,       bool                 oldTG = false
                                );
 
   //////////
@@ -576,7 +2122,7 @@ public: // class Task
                ,       PatchDomainSpec      patches_domain
                , const MaterialSubset     * matls
                ,       MaterialDomainSpec   matls_domain
-               ,       SearchTG             whichTG = SearchTG::NewTG
+               ,       bool                 oldTG = false
                );
 
   //////////
@@ -584,52 +2130,123 @@ public: // class Task
   void modifies( const VarLabel       *
                , const PatchSubset    * patches
                , const MaterialSubset * matls
-               ,       SearchTG         whichTG = SearchTG::NewTG
+               ,       bool             oldTG = false
                );
 
   //////////
   //
   void modifies( const VarLabel       *
                , const MaterialSubset * matls
-               ,       SearchTG         whichTG = SearchTG::NewTG
+               ,       bool             oldTG = false
                );
 
   //////////
   //
-  void modifies( const VarLabel           *
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_domain
-               ,       SearchTG             whichTG = SearchTG::NewTG
+  void modifies( const VarLabel       *
+               , const MaterialSubset * matls
+               , MaterialDomainSpec     matls_domain
+               , bool                   oldTG = false
                );
 
   //////////
   //
   void modifies( const VarLabel *
-               ,       SearchTG         whichTG = SearchTG::NewTG
+               ,       bool     oldTG = false
                );
 
   //////////
   // Modify reduction vars
-  void modifies( const VarLabel         *
-               , const Level            * level
-               , const MaterialSubset   * matls = nullptr
-               ,       MaterialDomainSpec matls_domain = NormalDomain
-               ,       SearchTG           whichTG = SearchTG::NewTG
-               );
+  void modifies( const VarLabel*
+               , const Level* level
+               , const MaterialSubset* matls = nullptr
+               , MaterialDomainSpec matls_domain = NormalDomain
+               , bool oldTG = false);
 
   //////////
   // Tells the task to actually execute the function assigned to it.
-  virtual void doit(       DetailedTask                * task
-                   ,       CallBackEvent                 event
-                   , const ProcessorGroup              * pg
-                   , const PatchSubset                 *
+  virtual void doit( const PatchSubset                 *
                    , const MaterialSubset              *
                    ,       std::vector<DataWarehouseP> & dws
-                   ,       void                        * oldTaskGpuDW
-                   ,       void                        * newTaskGpuDW
-                   ,       void                        * stream
-                   ,       int                           deviceID
+                   ,       UintahParams                & uintahParams
                    );
+
+  //////////
+#if defined(HAVE_GPU)
+#ifdef TASK_MANAGES_EXECSPACE
+  typedef std::set<unsigned int>       deviceNumSet;
+  typedef deviceNumSet::const_iterator deviceNumSetIter;
+
+  // Device and Stream related calls
+  void assignDevice(intptr_t dTask, unsigned int device);
+
+  // Most tasks will only run on one device.
+
+  // But some, such as the data archiver task or send_old_data could
+  // run on multiple devices.
+
+  // This is not a good idea.  A task should only run on one device.
+  // But the capability for a task to run on multiple nodes exists.
+  deviceNumSet getDeviceNums(intptr_t dTask);
+
+#ifdef USE_KOKKOS_INSTANCE
+  // Task instance pass through methods.
+  virtual void assignDevicesAndInstances(intptr_t dTask);
+
+  virtual void assignDevicesAndInstances(intptr_t dTask, unsigned int deviceNum);
+
+  virtual void clearKokkosInstancesForThisTask(intptr_t dTask);
+
+  virtual bool checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const;
+
+  virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                                 void* dst, void* src,
+                                 size_t count, GPUMemcpyKind kind);
+
+  virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                            void* dst, int dstDevice,
+                                      const void* src, int srcDevice,
+                                      size_t count );
+#else
+  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
+  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
+
+  virtual void assignDevicesAndStreams(intptr_t dTask);
+
+  virtual void assignDevicesAndStreams(intptr_t dTask, unsigned int deviceNum);
+
+  virtual void setCudaStreamForThisTask(intptr_t dTask, unsigned int deviceNum);
+
+  virtual cudaStream_t* getCudaStreamForThisTask(intptr_t dTask, unsigned int deviceNum ) const;
+
+  virtual bool haveCudaStreamForThisTask(intptr_t dTask, unsigned int deviceNum ) const;
+
+  virtual void reclaimCudaStreamsIntoPool(intptr_t dTask);
+
+  virtual void clearCudaStreamsForThisTask(intptr_t dTask);
+
+  virtual bool checkCudaStreamDoneForThisTask(intptr_t dTask,
+                                              unsigned int deviceNum ) const;
+
+  virtual bool checkAllCudaStreamsDoneForThisTask(intptr_t dTask) const;
+
+  virtual void doCudaMemcpyAsync( intptr_t dTask, unsigned int deviceNum,
+                                  void* dst, void* src,
+                                  size_t count, cudaMemcpyKind kind);
+
+  virtual void doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                            void* dst, int dstDevice,
+                                      const void* src, int srcDevice,
+                                      size_t count );
+#endif // defined(USE_KOKKOS_INSTANCE)
+  virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                                          unsigned int deviceNum,
+                                          GPUDataWarehouse *taskgpudw);
+
+  virtual void syncTaskGpuDW(intptr_t dTask,
+                             unsigned int deviceNum,
+                             GPUDataWarehouse *taskgpudw);
+#endif  // defined(TASK_MANAGES_EXECSPACE)
+#endif  // defined(HAVE_GPU)
 
   inline const std::string & getName() const { return m_task_name; }
 
@@ -637,10 +2254,15 @@ public: // class Task
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
 
-  bool hasDistalRequires() const;         // determines if this Task has any "distal" ghost cell requirements
+  bool hasDistalRequires() const;         // determines if this Task
+                                          // has any "distal" ghost
+                                          // cell requirements
 
-  int m_phase{-1};                        // synchronized phase id, for dynamic task scheduling
-  int m_comm{-1};                         // task communicator id, for threaded task scheduling
+  int m_phase{-1};                        // synchronized phase id,
+                                          // for dynamic task
+                                          // scheduling
+  int m_comm{-1};                         // task communicator id, for
+                                          // threaded task scheduling
   std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task
   int m_max_level_offset{0};              // max level offset of this task
 
@@ -683,7 +2305,7 @@ public: // class Task
                 ,       Task               * task
                 ,       WhichDW              dw
                 , const VarLabel           * var
-                ,       SearchTG             whichTG
+                ,       bool                 oldtg
                 , const PatchSubset        * patches
                 , const MaterialSubset     * matls
                 ,       PatchDomainSpec      patches_dom   = ThisLevel
@@ -697,7 +2319,7 @@ public: // class Task
                 ,       Task               * task
                 ,       WhichDW              dw
                 , const VarLabel           * var
-                ,       SearchTG             whichTG
+                ,       bool                 oldtg
                 , const Level              * reductionLevel
                 , const MaterialSubset     * matls
                 ,       MaterialDomainSpec   matls_dom = NormalDomain
@@ -819,7 +2441,6 @@ public: // class Task
 
   void setSets( const PatchSet * patches, const MaterialSet * matls );
 
-  static const MaterialSubset* getGlobalMatlSubset();
 
 private: // class Task
 
@@ -833,6 +2454,16 @@ private: // class Task
 
   std::string m_task_name;
 
+#if defined(HAVE_GPU)
+#ifdef TASK_MANAGES_EXECSPACE
+  // The task is pointed to by multiple DetailedTasks. As such, the
+  // task has to keep track of the device and stream on a DetailedTask
+  // basis. The DetailedTask's pointer address is used as the key.
+  std::map<intptr_t, deviceNumSet>  m_deviceNums;
+  std::map<intptr_t, cudaStreamMap> m_cudaStreams;
+#endif
+#endif
+
 protected: // class Task
 
   ActionBase * m_action{nullptr};
@@ -844,7 +2475,7 @@ protected: // class Task
   Task& operator=( Task && )      = delete;
 
 
-
+  static const MaterialSubset* getGlobalMatlSubset();
 
   static MaterialSubset* globalMatlSubset;
 
@@ -865,11 +2496,16 @@ protected: // class Task
 
   bool m_uses_mpi{false};
   bool m_uses_threads{false};
+  TaskAssignedExecutionSpace m_execution_space{};
+  TaskAssignedMemorySpace    m_memory_space{};
   bool m_uses_device{false};
-  int  m_max_streams_per_task{1};
+  bool m_preload_sim_vars{false};
+  bool m_uses_kokkos_openmp{false};
+  bool m_uses_kokkos_openmptarget{false};
+  bool m_uses_kokkos_cuda{false};
+  int  m_max_streams_per_task{0};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
-  bool m_debugFlag{false};
 
   TaskType d_tasktype;
 
@@ -906,6 +2542,321 @@ inline void Task::Dependency::addReq( Edge * edge )
   }
   m_req_tail = edge;
 }
+
+#if defined(HAVE_GPU)
+#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+//_____________________________________________________________________________
+//
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+assignDevicesAndInstances(intptr_t dTask)
+{
+  for (int i = 0; i < this->taskPtr->maxStreamsPerTask(); i++) {
+   this->assignDevicesAndInstances(dTask, i);
+  }
+}
+
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
+{
+  if (this->haveKokkosInstanceForThisTask(dTask, device_id) == false) {
+    this->taskPtr->assignDevice(dTask, device_id);
+
+    this->setKokkosInstanceForThisTask(dTask, device_id);
+  }
+}
+
+template<typename ExecSpace, typename MemSpace>
+bool
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+haveKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  bool retVal = false;
+
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      retVal = (it != iMap.end());
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  return retVal;
+}
+
+template<typename ExecSpace, typename MemSpace>
+ExecSpace
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+getKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      if (it != iMap.end())
+      {
+        kokkosInstances_mutex.unlock();
+
+        return it->second;
+      }
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  printf("ERROR! - Task::ActionPortableBase::getKokkosInstanceForThisTask() - "
+           "This task %s does not have an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+  SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                          this->taskPtr->getName(), __FILE__, __LINE__));
+
+  ExecSpace instance;
+
+  return instance;
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+setKokkosInstanceForThisTask(intptr_t dTask,
+                             unsigned int device_id)
+{
+  // if (instance == nullptr) {
+  //   printf("ERROR! - Task::ActionPortableBase::setKokkosInstanceForThisTask() - "
+  //          "A request was made to assign an instance to a nullptr address "
+  //          "for this task %s\n", this->taskPtr->getName().c_str());
+  //   SCI_THROW(InternalError("A request was made to assign an instance to a "
+  //                           "nullptr address for this task :" +
+  //                           this->taskPtr->getName() , __FILE__, __LINE__));
+  // } else
+  if(this->haveKokkosInstanceForThisTask(dTask, device_id) == true) {
+    printf("ERROR! - Task::ActionPortableBase::setKokkosInstanceForThisTask() - "
+           "This task %s already has an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                            this->taskPtr->getName(), __FILE__, __LINE__));
+  } else {
+    // printf("Task::ActionPortableBase::setKokkosInstanceForThisTask() - "
+    //        "This task %s (%d) now has an instance assigned for device %d\n",
+    //        this->taskPtr->getName().c_str(), dTask, device_id);
+    // As m_kokkosInstances can be touched by multiple threads a
+    // mutext is needed.
+    kokkosInstances_mutex.lock();
+    {
+      ExecSpace instance;
+      m_kokkosInstances[dTask][device_id] = instance;
+    }
+    kokkosInstances_mutex.unlock();
+  }
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+clearKokkosInstancesForThisTask(intptr_t dTask)
+{
+  // As m_kokkosInstances can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    if(m_kokkosInstances.find(dTask) != m_kokkosInstances.end())
+    {
+      m_kokkosInstances[dTask].clear();
+      m_kokkosInstances.erase(dTask);
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  // printf("Task::ActionPortableBase::clearKokkosInstancesForThisTask() - "
+  //     "Clearing instances for task %s\n",
+  //     this->taskPtr->getName().c_str());
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+template<typename ES>
+typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+checkKokkosInstanceDoneForThisTask_impl<ES>(intptr_t dTask, unsigned int device_id) const
+{
+  return true;
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+template<typename ES>
+typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+checkKokkosInstanceDoneForThisTask_impl<ES>(intptr_t dTask, unsigned int device_id) const
+{
+  // ARS - FIXME
+  if (device_id != 0) {
+   printf("Error, Task::checkKokkosInstanceDoneForThisTask is %u\n", device_id);
+   exit(-1);
+  }
+
+  // Base call is commented out
+  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, device_id);
+
+  instance.fence();
+
+  return true;
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+bool
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
+{
+  // A task can have multiple instances (such as an output task
+  // pulling from multiple GPUs).  Check all instacnes to see if they
+  // are done.  If any one instance isn't done, return false.  If
+  // nothing returned false, then they all must be good to go.
+  bool retVal = true;
+
+  // As m_kokkosInstances can be touched by multiple threads get a local
+  // copy so not to lock everything.
+  kokkosInstanceMap kokkosInstances;
+
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask);
+    if(iter != m_kokkosInstances.end()) {
+      kokkosInstances = iter->second;
+    } else {
+      kokkosInstances_mutex.unlock();
+
+      return retVal;
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  for (auto & it : kokkosInstances)
+  {
+    retVal = this->checkKokkosInstanceDoneForThisTask(dTask, it.first);
+    if (retVal == false)
+      break;
+  }
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+template<typename ES>
+typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value ||
+                        std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+doKokkosDeepCopy_impl<ES>(intptr_t dTask, unsigned int deviceNum,
+                          void* dst, void* src,
+                          size_t count, GPUMemcpyKind kind)
+{
+  // Do nothing as all of the data is on the host.
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+template<typename ES>
+typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value &&
+                        !std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+doKokkosDeepCopy_impl<ES>(intptr_t dTask, unsigned int deviceNum,
+                          void* dst, void* src,
+                          size_t count, GPUMemcpyKind kind)
+{
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  char * srcPtr = static_cast< char *>(src);
+  char * dstPtr = static_cast< char *>(dst);
+
+  if(kind == GPUMemcpyHostToDevice)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>   hostView( srcPtr, count);
+    Kokkos::View<char*, ExecSpace        > deviceView( dstPtr, count);
+    // Deep copy the host view to the device view.
+    Kokkos::deep_copy(instance, deviceView, hostView);
+  }
+  else if(kind == GPUMemcpyDeviceToHost)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>   hostView( dstPtr, count);
+    Kokkos::View<char*, ExecSpace        > deviceView( srcPtr, count);
+    // Deep copy the device view to the host view.
+    Kokkos::deep_copy(instance, hostView, deviceView);
+  }
+}
+
+//_____________________________________________________________________________
+//
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+doKokkosMemcpyPeerAsync( intptr_t dTask,
+                       unsigned int deviceNum,
+                             void* dst, int  dstDevice,
+                       const void* src, int  srcDevice,
+                       size_t count )
+{
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+  // ARS - FIXME
+  // CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
+  //                                    count, *stream));
+}
+
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                           unsigned int deviceNum,
+                           GPUDataWarehouse *taskgpudw)
+{
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(instance);
+}
+
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+syncTaskGpuDW(intptr_t dTask,
+                           unsigned int deviceNum,
+                           GPUDataWarehouse *taskgpudw)
+{
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->syncto_device(instance);
+}
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_GPU)
 
 }  // End namespace Uintah
 

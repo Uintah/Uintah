@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,8 +25,6 @@
 #ifndef Wasatch_DensitySolverHelperFunctions_h
 #define Wasatch_DensitySolverHelperFunctions_h
 
-#include <vector>
-
 namespace WasatchCore{
 
   // \brief computes the flat index of a square array given 
@@ -35,35 +33,9 @@ namespace WasatchCore{
                                      const unsigned iRow,
                                      const unsigned jCol )
   {
-      assert(nRows > iRow);
-      assert(nRows > jCol);
+      assert(nRows > iRow );
+      assert(nRows > jCol );
       return iRow*nRows + jCol;
   }
-
-  template<typename T>
-  std::vector<T> sub_vector(std::vector<T> const& vec, int m, int n) 
-  {
-    assert(m < vec.size());
-    assert(n < vec.size());
-    assert(m >= 0);
-    assert(n >= 0);
-
-    const auto first = vec.cbegin() + m;
-    const auto last  = vec.cbegin() + n;
-    
-    return std::vector<T>(first, last);
-  }
-
-  template<typename T>
-  std::vector<T> concatenate_vectors(std::vector<T> const vec1, std::vector<T> const vec2) 
-  {
-    std::vector<T> result;
-    result.reserve( vec1.size() + vec2.size() );
-    result.insert( result.end(), vec1.begin(), vec1.end() );
-    result.insert( result.end(), vec2.begin(), vec2.end() );
-  
-    return result;
-  }
-
 }
 #endif

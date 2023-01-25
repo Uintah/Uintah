@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2021 The University of Utah
+ * Copyright (c) 2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 #ifndef UINTAH_GPUSTENCIL7_H
 #define UINTAH_GPUSTENCIL7_H
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 namespace Uintah {

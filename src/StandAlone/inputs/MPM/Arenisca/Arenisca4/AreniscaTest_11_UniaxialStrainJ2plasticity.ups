@@ -25,7 +25,6 @@
        <save label="p.velocity"/>
        <save label="p.volume"/>
        <save label="p.stress"/>
-       <save label = "p.scalefactor"/>
        <save label="p.deformationMeasure"/>
        <save label="p.particleID"/>
        <save label="g.stressFS"/>
@@ -38,7 +37,7 @@
       	<interpolator>              gimp       </interpolator>
         <withColor>                 false      </withColor>
         <UsePrescribedDeformation>  true       </UsePrescribedDeformation>
-        <PrescribedDeformationFile>     inputs/MPM/Arenisca/Arenisca4/AreniscaTest_11_PrescribedDeformation.inp  </PrescribedDeformationFile>
+        <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_11_PrescribedDeformation.inp  </PrescribedDeformationFile>
         <minimum_subcycles_for_F>       -2     </minimum_subcycles_for_F>
     </MPM>
 

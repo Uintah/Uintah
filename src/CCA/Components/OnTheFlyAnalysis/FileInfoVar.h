@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,15 +36,15 @@
 namespace Uintah {
 
 struct FileInfo : public RefCounted {
-
+  
   std::map<std::string, FILE *> files;       // filename is the key
-
+  
   // constructor computes the values
   FileInfo() {};
-
+  
   ~FileInfo(){
     std::map<std::string, FILE *>::iterator it;
-
+    
     for ( it=files.begin() ; it != files.end(); it++ ){
       //std::cout << " closing file " << (*it).first << std::endl;
       fclose((*it).second);
@@ -69,14 +69,14 @@ typedef Handle<FileInfo> FileInfoP;
     SCI_THROW(InternalError("Swap bytes for FileInfoP is not implemented", __FILE__, __LINE__));
 
     ssize_t linesize = (ssize_t)(sizeof(FileInfoP));
-
+    
     FileInfoP val;
-
+    
     in.read((char*) &val, linesize);
-
+    
     if (swapBytes)
       Uintah::swapbytes(val);
-
+    
     value = std::make_shared<FileInfoP>(val);
   }
 

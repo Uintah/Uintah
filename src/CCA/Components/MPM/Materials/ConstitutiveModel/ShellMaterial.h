@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,6 @@
 
 namespace Uintah {
 
-  class ShellMPMLabel;
   ////////////////////////////////////////////////////////////////////////////
   /*! 
     \class ShellMaterial
@@ -85,7 +84,6 @@ namespace Uintah {
   private:
     // Prevent copying of this class:
     ShellMaterial& operator=(const ShellMaterial &cm);
-    ShellMPMLabel* Sl;
 
   public:
     // constructors

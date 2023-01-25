@@ -45,7 +45,7 @@ LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.
              ]
 
-DEBUGTESTS =[("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )]
+DEBUGTESTS =[]
 
 #__________________________________
 # The following list is parsed by the local RT script

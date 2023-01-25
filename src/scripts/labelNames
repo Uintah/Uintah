@@ -3,7 +3,7 @@
 #_____________________________________________________________________.
 #  This script spits out the variable names for the different components
 #   usage:    
-#     labelNames <ICE/MPMICE/Arches/>
+#     labelNames <ICE/MPMICE/Arches/MPMArches>
 #
 #_____________________________________________________________________.
 

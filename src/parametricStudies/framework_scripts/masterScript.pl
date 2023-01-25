@@ -158,7 +158,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
    #__________________________________
    # loop over all tests
    #   - make test directories
-   #   - copy tst, scripts, other files & input files
+   #   - copy tst, batch scripts, other files & input files
    my $otherFiles = "";
 
    foreach my $test ( $whatToRun->findnodes('test') ) {
@@ -182,12 +182,12 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
      my $upsFile  = setPath( $ups_tmp, $fw_path, $inputs_path.$component );
 
-                   # Other files needed.  This could contain wildcards
+                   # Other files needed.  This could contain wildcards 
      if($test->exists('otherFilesToCopy') ){
        $otherFiles = cleanStr( $test->findvalue('otherFilesToCopy') );
        $otherFiles = setPath( $otherFiles, $fw_path, $inputs_path.$component ) ;
      }
-
+     
                     # find a unique testname
      my $count = 0;
      my $testNameOld = $testName;
@@ -210,9 +210,9 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      if (! -e $upsFile ||
          ! -e $tstFile ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n        ($upsFile) \n";
-       print "or the tst file: \n     ($tstFile)\n";
-       print "or the other file(s) \n ($otherFiles) \n";
+       print "The ups file: \n       \t ($upsFile) \n";
+       print "or the tst file: \n     \t ($tstFile)\n";
+       print "or the other file(s) \n \t ($otherFiles) \n";
        print "do not exist.  Now exiting\n";
        exit
      }
@@ -220,9 +220,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      # copy the config files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
-     system("cp -f $upsFile $tstFile $testing_path");
-
-     system("cp -rf $otherFiles $testing_path");
+     system("cp -f $upsFile $tstFile $otherFiles $testing_path");
 
      system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
 
@@ -236,13 +234,14 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      system("ln -s $inputs_path > /dev/null 2>&1");
 
      # create any symbolic links requested by that component
-     foreach my $s (@symLinks) {
-       if( defined $s ){
-         print " creating symbolic link: $s \n";
-         system("ln -s $s> /dev/null 2>&1");
+     if( @symLinks ){
+       foreach my $s (@symLinks) {
+         if( $s ne ""){
+           print " creating symbolic link: $s \n";
+           system("ln -s $s> /dev/null 2>&1");
+         }
        }
      }
-
 
      print "\n\n===================================================================================\n";
      print "Test Name      : $testName \n";

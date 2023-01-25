@@ -1,60 +1,23 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
-<!--______________________________________________________________________-->
-
-<BoundaryConditions  spec="REQUIRED NO_DATA" >
-
-      <LODI                 spec="OPTIONAL NO_DATA">
-        <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
-        <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
-        <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
-        <material           spec="REQUIRED STRING"/>
-      </LODI>
-
-      <SINE_BC              spec="OPTIONAL NO_DATA">
-        <omega              spec="REQUIRED DOUBLE 'positive'"/>
-        <A                  spec="REQUIRED DOUBLE"/>
-        <reference_pressure spec="REQUIRED DOUBLE 'positive'"/>
-        <reference_velocity spec="REQUIRED VECTOR 'positive'"/>
-      </SINE_BC>
-
-      <microSlip            spec="OPTIONAL NO_DATA">
-        <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
-        <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
-        <SlipModel          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'FirstOrder SecondOrder_Deissler SecondOrder_Karniadakis-Beskok'"/>
-        <CreepFlow          spec="REQUIRED BOOLEAN" />
-      </microSlip>
-
-      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
-        <material           spec="REQUIRED STRING"/>
-        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
-        <vonKarmanConstant  spec="OPTIONAL DOUBLE '0,0.5'"    need_applies_to="type logWindProfile"/>
-        <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" />
-        <verticalDirection  spec="REQUIRED INTEGER '0,2'" />
-        <maxHeight          spec="OPTIONAL DOUBLE"            need_applies_to="type powerLawProfile"/>
-      </inletVelocity>
-
- </BoundaryConditions>
-
-  <!--__________________________________-->
   <CFD>
     <ICE                                spec="OPTIONAL NO_DATA" >
-      <advection                        spec="REQUIRED NO_DATA"
-                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'"
+      <advection                        spec="REQUIRED NO_DATA" 
+                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'" 
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
                                           attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
-
+      
       <applyHydrostaticPressure         spec="OPTIONAL BOOLEAN" />
-
+      
       <ADD_HEAT                         spec="OPTIONAL NO_DATA" >
        <add_heat_matls                  spec="REQUIRED STRING" />
        <add_heat_coeff                  spec="REQUIRED STRING" />
        <add_heat_t_start                spec="REQUIRED DOUBLE" />
        <add_heat_t_final                spec="REQUIRED DOUBLE" />
-      </ADD_HEAT>
+      </ADD_HEAT>                                        
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
-
+      
       <turbulence                       spec="OPTIONAL NO_DATA"
                                           attribute1="model  REQUIRED STRING 'Smagorinsky Germano'">
         <model_constant                 spec="REQUIRED DOUBLE 'positive'" need_applies_to="model  Smagorinsky Germano"/>
@@ -63,57 +26,59 @@
 
       <wallShearStress                  spec="OPTIONAL NO_DATA"
                                           attribute1="model  REQUIRED STRING 'logLawModel smoothWall'">
-
+        
         <domainFace                     spec="REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" need_applies_to="model  logLawModel smoothWall"/>
         <roughnessConstant              spec="OPTIONAL DOUBLE 'positive'"               need_applies_to="model  logLawModel"/>
         <roughnessInputFile             spec="OPTIONAL STRING"                          need_applies_to="model  logLawModel"/>
         <vonKarmanConstant              spec="OPTIONAL DOUBLE '0,0.5'"                  need_applies_to="model  logLawModel"/>
       </wallShearStress>
 
-
-      <!--__________________________________-->
-
+      
       <customInitialization             spec="OPTIONAL NO_DATA" >
         <manufacturedSolution           spec="OPTIONAL NO_DATA"
-                                        attribute1="type  REQUIRED STRING 'mms_1 mms_2 mms_3'">
+                                        attribute1="type  REQUIRED STRING 'mms_1 mms_2 mms_3'"> 
           <A                            spec="OPTIONAL DOUBLE" />
           <angle                        spec="OPTIONAL DOUBLE" />
         </manufacturedSolution>
-
+        
         <vortices                       spec="OPTIONAL NO_DATA" >
           <vortex                       spec="MULTIPLE NO_DATA" >
             <axis                       spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
             <origin                     spec="REQUIRED VECTOR" />
             <strength                   spec="REQUIRED DOUBLE" />
             <radius                     spec="REQUIRED DOUBLE 'positive'" />
-          </vortex>
-        </vortices>
+          </vortex>                
+        </vortices> 
 
         <vortexPairs                    spec="OPTIONAL NO_DATA" >
           <numVortexPairs               spec="REQUIRED DOUBLE" />
           <axis                         spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
           <strength                     spec="REQUIRED DOUBLE" />
         </vortexPairs>
-
+         
         <gaussianTemperature            spec="OPTIONAL NO_DATA">
           <origin                       spec="REQUIRED VECTOR "/>
           <spread_x                     spec="REQUIRED DOUBLE"/>
           <spread_y                     spec="REQUIRED DOUBLE"/>
           <amplitude                    spec="REQUIRED DOUBLE 'positive'"/>
         </gaussianTemperature>
-
+        
         <counterflow                    spec="OPTIONAL NO_DATA">
           <strainRate                   spec="REQUIRED DOUBLE 'positive'"/>
           <referenceCell                spec="REQUIRED VECTOR"/>
         </counterflow>
-
-        <powerLawProfile                spec="OPTIONAL NO_DATA">
-          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
-          <profileHeight                spec="REQUIRED DOUBLE" />
+        
+        <powerLawProfile                spec="OPTIONAL NO_DATA"> 
+          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
+          <maxHeight                    spec="REQUIRED DOUBLE" />
           <U_infinity                   spec="REQUIRED VECTOR" />
           <exponent                     spec="REQUIRED DOUBLE 'positive'" />
+          <variance                     spec="OPTIONAL NO_DATA">
+            <C_mu                       spec="REQUIRED DOUBLE 'positive'"/>
+            <frictionVel                spec="REQUIRED DOUBLE 'positive'"/>
+          </variance>
         </powerLawProfile>
-
+        
         <powerLawProfile2               spec="OPTIONAL NO_DATA">
           <Re_tau                       spec="REQUIRED DOUBLE  'positive'"/>
           <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
@@ -121,22 +86,22 @@
           <halfChannelHeight            spec="REQUIRED DOUBLE  'positive'"/>
           <channelFloor                 spec="OPTIONAL DOUBLE"/>
           <channelCeiling               spec="OPTIONAL DOUBLE"/>
-        </powerLawProfile2>
-
+        </powerLawProfile2> 
+        
         <DNS_Moser                      spec="OPTIONAL NO_DATA">
-          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
+          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
           <dpdx                         spec="REQUIRED DOUBLE" />
         </DNS_Moser>
-
+                
       </customInitialization>
-
+      
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">
         <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
         <outer_iteration_tolerance      spec="REQUIRED DOUBLE  'positive'"/>
         <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
-        <include href="solver_spec.xml" section="Solver/Parameters" />
+        <include href="solver_spec.xml" section="Parameters" />
       </ImplicitSolver>
-
+      
       <max_iteration_equilibration      spec="OPTIONAL INTEGER 'positive'" /> <!-- FIXME: what is default? -->
       <solution                         spec="OPTIONAL NO_DATA"
                                           attribute1="technique REQUIRED STRING 'EqForm'" />
@@ -145,25 +110,23 @@
         <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1'" />
         <knob_for_diffusion             spec="OPTIONAL DOUBLE '0,1'" />
       </TimeStepControl>
-
+      
       <fixedPressureGradient            spec="OPTIONAL NO_DATA" >
         <x_dir                          spec="OPTIONAL DOUBLE" />
         <y_dir                          spec="OPTIONAL DOUBLE" />
         <z_dir                          spec="OPTIONAL DOUBLE" />
       </fixedPressureGradient>
-
-    </ICE>
+      
+    </ICE>        
   </CFD>
-
-  <!--__________________________________-->
 
   <AMR>
     <ICE                                spec="OPTIONAL NO_DATA" >
       <orderOfInterpolation             spec="REQUIRED INTEGER 'positive'" />
       <orderOf_CFI_Interpolation        spec="OPTIONAL INTEGER 'positive'" />
       <do_Refluxing                     spec="REQUIRED BOOLEAN" />
-      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" >
-        <Variable                       spec="MULTIPLE NO_DATA"
+      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" > 
+        <Variable                       spec="MULTIPLE NO_DATA" 
                                           attribute1="name  REQUIRED STRING"
                                           attribute2="value REQUIRED DOUBLE"
                                           attribute3="matl  REQUIRED STRING" />
@@ -172,14 +135,10 @@
     </ICE>
   </AMR>
 
-  <!--__________________________________-->
-
   <MaterialProperties>
-    <ICE                      spec="OPTIONAL NO_DATA" >
+    <ICE                      spec="OPTIONAL NO_DATA" > 
       <material               spec="MULTIPLE NO_DATA"
-                                attribute1="name OPTIONAL STRING"
-                                attribute2="index OPTIONAL INTEGER" >
-
+                                attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
                                 attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater, KumariDass'" >
@@ -191,16 +150,16 @@
           <Gamma              spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <u                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <w                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
-
+          
           <gas_constant       spec="OPTIONAL DOUBLE" need_applies_to='type  ideal_gas' />
-
+          
           <!--  JWL & JWLC  -->
           <A                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Gruneisen Tillotson' />
           <B                  spec="REQUIRED DOUBLE           " need_applies_to='type JWL JWLC Gruneisen Tillotson' />
           <C                  spec="REQUIRED DOUBLE           " need_applies_to='type     JWLC' />
-          <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
+          <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
           <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
-          <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
+          <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
           <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnaghan Gruneisen Tillotson' />
           <rho0               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
 
@@ -220,28 +179,28 @@
           <c1                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
           <c2                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
           <c3                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
-
+          
           <K                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan Gruneisen' />
           <T0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Gruneisen' />
           <T0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <S0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <S                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
-
+          
           <co                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <ko                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <To                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <L                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <vo                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
-
+          
           <E0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           <Es                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           <Esp                spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           <alpha              spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           <beta               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
-
+          
         </EOS>
-        <SpecificHeatModel    spec="OPTIONAL NO_DATA"
+        <SpecificHeatModel    spec="OPTIONAL NO_DATA"  
                               attribute1="type REQUIRED STRING 'Debye Component Polynomial NASAPolynomial'" >
           <Atoms              spec="REQUIRED INTEGER 'positive'" need_applies_to='type Debye' />
           <DebyeTemperature   spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Debye' />
@@ -272,7 +231,7 @@
 
       </material>
     </ICE>
-
+    
     <!--ICE and MPMICE related -->
     <exchange_properties           spec="OPTIONAL NO_DATA" >
       <Model                          spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'slip'" >
@@ -282,12 +241,12 @@
         <thermal_accommodation_coeff  spec="REQUIRED DOUBLE"  />
         <useSlipCoeffs                spec="OPTIONAL BOOLEAN" />
       </Model>
-
-      <convective_fluid            spec="OPTIONAL INTEGER" />
-      <convective_solid            spec="OPTIONAL INTEGER" />
+    
+      <convective_fluid            spec="OPTIONAL INTEGER" /> 
+      <convective_solid            spec="OPTIONAL INTEGER" /> 
       <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" />
       <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
-
+      
       <exchange_coefficients       spec="REQUIRED NO_DATA" >
         <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
         <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />

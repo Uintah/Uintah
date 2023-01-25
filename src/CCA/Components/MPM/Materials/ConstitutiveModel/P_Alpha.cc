@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,10 +60,6 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->getWithDefault("Ku", d_initialData.Ku,.1*d_initialData.K0);
   ps->getWithDefault("shear_modulus", d_initialData.shear,      0.0);
   ps->getWithDefault("yield_stress",  d_initialData.FlowStress, 9.e99);
-  ps->getWithDefault("hardening_modulus",  d_initialData.Kh, 0.0);
-
-
-  const TypeDescription* P_dbl =ParticleVariable<double>::getTypeDescription();
 
   alphaLabel              = VarLabel::create("p.alpha",
                             ParticleVariable<double>::getTypeDescription());
@@ -79,9 +75,6 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
                              ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc      = VarLabel::create("p.bElBar+",
                              ParticleVariable<Matrix3>::getTypeDescription());
-  pPlasticStrainLabel       = VarLabel::create("p.plasticStrain", P_dbl );
-  pPlasticStrainLabel_preReloc 
-                            = VarLabel::create("p.plasticStrain+",P_dbl );
 }
 
 P_Alpha::~P_Alpha()
@@ -93,8 +86,6 @@ P_Alpha::~P_Alpha()
   VarLabel::destroy(tempAlpha1Label_preReloc);
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 
 void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -114,8 +105,7 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("Ks",      d_initialData.Ks);
   cm_ps->appendElement("Ku",      d_initialData.Ku);
   cm_ps->appendElement("shear_modulus", d_initialData.shear);
-  cm_ps->appendElement("yield_stress",  d_initialData.FlowStress);
-  cm_ps->appendElement("hardening_modulus", d_initialData.Kh);
+  cm_ps->appendElement("yield_stress", d_initialData.FlowStress);
   cm_ps->appendElement("T_0",     d_initialData.T_0);
   cm_ps->appendElement("C_0",     d_initialData.C_0);
   cm_ps->appendElement("Gamma_0", d_initialData.Gamma_0);
@@ -135,7 +125,6 @@ void P_Alpha::addInitialComputesAndRequires(Task* task,
   task->computes(alphaMinLabel,  matlset);
   task->computes(tempAlpha1Label,matlset);
   task->computes(bElBarLabel,    matlset);
-  task->computes(pPlasticStrainLabel, matlset);
 }
 
 void P_Alpha::initializeCMData(const Patch* patch,
@@ -151,12 +140,9 @@ void P_Alpha::initializeCMData(const Patch* patch,
   ParticleVariable<double>      alpha_min;
   ParticleVariable<double>      tAlpha1;
   ParticleVariable<Matrix3> bElBar;
-  ParticleVariable<double> pPlasticStrain;
-
   new_dw->allocateAndPut(alpha_min, alphaMinLabel,   pset);
   new_dw->allocateAndPut(tAlpha1,   tempAlpha1Label, pset);
   new_dw->allocateAndPut(bElBar,    bElBarLabel,     pset);
-  new_dw->allocateAndPut(pPlasticStrain, pPlasticStrainLabel,  pset);
 
   double rhoS = d_initialData.rhoS;
   double rho_orig = matl->getInitialDensity();
@@ -166,10 +152,10 @@ void P_Alpha::initializeCMData(const Patch* patch,
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
   // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+     // alpha_min[*iter]    = d_initialData.alpha0;
      alpha_min[*iter]    = alpha_min0;
      tAlpha1[*iter]      = d_initialData.T_0;
      bElBar[*iter]       = Identity;
-     pPlasticStrain[*iter] = 0.0;
   }
 
   computeStableTimeStep(patch, matl, new_dw);
@@ -185,8 +171,6 @@ void P_Alpha::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(tempAlpha1Label_preReloc);
   from.push_back(bElBarLabel);
   to.push_back(bElBarLabel_preReloc);
-  from.push_back(pPlasticStrainLabel);
-  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void P_Alpha::computeStableTimeStep(const Patch* patch,
@@ -254,8 +238,6 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient, bElBar;
-    constParticleVariable<double>  pPlasticStrain_old;
-    ParticleVariable<double>       pPlasticStrain;
     ParticleVariable<Matrix3> pstress,bElBar_new;
     constParticleVariable<double> alpha_min_old, ptemperature, tempAlpha1_old;
     constParticleVariable<double> pvolume;
@@ -272,7 +254,6 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     old_dw->get(alpha_min_old,               alphaMinLabel,               pset);
     old_dw->get(tempAlpha1_old,              tempAlpha1Label,             pset);
     old_dw->get(bElBar,                      bElBarLabel,                 pset);
-    old_dw->get(pPlasticStrain_old,          pPlasticStrainLabel,         pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,              pset);
@@ -284,11 +265,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,             pset);
     new_dw->get(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
-    new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pPlasticStrain,
-                                      pPlasticStrainLabel_preReloc,       pset);
-
-    pPlasticStrain.copyData(pPlasticStrain_old);
+    new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
 
     double cv = matl->getSpecificHeat();
     double rho_orig = matl->getInitialDensity();
@@ -300,8 +277,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double Ks = d_initialData.Ks;
     double Ku = d_initialData.Ku;
     double shear = d_initialData.shear;
-    double rhoS  = d_initialData.rhoS;
-    double Kh    = d_initialData.Kh;  // shear hardening modulus
+    double rhoS = d_initialData.rhoS;
 
     // Density and alpha at which model stops being elastic
     double rhoP     = rho_orig/(1.-Pe/K0);
@@ -339,24 +315,18 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
 
       // Check for plastic loading
       double flow = d_initialData.FlowStress;
-      //double fTrial = sTnorm - sqtwthds*flow;
-      double  plasStrain  = pPlasticStrain[idx];
-      double fTrial = sTnorm - sqtwthds*(Kh*plasStrain + flow);
-
+      double fTrial = sTnorm - sqtwthds*flow;
 
       if (fTrial > 0.0) {
         // plastic
         // Compute increment of slip in the direction of flow
-//        double delgamma = fTrial/(2.0*muBar);
-        double delgamma = (fTrial/(2.0*muBar)) / (1.0 + (Kh/(3.0*muBar)));
-
+        double delgamma = fTrial/(2.0*muBar);
         Matrix3 normal   = tauDevTrial/sTnorm;
 
         // The actual shear stress
         tauDev = tauDevTrial - normal*2.0*muBar*delgamma;
 
         bElBar_new[idx]     = tauDev/shear + Identity*IEl;
-        pPlasticStrain[idx] += sqtwthds*delgamma;
       } else {
         // The actual shear stress
         tauDev          = tauDevTrial;
@@ -504,14 +474,11 @@ void P_Alpha::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, alphaMinLabel,  matlset, gnone);
   task->requires(Task::OldDW, tempAlpha1Label,matlset, gnone);
   task->requires(Task::OldDW, bElBarLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainLabel,
-                                              matlset, gnone);
 
   task->computes(alphaMinLabel_preReloc,      matlset);
   task->computes(alphaLabel,                  matlset);
   task->computes(tempAlpha1Label_preReloc,    matlset);
   task->computes(bElBarLabel_preReloc,        matlset);
-  task->computes(pPlasticStrainLabel_preReloc,matlset);
 }
 
 void 

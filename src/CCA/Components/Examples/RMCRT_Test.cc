@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -187,6 +187,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
               << " inside of the <AMR> section. \n";
           throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
         }
+      } else  if (type == "dataOnionSlim" ) {       // Data Onion Slim
+        d_whichAlgo = dataOnionSlim;
       } else if ( type == "RMCRT_coarseLevel" ) {   // 2 Level
         d_whichAlgo = coarseLevel;
       } else if ( type == "singleLevel" ) {         // 1 Level
@@ -385,17 +387,20 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
   typedef std::vector<const VarLabel*> VarLabelVec;
 
-  VarLabelVec fineLevelVarLabels = { d_RMCRT->d_divQLabel,
-                                     d_RMCRT->d_boundFluxLabel,
-                                     d_RMCRT->d_radiationVolqLabel,
-                                     d_RMCRT->d_sigmaT4Label };
-                                                      
-  VarLabelVec coarseLevelVarLabels = { d_RMCRT->d_abskgLabel,
-                                       d_RMCRT->d_sigmaT4Label };
+  VarLabelVec fineLevelVarLabels, coarseLevelVarLabels;
+
+  fineLevelVarLabels.push_back(d_RMCRT->d_divQLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_boundFluxLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_radiationVolqLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_sigmaT4Label );
+
+  coarseLevelVarLabels.push_back(d_RMCRT->d_abskgLabel );
+  coarseLevelVarLabels.push_back(d_RMCRT->d_sigmaT4Label );
+
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
-  if( d_whichAlgo == dataOnion ){
+  if( d_whichAlgo == dataOnion || d_whichAlgo == dataOnionSlim ){
   
     Task::WhichDW temp_dw       = Task::NewDW;
     Task::WhichDW sigmaT4_dw    = Task::NewDW;
@@ -437,6 +442,14 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
       }
     }
+
+#ifdef USE_RMCRT_SLIM
+    //Combine vars for every level
+    for (int l = maxLevels - 1; l >= 0; l--) {
+      const LevelP& level = grid->getLevel(l);
+      d_RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
+    }
+#endif
 
     //__________________________________
     //  compute the extents of the rmcrt region of interest on the finest level

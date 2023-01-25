@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,8 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 
-#include <CCA/Components/Schedulers/DetailedTasks.h>
-
+#include <atomic>
 #include <list>
 #include <map>
 #include <vector>
@@ -34,6 +33,7 @@
 namespace Uintah {
 
 class DetailedDep;
+class DetailedTask;
 class ProcessorGroup;
 class Variable;
 class VarLabel;

@@ -26,7 +26,7 @@ def getUniqueFilename(org_filename, inputsDir):
   #__________________________________
   #  create inputsDir/tmp directory
   tmpDir = "%s/tmp" % inputsDir
-
+  
   if path.exists( tmpDir ) == False:
     mkdir(tmpDir )
 
@@ -42,8 +42,8 @@ def getUniqueFilename(org_filename, inputsDir):
 
   while path.exists(mod_filename):
     count = count + 1
-    mod_filename     = "%s/%s.%d" % (tmpDir, basename, count)
-
+    mod_filename     = "%s/%s.%d" % (tmpDir, basename, count) 
+    
   #__________________________________
   # move org_file to unique file name
   command = "mv %s/%s %s" % (tmpDir, basename, mod_filename)
@@ -120,16 +120,6 @@ def modUPS(inputsDir, filename, changes):
 #                                ( "update", "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]"    ),
 #                                ( "update", "Uintah_specification/RMCRT/nDivQRays                      : 100"       )
 #                               ] )
-#
-#  chanFlow_powerLaw_ups = modUPS2( the_dir,                       \
-#                                  "channelFlow_PowerLaw.ups",   \
-#                                [( "update", "/Uintah_specification/DataArchiver/filebase :powerLaw.uda" ),
-#                                 ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :powerLawProfile" ),
-#                                 ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :powerLawProfile" ),
-#                                 ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile")
-#                               ] )
-#
-#
 #  This script depends on xmlstarlet.
 #  Use:
 #       xmlstarlet el -v <ups>
@@ -150,7 +140,7 @@ def modUPS2( inputsDir, filename, changes):
 
     if rc == 256:
       print("__________________________________")
-      print("  ERROR:modUPS2.py ")
+      print("  ERROR:modUPS.py ")
       print("      The command (xmlstarlet) was not found and the file %s was not modified" % filename)
       print("__________________________________")
       return
@@ -163,35 +153,21 @@ def modUPS2( inputsDir, filename, changes):
       option = change[1].split(":")
 
       if operation == "UPDATE":
-
-        # remove white spaces from tag
-        if option[1].find(' ') != -1:
-          print("__________________________________")
-          print("  WARNING:modUPS2.py ")
-          print("      There is a white space in the tag (%s), filename: (%s)." % (option[1], filename))
-          print("__________________________________")
-          option[1] = option[1].replace(' ', '')
-
-        command = "xmlstarlet edit --inplace --update  \"%s\" --value \"%s\"  %s" % (option[0], option[1], mod_filename )
+        command = "xmlstarlet edit --update %s --value \"%s\"  %s > %s" % (option[0], option[1], mod_filename, tmp_filename )
 
       elif operation == "DELETE":
-        command = "xmlstarlet edit --inplace --delete  \"%s\" %s" % (option[0], mod_filename )
+        command = "xmlstarlet edit --delete %s %s > %s "% (option[0], mod_filename, tmp_filename )
 
       else:
         print("__________________________________")
-        print("  ERROR:modUPS2.py ")
+        print("  ERROR:modUPS.py ")
         print("      The operation (%s) was not found and the file %s was not modified" % (operation, filename ))
         print("__________________________________")
         return
+      system(command)
 
-      rc = system(command)
-
-      if rc != 0:
-        print("__________________________________")
-        print("  ERROR:modUPS2.py ")
-        print("      The command (%s) faild and the file %s was not modified" % (command,filename) )
-        print("__________________________________")
-        return
+      command = "mv %s %s" % (tmp_filename, mod_filename)
+      system(command)
 
     #return the relative path to the inputsDir
     relPath = path.relpath(mod_filename, inputsDir)

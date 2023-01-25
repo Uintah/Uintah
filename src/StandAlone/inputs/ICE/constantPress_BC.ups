@@ -253,7 +253,6 @@
       <!--__________________________________-->
       
      <Module name = "minMax">
-        <material>Atmosphere</material>
         <samplingFrequency> 5000</samplingFrequency>
         <timeStart>          0   </timeStart>
         <timeStop>          100  </timeStop>

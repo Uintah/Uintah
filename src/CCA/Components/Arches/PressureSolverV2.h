@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,6 +40,7 @@
 #include <CCA/Components/Arches/linSolver.h>
 namespace Uintah {
 
+class MPMArchesLabel;
 class ArchesLabel;
 class ProcessorGroup;
 class ArchesVariables;
@@ -57,6 +58,7 @@ public:
   //______________________________________________________________________/
   // Construct an instance of the Pressure solver.
   PressureSolver(ArchesLabel* label,
+                 const MPMArchesLabel* MAlb,
                  BoundaryCondition* bndry_cond,
                  PhysicalConstants* phys_const,
                  const ProcessorGroup* myworld,
@@ -207,6 +209,7 @@ private:
                               ArchesConstVariables* constvars);
 
   ArchesLabel* d_lab;
+  const MPMArchesLabel* d_MAlab;
   IntVector d_periodic_vector;
 
   Source*             d_source;

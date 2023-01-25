@@ -133,8 +133,6 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   }
   proc0cout << "Total Realizations: " << NT << endl;
   proc0cout << "Geom Size " << jSize << " " << kSize << endl;
-  
-  gzclose(gzFp);
 }
 
 //____________________________________________

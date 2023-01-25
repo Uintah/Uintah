@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,7 +82,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
 
   // delta t
   VarLabel* nonconstDelT = VarLabel::create(delT_name, delt_vartype::getTypeDescription());
-  nonconstDelT->schedReductionTask(false);
+  nonconstDelT->allowMultipleComputes();
   m_delTLabel = nonconstDelT;
 
   m_application_stats.calculateRankMinimum( true );

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,8 +44,6 @@ namespace Uintah {
   class MPMFlags;
   class MPMMaterial;
   class MPMLabel;
-  class AMRMPMLabel;
-  class HydroMPMLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -123,11 +121,6 @@ namespace Uintah {
     ParticleVariable<Vector> pPosChargeGrad;
     ParticleVariable<Vector> pNegChargeGrad;
     ParticleVariable<double> pPermittivity;
-
-    // Hydro-mechanical coupling MPM
-    ParticleVariable<double> pFluidMass, pSolidMass, pPorePressure, pPorosity;
-    ParticleVariable<Vector> pFluidVelocity, pfluidacceleration;
-    ParticleVariable<Vector> pPrescribedPorePressure;
     } ParticleVars;
 
   protected:
@@ -157,7 +150,7 @@ namespace Uintah {
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
     IntVector getLoadCurveID(const Point& pp, const Vector& dxpp, 
-                             Vector& areacomps, int dwi);
+                                                    Vector& areacomps);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Print MPM physical boundary condition information */
@@ -177,8 +170,6 @@ namespace Uintah {
                             const Vector dxpp);
 
     MPMLabel* d_lb;
-    AMRMPMLabel* d_Al;
-    HydroMPMLabel* d_Hlb;
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;
@@ -188,7 +179,6 @@ namespace Uintah {
     bool d_computeScaleFactor;
     bool d_useCPTI;
     bool d_withGaussSolver;
-    bool d_coupledflow;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@ PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom,
   }
   d_endCapName = "";
 
-  for( ProblemSpecP fileData = polyData->findBlock("filename"); fileData != nullptr; fileData = fileData->findNextBlock( "filename" ) ) {
+  for( ProblemSpecP fileData = polyData->findBlock("file"); fileData != nullptr; fileData = fileData->findNextBlock( "file" ) ) {
     
     string fileName;
     fileData->get(fileName);
@@ -71,10 +71,10 @@ PolynomialData::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP pd_ps = ps->appendChild("polynomial_data");
   for( vector<std::string>::const_iterator itr = d_fileNames.begin(); itr != d_fileNames.end(); itr++ ) {
-    pd_ps->appendElement("filename",*itr);
+    pd_ps->appendElement("file",*itr);
   }
   if (d_endCapName != "") {
-    pd_ps->appendElement( "filename", d_endCapName );
+    pd_ps->appendElement( "file", d_endCapName );
   }
 
 }

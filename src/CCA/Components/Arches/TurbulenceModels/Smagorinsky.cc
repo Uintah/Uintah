@@ -13,6 +13,52 @@ Smagorinsky::~Smagorinsky()
 {}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Smagorinsky::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Smagorinsky::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &Smagorinsky::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &Smagorinsky::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &Smagorinsky::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Smagorinsky::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &Smagorinsky::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Smagorinsky::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &Smagorinsky::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &Smagorinsky::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &Smagorinsky::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Smagorinsky::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &Smagorinsky::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+TaskAssignedExecutionSpace Smagorinsky::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &Smagorinsky::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &Smagorinsky::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &Smagorinsky::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Smagorinsky::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &Smagorinsky::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+TaskAssignedExecutionSpace Smagorinsky::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 Smagorinsky::problemSetup( ProblemSpecP& db ){
 
@@ -77,8 +123,8 @@ Smagorinsky::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
   mu_sgc.initialize(0.0);
@@ -99,8 +145,8 @@ Smagorinsky::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Smagorinsky::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+Smagorinsky::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   if ( !m_using_production ){
     CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
@@ -129,8 +175,8 @@ Smagorinsky::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);

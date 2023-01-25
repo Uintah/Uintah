@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,8 @@
 #ifndef UINTAH_HOMEBREW_MPM_COMMON_H
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
+#include <CCA/Components/Application/ApplicationCommon.h>
+
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
@@ -40,17 +42,19 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   
-  class MPMCommon
+  class MPMCommon : public ApplicationCommon
   {
   public:
-    MPMCommon( const MaterialManagerP materialManager);
+    MPMCommon(const ProcessorGroup* myworld, MaterialManagerP materialManager);
 
-    ~MPMCommon();
+    virtual ~MPMCommon();
 
     virtual void materialProblemSetup(const ProblemSpecP& prob_spec,
-                                      MPMFlags* flags, 
-                                      bool isRestart);
+                                      MPMFlags* flags, bool isRestart);
 
+    virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
+                                          MPMFlags* flags);
+                                          
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
@@ -58,13 +62,20 @@ namespace Uintah {
     // Used by the switcher
     virtual void setupForSwitching() {
   
+      d_cohesiveZoneState.clear();
+      d_cohesiveZoneState_preReloc.clear();
+
       d_particleState.clear();
       d_particleState_preReloc.clear();
     }
 
+  public:
     // Particle state
     std::vector<std::vector<const VarLabel* > > d_particleState;
     std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
+    
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
     
     inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
       particle_ghost_type = type;
@@ -76,18 +87,10 @@ namespace Uintah {
       ngc = particle_ghost_layer;
     }
 
-    //__________________________________
-    //  utilities
-    template<class T>
-    static
-    std::map<int,T> initializeMap(T val);
-
-
     MPMLabel* lb {nullptr};
 
   private:
-    MPMFlags*        d_flags     = nullptr;
-    static MaterialManagerP d_matlManager;
+    MPMFlags*             d_flags       = nullptr;
     
   protected:
     //! so all components can know how many particle ghost cells to ask for

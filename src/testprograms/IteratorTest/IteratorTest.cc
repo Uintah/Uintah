@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,11 +27,17 @@
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/Variables/UnionIterator.h>
+#include <Core/Parallel/KokkosTools.h>
 
 #include <iostream>
 
 int main()
 {
+
+#ifdef HAVE_KOKKOS
+    Kokkos::initialize();
+#endif //HAVE_KOKKOS
+
   //create 3 iterators 1 that is the whole region and 2 that are the halves
   Uintah::Iterator giter_big(Uintah::GridIterator(Uintah::IntVector(0,0,0), Uintah::IntVector(2,2,2)));
   Uintah::Iterator giter_left(Uintah::GridIterator(Uintah::IntVector(0,0,0),Uintah::IntVector(2,2,1)));
@@ -67,6 +73,11 @@ int main()
   }
 
   std::cout << "All tests passed\n";
+
+#ifdef HAVE_KOKKOS
+  Uintah::cleanupKokkosTools();
+  Kokkos::finalize();
+#endif //HAVE_KOKKOS
 
   return 0;
 }

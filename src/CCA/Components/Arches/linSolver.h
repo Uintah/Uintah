@@ -10,6 +10,8 @@
 namespace Uintah {
 
 class ArchesLabel;  //Spaghetti anyone?
+class MPMArchesLabel;
+class ArchesLabel;
 class PressureSolver;
 //class ProcessorGroup;
 //class ArchesVariables;
@@ -32,10 +34,12 @@ public:
 
   //______________________________________________________________________/
   // Construct an instance of the Pressure solver.
-  linSolver( PressureSolver* ps,  BoundaryCondition* bc , PhysicalConstants* pc,const int indx,const VarLabel*  VolFrac,
-                                                                                               const VarLabel*  CellType,
-                                                                                               const VarLabel*  A_m,
-                                                                                               const MaterialSet* f_matls ) : 
+  linSolver(const MPMArchesLabel* mal,   PressureSolver* ps,  BoundaryCondition* bc , PhysicalConstants* pc,const int indx,const VarLabel*  VolFrac,
+                                                                                                                           const VarLabel*  CellType,
+                                                                                                                           const VarLabel*  A_m,
+                                                                                                                           const MaterialSet* f_matls
+                                                                                                                                                      ) : 
+d_MAlab(mal),
 d_pressureSolver(ps),
 d_boundaryCondition(bc),
 d_physicalConsts(pc),
@@ -249,6 +253,7 @@ cg_task4( const ProcessorGroup* pg,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw, int iter);
 
+  const MPMArchesLabel* d_MAlab;
   PressureSolver*     d_pressureSolver;
   BoundaryCondition*  d_boundaryCondition;
   PhysicalConstants*  d_physicalConsts;

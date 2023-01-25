@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,8 @@
 #include <sci_defs/kokkos_defs.h>
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 
+#define MAX_NUM_DEP_VARS 15
+
 /**
  * @class  ClassicTableInterface
  * @author Jeremy Thornock
@@ -54,6 +56,7 @@ namespace Uintah {
 
 
 class ArchesLabel;
+class MPMArchesLabel;
 class TimeIntegratorLabel;
 class BoundaryCondition_new;
 class MixingRxnModel;
@@ -143,7 +146,7 @@ public:
 
 private:
 
-  Interp_class * ND_interp; ///< classic table object
+  Interp_class<MAX_NUM_DEP_VARS> * ND_interp; ///< classic table object
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
 
@@ -155,8 +158,6 @@ private:
   int d_indepvarscount;       ///< Number of independent variables
   int d_varscount;            ///< Total dependent variables
   int d_nDepVars;             ///< number of dependent variables requested by arches
-
-  std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
 
   std::string d_enthalpy_name;
 

@@ -15,6 +15,16 @@ public:
     StressTensor( std::string task_name, int matl_index );
     ~StressTensor();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -29,18 +39,57 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+   template< typename grid_CT>
+   struct VelocityDerivative_central{
+     VelocityDerivative_central( grid_CT &_u, const Vector& _Dx) : u(_u),Dx(_Dx){}
+       inline void operator()(double& dudx,double& dudy,double& dudz,int i, int j, int k)  const {
+         {
+           STENCIL3_1D(0);
+           dudx = (u(IJK_) - u(IJK_M_))/Dx.x();
+         }
+         {
+           STENCIL3_1D(1);
+           dudy = (u(IJK_) - u(IJK_M_))/Dx.y();
+         }
+         {
+           STENCIL3_1D(2);
+           dudz = (u(IJK_) - u(IJK_M_))/Dx.z();
+         }
+       };
+       const grid_CT& u;
+       const Vector  Dx;
+     };
+    
+     template< typename grid_CT> VelocityDerivative_central<grid_CT>
+     functorCreationWrapper( grid_CT &_u, const Vector& _Dx) {
+        return  VelocityDerivative_central<grid_CT>(_u,_Dx);
+     } // WE have to do this because of CCVariables
 
-    void VelocityDerivative_central(double&, double&, double&, const Array3<double>&, const Vector&, int, int, int);
-
+#define dVeldDir(u, eps, Dx, dudx, dudy, dudz, i,  j, k ) \
+         {                                           \
+           STENCIL3_1D(0);                           \
+           dudx = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.x();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(1);                           \
+           dudy = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.y();      \
+         }                                           \
+         {                                           \
+           STENCIL3_1D(2);                           \
+           dudz = eps(IJK_)*eps(IJK_M_)*(u(IJK_) - u(IJK_M_))/Dx.z();      \
+         }    
     //Build instructions for this class.
     class Builder : public TaskInterface::TaskBuilder {
 

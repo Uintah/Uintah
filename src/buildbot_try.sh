@@ -30,6 +30,15 @@
 #
 # 3. To create a patch run "git diff >myPatch"
 #
+# Usage: buildbot_try.sh   [options]
+#             Options:
+#              trunk-opt                  Trunk:opt-full-try server
+#              trunk-debug/dbg            Trunk:dbg-full-try server
+#              trunk-gpu                  Trunk:opt-gpu-try server
+#              kokkos-opt                 Kokkos:opt-full-try server
+#              all                        run trunk(opt + dbg + gpu) try servers
+#              createPatch                run git diff on src/ and submit that patch
+#              myPatch      <patchFile>  submit the patchfile to the try servers
 #______________________________________________________________________
 #
 
@@ -38,47 +47,30 @@ cat << EOF > $usage
 #______________________________________________________________________
 # Usage: buildbot_try.sh   [options]
 #             Options:
-#              trunk-opt                  Trunk:optimized tests
-#              trunk-debug/dbg            Trunk:debug tests
-#              trunk-gpu                  Trunk:optimized gpu tests
-#              kokkos-opt                 Kokkos:optimized tests
-#              allBuilders                run trunk(opt + dbg + gpu) tests
+#              trunk-opt                  Trunk:opt-full-try server
+#              trunk-debug/dbg            Trunk:dbg-full-try server
+#              trunk-gpu                  Trunk:opt-gpu-try server
+#              kokkos-opt                 Kokkos:opt-full-try server
+#              all                        run trunk(opt + dbg + gpu) try servers
 #              createPatch                run git diff on src/ and submit that patch
-#              testComponents             An optional list of components to run tests, space deliminted surrounded my quotes.
-#                                         Valid options:
-#                                             trunk:  "ARCHES Examples ICE IMPM Models MPMICE MPM UCF Wasatch"
-#                                             gpu:    "ARCHES Examples"
-#                                             kokkos: "ARCHES Examples"
-#              myPatch      <patchFile>   submit the patchfile to the try servers
+#              myPatch      <patchFile>  submit the patchfile to the try servers
 #______________________________________________________________________
 EOF
 
 # Defaults
-set trunkServers = ("Trunk:opt-full" "Trunk:dbg-full" "Trunk:opt-gpu")
+set trunkServers = ("Trunk:opt-full-try" "Trunk:dbg-full-try" "Trunk:opt-gpu-try")
 
 set BUILDERS = ""
-set CREATE_PATCH    = false
-set MY_PATCH        = false
-set BRANCH          = "master"
-set TESTCOMPONENTS  = ""          # "None" is used inside commonBuildSteps.py:getValueWithDefault()
+set CREATE_PATCH = false
+set MY_PATCH     = false
+set BRANCH       = "master"
+
 # No args so all tests
 
 if ($#argv == 0) then
   foreach server ($trunkServers )
     set BUILDERS = "$BUILDERS --builder=$server"
   end
-endif
-
-#__________________________________
-#  check version of buildbot
-#  This requires a gnu:sort
-set ver    = `buildbot try --version | awk '{print $3}'`
-set reqVer = "18.8.0"
-echo "$ver $reqVer" | tr " " "\n" | sort -C --version-sort
-
-if( $status == 0 ) then
-  echo "WARNING:  The version of buildbot ($ver) is not compatible with the version on the server this script may not work properly."
-  echo "          Server version: $reqVer"
 endif
 
 #__________________________________
@@ -102,35 +94,30 @@ while ( $#argv )
       breaksw
 
     case trunk-opt:
-      set BUILDERS = "$BUILDERS --builder=Trunk:opt-full"
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-full-try"
       shift
       breaksw
     case trunk-d*b*g:         # debug or dbg
-      set BUILDERS = "$BUILDERS --builder=Trunk:dbg-full"
+      set BUILDERS = "$BUILDERS --builder=Trunk:dbg-full-try"
       shift
       breaksw
 
     case trunk-gpu:
-      set BUILDERS = "$BUILDERS --builder=Trunk:opt-gpu"
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-gpu-try"
       shift
       breaksw
 
     case kokkos-opt:
-      set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full"
+      set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full-try"
       set BRANCH = "kokkos_dev"
       shift
       breaksw
 
-    case allbuilders:
+    case all:
       foreach server ($trunkServers)
         set BUILDERS = "$BUILDERS --builder=$server"
       end
       shift
-      breaksw
-
-    case testcomponents:
-      set TESTCOMPONENTS = "$2"
-      shift; shift
       breaksw
     default:
       echo " Error parsing inputs ($1)."
@@ -156,10 +143,9 @@ if ( $CREATE_PATCH == "false" && $MY_PATCH == "false" ) then
 endif
 
 /bin/rm $usage
-
 #______________________________________________________________________
 #
-# Note normally git will automatically create a patch.  It will
+# Note normally svn will automatically create a patch.  It will
 # contain context lines which are superfluous and make the patch
 # bigger than necessary.
 
@@ -178,7 +164,6 @@ if( $CREATE_PATCH == "true" ) then
   set PATCH = "--diff=buildbot_patch.txt --patchlevel=1"
 
 endif
-
 #__________________________________
 # use a user created patch
 
@@ -193,14 +178,8 @@ endif
 
 #__________________________________
 
-echo "  PATCH:      ${PATCH}"
-echo "  BUILDERS:   ${BUILDERS}"
-if( "$TESTCOMPONENTS" == "None" ) then
-  echo "  Test Components: Default components"
-else
-  echo "  Test Components: ${TESTCOMPONENTS}"
-endif
-
+echo "  PATCH ${PATCH}"
+echo "  BUILDERS: ${BUILDERS}"
 
 #__________________________________
 
@@ -211,18 +190,11 @@ buildbot --verbose try \
          --repository='https://github.com/Uintah/Uintah.git' \
          --username=buildbot_try \
          --passwd=try_buildbot \
-         --property=test_components="${TESTCOMPONENTS}"\
          --vc=git \
          --who=`whoami` \
          ${PATCH} ${BUILDERS}
 
 echo $status
-
-if( "$status" == "0" ) then
-  echo "  Success.  Check http://uintah-build.chpc.utah.edu:8010/#/builders for status"
-else
-  echo "  Failed"
-endif
 
 # cleanup
 if( $CREATE_PATCH == "true" ) then

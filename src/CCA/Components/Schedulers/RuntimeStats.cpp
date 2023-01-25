@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,10 +23,10 @@
  */
 
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
 
@@ -92,8 +92,7 @@ namespace {
 } // namespace
 
 
-//______________________________________________________________________
-//
+
 void RuntimeStats::register_report( Dout const& dout
                                   , std::string const& name
                                   , ValueType type
@@ -108,8 +107,7 @@ void RuntimeStats::register_report( Dout const& dout
   }
 }
 
-//______________________________________________________________________
-//
+
 std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 {
   if (exec_times) {
@@ -118,8 +116,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
   }
   return nullptr;
 }
-//______________________________________________________________________
-//
+
 std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 {
   if (wait_times) {
@@ -129,21 +126,10 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
   return nullptr;
 }
 
-//______________________________________________________________________
-//
-void RuntimeStats::initialize_timestep( const int num_schedulers, 
-                                        std::vector<TaskGraph *> const &  graphs )
+void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs )
 {
   if (exec_times || wait_times || task_stats) {
 
-    // bulletproofing
-    // This code wasn't designed to be called multiple times per timestep from each scheduler & sub-scheduler.
-    if( num_schedulers > 1 ){    
-      throw ProblemSetupException("ERROR:  The SCI_DEBUG timers ExecTimes, WaitTimes, TaskStats were not designed to work\n"
-                                  " with applications/components that utilize sub-schedulers.  Please disable those timers.\n",     
-                                   __FILE__, __LINE__);
-    }
-    
     std::unique_lock<Uintah::MasterLock> lock(g_report_lock);
 
     std::set<std::string> task_names;

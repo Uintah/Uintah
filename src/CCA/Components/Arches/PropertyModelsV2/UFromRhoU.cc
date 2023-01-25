@@ -12,6 +12,54 @@ TaskInterface( task_name, matl_index ){}
 UFromRhoU::~UFromRhoU(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &UFromRhoU::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UFromRhoU::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UFromRhoU::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UFromRhoU::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &UFromRhoU::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UFromRhoU::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UFromRhoU::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UFromRhoU::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &UFromRhoU::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UFromRhoU::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UFromRhoU::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UFromRhoU::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UFromRhoU::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UFromRhoU::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void UFromRhoU::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
@@ -54,7 +102,8 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UFromRhoU::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities( patch, tsk_info );
 
@@ -76,7 +125,8 @@ void UFromRhoU::register_timestep_init( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
   constSFCXVariable<double>& old_u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
@@ -109,7 +159,8 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
 }
 
 //--------------------------------------------------------------------------------------------------
-void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   compute_velocities( patch, tsk_info );
 

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -34,10 +34,8 @@ SRCDIR   := CCA/Components/MPM/PhysicalBC
 SRCS     += \
 	$(SRCDIR)/MPMPhysicalBCFactory.cc  \
 	$(SRCDIR)/FluxBCModelFactory.cc    \
-	$(SRCDIR)/HydrostaticBC.cc         \
 	$(SRCDIR)/ForceBC.cc               \
 	$(SRCDIR)/PressureBC.cc            \
-	$(SRCDIR)/TorqueBC.cc              \
 	$(SRCDIR)/ScalarFluxBC.cc          \
 	$(SRCDIR)/HeatFluxBC.cc            \
 	$(SRCDIR)/FluxBCModel.cc           \

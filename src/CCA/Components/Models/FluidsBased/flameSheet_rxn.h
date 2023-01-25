@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,8 +84,7 @@ WARNING
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);
 
-    virtual void scheduleRestartInitialize(SchedulerP&,
-                                           const LevelP& level){};
+    virtual void restartInitialize() {}
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
@@ -113,9 +112,9 @@ WARNING
     
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-                    const MaterialSubset* matls,
+                      const MaterialSubset* matls, 
                     DataWarehouse*, 
-                    DataWarehouse* new_dw);
+                      DataWarehouse* new_dw);
                      
     void testConservation(const ProcessorGroup*, 
                           const PatchSubset* patches,

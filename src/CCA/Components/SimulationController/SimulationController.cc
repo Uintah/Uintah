@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -663,42 +663,16 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << "at the end of each time step" << std::endl
               << "EMA == Wall time as an exponential moving average "
               << "using a window of the last " << m_wall_timers.getWindow()
-              << " time steps\n" 
-              << "ETC == Estimated time to completion [HH:MM:SS]\n"
-              << "______________________________________________________________________"<< std::endl;
+              << " time steps" << std::endl;
     }
 
-    //__________________________________
-    //compute ETC  Estimated time to completion
-    double nTimesteps = trunc( (m_application->getSimTimeMax() - m_application->getSimTime()) / m_application->getNextDelT() );
-    int ETC_sec       = trunc( m_wall_timers.ExpMovingAverage().seconds() * nTimesteps ); 
-    
-    
-    using namespace std::chrono;
-    seconds secs(ETC_sec);
-    auto mins =  duration_cast<minutes>(secs);           // sec -> minutes
-    secs     -=  duration_cast<seconds>(mins);           // 
-    auto hrs  =  duration_cast<hours>(mins);             // min -> hrs
-    mins     -=  duration_cast<minutes>(hrs);
-    
-    int hrs_setw = std::fmax( 2 , floor( log10(hrs.count()) ) );           // hrs can be a large number
-    
-    std::ios orgFormat(NULL);                                     // keep track of 
-    orgFormat.copyfmt(message);
-    
     message << std::left
             << "Timestep "      << std::setw(8)  << m_application->getTimeStep()
             << "Time="          << std::setw(12) << m_application->getSimTime()
             << "Next delT="     << std::setw(12) << m_application->getNextDelT()
             << "Wall Time="     << std::setw(10) << m_wall_timers.GetWallTime()
 //          << "Net Wall Time=" << std::setw(10) << timeStepTime.seconds()
-            << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
-            << std::right
-            << "ETC="           << std::setfill('0') << std::setw(hrs_setw) << hrs.count()  << ":" 
-                                << std::setfill('0') << std::setw(2) << mins.count() << ":" 
-                                << std::setfill('0') << std::setw(2) << secs.count() << "  ";
-    message.copyfmt(orgFormat);
-    message << std::left;
+            << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
 
     // Report on the memory used.
     if (g_sim_stats_mem) {

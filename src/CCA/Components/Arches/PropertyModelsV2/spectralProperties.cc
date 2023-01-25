@@ -19,6 +19,51 @@ spectralProperties::~spectralProperties( )
 }
 
 //---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &spectralProperties::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &spectralProperties::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &spectralProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &spectralProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &spectralProperties::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &spectralProperties::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &spectralProperties::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &spectralProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &spectralProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &spectralProperties::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace spectralProperties::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
 void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
@@ -89,8 +134,8 @@ spectralProperties::register_initialize( VIVec& variable_registry , const bool p
   }
 }
 
-void
-spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for (int i=0; i< _nbands  ; i++){
     CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >( _abskg_name_vector[i]);
@@ -110,16 +155,13 @@ void spectralProperties::register_restart_initialize( VIVec& variable_registry ,
 
 }
 
-void spectralProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-}
-
 void spectralProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
 
-void spectralProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+spectralProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 }
 
@@ -160,8 +202,8 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 }
 
 
-void
-spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 

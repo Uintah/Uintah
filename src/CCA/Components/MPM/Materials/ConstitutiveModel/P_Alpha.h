@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,7 +65,6 @@ namespace Uintah {
       double Gamma_0;
       double S_alpha;
       double FlowStress;
-      double Kh;  // deviatoric hardening modulus
     };
 
     const VarLabel* alphaLabel;
@@ -75,8 +74,6 @@ namespace Uintah {
     const VarLabel* tempAlpha1Label_preReloc;
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
-    const VarLabel* pPlasticStrainLabel;
-    const VarLabel* pPlasticStrainLabel_preReloc;
 
   private:
     CMData d_initialData;

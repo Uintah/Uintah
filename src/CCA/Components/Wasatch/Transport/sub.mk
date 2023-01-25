@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2021 The University of Utah
+#  Copyright (c) 2010-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -47,7 +47,6 @@ ifeq ($(HAVE_POKITT),yes)
 # the species transport equation is broken into
 # pieces because of long compilation times.
    CUDA_ENABLED_SRCS += 					\
-    ThermodynamicPressureTransportEquation  \
 		SpeciesTransportEquation			\
 		SpeciesTransportEquation_diffusion	\
 		SpeciesTransportEquation_reaction

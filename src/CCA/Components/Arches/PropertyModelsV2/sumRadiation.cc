@@ -9,6 +9,48 @@ namespace Uintah{
 Dout dbg_sumRad("Arches_sumRad", "Arches::PropertyModelsV2::sumRadiation", "outputs what abskt is comprised of", false);
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &sumRadiation::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sumRadiation::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &sumRadiation::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &sumRadiation::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &sumRadiation::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sumRadiation::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &sumRadiation::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sumRadiation::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 sumRadiation::problemSetup( ProblemSpecP& db ){
 
@@ -128,24 +170,26 @@ sumRadiation::register_initialize( VIVec& variable_registry ,
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
 void
 sumRadiation::initialize( const Patch* patch,
-                          ArchesTaskInfoManager* tsk_info ){
+                          ArchesTaskInfoManager* tsk_info,
+                          ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& abskt = tsk_info->get_field<CCVariable<double> >(m_abskt_name);
-  constCCVariable<double>& volFrac = tsk_info->get_field<constCCVariable<double> >("volFraction");
+  auto abskt = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_abskt_name);
+  auto volFrac = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>("volFraction");
 
-  abskt.initialize( 1.0);
+  Uintah::parallel_initialize(execObj, 1.0, abskt);
+
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
   const double abs_frac = 1./(double)m_absk_names.size();
 
   for (unsigned int i=0; i<m_absk_names.size(); i++){
 
-    constCCVariable<double>& abskf = tsk_info->get_field<constCCVariable<double> >(m_absk_names[i]);
+    auto abskf = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_absk_names[i]);
 
-    Uintah::parallel_for( range,
-      [&](int i, int j, int k){
+    Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA( int i, int j, int k ){
 
       if (volFrac(i,j,k) > 1e-16){
         abskt(i,j,k) = abskt(i,j,k) + abskf(i,j,k) - abs_frac;          // Dimensionally this is inconsistent.  --Todd
@@ -156,7 +200,7 @@ sumRadiation::initialize( const Patch* patch,
     });
 
     if (m_absk_names.size()==0){
-      Uintah::parallel_for( range, [&](int i, int j, int k){
+      Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA( int i, int j, int k ){
         abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
       });
     }
@@ -170,9 +214,9 @@ void sumRadiation::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  initialize( patch,tsk_info );
+template <typename ExecSpace, typename MemSpace>
+void sumRadiation::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  initialize( patch, tsk_info, execObj );
 }
 
 } //namespace Uintah

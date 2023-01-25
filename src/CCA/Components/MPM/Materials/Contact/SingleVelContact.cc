@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <vector>
 
@@ -61,7 +60,6 @@ SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
   flag = MFlag;
   d_oneOrTwoStep = 2;
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
-  ps->getWithDefault("ExcludeMaterial", d_excludeMatl, -999);
 }
 
 SingleVelContact::~SingleVelContact()
@@ -72,8 +70,6 @@ void SingleVelContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type","single_velocity");
-  contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
-  contact_ps->appendElement("ExcludeMaterial",   d_excludeMatl);
   d_matls.outputProblemSpec(contact_ps);
 }
 
@@ -95,11 +91,9 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMatls);
     std::vector<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = 
-                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
-      int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gmass[m], lb->gMassLabel,    dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwi, patch);
+      int dwindex = matls->get(m);
+      new_dw->get(gmass[m], lb->gMassLabel,    dwindex, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwindex, patch);
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -115,15 +109,10 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
         }
       }
 
-      double excludeMass = 0.;
-      if(d_excludeMatl >=0){
-        excludeMass = gmass[d_excludeMatl][c];
-      }
-
       // Set each field's velocity equal to the center of mass velocity
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int n = 0; n < numMatls; n++) {
-        if(d_matls.requested(n) && excludeMass < 1.e-99) {
+        if(d_matls.requested(n)) {
           gvelocity[n][c] = centerOfMassVelocity;
         }
       }
@@ -154,9 +143,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > gvelocity_star(numMatls);
 
     for(int m=0;m<matls->size();m++){
-     MPMMaterial* mpm_matl = 
-                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
-     int dwi = mpm_matl->getDWIndex();
+     int dwi = matls->get(m);
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
     }
@@ -176,15 +163,10 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
         }
       }
 
-      double excludeMass = 0.;
-      if(d_excludeMatl >=0){
-        excludeMass = gmass[d_excludeMatl][c];
-      }
-
       // Set each field's velocity equal to the center of mass velocity
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int  n = 0; n < numMatls; n++){
-        if(d_matls.requested(n) && excludeMass < 1.e-99) {
+        if(d_matls.requested(n)) {
           Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
           gvelocity_star[n][c] = centerOfMassVelocity;
         }

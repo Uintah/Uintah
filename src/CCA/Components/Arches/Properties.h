@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,6 +65,7 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
 class ArchesLabel;
+class MPMArchesLabel;
 class MixingModel;
 class MixingRxnTable;
 class TabPropsInterface;
@@ -80,7 +81,8 @@ public:
   // Constructor taking
   //   [in]
 
-  Properties(ArchesLabel* label,
+  Properties(ArchesLabel* label, \
+             const MPMArchesLabel* MAlb,
              PhysicalConstants* phys_const,
              const ProcessorGroup* myworld);
 
@@ -202,6 +204,7 @@ private:
 
   // Variable labels used by simulation controller
   ArchesLabel* d_lab;
+  const MPMArchesLabel* d_MAlab;
   const VarLabel* d_mf_label;
 
   bool d_reactingFlow;

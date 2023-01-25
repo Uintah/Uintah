@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,9 +37,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
   #include <curand.h>
   #include <curand_kernel.h>
 #endif
@@ -222,6 +222,9 @@ namespace Uintah{
 
       ApplicationInterface* m_application{nullptr};
 
+      bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
+      IntVector m_virtual_ROI {IntVector(0,0,0)};
+
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
@@ -237,25 +240,21 @@ namespace Uintah{
                      Task::WhichDW which_sigmaT4_dw,
                      Task::WhichDW which_celltype_dw );
 
+#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
       //__________________________________
-      template<class T>
-      void rayTraceGPU( DetailedTask* dtask,
-                        Task::CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
+      template<class T, typename ExecSpace, typename MemSpace>
+      void rayTraceGPU( const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        bool modifies_divQ,
+                        OnDemandDataWarehouse* old_dw,
+                        OnDemandDataWarehouse* new_dw,
+                        UintahParams& uintahParams,
+                        ExecutionObject<ExecSpace, MemSpace>& execObj,
                         int timeStep,
+                        bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw);
-
+#endif
       //__________________________________
       template<class T>
       void rayTrace_dataOnion( const ProcessorGroup* pg,
@@ -268,24 +267,22 @@ namespace Uintah{
                                Task::WhichDW which_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw );
 
+#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
       //__________________________________
-      template<class T>
-      void rayTraceDataOnionGPU( DetailedTask* dtask,
-                                 Task::CallBackEvent event,
-                                 const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
+      template<class T, typename ExecSpace, typename MemSpace>
+      void rayTraceDataOnionGPU( const PatchSubset* patches,
                                  const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 void* oldTaskGpuDW,
-                                 void* newTaskGpuDW,
-                                 void* stream,
-                                 int deviceID,
-                                 bool modifies_divQ,
+                                 OnDemandDataWarehouse* old_dw,
+                                 OnDemandDataWarehouse* new_dw,
+                                 UintahParams& uintahParams,
+                                 ExecutionObject<ExecSpace, MemSpace>& execObj,
                                  int timeStep,
+                                 bool modifies_divQ,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW which_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );
+#endif
+
       //__________________________________
       template<class T>
       void updateSumI_ML ( Vector& ray_direction,

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,11 @@
 
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Core/Parallel/Portability.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/KokkosViews.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/MaterialManager.h>
@@ -38,17 +42,46 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
-#include <sci_defs/kokkos_defs.h>
-
 using namespace std;
 using namespace Uintah;
+
+class DetailedTask;
+
+
+//DS 05132020: Updated Poisson1 to use CC Variable or NCVariable. Comment/uncomment USE_CC_VARS to switch between two types.
+//#define USE_CC_VARS
+
+
+#ifdef USE_CC_VARS
+typedef CCVariable<double> vartype;
+typedef constCCVariable<double> constvartype;
+#define POISSON1_GHOST_TYPE Ghost::AroundCells
+#define getLowIndex(patch) patch->getCellLowIndex()
+#define getHighIndex(patch) patch->getCellHighIndex()
+#else
+typedef NCVariable<double> vartype;
+typedef constNCVariable<double> constvartype;
+#define POISSON1_GHOST_TYPE Ghost::AroundNodes
+#define getLowIndex(patch) patch->getNodeLowIndex()
+#define getHighIndex(patch) patch->getNodeHighIndex()
+#endif
+
+
+
+//______________________________________________________________________
+// A sample implementation supporting several modes of execution:
+//   &Poisson1::timeAdvance<UINTAH_CPU_TAG>            // Task supports non-Kokkos builds and is executed serially
+//   &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>         // Task supports Kokkos::OpenMP builds and is executed using OpenMP via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>   // Task supports Kokkos::DefaultHostExecutionSpace builds and is executed using the Default Host Execution space via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG> // Task supports Kokkos::DefaultExecutionSpace builds and is executed using the Default Execution space via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEVICE_TAG>         // Task supports Kokkos builds and is executed using GPU via Kokkos
 
 Poisson1::Poisson1( const ProcessorGroup   * myworld
                   , const MaterialManagerP   materialManager
                   )
   : ApplicationCommon( myworld, materialManager )
 {
-  phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
+  phi_label = VarLabel::create("phi", vartype::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
 
@@ -116,12 +149,33 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                                   ,       SchedulerP & sched
                                   )
 {
-  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
+//______________________________________________________________________
+// Legacy approach:
 
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
+//  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
+
+//  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//  task->computes(phi_label);
+//  task->computes(residual_label);
+//  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
+
+//______________________________________________________________________
+// Portable approach:
+
+  auto TaskDependencies = [&](Task* task) {
+    task->requires(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
+    task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, POISSON1_GHOST_TYPE, 1);
+    task->computes(residual_label);
+  };
+
+  create_portable_tasks(TaskDependencies, this,
+                        "Poisson1::timeAdvance",
+                        &Poisson1::timeAdvance<UINTAH_CPU_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEVICE_TAG>,
+                        sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
 //______________________________________________________________________
@@ -153,7 +207,7 @@ void Poisson1::initialize( const ProcessorGroup *
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    NCVariable<double> phi;
+    vartype phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
 
@@ -181,84 +235,65 @@ void Poisson1::initialize( const ProcessorGroup *
 
 //______________________________________________________________________
 //
-namespace {
-
-struct TimeAdvanceFunctor {
-#ifdef UINTAH_ENABLE_KOKKOS
-  KokkosView3<const double> m_phi;
-  KokkosView3<double> m_newphi;
-#else
-  constNCVariable<double> & m_phi;
-  NCVariable<double> & m_newphi;
-#endif
-
-  typedef double value_type;
-
-  TimeAdvanceFunctor(constNCVariable<double> & phi,
-                     NCVariable<double> & newphi)
-#ifdef UINTAH_ENABLE_KOKKOS
-      : m_phi( phi.getKokkosView() )
-      , m_newphi( newphi.getKokkosView() )
-#else
-      : m_phi(phi),
-        m_newphi(newphi)
-#endif
-  {
-  }
-
-  void operator()(int i, int j, int k, double & residual) const
-  {
-    m_newphi(i, j, k) = ( 1. / 6 ) *
-                        ( m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
-                          m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1) );
-
-    double diff = m_newphi(i, j, k) - m_phi(i, j, k);
-    residual += diff * diff;
-  }
-};
-
-}  // namespace
-
-//______________________________________________________________________
-//
-void Poisson1::timeAdvance( const ProcessorGroup *
-                          , const PatchSubset    * patches
-                          , const MaterialSubset * matls
-                          ,       DataWarehouse  * old_dw
-                          ,       DataWarehouse  * new_dw
+template <typename ExecSpace, typename MemSpace>
+void Poisson1::timeAdvance( const PatchSubset                          * patches
+                          , const MaterialSubset                       * matls
+                          ,       OnDemandDataWarehouse                * old_dw
+                          ,       OnDemandDataWarehouse                * new_dw
+                          ,       UintahParams                         & uintahParams
+                          ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                           )
 {
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    constNCVariable<double> phi;
-
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-    NCVariable<double> newphi;
-
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
     double residual = 0;
 
     // Prepare the ranges for both boundary conditions and main loop
-    IntVector l = patch->getNodeLowIndex();
+    IntVector l = getLowIndex(patch);
+    IntVector h = getHighIndex(patch);
+
+    Uintah::BlockRange rangeBoundary( l, h);
+
     l += IntVector( patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1
                   , patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1
                   , patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1
                   );
 
-    IntVector h = patch->getNodeHighIndex();
     h -= IntVector( patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1
                   , patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1
                   , patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1
                   );
 
-    Uintah::BlockRange range(l, h);
+    Uintah::BlockRange range( l, h );
 
-    TimeAdvanceFunctor func(phi, newphi);
-    Uintah::parallel_reduce_sum(range, func, residual);
+    auto phi = old_dw->getConstGridVariable<constvartype, double, MemSpace> (phi_label, matl, patch, POISSON1_GHOST_TYPE, 1);
+    auto newphi = new_dw->getGridVariable<vartype, double, MemSpace> (phi_label, matl, patch);
 
-    new_dw->put(sum_vartype(residual), residual_label);
+    // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
+    //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+      newphi(i, j, k) = phi(i,j,k);
+    });
+
+    // Perform the main loop
+    Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+      newphi(i, j, k) = ( 1. / 6 ) *
+                        ( phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+                          phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) );
+
+
+//    printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+//           phi.m_view.data(), &(phi(i,j,k)),
+//           phi(i,j,k),
+//           phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+//           phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+//           newphi(i,j,k));
+
+      double diff = newphi(i, j, k) - phi(i, j, k);
+      residual += diff * diff;
+    }, residual);
+
   }
 }

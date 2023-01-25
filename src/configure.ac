@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2021 The University of Utah
+## Copyright (c) 1997-2020 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -70,7 +70,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2021 The University of Utah
+## Copyright (c) 1997-2020 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -803,13 +803,14 @@ SCI_ARG_ENABLE(all_components,
 # --- end list of -enable components ------
 #
 BUILD_MODELS_RADIATION=no
-DEF_MODELS_RADIATION=
+DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"
 
 if test "$enable_all_components" = "yes" -o  \
         "$enable_arches"         = "yes" -o  \
         "$enable_examples"       = "yes" -o  \
         "$enable_wasatch"        = "yes" ; then
   BUILD_MODELS_RADIATION=yes
+  DEF_MODELS_RADIATION=
 fi
 
 # Check for enabling a specific component (one or more)
@@ -993,10 +994,17 @@ fi
 # Figure out which compiler we are using (gcc, clang, etc)
 AC_MSG_CHECKING(the type of compiler we are using)
 USING_GCC=no
+USING_NVCC=no
 USING_ICC=no
 USING_CLANG=no
 USING_XLC=no
 USING_PGCC=no
+
+($CXX --version | grep -iq "NVIDIA") &> /dev/null
+if test "$?" = 0; then
+  AC_MSG_RESULT(Using the NVIDIA compiler.)
+  USING_NVCC=yes
+fi
 
 ($CC --version | grep -iq "Free Software Foundation") &> /dev/null
 if test "$?" = 0; then
@@ -1104,6 +1112,8 @@ sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
 ## -- Begin Test for Bluegene Q --
+CXX_BASE=$CXX
+CXXFLAGS_BASE=$CXXFLAGS
 
 cat > conftest-bgq.cc <<EOF
 #include <stdio.h>
@@ -1553,6 +1563,40 @@ esac
 
 #########################################################################
 ##
+##  Add the -fopenmp flag
+##
+
+cat > conftest-openmp.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+}
+EOF
+
+# Verify that the compiler accepts the -fopenmp flag:
+$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+
+if test $? = 0; then
+   if test "$IS_OSX" = "no"; then
+      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS -fopenmp"
+      CXXFLAGS="$CXXFLAGS -fopenmp"
+   else
+      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
+   fi
+else
+   rm -f conftest-openmp conftest-openmp.cc
+   AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
+fi
+
+rm -f conftest-openmp conftest-openmp.cc
+
+#########################################################################
+##
 ## search for Zoltan
 ##
 if test "$with_zoltan" != NOT_SET; then
@@ -1799,12 +1843,16 @@ case $host in
       if test "$sci_required_fortran" = "yes"; then
         SCI_CHECK_VERSION($F77,--version,0.5.25,,echo configure: error: wrong $F77 version.; exit)
       fi
-      SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
+      if test "$USING_NVCC" = "no"; then
+        SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
+      else
+        AC_MSG_WARN(Not verifying version of '$CXX')
+      fi
     else
       if test "$USING_ICC" = "yes"; then
         SCI_CHECK_VERSION($CC,--version,14.0.0,,echo configure: error: wrong $CC version.; exit)
       else
-        AC_MSG_WARN(Not checking for version of $CC)
+        AC_MSG_WARN(Not verifying version of $CC)
       fi
     fi
 
@@ -1972,7 +2020,7 @@ fi
 
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
-  for flag in -M; do
+  for flag in -MD -M; do
     AC_MSG_CHECKING( 3 - if depend mode flag '$flag' works )
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
@@ -3617,7 +3665,6 @@ AC_SUBST(GPERFTOOLS_LIB_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
 ##  --  Handle --enable-kokkos -------------------------------
-
 if test "$build_kokkos_lib" != "no"; then
 
   if test "$with_kokkos" != NOT_SET; then
@@ -3640,7 +3687,7 @@ if test "$build_kokkos_lib" != "no"; then
   SCI_TRY_LINK(KOKKOS, Kokkos libraries and headers,
                Kokkos_Core.hpp,
                $_sci_inc,
-               kokkos,
+               kokkoscore,
                $_sci_lib,
                ,
                [],
@@ -3668,7 +3715,7 @@ if test "$with_kokkos" != NOT_SET; then
   SCI_TRY_LINK(KOKKOS, Kokkos libraries and headers,
                Kokkos_Core.hpp,
                $_sci_inc,
-               kokkos,
+               kokkoscore,
                $_sci_lib,
                ,
                [],
@@ -3678,7 +3725,7 @@ if test "$with_kokkos" != NOT_SET; then
 fi
 
 if test "$HAVE_KOKKOS" = "yes"; then
-  DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
+  DEF_KOKKOS="#define HAVE_KOKKOS"
 fi
 
 AC_SUBST(HAVE_KOKKOS)
@@ -3686,6 +3733,7 @@ AC_SUBST(DEF_KOKKOS)
 AC_SUBST(INC_KOKKOS_H)
 AC_SUBST(KOKKOS_LIB_DIR_FLAG)
 AC_SUBST(KOKKOS_LIB_FLAG)
+AC_SUBST(HAVE_KOKKOS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
 
@@ -3802,6 +3850,65 @@ AC_SUBST(NVCC_LIBS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
+##  --  defines for GPU builds  ------------------------------------------
+
+HAVE_GPU=""
+DEF_HAVE_GPU=""
+
+HAVE_KOKKOS_GPU=""
+DEF_HAVE_KOKKOS_GPU=""
+
+if test "$HAVE_CUDA" = "yes"; then
+  AC_MSG_NOTICE(Building with GPU support)
+  HAVE_GPU="yes"
+  DEF_HAVE_GPU="#define HAVE_GPU"
+
+fi
+
+if test "$HAVE_KOKKOS" = "yes"; then
+
+## --------------
+## -- Begin Test for Kokkos GPU --
+
+cat > conftest-kokkos.cc <<EOF
+#include <Kokkos_Macros.hpp>
+int
+main()
+{
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+AC_MSG_CHECKING(if Kokkos uses a GPU)
+$CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
+
+./conftest-kokkos
+
+if test $? = 0; then
+  AC_MSG_RESULT(yes)
+  HAVE_GPU="yes"
+  DEF_HAVE_GPU="#define HAVE_GPU"
+  HAVE_KOKKOS_GPU="yes"
+  DEF_HAVE_KOKKOS_GPU="#define HAVE_KOKKOS_GPU"
+else
+  AC_MSG_RESULT(no)
+fi
+
+rm -f conftest-kokkos.cc conftest-kokkos
+
+fi
+
+AC_SUBST(HAVE_GPU)
+AC_SUBST(DEF_HAVE_GPU)
+
+AC_SUBST(HAVE_KOKKOS_GPU)
+AC_SUBST(DEF_HAVE_KOKKOS_GPU)
+
+sci_defs_files="$sci_defs_files include/sci_defs/gpu_testdefs.h"
 
 ##  --  search for visus  -------------------------------------------------
 AC_LANG(C++)

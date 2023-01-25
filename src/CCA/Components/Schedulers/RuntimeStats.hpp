@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -69,9 +69,7 @@ public:
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void initialize_timestep( const int num_schedulers
-                                 , std::vector<TaskGraph *> const & graphs 
-                                 );
+  static void initialize_timestep( std::vector<TaskGraph *> const & graphs );
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler

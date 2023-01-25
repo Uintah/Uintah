@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
+#include <Core/Parallel/Portability.h>
 
 using namespace Uintah;
 
@@ -329,95 +330,138 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   DOUT( dbg_arches_task, "\n[TaskFactoryBase]  Scheduling with mode " << type_string << " for factory " << _factory_name );
   DOUT( dbg_arches_task, "                   Task packing is " << pack_string );
 
+  bool archesTasksMixMemSpaces = false;
+  TaskAssignedExecutionSpace assignedExecutionSpace{};
+
+  std::vector<std::string> taskNames(arches_tasks.size());
+  std::vector<int> taskExecSpace(arches_tasks.size());
+
+  int icount=0;
+
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
+    taskNames[icount]=(*i_task)->get_task_name();
+
+    TaskAssignedExecutionSpace temp{};
 
     DOUT( dbg_arches_task, "[TaskFactoryBase]      Task: " << (*i_task)->get_task_name() );
 
     switch( type ){
 
       case (TaskInterface::INITIALIZE):
-        (*i_task)->register_initialize( variable_registry, pack_tasks );
-        time_substep = 0;
+        {
+          temp = (*i_task)->loadTaskInitializeFunctionPointers();
+          (*i_task)->register_initialize( variable_registry, pack_tasks );
+          taskNames[icount]=taskNames[icount]+"::INITIALIZE";
+          time_substep = 0;
+        }
         break;
       case (TaskInterface::RESTART_INITIALIZE):
-        (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
-        time_substep = 0;
+        {
+          temp = (*i_task)->loadTaskRestartInitFunctionPointers();
+          (*i_task)->register_restart_initialize( variable_registry , pack_tasks);
+          taskNames[icount]=taskNames[icount]+"::RESTART_INITIALIZE";
+          time_substep = 0;
+        }
         break;
       case (TaskInterface::TIMESTEP_INITIALIZE):
-        (*i_task)->register_timestep_init( variable_registry, pack_tasks );
-        time_substep = 0;
+        {
+          temp = (*i_task)->loadTaskTimestepInitFunctionPointers();
+          (*i_task)->register_timestep_init( variable_registry, pack_tasks );
+          taskNames[icount]=taskNames[icount]+"::TIMESTEP_INITIALIZE";
+          time_substep = 0;
+        }
         break;
       case (TaskInterface::TIMESTEP_EVAL):
-        (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
+        {
+          temp = (*i_task)->loadTaskEvalFunctionPointers();
+          (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks);
+          taskNames[icount]=taskNames[icount]+"::EVAL";
+        }
         break;
       case (TaskInterface::BC):
-        (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
+        {
+          temp = (*i_task)->loadTaskComputeBCsFunctionPointers();
+          (*i_task)->register_compute_bcs( variable_registry, time_substep , pack_tasks);
+          taskNames[icount]=taskNames[icount]+"::COMPUTE_BCS";
+        }
         break;
       case (TaskInterface::ATOMIC):
-        (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks );
+        {
+          temp = (*i_task)->loadTaskEvalFunctionPointers();
+          (*i_task)->register_timestep_eval( variable_registry, time_substep, pack_tasks );
+          taskNames[icount]=taskNames[icount]+"::ATOMIC";
+        }
         break;
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
         break;
 
     }
+
+    taskExecSpace[icount] = temp;
+    icount++;
+
+    if ( assignedExecutionSpace != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE && assignedExecutionSpace != temp && temp != TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE ) {
+      archesTasksMixMemSpaces = true;
+    } else if ( TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE != temp ){
+      assignedExecutionSpace = temp;
+    }
   }
 
-  Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this,
-                           &TaskFactoryBase::do_task, variable_registry,
-                           arches_tasks, type, time_substep, pack_tasks );
+  auto TaskDependencies = [&](Task *& tsk) {
 
-  int counter = 0;
-  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
+    int counter = 0;
+    for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
-    counter++;
+      counter++;
 
-    ArchesFieldContainer::VariableInformation& ivar = *pivar;
-    insert_max_ghost(ivar, _factory_name+"::"+task_group_name+", "+type_string);
+      ArchesFieldContainer::VariableInformation& ivar = *pivar;
+      insert_max_ghost(ivar, _factory_name+"::"+task_group_name+", "+type_string);
 
-    switch(ivar.depend) {
-    case ArchesFieldContainer::COMPUTES:
-      {
-        if ( time_substep == 0 ) {
-          if ( reinitialize ){
+      switch(ivar.depend) {
+      case ArchesFieldContainer::COMPUTES:
+        {
+          if ( time_substep == 0 ) {
+            if ( reinitialize ){
+              // Uncomment this code to fix all ghost cells.
+              // const Uintah::PatchSet* const allPatches =
+              //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+              // const Uintah::PatchSubset* const localPatches =
+              //  allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+              // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
+              // tsk->modifiesWithScratchGhost( ivar.label,
+              //                                localPatches,
+              //                                Uintah::Task::ThisLevel,
+              //                                matls->getSubset(0), Uintah::Task::NormalDomain,
+              //                                ivar.ghost_type, ivar.nGhost );
+              // end uncomment
+              DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
+              tsk->modifies( ivar.label );   // was computed upstream
+            } else {
+              DOUT( dbg_arches_task, "[TaskFactoryBase]      computing: " << ivar.name );
+              // tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
+              //                                Uintah::Task::NormalDomain, ivar.ghost_type,
+              //                                ivar.nGhost );
+              tsk->computes( ivar.label );   //only compute on the zero time substep
+            }
+          } else {
             // Uncomment this code to fix all ghost cells.
             // const Uintah::PatchSet* const allPatches =
-            //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+            //   sched->getLoadBalancer()->getPerProcessorPatchSet(level);
             // const Uintah::PatchSubset* const localPatches =
-            //  allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+            //    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
             // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
             // tsk->modifiesWithScratchGhost( ivar.label,
             //                                localPatches,
             //                                Uintah::Task::ThisLevel,
             //                                matls->getSubset(0), Uintah::Task::NormalDomain,
             //                                ivar.ghost_type, ivar.nGhost );
-            // end uncomment
+            // end ucomment
             DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-            tsk->modifies( ivar.label );   // was computed upstream
-          } else {
-            DOUT( dbg_arches_task, "[TaskFactoryBase]      computing: " << ivar.name );
-            // tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
-            //                                Uintah::Task::NormalDomain, ivar.ghost_type,
-            //                                ivar.nGhost );
-            tsk->computes( ivar.label );   //only compute on the zero time substep
-          }
-        } else {
-          // Uncomment this code to fix all ghost cells.
-          // const Uintah::PatchSet* const allPatches =
-          //   sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-          // const Uintah::PatchSubset* const localPatches =
-          //    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
-          // DOUT( dbg_arches_task, "[TaskFactoryBase]  modifying (wsg): " << ivar.name );
-          // tsk->modifiesWithScratchGhost( ivar.label,
-          //                                localPatches,
-          //                                Uintah::Task::ThisLevel,
-          //                                matls->getSubset(0), Uintah::Task::NormalDomain,
-          //                                ivar.ghost_type, ivar.nGhost );
-          // end ucomment
-          DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-          tsk->modifies( ivar.label );
-      }}
-      break;
+            tsk->modifies( ivar.label );
+        }}
+        break;
     case ArchesFieldContainer::COMPUTESCRATCHGHOST:
       {
         if ( time_substep == 0 ){
@@ -471,28 +515,78 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         throw InvalidValue(msg.str(), __FILE__, __LINE__);
       }
       break;
+      }
     }
-  }
 
-  //other variables:
-  if ( sched->get_dw(0) != nullptr ){
-    tsk->requires(Task::OldDW, VarLabel::find("delT"));
-    tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
-  }
+    //other variables:
+    if ( sched->get_dw(0) != nullptr ){
+      tsk->requires(Task::OldDW, VarLabel::find("delT"));
+      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+    }
 
-  if ( counter > 0 )
-    sched->addTask( tsk, level->eachPatch(), matls );
-  else
-    delete tsk;
+    // This task had no work to perform.  Delete it.
+    if ( counter == 0 ) {
+      delete tsk;
+      tsk = nullptr;
+    } else {
+      if (archesTasksMixMemSpaces) {
+        std::cout << std::endl << " WARNING Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space." << std::endl << std::endl;
+        for (unsigned int i=0; i<taskNames.size(); i++){
+            std::cout <<taskNames[i] << " using execution space enum ->  "<< taskExecSpace[i]   <<" \n";
+         } 
+        throw InvalidValue("Error: Different execution spaces specified.  All Arches tasks within a single Uintah task must share the same execution space.",__FILE__,__LINE__);
+      }
+    }
+  };
+
+  bool non_const_pack_tasks = pack_tasks;
+
+  // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
+  // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
+  if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
+    create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
+                          &TaskFactoryBase::do_task<KOKKOS_OPENMP_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
+  } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
+
+    //some race condition in kokkos::parallel_reduce. So combine all patches together in a single reduction task to avoid the multiple cpu threads calling parallel_reduce
+    //temp work around until the permanent solution
+	if(task_group_name == "density_star" && type == (TaskInterface::TIMESTEP_EVAL)){
+	  create_portable_tasks( TaskDependencies, this,
+							  _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
+							  &TaskFactoryBase::do_task<KOKKOS_DEVICE_TAG>,
+							  sched, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls, TASKGRAPH::DEFAULT,
+							  variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
+	  //printf("warning: Creating per processor task for density_star due to race condition in kokkos cuda parallel_reduce %s %d\n", __FILE__, __LINE__);
+	}
+	else{
+      create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
+                          &TaskFactoryBase::do_task<KOKKOS_DEVICE_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
+	}
+
+  } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
+    create_portable_tasks( TaskDependencies, this,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
+                          &TaskFactoryBase::do_task<UINTAH_CPU_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
+                          variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
+  }
 
 }
 
 //--------------------------------------------------------------------------------------------------
-void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
-                                const PatchSubset* patches,
+template <typename ExecSpace, typename MemSpace>
+void TaskFactoryBase::do_task ( const PatchSubset* patches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
+                                UintahParams& uintahParams,
+                                ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 std::vector<ArchesFieldContainer::VariableInformation> variable_registry,
                                 std::vector<TaskInterface*> arches_tasks,
                                 TaskInterface::TASK_TYPE type,
@@ -536,33 +630,33 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
       switch( type ){
         case (TaskInterface::INITIALIZE):
           {
-            (*i_task)->initialize( patch, tsk_info_mngr );
+            (*i_task)->initialize<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::RESTART_INITIALIZE):
           {
-            (*i_task)->restart_initialize( patch, tsk_info_mngr );
+            (*i_task)->restart_initialize<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::TIMESTEP_INITIALIZE):
           {
-            (*i_task)->timestep_init( patch, tsk_info_mngr );
+            (*i_task)->timestep_init<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
             time_substep = 0;
           }
           break;
         case (TaskInterface::TIMESTEP_EVAL):
           {
-            (*i_task)->eval( patch, tsk_info_mngr );
+            (*i_task)->eval<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::BC):
           {
-            (*i_task)->compute_bcs( patch, tsk_info_mngr );
+            (*i_task)->compute_bcs<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         case (TaskInterface::ATOMIC):
           {
-            (*i_task)->eval( patch, tsk_info_mngr);
+            (*i_task)->eval<ExecSpace, MemSpace>( patch, tsk_info_mngr, execObj );
           }
           break;
         default:

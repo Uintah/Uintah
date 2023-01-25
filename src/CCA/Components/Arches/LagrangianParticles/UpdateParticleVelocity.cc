@@ -12,6 +12,48 @@ UpdateParticleVelocity::~UpdateParticleVelocity(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &UpdateParticleVelocity::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticleVelocity::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &UpdateParticleVelocity::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticleVelocity::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleVelocity::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticleVelocity::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticleVelocity::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleVelocity::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){
 
@@ -46,8 +88,8 @@ UpdateParticleVelocity::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );
@@ -84,8 +126,8 @@ UpdateParticleVelocity::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

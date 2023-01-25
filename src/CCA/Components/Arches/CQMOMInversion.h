@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -220,8 +220,8 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   char matType = 'U';
   DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], &wkopt, &lwork, &info ); //with -1 this finds work size
   lwork = (int)wkopt;
-  work = (double*)malloc( lwork*sizeof(double) );
-    
+  //  work_.resize(lwork);
+  work = new double[lwork];
   // Solve eigenproblem. eigenvectors are stored in the z_ matrix, columnwise
   //  dsyev_( &jobz, &matType, &n, &z_[0], &lda, &eigenVal[0], &work_[0], &lwork, &info );
   DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
@@ -242,7 +242,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
     w[i] = moments[0] * z_[i*nEnv] * z_[i*nEnv];
     x[i] = eigenVal[i];
   }
-  free( (void*)work );
+  delete work;
 }
 
 

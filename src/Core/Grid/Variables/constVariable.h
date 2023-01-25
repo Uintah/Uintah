@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,9 +29,13 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
+  #include <Kokkos_Macros.hpp>
+#endif
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   #include <Core/Grid/Variables/Array3.h>
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif
 
 namespace Uintah {
 
@@ -135,11 +139,12 @@ WARNING
     inline const T& operator[](Index idx) const
     { return this->rep_[idx]; }
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<const T> getKokkosView() const
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+      inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const
       {
         auto v = this->rep_.getKokkosView();
-        return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
+        Array3Data<const T>* constA3Data = reinterpret_cast<Array3Data<const T>*>(v.m_A3Data);
+        return KokkosView3<const T, Kokkos::HostSpace>( v.m_view, v.m_i, v.m_j, v.m_k, constA3Data );
       }
 #endif
 

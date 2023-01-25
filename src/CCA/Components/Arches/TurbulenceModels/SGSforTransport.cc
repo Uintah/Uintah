@@ -29,6 +29,54 @@ namespace Uintah{
   }
 
   //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace SGSforTransport::loadTaskComputeBCsFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace SGSforTransport::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &SGSforTransport::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace SGSforTransport::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &SGSforTransport::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace SGSforTransport::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &SGSforTransport::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  TaskAssignedExecutionSpace SGSforTransport::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::problemSetup( ProblemSpecP& db ){
 
@@ -74,8 +122,8 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-  void
-    SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       SFCXVariable<double>& FractalXSrc= tsk_info->get_field<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>& FractalYSrc= tsk_info->get_field<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>& FractalZSrc= tsk_info->get_field<SFCZVariable<double> >("FractalZSrc");
@@ -95,8 +143,8 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-  void
-    SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       SFCXVariable<double>& FractalXSrc= tsk_info->get_field<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>& FractalYSrc= tsk_info->get_field<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>& FractalZSrc= tsk_info->get_field<SFCZVariable<double> >("FractalZSrc");
@@ -121,8 +169,8 @@ namespace Uintah{
     }
 
   //--------------------------------------------------------------------------------------------------
-  void
-    SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void SGSforTransport::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
       Vector Dx=patch->dCell();
       //  double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
       // double vol = Dx.x()*Dx.y()*Dx.z();

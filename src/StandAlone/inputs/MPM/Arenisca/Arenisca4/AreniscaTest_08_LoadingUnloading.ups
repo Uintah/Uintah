@@ -26,7 +26,6 @@
       <save label = "p.velocity"/>
       <save label = "p.particleID"/>
       <save label = "p.stress"/>
-      <save label = "p.scalefactor"/>
       <save label = "g.mass"/>
       <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
@@ -41,13 +40,15 @@
     <use_load_curves>               false     </use_load_curves>
     <minimum_particle_mass>         1.0e-15   </minimum_particle_mass>
     <minimum_mass_for_acc>          1.0e-15   </minimum_mass_for_acc>
+    <maximum_particle_velocity>     1.0e5     </maximum_particle_velocity>
     <artificial_damping_coeff>      0.0       </artificial_damping_coeff>
     <artificial_viscosity>          true      </artificial_viscosity>
     <artificial_viscosity_heating>  false     </artificial_viscosity_heating>
     <do_contact_friction_heating>   false     </do_contact_friction_heating>
+    <UseMomentumForm>               false     </UseMomentumForm>
     <withColor>                     true      </withColor>
     <UsePrescribedDeformation>      true      </UsePrescribedDeformation>
-    <PrescribedDeformationFile>     inputs/MPM/Arenisca/Arenisca4/AreniscaTest_08_PrescribedDeformation.inp  </PrescribedDeformationFile>
+    <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_08_PrescribedDeformation.inp  </PrescribedDeformationFile>
     <minimum_subcycles_for_F>       -2        </minimum_subcycles_for_F>
   </MPM>
 

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2021 The University of Utah
+#  Copyright (c) 2010-2018 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,15 +33,10 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=                  \
-     DensityFromMixFrac               \
-     DensityFromMixFracAndHeatLoss    \
+CUDA_ENABLED_SRCS :=               \
+     DensityFromMixFrac            \
+     DensityFromMixFracAndHeatLoss \
      TwoStreamMixingDensity
-
-ifeq ($(HAVE_POKITT),yes)
-   CUDA_ENABLED_SRCS += 					\
-    DensityFromSpeciesAndEnthalpy
-endif
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -74,14 +69,4 @@ ifeq ($(HAVE_CUDA),yes)
   $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif
-
-########################################################################
-#
-# Recursively build subdirectories...
-#
-
-SUBDIRS := \
-        $(SRCDIR)/SpeciesAndEnthalpyExpressions
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
 

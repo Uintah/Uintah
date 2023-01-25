@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,7 +58,10 @@ namespace Uintah {
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                              const LevelP & level) =0;
-
+                                             
+    // populate the old_dw with variables from timestep
+    enum {NOTUSED = -9};
+    virtual int getTimestep_OldDW(){ return NOTUSED; };
     
     virtual std::string getName()=0;
     
@@ -66,11 +69,33 @@ namespace Uintah {
                            double & startTime,
                            double & stopTime);
 
+    void createMatlSet(const ProblemSpecP        &  module_ps,
+                       MaterialSet               * matlSet,
+                       std::map<std::string,int> & Qmatls);
+
+    template <class T>
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
     MaterialManagerP   d_materialManager;
     DataArchive      * d_dataArchive   = nullptr;
     Output           * d_dataArchiver  = nullptr;
     std::vector<double> d_udaTimes;                 // physical time pulled from uda:index.xml
     
+    //__________________________________
+    //
+    class proc0patch0cout {
+      public:
+        proc0patch0cout( const int nTimesPerTimestep);
+                              
+        void print(const Patch * patch,
+                   std::ostringstream& msg);
+      private:
+        int d_count             =0;        
+        int d_nTimesPerTimestep =0;        
+    
+    };
   };
 }
 

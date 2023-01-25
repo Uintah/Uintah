@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 #ifndef Packages_Uintah_CCA_Ports_AnalysisModule_h
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
-
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 
@@ -34,9 +34,6 @@
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -56,10 +53,7 @@ namespace Uintah {
                    const MaterialManagerP materialManager,
                    const ProblemSpecP& module_spec);
 
-
     virtual ~AnalysisModule();
-
-    enum objectType { plane=0, line=1, box=2, none=-9};
 
     // Methods for managing the components attached via the ports.
     virtual void setComponents( UintahParallelComponent *comp ) {};
@@ -82,43 +76,34 @@ namespace Uintah {
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level) = 0;
 
+    virtual void restartInitialize() = 0;
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level) = 0;
 
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) = 0;
 
-    int createDirectory( mode_t mode,
-                         const std::string & rootPath,
-                         const std::string & path );
-
-
-    void bulletProofing_LinesPlanes( const objectType obj,
-                                     const GridP& grid,
-                                     const std::string message,
-                                     const Point start,
-                                     const Point end );
 
     //__________________________________
     //  time related
     struct timeVars{
-        int    timeStep;
         double prevAnlysTime {-9e9};
         double nextAnlysTime {-9e9};
         double now           {-9e9};
-        bool isItTime        {false};
+        bool isItTime {false};
     };
 
     void sched_TimeVars( Task * t,
                          const LevelP   & level,
                          const VarLabel * prev_AnlysTimeLabel,
                          const bool addComputes );
-
+                                                                       
     bool getTimeVars( DataWarehouse  * old_dw,
                       const Level    * level,
                       const VarLabel * prev_AnlysTime,
                       timeVars       & tv );
-
+                   
     void putTimeVars( DataWarehouse  * new_dw,
                       const VarLabel * prev_AnlysTimeLabel,
                       timeVars tv);
@@ -127,16 +112,6 @@ namespace Uintah {
                    const Level    * level,
                    const VarLabel * prev_AnlysTime );
 
-    std::string  getName( objectType type )
-    {
-      switch( type ) {
-        case plane:  return "plane";
-        case line:   return "line";
-        case box:    return "box";
-        default:
-          throw InternalError( "Invalid type", __FILE__, __LINE__);
-      }
-    };
 
 
     //__________________________________
@@ -156,14 +131,6 @@ namespace Uintah {
     double     m_analysisFreq;               // analysis frequency: units 1/sec
     double     d_startTime{0.0};
     double     d_stopTime{DBL_MAX};
-
-    Ghost::GhostType m_gn = Ghost::None;
-    MaterialSubset  * m_zeroMatl            {nullptr};
-    MaterialSet     * m_zeroMatlSet         {nullptr};
-
-
-  private:
-    std::set<std::string> m_DirExists;        // keep track when a directory has been created
   };
 }
 

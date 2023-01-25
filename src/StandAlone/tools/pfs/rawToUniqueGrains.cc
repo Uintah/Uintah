@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -83,7 +83,7 @@ intensities > 0 and maps that intensity to a mpm matl.
 ups file specification:
   <PreprocessTools>
     <rawToUniqueGrains>
-      <image_filename>  simple_sugar_mock_blob3d_unique_grains.raw  </image_filename>
+      <image>  simple_sugar_mock_blob3d_unique_grains.raw  </image>
       <ppc>      [1,1,1]       </ppc>
       <res>    [154,252,1]     </res>
       <outputBasename>   points/16bit_grains    </outputBasename>
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
-    raw_ps->require("image_filename", imgname ); 
+    raw_ps->require("image",          imgname ); 
     raw_ps->require("ppc",            ppc);
     raw_ps->require("res",            res);
     raw_ps->require("outputBasename", f_name);
@@ -673,7 +673,7 @@ bool ReadAuxFile(const string auxFileName, map<int,double>& data)
     cout.precision(17);
     
     // bullet proofing
-    if(isnormal(intensity) ==0 || isnormal(scalar == 0 ) ){
+    if( intensity == 0 || isnormal(scalar) ){
       ostringstream warn;
       warn << "ERROR: auxFile: either the intensity (" << intensity << ") or scalar (" << scalar << ") is not a number\n";
       throw InternalError(warn.str(), __FILE__, __LINE__);

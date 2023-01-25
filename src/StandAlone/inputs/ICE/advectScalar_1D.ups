@@ -18,7 +18,7 @@
      <delt_max>             1.0e-6  </delt_max>
      <delt_init>            1.0e-6  </delt_init>
      <timestep_multiplier>  1.0     </timestep_multiplier>
-     <max_Timesteps>        5     </max_Timesteps>
+     <max_Timesteps>        100     </max_Timesteps>
    </Time>
 
     <!--____________________________________________________________________-->
@@ -48,7 +48,7 @@
              <lower>       [-0.5,-0.05,-0.05]  </lower>
              <upper>       [0.5,0.05,0.05]     </upper>
              <extraCells>  [0,1,1]             </extraCells>
-             <patches>     [4,1,1]             </patches>
+             <patches>     [1,1,1]             </patches>
              <resolution>  [10000,1,1]         </resolution>
            </Box>
            <periodic> [1,0,0] </periodic>
@@ -58,22 +58,20 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>advectScalar_1D.uda</filebase>
+      <filebase>r10_v100.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <outputInitTimestep/>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
-      <save label="temp_CC"/>
-      
       <save label="scalar-f"/>
-      <save label="totalSum_scalar-f"/>
-      
-      <save label="scalar-q"/>
-      <save label="totalSum_scalar-q"/>
-      
+      <save label="sum_scalar_f"/>
+      <save label="temp_CC"/>
+      <save label="scalar-f"/>
+      <save label="sum_scalar_f"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -167,7 +165,7 @@
               <geom_object>
                 <difference>
                   <box label="wholeDomain"/>
-                  <box label="scalar-f_slug">
+                  <box label="scalarSlug">
                     <min>         [-0.4,-0.4,-0.4]  </min>
                     <max>         [ 0.4, 0.4, 0.4]  </max>
                   </box>
@@ -176,58 +174,15 @@
               </geom_object>
 
               <geom_object>
-                <box label="scalar-f_slug"/>
+                <box label="scalarSlug">  </box>
                 <scalar>    1.00   </scalar>
                 <sinusoidalInitialize>     false      </sinusoidalInitialize>
                 <freq> [1,0,0]    </freq>
-                <linearInitialize>         true      </linearInitialize>
+                <linearInitialize>         false      </linearInitialize>
                 <slope> [1,0,0]   </slope>
                 <triangularInitialize>     false      </triangularInitialize>
                 <cubicInitialize>          false      </cubicInitialize>
-                <exponentialInitialize_1D> false       </exponentialInitialize_1D>
-                <coeff> [20,0,0]  </coeff>
-              </geom_object>
-            </initialization>
-
-          </scalar>
-        </PassiveScalar>
-      </Model>
-      <!--____________________________________________________________________-->
-              
-      <Model type="PassiveScalar">
-        <PassiveScalar>
-          <material>"BackgroundGas"</material>
-          <scalar name="q">
-            <test_conservation>       true      </test_conservation>
-
-            <constants>
-              <diffusivity>              0.0    </diffusivity>
-              <initialize_diffusion_knob>  0    </initialize_diffusion_knob>
-              <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>
-            </constants>
-
-            <initialization>
-              <geom_object>
-                <difference>
-                  <box label="wholeDomain"/>
-                  <box label="scalar-q_slug">
-                    <min>         [-0.4,-0.4,-0.4]  </min>
-                    <max>         [ 0.4, 0.4, 0.4]  </max>
-                  </box>
-                </difference>
-                <scalar>    0.00   </scalar>
-              </geom_object>
-
-              <geom_object>
-                <box label="scalar-q_slug"/>
-                <scalar>    1.00   </scalar>
-                <sinusoidalInitialize>     false      </sinusoidalInitialize>
-                <freq> [1,0,0]    </freq>
-                <linearInitialize>         true      </linearInitialize>
-                <slope> [1,0,0]   </slope>
-                <triangularInitialize>     false      </triangularInitialize>
-                <cubicInitialize>          false      </cubicInitialize>
-                <exponentialInitialize_1D> false       </exponentialInitialize_1D>
+                <exponentialInitialize_1D> true       </exponentialInitialize_1D>
                 <coeff> [20,0,0]  </coeff>
               </geom_object>
             </initialization>

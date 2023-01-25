@@ -5,7 +5,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,6 +31,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <iomanip>
+#include <Core/Parallel/LoopExecution.hpp>
 
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
@@ -45,6 +46,16 @@ public:
 
     KFEUpdate<T>( std::string task_name, int matl_index, bool do_time_ave );
     ~KFEUpdate<T>(){}
+
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -71,6 +82,18 @@ public:
 
     };
 
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
 protected:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool pack_tasks){}
@@ -80,14 +103,6 @@ protected:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
-
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
-
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
 private:
 
@@ -130,6 +145,53 @@ private:
   {}
 
   //------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskComputeBCsFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::BC>( this
+                                       , &KFEUpdate<T>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KFEUpdate<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KFEUpdate<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskInitializeFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &KFEUpdate<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KFEUpdate<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KFEUpdate<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KFEUpdate<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KFEUpdate<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KFEUpdate<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
 
@@ -291,11 +353,12 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     const double dt = tsk_info->get_dt();
     Vector DX = patch->dCell();
-    const double V = DX.x()*DX.y()*DX.z();
+    const double Vol = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -304,13 +367,13 @@ private:
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      T& phi = tsk_info->get_field<T>(m_transported_eqn_names[ceqn]);
-      T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ceqn]+"_RHS");
-      CT& old_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      auto phi = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ceqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ceqn]+"_RHS");
+      auto old_phi = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
-      CFXT& x_flux = tsk_info->get_field<CFXT>(*ieqn+"_x_flux");
-      CFYT& y_flux = tsk_info->get_field<CFYT>(*ieqn+"_y_flux");
-      CFZT& z_flux = tsk_info->get_field<CFZT>(*ieqn+"_z_flux");
+      auto x_flux = tsk_info->get_field<CFXT, const double, MemSpace>(*ieqn+"_x_flux");
+      auto y_flux = tsk_info->get_field<CFYT, const double, MemSpace>(*ieqn+"_y_flux");
+      auto z_flux = tsk_info->get_field<CFZT, const double, MemSpace>(*ieqn+"_z_flux");
 
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
@@ -319,64 +382,60 @@ private:
 
       if ( time_substep == 0  || !m_do_time_ave ){
 
-        auto fe_update = [&](int i, int j, int k){
+        BlockRange range;
 
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
+          range = Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
+          range = Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
+          range = Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+        } else {
+          range = Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+        }
 
+        Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
-
-        };
-
-        if ( m_dir == ArchesCore::XDIR ){
-          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::YDIR ){
-          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::ZDIR ){
-          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else {
-          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
-          Uintah::parallel_for( range, fe_update );
-        }
+          phi(i,j,k) = phi(i,j,k) + dt/Vol * rhs(i,j,k);
+        });
 
       } else {
 
-        auto fe_update = [&](int i, int j, int k){
 
+        BlockRange range2;
+
+        if ( m_dir == ArchesCore::XDIR ){
+          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
+          range2 = Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range);
+        } else if ( m_dir == ArchesCore::YDIR ){
+          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
+          range2 = Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range);
+        } else if ( m_dir == ArchesCore::ZDIR ){
+          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
+          range2 = Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range);
+        } else {
+          range2 = Uintah::BlockRange(patch->getCellLowIndex(), patch->getCellHighIndex());
+        }
+
+        const double alpha = _alpha[time_substep];
+        const double beta = _beta[time_substep];
+
+        Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
+          phi(i,j,k) = phi(i,j,k) + dt/Vol * rhs(i,j,k);
 
-          phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
+          phi(i,j,k) = alpha * old_phi(i,j,k) + beta * phi(i,j,k);
+        });
 
-        };
-
-        if ( m_dir == ArchesCore::XDIR ){
-          GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::YDIR ){
-          GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else if ( m_dir == ArchesCore::ZDIR ){
-          GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
-          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, fe_update );
-        } else {
-          Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
-          Uintah::parallel_for( range, fe_update );
-        }
       }
 
     }
@@ -386,19 +445,19 @@ private:
 
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
-      //const double scaling_constant = ieqn->second;
-      constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
+      const double ScalingConstant = info.constant;
+      auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
-      T& phi = tsk_info->get_field<T>(varname);
-      T& phi_unscaled = tsk_info->get_field<T>(info.unscaled_var);
+      auto phi = tsk_info->get_field<T, double, MemSpace>(varname);
+      auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>(info.unscaled_var);
 
-      phi_unscaled.initialize(0.0);
+      Uintah::parallel_initialize( execObj, 0.0, phi_unscaled );
 
-      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-      Uintah::parallel_for( range, [&](int i, int j, int k){
+      Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA(int i, int j, int k){
 
-        phi_unscaled(i,j,k) = phi(i,j,k) * info.constant * vol_fraction(i,j,k);
+        phi_unscaled(i,j,k) = phi(i,j,k) * ScalingConstant * vol_fraction(i,j,k);
 
       });
     }
@@ -418,17 +477,19 @@ private:
     }
   }
 //--------------------------------------------------------------------------------------------------
-  template <typename T > void
-  KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T >
+  template <typename ExecSpace, typename MemSpace>
+  void KFEUpdate<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    CT& phi = tsk_info->get_field<CT>(ieqn->first);
-    T& phi_unscaled = tsk_info->get_field<T>((ieqn->second).unscaled_var);
+    auto phi = tsk_info->get_field<CT, const double, MemSpace>(ieqn->first);
+    auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>((ieqn->second).unscaled_var);
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());
@@ -437,9 +498,11 @@ private:
       if ( on_this_patch ){
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-            phi_unscaled(i,j,k) = phi(i,j,k) * (ieqn->second).constant*vol_fraction(i,j,k) ;
-          });
+        const double scalConstant=(ieqn->second).constant;
+
+        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+          phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
+        });
         }
     }
   }

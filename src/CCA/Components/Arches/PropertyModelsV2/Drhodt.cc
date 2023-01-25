@@ -14,6 +14,48 @@ Drhodt::~Drhodt(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &Drhodt::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Drhodt::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Drhodt::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Drhodt::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &Drhodt::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Drhodt::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Drhodt::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Drhodt::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace Drhodt::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 Drhodt::problemSetup( ProblemSpecP& db ){
 
@@ -41,11 +83,11 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& drhodt = tsk_info->get_field<CCVariable<double> >( m_label_drhodt );
-  drhodt.initialize(0.0);
+  auto drhodt = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_drhodt );
+  parallel_initialize(execObj,0.0,drhodt);
 
 }
 
@@ -61,18 +103,18 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >( m_label_density );
-  constCCVariable<double>& old_rho = tsk_info->get_field<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);
+  auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_density );
+  auto old_rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_density, ArchesFieldContainer::OLDDW );
 
-  CCVariable<double>& drhodt = tsk_info->get_field<CCVariable<double> >( m_label_drhodt );
-  drhodt.initialize(0.0);
+  auto drhodt = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_drhodt );
+  parallel_initialize(execObj,0.0,drhodt);
   const double dt = tsk_info->get_dt();
   //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
     drhodt(i,j,k)   = (rho(i,j,k) - old_rho(i,j,k))/dt;
   });
 }

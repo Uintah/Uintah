@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,8 @@
  */
 
 #include <CCA/Components/Schedulers/DependencyBatch.h>
+
+#include <CCA/Components/Schedulers/DetailedTask.h>
 
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DOUT.hpp>
@@ -116,7 +118,7 @@ DependencyBatch::received( const ProcessorGroup * pg )
     for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
       message << "\tSatisfying " << *dep << "\n";
     }
-    DOUTR(true, message.str());
+    DOUT(true, message.str());
   }
 }
 

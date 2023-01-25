@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -91,9 +91,6 @@ WARNING
       // Get the load curve id
       inline int getID() const {return d_id;}
 
-      // Get the load curve id
-      inline int getMatl() const {return d_matl;}
-
       // Get the load at time t
       inline T getLoad(double t) {
 
@@ -124,7 +121,6 @@ WARNING
       std::vector<double> d_time;
       std::vector<T> d_load;
       int d_id;
-      int d_matl;
    };
 
    // Construct a load curve from the problem spec
@@ -136,7 +132,6 @@ WARNING
          throw ProblemSetupException("**ERROR** No load curve specified.", 
                                       __FILE__, __LINE__);
       loadCurve->require("id", d_id);
-      loadCurve->getWithDefault("material", d_matl, -99);
       for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
            timeLoad != nullptr;
            timeLoad = timeLoad->findNextBlock("time_point") ) {
@@ -160,7 +155,6 @@ WARNING
      {
        ProblemSpecP lc_ps = ps->appendChild("load_curve");
        lc_ps->appendElement("id",d_id);
-       lc_ps->appendElement("material",d_matl);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",d_time[i]);

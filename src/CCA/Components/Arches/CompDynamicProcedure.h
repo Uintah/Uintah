@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -71,6 +71,7 @@ class CompDynamicProcedure : public TurbulenceModel {
 public:
 
   CompDynamicProcedure(const ArchesLabel* label,
+                       const MPMArchesLabel* MAlb,
                        PhysicalConstants* phyConsts,
                        BoundaryCondition* bndryCondition);
 
@@ -137,8 +138,9 @@ private:
 
   const VarLabel* d_denRefArrayLabel;
 
-  void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
-                           CCVariable<double>& var2, constCCVariable<double> vol_fraction ){
+  template< typename grid_T, typename grid_CT>
+  void apply_zero_neumann(  const Patch* patch, grid_T& var,
+                           grid_T& var2, grid_CT vol_fraction ){
 
     std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);

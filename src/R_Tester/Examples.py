@@ -115,10 +115,10 @@ DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL
 
 KOKKOSTESTS   = [
 #                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
-#                   ("RMCRT_1L_bounded",  "RMCRT_bm1_1L_bounded.ups",   8, "ALL", ["exactComparison"]),
+#                   ("RMCRT_1L_bounded", "RMCRT_bm1_1L_bounded.ups",    1, "ALL", ["exactComparison"]),
 #                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
 #                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
-#                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"])
+#                   ("RMCRT_ML",         "RMCRT_ML.ups",                1, "ALL", ["exactComparison"])
                 ]
 
 
@@ -132,7 +132,7 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS KOKKOSTESTS Poisson3_Tests BUILDBOTTESTS
+#LIST: BASETESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS KOKKOSTESTS Poisson3_Tests BUILDBOTTESTS
 #__________________________________
 
 

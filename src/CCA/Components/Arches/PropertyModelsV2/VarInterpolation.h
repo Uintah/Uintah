@@ -14,6 +14,16 @@ public:
     VarInterpolation<T, IT>( std::string task_name, int matl_index );
     ~VarInterpolation<T, IT>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     class Builder : public TaskInterface::TaskBuilder {
@@ -43,13 +53,17 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -112,6 +126,53 @@ VarInterpolation<T, IT>::~VarInterpolation()
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &VarInterpolation<T, IT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T, typename IT>
+TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename T, typename IT>
 void VarInterpolation<T, IT>::problemSetup( ProblemSpecP& db ){
 
   db->findBlock("variable")->getAttribute("label", m_var_name);
@@ -148,10 +209,11 @@ void VarInterpolation<T,IT>::register_initialize(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
-void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  IT& int_var = tsk_info->get_field<IT>(m_inter_var_name);
-  int_var.initialize(0.0);
+  auto int_var = tsk_info->get_field<IT, double, MemSpace>(m_inter_var_name);
+  parallel_initialize(execObj,0.0,int_var);
 
 }
 
@@ -169,17 +231,18 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 template <typename T, typename IT>
-void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  IT& int_var = tsk_info->get_field<IT>(m_inter_var_name);
-  T& var = tsk_info->get_field<T >(m_var_name);
+  auto int_var = tsk_info->get_field<IT, double, MemSpace>(m_inter_var_name);
+  auto var = tsk_info->get_field<T, const double, MemSpace>(m_var_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  ArchesCore::doInterpolation( range, int_var, var, ioff, joff, koff, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, range, int_var, var, ioff, joff, koff, m_int_scheme );
 
 }
 }

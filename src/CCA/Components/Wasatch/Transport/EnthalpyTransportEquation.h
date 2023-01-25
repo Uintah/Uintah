@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2021 The University of Utah
+ * Copyright (c) 2013-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -133,16 +133,8 @@ namespace WasatchCore {
 
     Uintah::ProblemSpecP wasatchSpec_;
     const Expr::Tag diffCoeffTag_;
-    const Expr::Tag temperatureTag_;
-    const bool usePokitt_;
 
-#   ifdef HAVE_POKITT
-    Expr::TagList yiTags_, yiNP1Tags_, yiInitTags_;
-
-    FieldTagListInfo speciesInfoNP1_;
-
-    Uintah::ProblemSpecP specParams_;
-#   endif
+    // #ifdef HAVE_POKITT stuff here
 
   };
 

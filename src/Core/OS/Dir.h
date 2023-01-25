@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,7 +90,7 @@ public:
   Dir  createSubdirPlus( const std::string & sub );
   
   Dir  getSubdir(    const std::string & name ) const;
-  bool exists() const;
+  bool exists();
   
   void getFilenamesBySuffix( const std::string              & suffix,
                                    std::vector<std::string> & filenames ) const;

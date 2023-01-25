@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -97,7 +97,7 @@ using namespace ExchangeModels;
     public:
       ICE(const ProcessorGroup* myworld,
           const MaterialManagerP materialManager);
-
+      
       virtual ~ICE();
 
       virtual double recomputeDelT(const double delT);
@@ -114,13 +114,15 @@ using namespace ExchangeModels;
       virtual void scheduleRestartInitialize(const LevelP& level,
                                              SchedulerP& sched);
 
+      virtual void restartInitialize();
+
       virtual void scheduleComputeStableTimeStep(const LevelP&,
                                                 SchedulerP&);
 
       virtual void scheduleTimeAdvance( const LevelP& level,
                                         SchedulerP&);
 
-      virtual void scheduleFinalizeTimestep(const LevelP& level,
+      virtual void scheduleFinalizeTimestep(const LevelP& level, 
                                             SchedulerP&);
 
       virtual void scheduleAnalysis(const LevelP& level, SchedulerP&);
@@ -138,11 +140,11 @@ using namespace ExchangeModels;
                                  const MaterialSet*);
 
       void scheduleComputeVel_FC(SchedulerP&,
-                                 const PatchSet*,
-                                 const MaterialSubset*,
-                                 const MaterialSubset*,
-                                 const MaterialSubset*,
-                                 const MaterialSet*);
+                                 const PatchSet*,           
+                                 const MaterialSubset*,     
+                                 const MaterialSubset*,     
+                                 const MaterialSubset*,     
+                                 const MaterialSet*);       
 
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
                                                     const PatchSet*,
@@ -216,7 +218,7 @@ using namespace ExchangeModels;
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
-
+                                    
       void scheduleComputeTaskGraphIndex( SchedulerP& sched,
                                           const LevelP& level);
 
@@ -396,7 +398,7 @@ using namespace ExchangeModels;
       template<class T> void computeVelFace(int dir, CellIterator it,
                                             IntVector adj_offset,
                                             double dx,
-                                            double delT,
+                                            double delT, 
                                             double gravity,
                                             constCCVariable<double>& rho_CC,
                                             constCCVariable<double>& sp_vol_CC,
@@ -498,7 +500,7 @@ using namespace ExchangeModels;
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-
+                                     
       void computeTaskGraphIndex(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
@@ -654,7 +656,7 @@ using namespace ExchangeModels;
       }
 
       // debugging variables
-      int d_dbgVar1                 = 0;     //inputs for debugging
+      int d_dbgVar1                 = 0;     //inputs for debugging          
       int d_dbgVar2                 = 0;
       std::vector<IntVector>d_dbgIndices;
 
@@ -676,28 +678,28 @@ using namespace ExchangeModels;
       bool           d_add_heat     = false;
       std::vector<int>    d_add_heat_matls;
       std::vector<double> d_add_heat_coeff;
-      double         d_add_heat_t_start;
+      double         d_add_heat_t_start; 
       double        d_add_heat_t_final;
 
       double d_ref_press;
 
     public:
-      // Particle state - communicated from MPM
+      // Particle state - communicated from MPM 
       inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
         particle_ghost_type = type;
         particle_ghost_layer = ngc;
       }
-
+      
       inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
         type = particle_ghost_type;
         ngc = particle_ghost_layer;
       }
-
+      
     private:
       //! so all components can know how many particle ghost cells to ask for
       Ghost::GhostType particle_ghost_type{Ghost::None};
       int particle_ghost_layer{0};
-
+    
 // For AMR staff
 
     protected:
@@ -754,8 +756,6 @@ using namespace ExchangeModels;
       double d_delT_diffusionKnob  = 1.0;     // used to modify the diffusion constribution to delT calc.
       Vector d_gravity;
       Vector d_fixedPressGrad      = Vector( d_EVIL_NUM );
-      Ghost::GhostType  m_gn  = Ghost::None;
-      Ghost::GhostType  m_gac = Ghost::AroundCells;
 
       //__________________________________
       // Misc

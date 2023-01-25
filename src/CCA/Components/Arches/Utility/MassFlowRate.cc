@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
   is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,7 +48,52 @@ MassFlowRate::MassFlowRate( std::string task_name, int matl_index ) :
 MassFlowRate::~MassFlowRate(){
 }
 
-// Define ----------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//Method: Load task function pointers for portability
+//---------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &MassFlowRate::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &MassFlowRate::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace MassFlowRate::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//-------------------------------------------------------------------------------------------------------
 void MassFlowRate::problemSetup( ProblemSpecP& db ){
 
   // Parse from UPS file
@@ -234,14 +279,15 @@ void MassFlowRate::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void MassFlowRate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  eval_massFlowRate( patch, tsk_info );
-
+  eval_massFlowRate( patch, tsk_info , execObj );
 }
 
 //--------------------------------------------------------------------------------------------------
-void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace> execObj ){
 
   DataWarehouse* new_dw = tsk_info->getNewDW();
 
@@ -292,7 +338,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
             //Now loop through the cells:
             double value_m_dot = 0;
-            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
             const int ic = i - iDir[0]; // interior cell index
             const int jc = j - iDir[1];
@@ -358,7 +404,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
         double value_m_dot = 0;
         if ( m_scalar_name == "NULL" ){
 
-          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+          parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
             const int im = i - iDir[0]; // interior cell index
             const int jm = j - iDir[1];
@@ -379,9 +425,9 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
         } else {
 
-          auto scalar = tsk_info->get_field<constCCVariable<double> >( m_scalar_name );
+          auto scalar = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_scalar_name );
 
-          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+          parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
             const int im = i - iDir[0]; // interior cell index
             const int jm = j - iDir[1];

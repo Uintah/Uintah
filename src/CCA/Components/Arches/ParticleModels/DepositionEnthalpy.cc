@@ -15,6 +15,49 @@ TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManage
 DepositionEnthalpy::~DepositionEnthalpy(){
 }
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DepositionEnthalpy::problemSetup( ProblemSpecP& db ){
 
@@ -84,8 +127,8 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-void
-DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& ash_enthalpy_flux = tsk_info->get_field<CCVariable<double> >(m_task_name);
   CCVariable<double>& ash_enthalpy_src = tsk_info->get_field<CCVariable<double> >(_ash_enthalpy_src);
@@ -126,8 +169,8 @@ DepositionEnthalpy::register_timestep_eval(
 
 }
 
-void
-DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

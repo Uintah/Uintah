@@ -1,0 +1,1064 @@
+diff --git a/bin/nvcc_wrapper b/bin/nvcc_wrapper
+index d339da4f..ffa082ee 100755
+--- a/bin/nvcc_wrapper
++++ b/bin/nvcc_wrapper
+@@ -12,8 +12,8 @@
+ # or g++ as their back-end compiler.  The defaults can be overwritten
+ # by using the usual arguments (e.g., -arch=sm_30 -ccbin icpc).
+ 
+-default_arch="sm_35"
+-#default_arch="sm_50"
++#default_arch="sm_35"
++default_arch="sm_70"
+ 
+ #
+ # The default C++ compiler.
+@@ -111,7 +111,7 @@ do
+     replace_pragma_ident=1
+     ;;
+   #handle source files to be compiled as cuda files
+-  *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu)
++  *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu|*.c)
+     cpp_files="$cpp_files $1"
+     ;;
+    # Ensure we only have one optimization flag because NVCC doesn't allow muliple
+diff --git a/core/src/Cuda/Kokkos_CudaExec.hpp b/core/src/Cuda/Kokkos_CudaExec.hpp
+index ada3f64f..c4abd2a9 100644
+--- a/core/src/Cuda/Kokkos_CudaExec.hpp
++++ b/core/src/Cuda/Kokkos_CudaExec.hpp
+@@ -47,6 +47,7 @@
+ #include <Kokkos_Macros.hpp>
+ #ifdef KOKKOS_ENABLE_CUDA
+ 
++#include <cstdio>
+ #include <string>
+ #include <cstdint>
+ #include <Kokkos_Parallel.hpp>
+@@ -152,23 +153,196 @@ namespace Impl {
+ // For 2.0 capability: 48 KB L1 and 16 KB shared
+ //----------------------------------------------------------------------------
+ 
++extern uint64_t ConstantMemoryUsageBitset;
++
++struct CudaEventAndBitsetUsage {
++  cudaEvent_t  event;
++  bool         createdEvent{false};
++  uint64_t     usageBitset {0};
++  unsigned int lock        {0};
++  bool         slotUsed    {false};
++
++  enum { NumSlots = 64 };
++
++  inline
++  static unsigned int slot_size_in_bytes()
++    { return ( CudaTraits::ConstantMemoryUsage / 64 ); }
++};
++
++// 64 slots possible divided constant cache memory (most, if not all, functors will require multiple slots)
++extern CudaEventAndBitsetUsage UsageArray[];
++
++static size_t find_and_claim_bitset_region( size_t functorSize )
++{
++  //unsigned int slotSizeInBytes = CudaTraits::ConstantMemoryUsage / 64;
++  // Determine how many slots this functor needs (CudaTraits::ConstantMemoryUsage defined above)
++  unsigned int slotsNeeded = functorSize / CudaEventAndBitsetUsage::slot_size_in_bytes() + 1;
++
++  // If the bitset uses an unsigned int, then there are 64 bits = 64 slots.
++  unsigned int bitIndexNumSlots = sizeof(ConstantMemoryUsageBitset) * 8;
++  unsigned int slotNum = 0;
++  uint64_t     bitMask = 0;
++
++  // Loop to either grab a slot or wait for a slot to arrive.
++  while (true) {
++    slotNum = 0;
++
++    // Create a sliding window by creating a bitmask of contiguous 1s, the amount of which is equal to slotsNeeded.
++    // Start the window at range [0 to slotsNeeded].  If this window of slots is not all open, shift the window right 1 and try again.
++    bitMask = (1 << slotsNeeded) - 1;  // Create contiguous bits of 1s
++    bitMask = bitMask << ( bitIndexNumSlots - slotsNeeded );  // Shift it to the far left to begin
++    //printf("ConstantMemoryUsageBitset is %016lx, slots needed is %u, bitMask is %016lx\n", ConstantMemoryUsageBitset, slotsNeeded, bitMask);
++    while ( slotNum < bitIndexNumSlots - slotsNeeded + 1 ) {
++      // See if this bitmask has not been claimed.
++      // Do an atomic read.
++      uint64_t oldVal = Kokkos::atomic_fetch_add( &ConstantMemoryUsageBitset , 0 );
++      //printf("slotNum %u, looping to %u, oldVal is %016lx, bitMask is %016lx, (bitMask & oldVal) is %016lx\n", slotNum, (bitIndexNumSlots - slotsNeeded), oldVal, bitMask, (bitMask & oldVal));
++      // Are these bits still indiciating the constant cache memory block space is free to use?
++      if ( (bitMask & oldVal) == 0 ) {
++        //printf("Attempting to claim region at slotnum %u with bitset %016lx\n", slotNum, bitMask);
++        // Try to claim it, first by getting the lock so this thread can control the associated CUDA
++        // event object and prevent other threads from accessing it.
++        if ( Kokkos::atomic_exchange( & UsageArray[ slotNum ].lock , 1 ) == 0 ) {
++          // Now attempt to update the bitset to indicate all constant cache memory blocks this neeeds.
++          if ( Kokkos::atomic_compare_exchange_strong( &ConstantMemoryUsageBitset , oldVal , bitMask | oldVal ) ) {
++
++            // Store the blocks used by this kernel so when the kernel completes it can release all those.
++            UsageArray[ slotNum ].usageBitset = bitMask;
++
++            //printf("Claimed slots!  ConstantMemoryUsageBitset is %016lx, bitMask is %016lx, usageBitset is %016lx, returning offset: %u\n", ConstantMemoryUsageBitset, bitMask, UsageArray[slotNum].usageBitset, slotNum * CudaEventAndBitsetUsage::slot_size_in_bytes() );
++
++            // Do not let go of the UsageArray lock on this slot just yet.
++            // Wait until either the kernel executes (for synchronous scenarios) as found in release_bitset_slots()
++            // or the kernel launched and a CUDA event was recorded (for asynchronous scenarios) as found in record_event()
++
++            // Return byte offset that can be used by this into constant memory
++            return slotNum * CudaEventAndBitsetUsage::slot_size_in_bytes();
++          } else {
++            // The ConstantMemoryUsageBitset changed, we couldn't claim our region.  Release the lock, and go back to look for other free slots.
++            Kokkos::atomic_exchange( & UsageArray[ slotNum ].lock , 0 );
++          }
++        }
++      }
++      // Try the next slot.
++      slotNum++;
++      bitMask = bitMask >> 1;
++    }
++    //No slots found.  Go through the UsageArray and see if any events have reported they are done.
++    //If so, open those slots back up for reuse.
++    //printf("No slots found, looking to see if one is done\n");
++    for (int i = 0; i < 64; ++i) {
++      //Attempt to obtain the lock to indicate this thread can access this UsageArray slot.
++      //printf("Trying slot ");
++      if ( Kokkos::atomic_exchange( & UsageArray[i].lock , 1 ) == 0 ) {
++        //printf("%d-", i);
++        if ( UsageArray[i].slotUsed ) {
++          //printf("true-");
++          // Check if a prior even was done.  Note that only asynchronous kernel invocations open up
++          // the lock for this check.  Synchronous kernel invocations will NOT open up the lock (which
++          // is needed as they don't have an associated event.)
++          if ( cudaEventQuery( UsageArray[i].event ) == cudaSuccess ) {
++            //printf("The event at slot %d completed\n", i);
++            bool success = false;
++            while (!success ) {
++              // The prior kernel completed.  Release those slots in the ConstantMemoryUsageBitset
++              uint64_t oldVal = Kokkos::atomic_fetch_add( &ConstantMemoryUsageBitset , 0 );
++              //printf("The usage bitset for this kernel was %016lx\n", UsageArray[i].usageBitset);
++              if ( Kokkos::atomic_compare_exchange_strong( &ConstantMemoryUsageBitset , oldVal , ( oldVal & ~UsageArray[i].usageBitset ) ) ) {
++                //printf("Cleared an entry at slot %d.  The bitset was %016lx, but is now %016lx\n", i , oldVal , ConstantMemoryUsageBitset);
++                success = true;
++                UsageArray[i].usageBitset = 0;
++                UsageArray[i].slotUsed = false;
++              }
++            }
++          }
++        }
++        //Release the UsageArray lock to open this back up for reuse
++        Kokkos::atomic_exchange( & UsageArray[ i ].lock , 0 );
++      }
++    }
++  }
++}
++
++static void record_event( const unsigned int offset
++                        , const cudaStream_t stream
++                        )
++{
++  unsigned int usageArrayIndex = offset / CudaEventAndBitsetUsage::slot_size_in_bytes();
++  // Create an event object, then associate the stream with the event object.  If the stream is already complete
++  // or has completed the event returns cudaSuccess.  If the stream still has work, the event returns cudaErrorNotReady.
++
++  if ( ! UsageArray[ usageArrayIndex ].createdEvent ) {
++
++    // TODO: Perform a cudaEventDestroy in void CudaInternal::finalize().  Note, it cannot be done in a CudaEventAndBitsetUsage destructor
++    // as destructors can fire after CUDA tear downs have taken place.
++    CUDA_SAFE_CALL( cudaEventCreate( & UsageArray[ usageArrayIndex ].event , cudaEventDisableTiming ) );
++    UsageArray[ usageArrayIndex ].createdEvent = true;
++  }
++  //printf("Recording event at %p\n", & UsageArray[ usageArrayIndex].event );
++  CUDA_SAFE_CALL( cudaEventRecord( UsageArray[ usageArrayIndex ].event , stream ) );
++
++  //Now that we have an event created other threads can check the event to see if the upcoming kernel has completed.
++  UsageArray[ usageArrayIndex ].slotUsed = true;
++
++  // Let go of the lock on the UsageArray so later threads can check if the event completed, signifying completion of the kernel
++  //printf("record_event() - Unlocking slot %d\n", usageArrayIndex);
++  Kokkos::atomic_exchange( & UsageArray[ usageArrayIndex ].lock , 0 );
++}
++
++static void release_bitset_slots( const unsigned int offset )
++{
++  unsigned int usageArrayIndex = offset / CudaEventAndBitsetUsage::slot_size_in_bytes();
++  // The prior kernel completed.  Release those slots in the ConstantMemoryUsageBitset
++  uint64_t oldVal = Kokkos::atomic_fetch_add( &ConstantMemoryUsageBitset , 0 );
++  //printf("The usage bitset for this kernel was %016lx\n", UsageArray[ usageArrayIndex ].usageBitset);
++  if ( Kokkos::atomic_compare_exchange_strong( &ConstantMemoryUsageBitset , oldVal , ( oldVal & ~UsageArray[ usageArrayIndex ].usageBitset ) ) ) {
++    //printf("Cleared an entry at slot %d.  The bitset was %016lx, but is now %016lx\n", usageArrayIndex , oldVal , ConstantMemoryUsageBitset);
++    UsageArray[ usageArrayIndex ].usageBitset = 0;
++    UsageArray[ usageArrayIndex ].slotUsed = false;
++  }
++
++  // Let go of the lock on the UsageArray so this slot can be used again
++  Kokkos::atomic_exchange( & UsageArray[ usageArrayIndex ].lock , 0 );
++}
++
++//template< class DriverType>
++//__global__
++//static void cuda_parallel_launch_constant_memory()
++//{
++//  const DriverType & driver =
++//    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
++//
++//  driver();
++//}
++
+ template< class DriverType>
+ __global__
+-static void cuda_parallel_launch_constant_memory()
++static void cuda_parallel_launch_constant_memory( unsigned int offset )
+ {
+   const DriverType & driver =
+-    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
++    *((const DriverType *) (kokkos_impl_cuda_constant_memory_buffer + offset));
+ 
+   driver();
+ }
+ 
++//template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
++//__global__
++//__launch_bounds__(maxTperB, minBperSM)
++//static void cuda_parallel_launch_constant_memory()
++//{
++//  const DriverType & driver =
++//    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
++//
++//  driver();
++//}
++
+ template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
+ __global__
+ __launch_bounds__(maxTperB, minBperSM)
+-static void cuda_parallel_launch_constant_memory()
++static void cuda_parallel_launch_constant_memory( unsigned int offset )
+ {
+   const DriverType & driver =
+-    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
++    *((const DriverType *) (kokkos_impl_cuda_constant_memory_buffer + offset));
+ 
+   driver();
+ }
+@@ -216,7 +390,7 @@ struct CudaParallelLaunch< DriverType
+       }
+ 
+       // Fence before changing settings and copying closure
+-      Kokkos::Cuda::fence();
++      //Kokkos::Cuda::fence();
+ 
+       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
+@@ -233,21 +407,52 @@ struct CudaParallelLaunch< DriverType
+       }
+       #endif
+ 
++      size_t offset = find_and_claim_bitset_region( sizeof(DriverType) );
++      if (offset == 12345) { return; }
++
++      //printf("Copying functor of size %lu into offset %lu\n", sizeof(DriverType), offset);
++      const unsigned char * const bytes = reinterpret_cast<const unsigned char *>(&driver);
++      //size_t i;
++      //printf("[ ");
++      //for(i = 0; i < sizeof(DriverType); i++)
++      //{
++      //  printf("%02x ", bytes[i]);
++      //}
++      //printf("]\n");
++
+       // Copy functor to constant memory on the device
+-      cudaMemcpyToSymbol(
+-        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
++      if (stream) {
++        cudaMemcpyToSymbolAsync(
++          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), offset, cudaMemcpyHostToDevice, stream );
++      } else {
++        cudaMemcpyToSymbol(
++          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), offset, cudaMemcpyHostToDevice );
++      }
+ 
+-      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
++      //TODO: Only call this in a Team Policy kernel, not a Range Policy kernel
++      //KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+ 
+       // Invoke the driver function on the device
++      //printf("Launching kernel from constant memory with block parameters (%d,%d,%d) and requested shmem size %d\n", block.x, block.y, block.z, shmem);
+       cuda_parallel_launch_constant_memory
+         < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
+-          <<< grid , block , shmem , stream >>>();
++          <<< grid , block , shmem , stream >>>( offset / sizeof(DriverType*) );
++      //printf("Finished launching kernel from constant memory\n");
++
++      if (stream) {
++        // Track the kernel if launched asynchronously
++        // The region of constant cache memory storing the functor will be reclaimed when the event completes
++        record_event( offset, stream );
++      } else {
++        // Clean up the functor now as the functor has completed.
++        release_bitset_slots( offset );
++      }
+ 
+ #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+       CUDA_SAFE_CALL( cudaGetLastError() );
+       Kokkos::Cuda::fence();
+ #endif
++      //printf("Finished\n");
+     }
+   }
+ };
+@@ -272,7 +477,7 @@ struct CudaParallelLaunch< DriverType
+       }
+ 
+       // Fence before changing settings and copying closure
+-      Kokkos::Cuda::fence();
++      //Kokkos::Cuda::fence();
+ 
+       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
+@@ -288,20 +493,60 @@ struct CudaParallelLaunch< DriverType
+       }
+       #endif
+ 
++      size_t offset = find_and_claim_bitset_region( sizeof(DriverType) );
++      if (offset == 12345) { return; }
++
++      //printf(" --- Copying functor of size %lu into offset %lu\n", sizeof(DriverType), offset);
++      const unsigned char * const bytes = reinterpret_cast<const unsigned char *>(&driver);
++      //size_t i;
++      //printf("[ ");
++      //for(i = 0; i < sizeof(DriverType); i++)
++      //{
++      //  printf("%02x ", bytes[i]);
++      //}
++      //printf("]\n");
++
++
++      // TODO: Verify we *don't* want to register the functor.  It seems to slow things down!
++      // cudaHostRegister((void*)&driver, sizeof(DriverType), cudaHostRegisterPortable);
++      // Copy the object into constant memory on the device.  This object contains
++      // the functor operator() and object data members like m_scratch_space and m_scratch_flags
++
+       // Copy functor to constant memory on the device
+-      cudaMemcpyToSymbol(
+-        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
++      if (stream) {
++        cudaMemcpyToSymbolAsync(
++          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), offset, cudaMemcpyHostToDevice, stream );
++      } else {
++        cudaMemcpyToSymbol(
++          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), offset, cudaMemcpyHostToDevice );
++      }
+ 
+-      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
++      //TODO: Only call this in a Team Policy kernel, not a Range Policy kernel
++      //KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+ 
++      // Invoke the driver function on the device
++      //printf("Launching kernel from constant memory with block parameters (%d,%d,%d) and requested shmem size of %d\n", block.x, block.y, block.z, shmem);
+       // Invoke the driver function on the device
+       cuda_parallel_launch_constant_memory< DriverType >
+-          <<< grid , block , shmem , stream >>>();
++          <<< grid , block , shmem , stream >>>( offset / sizeof(DriverType*) );
++      //printf("Finished launching kernel from constant memory\n");
++
++      if (stream) {
++        // Track the kernel if launched asynchronously
++        // The region of constant cache memory storing the functor will be reclaimed when the event completes
++        record_event( offset, stream );
++      } else {
++        // Clean up the functor now as the functor has completed.
++        release_bitset_slots( offset );
++      }
+ 
+ #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+       CUDA_SAFE_CALL( cudaGetLastError() );
+       Kokkos::Cuda::fence();
+ #endif
++      //printf("Finished\n");
++      //TODO: This *may* be needed, but probably not.  Depends if we register it (see above)
++      //cudaHostUnregister((void*)&driver); //Remember, this blocks.  So hook it into my cuda event system?
+     }
+   }
+ };
+@@ -343,7 +588,7 @@ struct CudaParallelLaunch< DriverType
+       }
+       #endif
+ 
+-      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
++      //KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+ 
+       // Invoke the driver function on the device
+       cuda_parallel_launch_local_memory
+@@ -391,12 +636,14 @@ struct CudaParallelLaunch< DriverType
+       }
+       #endif
+ 
+-      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
++      //KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+ 
+       // Invoke the driver function on the device
++      //printf("Launching kernel\n");
+       cuda_parallel_launch_local_memory< DriverType >
+           <<< grid , block , shmem , stream >>>( driver );
+ 
++      //printf("Finished launching kernel\n");
+ #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+       CUDA_SAFE_CALL( cudaGetLastError() );
+       Kokkos::Cuda::fence();
+diff --git a/core/src/Cuda/Kokkos_CudaSpace.cpp b/core/src/Cuda/Kokkos_CudaSpace.cpp
+index 302cf13d..9bf1c121 100644
+--- a/core/src/Cuda/Kokkos_CudaSpace.cpp
++++ b/core/src/Cuda/Kokkos_CudaSpace.cpp
+@@ -95,7 +95,11 @@ DeepCopy<CudaSpace,CudaSpace,Cuda>::DeepCopy( const Cuda & instance , void * dst
+ { CUDA_SAFE_CALL( cudaMemcpyAsync( dst , src , n , cudaMemcpyDefault , instance.cuda_stream() ) ); }
+ 
+ DeepCopy<HostSpace,CudaSpace,Cuda>::DeepCopy( const Cuda & instance , void * dst , const void * src , size_t n )
+-{ CUDA_SAFE_CALL( cudaMemcpyAsync( dst , src , n , cudaMemcpyDefault , instance.cuda_stream() ) ); }
++{
++  //printf( "Doing async D2H copy from src: %p to dest: %p on stream %p\n", src, dst, instance.cuda_stream() );
++  CUDA_SAFE_CALL( cudaMemcpyAsync( dst , src , n , cudaMemcpyDefault , instance.cuda_stream() ) );
++  //printf("Done doing async D2H copy\n");
++}
+ 
+ DeepCopy<CudaSpace,HostSpace,Cuda>::DeepCopy( const Cuda & instance , void * dst , const void * src , size_t n )
+ { CUDA_SAFE_CALL( cudaMemcpyAsync( dst , src , n , cudaMemcpyDefault , instance.cuda_stream() ) ); }
+@@ -211,7 +215,9 @@ void * CudaHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
+ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
+ {
+   try {
++    //printf("In deallocate going to free arg_alloc_ptr%p\n", arg_alloc_ptr);
+     CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
++    //printf("In deallocate going to free arg_alloc_ptr%p\n", arg_alloc_ptr);
+   } catch(...) {}
+ }
+ 
+@@ -380,6 +386,7 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::
+   }
+   #endif
+ 
++  //printf("In ~SharedAllocationRecord, calling m_space.deallocate()\n");
+   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
+                     , SharedAllocationRecord< void , void >::m_alloc_size
+                     );
+@@ -814,8 +821,8 @@ print_records( std::ostream & s , const Kokkos::CudaHostPinnedSpace & , bool det
+ }
+ 
+ void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
+-  static void* ptr = NULL;
+-  static std::int64_t current_size = 0;
++  thread_local static void* ptr = NULL;
++  thread_local static std::int64_t current_size = 0;
+   if(current_size == 0) {
+     current_size = bytes;
+     ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>("CudaSpace::ScratchMemory",current_size);
+diff --git a/core/src/Cuda/Kokkos_Cuda_Impl.cpp b/core/src/Cuda/Kokkos_Cuda_Impl.cpp
+index 8249da6a..00aa344c 100644
+--- a/core/src/Cuda/Kokkos_Cuda_Impl.cpp
++++ b/core/src/Cuda/Kokkos_Cuda_Impl.cpp
+@@ -129,6 +129,11 @@ void cuda_internal_error_throw( cudaError e , const char * name, const char * fi
+   throw_runtime_exception( out.str() );
+ }
+ 
++uint64_t ConstantMemoryUsageBitset;
++
++// 64 slots possible divided constant cache memory (most, if not all, functors will require multiple slots)
++CudaEventAndBitsetUsage UsageArray[ CudaEventAndBitsetUsage::NumSlots ];
++
+ //----------------------------------------------------------------------------
+ // Some significant cuda device properties:
+ //
+@@ -564,6 +569,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
+   cudaThreadSetCacheConfig(cudaFuncCachePreferShared);
+ 
+   // Init the array for used for arbitrarily sized atomics
++  //printf("Calling Impl::init_lock_arrays_cuda_space()\n");
+   Impl::initialize_host_cuda_lock_arrays();
+ }
+ 
+@@ -602,6 +608,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
+ {
+   if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
+ 
++    //printf("Initializing scratch_space\n");
+     m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+ 
+      typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+@@ -651,6 +658,7 @@ void CudaInternal::finalize()
+ 
+     if ( m_stream ) {
+       for ( size_type i = 1 ; i < m_streamCount ; ++i ) {
++        //printf("In finalize, calling cudaStreamDestroy\n");
+         cudaStreamDestroy( m_stream[i] );
+         m_stream[i] = 0 ;
+       }
+@@ -741,6 +749,7 @@ void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
+ void Cuda::impl_initialize( const Cuda::SelectDevice config , size_t num_instances )
+ #endif
+ {
++  //printf("In Cuda::initialize() calling Impl::CudaInternal::singleton().initialize\n");
+   Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances );
+ 
+   #if defined(KOKKOS_ENABLE_PROFILING)
+@@ -791,10 +800,47 @@ void Cuda::impl_finalize()
+   #endif
+ }
+ 
++Cuda::~Cuda()
++{
++  if ( m_ref_count_ptr ) {
++    //printf("In Cuda::~Cuda() - The ref count is %d\n", m_ref_count_ptr->ref_count);
++    //int count = Kokkos::atomic_fetch_add( & m_ref_count_ptr->ref_count, 1 );
++    //if (count == 1) {
++    if ( Kokkos::atomic_fetch_add( & m_ref_count_ptr->ref_count, (signed int)-1 ) == 1 )  {
++      //Previous reference count was a 1, now it's at zero.  Commence cleanup
++      if (! m_unmanaged_stream ) {
++        //printf("destroying stream for label %s address %p and stream %p\n", m_label.c_str(), &m_label, m_stream);
++        cudaStreamDestroy( m_stream );
++        m_stream = 0;
++        //printf("destroyed stream %p\n", m_stream);
++      }
++      free ( m_ref_count_ptr );
++    }
++  }
++}
++
++Cuda::Cuda( const Cuda & rhs )
++{
++  this->m_device = rhs.m_device;
++  this->m_stream = rhs.m_stream;
++  this->m_unmanaged_stream = rhs.m_unmanaged_stream;
++  this->m_label = rhs.m_label;
++  // Give the copy reference count behavior, which is needed when non-defuault streams
++  // are used.  Since we have an instance passed in, there is no worries about a concurrency
++  // scenario where a destructor fires and removes a stream, a simple atomic add on
++  // the ref count suffices.
++  if (rhs.m_ref_count_ptr) {
++    this->m_ref_count_ptr = rhs.m_ref_count_ptr;
++    atomic_increment( & this->m_ref_count_ptr->ref_count );
++    //printf("In Cuda::Cuda() copy constructor - The ref count is %d\n", this->m_ref_count_ptr->ref_count);
++  }
++}
++
+ Cuda::Cuda()
+   : m_device( Impl::CudaInternal::singleton().m_cudaDev )
+   , m_stream( 0 )
+ {
++  //printf("In Cuda::Cuda default constructor, m_stream is %p\n", m_stream);
+   Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" );
+ }
+ 
+@@ -804,7 +850,29 @@ Cuda::Cuda( const int instance_id )
+       Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" )
+         ? Impl::CudaInternal::singleton().m_stream[ instance_id % Impl::CudaInternal::singleton().m_streamCount ]
+         : 0 )
+-{}
++{
++  //printf("In Cuda::Cuda int constructor, m_stream is %p\n", m_stream);
++}
++
++Cuda::Cuda( const std::string & label )
++  : m_device( Impl::CudaInternal::singleton().m_cudaDev )
++{
++  m_ref_count_ptr = (Cuda::RefCounter*)malloc( sizeof( Cuda::RefCounter ) );
++  m_ref_count_ptr->ref_count = 1;
++  CUDA_SAFE_CALL( cudaStreamCreateWithFlags( &m_stream, cudaStreamNonBlocking ) );
++  //printf("In Cuda::Cuda string constructor, m_stream is %p\n", m_stream);
++  m_label = label;
++}
++
++Cuda::Cuda( const cudaStream_t & stream )
++  : m_device( Impl::CudaInternal::singleton().m_cudaDev )
++{
++  m_ref_count_ptr = (Cuda::RefCounter*)malloc( sizeof( Cuda::RefCounter ) );
++  m_ref_count_ptr->ref_count = 1;
++  m_stream = stream;
++  //printf("In Cuda::Cuda unmanaged stream constructor, stream is %p\n", m_stream);
++  m_unmanaged_stream = true;
++}
+ 
+ void Cuda::print_configuration( std::ostream & s , const bool )
+ { Impl::CudaInternal::singleton().print_configuration( s ); }
+@@ -820,6 +888,25 @@ void Cuda::fence()
+   Kokkos::Impl::cuda_device_synchronize();
+ }
+ 
++Kokkos::AsyncStatus Cuda::getStatus() {
++  //Atomic read
++  int ref_count = Kokkos::atomic_fetch_add( & m_ref_count_ptr->ref_count, 0 );
++  if (ref_count > 0) {
++    cudaError_t retVal;
++    retVal = cudaStreamQuery( m_stream );
++    if ( retVal == cudaSuccess ) {
++      return AsyncStatus::SUCCESS;
++    } else if ( retVal == cudaErrorNotReady ) {
++      return AsyncStatus::NOT_READY;
++    } else {
++      //CUDA_SAFE_CALL triggers and exits on anything not cudaSucces, including
++      //cudaErrorNotReady.  If it wasn't either of those two, then check here.
++      CUDA_SAFE_CALL ( retVal );
++    }
++  }
++  return AsyncStatus::NOT_READY;
++}
++
+ const char* Cuda::name() { return "Cuda"; }
+ 
+ } // namespace Kokkos
+diff --git a/core/src/Cuda/Kokkos_Cuda_Parallel.hpp b/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
+index eac4abac..a51676ae 100644
+--- a/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
++++ b/core/src/Cuda/Kokkos_Cuda_Parallel.hpp
+@@ -82,12 +82,17 @@ public:
+   //! Tag this class as a kokkos execution policy
+   typedef TeamPolicyInternal      execution_policy ;
+ 
++  //! Execution space of this execution policy
++  typedef Kokkos::Cuda  execution_space ;
++
+   typedef PolicyTraits<Properties ... > traits;
+ 
+ private:
+ 
+   enum { MAX_WARP = 8 };
+ 
++  typename traits::execution_space m_space ;
++
+   int m_league_size ;
+   int m_team_size ;
+   int m_vector_length ;
+@@ -97,9 +102,6 @@ private:
+ 
+ public:
+ 
+-  //! Execution space of this execution policy
+-  typedef Kokkos::Cuda  execution_space ;
+-
+   TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+     m_league_size = p.m_league_size;
+     m_team_size = p.m_team_size;
+@@ -150,6 +152,7 @@ public:
+ 
+   //----------------------------------------
+ 
++  const typename traits::execution_space & space() const { return m_space ; }
+   inline int vector_length()   const { return m_vector_length ; }
+   inline int team_size()   const { return m_team_size ; }
+   inline int league_size() const { return m_league_size ; }
+@@ -174,11 +177,12 @@ public:
+    {}
+ 
+   /** \brief  Specify league size, request team size */
+-  TeamPolicyInternal( execution_space &
++  TeamPolicyInternal( execution_space & work_space
+             , int league_size_
+             , int team_size_request
+             , int vector_length_request = 1 )
+-    : m_league_size( league_size_ )
++    : m_space( work_space )
++    , m_league_size( league_size_ )
+     , m_team_size( team_size_request )
+     , m_vector_length( vector_length_request )
+     , m_team_scratch_size {0,0}
+@@ -201,11 +205,12 @@ public:
+     }
+ 
+   /** \brief  Specify league size, request team size */
+-  TeamPolicyInternal( execution_space &
++  TeamPolicyInternal( execution_space & work_space
+             , int league_size_
+             , const Kokkos::AUTO_t & /* team_size_request */
+             , int vector_length_request = 1 )
+-    : m_league_size( league_size_ )
++    : m_space( work_space )
++    , m_league_size( league_size_ )
+     , m_team_size( -1 )
+     , m_vector_length( vector_length_request )
+     , m_team_scratch_size {0,0}
+@@ -423,7 +428,7 @@ public:
+       const dim3 block(  1 , block_size , 1);
+       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
+ 
+-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
++      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0, m_policy.space().cuda_stream() );
+     }
+ 
+   ParallelFor( const FunctorType  & arg_functor ,
+@@ -570,6 +575,7 @@ private:
+   //
+ 
+   const FunctorType  m_functor ;
++  const Policy       m_policy ;
+   const size_type    m_league_size ;
+   const size_type    m_team_size ;
+   const size_type    m_vector_size ;
+@@ -599,6 +605,7 @@ public:
+     int64_t threadid = 0;
+     if ( m_scratch_size[1]>0 ) {
+       __shared__ int64_t base_thread_id;
++      printf("Warning? Hit Team Policy scratch space stuff!  This has a __syncthreads() in it.\n");
+       if (threadIdx.x==0 && threadIdx.y==0 ) {
+         threadid = (blockIdx.x*blockDim.z + threadIdx.z) %
+           (Kokkos::Impl::g_device_cuda_lock_arrays.n / (blockDim.x * blockDim.y));
+@@ -631,6 +638,7 @@ public:
+                                     , m_league_size ) );
+     }
+     if ( m_scratch_size[1]>0 ) {
++      printf("Warning? Hit Team Policy scratch space stuff!  This has a __syncthreads() in it.\n");
+       __syncthreads();
+       if (threadIdx.x==0 && threadIdx.y==0 )
+         Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid]=0;
+@@ -644,7 +652,7 @@ public:
+       const dim3 grid( int(m_league_size) , 1 , 1 );
+       const dim3 block( int(m_vector_size) , int(m_team_size) , 1 );
+ 
+-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
++      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total, m_policy.space().cuda_stream() ); // copy to device and execute
+ 
+     }
+ 
+@@ -652,6 +660,7 @@ public:
+              , const Policy       & arg_policy
+              )
+     : m_functor( arg_functor )
++    , m_policy(  arg_policy )
+     , m_league_size( arg_policy.league_size() )
+     , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+         Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
+@@ -852,7 +861,11 @@ public:
+ 
+         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+         m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++
++        // Unified Space data transfers aren't asynchronous, so CUDA streams shouldn't use them (?)
++        //if ( ! m_policy.space().cuda_stream() ) {
++          m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++        //}
+ 
+         // REQUIRED ( 1 , N , 1 )
+         const dim3 block( 1 , block_size , 1 );
+@@ -861,18 +874,42 @@ public:
+ 
+       const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
+ 
+-      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
++      //printf(" %d -- CudaParallelLaunch with this at %p and m_scratch_space at %p\n", __LINE__, this, m_scratch_space );
+ 
+-      Cuda::fence();
++      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem, m_policy.space().cuda_stream() ); // copy to device and execute
++
++      if ( ! m_policy.space().cuda_stream() ) {
++        Cuda::fence();
++      }
++
++      //printf(" %d -- CudaParallelLaunch Complete\n", __LINE__);
+ 
+       if ( m_result_ptr ) {
+         if ( m_unified_space ) {
++          //printf(" %d -- m_unified_space on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++          //printf(" %d -- Data before stream sync is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
++          // If it's on a stream, sync to ensure correctness
++          if ( m_policy.space().cuda_stream() ) {
++            CUDA_SAFE_CALL( cudaStreamSynchronize( m_policy.space().cuda_stream() ) );
++          }
++          //printf(" %d -- Data after stream sync and before setting count is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
+           const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer)  );
++          //printf(" %d -- Data after setting count to %d is %d\n", __LINE__, count, pointer_type(m_unified_space)[0] );
+           for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
++          //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
++          //printf(" %d -- Data at index %d after is %d\n", __LINE__, (count - 1), m_result_ptr[count-1] );
+         }
+         else {
++          //printf(" %d -- !m_unified_space (DeepCopy) on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++          //printf(" %d -- Data at %p before is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
+           const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
+-          DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
++          // If it's on a stream, the DeepCopy is queued after the prior kernel call which computed the reduction value
++          if ( m_policy.space().cuda_stream() ) {
++            DeepCopy<HostSpace,CudaSpace,Cuda>( m_policy.space() , m_result_ptr , m_scratch_space , size );
++          } else {
++            DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
++          }
++          //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr);
+         }
+       }
+     }
+@@ -1078,7 +1115,11 @@ public:
+ 
+         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+         m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++
++        // Unified Space data transfers aren't asynchronous, so CUDA streams shouldn't use them (?)
++        //if ( ! m_policy.space().cuda_stream() ) {
++          m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++        //}
+ 
+         // REQUIRED ( 1 , N , 1 )
+         const dim3 block( 1 , block_size , 1 );
+@@ -1087,18 +1128,42 @@ public:
+ 
+       const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
+ 
+-      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
++      //printf(" %d -- CudaParallelLaunch with this at %p and m_scratch_space at %p\n", __LINE__, this, m_scratch_space );
++
++      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem, m_policy.space().cuda_stream() ); // copy to device and execute
++
++      if ( ! m_policy.space().cuda_stream() ) {
++        Cuda::fence();
++      }
+ 
+-      Cuda::fence();
++      //printf(" %d -- CudaParallelLaunch Complete\n", __LINE__);
+ 
+       if ( m_result_ptr ) {
+         if ( m_unified_space ) {
++          //printf(" %d -- m_unified_space on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++          //printf(" %d -- Data before stream sync is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
++          // If it's on a stream, sync to ensure correctness
++          if ( m_policy.space().cuda_stream() ) {
++            CUDA_SAFE_CALL( cudaStreamSynchronize( m_policy.space().cuda_stream() ) );
++          }
++          //printf(" %d -- Data after stream sync and before setting count is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
+           const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer)  );
++          //printf(" %d -- Data after setting count to %d is %d\n", __LINE__, count, pointer_type(m_unified_space)[0] );
+           for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
++          //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
++          //printf(" %d -- Data at index %d after is %d\n", __LINE__, (count - 1), m_result_ptr[count-1] );
+         }
+         else {
++          //printf(" %d -- !m_unified_space (DeepCopy) on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++          //printf(" %d -- Data at %p before is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
+           const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
+-          DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
++          // If it's on a stream, the DeepCopy is queued after the prior kernel call which computed the reduction value
++          if ( m_policy.space().cuda_stream() ) {
++            DeepCopy<HostSpace,CudaSpace,Cuda>( m_policy.space() , m_result_ptr , m_scratch_space , size );
++          } else {
++            DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
++          }
++          //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr);
+         }
+       }
+     }
+@@ -1189,6 +1254,7 @@ private:
+   //
+ 
+   const FunctorType   m_functor ;
++  const Policy        m_policy ;
+   const ReducerType   m_reducer ;
+   const pointer_type  m_result_ptr ;
+   size_type *         m_scratch_space ;
+@@ -1336,24 +1402,53 @@ public:
+ 
+         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
+         m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++
++        // Unified Space data transfers aren't asynchronous, so CUDA streams shouldn't use them (?)
++        //if ( ! m_policy.space().cuda_stream() ) {
++          m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
++        //}
+ 
+         const dim3 block( m_vector_size , m_team_size , 1 );
+         const dim3 grid( block_count , 1 , 1 );
+         const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
+ 
+-        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
++        //printf(" %d -- CudaParallelLaunch with this at %p and m_scratch_space at %p\n", __LINE__, this, m_scratch_space );
+ 
+-        Cuda::fence();
++        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total, m_policy.space().cuda_stream() ); // copy to device and execute
++
++        if ( ! m_policy.space().cuda_stream() ) {
++          Cuda::fence();
++        }
++
++        //printf(" %d -- CudaParallelLaunch Complete\n", __LINE__);
+ 
+         if ( m_result_ptr ) {
+           if ( m_unified_space ) {
++            //printf(" %d -- m_unified_space on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++            //printf(" %d -- Data before stream sync is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
++            // If it's on a stream, sync to ensure correctness
++            if ( m_policy.space().cuda_stream() ) {
++              CUDA_SAFE_CALL( cudaStreamSynchronize( m_policy.space().cuda_stream() ) );
++            }
++            //printf(" %d -- Data after stream sync and before setting count is %d\n", __LINE__, pointer_type(m_unified_space)[0] );
+             const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
++            //printf(" %d -- Data after setting count to %d is %d\n", __LINE__, count, pointer_type(m_unified_space)[0] );
+             for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
++            //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
++            //printf(" %d -- Data at index %d after is %d\n", __LINE__, (count - 1), m_result_ptr[count-1] );
+           }
+           else {
++            //printf(" %d -- !m_unified_space (DeepCopy) on stream %p\n", __LINE__, m_policy.space().cuda_stream() );
++            //printf(" %d -- Data at %p before is %d\n", __LINE__, m_result_ptr, *m_result_ptr );
+             const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) );
+-            DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
++            // If it's on a stream, the DeepCopy is queued after the prior kernel call which computed the reduction value
++            if ( m_policy.space().cuda_stream() ) {
++              DeepCopy<HostSpace,CudaSpace,Cuda>( m_policy.space(), m_result_ptr, m_scratch_space, size );
++            }
++            else {
++              DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
++            }
++            //printf(" %d -- Data at %p after is %d\n", __LINE__, m_result_ptr, *m_result_ptr);
+           }
+         }
+       }
+@@ -1372,6 +1467,7 @@ public:
+                                    Kokkos::is_view< HostViewType >::value
+                                 ,void*>::type = NULL)
+   : m_functor( arg_functor )
++  , m_policy(  arg_policy )
+   , m_reducer( InvalidType() )
+   , m_result_ptr( arg_result.data() )
+   , m_scratch_space( 0 )
+@@ -1407,9 +1503,10 @@ public:
+     m_team_begin = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( arg_functor , m_team_size );
+     m_shmem_begin = sizeof(double) * ( m_team_size + 2 );
+     m_shmem_size = arg_policy.scratch_size(0,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+-    m_scratch_ptr[1] = cuda_resize_scratch_space(static_cast<std::int64_t>(m_scratch_size[1])*(static_cast<std::int64_t>(Cuda::concurrency()/(m_team_size*m_vector_size))));
++    //m_scratch_ptr[1] = cuda_resize_scratch_space(static_cast<std::int64_t>(m_scratch_size[1])*(static_cast<std::int64_t>(Cuda::concurrency()/(m_team_size*m_vector_size))));
+     m_scratch_size[0] = m_shmem_size;
+     m_scratch_size[1] = arg_policy.scratch_size(1,m_team_size);
++    m_scratch_ptr[1] = cuda_resize_scratch_space(static_cast<std::int64_t>(m_scratch_size[1])*(static_cast<std::int64_t>(Cuda::concurrency()/(m_team_size*m_vector_size))));
+ 
+     // The global parallel_reduce does not support vector_length other than 1 at the moment
+     if( (arg_policy.vector_length() > 1) && !UseShflReduction )
+@@ -1433,7 +1530,7 @@ public:
+     if ( unsigned(m_team_size) >
+          unsigned(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+                ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
+-      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
++      //Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
+     }
+ 
+   }
+@@ -1442,6 +1539,7 @@ public:
+                 , const Policy       & arg_policy
+                 , const ReducerType & reducer)
+   : m_functor( arg_functor )
++  , m_policy(  arg_policy )
+   , m_reducer( reducer )
+   , m_result_ptr( reducer.view().data() )
+   , m_scratch_space( 0 )
+@@ -1467,9 +1565,10 @@ public:
+     m_team_begin = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( arg_functor , m_team_size );
+     m_shmem_begin = sizeof(double) * ( m_team_size + 2 );
+     m_shmem_size = arg_policy.scratch_size(0,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+-    m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
++    //m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
+     m_scratch_size[0] = m_shmem_size;
+     m_scratch_size[1] = arg_policy.scratch_size(1,m_team_size);
++    m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
+ 
+     // The global parallel_reduce does not support vector_length other than 1 at the moment
+     if( (arg_policy.vector_length() > 1) && !UseShflReduction )
+@@ -1490,7 +1589,7 @@ public:
+     if ( int(m_team_size) >
+          int(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+                ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
+-      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
++      //Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
+     }
+ 
+   }
+diff --git a/core/src/Kokkos_Cuda.hpp b/core/src/Kokkos_Cuda.hpp
+index 726a5749..7e393b75 100644
+--- a/core/src/Kokkos_Cuda.hpp
++++ b/core/src/Kokkos_Cuda.hpp
+@@ -62,6 +62,13 @@
+ #include <impl/Kokkos_Tags.hpp>
+ 
+ 
++/*--------------------------------------------------------------------------*/
++namespace Kokkos {
++  enum AsyncStatus {
++    SUCCESS = 0,
++    NOT_READY = 1
++  };
++} // namespace Kokkos
+ /*--------------------------------------------------------------------------*/
+ 
+ namespace Kokkos {
+@@ -165,12 +172,14 @@ public:
+   //--------------------------------------------------
+   //! \name  Cuda space instances
+ 
+-  ~Cuda() {}
++  ~Cuda();
+   Cuda();
+   explicit Cuda( const int instance_id );
++  explicit Cuda( const std::string & label);
++  explicit Cuda( const cudaStream_t & stream);
+ 
+   Cuda( Cuda && ) = default ;
+-  Cuda( const Cuda & ) = default ;
++  Cuda( const Cuda & ); // = default ;
+   Cuda & operator = ( Cuda && ) = default ;
+   Cuda & operator = ( const Cuda & ) = default ;
+ 
+@@ -222,6 +231,14 @@ public:
+   cudaStream_t cuda_stream() const { return m_stream ; }
+   int          cuda_device() const { return m_device ; }
+ 
++  /// \brief Returns a code for an ongoing or finished async action
++  ///
++  /// Anything on a CUDA stream can be queried to its status
++  /// Generally it returns a not ready (it's still in progress),
++  /// a success (not started/completed), or a detailed error code.
++  /// If an error code occurs, this should just exit the program.
++  Kokkos::AsyncStatus getStatus();
++
+   //@}
+   //--------------------------------------------------------------------------
+ 
+@@ -231,6 +248,17 @@ private:
+ 
+   int          m_device ;
+   cudaStream_t m_stream ;
++  bool         m_unmanaged_stream{false} ;
++  std::string  m_label ;
++
++  struct RefCounter {
++    int ref_count{0};
++    RefCounter() {
++      //printf("Constructing a RefCounter object\n");
++    }
++  };
++
++  RefCounter * m_ref_count_ptr{nullptr};
+ };
+ 
+ } // namespace Kokkos
+diff --git a/core/src/Kokkos_ExecPolicy.hpp b/core/src/Kokkos_ExecPolicy.hpp
+index a33e28fc..f5cfa794 100644
+--- a/core/src/Kokkos_ExecPolicy.hpp
++++ b/core/src/Kokkos_ExecPolicy.hpp
+@@ -523,11 +523,11 @@ public:
+   TeamPolicy& operator = (const TeamPolicy&) = default;
+ 
+   /** \brief  Construct policy with the given instance of the execution space */
+-  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
+-    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {first_arg = false;}
++  TeamPolicy( typename traits::execution_space & work_space , int league_size_request , int team_size_request , int vector_length_request = 1 )
++    : internal_policy(work_space, league_size_request, team_size_request, vector_length_request) {first_arg = false;}
+ 
+-  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
+-    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
++  TeamPolicy( typename traits::execution_space & work_space , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
++    : internal_policy(work_space, league_size_request, Kokkos::AUTO(), vector_length_request) {first_arg = false;}
+ 
+   /** \brief  Construct policy with the default instance of the execution space */
+   TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
+diff --git a/core/src/Makefile b/core/src/Makefile
+index 6ee5fec7..395ab079 100644
+--- a/core/src/Makefile
++++ b/core/src/Makefile
+@@ -8,7 +8,7 @@ PREFIX ?= /usr/local/lib/kokkos
+ default: build-lib
+ 
+ ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
+-  CXX ?= $(KOKKOS_PATH)/bin/nvcc_wrapper
++  CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
+ else
+   CXX ?= g++
+ endif

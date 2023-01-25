@@ -25,6 +25,60 @@ CO::~CO(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &CO::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &CO::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &CO::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &CO::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &CO::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &CO::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &CO::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &CO::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &CO::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &CO::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &CO::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &CO::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &CO::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &CO::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &CO::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace CO::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &CO::restart_initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &CO::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &CO::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &CO::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &CO::restart_initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 CO::problemSetup( ProblemSpecP& db ){
 
@@ -100,8 +154,8 @@ CO::register_initialize( VIVec& variable_registry , const bool pack_tasks){
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& CO = tsk_info->get_field<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& CO_diff = tsk_info->get_field<CCVariable<double> >( m_CO_diff_name );
@@ -134,7 +188,8 @@ void CO::register_timestep_init( VIVec& variable_registry , const bool packed_ta
 }
 
 //--------------------------------------------------------------------------------------------------
-void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& CO = tsk_info->get_field<CCVariable<double>>( m_CO_model_name );
   constCCVariable<double>& CO_old = tsk_info->get_field<constCCVariable<double>>( m_CO_model_name );
@@ -189,8 +244,8 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
 
 }
 
-void
-CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.
@@ -338,7 +393,8 @@ CO::register_restart_initialize( VIVec& variable_registry , const bool packed_ta
   }
 }
 
-void  CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& CO = tsk_info->get_field<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& d  = tsk_info->get_field<CCVariable<double> >( m_CO_model_name+"_defect" );

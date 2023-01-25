@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,8 +45,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#if defined(HAVE_GPU)
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <sci_defs/gperftools_defs.h>
@@ -184,7 +184,7 @@ AMRSimulationController::run()
   finalSetup();
 
   // Once the grid is set up pass it on to the GPU.
-#ifdef HAVE_CUDA
+#if defined(HAVE_GPU)
   GpuUtilities::assignPatchesToGpus( m_current_gridP );
 #endif
 
@@ -352,7 +352,7 @@ AMRSimulationController::run()
     // from postProcessUda and needs to be done before
     // advanceDataWarehouse is called.
     if (m_post_process_uda) {
-      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid( m_current_gridP );
+      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid();
     }
 
     // After one step (either time step or initialization) and the
@@ -496,6 +496,8 @@ AMRSimulationController::doInitialTimeStep()
                                                  m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                                  m_scheduler );
 
+    m_application->restartInitialize();
+
     for (int i = m_current_gridP->numLevels() - 1; i >= 0; i--) {
       m_application->scheduleRestartInitialize( m_current_gridP->getLevel(i), m_scheduler );
     }
@@ -597,7 +599,12 @@ AMRSimulationController::doInitialTimeStep()
     
       // If compiled with VisIt check the in-situ status for work.
       // ScheduleCheckInSitu( true );
-    
+
+      //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
+#if defined(HAVE_GPU)
+      collectGhostCells();
+#endif
+
       taskGraphTimer.reset( true );
       m_scheduler->compile();
       taskGraphTimer.stop();
@@ -845,6 +852,45 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
     proc0cout << "______________________________________________________________________\n";
   
   return retVal;
+}
+
+//______________________________________________________________________
+//
+// DS 04202020: Resizing GPU variables is no longer a problem since the fix in UnifiedScheduler allocates variables with max ghost cell values.
+// The max ghost cells values for variables across tasks are computed in SchedulerCommon::addTask, which is invoked during schedulerInit, scheduleTimestep etc.
+// But still the problem occurs sometimes especially while using multiple taskgraphs.
+// e.g., Consider two taskgraphs: init and main. A GPU task in init task graph computes a variable on GPU, but is not use by any other task in init.
+// So the max ghost cells computed during init task graph is 0 and the GPU memory is allocated.
+// Now a GPU task in the main task graph uses the same variable with ghost cell 1, but the allocation was already done with ghost cells = 0 and we get this error.
+// Hence here we call scheduleTimeAdvance etc.to look up future tasks and compute max ghost values across init and main task graphs and seems to work for Arches
+//  **** Few possible problems: ****
+// 1. The fix seems to work for Arches, but still may fail while using sub scheduler such as Poisson2.
+// 2. The fix is not tested with components other than Arches and also for AMR problems and might fail. As of now calling only scheduleTimeAdvance,
+//    scheduleFinalizeTimestep and scheduleComputeStableTimeStep. We might have to call more functions depending on the need.
+// 3. collectGhostCells MUST be called AFTER init task graph in compiled, but BEFORE task graph is executed. Some tasks in main task graph of Arches
+//    are dependent on some setup done during compilation of init task graph (WBCHelper of Arches), so scheduleTimeAdvance must be called after scheduleInit.
+//    But also we dont want to execute main tasks during initialization. So call collectGhostCells after init task graph is compiled. That way, even if
+//    new tasks are added in task graph, corresponding DetailedTasks are not created and not executed when scheduler->execute() is called. Also it is important
+//    to call collectGhostCells before executing init tasks so that the scheduler gets the up to date information about ghost cells. If the logic causes
+//    problem in future, we might have to explicitly delete extra tasks added.
+
+void
+AMRSimulationController::collectGhostCells()
+{
+  m_scheduler->setMaxGhostCellsCollectionPhase(true);	//disable actual scheduling of tasks by the scheduler.
+  for (int i = 0; i < m_current_gridP->numLevels(); i++) {
+    m_application->scheduleTimeAdvance(m_current_gridP->getLevel(i),
+                                       m_scheduler);
+
+    m_application->scheduleFinalizeTimestep(m_current_gridP->getLevel(i),
+                                            m_scheduler);
+  }
+
+  // Compute the next time step.
+  scheduleComputeStableTimeStep();
+
+  m_scheduler->setMaxGhostCellsCollectionPhase(false);  //enable actual scheduling of tasks by the scheduler.
+
 }
 
 //______________________________________________________________________

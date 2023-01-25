@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -206,8 +206,6 @@ main(int argc, char *argv[])
                 // ADB: change this to always be 128 bytes, so that we can 
                 // cleanly read the header off a binary file
                 ofstream dest(of_name.c_str());
-                dest.precision(16);
-                dest.setf(ios::scientific,ios::floatfield);
                 if(binmode) {
                   double x0 = min.x(), y0 = min.y(), z0 = min.z();
                   double x1 = max.x(), y1 = max.y(), z1 = max.z();

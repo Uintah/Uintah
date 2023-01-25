@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -159,9 +159,6 @@ public:
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
                                                  IntVector high = IntVector(0,0,0) ) = 0;
-  
-  virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
-  
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
@@ -259,7 +256,7 @@ public:
        int matlIndex, const Patch*, bool replace = false) = 0;
 
   // this is so we can get reduction information for regridding
-  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
+  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemoryspace<Level> >& vars ) const = 0;
 
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;

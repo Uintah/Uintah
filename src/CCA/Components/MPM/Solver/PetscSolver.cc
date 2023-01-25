@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -351,7 +351,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id = INT_MAX;
+  PetscClassId id;
   if (d_A) {
     PetscObjectGetClassId((PetscObject)d_A,&id);
   }
@@ -507,7 +507,7 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #endif
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id = INT_MAX;
+  PetscClassId id;
   if (d_A) {
     PetscObjectGetClassId((PetscObject)d_A,&id);
   }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,7 +53,6 @@ namespace Uintah {
       std::string scaling; /* Volume scaling method: "none" or "kayenta" */
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
-      bool localizeOrNot;
       
       void print(){
         std::cout << " mean:" << mean << " std: " << std << " exponent: " << exponent

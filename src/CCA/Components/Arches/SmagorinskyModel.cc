@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,9 +58,10 @@ using namespace Uintah;
 // Default constructor for SmagorinkyModel
 //****************************************************************************
 SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label,
+                                   const MPMArchesLabel* MAlb,
                                    PhysicalConstants* phyConsts,
                                    BoundaryCondition* bndry_cond):
-                                   TurbulenceModel(label),
+                                   TurbulenceModel(label, MAlb),
                                    d_physicalConsts(phyConsts),
                                    d_boundaryCondition(bndry_cond)
 {
@@ -128,7 +129,10 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-
+  // for multimaterial
+  if (d_MAlab){
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+  }
 
   if( sched->get_dw(0) )
     tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
@@ -191,8 +195,12 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
 
     new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
-    new_dw->get(VelocityCC,  d_lab->d_CCVelocityLabel,     indx, patch, gac, 1);
-    new_dw->get(cellType,    d_lab->d_cellTypeLabel,       indx, patch, gac, 1);
+    new_dw->get(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
+
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
+    }
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     // get physical constants
     double mol_viscos; // molecular viscosity
@@ -324,6 +332,21 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
+      }
+    }
+
+    if (d_MAlab) {
+      IntVector indexLow = patch->getExtraCellLowIndex();
+      IntVector indexHigh = patch->getExtraCellHighIndex();
+      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+            // Store current cell
+            IntVector currCell(colX, colY, colZ);
+            viscosity[currCell] *=  voidFraction[currCell];
+            turbViscosity[currCell] *=  voidFraction[currCell];
           }
         }
       }

@@ -9,6 +9,42 @@ TaskInterface( task_name, matl_index ) {
 InitLagrangianParticleSize::~InitLagrangianParticleSize(){
 }
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &InitLagrangianParticleSize::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 void
 InitLagrangianParticleSize::problemSetup( ProblemSpecP& db ){
 
@@ -60,8 +96,8 @@ InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContaine
 
 }
 
-void
-InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
   ParticleVariable<double>& dp = *(std::get<0>(dp_t));
@@ -90,8 +126,8 @@ void
 InitLagrangianParticleSize::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
 }
 
-void
-InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template <typename ExecSpace, typename MemSpace> void
+InitLagrangianParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
 
 
 //
@@ -106,7 +142,7 @@ InitLagrangianParticleSize::register_timestep_eval( std::vector<ArchesFieldConta
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!
-void
-InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template <typename ExecSpace, typename MemSpace>
+void InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 } //namespace Uintah

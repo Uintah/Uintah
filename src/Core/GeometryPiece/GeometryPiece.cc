@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,8 +32,8 @@ DebugStream GeometryPiece::gp_dbg( "GeometryPiece", "GeometryPiece", "Geometry p
 //______________________________________________________________________
 //
 GeometryPiece::GeometryPiece() :
-  m_isNameSet( false ),
-  m_isFirstOutput( true )
+  nameSet_( false ),
+  firstOutput_( true )
 {
 }
 
@@ -50,14 +50,14 @@ GeometryPiece::outputProblemSpec( ProblemSpecP & ps ) const
 {
   ProblemSpecP child_ps = ps->appendChild( getType().c_str() );
 
-  if( m_isNameSet ) {
+  if( nameSet_ ) {
     child_ps->setAttribute( "label", name_ );
 
-    if( m_isFirstOutput ) {
+    if( firstOutput_ ) {
       // If geom obj is named, then only output data the first time.
       gp_dbg << "GP::outputProblemSpec(): Full description of: " << name_ << " -- " << getType() << "\n";
       outputHelper( child_ps );
-      m_isFirstOutput = false;
+      firstOutput_ = false;
 
     } else {
       gp_dbg << "GP::outputProblemSpec(): Reference to: " << name_ << " -- " << getType() << "\n";

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,29 +27,30 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
+#include <sci_defs/gpu_defs.h>
+
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
-#include <sci_defs/cuda_defs.h>
-
 #include <map>
+#include <queue>
 #include <string>
 #include <vector>
 
 namespace Uintah {
 
-class Task;
 class DetailedTask;
+class DetailedTasks;
 class UnifiedSchedulerWorker;
 
 /**************************************
 
 CLASS
    UnifiedScheduler
-   
+
 
 GENERAL INFORMATION
    UnifiedScheduler.h
@@ -58,7 +59,7 @@ GENERAL INFORMATION
    Scientific Computing and Imaging Institute
    University of Utah
 
-   
+
 KEYWORDS
    Task Scheduler, Multi-threaded MPI, CPU, GPU
 
@@ -72,13 +73,13 @@ DESCRIPTION
 
    Uintah task scheduler to support, schedule and execute solely CPU tasks
    or some combination of CPU and GPU tasks when enabled.
-  
+
 WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
    development, not all tasks/components are GPU-enabled and/or thread-safe yet.
-   
+
    Requires MPI_THREAD_MULTIPLE support.
-  
+
 ****************************************/
 
 
@@ -90,18 +91,18 @@ class UnifiedScheduler : public MPIScheduler  {
                       UnifiedScheduler * parentScheduler = nullptr );
 
     virtual ~UnifiedScheduler();
-    
+
     static int verifyAnyGpuActive();  // used only to check if this Uintah build can communicate with a GPU.  This function exits the program
-    
+
     virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & materialManager );
-      
+
     virtual SchedulerP createSubScheduler();
-    
+
     virtual void execute( int tgnum = 0, int iteration = 0 );
-    
+
     virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
-    
-    void runTask( DetailedTask * dtask , int iteration , int thread_id , Task::CallBackEvent event );
+
+    void runTask( DetailedTask * dtask , int iteration , int thread_id , CallBackEvent event );
 
     void runTasks( int thread_id );
 
@@ -118,7 +119,7 @@ class UnifiedScheduler : public MPIScheduler  {
       , NumTasks
       , NumPatches
     };
-    
+
     VectorInfoMapper< ThreadStatsEnum, double > m_thread_info;
 
     static std::string myRankThread();
@@ -188,28 +189,40 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void initiateH2DCopies( DetailedTask * dtask );
 
-    void turnIntoASuperPatch(GPUDataWarehouse* const       gpudw, 
-                             const Level* const            level, 
+    void turnIntoASuperPatch(GPUDataWarehouse* const       gpudw,
+                             const Level* const            level,
                              const IntVector&              low,
                              const IntVector&              high,
-                             const VarLabel* const         label, 
-                             const Patch * const           patch, 
-                             const int                     matlIndx, 
-                             const int                     levelID ); 
+                             const VarLabel* const         label,
+                             const Patch * const           patch,
+                             const int                     matlIndx,
+                             const int                     levelID );
 
     void prepareDeviceVars( DetailedTask * dtask );
+
+    void copyDelayedDeviceVars( DetailedTask * dtask );
+
+    bool delayedDeviceVarsValid( DetailedTask * dtask );        //check if the main patch is valid, not ghost cells.
 
     void prepareTaskVarsIntoTaskDW( DetailedTask * dtask );
 
     void prepareGhostCellsIntoTaskDW( DetailedTask * dtask );
 
-    void markDeviceRequiresDataAsValid( DetailedTask * dtask );
+    void markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask );
+
+    void markHostAsInvalid( DetailedTask * dtask );
 
     void markDeviceGhostsAsValid( DetailedTask * dtask );
 
+    void markHostComputesDataAsValid( DetailedTask * dtask );
+
     void markDeviceComputesDataAsValid( DetailedTask * dtask );
 
-    void markHostRequiresDataAsValid( DetailedTask * dtask );
+    void markDeviceModifiesGhostAsInvalid( DetailedTask * dtask );
+
+    void markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask );
+
+    void markDeviceAsInvalidHostAsValid( DetailedTask * dtask );
 
     void initiateD2HForHugeGhostCells( DetailedTask * dtask );
 
@@ -223,7 +236,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
 
-    void freeCudaStreamsFromPool();
+    // void freeCudaStreamsFromPool();
 
     cudaStream_t* getCudaStreamFromPool( int device );
 
@@ -314,7 +327,7 @@ class UnifiedScheduler : public MPIScheduler  {
 class UnifiedSchedulerWorker {
 
 public:
-  
+
   UnifiedSchedulerWorker( UnifiedScheduler * scheduler, int tid, int affinity );
 
   void run();
@@ -326,7 +339,7 @@ public:
   void   startWaitTime();
   void   stopWaitTime();
   void   resetWaitTime();
-  
+
   friend class UnifiedScheduler;
 
 private:
@@ -341,5 +354,5 @@ private:
 };
 
 } // namespace Uintah
-   
+
 #endif // CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H

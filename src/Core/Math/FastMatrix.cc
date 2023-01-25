@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -376,7 +376,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
         row=j;
       }
     }
-    ASSERT(max > 1.e-16);
+    ASSERT(max > 1.e-12);
     if(row != i){
       // Switch rows
       for(int j=i;j<size;j++){

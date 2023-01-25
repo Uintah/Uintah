@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import os
+import os 
 
 # bulletproofing
 if os.sys.version_info <= (3,0):
@@ -18,7 +18,7 @@ import subprocess # needed to accurately get return codes
 from os                       import system
 from optparse                 import OptionParser
 from sys                      import argv, exit
-from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags, cmdline, isValid_inputFile
+from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
 from helpers.modUPS           import modUPS
 
 ####################################################################################
@@ -28,6 +28,10 @@ inputs        = ""   # full path to src/Standalone/inputs/
 OS            = platform.system()
 debug_build   = ""
 no_sci_malloc = ""
+                      # HACK 
+                      # 1 for GPU RT machine (albion, aurora), 0 otherwise.
+                      #   need to make this generic, perhaps pycuda?
+has_gpu       = 0 
 
 
 ####################################################################################
@@ -40,7 +44,7 @@ usage = "%prog [options]\n\n" \
 
 parser = OptionParser( usage, add_help_option=False )
 
-parser.set_defaults( verbose=False,
+parser.set_defaults( verbose=False, 
                      parallelism=1 )
 
 parser.add_option( "-b", dest="build_directory",              help="Uintah build directory [REQUIRED]",
@@ -84,9 +88,9 @@ def validateArgs( options, args ) :
 
     if not options.build_directory :
         error( "Uintah build directory is required..." )
-    elif options.build_directory[0] != "/" :
+    elif options.build_directory[0] != "/" : 
         error( "Uintah build directory must be an absolute path (ie, it must start with '/')." )
-    elif options.build_directory[-1] == "/" :
+    elif options.build_directory[-1] == "/" : 
         # Cut off the trailing '/'
         options.build_directory = options.build_directory[0:-1]
 
@@ -140,7 +144,7 @@ def validateArgs( options, args ) :
 
 def generateGS() :
 
-    global sus, inputs, debug_build, no_sci_malloc
+    global sus, inputs, debug_build, no_sci_malloc, has_gpu
     try :
         (options, leftover_args ) = parser.parse_args()
     except :
@@ -148,7 +152,7 @@ def generateGS() :
         exit( 1 )
 
     validateArgs( options, leftover_args )
-
+    
     #__________________________________
     # define the maximum run time
     Giga = 2**30
@@ -162,7 +166,7 @@ def generateGS() :
       maxAllowRunTime = 15*60   # 15 minutes
 
     resource.setrlimit(resource.RLIMIT_CPU, (maxAllowRunTime,maxAllowRunTime) )
-
+    
     #__________________________________
     # Does mpirun command exist or has the environmental variable been set?
     try :
@@ -174,25 +178,26 @@ def generateGS() :
         print( "ERROR:generateGoldStandards.py ")
         print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
         print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
-        exit (1)
-
+        exit (1)    
+        
     print( "Using mpirun: %s " % MPIRUN )
     print( "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable" )
-
+        
     if options.verbose :
         print( "Building Gold Standards in " + os.getcwd() )
 
     ##############################################################
-    # Determine if the code has been modified (git status)
-    cmd = "cd %s; git status" % options.src_directory
+    # Determine if the code has been modified (svn stat)
 
-    (stdout,stderr,rc) = cmdline( cmd )
+    process = subprocess.Popen( "svn stat " + options.src_directory, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    ( stdout, sterr ) = process.communicate()
+    result = process.returncode
 
-    if rc != 0 :
+    if result != 0 :
         answer = ""
         while answer != "n" and answer != "y" :
             print( "" )
-            print( "WARNING:  'git status' failed to run correctly, so generateGoldStandards.py cannot tell" )
+            print( "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py cannot tell" )
             print( "          if your tree is 'up to date'.  Are you sure you want to continue generating" )
             print( "          new gold standards at this time? [y/n]" )
             print( "" )
@@ -205,28 +210,25 @@ def generateGS() :
                 exit( 0 )
 
     allComponentsTests = options.test_file
-
+    
     # parse the inputs which are in the form ( <component>:<test> )
     components      = []          # list that contains each test name
     componentTests  = []          # contains the name list of tests to run
-
-
+    
+    
     #______________________________________________________________________
-    #  Bulletproofing
-    #  clean out old gold standards
-
     for component in allComponentsTests :
       me = component.split(':')
       c = me[0]
       t = me[1]
       components.append( c )
       componentTests.append( t )
-
+    
     print( "\nComponents (%s), tests(%s) " % (components,componentTests) )
-
+    
 
     # Exit if the component hasn't been compiled.  Note, not all components
-    # are listed in the configVars.mk file
+    # are listed in the configVars.mk file 
     configVars = options.build_directory + "/configVars.mk"
     for component in components :
 
@@ -234,7 +236,7 @@ def generateGS() :
       for line in open(configVars):
         if searchString in line:
           print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
-          exit( 1 )
+          exit( 1 ) 
 
     # Warn user if directories already exist
     some_dirs_already_exist = False
@@ -265,13 +267,11 @@ def generateGS() :
             if os.path.isdir( component ) :
                 print( "Deleting " + component )
                 shutil.rmtree( component )
-
-    #__________________________________
-    #
+    
     counter = -1;
     for component in components :
         counter = counter + 1
-
+        
         # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
         # (Need to 'import' the module first.)
         if options.verbose :
@@ -296,7 +296,7 @@ def generateGS() :
 
         # find the list of tests (local/nightly/debug/......)
         tests = THE_COMPONENT.getTestList( componentTests[counter] )
-
+                  
         if options.verbose :
             print( "" )
             print( "______________________________________________________________________" )
@@ -306,14 +306,11 @@ def generateGS() :
         for test in tests :
             if getTestOS( test ) != OS.upper() and getTestOS( test ) != "ALL":
                 continue
-
+             
             #  Defaults
             sus_options  = ""
-            do_restart   = 1
-            do_gpu       = 0    # run test if gpu is supported
-            testname     = getTestName( test )
-            upsFile      = inputs + "/" + component + "/" + getUpsFile( test )
-
+            do_gpu       = 0    # run test if gpu is supported 
+            
             #__________________________________
             # parse user flags for the gpu and sus_options
             # override defaults if the flags have been specified
@@ -324,47 +321,42 @@ def generateGS() :
               #  parse the user flags
               for i in range(len(flags)):
                 if flags[i] == "gpu":
-                  do_gpu = 1
-
-                if flags[i] == "no_restart":
-                  do_restart = 0
+                  do_gpu = 1 
 
                 tmp = flags[i].rsplit('=')
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
                   print( "\n sus_option: %s \n"%(sus_options) )
 
-            #__________________________________
-            # check if code/machine is gpu enabled
             if do_gpu == 1:
-
+            
               print( "Running command to see if GPU is active: " + sus + " -gpucheck" )
 
-              (stdout,stderr,rc) = cmdline( "%s -gpucheck" % sus)
-
+              child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
+              streamdata = child.communicate()[0]
+              rc = child.returncode
               if rc == 1:
                 print( "GPU found!" )
+                has_gpu = 1
               else:
+                has_gpu = 0
                 print( "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n" )
                 continue
-
-            print( "About to run test: " + testname )
-
-            #__________________________________
-            #
-            if isValid_inputFile( upsFile, "null", do_restart ) == False:
-              print ("    Now skipping test %s \n" % testname)
-              continue
-
-            os.mkdir( testname )
-            os.chdir( testname )
+              
+            # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
+            print( "About to run test: " + getTestName( test ) )
+            os.mkdir( getTestName( test ) )
+            os.chdir( getTestName( test ) )
 
             # Create (yet) another symbolic link to the 'inputs' directory so some .ups files will be able
             # to find what they need...  (Needed for, at least, methane8patch (ARCHES) test.)
             if not os.path.islink( "inputs" ) :
                 os.symlink( inputs, "inputs" )
 
+            np = float( getMPISize( test ) )
+            mpirun = ""
 
+            
             MALLOC_FLAG = ""
 
             if debug_build :
@@ -379,10 +371,9 @@ def generateGS() :
                     os.environ['MALLOC_STATS'] = "malloc_stats"
                     MALLOC_FLAG = " -x MALLOC_STATS "
 
-            GIT_FLAGS = " -gitStatus -gitDiff "
-            #GIT_FLAGS = "" # When debugging, if you don't want to spend time waiting for git, uncomment this line.
-
-            #__________________________________
+            SVN_FLAGS = " -svnStat -svnDiff "
+            #SVN_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
+            
             # adjustments for openmpi and mvapich
             # openmpi
             rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
@@ -392,35 +383,34 @@ def generateGS() :
             # mvapich
             rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
             if rc == 0:
-              MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN
-
-            #__________________________________
-            #  Run sus and check return codes
-            np = int( getMPISize( test ) )
+              MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN    
+      
+            np = int( np )
             my_mpirun = "%s -n %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " > sus_log.txt 2>&1 "
+            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 
             rc = os.system( command )
-
+            
+            
             print( "\t*** Test return code %i" % rc )
             # catch if sus doesn't run to completion
-
+            
             if rc == 35072 or rc == 36608 :
               print( "\t*** Test exceeded maximum allowable run time ***" )
               print( "" )
-
+            
             if rc != 0:
               print( "\nERROR: %s: Test (%s) failed to complete\n" % (component,test) )
-
+            
             os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
             nTestsFinished += 1
-
+         
         if nTestsFinished == 0:
-          print( "\nERROR: Zero %s regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?  \n" % (component) )
-
+          print( "\nERROR: Zero %s regression tests ran to completion.  Hint: is the OS you're using appropriate for the component's tests?  \n" % (component) ) 
+          
         os.chdir( ".." ) # Back to the TestData directory
 
 

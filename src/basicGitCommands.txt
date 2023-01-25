@@ -22,7 +22,7 @@ git push                      // push committed local changes to a remote reposi
 
 git reset --hard              // discard uncommitted local changes in tracked files
 
-git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s)
+git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s) 
 
 git revert <commit>           // reverse prior commits
 
@@ -31,31 +31,13 @@ Notes:
 - git pull incurs a git merge and may create a new merge commit
 - git revert creates a new commit reversing the specified commit(s)
 
-If you have changes, and you want/need to grab someone else's changes:
-
-git stash
-git pull
-git stash pop
-
-At this point, you can add, commit and push your changes if you want.
-
-To see what is stashed, do:
-
-git stash list
-and then:
-git stash show -p stash@{stash_id}
-
 
 
 //__________________________________
 // Branch Workflow Example
 
 git clone https://github.com/Uintah/Uintah.git  // download Uintah
-  or
-git clone git@github.com:Uintah/Uintah.git      // if you're using an ssh key for authentication
-
 cd Uintah                                       // move to the newly downloaded repository
-
 git checkout Cyberstone2                        // switch to the target branch
 
 * modify Cyberstone2 code *
@@ -63,24 +45,6 @@ git checkout Cyberstone2                        // switch to the target branch
 git add <files>                                 // add modified files to the list that will be committed
 git commit -m "<msg>"                           // commit changes to the local repository
 git push                                        // push committed local changes to the remote repository
-
-
-//__________________________________
-// To setup ssh keys for authentication
-
-ssh-keygen -t ed25519 -C "<git email address>"   // generate the ssh key
-more ~/.ssh/id_ed25519.pub                       // copy the key into the clipboard
-
-Login to https://github.com
-  Profile->settings->ssh and gpg keys            // paste the key and label it by the machine name
-
-ssh -T git@github.com                            // To test the sshkey
-
-Repeat for each machine you want to commit from.
-
-If the repository uses URL address (https://github.com) convert it to one that accepts ssh-keys
-
-git remote set-url origin git@github.com:/Uintah/Uintah
 
 
 
@@ -106,36 +70,6 @@ Notes:
 
 
 //__________________________________
-// Branch Migration Example
-
-git clone https://github.com/Uintah/Uintah.git                              // download Uintah
-cd Uintah                                                                   // move to the newly downloaded repository
-git checkout kokkos_dev                                                     // switch to the target branch to migrate
-git pull                                                                    // update to the latest remote revision
-
-git remote -v                                                               // check which remote repository is tracked
-git remote set-url origin https://github.com/jholmen/Uintah-kokkos_dev.git  // change the origin remote URL to the repository to migrate to
-git remote -v                                                               // check which remote repository is tracked
-
-git push origin kokkos_dev                                                  // push the branch to the new repository
-
-Notes:
-- The branch to migrate to must have an initial commit
-- The branch in the new repository can be merged to the default (e.g., master) branch to associate GitHub activity with a GitHub user account
-
-
-
-//__________________________________
-//  To pull a single directory <src/scripts> from master
- git init
- git remote add origin -f git@github.com:/Uintah/Uintah or https://github.com/Uintah/Uintah.git
- git config core.sparsecheckout true
- nedit .git/info/sparse-checkout 
-      add src/scripts
- git pull origin master
-
-
-//__________________________________
 // Additional Resources
 
 Git Learning Resources:
@@ -144,7 +78,7 @@ https://try.github.io/
 Side-by-Side Comparisons of Git and SVN Commands:
 https://backlog.com/git-tutorial/reference/commands/
 
-Git Cheatsheet
+Git cheatsheet
 http://www.ndpsoftware.com/git-cheatsheet.html;
 
 Virtual Sandbox to Experiment with Git Commands:
@@ -153,14 +87,8 @@ http://git-school.github.io/visualizing-git/#free-remote
 Virtual Sandbox and Tutorial to Experiment with Git Commands:
 https://learngitbranching.js.org/
 
-Why Is Git so Hard?:
+Why is git so hard:
 http://merrigrove.blogspot.com/2014/02/why-heck-is-git-so-hard-places-model-ok.html
 
 Git Branching:
 https://learngitbranching.js.org
-
-Migrating to a New Git Repository:
-https://help.looker.com/hc/en-us/articles/360001310847-Migrating-to-a-New-Git-Repository
-
-Why Are My Contributions Not Showing Up on My Profile?:
-https://docs.github.com/en/github/setting-up-and-managing-your-github-profile/why-are-my-contributions-not-showing-up-on-my-profile

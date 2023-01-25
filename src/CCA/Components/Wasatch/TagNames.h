@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -85,10 +85,7 @@ namespace WasatchCore{
     const Expr::Tag
     soundspeed,
     heatCapacity, cp, cv,
-    thermalConductivity,
-    thermodynamicPressure,
-    thermodynamicPressureNP1,
-    backgroundPressure,
+    thermalConductivity,    
     dudx, dvdy, dwdz,
     dpdx, dpdy, dpdz;
     
@@ -124,13 +121,8 @@ namespace WasatchCore{
     convectiveflux, diffusiveflux;
     
     const Expr::Tag
-    pressuresrc,
-    divu,
-    drhodt, drhodtnp1,
-    unconvergedpts,
-    DPDt, DPDtNP1,
-    partialDPDt,
-    adiabaticIndex;
+    pressuresrc,divu,
+    drhodt,drhodtnp1,unconvergedpts;
 
     // mms varden
     const Expr::Tag

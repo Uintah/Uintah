@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,8 +40,9 @@
 
 using namespace Uintah;
 
-TurbulenceModel::TurbulenceModel(const ArchesLabel* label):
-                                 d_lab(label)
+TurbulenceModel::TurbulenceModel(const ArchesLabel* label,
+                                 const MPMArchesLabel* MAlb):
+                                 d_lab(label), d_MAlab(MAlb)
 {
   d_filter = 0;
   d_dissipationRateLabel = VarLabel::create(

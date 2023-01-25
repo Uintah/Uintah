@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -71,13 +71,6 @@ CompositeContact::initFriction(const ProcessorGroup*,
 }
 
 void
-CompositeContact::setContactMaterialAttributes()
-{
-  for (list<Contact*>::const_iterator it = d_m.begin(); it != d_m.end(); it++)
-    (*it)->setContactMaterialAttributes();
-}
-
-void
 CompositeContact::exMomInterpolated(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
@@ -97,9 +90,10 @@ CompositeContact::exMomIntegrated(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  for(list<Contact*>::iterator mit(d_m.begin());mit!=d_m.end();mit++) {
+  for(list<Contact*>::iterator mit(d_m.begin());mit!=d_m.end();mit++)
+    {
       (*mit)->exMomIntegrated(pg, patches, matls, old_dw, new_dw);
-  }
+    }
 }
 
 void

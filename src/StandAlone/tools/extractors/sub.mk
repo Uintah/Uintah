@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -54,7 +54,7 @@ else
           $(CANTERA_LIBRARY)                                  \
           $(PETSC_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)         \
-          $(PIDX_LIBRARY)
+          $(PIDX_LIBRARY) $(KOKKOS_LIBRARY)
   ifeq ($(HAVE_TIFF),yes)
     LIBS := $(LIBS) $(TIFF_LIBRARY)
   endif

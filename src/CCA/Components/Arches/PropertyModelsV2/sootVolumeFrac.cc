@@ -15,6 +15,48 @@ sootVolumeFrac::~sootVolumeFrac( )
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &sootVolumeFrac::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &sootVolumeFrac::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace sootVolumeFrac::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 sootVolumeFrac::problemSetup(  Uintah::ProblemSpecP& db )
 {
@@ -39,8 +81,8 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
+template <typename ExecSpace, typename MemSpace>
+void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
   CCVariable<double>& fvSoot = tsk_info->get_field<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
@@ -54,20 +96,15 @@ sootVolumeFrac::register_restart_initialize( VIVec& variable_registry , const bo
 
 //--------------------------------------------------------------------------------------------------
 void
-sootVolumeFrac::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
-{
-}
-
-//--------------------------------------------------------------------------------------------------
-void
 sootVolumeFrac::register_timestep_init( VIVec& variable_registry , const bool packed_tasks)
 {
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
+template <typename ExecSpace, typename MemSpace>
+void sootVolumeFrac::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -80,8 +117,8 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
+template <typename ExecSpace, typename MemSpace>
+void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
   CCVariable<double>& fvSoot = tsk_info->get_field<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);

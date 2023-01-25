@@ -1,7 +1,7 @@
 <!--
    UPS_SPEC:
      This specification defines the valid tags, their attributes, and
-     their values.
+     their values.  
 
    DTD/XML Schema:
 
@@ -18,103 +18,84 @@
 
    Format of this specification:
 
-     An input file tag has the specification:
+     A tag specification must look like this:
 
-     <
-     1.      name
-     2.      spec            ="..."
-     3.      attribute#      ="..."
-     4.      children#       ="..."
-     5.      need_applies_to ="..."
+     <name spec="..." 
+           attribute#="..."
+           children#="..."
+           need_applies_to="..."
      >
 
-     1) name:  The name of a given tag (eg: cylinder, Time, etc)
+     need_applies_to="<var>..." => An optional parameter.  If present, the tag refers to a parent
+                             attribute <var>.  This tag allows for specifying how children are to
+                             be required (see Values, below).
+       * var must be the 'name' of a previously defined attribute for the tag's parent.
+       * If a 'need_applies_to' is used, then the parent's attribute must be REQUIRED!
+       * Values:
+         - ALL => This child tag is required for all versions of the parent tag.  This
+                     is the default 
+         - list of values => The child tag is required only for the given versions of the parent's attribute.
+         
 
-     2) spec:  Is required and has three options, "need  type  [validValues]"
+     Only 'spec' is required for a tag.
+
+     name => the name of a given tag (eg: cylinder, Time, etc)
+
+     spec => "need  type  [validValues]"
 
        * need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
                                              Currently MULTIPLE means 0 or more...)
-
        * type: DOUBLE, INTEGER, STRING, VECTOR, MULTIPLE_INTEGERS, MULTIPLE_DOUBLES,
-               MULTIPLE_VECTORS, BOOLEAN, NO_DATA
-                      (NO_DATA means the tag doesn't have any
-                      data (text) but can have attributes and/or sub-tags.)
-               MULTIPLE_INTEGERS:  [ #... ]
-               VECTOR:             [ #, #, # ] // 3 numbers (ie: an IntVector)
+               MULTIPLE_VECTORS, BOOLEAN, NO_DATA (NO_DATA means the tag doesn't have any
+                                          data (text) but can have attributes and/or
+                                          sub-tags.)
+         - MULTIPLE_INTEGERS:  [ #... ]
+         - VECTOR:             [ #, #, # ] // 3 numbers (ie: an IntVector)
 
        * validValues: an optional _single_ string (see below for how it is parsed) that contains valid values
                       or the value of the tag.  The specification of valid values depends on the
                       type of the tag:
+  
+         - STRING: a comma separated lists of strings which enumerate
+                   explicitly which values the string can take on. If 
+                   valid values for a string are not provided, then
+                   all strings will be accepted.
+         - INTEGER/DOUBLE: "positive" = a positive value, "num, num" =
+                   min, max values.  If not specified, then any
+                   integer/double will be accepted.
+               
+         - VECTOR: not quite sure how to specify valid values for a
+                   vector yet...
 
-               STRING: a comma separated lists of strings which enumerate
-                      explicitly which values the string can take on. If
-                      valid values for a string are not provided, then
-                      all strings will be accepted.
+                   children => how to handle child tags of this tag.
 
-               INTEGER/DOUBLE: "positive" = a positive value, "num, num" =
-                      min, max values.  If not specified, then any
-                      integer/double will be accepted.
+     attribute#="name _spec_" => attributes for a tag.  The '#' should be replaced with 1, 2, 3... etc,
+                   (the numbers must be unique.)  The _spec_ is as above.  (eg: attribute1="label OPTIONAL STRING")
 
-               VECTOR: not quite sure how to specify valid values for a
-                      vector yet...
+     children# => how to handle child tags of this tag.  The '#' should be replaced with 1, 2, 3... etc,
+                   (the numbers must be unique.) 
 
-     3) attribute#:  "name <spec>"
-                      The '#' must be 1, 2, 3... etc.
-                      The name and <spec> are described above.  (eg: attribute1="label OPTIONAL STRING")
-
-
-     4) children#:   "ONE_OF(...)" or "ALL_OR_NONE_OF(...)'
-                      This specifies how to handle child tags
-                      The '#' must be 1, 2, 3... etc.
-
-               ONE_OF( [ATTRIBUTE|CHILD], [child1|attr1], [child2|attr2], ...)
-                      specifies that only one of the specified child tags is allowed.
-                      Use ATTRIBUTE or CHILD to specify what this requirement applies to.
-                      (One child MUST exist!)
-
-
-               ALL_OR_NONE_OF( [ATTRIBUTE|CHILD] child1, child2, ... ) -
-                      Must have either all of the child tags, or none.  The child tags
-                      must be declared OPTIONAL, as this flag will govern their use.
-
-
-     5) need_applies_to="<var> [Values]"
-              An optional parameter for specifying which parent tags the tag applied to (see
-              The parent attribute <var> which must be previously defined.
-              This tag allows
-
-              <var> :  The 'name' of a previously defined attribute for the tag's parent.
-
-              Values:
-                  - ALL:  This child tag is required for all versions of the parent tag.  This
-                          is the default
-                  - list of values:  The child tag is required only parent attributes.
-    __________________________________
-    Include files:
-    To include a portion of a file that contains several xml trees the user can specify:
-
-      <include href="ice_spec.xml"    section="BoundaryConditions" excludeSectionTag="true" />
-
-              href:               Name of the the include file.
-              Section:            refers to the xml node that will be included.
-              excludeSectionTag   exclusively include the contents of the xml node.  The section node is ignored.
+       * ONE_OF( [ATTRIBUTE|CHILD], [child1|attr1], [child2|attr2], ...) - specifies that only one of the specified child tags is allowed.
+                                                           Use ATTRIBUTE or CHILD to specify what this requirement
+                                                           applies to.  (One child MUST exist!)
+       * ALL_OR_NONE_OF( [ATTRIBUTE|CHILD] child1, child2, ... ) - Must have either all of the child tags, or none.  The child tags
+                                                 must be declared OPTIONAL, as this flag will govern their use.
 
 -->
-<!--______________________________________________________________________
-    ______________________________________________________________________-->
-<Uintah_specification>
+
+<Uintah_specification> 
 
   <!--===========================================================-->
   <!-- Begin Common Block -->
   <CommonTags>
-    <!--
+    <!-- 
        Tags in this <CommonTags> block are used more than once in the
        Uintah_specification.  In the Uintah_specification, they
-       should just be referenced as <tag/>.  Optionally, if the
+       should just be referenced as <tag/>.  Optionally, if the 
        OPTIONAL/REQUIRED spec has changed, they can be referred to as
        <tag spec="NEW_VALUE">.  [Note, do NOT use <CommonTags> for
        any other tag name.]
-
+     
        Note, you can 're-open' the <CommonTags> (anywhere by just
        creating a new <CommonTags></CommonTags> block) to add new
        common tags to it.  Note, however, that the names of all
@@ -148,22 +129,7 @@
       <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
-    <file                     spec="OPTIONAL NO_DATA"
-                                attribute1="label    OPTIONAL STRING" >
-      <name                   spec="OPTIONAL STRING" />
-      <var                    spec="MULTIPLE STRING" />
-      <format                 spec="OPTIONAL STRING" />
-      <usePFS                 spec="OPTIONAL BOOLEAN"/>
-    </file>
-
-    <image                    spec="OPTIONAL NO_DATA" >                               <!-- used by StandAlone/tools/pfs/pfs2.cc -->
-      <name                   spec="REQUIRED STRING" />
-      <res                    spec="OPTIONAL VECTOR" />
-      <threshold              spec="OPTIONAL MULTIPLE_DOUBLES" />
-    </image>
-
-
-    <torus                    spec="OPTIONAL NO_DATA"
+    <torus                 spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <center                 spec="REQUIRED VECTOR" />
       <major_radius           spec="REQUIRED DOUBLE 'positive'" />
@@ -179,15 +145,15 @@
       <p3                     spec="OPTIONAL VECTOR" />
       <p4                     spec="OPTIONAL VECTOR" />
     </parallelepiped>
-
+    
     <sphere                   spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING"
                                 children1="ALL_OR_NONE_OF( CHILD origin, radius )" >
       <origin                 spec="OPTIONAL VECTOR" />
       <radius                 spec="OPTIONAL DOUBLE 'positive'" />
     </sphere>
-
-    <ellipsoid                spec="OPTIONAL NO_DATA"
+    
+    <ellipsoid                   spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <origin                 spec="OPTIONAL VECTOR" />
       <rx                     spec="OPTIONAL DOUBLE 'positive'" />
@@ -213,10 +179,10 @@
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
       <thickness              spec="REQUIRED DOUBLE 'positive'" />
       <num_lat                spec="REQUIRED DOUBLE 'positive'" />
-      <num_long               spec="REQUIRED DOUBLE 'positive'" />
+      <num_long                spec="REQUIRED DOUBLE 'positive'" />
     </sphere_shell>
 
-    <cylinder_shell           spec="OPTIONAL NO_DATA"
+    <cylinder_shell             spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <top                    spec="REQUIRED VECTOR" />
       <bottom                 spec="REQUIRED VECTOR" />
@@ -234,7 +200,7 @@
       <thickness              spec="REQUIRED DOUBLE 'positive'" />
       <num_radius             spec="REQUIRED DOUBLE 'positive'" />
     </plane_shell>
-
+    
 
     <!--  Note:  smoothcyl is not intended to be used with the union, difference intersection -->
     <smoothcyl                spec="OPTIONAL NO_DATA"
@@ -259,22 +225,22 @@
     </tri>
 
     <line_segment             spec="OPTIONAL NO_DATA"
-                                attribute1="label    OPTIONAL STRING"
-                                children1="ALL_OR_NONE_OF( CHILD name )" >
-      <name                   spec="OPTIONAL STRING" />
+                              attribute1="label    OPTIONAL STRING"
+                              children1="ALL_OR_NONE_OF( CHILD name )" >
+      <name                   spec="OPTIONAL STRING" /> 
     </line_segment>
 
     <half_space               spec="OPTIONAL NO_DATA"
                               attribute1="type REQUIRED STRING 'absolute, relative'" >
       <planePoint             spec="REQUIRED VECTOR" need_applies_to="type absolute" />
       <normal                 spec="REQUIRED VECTOR" need_applies_to="type absolute" />
-      <offset                 spec="REQUIRED VECTOR" need_applies_to="type relative" />
+      <offset                 spec="REQUIRED VECTOR" need_applies_to="type relative" />                              
     </half_space>
-
+    
     <polyhedron               spec="OPTIONAL NO_DATA"
                                 attribute1="label  OPTIONAL STRING" >
       <center                 spec="REQUIRED VECTOR"/>
-      <bounds                 spec="REQUIRED NO_DATA">
+      <bounds                 spec="REQUIRED NO_DATA">      
         <half_space           spec="MULTIPLE"/>
       </bounds>
     </polyhedron>
@@ -307,12 +273,11 @@
     </union>
 
     <!-- FIXME: only can have 2 children, right? how to specify? -->
-    <difference               spec="OPTIONAL NO_DATA"
+    <difference               spec="OPTIONAL NO_DATA" 
                                 attribute1="label OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
-      <file                   spec="MULTIPLE" />
       <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
@@ -370,11 +335,24 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
       <polyhedron             spec="MULTIPLE" />
-      <file                   spec="MULTIPLE" />
-      <image                  spec="MULTIPLE" />
+
+      <file                    spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+        <name                 spec="OPTIONAL STRING" />
+        <var                  spec="MULTIPLE STRING" />
+        <format               spec="OPTIONAL STRING" />
+        <usePFS               spec="OPTIONAL BOOLEAN"/>
+      </file>
+      
+      <image                  spec="OPTIONAL NO_DATA" >
+        <name                 spec="REQUIRED STRING" />
+        <res                  spec="OPTIONAL VECTOR" />
+        <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
+      </image>
+
       <res                     spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity                spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
-      <level                   spec="OPTIONAL INTEGER"/>
+      <level                   spec="OPTIONAL INTEGER"/> 
       <temperature             spec="OPTIONAL DOUBLE" />
       <color                   spec="OPTIONAL DOUBLE" />
       <density                 spec="OPTIONAL DOUBLE" />
@@ -387,15 +365,15 @@
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 
-      <corrugated              spec="OPTIONAL NO_DATA" >   <!-- FIXME: is this really optional?  Default? -->
-        <xymin                 spec="REQUIRED VECTOR" />
-        <xymax                 spec="REQUIRED VECTOR" />
-        <thickness             spec="REQUIRED DOUBLE" />
-        <normal                spec="REQUIRED VECTOR" />
-        <corr_edge             spec="REQUIRED STRING 'x+, x-, y+, y-'" />
-        <curve                 spec="REQUIRED STRING 'sin'" />
-        <wavelength            spec="REQUIRED DOUBLE" />
-        <amplitude             spec="REQUIRED DOUBLE" />
+      <corrugated              spec="OPTIONAL NO_DATA" >   <!-- FIXME: is this really optional?  Default? -->        
+        <xymin                 spec="REQUIRED VECTOR" />                                                             
+        <xymax                 spec="REQUIRED VECTOR" />                                                             
+        <thickness             spec="REQUIRED DOUBLE" />                                                             
+        <normal                spec="REQUIRED VECTOR" />                                                             
+        <corr_edge             spec="REQUIRED STRING 'x+, x-, y+, y-'" />                                            
+        <curve                 spec="REQUIRED STRING 'sin'" />                                                       
+        <wavelength            spec="REQUIRED DOUBLE" />                                                             
+        <amplitude             spec="REQUIRED DOUBLE" />                                                             
       </corrugated>
 
       <coeff                     spec="OPTIONAL VECTOR"/>
@@ -417,56 +395,36 @@
       <neg_charge_density        spec="OPTIONAL DOUBLE"/>
       <permittivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
-
-    <!--______________________________________________________________________-->
+      
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING
-                                               'amrmpm, AMRmpm, AMRMPM,
-                                                arches, ARCHES,
-                                                benchmark, BENCHMARK,
-                                                burger, BURGER,
-                                                dosweep, DOSWEEP,
+                                                'arches,
+                                                burger,dosweep, ice,
+                                                impm, mpm,
+                                                mpmarches, sfmpm, 
+                                                mpmf, mpmice, amrmpm, wasatch, postProcessUda,
                                                 electrostatic_solver,
-                                                esmpm2, ESMPM2,
-                                                esmpm, ESMPM,
                                                 gauss_solver,
-                                                heat,
-                                                ice, ICE,
-                                                impm, IMPM,
-                                                mpmice, MPMICE,
-                                                mpm, MPM,
                                                 mpnp,
-                                                particletest, PARTICLETEST,
-                                                phasefield, PHASEFIELD,
-                                                poisson1, POISSON1,
-                                                poisson2, POISSON2,
-                                                poisson3, POISSON3,
-                                                poisson4, POISSON4,
-                                                postProcessUda,
-                                                regriddertest, REGRIDDERTEST,
-                                                RMCRT_Test,
-                                                rmpmice, rigidmpmice, RIGIDMPMICE,
-                                                rmpm, rigidmpm, RIGIDMPM,
-                                                sfmpm, shmpm, SFmpm, SFMPM,
-                                                smpmice, shellmpmice, SHELLMPMICE,
-                                                smpm, shellmpm, SHELLMPM,
-                                                solvertest2, SOLVERTEST2,
-                                                solvertest, SOLVERTEST,
-                                                switcher,
-                                                unifiedschedulertest, UNIFIEDSCHEDULERTEST,
-                                                wasatch,
-                                                wave, WAVE'" >
-
-                                  <!-- The 'type' above is used in CCA/Components/Parent/ApplicationFactory.cc -->
+                                                esmpm,
+                                                esmpm2,
+                                                unifiedschedulertest, poisson1,
+                                                poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, gpuresizetest1, benchmark,
+                                                rigidmpmice,reduce_uda, rmpmice,smpm,
+                                                smpmice,switcher,wave,
+                                                solvertest, solvertest2, heat,
+                                                phasefield,
+                                                RMCRT_Test particletest'" >
+                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over               spec="MULTIPLE NO_DATA"
                                     attribute1="var   REQUIRED STRING"
                                     attribute2="matls OPTIONAL INTEGER"
                                     attribute3="level OPTIONAL STRING 'finest'" />
-
+                                  
         <subcomponent             spec="MULTIPLE NO_DATA"
-                                    attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmf, mpmice,
-                                                                     poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
-                                  <!-- The 'type' above is used in CCA/Components/Parent/ApplicationFactory.cc -->
+                                    attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
+                                                                     poisson1, poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
+                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
           <SwitchCriteria           spec="OPTIONAL NO_DATA"  attribute1="type REQUIRED STRING 'steadyBurn, DDT1, Timestep, simpleBurn'" >
             <timestep               spec="REQUIRED INTEGER" need_applies_to="type Timestep"   />
@@ -474,7 +432,7 @@
             <BoundaryParticles      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
             <ThresholdTemperature   spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
           </SwitchCriteria>
-          <init                     spec="MULTIPLE NO_DATA"
+          <init                     spec="MULTIPLE NO_DATA" 
                                       attribute1="var    REQUIRED STRING"
                                       attribute2="matls  REQUIRED STRING"
                                       attribute3="levels OPTIONAL STRING"/>
@@ -486,26 +444,28 @@
   <!-- End Common Block -->
   <!--===========================================================-->
 
-  <SimulationComponent    spec="REQUIRED" />
-
   <Meta                   spec="OPTIONAL NO_DATA">
     <title                spec="OPTIONAL STRING" />
     <info                 spec="OPTIONAL STRING" />
   </Meta>
 
+  <Unit                   spec="OPTIONAL NO_DATA"
+                            attribute1="name REQUIRED STRING 'KG^2'" />  <!-- FIXME: is this a good idea?  If so, how to specify?  Make required! -->
+
   <ParticlePosition          spec="OPTIONAL NO_DATA" attribute1="label REQUIRED STRING"/>
 
-  <!--______________________________________________________________________-->
-
+  <!-- Simulation Controller Block -->
+  <!--===========================================================-->
   <SimulationController spec="OPTIONAL NO_DATA">
     <RuntimeStats       spec="OPTIONAL NO_DATA">
       <frequency        spec="OPTIONAL INTEGER 'positive'" /> <!-- Only output on every n^th timestep -->
       <onTimeStep       spec="OPTIONAL INTEGER 'positive'" /> <!-- Output on time steps which end with this ordinal -->
     </RuntimeStats>
   </SimulationController>
+  <!-- End Simulation Controller Block -->
+  <!--===========================================================-->
 
-  <!--______________________________________________________________________-->
-
+                                                                                
   <Time                      spec="REQUIRED NO_DATA">
     <!-- Initial simulation time -->
     <initTime                spec="REQUIRED DOUBLE  'positive'" />
@@ -524,13 +484,13 @@
     <timestep_multiplier     spec="REQUIRED DOUBLE  'positive'" />
 
     <!-- The maximum delta T can increase as a percent over the previous value,
-         optionally one can output or checkpoint if the value is exceeded -->
+	 optionally one can output or checkpoint if the value is exceeded -->
     <max_delt_increase       spec="OPTIONAL DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
     <!-- The maximum delta T for the initial simulation time until
-         initial_delt_range is reached.
-         optionally one can output or checkpoint if the value is exceeded -->
+	 initial_delt_range is reached.
+	 optionally one can output or checkpoint if the value is exceeded -->
     <delt_init               spec="OPTIONAL DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
@@ -538,12 +498,12 @@
     <initial_delt_range      spec="OPTIONAL DOUBLE  'positive'" />
 
     <!-- The minimum delta T value,
-         optionally one can output or checkpoint if the value is exceeded -->
+	 optionally one can output or checkpoint if the value is exceeded -->
     <delt_min                spec="REQUIRED DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
     <!-- The maximum delta T value,
-         optionally one can output or checkpoint if the value is exceeded -->
+	 optionally one can output or checkpoint if the value is exceeded -->
     <delt_max                spec="REQUIRED DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
@@ -557,7 +517,7 @@
   </Time>
 
   <!--______________________________________________________________________-->
-
+  
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
              then no data will be saved (and no .uda dir will be created). -->
   <DataArchiver               spec="REQUIRED NO_DATA"
@@ -592,12 +552,13 @@
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
       <outputLastTimestep     spec="OPTIONAL BOOLEAN" />
 
+     <!-- HACK: until we know what to do about checking the label names-->
       <save                   spec="MULTIPLE NO_DATA"
                                 attribute1="label        REQUIRED STRING"
                                 attribute2="levels       OPTIONAL STRING"
-                                attribute3="material     OPTIONAL STRING"
+                                attribute3="material     OPTIONAL STRING" 
                                 attribute4="table_lookup OPTIONAL BOOLEAN" /> <!-- FIXME: are these really STRINGs? and what are the valid values? -->
-
+      <save_crack_geometry    spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
       <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
       <frequency              spec="OPTIONAL INTEGER 'positive'" />
       <!-- Only output global vars on every n^th timestep - default 1 -->
@@ -606,7 +567,7 @@
 
       <simTime                spec="OPTIONAL BOOLEAN" /> <!-- Output the sim time with the global vars - default false -->
       <timeStep               spec="OPTIONAL BOOLEAN" /> <!-- Output the time step with the global vars - default true -->
-
+      
       <PIDX                   spec="OPTIONAL NO_DATA">
         <debugOutput          spec="OPTIONAL BOOLEAN" />
         <checkpoint           spec="OPTIONAL NO_DATA"
@@ -639,160 +600,374 @@
       </PIDX>
   </DataArchiver>
 
-  <!--______________________________________________________________________-->
   <InitialConditions        spec="OPTIONAL NO_DATA">
     <MPM                    spec="OPTIONAL NO_DATA" />
     <ARCHES                 spec="OPTIONAL NO_DATA" />
   </InitialConditions>
-
+  
   <!--______________________________________________________________________-->
-  <!-- Grid Attributes:  -->
+  <!-- Grid Attributes:
+          doAMR:      If set to true, then Adaptive Mesh Refinement is turned on. Defaults to off. -->
   <Grid                     spec="REQUIRED NO_DATA"
                             attribute1="doAMR      OPTIONAL BOOLEAN">
-
+    <!--____Begin BoundaryConditions section______________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
-
+      
       <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"/>
 
       <!-- Specify interior boundary conditions. A minus interior face will return an iterator
-      with the cells on the minus side of the boundary. A plus interior face will return an
+      with the cells on the minus side of the boundary. A plus interior face will return an 
       iterator with cells on the plus side of the boundary -->
-      <InteriorFace     spec="MULTIPLE NO_DATA"
-                          attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"
-                          attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"
-                          attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
-                          attribute6="radius        OPTIONAL DOUBLE 'positive'"
-                          attribute7="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute8="lower         OPTIONAL MULTIPLE_DOUBLES"
-                          attribute9="upper         OPTIONAL MULTIPLE_DOUBLES"
-                          attribute10="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute11="major_radius OPTIONAL DOUBLE 'positive'"
-                          attribute12="minor_radius OPTIONAL DOUBLE 'positive'"
-                          attribute13="angle        OPTIONAL DOUBLE"
-                          attribute14="name         OPTIONAL STRING"
-                          attribute15="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User, Interior'">
-
-        <BCType       spec="MULTIPLE NO_DATA"
-                        attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, Custom'"
-                        attribute3="label     REQUIRED STRING "
-                        attribute4="type      OPTIONAL STRING 'int, subgrid_injector'"
-                        attribute5="value     OPTIONAL STRING" >
-
-          <value      spec="OPTIONAL STRING"/>
+      <InteriorFace     spec="MULTIPLE NO_DATA"                                                                             
+                          attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                               
+                          attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                               
+                          attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"                                             
+                          attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"                                              
+                          attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"                                             
+                          attribute6="radius        OPTIONAL DOUBLE 'positive'"                                             
+                          attribute7="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                               
+                          attribute8="lower         OPTIONAL MULTIPLE_DOUBLES"                                              
+                          attribute9="upper         OPTIONAL MULTIPLE_DOUBLES"                                               
+                          attribute10="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                  
+                          attribute11="major_radius OPTIONAL DOUBLE 'positive'"                                             
+                          attribute12="minor_radius OPTIONAL DOUBLE 'positive'"                                             
+                          attribute13="angle        OPTIONAL DOUBLE"                                                                                              
+                          attribute14="name         OPTIONAL STRING"                                                        
+                          attribute15="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User, Interior'">                                  
+                                                                                                                            
+        <BCType       spec="MULTIPLE NO_DATA"                                                                               
+                        attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"                  
+                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, Custom'"                                 
+                        attribute3="label     REQUIRED STRING "                                                             
+                        attribute4="type      OPTIONAL STRING 'int, subgrid_injector'"                                      
+                        attribute5="value     OPTIONAL STRING" >                                                            
+                                                                                                                            
+          <value      spec="OPTIONAL STRING"/>                                                                              
 
           <!-- Area for the subgrid injector. The total contribution to the RHS is
                RHS += area*value
                so that value = rho*phi*velocity
                If area is not specified, then area = cell face area respectively -->
-          <area             spec="OPTIONAL DOUBLE"/>
+          <area             spec="OPTIONAL DOUBLE"/> 
 
         </BCType>
       </InteriorFace>
-
+      
       <!-- angle in degrees for ellipse -->
-      <Face           spec="MULTIPLE NO_DATA"
-                        attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"
-                        attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"
-                        attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
-                        attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute7="radius        OPTIONAL DOUBLE 'positive'"
-                        attribute8="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute9="lower         OPTIONAL MULTIPLE_DOUBLES"
-                        attribute10="upper        OPTIONAL MULTIPLE_DOUBLES"
-                        attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute12="major_radius OPTIONAL DOUBLE 'positive'"
-                        attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
-                        attribute14="angle        OPTIONAL DOUBLE"
-                        attribute15="name         OPTIONAL STRING"
-                        attribute16="type         OPTIONAL STRING 'Wall, Velocity, MassFlow, Inlet, Outflow, Open, Symmetry, Pressure, User'"
-                        attribute17="inner_lower  OPTIONAL MULTIPLE_DOUBLES"
-                        attribute18="outer_lower  OPTIONAL MULTIPLE_DOUBLES"
-                        attribute19="inner_upper  OPTIONAL MULTIPLE_DOUBLES"
-                        attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"
-                        attribute21="rectangulus  OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">
-
-        <include href="wasatch_spec.xml" section="ParticleBC" />
-
-        <!--__________________________________-->
+      <Face           spec="MULTIPLE NO_DATA"                                                                                                       
+                        attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                                         
+                        attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                                         
+                        attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"                                                                       
+                        attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"                                                                       
+                        attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                                         
+                        attribute7="radius        OPTIONAL DOUBLE 'positive'"                                                                       
+                        attribute8="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                                         
+                        attribute9="lower         OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute10="upper        OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                                                         
+                        attribute12="major_radius OPTIONAL DOUBLE 'positive'"                                                                       
+                        attribute13="minor_radius OPTIONAL DOUBLE 'positive'"                                                                       
+                        attribute14="angle        OPTIONAL DOUBLE"                                                                                                
+                        attribute15="name         OPTIONAL STRING"                                                                                  
+                        attribute16="type         OPTIONAL STRING 'Wall, Velocity, MassFlow, Inlet, Outflow, Open, Symmetry, Pressure, User'"                 
+                        attribute17="inner_lower  OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute18="outer_lower  OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute19="inner_upper  OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"                                                                        
+                        attribute21="rectangulus  OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">                                                       
+         <!--__________________________________-->
+         <!--  Wasatch                         -->                       
+        <ParticleBC     spec="OPTIONAL NO_DATA" children1="ONE_OF(CHILD Wall, Inlet)">
+          <!-- spec for particle wall boundary -->                                
+          <Wall                   spec="OPTIONAL NO_DATA" attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+            <Restitution          spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+          </Wall>
+          
+          <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+          <Inlet                  spec="OPTIONAL NO_DATA">
+            <ParticlesPerSecond   spec="OPTIONAL DOUBLE"/>
+          </Inlet>                                                                
+        </ParticleBC>
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom,
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
                                                                      Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'"
+                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'" 
                               attribute5="value     OPTIONAL STRING" >
-
+                                                                
           <value            spec="OPTIONAL STRING"/>
+          
+          <!--__________________________________-->
+          <!--  Arches                          -->
+          <inputfile        spec="REQUIRED STRING"  need_applies_to="var TurbulentInlet" />
+          
+          <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
+          <timeperiod       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="var TurbulentInlet"/>
 
-          <include href="arches_spec.xml" section="BCType" excludeSectionTag="true" />
+          <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
+
+          <variable         spec="OPTIONAL NO_DATA" attribute1="label REQUIRED STRING"/> 
+
+          <!-- When using the FromFile or VelocityFileInput interface, one must supply a default in the 
+          event that the handoff file does not contain an iterator for the specified geometry --> 
+          <default          spec="REQUIRED NO_DATA" 
+                              attribute1="type      REQUIRED STRING 'Neumann, Dirichlet" 
+                              attribute2="value     OPTIONAL DOUBLE" 
+                              attribute3="velvalue  OPTIONAL VECTOR"
+                              need_applies_to="var VelocityFileInput FromFile"/> 
+         
+          <!-- Swirl No. -->
+          <!-- swirl_no = 2/3*vel_tangential/vel_axial -->
+          <!-- This definition is from Combustion Aerodynamics J.M. BEER and N.A. 1983 equation 5.14 -->
+          <!-- assumes: constant density, constant tangential and axial components of velocity  -->
+          <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl, ScalarSwirl"/>
+          <!-- swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+          <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl, ScalarSwirl"/>
+
+          <!-- For DQMOM: when using swirl one must clarify which component of velocity this phase variable represents. 
+               This is needed because the velocity names are user-specified. To specify it, we assume that the normal 
+               component is X and so the Y and Z "components" must be specified. This will vary face-to-face and component to 
+               component. 
+               Example: Face = y-, therefore Y would be assigned to z-velocity component and Z would be assigned to the 
+               x-velocity component to maintain a right-handed coordinate system. 
+          -->
+          <swirl_coord      spec="OPTIONAL STRING 'Y,Z'"  need_applies_to="var ScalarSwirl"/>
+
+          <!-- Stabilized Atmospheric Boundary Layer --> 
+          <!-- When using StABL, the free stream velocity is specified in the <value> tag. --> 
+          <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]--> 
+          <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity --> 
+          <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
+
+          <!-- One might want to specify a non-normal, mass flow inlet. This allows one to specify those components -->
+          <massflow_unitVector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet, PartMassFlowInlet"/> <!-- Specify the vector. The Normal component value is ignored. -->
+
+          <which_vel   spec="OPTIONAL STRING" need_applies_to= "var Custom"/> <!--This a MMS BC for almgren problem only for verification-->
+          <coordinates spec="OPTIONAL NO_DATA" attribute1 = "x REQUIRED STRING"
+                       attribute2 = "y REQUIRED STRING" need_applies_to= "var Custom"/> <!-- used in MMS_almgren BC -->
         </BCType>
       </Face>
+      
+      
+      <!--__________________________________-->
+      <!--        I C E                     -->
+      <LODI                 spec="OPTIONAL NO_DATA">
+        <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
+        <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
+        <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
+        <material           spec="REQUIRED STRING"/>
+      </LODI>    
 
-      <include href="ice_spec.xml"    section="BoundaryConditions" excludeSectionTag="true" />
+      <SINE_BC              spec="OPTIONAL NO_DATA">
+        <omega              spec="REQUIRED DOUBLE 'positive'"/>
+        <A                  spec="REQUIRED DOUBLE"/>
+        <reference_pressure spec="REQUIRED DOUBLE 'positive'"/>
+        <reference_velocity spec="REQUIRED VECTOR 'positive'"/>
+      </SINE_BC>
 
+      <microSlip            spec="OPTIONAL NO_DATA">
+        <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
+        <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
+        <SlipModel          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'FirstOrder SecondOrder_Deissler SecondOrder_Karniadakis-Beskok'"/>
+        <CreepFlow          spec="REQUIRED BOOLEAN" />
+      </microSlip>
+
+      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
+        <material           spec="REQUIRED STRING"/>
+        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
+        <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" /> 
+        <verticalDirection  spec="REQUIRED INTEGER '0,2'" />
+        <maxHeight          spec="OPTIONAL DOUBLE"            need_applies_to="type powerLawProfile"/>
+        <variance           spec="OPTIONAL NO_DATA">
+          <C_mu             spec="REQUIRED DOUBLE 'positive'"/>
+          <frictionVel      spec="REQUIRED DOUBLE 'positive'"/>
+        </variance>
+      </inletVelocity>
+      
     </BoundaryConditions>
-
+    
     <!--__________________________________-->
-
+    
     <Level              spec="MULTIPLE NO_DATA">
       <Box              spec="MULTIPLE NO_DATA"
-                          attribute1="label     OPTIONAL STRING"
+                          attribute1="label     OPTIONAL STRING" 
                           children1="ONE_OF(CHILD autoPatch,patches)">
         <autoPatch      spec="OPTIONAL INTEGER 'positive'" />
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
         <resolution     spec="OPTIONAL VECTOR" />
         <patches        spec="OPTIONAL VECTOR" />
-        <extraCells     spec="OPTIONAL VECTOR" />
+        <extraCells     spec="OPTIONAL VECTOR" /> 
       </Box>
-      <spacing          spec="OPTIONAL VECTOR" />
+      <spacing          spec="OPTIONAL VECTOR" /> 
       <periodic         spec="OPTIONAL VECTOR 'positive'"/>
     </Level>
   </Grid>
-
-  <!--______________________________________________________________________-->
-
-  <PhysicalConstants    spec="OPTIONAL NO_DATA">
+  
+  <!--__________________________________-->
+  
+  <PhysicalConstants    spec="OPTIONAL NO_DATA"> 
     <gravity            spec="REQUIRED VECTOR" />
     <reference_pressure spec="OPTIONAL DOUBLE" />
     <reference_point    spec="OPTIONAL VECTOR" />
     <viscosity          spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
+  
+  <!--__________________________________-->
+  
+  <CFD                 spec="OPTIONAL NO_DATA" >                                                                     
 
-  <!--______________________________________________________________________-->
-
-  <CFD                 spec="OPTIONAL NO_DATA" >
-
-    <CanAddICEMaterial spec="OPTIONAL BOOLEAN" />            <!-- FIXME: This belongs in CFD/ICE -->
-    <cfl               spec="OPTIONAL INTEGER 'positive'" />
+    <CanAddICEMaterial spec="OPTIONAL BOOLEAN" />            <!-- FIXME: This belongs in CFD/ICE -->                 
+    <cfl               spec="OPTIONAL INTEGER 'positive'" /> <!-- FIX ME: REALLY OPTIONAL??? -->                     
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
     <include href="arches_spec.xml" section="CFD/ARCHES" />
 
   </CFD>
 
+  <!--__________________________________-->
 
+  <DataAnalysis                         spec="OPTIONAL NO_DATA" >
+    <Module                             spec="MULTIPLE NO_DATA"
+                                          attribute1="name REQUIRED STRING 'controlVolFluxes  firstLawThermo, flatPlate_heatFlux, 
+                                                                            lineExtract,      meanTurbFluxes, minMax,         momentumAnalysis, 
+                                                                            particleExtract,  planeAverage,   planeExtract, 
+                                                                            radiometer,       statistics,     vorticity'" >
+      
+      <!--  Common __________________________________-->
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, lineExtract,     planeExtract, 
+                                                                                      particleExtract,  firstLawThermo,  minMax"/>
+                                                                                      
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract, 
+                                                                                      minMax,           particleExtract, planeAverage, 
+                                                                                      planeExtract,     statistics"/>
+                                                                                      
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract, 
+                                                                                      minMax,           particleExtract, planeAverage, 
+                                                                                      planeExtract,     statistics"/>
+                                                                                      
+      <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
+       
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract meanTurbFluxes, minMax particleExtract planeAverage planeExtract statistics">
+        <analyze                        spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING" 
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING"
+                                          attribute4="computeReynoldsStress OPTIONAL STRING"
+                                          attribute5="weighting OPTIONAL STRING 'none, nCells, mass'" />
+      </Variables>
+      
+      <!--  controlVolFluxes _____________________________-->
+      <controlVolumes                   spec="OPTIONAL NO_DATA" need_applies_to="name controlVolFluxes">
+        <box                            spec="MULTIPLE" />
+      </controlVolumes>
+      
+      
+      
+      <!--  lineExtract __________________________________-->
+      <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">
+        <line                           spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
+          <startingPt                   spec="REQUIRED VECTOR" />
+          <endingPt                     spec="REQUIRED VECTOR" />
+          <stepSize                     spec="OPTIONAL DOUBLE 'positive'"/>
+        </line>
+      </lines>
+      
+      <!--  meanTurbFluxes __________________________________-->
+      <monitorCell                      spec= "OPTIONAL VECTOR" />
+      
+      <enableVerification               spec= "OPTIONAL NO_DATA" />
+      
+      <velocity                         spec= "OPTIONAL NO_DATA" need_applies_to="name meanTurbFluxes"
+                                          attribute1="label REQUIRED STRING"
+                                          attribute2="weighting OPTIONAL STRING 'none, nCells, mass'" />     
+      
+      <!--  planeAverage __________________________________-->
+      <planeOrientation                 spec="REQUIRED STRING  'XY XZ YZ'" need_applies_to="name meanTurbFluxes, planeAverage"/>
+      <weight                           spec= "OPTIONAL NO_DATA" need_applies_to="name meanTurbFluxes, planeAverage"
+                                          attribute1="label REQUIRED STRING" />
 
-  <!--______________________________________________________________________-->
+      <!--  planeExtract __________________________________-->
+      <planes                           spec="OPTIONAL NO_DATA" need_applies_to="name planeExtract">
+        <plane                          spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
+          <startingPt                   spec="REQUIRED VECTOR" />
+          <endingPt                     spec="REQUIRED VECTOR" />
+        </plane>
+      </planes>      
+      
+      <!--  flatPlate_heatFlux ____________________________-->
+      <plane                           spec="MULTIPLE NO_DATA" need_applies_to="name flatPlate_heatFlux"> 
+        <startingPt                    spec="REQUIRED VECTOR" />
+        <endingPt                      spec="REQUIRED VECTOR" />
+      </plane>
+      
+      <!--1st lawThermo __________________________________-->
+      <engy_convt_factor                spec="OPTIONAL DOUBLE"  need_applies_to="name firstLawThermo"/> 
+      <controlVolume                    spec="OPTIONAL NO_DATA" need_applies_to="name firstLawThermo momentumAnalysis">       
+        <Face                           spec="MULTIPLE NO_DATA"  
+                                          attribute1="side REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" 
+                                          attribute2="extents REQUIRED STRING 'entireFace, partialFace'">
+          <startPt                      spec="OPTIONAL VECTOR" />
+          <endPt                        spec="OPTIONAL VECTOR" />
+        </Face>
+      </controlVolume>
+
+      <!--momentumAnalysis__________________________________--> 
+      <uvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/> 
+      <vvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <wvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <vel_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <rho_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/> 
+ 
+      <!--statistics ____________________________________--> 
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="name statistics" />
+            
+    </Module>
+  </DataAnalysis>
+
+  <!--__________________________________-->
   <PostProcess                          spec="OPTIONAL NO_DATA" >
-    <include href="dataAnalysis_spec.xml"    section="DataAnalysis/Module" />
+    <Module                             spec="MULTIPLE NO_DATA"
+                                          attribute1="type REQUIRED STRING 'statistics, spatioTemporalAvg, reduceUda" >
+      
+      <!--  Common __________________________________-->
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics, spatioTemporalAvg"/>
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics, spatioTemporalAvg">
+        <analyze                        spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING" 
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING" />
+      </Variables>
+ 
+      <!--statistics ____________________________________--> 
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="type statistics" />
+      
+      <!--spatioTemporalAvg _____________________________--> 
+      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"  need_applies_to="type spatioTemporalAvg" />
+      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="type spatioTemporalAvg" />
+      <TemporalAvg                     spec="REQUIRED NO_DATA" need_applies_to="type spatioTemporalAvg" attribute1="OnOff REQUIRED STRING ">
+        <baseTimestep                  spec="REQUIRED DOUBLE 'positive'"/>
+      </TemporalAvg>
+    </Module>
   </PostProcess>
 
-
-  <!--______________________________________________________________________-->
-
-  <AMR                                  spec="OPTIONAL NO_DATA"
-                                          attribute1="type OPTIONAL STRING 'Dynamic StaticGridML'">
+  
+  <!--__________________________________-->
+  
+  <AMR                                  spec="OPTIONAL NO_DATA" attribute1="type OPTIONAL STRING 'Dynamic StaticGridML'">
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
-    <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE. -->
+    <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 
     <include href="ice_spec.xml"        section="AMR/ICE" />
     <include href="mpm_spec.xml"        section="AMR/MPM" />
@@ -801,30 +976,30 @@
     <Regridder                          spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'Tiled, SingleLevel'" >
       <adaptive                         spec="OPTIONAL BOOLEAN" />
-
-      <!-- Generic Required Regridder Options -->
+      
+      <!-- Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
-
-      <!-- Generic Optional Regridder Options -->
+      
+      <!-- Generic Optional Regridder Options --> 
       <regrid_once                      spec="OPTIONAL BOOLEAN" />
-      <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />
-      <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />
+      <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
+      <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
       <cell_stability_dilation          spec="OPTIONAL VECTOR" />
       <cell_regrid_dilation             spec="OPTIONAL VECTOR" />
-      <dynamic_dilation                 spec="OPTIONAL BOOLEAN" />
+      <dynamic_dilation                 spec="OPTIONAL BOOLEAN" />   
       <max_dilation                     spec="OPTIONAL BOOLEAN" />
-      <max_timestep_interval            spec="OPTIONAL INTEGER" />
-      <min_timestep_interval            spec="OPTIONAL INTEGER" />
-
+      <max_timestep_interval            spec="OPTIONAL INTEGER" />   
+      <min_timestep_interval            spec="OPTIONAL INTEGER" />   
+      
       <!-- Required SingleLevel Regridder -->
       <new_patch_layout                 spec="REQUIRED VECTOR"             need_applies_to="type SingleLevel"/>
       <level                            spec="OPTIONAL INTEGER 'positive'" need_applies_to="type SingleLevel"/>
-
+      
       <!--Required BNR Regridder & Tiled Regridder Options-->
       <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type Tiled"/>
       <min_boundary_cells               spec="REQUIRED VECTOR"           need_applies_to="type Tiled"/>
       <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type Tiled"/>
-
+      
 
       <!-- Optional Options-->
       <patches_per_level_per_proc       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type Tiled" />
@@ -838,26 +1013,14 @@
                                         attribute3="label     REQUIRED STRING " />
     </FineCoarseInterfaces>
   </AMR>
-
-  <!--______________________________________________________________________-->
+  
+  <!--__________________________________-->
   <!--  Scheduler Options               -->
-
+  
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP'">
+                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP Kokkos'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
-    <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren
-                                                 LeastChildren
-                                                 MostAllChildren
-                                                 LeastAllChildren
-                                                 MostL2Children
-                                                 LeastL2Children
-                                                 PatchOrder
-                                                 PatchOrderRandom
-                                                 MostMessages
-                                                 LeastMessages
-                                                 Random
-                                                 FCFS
-                                                 Stack'" />
+    <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
 
     <!-- TaskMonitoring Example
 
@@ -876,11 +1039,11 @@
 
     <save label="AllTasks/LoadBalancerCost"/>
     <save label="AllTasks/ExecTime"/>
-    <save label="SchedulerCommon/recordTaskMonitoring/ExecTime"/>
+    <save label="SchedulerCommon/recordTaskMonitoring/ExecTime"/> 
 
     The values must be saved otherwise they are only availble in situ.
     -->
-
+    
     <TaskMonitoring       spec="OPTIONAL NO_DATA">
       <per_cell           spec="OPTIONAL BOOLEAN" />
       <attribute          spec="MULTIPLE STRING 'LoadBalancerCost ExecTime WaitTime'" />
@@ -888,7 +1051,7 @@
                           attribute1="name REQUIRED STRING"
                           attribute2="attribute REQUIRED STRING 'ExecTime WaitTime'" />
     </TaskMonitoring>
-
+    
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE"  />
       <end_time           spec="REQUIRED DOUBLE"  />
@@ -908,84 +1071,185 @@
     </VarTracker>
   </Scheduler>
 
-
-  <!--______________________________________________________________________-->
+  <!--__________________________________-->
   <!-- image or preprocessing specs     -->
   <PreprocessTools        spec="OPTIONAL NO_DATA" >
     <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
-      <image_filename     spec="REQUIRED STRING" />
+      <image              spec="REQUIRED STRING" />
       <ppc                spec="REQUIRED VECTOR 'positive'" />
       <res                spec="REQUIRED VECTOR 'positive'" />
       <outputBasename     spec="REQUIRED STRING" />
-
+      
       <matl               spec="MULTIPLE NO_DATA"
                           attribute1="index REQUIRED STRING">
         <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
       </matl>
-
+      
       <uniqueGrains       spec="OPTIONAL NO_DATA">
         <matlIndex        spec="REQUIRED MULTIPLE_DOUBLES" />
         <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
       </uniqueGrains>
-
+      
 
     </rawToUniqueGrains>
   </PreprocessTools>
-
-    <!--______________________________________________________________________-->
-  <LoadBalancer            spec="OPTIONAL NO_DATA"
+  
+  <!--__________________________________-->
+  <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'Simple SimpleLoadBalancer RoundRobin DLB PLB'" >
-
+                             
     <costAlgorithm         spec="OPTIONAL STRING 'Model,ModelLS,Kalman,Memory'" />
     <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
-    <doSpaceCurve          spec="OPTIONAL BOOLEAN" />               <!-- default is true-->
-    <hasParticles          spec="OPTIONAL BOOLEAN" />               <!-- should the cost algorithms take into account particles-->
+    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- default is true-->
+    <hasParticles          spec="OPTIONAL BOOLEAN" /> <!-- should the cost algorithms take into account particles-->
     <timestepInterval      spec="REQUIRED INTEGER 'positive'" />
 
-    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" />    <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
-    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" />          <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
-    <levelIndependent      spec="OPTIONAL BOOLEAN" />               <!-- default is true -->
+    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
+    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
+    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- default is true -->
     <outputNthProc         spec="OPTIONAL INTEGER 'positive'"/>
 
     <zoltanAlgorithm       spec="OPTIONAL STRING 'HSFC RIB RCB'" />
     <zoltanIMBTol          spec="OPTIONAL DOUBLE 'positive'" />
-
+    
     <!--The remaining tags should not need to be set unless using "Model"-->
-    <cellCost              spec="OPTIONAL DOUBLE 'positive'" />     <!--The weight per cell -->
-    <particleCost          spec="OPTIONAL DOUBLE 'positive'" />     <!-- The weight per particle -->
-    <patchCost             spec="OPTIONAL DOUBLE 'positive'" />     <!-- The weight per patch -->
-    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" />     <!--The weight extra cell -->
+    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
+    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
+    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+    <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
   </LoadBalancer>
+
+  <Multimaterial                       spec="OPTIONAL NO_DATA" >               
+    <fluidThermalConductivity          spec="REQUIRED DOUBLE" />               
+    <heatExchange                      spec="REQUIRED BOOLEAN" />              
+    <turbulentPrandtNo                 spec="REQUIRED DOUBLE" />               
+    <fluidHeatCapacity                 spec="REQUIRED DOUBLE" />               
+    <IfCutCell                         spec="REQUIRED BOOLEAN" />              
+    <StationarySolid                   spec="REQUIRED BOOLEAN" />              
+    <inviscid                          spec="REQUIRED BOOLEAN" />              
+    <restart                           spec="REQUIRED BOOLEAN" />              
+    <fixedCellType                     spec="REQUIRED BOOLEAN" />              
+    <fixedTemp                         spec="REQUIRED BOOLEAN" />              
+    <TestCutCells                      spec="REQUIRED BOOLEAN" />              
+    <stairstep                         spec="REQUIRED BOOLEAN" />              
+  </Multimaterial>
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/ESMPM" />
 
-  <!--__________________________________-->
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                            attribute1="add OPTIONAL BOOLEAN" >
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
-    <include href="ice_spec.xml" section="MaterialProperties"     excludeSectionTag="true"/>
+    <include href="ice_spec.xml" section="MaterialProperties/ICE" />
     <include href="fvm_spec.xml" section="MaterialProperties/FVM" />
 
   </MaterialProperties>
-
+  
   <!--  Models        -->
   <include href="Models.xml" />
-
+  
   <!--  MPM           -->
   <include href="mpm_spec.xml" section="Uintah_specification/PhysicalBC" />
 
-  <!-- Solver Component -->
-  <include href="solver_spec.xml" section=""/>
+  <SimulationComponent          spec="REQUIRED" />
 
-  <!-- Examples Component -->
-  <include href="examples_spec.xml" section="" />
+  <Solver                     spec="OPTIONAL NO_DATA" 
+                              attribute1="type REQUIRED STRING 'CGSolver, hypre, hypreamr'" >
+    <include href="solver_spec.xml" section="Parameters" />
+  </Solver>
+
+  <!--______________________________________________________________________-->
+  <!--                 EXAMPLES                                             -->
+  
+  <!-- RMCRT_Test   component  -->
+  <include href="RMCRT_test.xml"/>
+  
+  <!-- Burger         -->
+  <Burger                     spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </Burger>
+
+  <!--  DOSWeep  Component -->
+  <DOSweep                    spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+    <X_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Y_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Z_Laplacian              spec="OPTIONAL NO_DATA" />
+    <include href="solver_spec.xml" section="Parameters" />
+  </DOSweep>
+
+  <!-- Heat -->
+  <Heat                       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <alpha                    spec="REQUIRED DOUBLE" />
+    <R0                       spec="REQUIRED DOUBLE" />
+    <gamma                    spec="REQUIRED DOUBLE" />
+    <refine_threshold         spec="OPTIONAL DOUBLE" />
+  </Heat>
+
+  <!-- Poisson        -->
+  <Poisson                    spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </Poisson>
+
+  <!-- portabledependencytest1        -->
+  <portabledependencytest1                    spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+    <task                     spec="REQUIRED STRING" />
+    <exespace                 spec="REQUIRED STRING" />
+  </portabledependencytest1>
+
+  <PhaseField spec="OPTIONAL NO_DATA"
+        attribute1="type REQUIRED STRING 'pure_metal, heat, benchmark01, benchmark02, benchmark03, benchmark04'">
+    <delt                     spec="REQUIRED DOUBLE" />
+    <dim                      spec="OPTIONAL INTEGER '1,3'"/>
+    <var                      spec="OPTIONAL STRING 'cc, nc'"/>
+    <scheme                   spec="OPTIONAL STRING 'forward_euler, backward_euler, crank_nicolson'" />
+    <verbosity                spec="OPTIONAL INTEGER '0,4'"/>
+    <alpha                    spec="OPTIONAL DOUBLE" />
+    <R0                       spec="OPTIONAL DOUBLE" />
+    <Delta                    spec="OPTIONAL DOUBLE" />
+    <epsilon                  spec="OPTIONAL DOUBLE" />
+    <gamma_psi                spec="OPTIONAL DOUBLE" />
+    <gamma_u                  spec="OPTIONAL DOUBLE" />
+    <refine_threshold         spec="OPTIONAL DOUBLE" />
+    <test                     spec="OPTIONAL BOOLEAN" />
+  </PhaseField>
+  
+  <UnifiedSchedulerTest       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </UnifiedSchedulerTest>  
+
+  <!--  Particle Test Component -->
+  <ParticleTest1              spec="OPTIONAL NO_DATA" >
+    <doOutput                 spec="OPTIONAL INTEGER" />
+    <doGhostCells             spec="OPTIONAL INTEGER" />
+  </ParticleTest1>
+  
+  <!--  Wave  Component -->
+  <Wave                       spec="OPTIONAL NO_DATA" >
+    <radius                   spec="OPTIONAL DOUBLE 'positive'" />
+    <initial_condition        spec="OPTIONAL STRING" />
+    <integration              spec="OPTIONAL STRING" />
+    <refine_threshold         spec="OPTIONAL INTEGER" />
+  </Wave>
+  
+  <!--  Solver Test  Component -->
+  <SolverTest                 spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+    <X_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Y_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Z_Laplacian              spec="OPTIONAL NO_DATA" />
+
+    <include href="solver_spec.xml" section="Parameters" />
+    
+  </SolverTest>
 
   <!-- Wasatch Component -->
   <include href="wasatch_spec.xml" section="" />
-
-  <!-- DataAnalysis -->
-  <include href="dataAnalysis_spec.xml" section="" />
 
 </Uintah_specification>

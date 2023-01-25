@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,11 +84,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
   db_classic->getWithDefault( "cold_flow", d_coldflow, false);
 
    //READ TABLE:
-  ND_interp=SCINEW_ClassicTable(tableFileName); // requires a delete on ND_interp object by host class
+  ND_interp=SCINEW_ClassicTable<MAX_NUM_DEP_VARS>(tableFileName); // requires a delete on ND_interp object by host class
 
   d_allDepVarNames=ND_interp->tableInfo.d_savedDep_var;
   d_allIndepVarNames=ND_interp->tableInfo.d_allIndepVarNames;
-  d_allIndepVarNum=ND_interp->tableInfo.d_allIndepVarNum;
 
   d_constants=(ND_interp->tableInfo.d_constants);     ///< List of constants in table header
   d_indepvarscount=d_allIndepVarNames.size();       ///< Number of independent variables
@@ -213,7 +212,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 
   if ( _iv_transform->has_heat_loss() ){
 
-    const vector<double> hl_bounds = _iv_transform->get_hl_bounds(ND_interp->tableInfo.indep_headers , d_allIndepVarNum);
+    const vector<double> hl_bounds = _iv_transform->get_hl_bounds(ND_interp->tableInfo.indep_headers ,ND_interp->tableInfo.d_allIndepVarNum);
 
     d_hl_lower_bound = hl_bounds[0];
     d_hl_upper_bound = hl_bounds[1];
@@ -393,9 +392,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
+    CCVariable<double> mpmarches_denmicro;
 
-    std::vector<CCVariable<double> >CCVar_vec_lookup (d_dvVarMap.size()); // needs to be expanded newTable
-    std::vector<int> depVarIndexes(d_nDepVars);
+
+    struct1DArray<CCVariable<double> , MAX_NUM_DEP_VARS> CCVar_vec_lookup (d_dvVarMap.size()); // needs to be expanded newTable
+    struct1DArray<int, MAX_NUM_DEP_VARS > depVarIndexes(d_nDepVars);
     if ( initialize_me ) {
        int  ixx =0;
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
@@ -483,7 +484,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
 
 
-   std::vector<CCVariable<double> > IVs_transformed(nIndVars);
+   struct1DArray<CCVariable<double>, MAX_TABLE_DIMENSION> IVs_transformed(nIndVars);
    for (int  ix = 0; ix< nIndVars; ix++){
      IVs_transformed[ix].allocate(domLo,domHi);
    }
@@ -518,7 +519,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
 
     //get the state from the Table
-    ND_interp->getState( IVs_transformed, CCVar_vec_lookup   ,d_allIndepVarNames ,patch,depVarIndexes);
+    ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> tempObjectReplaceForPortability;
+    ND_interp->getState<UintahSpaces::CPU,UintahSpaces::HostSpace>( tempObjectReplaceForPortability, IVs_transformed, CCVar_vec_lookup   ,patch,depVarIndexes);
 
 ////////    now deal with the mixing and density checks same as before
     int density_index=0;
@@ -622,8 +624,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           _iv_transform->transform( iv, total_inert_f );
 
-          std::vector<double> depVarValues;
-          depVarValues = ND_interp->find_val(iv, depVarIndexes );
+          struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+
+          struct1DArray<double, MAX_NUM_DEP_VARS > depVarValues;
+          ND_interp->find_val_wrapper<UintahSpaces::HostSpace>(iv_p, depVarIndexes, depVarValues);
 
           //take care of the mixing and density the same
           int depVarCount = 0;
@@ -667,11 +671,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     if ( modify_ref_den ) {
 
       //actually modify the reference density value:
-      std::vector<double> iv = _iv_transform->get_reference_iv();
-
-      std::vector<int> varIndex (1, density_index  );
-      std::vector<double> denValue(1, 0.0);
-      denValue = ND_interp->find_val( iv, varIndex );
+      struct1DArray<int,1> varIndex{density_index};
+      struct1DArray<double,1> denValue(1);
+      ND_interp->find_val_wrapper<UintahSpaces::HostSpace>( _iv_transform->get_reference_iv(), varIndex ,denValue);
       double den_ref = denValue[0];
 
       if ( time_substep == 0 ){
@@ -761,9 +763,11 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variab
   int dep_index = findIndex( variable );
   _iv_transform->transform( iv, 0.0 );
 
-  std::vector<int> varIndex (1, dep_index );
-  std::vector<double> tabValue(1, 0.0);
-  tabValue = ND_interp->find_val( iv, varIndex );
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+
+  struct1DArray<int,1> varIndex{dep_index};
+  struct1DArray<double,1> tabValue(1);
+  ND_interp->find_val_wrapper<UintahSpaces::HostSpace>( iv_p, varIndex, tabValue);
   double value = tabValue[0];
 
   return value;
@@ -790,9 +794,11 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f );
 
-  std::vector<int> varIndex (1, dep_index );
-  std::vector<double> tabValue(1, 0.0);
-  tabValue = ND_interp->find_val( iv, varIndex );
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+
+  struct1DArray<int,1> varIndex{dep_index};
+  struct1DArray<double,1> tabValue(1);
+    ND_interp->find_val_wrapper<UintahSpaces::HostSpace>(iv_p, varIndex, tabValue);
   double table_value = tabValue[0];
 
   // for post look-up mixing
@@ -830,9 +836,11 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f );
 
-  std::vector<int> varIndex (1, dep_index );
-  std::vector<double> tabValue(1, 0.0);
-  tabValue = ND_interp->find_val( iv, varIndex );
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+
+  struct1DArray<int,1> varIndex{dep_index};
+  struct1DArray<double,1> tabValue(1);
+  ND_interp->find_val_wrapper<UintahSpaces::HostSpace>( iv_p, varIndex, tabValue);
   double table_value = tabValue[0];
 
   if ( do_inverse ){ 

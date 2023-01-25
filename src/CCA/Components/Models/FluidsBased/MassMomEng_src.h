@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,6 @@
 #define Packages_Uintah_CCA_Components_Examples_MassMomEng_src_h
 
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
-#include <Core/GeometryPiece/GeometryPiece.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
 
@@ -38,7 +37,7 @@ namespace Uintah {
 
 CLASS
    MassMomEng_src
-
+   
    MassMomEng_src simulation
 
 GENERAL INFORMATION
@@ -50,16 +49,16 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-
+  
+   
 KEYWORDS
    MassMomEng_src
 
 DESCRIPTION
    Long description...
-
+  
 WARNING
-
+  
 ****************************************/
 
   class MassMomEng_src : public FluidsBasedModel {
@@ -67,46 +66,45 @@ WARNING
     MassMomEng_src(const ProcessorGroup* myworld,
                    const MaterialManagerP& materialManager,
                    const ProblemSpecP& params);
-
+    
     virtual ~MassMomEng_src();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
     virtual void problemSetup(GridP& grid,
                                const bool isRestart);
-
+      
     virtual void scheduleInitialize(SchedulerP&,
-                                    const LevelP& level);
+                                        const LevelP& level);
 
-    virtual void scheduleRestartInitialize(SchedulerP&,
-                                           const LevelP& level){};
-
+    virtual void restartInitialize() {}
+      
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
-                                               const LevelP& level);
-
+                                                   const LevelP& level);
+      
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                             const LevelP& level);
-
+                                                const LevelP& level);
+                                             
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
                                                          const MaterialSet*);
-
+                                               
     virtual void computeSpecificHeat(CCVariable<double>&,
-                                     const Patch*,
-                                     DataWarehouse*,
-                                     const int);
-
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int);
+                                    
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
-
+                                      
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches);
 
-  private:
-    void computeModelSources(const ProcessorGroup*,
+  private:    
+    void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse*,
+                             const MaterialSubset* matls, 
+                             DataWarehouse*, 
                              DataWarehouse* new_dw);
 
     MassMomEng_src(const MassMomEng_src&);
@@ -114,33 +112,18 @@ WARNING
 
     ProblemSpecP d_params;
     ICELabel* Ilb;
-    MaterialSet* d_matlSet;
+    MaterialSet* mymatls;
     Material* d_matl;
-
-    //__________________________________
-    //  Region used for initialization
-    class Region {
-    public:
-      Region(GeometryPieceP piece, ProblemSpecP&);
-
-      enum algorithm {fixedPrimitiveValues};
-      algorithm algoType;
-
-      GeometryPieceP piece;
-      Vector velocity_src;
-      double density_src;
-      double temp_src;
-      double timeStart;
-      double timeStop;
+    
+    struct src{
+      Vector mom_src_rate;
+      double mass_src_rate;
+      double eng_src_rate;
+      double d_mme_src_t_start;
+      double d_mme_src_t_final;
     };
-
-    class src{
-    public:
-      std::vector<MassMomEng_src::Region*> regions;
-    };
-
     src* d_src;
-
+    
     const VarLabel* totalMass_srcLabel;
     const VarLabel* totalMom_srcLabel;
     const VarLabel* totalEng_srcLabel;

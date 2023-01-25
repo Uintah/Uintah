@@ -29,7 +29,6 @@
                                                                              cnh_damage, 
                                                                              cnhp_damage, 
                                                                              UCNH, 
-                                                                             UCNHVar, 
                                                                              program_burn,
                                                                              jwlpp_mpm, 
                                                                              p_alpha, 
@@ -47,17 +46,6 @@
 									     MohrCoulomb,
 									     HypoplasticB,
 									     QADamage">
-
-        <!-- Variable property UCNH -->
-        <variable_properties       spec="OPTIONAL NO_DATA" >
-            <entry                 spec="MULTIPLE NO_DATA" >
-              <color               spec="REQUIRED DOUBLE" />
-              <bulk_modulus        spec="REQUIRED DOUBLE" />
-              <shear_modulus       spec="REQUIRED DOUBLE" />
-              <yield_stress        spec="REQUIRED DOUBLE" />
-              <hardening_modulus   spec="REQUIRED DOUBLE" />
-            </entry>
-        </variable_properties>
 
 	<!-- input parameters for Kelvin_voigt model -->
 	<elastic_shear				   spec="REQUIRED DOUBLE 'positive'" need_applies_to = "type Kelvin_Voigt" />
@@ -1068,7 +1056,7 @@
     <A1                spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
     <B1                spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
     <W                 spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
-    <beta_rate              spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
+    <beta              spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
     <strain_ref        spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>
 
     <Usemodul  		   spec="OPTIONAL DOUBLE" need_applies_to="type MohrCoulomb"/>

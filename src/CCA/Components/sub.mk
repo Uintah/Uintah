@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -66,6 +66,10 @@ ifeq ($(BUILD_MPM),yes)
   MPM := $(SRCDIR)/MPM
 endif
 
+# MPM-Arches
+ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
+  MPMARCHES := $(SRCDIR)/MPMArches
+endif
 
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
@@ -93,6 +97,7 @@ SUBDIRS := \
         $(FVM)                         \
         $(ICE)                         \
         $(MPM)                         \
+        $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \
         $(PARENT)                      \

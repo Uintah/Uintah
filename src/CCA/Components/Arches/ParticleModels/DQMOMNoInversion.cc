@@ -12,6 +12,48 @@ DQMOMNoInversion::DQMOMNoInversion( std::string task_name, int matl_index, const
 DQMOMNoInversion::~DQMOMNoInversion(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DQMOMNoInversion::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DQMOMNoInversion::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DQMOMNoInversion::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DQMOMNoInversion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DQMOMNoInversion::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DQMOMNoInversion::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DQMOMNoInversion::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DQMOMNoInversion::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DQMOMNoInversion::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DQMOMNoInversion::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void DQMOMNoInversion::problemSetup( ProblemSpecP& db ){
 
   m_ic_names = ArchesCore::getICNames( db );
@@ -94,11 +136,12 @@ void DQMOMNoInversion::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( *i );
-    var.initialize(0.0);
+    auto var = tsk_info->get_field<CCVariable<double>, double, MemSpace>( *i );
+    Uintah::parallel_initialize( execObj, 0.0, var );
   }
 
 }
@@ -133,31 +176,32 @@ void DQMOMNoInversion::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   Vector Dx = patch->dCell();
   double V = Dx.x()*Dx.y()*Dx.z();
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 
-    CCVariable<double>& src = tsk_info->get_field<CCVariable<double> >( *i );
+    auto src = tsk_info->get_field<CCVariable<double>, double, MemSpace>( *i );
 
     //Ensuring that all sources are zero since we are adding directly to the RHS
-    src.initialize(0.0);
+    Uintah::parallel_initialize( execObj, 0.0, src );
 
   }
 
   for  ( auto i = m_ic_qn_rhsnames.begin(); i != m_ic_qn_rhsnames.end(); i++ ){
 
-    CCVariable<double>& RHS = tsk_info->get_field<CCVariable<double> >(*i);
+    auto RHS = tsk_info->get_field<CCVariable<double>, double, MemSpace>(*i);
     std::vector<std::string> models = m_ic_model_map[*i];
 
     for ( auto j = models.begin(); j != models.end(); j++ ){
 
-      constCCVariable<double>& model = tsk_info->get_field<constCCVariable<double> >(*j);
+      auto model = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(*j);
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-      Uintah::parallel_for( range, [&]( int i, int j, int k){
+      Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA( int i, int j, int k){
         RHS(i,j,k) += model(i,j,k) * V;
       });
 

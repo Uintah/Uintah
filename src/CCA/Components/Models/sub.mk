@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -44,6 +44,7 @@ endif
 
 PSELIBS :=                 \
         CCA/Ports          \
+        CCA/Components/Schedulers \
         Core/Disclosure    \
         Core/Exceptions    \
         Core/Geometry      \
@@ -57,8 +58,7 @@ PSELIBS :=                 \
 
 # ICE Models
 ifeq ($(BUILD_ICE),yes)
-  SUBDIRS += $(SRCDIR)/FluidsBased \
-             $(SRCDIR)/ParticleBased
+  SUBDIRS += $(SRCDIR)/FluidsBased
 
   PSELIBS += CCA/Components/ICE/Core      \
 	     CCA/Components/ICE/CustomBCs \
@@ -92,15 +92,15 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
         $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
-ifneq ($(HAVE_CUDA),)
+ifeq ($(HAVE_CUDA),yes)
   LIBS :=  $(LIBS) $(CUDA_LIBRARY)
 endif
 
-ifneq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
-ifneq ($(HAVE_HYPRE),)
+ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 

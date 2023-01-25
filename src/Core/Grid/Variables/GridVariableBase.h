@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,6 +66,8 @@ WARNING
     virtual ~GridVariableBase() {}
       
     virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
+    virtual bool rewindowExact(const IntVector& lowIndex, const IntVector& highIndex) = 0;
+
     virtual void offset(const IntVector& offset) = 0;
 
     virtual GridVariableBase* cloneType() const = 0;

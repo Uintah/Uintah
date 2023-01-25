@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 2012-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,15 +25,21 @@
 //-- Uintah Includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
-#include <CCA/Components/Wasatch/Expressions/ScalarEOSHelper.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-using ScalarEOS::resolve_tag;
-using ScalarEOS::assemble_src_tags;
+
+Expr::Tag
+resolve_tag( const FieldSelector field,
+                   const FieldTagInfo& info )
+{
+  Expr::Tag tag;
+  const FieldTagInfo::const_iterator ifld = info.find( field );
+  if( ifld != info.end() ) tag = ifld->second;
+  return tag;
+}
 
 //------------------------------------------------------------------
 
@@ -210,7 +216,7 @@ ScalarEOSCoupling<FieldT>::Builder::Builder( const Expr::Tag& result,
 
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
-    srcT_          ( assemble_src_tags( sources, fieldInfo ) ),
+    srcT_          ( sources        ),
     rhoStarTag_    ( rhoStarTag     ),
     dRhoDPhiTag_      ( dRhoDPhiTag ),
     isStrongForm_  ( isStrongForm   )
@@ -226,7 +232,6 @@ ScalarEOSCoupling<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const bool isStrongForm)
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
-    srcT_          ( assemble_src_tags( Expr::TagList(), fieldInfo ) ),
     rhoStarTag_    ( rhoStarTag     ),
     dRhoDPhiTag_   ( dRhoDPhiTag    ),
     isStrongForm_  ( isStrongForm   )

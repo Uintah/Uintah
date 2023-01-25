@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@ CLASS
 GENERAL INFORMATION
    KokkosOpenMPScheduler.h
 
-   Alan Humphrey, John Holmen
+   Alan Humphrey, John Holmen, Brad Peterson
    Scientific Computing and Imaging Institute
    University of Utah
 
@@ -104,6 +104,7 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     KokkosOpenMPScheduler& operator=( KokkosOpenMPScheduler && )      = delete;
 
     void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
+    void runReadyTask( DetailedTask* readyTask );
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;

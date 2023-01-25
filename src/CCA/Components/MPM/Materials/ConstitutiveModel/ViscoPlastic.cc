@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,7 +48,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -1047,7 +1046,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
     // GET GLOBAL DATA 
     old_dw->get(delT,         lb->delTLabel, getLevel(patches));
-    new_dw->get(gDisp,        Il->dispNewLabel, dwi, patch, gac, 1);
+    new_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
 
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
@@ -1470,7 +1469,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
 
     // GET GLOBAL DATA 
-    old_dw->get(gDisp,        Il->dispNewLabel, dwi, patch, gac, 1);
+    old_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
     
     // the following line - JONAH
     parent_old_dw->get(pMass,               lb->pMassLabel,   pset);

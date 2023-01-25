@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,16 +29,18 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/kokkos_defs.h>
+
+#ifdef HAVE_KOKKOS
+  #include <Kokkos_Macros.hpp>
+#endif
 
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <thread>
-
-#ifdef _OPENMP
-  #include <omp.h>
-#endif
+#include <string>
 
 using namespace Uintah;
 
@@ -49,8 +51,16 @@ using namespace Uintah;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
+// Default to pthreads unless specified otherwise.
+Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment = Parallel::CpuThreadEnvironment::PTHREADS;
+
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
+int              Parallel::s_cuda_threads_per_block  = -1;
+int              Parallel::s_cuda_blocks_per_loop    = -1;
+int              Parallel::s_cuda_streams_per_task   = 1;
+std::string      Parallel::s_task_name_to_time       = "";
+int              Parallel::s_amount_task_name_expected_to_run = -1;
 int              Parallel::s_num_threads             = -1;
 int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
@@ -89,6 +99,22 @@ MpiError( char * what, int errorcode )
 
 //_____________________________________________________________________________
 //
+void
+Parallel::setCpuThreadEnvironment( CpuThreadEnvironment threadType )
+{
+  s_cpu_thread_environment = threadType;
+}
+
+//_____________________________________________________________________________
+//
+Parallel::CpuThreadEnvironment
+Parallel::getCpuThreadEnvironment()
+{
+  return s_cpu_thread_environment;
+}
+
+//_____________________________________________________________________________
+//
 bool
 Parallel::usingMPI()
 {
@@ -111,6 +137,86 @@ void
 Parallel::setUsingDevice( bool state )
 {
   s_using_device = state;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCudaThreadsPerBlock( unsigned int num )
+{
+  s_cuda_threads_per_block = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCudaBlocksPerLoop( unsigned int num )
+{
+  s_cuda_blocks_per_loop = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setCudaStreamsPerTask( unsigned int num )
+{
+  s_cuda_streams_per_task = num;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setTaskNameToTime( const std::string& taskNameToTime )
+{
+  s_task_name_to_time = taskNameToTime;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setAmountTaskNameExpectedToRun( unsigned int amountTaskNameExpectedToRun )
+{
+  s_amount_task_name_expected_to_run = amountTaskNameExpectedToRun;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getCudaThreadsPerBlock()
+{
+  return s_cuda_threads_per_block;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getCudaBlocksPerLoop()
+{
+  return s_cuda_blocks_per_loop;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getCudaStreamsPerTask()
+{
+  return s_cuda_streams_per_task;
+}
+
+//_____________________________________________________________________________
+//
+std::string
+Parallel::getTaskNameToTime()
+{
+  return s_task_name_to_time;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getAmountTaskNameExpectedToRun()
+{
+  return s_amount_task_name_expected_to_run;
 }
 
 //_____________________________________________________________________________
@@ -192,28 +298,33 @@ Parallel::initializeManager( int& argc , char**& argv )
     // it only displays the usage to the root process.
   }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+  // TODO: Set sensible defaults after deprecating use of
+  // Kokkos::OpenMP with the Unified Scheduler
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   if ( s_num_partitions <= 0 ) {
-    const char* num_cores = getenv("HPCBIND_NUM_CORES");
-    if ( num_cores != nullptr ) {
-      s_num_partitions = atoi(num_cores);
-    }
-    else {
-#ifdef _OPENMP
-      s_num_partitions = omp_get_max_threads();
-#else
-      s_num_partitions = 1;
-#endif
-    }
+    s_num_partitions = 1;
   }
   if ( s_threads_per_partition <= 0 ) {
-#ifdef _OPENMP
-    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
-#else
     s_threads_per_partition = 1;
-#endif
   }
-#endif // UINTAH_ENABLE_KOKKOS
+#endif
+
+  // Set CUDA parameters (NOTE: This could be autotuned if we grab
+  // knowledge of how many patches are assigned to this MPI rank and
+  // how many SMs are on this particular machine.)
+
+  // TODO, only display if gpu mode is turned on and if these values
+  // weren't set.
+#if defined(HAVE_KOKKOS_GPU)
+  if ( s_using_device ) {
+    if ( s_cuda_threads_per_block <= 0 ) {
+      s_cuda_threads_per_block = 256;
+    }
+    if ( s_cuda_blocks_per_loop <= 0 ) {
+      s_cuda_blocks_per_loop = 1;
+    }
+  }
+#endif
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
@@ -262,7 +373,7 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
 #else
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
@@ -274,18 +385,32 @@ Parallel::initializeManager( int& argc , char**& argv )
 
 #ifdef THREADED_MPI_AVAILABLE
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     if ( s_num_partitions > 0 ) {
       std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
-      std::cout << "Parallel: " << s_num_partitions << " OMP thread " << plural << " per MPI process\n";
+      std::cout << "Parallel: " << s_num_partitions << " OpenMP thread " << plural << " per MPI process\n";
     }
     if ( s_threads_per_partition > 0 ) {
       std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_threads_per_partition << " OMP " << plural << " per partition\n";
+      std::cout << "Parallel: " << s_threads_per_partition << " OpenMP " << plural << " per partition\n";
     }
 #else
     if (s_num_threads > 0) {
-      std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
+      std::string plural = (s_num_threads > 1) ? "threads" : "thread";
+      std::cout << "Parallel: " << s_num_threads << " std::" << plural << " per MPI process\n";
+    }
+#endif
+
+#if defined(HAVE_KOKKOS_GPU)
+    if ( s_using_device ) {
+      if ( s_cuda_blocks_per_loop > 0 ) {
+        std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
+        std::cout << "Parallel: " << s_cuda_blocks_per_loop << " CUDA " << plural << " per loop\n";
+      }
+      if ( s_cuda_threads_per_block > 0 ) {
+        std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
+        std::cout << "Parallel: " << s_cuda_threads_per_block << " CUDA " << plural << " per block\n";
+      }
     }
 #endif
 

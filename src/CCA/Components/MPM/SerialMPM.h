@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,7 +35,6 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
@@ -53,8 +52,6 @@ class HeatConduction;
 class AnalysisModule;
 class SDInterfaceModel;
 class FluxBCModel;
-class CZLabel;
-class CohesiveZoneTasks;
 
 /**************************************
 
@@ -84,7 +81,7 @@ WARNING
   
 ****************************************/
 
-  class SerialMPM : public ApplicationCommon, public MPMCommon {
+  class SerialMPM : public MPMCommon {
 public:
     SerialMPM(const ProcessorGroup* myworld,
               const MaterialManagerP materialManager);
@@ -95,7 +92,6 @@ public:
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
   SDInterfaceModel* d_sdInterfaceModel;
-
   //////////
   // Insert Documentation Here:
   virtual double recomputeDelT(const double delT);
@@ -114,6 +110,8 @@ public:
 
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
+
+  virtual void restartInitialize();
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
   
@@ -147,6 +145,11 @@ public:
         flags->d_with_ice = true;
   };
 
+  void setWithARCHES()
+  {
+        flags->d_with_arches = true;
+  };
+
   enum IntegratorType {
     Explicit,
     Implicit,
@@ -158,25 +161,17 @@ protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
-  friend class SingleHydroMPM;
+  friend class MPMArches;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   FluxBCModel*  d_fluxBC;
-  CZLabel* Cl;
-  CohesiveZoneTasks* cohesiveZoneTasks;
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
-
-
-  void scheduleParticleRelocation( SchedulerP        & sched,
-                                   const LevelP      & level,
-                                   const MaterialSet * matls,
-                                   const MaterialSet * cz_matls);
 
   void deleteGeometryObjects(const ProcessorGroup*,
                              const PatchSubset* patches,
@@ -219,21 +214,6 @@ protected:
                           int dwi, const Patch* patch);
 
   void scheduleInitializePressureBCs(const LevelP& level, SchedulerP&);
-
-  void scheduleRestartInitializeHACK( SchedulerP   & sched,
-                                      const LevelP & level);
-
-  void restartInitializeHACK( const ProcessorGroup  *,
-                              const PatchSubset     * patches,
-                              const MaterialSubset  * matls,
-                              DataWarehouse         *,
-                              DataWarehouse         * new_dw){};
-
-  void restartInitializeTask(const ProcessorGroup *,
-                             const PatchSubset    * patches,
-                             const MaterialSubset * ,
-                             DataWarehouse        * ,
-                             DataWarehouse        * new_dw);
 
   void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -295,6 +275,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void addCohesiveZoneForces(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -335,14 +323,6 @@ protected:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                const PatchSubset* patches,
                                                const MaterialSubset* matls,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void computeGridVelocityForFTM(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
@@ -402,6 +382,14 @@ protected:
   //////////
   // Insert Documentation Here:
   virtual void finalParticleUpdate(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void updateCohesiveZones(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
@@ -479,6 +467,12 @@ protected:
   virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
                                                          const MaterialSet*);
 
+  virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
+                                             const PatchSet*,
+                                             const MaterialSubset*,
+                                             const MaterialSubset*,
+                                             const MaterialSet*);
+
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
 
@@ -520,10 +514,6 @@ protected:
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
                                        const MaterialSet*);
 
-  virtual void scheduleComputeGridVelocityForFTM(SchedulerP&,
-                                                 const PatchSet*,
-                                                 const MaterialSet*);
-
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
                                                  
@@ -545,6 +535,12 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
+  virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
+                                           const PatchSet*,
+                                           const MaterialSubset*,
+                                           const MaterialSubset*,
+                                           const MaterialSet*);
+
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
@@ -560,10 +556,6 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
-  virtual void scheduleReduceVars( SchedulerP&, 
-                                   const PatchSet*,
-                                   const MaterialSet* );
-
 
   // JBH -- Scalar Diffusion Related
   virtual void scheduleConcInterpolated(        SchedulerP  &
@@ -674,7 +666,7 @@ protected:
   std::vector<Vector> d_IPVelNew;
 
 
-//  bool             d_fracture;
+  bool             d_fracture;
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

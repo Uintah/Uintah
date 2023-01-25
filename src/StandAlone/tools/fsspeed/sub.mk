@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -48,7 +48,8 @@ LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)          \
           $(BOOST_LIBRARY)                             \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
-          $(M_LIBRARY) $(PIDX_LIBRARY)
+          $(M_LIBRARY) $(PIDX_LIBRARY) \
+          $(KOKKOS_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -10,6 +10,49 @@ TaskInterface( task_name, matl_index ) {
 UpdateParticleSize::~UpdateParticleSize(){
 }
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &UpdateParticleSize::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticleSize::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleSize::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticleSize::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticleSize::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &UpdateParticleSize::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticleSize::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticleSize::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticleSize::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticleSize::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace UpdateParticleSize::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 
@@ -46,8 +89,8 @@ UpdateParticleSize::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));
@@ -74,8 +117,8 @@ UpdateParticleSize::register_timestep_eval(
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work!
-void
-UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));

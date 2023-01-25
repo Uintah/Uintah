@@ -1,0 +1,3 @@
+add_subdirectory( RMCRT )
+
+set( MDL_RADIATION_SRC ${MDL_RADIATION_SRC} PARENT_SCOPE )

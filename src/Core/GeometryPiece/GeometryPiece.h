@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,26 +105,26 @@ public:
   virtual std::string getType() const = 0;
 
   void setName(const std::string& name) {
-    m_isNameSet = true;
-    name_       = name;
+    nameSet_ = true;
+    name_    = name;
   }
 
   // Call at the beginning of outputing (ProblemSpec) so that this
   // object will output the full spec the first time, and only a
   // reference subsequently.
-  void resetOutput() const { m_isFirstOutput = true; }
+  void resetOutput() const { firstOutput_ = true; }
 
 protected:
 
   virtual void outputHelper( ProblemSpecP & ps ) const = 0;
 
-  bool        m_isNameSet; // defaults to false
-  std::string name_;       // All the geomPieces use this name.
+  bool        nameSet_; // defaults to false
+  std::string name_;
 
   // Used for outputing the problem spec... on the 1st output, the
   // entire object is output, on the 2nd, only a reference is output.
   // Must be 'mutable' as most of these objects are (mostly) 'const'
-  mutable bool m_isFirstOutput;
+  mutable bool firstOutput_;
 
   // Can only be one and cloning is possible.
   static DebugStream gp_dbg;

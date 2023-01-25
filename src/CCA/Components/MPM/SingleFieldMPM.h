@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,7 +35,6 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
@@ -79,7 +78,7 @@ WARNING
   
 ****************************************/
 
-  class SingleFieldMPM : public ApplicationCommon, public MPMCommon {
+  class SingleFieldMPM : public MPMCommon {
 public:
     SingleFieldMPM(const ProcessorGroup* myworld,
               const MaterialManagerP materialManager);
@@ -106,6 +105,8 @@ public:
 
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
+
+  virtual void restartInitialize();
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
   
@@ -137,6 +138,11 @@ public:
   void setWithICE()
   {
         flags->d_with_ice = true;
+  };
+
+  void setWithARCHES()
+  {
+        flags->d_with_arches = true;
   };
 
   enum IntegratorType {
@@ -269,6 +275,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void addCohesiveZoneForces(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -323,12 +337,6 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
-  void computeCurrentParticleSize(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* ,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -361,6 +369,14 @@ protected:
   //////////
   // Insert Documentation Here:
   virtual void finalParticleUpdate(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void updateCohesiveZones(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
@@ -445,6 +461,12 @@ protected:
   virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
                                                          const MaterialSet*);
 
+  virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
+                                             const PatchSet*,
+                                             const MaterialSubset*,
+                                             const MaterialSubset*,
+                                             const MaterialSet*);
+
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
 
@@ -488,9 +510,6 @@ protected:
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
 
-  void scheduleComputeCurrentParticleSize(SchedulerP&, const PatchSet*,
-                                          const MaterialSet*);
-
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
@@ -501,6 +520,12 @@ protected:
 
   virtual void scheduleFinalParticleUpdate(SchedulerP&, 
                                            const PatchSet*,
+                                           const MaterialSet*);
+
+  virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
+                                           const PatchSet*,
+                                           const MaterialSubset*,
+                                           const MaterialSubset*,
                                            const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 

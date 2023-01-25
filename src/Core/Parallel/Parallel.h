@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #define CORE_PARALLEL_PARALLEL_H
 
 #include <thread>
+#include <string>
 
 
 // Macros used to eliminate excess output on large parallel runs
@@ -79,6 +80,11 @@ class Parallel {
           , Abort
       };
 
+      enum CpuThreadEnvironment {
+        PTHREADS = 0,
+        OPEN_MP_THREADS = 1
+      };
+
       //////////
       // Initializes MPI if necessary. 
       static void initializeManager( int& argc, char**& arg );
@@ -105,6 +111,14 @@ class Parallel {
       static int getMPISize();
       
       //////////
+      // Sets the type of CPU scheduler threads
+      static void setCpuThreadEnvironment( CpuThreadEnvironment threadType );
+
+      //////////
+      // Returns the type of CPU scheduler threads
+      static CpuThreadEnvironment getCpuThreadEnvironment();
+
+      //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
 
@@ -115,6 +129,46 @@ class Parallel {
       //////////
       // Sets whether or not to use available accelerators or co-processors (e.g. GPU, MIC, etc)
       static void setUsingDevice( bool state );
+
+      //////////
+      // Sets the number of CUDA threads to use within an SM for a loop
+      static void setCudaThreadsPerBlock( unsigned int num );
+
+      //////////
+      // Sets the number of CUDA blocks that should be used for each loop
+      static void setCudaBlocksPerLoop( unsigned int num );
+
+      //////////
+      // Sets the number of CUDA streams per task
+      static void setCudaStreamsPerTask( unsigned int num );
+      
+      //////////
+      // Sets the name of the task name to time
+      static void setTaskNameToTime( const std::string& taskNameToTime );
+
+      //////////
+      // Sets the number of times the task name to time is expected to run
+      static void setAmountTaskNameExpectedToRun( unsigned int num );
+
+      //////////
+      // Sets the number of CUDA threads to use within an SM for a loop
+      static unsigned int getCudaThreadsPerBlock();
+
+      //////////
+      // Sets the number of CUDA blocks that should be used for each loop
+      static unsigned int getCudaBlocksPerLoop();
+
+      //////////
+      // Returns the number of CUDA streams per task
+      static unsigned int getCudaStreamsPerTask();
+
+      //////////
+      // Returns the name of the task name to time
+      static std::string getTaskNameToTime();
+
+      //////////
+      // Returns the number of times the task name to time is expected to run
+      static unsigned int getAmountTaskNameExpectedToRun();
 
       //////////
       // Returns the number of threads that a processing element is allowed to use to compute its tasks.
@@ -160,8 +214,15 @@ class Parallel {
       Parallel( Parallel && )                 = delete;
       Parallel& operator=( Parallel && )      = delete;
 
+      static CpuThreadEnvironment s_cpu_thread_environment;
+
       static bool              s_initialized;
       static bool              s_using_device;
+      static int               s_cuda_threads_per_block;
+      static int               s_cuda_blocks_per_loop;
+      static int               s_cuda_streams_per_task;
+      static std::string       s_task_name_to_time;
+      static int               s_amount_task_name_expected_to_run;
       static int               s_num_threads;
       static int               s_num_partitions;
       static int               s_threads_per_partition;

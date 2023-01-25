@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/MaterialManager.h>
@@ -43,23 +42,19 @@
 using namespace std;
 
 using namespace Uintah;
-//______________________________________________________________________
-//
+
 ParticleTest1::ParticleTest1(const ProcessorGroup* myworld,
                              const MaterialManagerP materialManager)
   : ApplicationCommon(myworld, materialManager)
 {
   lb_ = scinew ExamplesLabel();
-  lb_->timeStepLabel = VarLabel::find(timeStep_name);
 }
-//______________________________________________________________________
-//
+
 ParticleTest1::~ParticleTest1()
 {
   delete lb_;
 }
-//______________________________________________________________________
-//
+
 void ParticleTest1::problemSetup(const ProblemSpecP& params, 
                                  const ProblemSpecP& restart_prob_spec, 
                                  GridP& /*grid*/)
@@ -73,9 +68,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
   mymat_ = scinew SimpleMaterial();
   m_materialManager->registerSimpleMaterial(mymat_);
 }
-
-//______________________________________________________________________
-//
+ 
 void ParticleTest1::scheduleInitialize(const LevelP& level,
                                        SchedulerP& sched)
 {
@@ -84,22 +77,16 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);
-  task->computes(lb_->dummyLabel);
-  
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
-
-//______________________________________________________________________
-//
+ 
 void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
                                               SchedulerP& sched)
 {
 }
 
-//______________________________________________________________________
-//
 void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
-                                                  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &ParticleTest1::computeStableTimeStep);
@@ -108,11 +95,8 @@ void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
 
 }
 
-//______________________________________________________________________
-//
 void
-ParticleTest1::scheduleTimeAdvance( const LevelP& level, 
-                                    SchedulerP& sched)
+ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   const MaterialSet* matls = m_materialManager->allMaterials();
 
@@ -138,16 +122,11 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
     task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
   }
 
-  task->requires(Task::OldDW, lb_->timeStepLabel);
-  
-  task->computes(lb_->dummyLabel);
   task->computes(lb_->pXLabel_preReloc);
   task->computes(lb_->pMassLabel_preReloc);
   task->computes(lb_->pParticleIDLabel_preReloc);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
-  //__________________________________
-  //  schedule relocate
   lb_->d_particleState.clear();
   lb_->d_particleState_preReloc.clear();
   for (int m = 0; m < matls->size(); m++) {
@@ -170,8 +149,6 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
 
 }
 
-//______________________________________________________________________
-//
 void ParticleTest1::computeStableTimeStep(const ProcessorGroup* /*pg*/,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
@@ -181,13 +158,10 @@ void ParticleTest1::computeStableTimeStep(const ProcessorGroup* /*pg*/,
   new_dw->put(delt_vartype(1), getDelTLabel(),getLevel(patches));
 }
 
-//______________________________________________________________________
-//
 void ParticleTest1::initialize(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
-                          DataWarehouse* /*old_dw*/, 
-                          DataWarehouse* new_dw)
+                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
@@ -201,10 +175,6 @@ void ParticleTest1::initialize(const ProcessorGroup*,
       ParticleVariable<Point> px;
       ParticleVariable<double> pmass;
       ParticleVariable<long64> pids;
-      
-      CCVariable<double> dummy;  // used for testing outputNthProc
-      new_dw->allocateAndPut( dummy, lb_->dummyLabel, matl, patch);
-      dummy.initialize(0.0);
 
       ParticleSubset* subset = new_dw->createParticleSubset(numParticles,matl,patch);
       new_dw->allocateAndPut( px,    lb_->pXLabel,          subset );
@@ -223,26 +193,15 @@ void ParticleTest1::initialize(const ProcessorGroup*,
   }
 }
 
-//______________________________________________________________________
-//
 void ParticleTest1::timeAdvance(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse* old_dw, 
-                        DataWarehouse* new_dw)
+                        DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
     for( int m = 0; m<matls->size(); ++m ){
       int matl = matls->get(m);
-      
-      timeStep_vartype timeStep;
-      old_dw->get(timeStep, lb_->timeStepLabel );
-  
-      CCVariable<double> dummy;  // used for testing outputNthProc
-      new_dw->allocateAndPut( dummy, lb_->dummyLabel, matl, patch);
-      dummy.initialize((int) timeStep);
-      
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Malloc/Allocator.h>
 
 //#include <iostream>
@@ -41,19 +40,16 @@ using namespace Uintah;
 ImplicitCM::ImplicitCM()
 {
   d_lb = scinew MPMLabel();
-  Il = scinew ImpMPMLabel();
 }
 
 ImplicitCM::ImplicitCM(const ImplicitCM* cm)
 {
   d_lb = scinew MPMLabel();
-  Il = scinew ImpMPMLabel();
 }
 
 ImplicitCM::~ImplicitCM()
 {
   delete d_lb;
-  delete Il;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -95,6 +91,7 @@ ImplicitCM::addComputesAndRequires(Task*,
 {
 }
 
+
 void 
 ImplicitCM::addSharedCRForImplicit(Task* task,
                                           const MaterialSubset* matlset,
@@ -113,7 +110,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
                                                        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
-    task->requires(Task::NewDW, Il->dispNewLabel,      matlset,gac,1);
+    task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset,gac,1);
   } else {
     task->requires(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
   }
@@ -159,7 +156,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
     task->computes(d_lb->pdTdtLabel,                            matlset);
     if(reset){
-      task->requires(Task::OldDW,     Il->dispNewLabel,      matlset, gac,1);
+      task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
     }else {
       task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
     }

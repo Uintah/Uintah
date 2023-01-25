@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -218,7 +218,7 @@ link_localRT:
 
 sus: prereqs StandAlone/sus
 
-$(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/git_info.h
+$(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/svn_info.h
 
 tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
+#include <CCA/Components/Schedulers/KokkosScheduler.h>
 #include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
@@ -34,7 +35,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
 #include <iostream>
@@ -59,16 +60,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
-#if defined( UINTAH_ENABLE_KOKKOS ) && !defined( HAVE_CUDA )
-    scheduler = "KokkosOpenMP";
-#else
-    if (Uintah::Parallel::getNumThreads() > 0) {
-      scheduler = "Unified";
+    if ((Uintah::Parallel::getNumPartitions() > 0) && (Uintah::Parallel::getThreadsPerPartition() > 0)) {
+      if (Uintah::Parallel::usingDevice()) {
+        scheduler = "Kokkos";       // User passed '-npartitions <#> -nthreadsperpartition <#> -gpu'
+      }
+      else {
+        scheduler = "KokkosOpenMP"; // User passed '-npartitions <#> -nthreadsperpartition <#>'
+      }
+    }
+    else if (Uintah::Parallel::getNumThreads() > 0) {
+      scheduler = "Unified";        // User passed '-nthreads <#>'
     }
     else {
-      scheduler = "MPI";
+      scheduler = "MPI";            // User passed no scheduler-specific run-time parameters
     }
-#endif
   }
 
   /////////////////////////////////////////////////////////////////////
@@ -76,18 +81,27 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   if (scheduler == "MPI") {
     sch = scinew MPIScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
   else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
   }
 
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::PTHREADS);
+  }
+
+  else if (scheduler == "Kokkos") {
+    sch = scinew KokkosScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::OPEN_MP_THREADS);
   }
 
   else if (scheduler == "KokkosOpenMP") {
     sch = scinew KokkosOpenMPScheduler(world, nullptr);
+    Parallel::setCpuThreadEnvironment(Parallel::CpuThreadEnvironment::OPEN_MP_THREADS);
   }
 
   else {
@@ -106,8 +120,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   }
 
   // "-gpu" provided at command line, but not using "Unified"
-  if ((scheduler != "Unified") && Uintah::Parallel::usingDevice()) {
-    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.\n";
+  if ((scheduler != "Unified") && (scheduler != "Kokkos") && Uintah::Parallel::usingDevice()) {
+    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Kokkos Scheduler or Unified Scheduler.  Add  '-npartitions <n> -nthreadsperpartition <n>' or '-nthreads <n>' to the sus command line.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
@@ -119,6 +133,14 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;
+
+#if defined(HAVE_KOKKOS)
+  // Output Execution Space and Memory Space that will be used with Kokkos builds
+  proc0cout << "Kokkos HOST Execution Space: \t\t"   << Kokkos::DefaultHostExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos HOST Memory Space: \t\t"      << Kokkos::DefaultHostExecutionSpace::memory_space::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Execution Space: \t\t" << Kokkos::DefaultExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Memory Space: \t\t"    << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
+#endif
 
   return sch;
 

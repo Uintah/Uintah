@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -119,7 +119,7 @@ WARNING
                                          double      & min_distance ){
            int intersections = 0;
            
-           d_grid->countIntersections( start, end, intersections, min_distance);
+           d_grid->countIntersections( start, end, intersections, min_distance );
            return intersections;
          }
 
@@ -129,15 +129,6 @@ WARNING
            return intersections;
          }
 
-         inline std::vector<IntVector> getTriangles( ){
-           return d_tri;
-         }
-
-         inline std::vector<Point> getPoints( ){
-           return d_points;
-         }
-
-
       private:
 
          virtual void outputHelper( ProblemSpecP & ps ) const;
@@ -145,6 +136,7 @@ WARNING
          void readPoints(const std::string& file);
          void readTri(   const std::string& file);
          void makePlanes();
+//         void makeTriBoxes();
          void insideTriangle( Point& p, 
                               int i, 
                               int& NCS, 
@@ -155,8 +147,10 @@ WARNING
          std::vector<Point>     d_points;
          std::vector<IntVector> d_tri;
          std::vector<Plane>     d_planes;
+//         std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;
+
       };
 
 } // End namespace Uintah

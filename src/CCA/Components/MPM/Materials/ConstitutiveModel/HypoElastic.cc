@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -162,11 +162,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     double onethird = (1.0/3.0);
 
     Vector dx = patch->dCell();
-
-    double G    = d_initialData.G;
-    double bulk = d_initialData.K;
-    double alpha = d_initialData.alpha;   // for thermal stress    
-
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
@@ -184,13 +180,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,              lb->pMassLabel,               pset);
     old_dw->get(pvelocity,          lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,       lb->pTemperatureLabel,        pset);
-    
-    if(alpha>0.0){
-      // for thermal stress
-      old_dw->get(pTempPrevious,      lb->pTempPreviousLabel,     pset); 
-    } else {
-      old_dw->get(pTempPrevious,      lb->pTemperatureLabel,      pset); 
-    }
+    // for thermal stress
+    old_dw->get(pTempPrevious,      lb->pTempPreviousLabel,       pset); 
 
     new_dw->get(pvolume_new,        lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(velGrad,            lb->pVelGradLabel_preReloc,   pset);
@@ -202,6 +193,10 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
+
+    double G    = d_initialData.G;
+    double bulk = d_initialData.K;
+    double alpha = d_initialData.alpha;   // for thermal stress    
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -607,11 +602,9 @@ void HypoElastic::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
   
-  if(d_initialData.alpha>0){
-    Ghost::GhostType gnone = Ghost::None;
-    // for thermal stress
-    task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  }
+  Ghost::GhostType gnone = Ghost::None;
+  // for thermal stress
+  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 }
 
 void 

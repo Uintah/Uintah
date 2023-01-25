@@ -19,7 +19,6 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4     </delt_init>
-       <max_Timesteps>       60         </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -33,7 +32,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
+                              <value> [1.,1.,1.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -51,7 +50,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.]  </value>
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -69,7 +68,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.]  </value>
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -87,7 +86,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.]  </value>
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -105,7 +104,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.]  </value>
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -123,7 +122,7 @@
                               <value> 0. </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.]  </value>
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -144,7 +143,7 @@
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.25,0.25,0.25]  </spacing>
+           <spacing>            [1.0,1.0,1.0]           </spacing>
        </Level>
     </Grid>
    
@@ -164,9 +163,8 @@
       <save label="TotalMomentum"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
-      <save label="Totaldensity_src"/>
-      <save label="TotalMom_src"/>
-      <save label="TotalEng_src"/>
+      <save label="totalMassExchanged"/>
+      <save label="totalIntEngExchanged"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
@@ -211,7 +209,7 @@
                 </box>
              </difference>
                <res>          [2,2,2]                   </res>
-               <velocity>      [0.,0.,0.]               </velocity>
+               <velocity>      [0,0,0]                  </velocity>
                <density>       1.7899909957225715000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -226,7 +224,7 @@
            <geom_object>
                 <box label="blobInMiddle">              </box>
                <res>            [2,2,2]                 </res>
-               <velocity>       [0.,0.,0.]             </velocity>
+               <velocity>       [1,1,1]                 </velocity>
                <density>        1.789990995722571500e+00</density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
@@ -243,8 +241,7 @@
 
     </MaterialProperties>       
     
-    <!--______________________________________________________________________-->
-
+       
     <Models>
       <Model type = "Test">
         <Test>
@@ -254,23 +251,16 @@
           <startTime>    0.2         </startTime>
         </Test>
       </Model>
+
 <!--
       <Model type="mass_momentum_energy_src">
         <MassMomEng_src>
           <material> reactant   </material>
-          
-          <sources>
-            <geom_object>
-              <box label="blobInMiddle"/>
-              <velocity_src>  [0.,0.,0.]   </velocity_src>
-              <algorithm type="fixedPrimitiveValues">
-                <velocity_src>    [0.0,0.0,0.0]   </velocity_src>
-                <density_src>      0              </density_src>
-                <temperature_src>  350            </temperature_src>
-              </algorithm>
-            </geom_object>
-          </sources>
-          
+          <momentum_src>  [0,0,0]   </momentum_src>
+          <mass_src>      1         </mass_src>
+          To maintain constant temperature, eng_src must be:
+                  mass_src * specific_heat * initial_temperature
+          <energy_src>    195870.    </energy_src>
         </MassMomEng_src>
       </Model>
 -->

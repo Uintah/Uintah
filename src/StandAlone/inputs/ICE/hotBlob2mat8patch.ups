@@ -194,7 +194,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
-         <material name="surroundingAir">
+         <material>
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -218,8 +218,7 @@
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-
-         <material name="hotGas">
+         <material>
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>

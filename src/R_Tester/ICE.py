@@ -4,8 +4,7 @@ from sys import argv, exit
 from os import environ, system
 from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS, modUPS2
-#______________________________________________________________________
-#  Modify the input files
+
 
 the_dir = "%s/%s" % ( getInputsDir(),"ICE" )
 
@@ -29,22 +28,6 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
                              ["<max_levels>3</max_levels>", \
                               "<filebase>AMR_HotBlob_3L.uda</filebase>"])
 
-# use xmlstarlet el -v <ups> for xml paths
-chanFlow_powerLaw_ups = modUPS2( the_dir,                       \
-                                  "channelFlow_PowerLaw.ups",   \
-                               [( "update", "/Uintah_specification/DataArchiver/filebase :powerLaw.uda" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :powerLawProfile" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :powerLawProfile" ),
-                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile")
-                               ] )
-
-chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
-                                  "channelFlow_PowerLaw.ups",   \
-                               [( "update", "/Uintah_specification/DataArchiver/filebase :powerLaw2.uda" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :logWindProfile" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :logWindProfile" ),
-                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile2")
-                               ] )
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #
@@ -76,7 +59,6 @@ chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
 
 NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", ["exactComparison"]),
                    ("advectPeriodic",     "advect_periodic.ups",     8, "All", ["exactComparison"]),
-                   ("advectScalar",       "advectScalar.ups",        4, "All", ["exactComparison"]),
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
@@ -85,10 +67,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
-                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"]),  # dat file comparsion not working on restart
-                   ("stagnationPoint",    "stagnationPoint.ups",     8, "All", ["exactComparison"]),
-                   ("naturalConvection",  "naturalConvectionCavity_dx.ups",     
-                                                                     9, "All", ["exactComparison"])
+                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"])  # dat file comparsion not working on restart
               ]
 
 DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]),
@@ -112,12 +91,8 @@ AMRTESTS =    [   ("advectAMR",          "advectAMR.ups",           8, "All", ["
                   ("impAdvect_ML_5L",    "impAdvect_ML_5L.ups",     8, "All", ["exactComparison"])
               ]
 
-INITIALIZE =  [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart"]),
-                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
-              ]
-
-DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart"]),
-                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
+DEBUGGING =   [   ("advect",           "advect.ups",           1, "All", ["exactComparison"]),
+                  ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])
               ]
 #__________________________________
 
@@ -125,21 +100,19 @@ DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS LODI NIGHTLYTESTS
+#LIST:  AMRTESTS DIFFUSION DEBUGGING LOCALTESTS LODI NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 # returns the list
 
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + LODI + INITIALIZE
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + LODI
 
 def getTestList(me) :
-  if me ==  "AMRTESTS":
+  if me == "AMRTESTS":
     TESTS = AMRTESTS
   elif me == "DEBUGGING":
     TESTS = DEBUGGING
   elif me == "DIFFUSION":
     TESTS = DIFFUSION
-  elif me == "INITIALIZATION":
-    TESTS = INITIALIZE
   elif me == "LOCALTESTS":
     TESTS = NIGHTLYTESTS
   elif me == "LODI":
@@ -160,9 +133,8 @@ if __name__ == "__main__":
 
   result = runSusTests(argv, TESTS, "ICE")
 
-  # cleanup modified input files
-  command = "/bin/rm -rf %s/tmp  " % (the_dir)
-
+  # cleanup modified files
+  command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
   system( command )
 
   exit( result )

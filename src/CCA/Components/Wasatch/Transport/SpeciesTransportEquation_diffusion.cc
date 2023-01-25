@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2021 The University of Utah
+ * Copyright (c) 2016-2018 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/Expressions/LewisNumberSpeciesFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbDiffFlux.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
@@ -47,96 +46,14 @@ typedef SpatialOps::SVolField FieldT;  // this is the field type we will support
 //------------------------------------------------------------------------------
 
 void
-SpeciesTransportEquation::
-setup_diffusive_flux( FieldTagInfo& info )
+SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
 {
-  Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
-  Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION  ]->exprFactory;
-
-  const TagNames& tagNames = TagNames::self();
-
-  if( flowTreatment_ == LOWMACH ){
-    if( turbParams_.turbModelName == TurbulenceParameters::NOTURBULENCE ){
-      const std::string suffix = "";
-      register_diffusive_flux_expressions( INITIALIZATION  , infoInit_, densityInitTag_, primVarInitTag_, yiInitTags_, Expr::STATE_NONE, suffix );
-      register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_ , densityNP1Tag_ , primVarNP1Tag_ , yiNP1Tags_ , Expr::STATE_NP1 , suffix );
-
-      // set info for diffusive flux based on infoNP1_, add tag names to set of persistent fields
-      const std::set<FieldSelector> fsSet = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
-      for( FieldSelector fs : fsSet ){
-       if( infoNP1_.find(fs) != infoNP1_.end() ){
-         const std::string diffFluxName = infoNP1_[fs].name();
-         info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
-         persistentFields_.insert(diffFluxName);
-
-         // Force diffusive flux expression on initialization graph.
-         const Expr::ExpressionID id = icFactory.get_id( infoInit_[fs] );
-         gc_[INITIALIZATION]->rootIDs.insert(id);
-
-         // deal with nth species diffusive flux
-         if( specNum_==0 ){
-           FieldTagInfo infoSpecN;
-           const std::string dir = (fs == DIFFUSIVE_FLUX_X) ? "X"
-                                 : (fs == DIFFUSIVE_FLUX_Y) ? "Y"
-                                 :                            "Z";
-           const std::string specName = CanteraObjects::species_name( nspec_-1 );
-           infoSpecN[fs] = Expr::Tag( specName + tagNames.diffusiveflux + dir + suffix, Expr::STATE_N );
-           persistentFields_.insert(infoSpecN[fs].name());
-
-           register_diffusive_flux_placeholders<FieldT>( factory, infoSpecN );
-           const Expr::Tag initSpecNDiffFluxTag = Expr::Tag(infoSpecN[fs].name(), Expr::STATE_NONE );
-           const Expr::ExpressionID id = icFactory.get_id( initSpecNDiffFluxTag );
-           gc_[INITIALIZATION]->rootIDs.insert(id);
-          }// if( specNum_==0 )
-        }// if( infoNP1_... )
-      }// for( ... )
-
-      // Register placeholders for diffusive flux parameters at STATE_N
-      register_diffusive_flux_placeholders<FieldT>( factory, info );
-    } //if(turbParams_.turbModelName == TurbulenceParameters::NOTURBULENCE)
-
-    /* if the low-Mach algorithm is used with a turbulence model, we need to compute
-     * the diffusive flux at STATE_N and an estimate for diffusive flux at STATE_NP1.
-     * We cannot calculate the STATE_NP1 value exactly attempting to do so would
-     * induce a circular dependency like so:
-     * diffusive-flux_NP1 --> (...) --> velocity_NP1 --> (...) --> diffusive-flux_NP1
-     */
-    else{
-      const Expr::Context context = Expr::STATE_NONE;
-      const std::string suffix = "-NP1-estimate";
-      register_diffusive_flux_expressions( ADVANCE_SOLUTION, info    , densityTag_   , primVarTag_   , yiTags_   , context, ""     );
-      register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_, densityNP1Tag_, primVarNP1Tag_, yiNP1Tags_, context, suffix );
-    }
-  }
-  else{
-    register_diffusive_flux_expressions( ADVANCE_SOLUTION, info, densityTag_, primVarTag_, yiTags_, Expr::STATE_NONE, "" );
-  }
-}
-
-//------------------------------------------------------------------------------
-
-void
-SpeciesTransportEquation::
-register_diffusive_flux_expressions( const Category       cat,
-                                     FieldTagInfo&        info,
-                                     const Expr::Tag&     densityTag,
-                                     const Expr::Tag&     primVarTag,
-                                     const Expr::TagList& yiTags,
-                                     const Expr::Context  context,
-                                     const std::string    suffix )
-{
-  Expr::ExpressionFactory& factory = *gc_[cat]->exprFactory;
+  Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
   const TagNames& tagNames = TagNames::self();
 
   typedef typename FaceTypes<FieldT>::XFace XFaceT;
   typedef typename FaceTypes<FieldT>::YFace YFaceT;
   typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
-
-  Expr::Tag pressureTag = Wasatch::flow_treatment() == LOWMACH
-                          ? tagNames.thermodynamicPressure
-                          : tagNames.pressure;
-
-  if((cat == INITIALIZATION) && (flow_treatment() == LOWMACH)) pressureTag.reset_context(Expr::STATE_NONE);
 
   bool isFirstDirection = true;
 
@@ -144,7 +61,7 @@ register_diffusive_flux_expressions( const Category       cat,
        diffFluxParams != nullptr;
        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
   {
-    const std::string& primVarName = primVarTag.name();
+    const std::string& primVarName = primVarTag_.name();
 
     std::string direction;
     diffFluxParams->getAttribute("direction",direction);
@@ -154,7 +71,7 @@ register_diffusive_flux_expressions( const Category       cat,
 
       Expr::TagList diffFluxTags;
       for( int i=0; i<nspec_; ++i ){
-        diffFluxTags.push_back( Expr::Tag( CanteraObjects::species_name(i) + tagNames.diffusiveflux + dir + suffix, context ) );
+        diffFluxTags.push_back( Expr::Tag( CanteraObjects::species_name(i) + tagNames.diffusiveflux + dir, Expr::STATE_NONE ) );
       }
 
       FieldSelector fs;
@@ -174,15 +91,15 @@ register_diffusive_flux_expressions( const Category       cat,
         const Expr::Tag turbFluxTag( "turb_diff_flux_"+primVarName, Expr::STATE_NONE );
         if( direction == "X" ){
           typedef TurbDiffFlux<XFaceT>::Builder TurbFlux;
-          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag ) );
+          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag_ ) );
         }
         if( direction == "Y" ){
           typedef TurbDiffFlux<YFaceT>::Builder TurbFlux;
-          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag ) );
+          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag_ ) );
         }
         if( direction == "Z" ){
           typedef TurbDiffFlux<ZFaceT>::Builder TurbFlux;
-          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag ) );
+          factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag_ ) );
         }
 
         factory.attach_modifier_expression( turbFluxTag, diffFluxTags[specNum_] );
@@ -211,24 +128,15 @@ register_diffusive_flux_expressions( const Category       cat,
 
         if( dir == "X" ){
           typedef LewisNumberDiffFluxes<XFaceT>::Builder DiffFlux;
-          const Expr::ExpressionID id =
-          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags, thermCondTag, cpTag ) );
-
-//          if(cat == ADVANCE_SOLUTION) factory.cleave_from_parents( id );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
         else if( dir == "Y" ){
           typedef LewisNumberDiffFluxes<YFaceT>::Builder DiffFlux;
-          const Expr::ExpressionID id =
-          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags, thermCondTag, cpTag ) );
-
-//          if(cat == ADVANCE_SOLUTION) factory.cleave_from_parents( id );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
         else if( dir == "Z" ){
           typedef LewisNumberDiffFluxes<ZFaceT>::Builder DiffFlux;
-          const Expr::ExpressionID id =
-          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags, thermCondTag, cpTag ) );
-
-//          if(cat == ADVANCE_SOLUTION) factory.cleave_from_parents( id );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
         else{
           throw Uintah::ProblemSetupException( "Invalid direction encountered for diffusive flux spec.\n", __FILE__, __LINE__ );
@@ -242,29 +150,29 @@ register_diffusive_flux_expressions( const Category       cat,
 
         Expr::TagList diffCoeffTags;
         for( int i=0; i<nspec_; ++i ){
-          diffCoeffTags.push_back( Expr::Tag( CanteraObjects::species_name(i) + "_diff_coeff" + suffix, Expr::STATE_NONE) );
+          diffCoeffTags.push_back( Expr::Tag( CanteraObjects::species_name(i) + "_diff_coeff", Expr::STATE_NONE) );
         }
 
         // isotropic diffusion coefficients - only register once.
         if( isFirstDirection ){
           typedef pokitt::DiffusionCoeff<FieldT>::Builder DiffCoeff;
-          factory.register_expression( scinew DiffCoeff( diffCoeffTags, temperatureTag_, pressureTag, yiTags, tagNames.mixMW ) );
+          factory.register_expression( scinew DiffCoeff( diffCoeffTags, temperatureTag_, tagNames.pressure, yiTags_, tagNames.mixMW ) );
           isFirstDirection = false;
 
           dualTimeMatrixInfo_.set_diffusivities( diffCoeffTags );
         }
 
-        if     ( dir == "X" ){
+        if( dir == "X" ){
           typedef pokitt::SpeciesDiffFlux<XFaceT>::Builder DiffFlux;
-          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags, densityTag, tagNames.mixMW, diffCoeffTags ) );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
         else if( dir == "Y" ){
           typedef pokitt::SpeciesDiffFlux<YFaceT>::Builder DiffFlux;
-          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags, densityTag, tagNames.mixMW, diffCoeffTags ) );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
         else if( dir == "Z" ){
           typedef pokitt::SpeciesDiffFlux<ZFaceT>::Builder DiffFlux;
-          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags, densityTag, tagNames.mixMW, diffCoeffTags ) );
+          factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
         else{
           throw Uintah::ProblemSetupException( "Invalid direction encountered for diffusive flux spec.\n", __FILE__, __LINE__ );

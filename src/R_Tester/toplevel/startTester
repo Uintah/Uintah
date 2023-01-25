@@ -3,7 +3,7 @@
 
 # to differentiate among the build names & even directories
 COMPILE="yes"
-DEFAULT_MAIL_TO="uintah-developers@lists.utah.edu"
+DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
 
 DO_DBG="1"
 DO_OPT="1"
@@ -12,7 +12,7 @@ WHICH_TESTS="NIGHTLYTESTS"
 BUILDONLY="0"
 OS=$(uname -s)
 PARALLELISM=0
-REPLY_TO="uintah-developers@lists.utah.edu"
+REPLY_TO="uintah-developer@gforge.sci.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
 AUTO_UPDATE_SVN_STAMP="yes"                         # Automatically update the svn revision number when a test passes
 
@@ -40,7 +40,8 @@ if [ "$MACHINE" == "uintah-build" ]; then
   SCRIPT_DIR=/home/${LOGNAME}/scripts
   CHECKPOINTS=/home/${LOGNAME}/CheckPoints
 
-  names=("uintah-developers@lists.utah.edu" )
+  names=("uintah-developer@gforge.sci.utah.edu," \
+         "kgbrinkerhoff@gmail.com," )
   IFS=""    # used to elimnate spaces between array elements
   DEFAULT_MAIL_TO=${names[*]}
 
@@ -58,7 +59,10 @@ if [ "$MACHINE" == "uintah-build" ]; then
   RT_URL=http://uintah-build.chpc.utah.edu/~$LOGNAME
 
   if [ "$LOGNAME" == "gpu_rt" ]; then
-    names=( "t.harman@utah.edu" )
+    names=(\
+      "t.harman@utah.edu,"                 \
+      "jholmen@sci.utah.edu,"              \
+      "jeremy.thornock@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     export TEST_COMPONENTS="Examples ARCHES"

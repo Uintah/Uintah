@@ -33,6 +33,16 @@ namespace Uintah{
     BodyForce<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~BodyForce<IT, DT>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -67,13 +77,17 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   private:
 
@@ -115,6 +129,54 @@ namespace Uintah{
   BodyForce<IT, DT>::~BodyForce()
   {}
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskComputeBCsFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &BodyForce<IT, DT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &BodyForce<IT, DT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskTimestepInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  TaskAssignedExecutionSpace BodyForce<IT, DT>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels BodyForce needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
@@ -151,7 +213,8 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     for ( int ienv = 0; ienv < m_N; ienv++ ){
       const std::string name = get_name(ienv, m_base_var_name);
@@ -171,7 +234,8 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+  template <typename ExecSpace, typename MemSpace> void
+  BodyForce<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
   //======TIME STEP EVALUATION:
   template <typename IT, typename DT>
@@ -191,7 +255,8 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
     typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;

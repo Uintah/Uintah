@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,14 +28,16 @@
 #define UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
-#include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
 
 class GPUGridVariableBase : public GPUVariable {
 
-  friend class GPUDataWarehouse; // allow DataWarehouse set/get data members
-  friend class UnifiedScheduler; // allow scheduler access
+  friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
+  friend class KokkosScheduler;   // allow scheduler access
+  friend class UnifiedScheduler;  // allow scheduler access
+  friend class DetailedTask;      // allow task access
+
   public:
     HOST_DEVICE virtual ~GPUGridVariableBase() {}
     HOST_DEVICE virtual size_t getMemSize() = 0;

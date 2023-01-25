@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,11 +31,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/UPSHelper.h>
-
-#define MOMCONVECTION() \
-        Uintah::ComputeConvectiveFlux                                       \
-          get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   \
-        Uintah::parallel_for( convection_range, get_flux, scheme );
+#include <Core/Parallel/LoopExecution.hpp>
 
 namespace Uintah{
 
@@ -49,6 +45,16 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
@@ -61,13 +67,17 @@ public:
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -143,6 +153,75 @@ private:
 
     ArchesCore::BCFunctors<T>* m_boundary_functors;
 
+     template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT> void
+     doConvection(ExecutionObject<ExecSpace, MemSpace>& execObj,Uintah::BlockRange& convection_range,   grid_CT &phi, grid_CT& u_fx, grid_CT& v_fy ,grid_CT& w_fz ,grid_T& x_flux ,grid_T& y_flux ,grid_T& z_flux ,grid_CT& eps, int ieqn){
+        switch (m_conv_scheme[ieqn]){
+          case CENTRAL:
+            {
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,CentralConvection  >              
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::parallel_for(execObj, convection_range, get_flux );
+            Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,CentralConvection> partiallySpecializedTemplateStruct; 
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          case FOURTH:
+            {
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,FourthConvection  >              
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::parallel_for(execObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,FourthConvection  > partiallySpecializedTemplateStruct;           
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          case VANLEER:
+            {
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,VanLeerConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(execObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,VanLeerConvection  > partiallySpecializedTemplateStruct;              
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          case SUPERBEE:
+            {
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,SuperBeeConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(execObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,SuperBeeConvection  > partiallySpecializedTemplateStruct;          
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          case ROE:
+            {
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,RoeConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(execObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,RoeConvection  > partiallySpecializedTemplateStruct;             
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          case UPWIND:
+            {
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,UpwindConvection  >              
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::parallel_for(execObj, convection_range, get_flux );
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,UpwindConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            }
+            break;
+          default:
+            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__);
+        }
+      }
+
+
+     //}
+     //template <typename ExecSpace, typename MemSpace> void
+     //doConvection(ExecutionObject<ExecSpace, MemSpace> execObj, const Array3<double> &phi,const Array3<double> & u_fx,const Array3<double> & v_fy ,const Array3<double>& w_fz ,
+                                                                        //Array3<double>& x_flux ,Array3<double>& y_flux ,Array3<double>& z_flux ,const Array3<double>& eps){
+     //doConvection(ExecutionObject<ExecSpace, MemSpace> execObj){
+
   };
 
   //------------------------------------------------------------------------------------------------
@@ -169,6 +248,65 @@ private:
 
     delete m_boundary_functors;
 
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskComputeBCsFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::BC>( this
+                                       , &KMomentum<T>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KMomentum<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KMomentum<T>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &KMomentum<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KMomentum<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KMomentum<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &KMomentum<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KMomentum<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KMomentum<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                       , &KMomentum<T>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KMomentum<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KMomentum<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KMomentum<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KMomentum<T>::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace KMomentum<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -368,28 +506,33 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template <typename ExecSpace, typename MemSpace>
+  void KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      double scalar_init_value = m_init_value[ieqn];
+      const double scalar_init_value = m_init_value[ieqn];
 
-      T& u = tsk_info->get_field<T>(m_vel_name[ieqn]);
-      T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
-      T& rhs = tsk_info->get_field<T>(m_eqn_names[ieqn]+"_RHS");
-      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      auto u = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
-      phi.initialize(0.0);
-      rhs.initialize(0.0);
-      u.initialize(scalar_init_value);
-      x_flux.initialize(0.0);
-      y_flux.initialize(0.0);
-      z_flux.initialize(0.0);
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+
+      Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
+        phi(i,j,k)    = 0.0;
+        rhs(i,j,k)    = 0.0;
+        u(i,j,k)      = scalar_init_value; // initial value for velocity, phi (rho_u) is computed in UnweightVariable task
+        x_flux(i,j,k) = 0.0;
+        y_flux(i,j,k) = 0.0;
+        z_flux(i,j,k) = 0.0;
+      });
 
     } //eqn loop
   }
@@ -409,21 +552,26 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template <typename ExecSpace, typename MemSpace> void
+  KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      T& u = tsk_info->get_field<T>(m_vel_name[ieqn]);
-      T& phi = tsk_info->get_field<T>( m_eqn_names[ieqn] );
-      T& rhs = tsk_info->get_field<T>( m_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_field<CT>( m_eqn_names[ieqn] );
-      CT& old_u = tsk_info->get_field<CT>(m_vel_name[ieqn]);
+      auto u = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn] );
+      auto rhs = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn]+"_RHS" );
+      auto old_phi = tsk_info->get_field<CT, const double, MemSpace>( m_eqn_names[ieqn]);
+      auto old_u = tsk_info->get_field<CT, const double, MemSpace>(m_vel_name[ieqn]);
 
-      phi.copyData(old_phi);
-      u.copyData(old_u);
-      rhs.initialize(0.0);
+      Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+
+      parallel_for(execObj,init_range, KOKKOS_LAMBDA (int i,int j,int k){
+        phi(i,j,k) = old_phi(i,j,k);
+        u(i,j,k)   = old_u(i,j,k);
+        rhs(i,j,k) = 0.0;
+      });
 
     } //equation loop
   }
@@ -465,8 +613,9 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template <typename ExecSpace, typename MemSpace>
+  void KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     Vector Dx = patch->dCell();
     double V = Dx.x()*Dx.y()*Dx.z();
@@ -474,24 +623,21 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CT& eps = tsk_info->get_field<CT>(m_eps_name);
+    auto eps = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
-      T& rhs = tsk_info->get_field<T>(m_eqn_names[ieqn]+"_RHS");
+      auto phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
 
       //Convection:
-      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
-      x_flux.initialize(0.0);
-      y_flux.initialize(0.0);
-      z_flux.initialize(0.0);
-      rhs.initialize(0.0);
+      parallel_initialize(execObj,0.0,rhs,x_flux,y_flux,z_flux);
 
       //convection
       if ( m_conv_scheme[ieqn] != NOCONV ){
@@ -510,51 +656,11 @@ private:
 
         Uintah::BlockRange convection_range(low_patch_range, high_patch_range);
 
-        CT& u_fx = tsk_info->get_field<CT>(m_x_velocity_name);
-        CT& v_fy = tsk_info->get_field<CT>(m_y_velocity_name);
-        CT& w_fz = tsk_info->get_field<CT>(m_z_velocity_name);
+        auto u_fx = tsk_info->get_field<CT, const double, MemSpace>(m_x_velocity_name);
+        auto v_fy = tsk_info->get_field<CT, const double, MemSpace>(m_y_velocity_name);
+        auto w_fz = tsk_info->get_field<CT, const double, MemSpace>(m_z_velocity_name);
 
-        // switch between difference convection schemes:
-        switch (m_conv_scheme[ieqn]){
-          case CENTRAL:
-            {
-            CentralConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          case FOURTH:
-            {
-            FourthConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          case VANLEER:
-            {
-            VanLeerConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          case SUPERBEE:
-            {
-            SuperBeeConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          case ROE:
-            {
-            RoeConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          case UPWIND:
-            {
-            UpwindConvection scheme;
-            MOMCONVECTION();
-            }
-            break;
-          default:
-            throw InvalidValue("Error: Momentum convection scheme not recognized.", __FILE__, __LINE__);
-        }
+        doConvection(execObj,convection_range, phi, u_fx, v_fy , w_fz , x_flux , y_flux , z_flux , eps, ieqn);
       }
 
       //Stress
@@ -565,11 +671,11 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        constCCVariable<double>& sigma1 = tsk_info->get_field<constCCVariable<double> >(m_sigmax_name);
-        constCCVariable<double>& sigma2 = tsk_info->get_field<constCCVariable<double> >(m_sigmay_name);
-        constCCVariable<double>& sigma3 = tsk_info->get_field<constCCVariable<double> >(m_sigmaz_name);
+        auto sigma1 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmax_name);
+        auto sigma2 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmay_name);
+        auto sigma3 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmaz_name);
 
-        auto stressTensor = [&] (int i, int j, int k){
+        auto stressTensor = KOKKOS_LAMBDA (int i, int j, int k){
           double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
                               (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS +
                               (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
@@ -581,15 +687,15 @@ private:
         if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(execObj, range, stressTensor );
         } else if ( my_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(execObj, range, stressTensor );
         } else {
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range, stressTensor );
+          Uintah::parallel_for(execObj, range, stressTensor );
         }
       }
 
@@ -597,26 +703,26 @@ private:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = tsk_info->get_field<CT>((*isrc).name);
+        auto src = tsk_info->get_field<CT, const double, MemSpace>((*isrc).name);
         double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)
           Uintah::BlockRange range_x(low_fx_patch_range, high_fx_patch_range);
-          Uintah::parallel_for( range_x, [&](int i, int j, int k){
+          Uintah::parallel_for(execObj, range_x, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
 
           });
         } else if ( my_dir == ArchesCore::YDIR ){
           GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range_y(low_fy_patch_range, high_fy_patch_range);
-          Uintah::parallel_for( range_y, [&](int i, int j, int k){
+          Uintah::parallel_for(execObj, range_y, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
           });
         } else {
           GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1, 0);
           Uintah::BlockRange range_z(low_fz_patch_range, high_fz_patch_range);
-          Uintah::parallel_for( range_z, [&](int i, int j, int k){
+          Uintah::parallel_for(execObj, range_z, KOKKOS_LAMBDA (int i, int j, int k){
             rhs(i,j,k) += weight * src(i,j,k) * V;
           });
         }
@@ -650,10 +756,11 @@ private:
   }
 
 //--------------------------------------------------------------------------------------------------
-  template <typename T> void
-  KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename T>
+  template <typename ExecSpace, typename MemSpace>
+  void KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    m_boundary_functors->apply_bc( m_eqn_names, m_bcHelper, tsk_info, patch );
+    m_boundary_functors->apply_bc( m_eqn_names, m_bcHelper, tsk_info, patch ,execObj);
 
   }
 }

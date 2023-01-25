@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Portability.h>
 
 namespace Uintah{
 
@@ -107,17 +108,21 @@ namespace Uintah{
   /** @brief Schedule compute of a stable timestep **/
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
-  void computeStableTimeStep( const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset*,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw );
+  template <typename ExecSpace, typename MemSpace>
+  void computeStableTimeStep( const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              OnDemandDataWarehouse* old_dw,
+                              OnDemandDataWarehouse* new_dw,
+                              UintahParams& uintahParams,
+                              ExecutionObject<ExecSpace, MemSpace>& execObj);
 
-  void setTimeStep( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw );
+  template <typename ExecSpace, typename MemSpace>
+  void setTimeStep( const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    OnDemandDataWarehouse* old_dw,
+                    OnDemandDataWarehouse* new_dw,
+                    UintahParams& uintahParams,
+                    ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   double recomputeDelT(const double delT) { return delT/2.0; };
 

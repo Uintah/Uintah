@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,87 +33,82 @@ using std::ostream;
 
 namespace Uintah {
 
-//______________________________________________________________________
-//
-ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
-{
-  if( ps.getUnion() == nullptr ) {
-    out << "(null PatchSet)";
-  }
-  else {
-    out << "Patches: {";
-    for(int i=0;i<ps.size();i++){
-      const PatchSubset* pss = ps.getSubset(i);
-      if(i != 0) {
-        out << ", ";
-      }
-      out << *pss;
+  ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
+  {
+    if( ps.getUnion() == nullptr ) {
+      out << "(null PatchSet)";
     }
-    out << "}";
-  }
-  return out;
-}
-//______________________________________________________________________
-//
-ostream& operator<<(ostream& out, const Uintah::PatchSubset& pss)
-{
-  if( pss.size() == 0 ) {
-    out << "(null PatchSubset)";
-  }
-  else {
-    out << "{";
-    for(int j=0;j<pss.size();j++){
-      if(j != 0) {
-        out << ",";
+    else {
+      out << "Patches: {";
+      for(int i=0;i<ps.size();i++){
+        const PatchSubset* pss = ps.getSubset(i);
+        if(i != 0) {
+          out << ", ";
+        }
+        out << *pss;
       }
-      const Patch* patch = pss.get(j);
-      out << patch->getID();
+      out << "}";
     }
-    out << "}";
+    return out;
   }
-  return out;
-}
-//______________________________________________________________________
-//
-ostream& operator<<(ostream& out, const Uintah::MaterialSet& ms)
-{
-  if( ms.getUnion() == nullptr ) {
-    out << "(null Materials)";
-  }
-  else {
-    out << "Matls: {";
-    for( int i = 0; i < ms.size(); i++ ) {
-      const MaterialSubset* mss = ms.getSubset(i);
-      if( i != 0 ) {
-        out << ", ";
+
+  ostream& operator<<(ostream& out, const Uintah::PatchSubset& pss)
+  {
+    if( pss.size() == 0 ) {
+      out << "(null PatchSubset)";
+    }
+    else {
+      out << "{";
+      for(int j=0;j<pss.size();j++){
+        if(j != 0) {
+          out << ",";
+        }
+        const Patch* patch = pss.get(j);
+        out << patch->getID();
       }
-      out << *mss;
+      out << "}";
     }
-    out << "}";
+    return out;
   }
-  return out;
-}
-//______________________________________________________________________
-//
-ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
-{
-  if( mss.size() == 0 ) {
-    out << "(null MaterialSubset)";
-  }
-  else {
-    out << "{";
-    for(int j=0;j<mss.size();j++){
-      if(j != 0) {
-        out << ",";
+
+  ostream& operator<<(ostream& out, const Uintah::MaterialSet& ms)
+  {
+    if( ms.getUnion() == nullptr ) {
+      out << "(null Materials)";
+    }
+    else {
+      out << "Matls: {";
+      for( int i = 0; i < ms.size(); i++ ) {
+        const MaterialSubset* mss = ms.getSubset(i);
+        if( i != 0 ) {
+          out << ", ";
+        }
+        out << *mss;
       }
-      out << mss.get(j);
+      out << "}";
     }
-    out << "}";
+    return out;
   }
-  return out;
-}
+
+  ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
+  {
+    if( mss.size() == 0 ) {
+      out << "(null MaterialSubset)";
+    }
+    else {
+      out << "{";
+      for(int j=0;j<mss.size();j++){
+        if(j != 0) {
+          out << ",";
+        }
+        out << mss.get(j);
+      }
+      out << "}";
+    }
+    return out;
+  }
 
 } // end namespace Uintah
 
 
-
+  

@@ -13,6 +13,64 @@ ColdFlowProperties::~ColdFlowProperties(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskComputeBCsFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::BC>( this
+                                     , &ColdFlowProperties::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &ColdFlowProperties::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &ColdFlowProperties::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &ColdFlowProperties::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ColdFlowProperties::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &ColdFlowProperties::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &ColdFlowProperties::restart_initialize<KOKKOS_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP db_prop = db->findBlock("property");
@@ -61,14 +119,15 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
-    var.initialize(0.0);
+    auto var = tsk_info->get_field<CCVariable<double>, double, MemSpace>( i->first );
+    parallel_initialize(execObj, 0.0, var);
   }
 
-  get_properties( patch, tsk_info );
+  get_properties(execObj, patch, tsk_info );
 
 }
 
@@ -83,19 +142,21 @@ void ColdFlowProperties::register_timestep_init( VIVec& variable_registry , cons
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    constCCVariable<double>& old_var = tsk_info->get_field<constCCVariable<double> >( i->first );
-    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
+    auto old_var = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( i->first );
+    auto var = tsk_info->get_field<CCVariable<double>, double, MemSpace>( i->first );
 
-    var.copyData(old_var);
+    parallel_for(execObj, BlockRange(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex()) , KOKKOS_LAMBDA (int i,int j,int k){
+      var(i,j,k) = old_var(i,j,k);
+    });
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
+void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -104,9 +165,10 @@ void ColdFlowProperties::register_restart_initialize( VIVec& variable_registry ,
 }
 
 //--------------------------------------------------------------------------------------------------
-void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  get_properties( patch, tsk_info );
+  get_properties(execObj, patch, tsk_info );
 
 }
 
@@ -121,9 +183,10 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
 
 }
 
-void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  get_properties( patch, tsk_info );
+  get_properties(execObj, patch, tsk_info );
 
 }
 
@@ -138,9 +201,10 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 }
 
-void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constCCVariable<double>& f = tsk_info->get_field<constCCVariable<double> >( m_mixfrac_label );
+  auto f = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -156,10 +220,14 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
     for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-      CCVariable<double>& prop = tsk_info->get_field<CCVariable<double> >( i->first );
+      auto prop = tsk_info->get_field<CCVariable<double>, double, MemSpace>( i->first );
       const SpeciesInfo info = i->second;
 
-      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
+      const bool volumetric = info.volumetric;
+      const double stream_1 = info.stream_1;
+      const double stream_2 = info.stream_2;
+
+      parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
 
         int ip = i-iDir[0];
         int jp = j-iDir[1];
@@ -167,9 +235,9 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
         const double f_interp = 0.5 *( f(i,j,k) + f(ip,jp,kp) );
 
-        const double value = ( info.volumetric ) ?
-                             1./(f_interp / info.stream_1 + ( 1. - f_interp ) / info.stream_2) :
-                             f_interp * info.stream_1 + ( 1. - f_interp ) * info.stream_2;
+        const double value = volumetric ?
+                             1./(f_interp / stream_1 + ( 1. - f_interp ) / stream_2) :
+                             f_interp * stream_1 + ( 1. - f_interp ) * stream_2;
 
         prop(i,j,k) = 2. * value - prop(ip,jp,kp);
 
@@ -178,25 +246,30 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
   }
 }
 
-void ColdFlowProperties::get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ColdFlowProperties::get_properties( ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& f = tsk_info->get_field<constCCVariable<double> >( m_mixfrac_label );
+  auto f = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-    CCVariable<double>& prop = tsk_info->get_field<CCVariable<double> >( i->first );
+    auto prop = tsk_info->get_field<CCVariable<double>, double, MemSpace>( i->first );
     const SpeciesInfo info = i->second;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-    Uintah::parallel_for( range, [&]( int i, int j, int k ){
+   const double stream_1 = info.stream_1;
+   const double stream_2 = info.stream_2;
 
-      const double value = ( info.volumetric ) ?
-                           1./(f(i,j,k) / info.stream_1 + ( 1. - f(i,j,k) ) / info.stream_2) :
-                           f(i,j,k) * info.stream_1 + ( 1. - f(i,j,k) ) * info.stream_2;
-      prop(i,j,k) = value;
-
+   if (info.volumetric){
+    Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA ( int i, int j, int k ){
+      prop(i,j,k) =1./(f(i,j,k) / stream_1 + ( 1. - f(i,j,k) ) / stream_2);
     });
+   }else{
+    Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA ( int i, int j, int k ){
+      prop(i,j,k) =f(i,j,k) * stream_1 + ( 1. - f(i,j,k) ) * stream_2;
+    });
+   }
 
   }
 }

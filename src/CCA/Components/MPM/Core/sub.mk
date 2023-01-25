@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2021 The University of Utah
+#  Copyright (c) 1997-2020 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -21,6 +21,10 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
+# 
+# 
+# 
+# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -32,11 +36,6 @@ SRCS     += \
 	$(SRCDIR)/MPMDiffusionLabel.cc \
 	$(SRCDIR)/MPMFlags.cc          \
 	$(SRCDIR)/MPMLabel.cc          \
-	$(SRCDIR)/ImpMPMLabel.cc       \
-	$(SRCDIR)/ShellMPMLabel.cc     \
-	$(SRCDIR)/CZLabel.cc           \
-	$(SRCDIR)/AMRMPMLabel.cc       \
-	$(SRCDIR)/HydroMPMLabel.cc     \
 	$(SRCDIR)/ImpMPMFlags.cc
 
 PSELIBS := \

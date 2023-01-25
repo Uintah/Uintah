@@ -1,0 +1,25 @@
+set( ARCHES_SRC ${ARCHES_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/BodyForce.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Burnout.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/CQMOMSourceWrapper.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/CharOxidationps.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/CoalDensity.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/CoalTemperature.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Constant.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/DQMOMNoInversion.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/DepositionEnthalpy.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/DepositionVelocity.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/DragModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExampleParticleModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/FOWYDevol.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/FaceParticleVel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/PartVariablesDQMOM.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ParticleModelFactory.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ParticleTools.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/RateDeposition.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShaddixEnthalpy.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShaddixOxidation.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TotNumDensity.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/WDragModel.cc
+    PARENT_SCOPE
+    )

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 
@@ -60,9 +61,10 @@ using namespace Uintah;
 // Default constructor for Properties
 //****************************************************************************
 Properties::Properties(ArchesLabel* label,
+                       const MPMArchesLabel* MAlb,
                        PhysicalConstants* phys_const,
                        const ProcessorGroup* myworld):
-                       d_lab(label),
+                       d_lab(label), d_MAlab(MAlb),
                        d_physicalConsts(phys_const),
                        d_myworld(myworld)
 {
@@ -354,11 +356,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   }
 
   int drhodt_1st_order = 1;
-#if 0
-  if (d_MAlab){  // What to do  --Todd
+  if (d_MAlab){
     drhodt_1st_order = 2;
   }
-#endif
   delt_vartype delT, old_delT;
   parent_old_dw->get(delT, d_lab->d_delTLabel );
 

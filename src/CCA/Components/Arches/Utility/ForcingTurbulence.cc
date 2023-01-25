@@ -1,7 +1,7 @@
 /*
 * The MIT License
 *
-* Copyright (c) 1997-2021 The University of Utah
+* Copyright (c) 1997-2019 The University of Utah
 *
 is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to
@@ -39,6 +39,35 @@ ForcingTurbulence::ForcingTurbulence( std::string task_name, int matl_index ) : 
 
 // Destructor ------------------------------------------------------------------
 ForcingTurbulence::~ForcingTurbulence() {
+}
+
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskInitializeFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 // Problem Setup ---------------------------------------------------------------

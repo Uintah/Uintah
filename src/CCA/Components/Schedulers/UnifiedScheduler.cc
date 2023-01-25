@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,8 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
@@ -39,7 +41,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -84,22 +86,29 @@ namespace {
 } // namespace
 
 
-#ifdef HAVE_CUDA
-
-extern Uintah::MasterLock cerrLock;
+#if defined(HAVE_GPU)
 
 namespace Uintah {
 
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
-  Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
-
 }
+
+#endif
+
+#ifdef HAVE_CUDA
 
 namespace {
+
+  Dout g_gpu_ids( "Unified_GPU_IDs", "UnifiedScheduler", "detailed information to uniquely identify GPUs on a node", false );
+  Dout g_d2h_dbg( "Unified_D2H_DBG", "UnifiedScheduler", "detailed information to identify DW variables that may need copied from device-to-host", false );
+
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+
 }
+
+extern Uintah::MasterLock cerrLock;
 
 #endif
 
@@ -249,7 +258,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 
 #ifdef HAVE_CUDA
   //__________________________________
-  //    
+  //
   if ( Uintah::Parallel::usingDevice() ) {
     gpuInitialize();
 
@@ -323,7 +332,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 {
   // Default taskReadyQueueAlg
   std::string taskQueueAlg = "";
-
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if (params) {
     params->get("taskReadyQueueAlg", taskQueueAlg);
@@ -373,17 +381,16 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
       throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
     }
   }
-
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   int num_threads = Uintah::Parallel::getNumThreads() - 1;
 
-  if ( (num_threads < 1) &&  Uintah::Parallel::usingDevice() ) {
+  if ( (num_threads < 0) &&  Uintah::Parallel::usingDevice() ) {
     if (d_myworld->myRank() == 0) {
       std::cerr << "Error: no thread number specified for Unified Scheduler"
           << std::endl;
       throw ProblemSetupException(
-          "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
+          "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
   } else if (num_threads > MAX_THREADS) {
@@ -404,7 +411,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
         << num_threads + 1 << ").\n" << std::endl;
 
 #ifdef HAVE_CUDA
-    if ( !gpu_ids && Uintah::Parallel::usingDevice() ) {
+    if ( !g_gpu_ids && Uintah::Parallel::usingDevice() ) {
       cudaError_t retVal;
       int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
@@ -422,7 +429,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   }
 
 #ifdef HAVE_CUDA
-  if ( gpu_ids && Uintah::Parallel::usingDevice() ) {
+  if ( g_gpu_ids && Uintah::Parallel::usingDevice() ) {
     cudaError_t retVal;
     int availableDevices;
     std::ostringstream message;
@@ -446,8 +453,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 
-
-  // this spawns threads, sets affinity, etc
+  // This spawns threads, sets affinity, etc
   init_threads(this, num_threads);
 
   // Setup the thread info mapper
@@ -477,10 +483,10 @@ UnifiedScheduler::createSubScheduler()
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::runTask( DetailedTask        * dtask
-                         , int                   iteration
-                         , int                   thread_id /* = 0 */
-                         , Task::CallBackEvent   event
+UnifiedScheduler::runTask( DetailedTask  * dtask
+                         , int             iteration
+                         , int             thread_id /* = 0 */
+                         , CallBackEvent   event
                          )
 {
   // end of per-thread wait time - how long has a thread waited before executing another task
@@ -497,8 +503,8 @@ UnifiedScheduler::runTask( DetailedTask        * dtask
   }
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
-  if ( event == Task::CPU || event == Task::GPU) {
-    
+  if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
+
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
@@ -509,7 +515,14 @@ UnifiedScheduler::runTask( DetailedTask        * dtask
     }
 
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
-  
+
+#ifdef HAVE_CUDA
+    //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+    if (event == CallBackEvent::GPU) {
+      markHostAsInvalid(dtask);
+    }
+#endif
+
     dtask->doit(d_myworld, m_dws, plain_old_dws, event);
 
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -518,10 +531,21 @@ UnifiedScheduler::runTask( DetailedTask        * dtask
   }
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
-  if (event == Task::CPU || event == Task::postGPU) {
+  if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
+
+      //DS: 10312019: If CPU task is going to modify any variable, mark that variable as invalid on GPU.
+      if (event == CallBackEvent::CPU) {
+        markHostComputesDataAsValid(dtask);
+        markDeviceAsInvalidHostAsValid(dtask);
+      }
+
+      //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+      if (event == CallBackEvent::postGPU) {
+        markHostAsInvalid(dtask);
+      }
 
       // TODO: Don't make every task run through this
       // TODO: Verify that it only looks for data that's valid in the GPU, and not assuming it's valid.
@@ -544,7 +568,7 @@ UnifiedScheduler::runTask( DetailedTask        * dtask
 
       // Now that we've done internal ghost cell copies, we can mark the staging vars as being valid.
       // TODO: Sync required?  We shouldn't mark data as valid until it has copied.
-      markDeviceRequiresDataAsValid(dtask);
+      markDeviceRequiresAndModifiesDataAsValid(dtask);
 
       copyAllGpuToGpuDependences(dtask);
       // TODO: Mark destination staging vars as valid.
@@ -651,7 +675,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     m_task_info.reset(0);
   }
 
-  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
+  RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
   TaskGraph* tg = m_task_graphs[tgnum];
@@ -678,7 +702,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   if( m_runtimeStats )
     (*m_runtimeStats)[RuntimeStatsEnum::NumTasks] += m_num_tasks;
-                   
+
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
@@ -727,6 +751,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+  Impl::thread_fence();
 
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
@@ -906,14 +931,15 @@ UnifiedScheduler::runTasks( int thread_id )
 #ifdef HAVE_CUDA
     bool usingDevice = Uintah::Parallel::usingDevice();
     bool gpuInitReady = false;
-    bool gpuValidateRequiresCopies = false;
+    bool gpuValidateRequiresAndModifiesCopies = false;
+    bool gpuValidateRequiresDelayedCopies = false;
     bool gpuPerformGhostCopies = false;
     bool gpuValidateGhostCopies = false;
     bool gpuCheckIfExecutable = false;
     bool gpuRunReady = false;
     bool gpuPending = false;
     bool cpuInitReady = false;
-    bool cpuValidateRequiresCopies = false;
+    bool cpuValidateRequiresAndModifiesCopies = false;
     bool cpuCheckIfExecutable = false;
     bool cpuRunReady = false;
 
@@ -1032,8 +1058,15 @@ UnifiedScheduler::runTasks( int thread_id )
          * gpuVerifyDataTransferCompletion = true
          */
         if (usingDevice
-            && m_detailed_tasks->getDeviceValidateRequiresCopiesTask(readyTask)) {
-            gpuValidateRequiresCopies = true;
+            && m_detailed_tasks->getDeviceValidateRequiresAndModifiesCopiesTask(readyTask)) {
+            if (readyTask->getDelayedCopy()) {
+              gpuValidateRequiresDelayedCopies = true;
+              gpuValidateRequiresAndModifiesCopies = false;
+            }
+            else {
+              gpuValidateRequiresDelayedCopies = false;
+              gpuValidateRequiresAndModifiesCopies = true;
+            }
             havework = true;
             break;
         }
@@ -1104,11 +1137,11 @@ UnifiedScheduler::runTasks( int thread_id )
          * Check if a CPU task needs data into host memory from GPU memory
          * If so, copies data D2H.  Also checks if all data has arrived and is ready to process.
          *
-         * cpuValidateRequiresCopies = true
+         * cpuValidateRequiresAndModifiesCopies = true
          */
         else if (usingDevice
-            && m_detailed_tasks->getHostValidateRequiresCopiesTask(readyTask)) {
-            cpuValidateRequiresCopies = true;
+            && m_detailed_tasks->getHostValidateRequiresAndModifiesCopiesTask(readyTask)) {
+            cpuValidateRequiresAndModifiesCopies = true;
             havework = true;
             break;
         }
@@ -1218,12 +1251,22 @@ UnifiedScheduler::runTasks( int thread_id )
 
         //Determine which queue it should go into.
         //TODO: Skip queues if possible, not all tasks performed copies or ghost cell gathers
-        m_detailed_tasks->addDeviceValidateRequiresCopies(readyTask);
+        m_detailed_tasks->addDeviceValidateRequiresAndModifiesCopies(readyTask);
 
-      } else if (gpuValidateRequiresCopies) {
-        //Mark all requires vars this task is responsible for copying in as valid.
-        markDeviceRequiresDataAsValid(readyTask);
-        m_detailed_tasks->addDevicePerformGhostCopies(readyTask);
+      } else if (gpuValidateRequiresAndModifiesCopies) {
+        //Mark all requires and modifies vars this task is responsible for copying in as valid.
+        markDeviceRequiresAndModifiesDataAsValid(readyTask);
+        if (delayedDeviceVarsValid(readyTask)) {
+          //initiate delayed copy of variables which needs larger ghost cells. We have to wait untill origianal copy is completed to avoid race conditions
+          readyTask->setDelayedCopy(1);    //set delayed copy flag to indicate next round of getDeviceValidateRequiresAndModifiesCopiesTask will be for delayed copies
+          copyDelayedDeviceVars(readyTask);
+        }
+        m_detailed_tasks->addDeviceValidateRequiresAndModifiesCopies(readyTask);
+      } else if (gpuValidateRequiresDelayedCopies) {
+          readyTask->setDelayedCopy(0);    //reset delayed copy flag
+          //marked delayed vars to be valid and mark ready for the next stage
+          markDeviceRequiresAndModifiesDataAsValid(readyTask);
+          m_detailed_tasks->addDevicePerformGhostCopies(readyTask);
       } else if (gpuPerformGhostCopies) {
         //make sure all staging vars are valid before copying ghost cells in
         if (ghostCellsProcessingReady(readyTask)) {
@@ -1247,7 +1290,13 @@ UnifiedScheduler::runTasks( int thread_id )
       } else if (gpuRunReady) {
 
         // Run the task on the GPU!
-        runTask(readyTask, m_curr_iteration, thread_id, Task::GPU);
+        runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
+
+        if (g_d2h_dbg) {
+          std::ostringstream message;
+          message << "  Running GPU Task: " << *readyTask;
+          DOUT(true, message.str());
+        }
 
         // See if we're dealing with 32768 ghost cells per patch.  If so,
         // it's easier to manage them on the host for now than on the GPU.  We can issue
@@ -1263,6 +1312,12 @@ UnifiedScheduler::runTasks( int thread_id )
         // Go through all computes for the task. Mark them as valid.
         markDeviceComputesDataAsValid(readyTask);
 
+        // Go through all modifies for the task.  Mark any that had valid ghost cells as being invalid.
+        // (Consider task A computes, task B modifies ghost cell layer 1, task C requires ghost cell layer 1.
+        // Task C should not consider the ghost cells valid, as task B just updated the data, and so task C needs
+        // new ghost cells.
+        markDeviceModifiesGhostAsInvalid(readyTask);
+
         // The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
@@ -1271,10 +1326,11 @@ UnifiedScheduler::runTasks( int thread_id )
         // Run post GPU part of task.  It won't actually rerun the task
         // But it will run post computation management logic, which includes
         // marking the task as done.
-        runTask(readyTask, m_curr_iteration, thread_id, Task::postGPU);
+        runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
 
         // recycle this task's stream
-        GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+        // GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+        readyTask->reclaimCudaStreamsIntoPool();
       }
 #endif
       else {
@@ -1292,7 +1348,7 @@ UnifiedScheduler::runTasks( int thread_id )
           assignDevicesAndStreams(readyTask);
 
           // Run initiateD2H on all tasks in case the data we need is in GPU memory but not in host memory.
-          // The exception being we don't run an output task in a non-output timestep.  
+          // The exception being we don't run an output task in a non-output timestep.
           // (It would be nice if the task graph didn't have this OutputVariables task if
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
@@ -1327,10 +1383,10 @@ UnifiedScheduler::runTasks( int thread_id )
             //for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = readyTask->getVarsBeingCopiedByTask().getMap().begin(); it != readyTask->getVarsBeingCopiedByTask().getMap().end(); ++it) {
             //}
             //Once the D2H transfer is done, we mark those vars as valid.
-            m_detailed_tasks->addHostValidateRequiresCopies(readyTask);
+            m_detailed_tasks->addHostValidateRequiresAndModifiesCopies(readyTask);
           }
-        } else if (cpuValidateRequiresCopies) {
-          markHostRequiresDataAsValid(readyTask);
+        } else if (cpuValidateRequiresAndModifiesCopies) {
+          markHostRequiresAndModifiesDataAsValid(readyTask);
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
@@ -1351,8 +1407,15 @@ UnifiedScheduler::runTasks( int thread_id )
         } else if (cpuRunReady) {
 #endif
           // run CPU task.
-          runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
+          runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
+
 #ifdef HAVE_CUDA
+          if (g_d2h_dbg) {
+            std::ostringstream message;
+            message << "  Running CPU Task: " << *readyTask;
+            DOUT(true, message.str());
+          }
+
           //See note above near cpuInitReady.  Some CPU tasks may internally interact
           //with GPUs without modifying the structure of the data warehouse.
           //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
@@ -1416,7 +1479,7 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
   //Go through all toTasks
   for (std::list<DetailedTask*>::const_iterator iter = dep->m_to_tasks.begin(); iter != dep->m_to_tasks.end(); ++iter) {
     toTask = (*iter);
-    
+
     constHandle<PatchSubset> patches = toTask->getPatches();
     const int numPatches = patches->size();
     //const Patch* toPatch = toTask->getPatches()->get(0);
@@ -1662,16 +1725,16 @@ UnifiedScheduler::gpuInitialize( bool reset )
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw, 
+void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
                                            const Level* const level,
                                            const IntVector& low,
-                                           const IntVector& high, 
-                                           const VarLabel* const label, 
-                                           const Patch * const patch, 
-                                           const int matlIndx, 
+                                           const IntVector& high,
+                                           const VarLabel* const label,
+                                           const Patch * const patch,
+                                           const int matlIndx,
                                            const int levelID ) {
   //Handle superpatch stuff
-  //This was originally designed for the use case of turning an entire level into a variable.  
+  //This was originally designed for the use case of turning an entire level into a variable.
   //We need to set up the equivalent of a super patch.
   //For example, suppose a simulation has 8 patches and 2 ranks and 1 level, and this rank owns
   //patches 0, 1, 2, and 3.  Further suppose this scheduler thread is checking
@@ -1681,19 +1744,19 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
   //patch 1 is needed on the GPU, and this is the first thread to process this situation.
   //This thread's job should be to claim it is responsible for processing the variable for
   //patches 0, 1, 2, and 3.  Four GPU data warehouse entries should be created, one for each
-  //patch.  
+  //patch.
 
   //Patches 0, 1, 2, and 3 should be given the same pointer, same low, same high, (TODO: but different offsets).
-  //In order to avoid concurrency problems when marking all patches in the superpatch region as 
-  //belonging to the superpatch, we need to avoid Dining Philosophers problem.  That is accomplished 
+  //In order to avoid concurrency problems when marking all patches in the superpatch region as
+  //belonging to the superpatch, we need to avoid Dining Philosophers problem.  That is accomplished
   //by claiming patches in *sorted* order, and no scheduler thread can attempt to claim any later patch
   //if it hasn't yet claimed a former patch.  The first thread to claim all will have claimed the
   //"superpatch" region.
-  
+
   //Superpatches essentially are just windows into a shared variable, it uses shared_ptrs behind the scenes
-  //With this later only one alloaction or H2D transfer can be done.  This method's job is just 
-  //to concurrently set up all the underlying shared_ptr work.  
- 
+  //With this later only one alloaction or H2D transfer can be done.  This method's job is just
+  //to concurrently set up all the underlying shared_ptr work.
+
   //Note: Superpatch approaches won't work if for some reason a prior task copied a patch in a non-superpatch
   //manner, at the current moment no known simulation will ever do this.  It is also why we try to prepare
   //the superpatch a bit upstream before concurrency checks start, and not down in prepareDeviceVars(). Brad P - 8/6/2016
@@ -1707,9 +1770,9 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
 
 
   //Get all patches in the superpatch. Assuming our superpatch is the entire level.
-  //This also sorts the neighbor patches by ID for us.  Note that if the current patch is 
+  //This also sorts the neighbor patches by ID for us.  Note that if the current patch is
   //smaller than all the neighbors, we have to work that in too.
-  
+
   Patch::selectType neighbors;
   //IntVector low, high;
   //level->computeVariableExtents(type, low, high);  //Get the low and high for the level
@@ -1737,11 +1800,11 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
   //At this point the patch has been marked as a superpatch.
 
   if (thisThreadHandlesSuperPatchWork) {
-    
-    gpudw->setSuperPatchLowAndSize(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID, 
-                                   make_int3(low.x(), low.y(), low.z()), 
-                                   make_int3(high.x() - low.x(), high.y() - low.y(), high.z() - low.z())); 
-    
+
+    gpudw->setSuperPatchLowAndSize(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID,
+                                   make_int3(low.x(), low.y(), low.z()),
+                                   make_int3(high.x() - low.x(), high.y() - low.y(), high.z() - low.z()));
+
     //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
     //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
     //can also flag it as a superpatch.
@@ -1754,8 +1817,8 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
 
         //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
         //writing, this scenario didn't exist.  Some ways to solve this include 1) An "I'm using this" reference counter.
-        //2) Moving superpatch creation to the start of a timestep, and not at the start of initiateH2D, or 
-        //3) predetermining at the start of a timestep what superpatch regions will be, and then we can just form 
+        //2) Moving superpatch creation to the start of a timestep, and not at the start of initiateH2D, or
+        //3) predetermining at the start of a timestep what superpatch regions will be, and then we can just form
         //them together here
 
         //Shallow copy this neighbor patch into the superaptch
@@ -1791,7 +1854,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
   // transfer some variables twice).
   // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
   // materials, but a single task will never run multiple levels.
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*> vars;
   for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -1800,6 +1863,21 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+        std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator it = vars.find(lpmd);
+        if (it  == vars.end() || (it != vars.end() && it->second->m_whichdw != dependantVar->m_whichdw)) {
+          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+        }
+      }
+    }
+  }
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies); // modifies 2nd, may require copy
         if (vars.find(lpmd) == vars.end()) {
           vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }
@@ -1821,14 +1899,15 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
     }
   }
 
-  unsigned int device_id = -1;
+  int device_id = -1;
   // The task runs on one device.  The first patch we see can be used to tell us
   // which device we should be on.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   varIter = vars.begin();
   if (varIter != vars.end()) {
     device_id = GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(dtask->getPatches())->get(0));
-    OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   }
 
   // Go through each unique dependent var and see if we should allocate space and/or queue it to be copied H2D.
@@ -1882,11 +1961,16 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       //Get all size information about this dependency.
       IntVector low, high; // lowOffset, highOffset;
-      if (uses_SHRT_MAX) {
-        level->computeVariableExtents(type, low, high);
+      if (type == TypeDescription::PerPatch || type == TypeDescription::ReductionVariable) {
+        low.x(0); low.y(0); low.z(0);
+        high.x(0); high.y(0); high.z(0);
       } else {
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
-        patch->computeVariableExtents(basis, curDependency->m_var->getBoundaryLayer(), curDependency->m_gtype, curDependency->m_num_ghost_cells, low, high);
+        if (uses_SHRT_MAX) {
+          level->computeVariableExtents(type, low, high);
+        } else {
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+          patch->computeVariableExtents(basis, curDependency->m_var->getBoundaryLayer(), curDependency->m_gtype, curDependency->m_num_ghost_cells, low, high);
+        }
       }
       const IntVector host_size = high - low;
       const size_t elementDataSize = OnDemandDataWarehouse::getTypeDescriptionSize(curDependency->m_var->typeDescription()->getSubType()->getType());
@@ -1923,6 +2007,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                                       make_int3(low.x(), low.y(), low.z()),
                                       make_int3(host_size.x(), host_size.y(), host_size.z()));
 
+      //correctSize allocating allocated copyingIn validOnGPU gatheringGhostCells validWithGhostCellsOnGPU deallocating formingSuperPatch superPatch
+      //printf("%d %d %s %s %d %d %d: flags: %d %d %d %d %d %d %d %d %d %d\n",
+      //       Uintah::Parallel::getMPIRank(), Impl::t_tid, dtask->getName().c_str(), curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
+      //       (int)correctSize, (int)allocating, (int)allocated, (int)copyingIn, (int)validOnGPU, (int)gatheringGhostCells, (int)validWithGhostCellsOnGPU,
+      //       (int)deallocating, (int)formingSuperPatch, (int)superPatch
+      //      );
 
       if (gpu_stats.active()) {
         cerrLock.lock();
@@ -1933,17 +2023,26 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
               << " material: " << matlID << " level: " << levelID;
           if (curDependency->m_dep_type == Task::Requires) {
             gpu_stats << " - A REQUIRES dependency";
+          } else if (curDependency->m_dep_type == Task::Modifies) {
+            gpu_stats << " - A MODIFIES dependency";
           } else if (curDependency->m_dep_type == Task::Computes) {
             gpu_stats << " - A COMPUTES dependency";
           }
-          gpu_stats << " with a size of (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ")"
-                    << " and each element in it has a size of " << elementDataSize << " bytes"
-                    << " and the entire variable uses  " << memSize << " bytes." << std::endl;
+          if (type != TypeDescription::PerPatch && type != TypeDescription::ReductionVariable) {
+            gpu_stats << " with a size of (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ")"
+                      << " and each element in it has a size of " << elementDataSize << " bytes";
+          } else if (type == TypeDescription::PerPatch) {
+            gpu_stats << " a PerPatch variable";
+          } else if (type == TypeDescription::ReductionVariable) {
+            gpu_stats << " a reduction variable";
+          }
+          gpu_stats << " the variable is in data warehouse #" << dwIndex;
+          gpu_stats << " and the entire variable uses  " << memSize << " bytes." << std::endl;
         }
         cerrLock.unlock();
       }
 
-      if (curDependency->m_dep_type == Task::Requires) {
+      if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
 
         // For any variable, only ONE task should manage all ghost cells for it.
         // It is a giant mess to try and have two tasks simultaneously managing ghost cells for a single var.
@@ -1952,21 +2051,22 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         // Otherwise the var's status is left alone (perhaps the ghost cells were already processed by another task a while ago)
         bool gatherGhostCells = false;
         if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
-          
-          if(uses_SHRT_MAX) { 
+
+          if(uses_SHRT_MAX) {
             //Turn this into a superpatch if not already done so:
             turnIntoASuperPatch(gpudw, level, low, high, curDependency->m_var, patch, matlID, levelID);
-  
-            //At the moment superpatches are gathered together through an upcoming getRegionModifiable() call.  So we 
+
+            //At the moment superpatches are gathered together through an upcoming getRegionModifiable() call.  So we
             //still need to mark it as AWAITING_GHOST_CELLS. It should trigger as one of the simpler scenarios
             //below where it knows it can gather the ghost cells host-side before sending it into GPU memory.
           }
-          
+
           //See if we get to be the lucky thread that processes all ghost cells for this simulation variable
           gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
         }
 
-        if ((allocating || allocated) && correctSize && (copyingIn || validOnGPU)) {
+        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
+        if ( allocated && correctSize && ( /*copyingIn ||*/ validOnGPU )) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
 
@@ -2346,8 +2446,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
               }
             } //end neighbors for loop
           } // end if(gatherGhostCells)
-        } else if ((allocated || allocating) && !correctSize) {
-          // At the moment this isn't allowed. So it does an exit(-1).  There are two reasons for this.
+        } else if ( allocated && !correctSize ) {
+          // At the moment this isn't allowed.  There are two reasons for this.
           // First, the current CPU system always needs to "resize" variables when ghost cells are required.
           // Essentially the variables weren't created with room for ghost cells, and so room  needs to be created.
           // This step can be somewhat costly (I've seen a benchmark where it took 5% of the total computation time).
@@ -2360,15 +2460,33 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // ghost cell data while B is resizing its own data.
           // I believe both issues can be fixed with proper checkpoints.  But in reality
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
-          gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
-          std::cerr << "Resizing of GPU grid vars not implemented at this time.  "
-                    << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells."
-                    << "Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
-                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
-          exit(-1);
 
-        } else if ((!allocated && !allocating)
-                   || ((allocated || allocating) && correctSize && !validOnGPU && !copyingIn)) {
+          // DS 04222020: AMRSimulationController::collectGhostCells and SchedulerCommon::addTask together can
+          // determine max ghost cells for variables across all tasks and across init and main task graph.
+          // So this scenario can only occur when there are other task graphs such as sub scheduler of Poisson2
+          // or may be during AMR as methods related to it are not yet included in collectGhostCells.
+          // Updating error message to more meaningful text.
+          gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
+          std::cout <<  myRankThread()
+                    //<< " Resizing of GPU grid vars not implemented at this time. "
+                    <<"\n**Ensure the MAX number of ghost cells for the variable for GPU tasks in the previous task graph are same as in the current taskgraph**\n "
+                    << "Task: " << dtask->getName()
+                    //<< "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
+                    << " for " << curDependency->m_var->getName()
+                    << " patch " << patchID
+                    << " material " << matlID
+                    << " level " << levelID
+                    << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
+                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")"
+                    << " max ghost cells set to: " << curDependency->m_var->getMaxDeviceGhost()
+                    << "\n Are you using sub scheduler or AMR? Those are not yet supported by AMRSimulationController::collectGhostCells."
+                    << std::endl;
+
+          SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
+
+        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
+        } else if (( !allocated )
+                   || ( allocated && correctSize && !validOnGPU /*&& !copyingIn*/ )) {
 
           // It's either not on the GPU, or space exists on the GPU for it but it is invalid.
           // Either way, gather all ghost cells host side (if needed), then queue the data to be
@@ -2448,7 +2566,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             || type == TypeDescription::SFCXVariable
             || type == TypeDescription::SFCYVariable
             || type == TypeDescription::SFCZVariable) {
-          
+
           dtask->getDeviceVars().add(patch, matlID, levelID, false, host_size, memSize, elementDataSize, low, curDependency,
                                      curDependency->m_gtype, curDependency->m_num_ghost_cells, deviceIndex, nullptr,
                                      GpuUtilities::sameDeviceSameMpiRank);
@@ -2521,14 +2639,14 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
       if (it->second.m_staging == isStaging) {
 
-        if (dtask->getDeviceVars().getTotalVars(whichGPU, dwIndex) >= 0) {
+        if (dtask->getDeviceVars().getTotalVars(whichGPU, dwIndex)) {
 
           void* device_ptr = nullptr;  // device base pointer to raw data
 
           const IntVector offset = it->second.m_offset;
           const IntVector size = it->second.m_sizeVector;
-          const IntVector low = offset;
-          const IntVector high = offset + size;
+          IntVector low = offset;           //DS 12132019: GPU Resize fix. update low and high to max ghost cell if needed
+          IntVector high = offset + size;
           const TypeDescription* type_description = it->second.m_dep->m_var->typeDescription();
           const TypeDescription::Type type = type_description->getType();
           const TypeDescription::Type subtype = type_description->getSubType()->getType();
@@ -2544,6 +2662,16 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           const int numGhostCells = it->second.m_numGhostCells;
           Ghost::GhostType ghosttype = it->second.m_gtype;
           bool uses_SHRT_MAX = (numGhostCells == SHRT_MAX);
+
+          //DS 12132019: GPU Resize fix. getting max ghost cell related info
+          const IntVector boundaryLayer = it->second.m_dep->m_var->getBoundaryLayer();
+          Ghost::GhostType dgtype = it->second.m_dep->m_var->getMaxDeviceGhostType();
+          int dghost = it->second.m_dep->m_var->getMaxDeviceGhost();
+
+          if(numGhostCells>dghost){//RMCRT
+            dghost = numGhostCells;
+            dgtype = ghosttype;
+          }
 
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
@@ -2571,10 +2699,22 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(subtype);
 
               if (!uses_SHRT_MAX) {
+                //DS 12132019: GPU Resize fix. Do it only if its not staging. Use max ghost cells and corresponding low and high to allocate scratch space
+                if (it->second.m_staging==false) {
+                  const TypeDescription::Type type = it->second.m_dep->m_var->typeDescription()->getType();
+                  Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+                  patch->computeVariableExtents(basis, it->second.m_dep->m_var->getBoundaryLayer(), dgtype, dghost, low, high);
+
+                  //DS 01022019: set CPU status to valid for the variable to be copied. Otherwise picks up default status of Unknown on host and
+                  //copies it back for the next requires CPU.
+                  //if (it->second.m_dep->m_dep_type == Task::Requires) {
+                  //  gpudw->compareAndSwapSetValidOnCPU(label_cstr, patchID, matlIndx, levelID);
+                  //}
+                }
                 gpudw->allocateAndPut(*device_var, label_cstr, patchID, matlIndx, levelID, staging,
                                       make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
-                                      elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
-                                      it->second.m_numGhostCells);
+                                      elementDataSize, (GPUDataWarehouse::GhostType)(dgtype),
+                                      dghost);
               } else {
 
                 //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
@@ -2598,10 +2738,14 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           }
 
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
-          if (it->second.m_dep->m_dep_type == Task::Requires) {
+          if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
             if (!device_ptr) {
-              std::cerr << "ERROR: GPU variable's device pointer was nullptr" << std::endl;
-              throw ProblemSetupException("ERROR: GPU variable's device pointer was nullptr", __FILE__, __LINE__);
+              std::cout << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
+                  << "For " << label_cstr
+                  << " patch " << patchID
+                  << " material " << matlIndx
+                  << " level " << levelID << "." << std::endl;
+              SCI_THROW(InternalError("ERROR: GPU variable's device pointer was nullptr",__FILE__, __LINE__));
             }
 
             if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
@@ -2630,8 +2774,9 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               //Figure out which thread gets to copy data H2D.  First touch wins.  In case of a superpatch,
               //the patch vars were shallow copied so they all patches in the superpatch refer to the same atomic status.
               bool performCopy = false;
+              bool delayedCopy = false;
               if (!staging) {
-                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID);
+                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
               }
               else {
                 performCopy = gpudw->compareAndSwapCopyingIntoGPUStaging(label_cstr, patchID, matlIndx, levelID,
@@ -2639,7 +2784,15 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                                                      make_int3(size.x(), size.y(), size.z()));
               }
 
-              if (performCopy) {
+              if (performCopy == false && !staging && numGhostCells > 0) {
+                //delayedCopy: call if gpudw->delayedCopyNeeded. It is needed if current patch on GPU (either valid or being copied) has lesser number of ghost cells than current)
+                //delayed copy is needed to avoid race conditions and avoid the current copy with larger ghost layer being overwritten by those queued earlier with smaller
+                //ghost layer. This race condition was observed due to using different streams.
+                delayedCopy = gpudw->isDelayedCopyingNeededOnGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
+              }
+
+
+              if (performCopy || delayedCopy) { //delayedCopy: use performCopy || delayedCopy
                 //This thread is doing the H2D copy for this simulation variable.
 
                 //Start by getting the host pointer.
@@ -2725,10 +2878,14 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                         //all variable copies complete, then delete the object, which in turn decrements the refcounter, which then allows it to clean
                         //up later where needed (either immediately if the temp's refcounts hit 0, or later when the it does the scrub checks).
 
+                        //DS 12132019: GPU Resize fix. Do it only if its not staging. Use max ghost cells and corresponding low and high to allocate scratch space
                         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(type_description->createInstance());
-                        dw->getGridVar(*gridVar, label, matlIndx, patch, ghosttype, numGhostCells);
+                        dw->getGridVar(*gridVar, label, matlIndx, patch, dgtype, numGhostCells);
                         host_ptr = gridVar->getBasePointer();
                         it->second.m_tempVarToReclaim = gridVar;  //This will be held onto so it persists, and then cleaned up after the device-to-host copy
+                        if (it->second.m_staging == false) {
+                          it->second.m_varMemSize = gridVar->getDataSize(); //update it->second.m_varMemSize to add scratchGhost;
+                        }
                       }
                     }
                     break;
@@ -2787,7 +2944,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //Perform the copy!
 
                   cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
-                  OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+                  // Base call is commented out
+                  // OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
                   if (it->second.m_varMemSize == 0) {
                     printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
                         label_cstr, patchID, matlIndx, levelID, staging ? "true" : "false" );
@@ -2802,12 +2960,21 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //  }
                   //}
 
-                  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
+                  if (delayedCopy) {
+//                      printf("%s task: %s, prepareDeviceVars - mark for delayed copying %s %d %d %d %d: %d\n",myRankThread().c_str(), dtask->getName().c_str(), it->first.m_label.c_str(),
+//                              it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->first.m_dataWarehouse, numGhostCells);
+                    dtask->getDelayedCopyingVars().push_back(DetailedTask::delayedCopyingInfo(it->first, it->second, device_ptr, host_ptr, it->second.m_varMemSize));
+//                    while(gpudw->isValidOnGPU(label_cstr, patchID, matlIndx, levelID)==false);
+                  } else {
+//                      printf("%s task: %s, prepareDeviceVars - copying %s %d %d %d %d: %d\n",myRankThread().c_str(), dtask->getName().c_str(), it->first.m_label.c_str(),
+//                                                    it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->first.m_dataWarehouse, numGhostCells);
+                    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
 
-                  // Tell this task that we're managing the copies for this variable.
+                    // Tell this task that we're managing the copies for this variable.
 
-                  dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
+                    dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
                                                                 DeviceGridVariableInfo>(it->first, it->second));
+                  }
                 }
               }
             } else if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank || it->second.m_dest == GpuUtilities::anotherMpiRank) {
@@ -2825,6 +2992,61 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
     isStaging = !isStaging;
   }
   //} end for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin() - this is commented out for now until multi-device support is added
+}
+
+
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::copyDelayedDeviceVars( DetailedTask * dtask )
+{
+  dtask->getVarsBeingCopiedByTask().getMap().clear();
+
+  for (auto it = dtask->getDelayedCopyingVars().begin(); it != dtask->getDelayedCopyingVars().end(); it++) {
+    GpuUtilities::LabelPatchMatlLevelDw lpmld = it->lpmld;
+    DeviceGridVariableInfo devGridVarInfo = it->devGridVarInfo;
+
+    cudaStream_t* stream = dtask->getCudaStreamForThisTask(devGridVarInfo.m_whichGPU);
+
+    void * device_ptr = it->device_ptr;
+    void * host_ptr = it->host_ptr;
+
+    size_t size = it->size;
+
+//    printf("%s task: %s, delayed copying %s %d %d %d %d\n",myRankThread().c_str(), dtask->getName().c_str(), lpmld.m_label.c_str(),
+//          lpmld.m_patchID, lpmld.m_matlIndx, lpmld.m_levelIndx, lpmld.m_dataWarehouse);
+
+    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, size, cudaMemcpyHostToDevice, *stream));
+
+    // Tell this task that we're managing the copies for this variable.
+    dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>(lpmld, devGridVarInfo));
+  }
+
+  dtask->getDelayedCopyingVars().clear();
+}
+
+
+//______________________________________________________________________
+//
+bool
+UnifiedScheduler::delayedDeviceVarsValid( DetailedTask * dtask )
+{
+  for (auto it = dtask->getDelayedCopyingVars().begin(); it != dtask->getDelayedCopyingVars().end(); it++) {
+    GpuUtilities::LabelPatchMatlLevelDw lpmld = it->lpmld;
+    DeviceGridVariableInfo devGridVarInfo = it->devGridVarInfo;
+
+    int whichGPU = devGridVarInfo.m_whichGPU;
+    int dwIndex = devGridVarInfo.m_dep->mapDataWarehouse();
+
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+    GPUDataWarehouse* gpudw = dw->getGPUDW(whichGPU);
+
+    if (!(gpudw->isValidOnGPU(lpmld.m_label.c_str(), lpmld.m_patchID, lpmld.m_matlIndx, lpmld.m_levelIndx ))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 
@@ -3071,103 +3293,215 @@ UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
 
 //______________________________________________________________________
 //
+//TODO: Check performance. It hampered the performance by 10% for Poisson with patch size 4 cubed and 64 such patches. Ran with 2 ranks, nthreads 16
 bool
 UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
 {
-
+//  printf("allHostVarsProcessingReady %s\n", dtask->getName().c_str());
   const Task * task = dtask->getTask();
 
-  dtask->clearPreparationCollections();
+  //dtask->clearPreparationCollections();
 
-  // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
-  // transfer some variables twice).
-  // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
-  // materials, but a single task will never run multiple levels.
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
-  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
-    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
-    if (patches) {
-      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
-      const int numPatches = patches->size();
-      const int numMatls = matls->size();
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
-          labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-          if (vars.find(lpmd) == vars.end()) {
-            vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
-          }
-        }
-      }
-    } else {
-      std::cout << myRankThread() << " In allHostVarsProcessingReady, no patches, task is " << dtask->getName() << std::endl;
+  std::vector<DetailedTask::labelPatchMatlLevelDw> varsNeedOnHost = dtask->getVarsNeededOnHost();
+
+  for (int i = 0; i < varsNeedOnHost.size(); i++) {
+    DetailedTask::labelPatchMatlLevelDw lpmld = varsNeedOnHost[i];
+    OnDemandDataWarehouseP dw = m_dws[lpmld.dwIndex];
+    if (!(dw->isValidOnCPU(lpmld.label.c_str(), lpmld.patchID, lpmld.matlIndx, lpmld.levelIndx ))) {
+      //printf("allHostVarsProcessingReady: returns false for requires: %s %s %d %d %d \n", dtask->getName().c_str(),
+      //       dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+      return false;
     }
   }
 
-  // Go through each var, see if it's valid or valid with ghosts.
-  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
-  for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
-    const Task::Dependency* curDependency = varIter->second;
-
-    constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
-    constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
-    const int numPatches = patches->size();
-    const int patchID = varIter->first.m_patchID;
-    const Patch * patch = nullptr;
-    const Level * level = nullptr;
-    for (int i = 0; i < numPatches; i++) {
-      if (patches->get(i)->getID() == patchID) {
-        patch = patches->get(i);
-        level = patch->getLevel();
-      }
-    }
-    int levelID = level->getID();
-    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
-      levelID = -1;
-    }
-    const int matlID = varIter->first.m_matlIndex;
-    const int dwIndex = curDependency->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = m_dws[dwIndex];
-    GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
-    if (curDependency->m_dep_type == Task::Requires) {
-      if (gpudw->dwEntryExistsOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID)) {
-        if (!(gpudw->isValidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID))) {
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats
-                  << myRankThread()
-                  << " UnifiedScheduler::allHostVarsProcessingReady() - Task: "
-                  << dtask->getName()
-                  << " CPU Task: "
-                  << dtask->getName() << " is not ready because this var isn't valid in host memory.  Var "
-                  << curDependency->m_var->getName() << " patch " << patchID << " material " << matlID << " level " << levelID
-                  << std::endl;
-            }
-            cerrLock.unlock();
-          }
-          return false;
-        }
-      }
-    }
-  }
-
-  // if we got there, then everything must be ready to go.
-  if (gpu_stats.active()) {
-    cerrLock.lock();
-    {
-      gpu_stats
-          << myRankThread()
-          << " UnifiedScheduler::allHostVarsProcessingReady() - Task: "
-          << dtask->getName()
-          << " CPU Task: "
-          << dtask->getName() << " is ready to execute, all required vars are found in in host memory."
-          << std::endl;
-    }
-    cerrLock.unlock();
-  }
-
+//  printf("allHostVarsProcessingReady: returns true %s\n", dtask->getName().c_str());
+  dtask->getVarsNeededOnHost().clear();
   return true;
 }
+
+
+//______________________________________________________________________
+//
+//bool
+//UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
+//{
+////  printf("allHostVarsProcessingReady %s\n", dtask->getName().c_str());
+//  const Task * task = dtask->getTask();
+//
+//  dtask->clearPreparationCollections();
+//
+//  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
+//    if (type == TypeDescription::CCVariable ||
+//        type == TypeDescription::NCVariable ||
+//        type == TypeDescription::SFCXVariable ||
+//        type == TypeDescription::SFCYVariable ||
+//        type == TypeDescription::SFCZVariable)
+//    {
+//      int dwIndex = dependantVar->mapDataWarehouse();
+//      OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
+////            printf("allHostVarsProcessingReady: returns false for requires: %s %s %d %d %d \n", dtask->getName().c_str(),
+////                            dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+//            return false;
+//          }
+//        }
+//      }
+//    }
+//  }
+//
+//  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
+//    if (type == TypeDescription::CCVariable ||
+//        type == TypeDescription::NCVariable ||
+//        type == TypeDescription::SFCXVariable ||
+//        type == TypeDescription::SFCYVariable ||
+//        type == TypeDescription::SFCZVariable)
+//    {
+//      int dwIndex = dependantVar->mapDataWarehouse();
+//      OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
+////            printf("allHostVarsProcessingReady: returns false for modifies: %s %s %d %d %d \n", dtask->getName().c_str(),
+////                    dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+//            return false;
+//          }
+//        }
+//      }
+//    }
+//  }
+////  printf("allHostVarsProcessingReady: returns true %s\n", dtask->getName().c_str());
+//  return true;
+//}
+
+
+//bool
+//UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
+//{
+//
+//  const Task* task = dtask->getTask();
+//
+//  dtask->clearPreparationCollections();
+//
+//  // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
+//  // transfer some variables twice).
+//  // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
+//  // materials, but a single task will never run multiple levels.
+//  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+//  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//    if (patches) {
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+//          if (vars.find(lpmd) == vars.end()) {
+//            vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+//          }
+//        }
+//      }
+//    } else {
+//      std::cout << myRankThread() << " In allHostVarsProcessingReady, no patches, task is " << dtask->getName() << std::endl;
+//    }
+//  }
+//
+//  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//    if (patches) {
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies);
+//          if (vars.find(lpmd) == vars.end()) {
+//            vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+//          }
+//        }
+//      }
+//    } else {
+//      std::cout << myRankThread() << " In allHostVarsProcessingReady, no patches, task is " << dtask->getName() << std::endl;
+//    }
+//  }
+//
+//  // Go through each var, see if it's valid or valid with ghosts.
+//  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+//  for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
+//    const Task::Dependency* curDependency = varIter->second;
+//
+//    constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
+//    constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
+//    const int numPatches = patches->size();
+//    const int patchID = varIter->first.m_patchID;
+//    const Patch * patch = nullptr;
+//    const Level * level = nullptr;
+//    for (int i = 0; i < numPatches; i++) {
+//      if (patches->get(i)->getID() == patchID) {
+//        patch = patches->get(i);
+//        level = patch->getLevel();
+//      }
+//    }
+//    int levelID = level->getID();
+//    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+//      levelID = -1;
+//    }
+//    const int matlID = varIter->first.m_matlIndex;
+//    const int dwIndex = curDependency->mapDataWarehouse();
+//    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//    GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
+//    if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
+//      if (gpudw->dwEntryExistsOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID)) {
+//        if (!(gpudw->isValidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID))) {
+//          if (gpu_stats.active()) {
+//            cerrLock.lock();
+//            {
+//              gpu_stats
+//                  << myRankThread()
+//                  << " UnifiedScheduler::allHostVarsProcessingReady() - Task: "
+//                  << dtask->getName()
+//                  << " CPU Task: "
+//                  << dtask->getName() << " is not ready because this var isn't valid in host memory.  Var "
+//                  << curDependency->m_var->getName() << " patch " << patchID << " material " << matlID << " level " << levelID
+//                  << std::endl;
+//            }
+//            cerrLock.unlock();
+//          }
+//          return false;
+//        }
+//      }
+//    }
+//  }
+//
+//  // if we got there, then everything must be ready to go.
+//  if (gpu_stats.active()) {
+//    cerrLock.lock();
+//    {
+//      gpu_stats
+//          << myRankThread()
+//          << " UnifiedScheduler::allHostVarsProcessingReady() - Task: "
+//          << dtask->getName()
+//          << " CPU Task: "
+//          << dtask->getName() << " is ready to execute, all required vars are found in in host memory."
+//          << std::endl;
+//    }
+//    cerrLock.unlock();
+//  }
+//
+//  return true;
+//}
 
 //______________________________________________________________________
 //
@@ -3177,13 +3511,13 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
 
   const Task* task = dtask->getTask();
 
-  dtask->clearPreparationCollections();
+  //dtask->clearPreparationCollections();
 
   // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
   // transfer some variables twice).
   // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
   // materials, but a single task will never run multiple levels.
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*> vars;
   for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -3192,6 +3526,22 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+        std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter = vars.find(lpmd);
+        if (varIter == vars.end() || varIter->second->mapDataWarehouse() != dependantVar->mapDataWarehouse()) {
+          vars.insert(std::multimap<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+        }
+      }
+    }
+  }
+
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies);
         if (vars.find(lpmd) == vars.end()) {
           vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }
@@ -3200,9 +3550,13 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
   }
 
   // Go through each var, see if it's valid or valid with ghosts.
-  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
     const Task::Dependency* curDependency = varIter->second;
+
+    if (curDependency->m_var->typeDescription()->getType() == TypeDescription::SoleVariable) {
+      continue; //TODO: We are ignoring SoleVariables for now. They should be managed.
+    }
 
     constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
@@ -3225,10 +3579,12 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     const int dwIndex = curDependency->mapDataWarehouse();
     OnDemandDataWarehouseP dw = m_dws[dwIndex];
     GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
-    if (curDependency->m_dep_type == Task::Requires) {
+    if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
       if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
         // it has ghost cells.
-        if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
+        if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID)) ||
+            !(gpudw->isValidOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))
+        ) {
           return false;
         } else {
           if (gpu_stats.active()) {
@@ -3281,10 +3637,10 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
+UnifiedScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask )
 {
 
-  // This marks any Requires variable as valid that wasn't in the GPU but is now in the GPU.
+  // This marks any Requires and Modifies variable as valid that wasn't in the GPU but is now in the GPU.
   // If they were already in the GPU due to being computes from a previous time step, it was already
   // marked as valid.  So there is no need to do anything extra for them.
   // If they weren't in the GPU yet, this task or another task copied it in.
@@ -3304,36 +3660,39 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
-    if (it->second.m_dep->m_dep_type == Task::Requires) {
+    if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
+      bool success=false;
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
           cerrLock.lock();
           {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
+            gpu_stats << myRankThread() << " markDeviceRequiresAndModifiesDataAsValid() -"
                 << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID << std::endl;
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        success = gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       } else {
         if (gpu_stats.active()) {
           cerrLock.lock();
           {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
+            gpu_stats << myRankThread() << " markDeviceRequiresAndModifiesDataAsValid() -"
                 << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID
                 << " offset(" << it->second.m_offset.x() << ", " << it->second.m_offset.y() << ", " << it->second.m_offset.z()
                 << ") size (" << it->second.m_sizeVector.x() << ", " << it->second.m_sizeVector.y() << ", " << it->second.m_sizeVector.z() << ")" << std::endl;
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
+        success = gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
       }
 
-      if (it->second.m_tempVarToReclaim) {
-        //Release our reference to the variable data that getGridVar returned
-        delete it->second.m_tempVarToReclaim;
+      if(success){      //release only if SetValud returns true. Otherwise double deletion (probably due to race condition) and then segfault was observed in dqmom example
+        if (it->second.m_tempVarToReclaim) {
+          //Release our reference to the variable data that getGridVar returned
+          delete it->second.m_tempVarToReclaim;
+        }
       }
     }
   }
@@ -3373,6 +3732,45 @@ UnifiedScheduler::markDeviceGhostsAsValid( DetailedTask * dtask )
 //______________________________________________________________________
 //
 void
+UnifiedScheduler::markHostComputesDataAsValid( DetailedTask * dtask )
+{
+  // Go through device computes vars and mark them as valid on the device.
+  //std::lock_guard<Uintah::MasterLock> race(race_lock);
+  // The only thing we need to process is the requires.
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->m_next) {
+    constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
+    // this is so we can allocate persistent events and streams to distribute when needed
+    // one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    int dwIndex = comp->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+    for (int i = 0; i < numPatches; i++) {
+      GPUDataWarehouse * gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patches->get(i)));
+      for (int j = 0; j < numMatls; j++) {
+        int patchID = patches->get(i)->getID();
+        int matlID = matls->get(j);
+        const Level* level = patches->get(i)->getLevel();
+        int levelID = level->getID();
+        if (gpudw && gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
+          gpudw->compareAndSwapSetInvalidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+          gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+          //DS: not using gpudw->compareAndSwapSetValidOnCPU here because entry will not be there in GPU dw.
+        }
+        dw->compareAndSwapSetValidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
+void
 UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
 {
   // Go through device computes vars and mark them as valid on the device.
@@ -3391,6 +3789,44 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
 
     for (int i = 0; i < numPatches; i++) {
       GPUDataWarehouse * gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patches->get(i)));
+      for (int j = 0; j < numMatls; j++) {
+        int patchID = patches->get(i)->getID();
+        int matlID = matls->get(j);
+        const Level* level = patches->get(i)->getLevel();
+        int levelID = level->getID();
+        if (gpudw && gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
+          gpudw->compareAndSwapSetValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+          gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+          gpudw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+        }
+        dw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::markDeviceModifiesGhostAsInvalid( DetailedTask * dtask )
+{
+  // Go through device modifies vars and mark ghosts as invalid.
+
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* comp = task->getModifies(); comp != 0; comp = comp->m_next) {
+    constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
+    // this is so we can allocate persistent events and streams to distribute when needed
+    // one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    int dwIndex = comp->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+    for (int i = 0; i < numPatches; i++) {
+      GPUDataWarehouse * gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patches->get(i)));
       if (gpudw != nullptr) {
         for (int j = 0; j < numMatls; j++) {
           int patchID = patches->get(i)->getID();
@@ -3398,7 +3834,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
           const Level* level = patches->get(i)->getLevel();
           int levelID = level->getID();
           if (gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
-            gpudw->compareAndSwapSetValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+            gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
           }
         }
       }
@@ -3410,7 +3846,105 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
+UnifiedScheduler::markDeviceAsInvalidHostAsValid( DetailedTask * dtask )
+{
+  // Data has been copied from the device to the host.  The stream has completed.
+  // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
+
+  //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+  //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+  //TODO: check is it needed for all type of variables?
+  //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+  //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+  // The only thing we need to process is the modifies.
+  //var maps associated with detailed task do not ALWAYs contain variable - especially if task is a host task.
+  //So use raw dependency linked lists from task rather than var maps associated with detailed task.
+  const Task * task = dtask->getTask();
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        const Patch * patch = patches->get(i);
+        unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+        int dwIndex = dependantVar->mapDataWarehouse();
+        OnDemandDataWarehouseP dw = m_dws[dwIndex];
+        GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
+
+        const char * var_name = dependantVar->m_var->getName().c_str();
+        int patchID = patch->getID();
+        int matlID = matls->get(j);
+        int levelID = patch->getLevel()->getID();
+
+        //modified on CPU. mark device as invalid and host as valid
+        gpudw->compareAndSwapSetInvalidOnGPU(var_name, patchID, matlID, levelID);
+        gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(var_name, patchID, matlID, levelID);
+
+        //modified on CPU. mark host as valid, but host ghost as invalid
+        if(gpudw->dwEntryExists(var_name, patchID, matlID, levelID)){
+          gpudw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
+        }
+        dw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
+//dont mark device as valid here because computation on device might not be yet completed.
+void
+UnifiedScheduler::markHostAsInvalid( DetailedTask * dtask )
+{
+  // Data has been copied from the device to the host.  The stream has completed.
+  // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
+
+  //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+  //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+  //TODO: check is it needed for all type of variables?
+  //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+  //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+  // The only thing we need to process is the modifies.   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = dtask->getVarsBeingCopiedByTask().getMap();
+
+  //var maps associated with detailed task do not ALWAYs contain variable - especially if task is a host task.
+  //So use raw dependency linked lists from task rather than var maps associated with detailed task.
+  const Task * task = dtask->getTask();
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        const Patch * patch = patches->get(i);
+        unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+        int dwIndex = dependantVar->mapDataWarehouse();
+        OnDemandDataWarehouseP dw = m_dws[dwIndex];
+        GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
+
+        const char * var_name = dependantVar->m_var->getName().c_str();
+        int patchID = patch->getID();
+        int matlID = matls->get(j);
+        int levelID = patch->getLevel()->getID();
+
+        gpudw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
+//hoping that this will ALWAYS follow call to markHostAsInvalid after GPU modifies / computes. Otherwise the application will hang
+void
+UnifiedScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
 {
   // Data has been copied from the device to the host.  The stream has completed.
   // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
@@ -3422,17 +3956,21 @@ UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
-    if (it->second.m_dep->m_dep_type == Task::Requires) {
+    if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
           cerrLock.lock();
           {
-            gpu_stats << myRankThread() << " markHostRequiresDataAsValid() -"
+            gpu_stats << myRankThread() << " markHostRequiresAndModifiesDataAsValid() -"
                 << " Marking host memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID << std::endl;
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        if(gpudw->dwEntryExists(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx)){
+          gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        }
+        m_dws[dwIndex]->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
       if (it->second.m_var) {
         //Release our reference to the variable data that getGridVar returned
@@ -3499,7 +4037,8 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-          OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
           cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
           if (gpudw != nullptr) {
@@ -3654,10 +4193,10 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                 }
                 default:
                   std::ostringstream warn;
-                  warn << "  ERROR: UnifiedScheduler::initiateD2HForHugeGhostCells (" << dtask->getName() << ") variable: " 
+                  warn << "  ERROR: UnifiedScheduler::initiateD2HForHugeGhostCells (" << dtask->getName() << ") variable: "
                        << comp->m_var->getName() << " not implemented " << std::endl;
                   SCI_THROW(InternalError( warn.str() , __FILE__, __LINE__));
-                  
+
               }
             }
           }
@@ -3685,10 +4224,13 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
   const Task* task = dtask->getTask();
   dtask->clearPreparationCollections();
+  dtask->getVarsNeededOnHost().clear();
+
+  std::vector<const Patch *> validNeighbourPatches;
 
   // The only thing we need to process is the requires.
   // Gather up all possible dependents and remove duplicate (we don't want to transfer some variables twice)
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*> vars;
   for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -3697,12 +4239,77 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-        if (vars.find(lpmd) == vars.end()) {
+        std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator iter = vars.find(lpmd);
+        if (iter == vars.end() || iter->second->m_whichdw != dependantVar->m_whichdw) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
               gpu_stats << myRankThread() << " InitiateD2H - For task "
                   << dtask->getName() << " checking on requires \""
+                  << dependantVar->m_var->getName() << "\""
+                  << " patch " <<  patches->get(i)->getID()
+                  << " material " << matls->get(j)
+                  << std::endl;
+            }
+            cerrLock.unlock();
+          }
+          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+
+          const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
+
+          if ( type == TypeDescription::CCVariable   ||
+               type == TypeDescription::NCVariable   ||
+               type == TypeDescription::SFCXVariable ||
+               type == TypeDescription::SFCYVariable ||
+               type == TypeDescription::SFCZVariable
+             )
+          {
+            int dwIndex = dependantVar->mapDataWarehouse();
+            OnDemandDataWarehouseP dw = m_dws[dwIndex];
+            std::vector<OnDemandDataWarehouse::ValidNeighbors> validNeighbors;
+            dw->getValidNeighbors(dependantVar->m_var, matls->get(j), patches->get(i), dependantVar->m_gtype, dependantVar->m_num_ghost_cells, validNeighbors, true);
+
+            for (std::vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+              const Patch * sourcePatch;
+
+              if (iter->neighborPatch->getID() >= 0) {
+                sourcePatch = iter->neighborPatch;
+              } else {
+                // This occurs on virtual patches.  They can be "wrap around" patches, meaning if you go to one end of a domain
+                // you will show up on the other side.  Virtual patches have negative patch IDs, but they know what real patch they
+                // are referring to.
+                sourcePatch = iter->neighborPatch->getRealPatch();
+              }
+
+              //TODO: handle virtual patch case.
+              if (m_loadBalancer->getPatchwiseProcessorAssignment(sourcePatch) == d_myworld->myRank()) { //only if its a local patch
+                validNeighbourPatches.push_back(sourcePatch);
+                labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), sourcePatch->getID(), matls->get(j), Task::Requires);
+                if (vars.find(lpmd) == vars.end()) {
+                  vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+    const int numPatches = patches->size();
+    const int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Modifies);
+        if (vars.find(lpmd) == vars.end()) {
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread() << " InitiateD2H - For task "
+                  << dtask->getName() << " checking on modifies \""
                   << dependantVar->m_var->getName() << "\""
                   << " patch " <<  patches->get(i)->getID()
                   << " material " << matls->get(j)
@@ -3759,12 +4366,23 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     //Find the patch and level objects associated with the patchID
     const int patchID = varIter->first.m_patchID;
+    bool isNeighbor = false;
     const Patch * patch = nullptr;
     const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
       if (patches->get(i)->getID() == patchID) {
         patch = patches->get(i);
         level = patch->getLevel();
+      }
+    }
+
+    if (!patch) {
+      for (size_t i = 0; i < validNeighbourPatches.size(); i++) {
+        if (validNeighbourPatches[i]->getID() == patchID) {
+          patch = validNeighbourPatches[i];
+          level = patch->getLevel();
+          isNeighbor = true;
+        }
       }
     }
 
@@ -3780,33 +4398,238 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     const int matlID = varIter->first.m_matlIndex;
 
-    unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+    int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+
+    if (deviceNum < 0) { //patch is not present on any of the devices.
+      if (isNeighbor) {  //Sometimes getValidNeighbors returns patches out of the domain (do not know why). In such cases do not raise error. Its a hack.
+        continue;
+      } else {
+        cerrLock.lock();
+        {
+           std::cerr << "ERROR: Could not find the assigned GPU for this patch. patch: " << patch->getID() <<
+           " " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
+        cerrLock.unlock();
+        exit(-1);
+      }
+    }
+
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-    OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
 
     // TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
-    // There currently exists a race condition.  Suppose cellType is in both host and GPU 
+    // There currently exists a race condition.  Suppose cellType is in both host and GPU
     // memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
-    // know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
+    // know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).
     // Thread 2 - Task A requests a requires var for cellType for the host newDW, and gets it.
     // Thread 3 - Task B invokes the initiateD2H check, thinks there is no host instance of cellType,
     //            so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
     //            deletes the old entry and creates a new entry.
     // Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
     // A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
+    // For now, the if statement's job is to ignore a GPU task's *requires* that nay get pulled D2H
+    // by subsequent CPU tasks.  For example, RMCRT computes divQ, RMCRTboundFlux, and radiationVolq.
+    // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
+    // don't need to copy it back D2H"
 
-    //if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
-    //  continue;
-    //}
+    // DS 04222020: Commented hack_foundAComputes hack as now CPU validity status of a variable is
+    // maintained in OnDemandWH and whether D2H copy is needed can be determined dynamically.
+//    bool hack_foundAComputes{false};
+//
+//    // RMCRT hack:
+//    if ( (varName == "divQ")           ||
+//         (varName == "RMCRTboundFlux") ||
+//         (varName == "radiationVolq")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // almgren-mmsBC.ups hack
+//    // almgren-mms_conv.ups hack
+//    if ( (varName == "uVelocity") ||
+//         (varName == "vVelocity") ||
+//         (varName == "wVelocity")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // box1.ups hack
+//    if ( (varName == "length_0_x_dflux") ||
+//         (varName == "length_0_y_dflux") ||
+//         (varName == "length_0_z_dflux") ||
+//         (varName == "length_1_x_dflux") ||
+//         (varName == "length_1_y_dflux") ||
+//         (varName == "length_1_z_dflux") ||
+//         (varName == "pU_0_x_dflux")     ||
+//         (varName == "pU_0_y_dflux")     ||
+//         (varName == "pU_0_z_dflux")     ||
+//         (varName == "pV_0_x_dflux")     ||
+//         (varName == "pV_0_y_dflux")     ||
+//         (varName == "pV_0_z_dflux")     ||
+//         (varName == "pW_0_x_dflux")     ||
+//         (varName == "pW_0_y_dflux")     ||
+//         (varName == "pW_0_z_dflux")     ||
+//         (varName == "pU_1_x_dflux")     ||
+//         (varName == "pU_1_y_dflux")     ||
+//         (varName == "pU_1_z_dflux")     ||
+//         (varName == "pV_1_x_dflux")     ||
+//         (varName == "pV_1_y_dflux")     ||
+//         (varName == "pV_1_z_dflux")     ||
+//         (varName == "pW_1_x_dflux")     ||
+//         (varName == "pW_1_y_dflux")     ||
+//         (varName == "pW_1_z_dflux")     ||
+//         (varName == "w_qn0_x_dflux")    ||
+//         (varName == "w_qn0_y_dflux")    ||
+//         (varName == "w_qn0_z_dflux")    ||
+//         (varName == "w_qn1_x_dflux")    ||
+//         (varName == "w_qn1_y_dflux")    ||
+//         (varName == "w_qn1_z_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // dqmom_example_char_no_pressure.ups hack:
+//    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
+//    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
+//    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
+//    if ( (varName.substr(0,10) == "char_ps_qn")                                  ||
+//         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ||
+//         (varName == "raw_coal_0_x_dflux")                                       ||
+//         (varName == "raw_coal_0_y_dflux")                                       ||
+//         (varName == "raw_coal_1_x_dflux")                                       ||
+//         (varName == "raw_coal_1_y_dflux")                                       ||
+//         (varName == "raw_coal_1_z_dflux")                                       ||
+//         (varName == "w_qn2_x_dflux")                                            ||
+//         (varName == "w_qn2_y_dflux")                                            ||
+//         (varName == "w_qn3_x_dflux")                                            ||
+//         (varName == "w_qn4_x_dflux")                                            ||
+//         (varName == "w_qn4_y_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // heliumKS_pressureBC.ups hack
+//    if ( (varName == "A_press")            ||
+//         (varName == "b_press")            ||
+//         (varName == "cellType")           ||
+//         (varName == "continuity_balance") ||
+//         (varName == "density")            ||
+//         (varName == "density_star")       ||
+//         (varName == "drhodt")             ||
+//         (varName == "gamma")              ||
+//         (varName == "gravity_z")          ||
+//         (varName == "gridX")              ||
+//         (varName == "gridY")              ||
+//         (varName == "gridZ")              ||
+//         (varName == "guess_press")        ||
+//         (varName == "phi")                ||
+//         (varName == "phi_x_dflux")        ||
+//         (varName == "phi_y_dflux")        ||
+//         (varName == "phi_z_dflux")        ||
+//         (varName == "phi_x_flux")         ||
+//         (varName == "phi_y_flux")         ||
+//         (varName == "phi_z_flux")         ||
+//         (varName == "pressure")           ||
+//         (varName == "rho_phi")            ||
+//         (varName == "rho_phi_RHS")        ||
+//         (varName == "sigma11")            ||
+//         (varName == "sigma12")            ||
+//         (varName == "sigma13")            ||
+//         (varName == "sigma22")            ||
+//         (varName == "sigma23")            ||
+//         (varName == "sigma33")            ||
+//         (varName == "t_viscosity")        ||
+//         (varName == "ucell_xvel")         ||
+//         (varName == "ucell_yvel")         ||
+//         (varName == "ucell_zvel")         ||
+//         (varName == "vcell_xvel")         ||
+//         (varName == "vcell_yvel")         ||
+//         (varName == "vcell_zvel")         ||
+//         (varName == "wcell_xvel")         ||
+//         (varName == "wcell_yvel")         ||
+//         (varName == "wcell_zvel")         ||
+//         (varName == "ucellX")             ||
+//         (varName == "vcellY")             ||
+//         (varName == "wcellZ")             ||
+//         (varName == "uVel")               ||
+//         (varName == "vVel")               ||
+//         (varName == "wVel")               ||
+//         (varName == "uVel_cc")            ||
+//         (varName == "vVel_cc")            ||
+//         (varName == "wVel_cc")            ||
+//         (varName == "volFraction")        ||
+//         (varName == "volFractionX")       ||
+//         (varName == "volFractionY")       ||
+//         (varName == "volFractionZ")       ||
+//         (varName == "x-mom")              ||
+//         (varName == "x-mom_RHS")          ||
+//         (varName == "x-mom_x_flux")       ||
+//         (varName == "x-mom_y_flux")       ||
+//         (varName == "x-mom_z_flux")       ||
+//         (varName == "y-mom")              ||
+//         (varName == "y-mom_RHS")          ||
+//         (varName == "z-mom")              ||
+//         (varName == "z-mom_RHS")          ||
+//         (varName == "z-mom_x_flux")       ||
+//         (varName == "z-mom_y_flux")       ||
+//         (varName == "z-mom_z_flux")       ||
+//         (varName == "hypre_solver_label")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
+//    if ( (varName == "uVelocity_cc") ||
+//         (varName == "vVelocity_cc") ||
+//         (varName == "wVelocity_cc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_wale.ups hack:
+//    if ( (varName == "wale_model_visc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // poisson1.ups hack:
+//    if ( (varName == "phi")      ||
+//         (varName == "residual")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    if (g_d2h_dbg) {
+//      std::ostringstream message;
+//      message << "  " << varName << ": Device-to-Host Copy May Be Needed";
+//      DOUT(true, message.str());
+//    }
+//
+//    if (!hack_foundAComputes) {
+//      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
+//                // Go start the loop over and get the next potential variable.
+//    }
 
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
-      if (!gpudw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
+      if (!dw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
           gpudw->isAllocatedOnGPU( varName.c_str(), patchID, matlID, levelID) &&
           gpudw->isValidOnGPU( varName.c_str(), patchID, matlID, levelID)) {
+
+        DetailedTask::labelPatchMatlLevelDw lpmld(varName.c_str(), patchID, matlID, levelID, dwIndex);
+        dtask->getVarsNeededOnHost().push_back(lpmld);
 
         const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
         const TypeDescription::Type datatype = dependantVar->m_var->typeDescription()->getSubType()->getType();
@@ -3816,6 +4639,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
           case TypeDescription::SFCXVariable:
           case TypeDescription::SFCYVariable:
           case TypeDescription::SFCZVariable: {
+
+            if (g_d2h_dbg) {
+              std::ostringstream message;
+              message << "  " << varName << ": Checking If Device-to-Host Copy Needed";
+              DOUT(true, message.str());
+            }
 
             if (gpu_stats.active()) {
               cerrLock.lock();
@@ -3830,6 +4659,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
             }
             bool performCopy = gpudw->compareAndSwapCopyingIntoCPU(varName.c_str(), patchID, matlID, levelID);
             if (performCopy) {
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Yes, Device-to-Host Copy Needed";
+                DOUT(true, message.str());
+              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -3877,12 +4712,19 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               if (uses_SHRT_MAX) {
                 level->findCellIndexRange(host_low, host_high); // including extraCells
               } else {
-                Patch::getGhostOffsets(type, gtype, numGhostCells, host_lowOffset, host_highOffset);
+                //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+                Patch::getGhostOffsets(type, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost(), host_lowOffset, host_highOffset);
                 patch->computeExtents(basis, dependantVar->m_var->getBoundaryLayer(), host_lowOffset, host_highOffset, host_low, host_high);
               }
               host_size = host_high - host_low;
               int dwIndex = dependantVar->mapDataWarehouse();
               OnDemandDataWarehouseP dw = m_dws[dwIndex];
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Calling allocateAndPut";
+                DOUT(true, message.str());
+              }
 
               // Get/make the host var
               if (gpu_stats.active()) {
@@ -3923,7 +4765,19 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 if (uses_SHRT_MAX) {
                   gridVar->allocate(host_low, host_high);
                 } else {
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, gtype, numGhostCells);
+                  //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+                  //DS 06162020 Fix for the crash. Using allocateAndPut deletes the existing variable in dw and allocates a new one. If some other
+                  //thread is accessing the same variable at the same time, then it leads to a crash. Hence allocate only if the variable does
+                  //not exist on the host. While reusing existing variable, call getGridVar and set exactWindow=1. exactWindow=1 ensures that
+                  //the allocated space has exactly same size as the requested. This is needed for D2H copy.
+                  //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+                  //TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
+                  //variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
+                  else //if the variable exists, then fetch it.
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), 0, 1); //do not pass ghost cells. We dont want to gather them, just need memory allocated
                 }
                 if (finalized) {
                   dw->refinalize();
@@ -3949,7 +4803,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                   if (finalized) {
                     dw->unfinalize();
                   }
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+                  else
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0, 1);
+
                   if (finalized) {
                     dw->refinalize();
                   }
@@ -3987,6 +4846,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
                 host_ptr = gridVar->getBasePointer();
                 host_bytes = gridVar->getDataSize();
+
+                if (g_d2h_dbg) {
+                  std::ostringstream message;
+                  message << "  " << varName << ": Initiating Device-to-Host Copy";
+                  DOUT(true, message.str());
+                }
 
                 if (gpu_stats.active()) {
                   cerrLock.lock();
@@ -4062,6 +4927,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               size_t device_bytes = gpuPerPatchVar->getMemSize();
               delete gpuPerPatchVar;
 
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Initiating Device-to-Host Copy";
+                DOUT(true, message.str());
+              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -4113,6 +4984,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               device_ptr = gpuReductionVar->getVoidPointer();
               size_t device_bytes = gpuReductionVar->getMemSize();
               delete gpuReductionVar;
+
+              if (g_d2h_dbg) {
+                std::ostringstream message;
+                message << "  " << varName << ": Initiating Device-to-Host Copy";
+                DOUT(true, message.str());
+              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -4251,8 +5128,16 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
     if (index >= 0) {
       for (int i = 0; i < dtask->getTask()->maxStreamsPerTask(); i++) {
         if (dtask->getCudaStreamForThisTask(i) == nullptr) {
-          dtask->assignDevice(0); 
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(i);
+          dtask->assignDevice(0);
+#ifdef TASK_MANAGES_EXECSPACE
+#ifdef USE_KOKKOS_INSTANCE
+          cudaStream_t* stream = nullptr;
+#else
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), i);
+#endif
+#else
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, i);
+#endif
           dtask->setCudaStreamForThisTask(i, stream);
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -4266,7 +5151,7 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
           }
         }
       }
-    
+
     } else {
       cerrLock.lock();
       {
@@ -4296,7 +5181,7 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
         // See if this task doesn't yet have a stream for this GPU device.
         if (dtask->getCudaStreamForThisTask(index) == nullptr) {
           dtask->assignDevice(index);
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(index);
+          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, index);
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -4331,7 +5216,15 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
     // see if this task was already assigned a stream.
     if (dtask->getCudaStreamForThisTask(*iter) == nullptr) {
       dtask->assignDevice(*iter);
-      dtask->setCudaStreamForThisTask(*iter, GPUMemoryPool::getCudaStreamFromPool(*iter));
+#ifdef TASK_MANAGES_EXECSPACE
+#ifdef USE_KOKKOS_INSTANCE
+      cudaStream_t* stream = nullptr;
+#else
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), *iter);
+#endif
+#else
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
+#endif      dtask->setCudaStreamForThisTask(*iter, stream);
     }
   }
 }
@@ -4421,15 +5314,15 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // snyc now. I.e. turned on just before it happens rather than
         // turned on before the task graph execution.  As such, one
         // should also be checking:
-        
+
         // m_application->activeReductionVariable( "outputInterval" );
         // m_application->activeReductionVariable( "checkpointInterval" );
-        
+
         // However, if active the code below would be called regardless
         // if an output or checkpoint time step or not. Not sure that is
         // desired but not sure of the effect of not calling it and doing
         // an out of sync output or checkpoint.
-        
+
         if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -4640,7 +5533,8 @@ UnifiedScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
       //   Note: If we move to UVA, then we could just do a straight memcpy
 
       cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_destDeviceNum);
-      OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
 
       CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
     }
@@ -4686,7 +5580,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
                  it->first.m_levelIndx,
                  ghostLow,
                  ghostSize,
-                 (const int)it->first.m_dataWarehouse);
+                 it->first.m_dataWarehouse);
       GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
 
       tempGhostVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
@@ -4720,7 +5614,8 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 
           // Since we know we need a stream, obtain one.
           cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_sourceDeviceNum);
-          OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -4766,7 +5661,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
       if (it->second.m_dest == GpuUtilities::anotherMpiRank) {
         // TODO: Needs a particle section
         IntVector host_low, host_high, host_offset, host_size, host_strides;
-        OnDemandDataWarehouseP dw = m_dws[(const int)it->first.m_dataWarehouse];
+        OnDemandDataWarehouseP dw = m_dws[it->first.m_dataWarehouse];
 
         //We created a temporary host variable for this earlier,
         //and the deviceVars collection knows about it.
@@ -4775,7 +5670,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
         IntVector ghostSize(ghostHigh.x() - ghostLow.x(), ghostHigh.y() - ghostLow.y(), ghostHigh.z() - ghostLow.z());
         DeviceGridVariableInfo item = dtask->getDeviceVars().getStagingItem(it->first.m_label, it->second.m_sourcePatchPointer,
                                                                             it->first.m_matlIndx, it->first.m_levelIndx, ghostLow,
-                                                                            ghostSize, (const int)it->first.m_dataWarehouse);
+                                                                            ghostSize, it->first.m_dataWarehouse);
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
 
         //Also get the existing host copy

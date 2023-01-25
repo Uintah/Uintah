@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2021 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,7 @@
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Mat.h>
