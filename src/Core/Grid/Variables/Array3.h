@@ -38,7 +38,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
 #include <iosfwd>

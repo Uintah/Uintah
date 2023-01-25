@@ -49,7 +49,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"

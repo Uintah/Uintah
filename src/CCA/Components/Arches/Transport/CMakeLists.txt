@@ -1,0 +1,16 @@
+set( ARCHES_SRC ${ARCHES_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/AddPressGradient.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ComputePsi.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Diffusion.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/KFEUpdate.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/KMomentum.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/KScalarRHS.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/PressureBC.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/PressureEqn.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/StressTensor.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TimeAve.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TransportFactory.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TransportHelper.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/VelRhoHatBC.cc
+    PARENT_SCOPE
+    )

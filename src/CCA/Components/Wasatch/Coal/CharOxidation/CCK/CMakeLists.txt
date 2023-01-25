@@ -1,0 +1,6 @@
+set( WASATCH_SRC ${WASATCH_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/CCKData.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/CCKFunctions.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/CCKInterface.cc
+        PARENT_SCOPE
+    )

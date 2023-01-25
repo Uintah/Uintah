@@ -1,0 +1,4 @@
+set( ARCHES_SRC ${ARCHES_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/WallModelDriver.cc
+    PARENT_SCOPE
+    )

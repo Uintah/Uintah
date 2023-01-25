@@ -26,7 +26,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 #define CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
 #ifdef HAVE_KOKKOS

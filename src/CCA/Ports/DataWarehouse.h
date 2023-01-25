@@ -43,7 +43,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(HAVE_GPU)
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>

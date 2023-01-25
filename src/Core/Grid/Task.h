@@ -42,7 +42,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/TupleHelpers.hpp>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
 #if defined(HAVE_GPU)
@@ -73,11 +73,6 @@ class OnDemandDataWarehouse;
 class ProcessorGroup;
 class Task;
 
-enum GPUMemcpyKind { GPUMemcpyUnknown      = 0,
-		     GPUMemcpyHostToDevice = 1,
-		     GPUMemcpyDeviceToHost = 2,
-};
-
 /**************************************
 
  CLASS
@@ -102,6 +97,12 @@ enum GPUMemcpyKind { GPUMemcpyUnknown      = 0,
 class Task {
 
 public: // class Task
+
+  enum GPUMemcpyKind {
+    GPUMemcpyUnknown      = 0,
+    GPUMemcpyHostToDevice = 1,
+    GPUMemcpyDeviceToHost = 2,
+  };
 
 protected: // class Task
 
@@ -2459,11 +2460,7 @@ private: // class Task
   // task has to keep track of the device and stream on a DetailedTask
   // basis. The DetailedTask's pointer address is used as the key.
   std::map<intptr_t, deviceNumSet>  m_deviceNums;
-#ifdef USE_KOKKOS_INSTANCE
-  // Instances are defined at the action level.
-#else
   std::map<intptr_t, cudaStreamMap> m_cudaStreams;
-#endif
 #endif
 #endif
 

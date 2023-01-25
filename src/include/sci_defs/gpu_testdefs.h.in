@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,455 @@
 #ifndef SCI_GPU_DEFS_H
 #define SCI_GPU_DEFS_H
 
-@DEF_HAVE_GPU@
+#cmakedefine HAVE_CUDA
+#cmakedefine HAVE_NCCL
 
+#define SCI_GPU_ASSERTION_LEVEL @ASSERTION_LEVEL@
+
+#ifdef HAVE_CUDA
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+#ifdef HAVE_NCCL
+#include <nccl.h>
 #endif
 
+#ifdef __CUDACC__
+#define HOST_DEVICE __host__ __device__
+#else
+#define HOST_DEVICE
+#endif
+
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
+#include <stdio.h>
+
+  using gpuStream_t = cudaStream_t;
+  using gpuEvent_t = cudaEvent_t;
+  using gpuError_t = cudaError_t;
+  #define gpuMemcpyAsync cudaMemcpyAsync
+  #define gpuMemcpyPeerAsync cudaMemcpyPeerAsync
+  #define gpuMemcpyDeviceToHost cudaMemcpyDeviceToHost
+  #define gpuMemcpyHostToDevice cudaMemcpyHostToDevice
+  #define gpuMemcpyDeviceToDevice cudaMemcpyDeviceToDevice
+  #define gpuErrorLaunchFailure cudaErrorLaunchFailure
+  #define gpuGetDevice cudaGetDevice
+  #define gpuStreamQuery cudaStreamQuery
+  #define gpuSuccess cudaSuccess
+  #define gpuErrorNotReady cudaErrorNotReady
+  #define gpuErrorLaunchFailure cudaErrorLaunchFailure
+  #define gpuSetDevice cudaSetDevice
+  #define gpuDeviceReset cudaDeviceReset
+  #define gpuGetDeviceCount cudaGetDeviceCount
+  #define gpuDeviceCanAccessPeer cudaDeviceCanAccessPeer
+  #define gpuDeviceEnablePeerAccess cudaDeviceEnablePeerAccess
+  #define gpuDeviceProp cudaDeviceProp
+  #define gpuGetDeviceProperties cudaGetDeviceProperties
+  #define gpurandState curandState
+  #define gpuHostRegister cudaHostRegister
+  #define gpuHostRegisterPortable cudaHostRegisterPortable
+
+// Allow easy indexing into deice-side 3D array
+#define INDEX3D(dx, dy, i, j, k) ((i) + ((j)*dx) + ((k)*dx * dy))
+
+// Error handling wrapper for CUDA RUNTIME API calls (no-sync)
+#define GPU_RT_SAFE_CALL(call)                                                \
+  {                                                                            \
+    cudaError err = call;                                                      \
+    if (err != cudaSuccess) {                                                  \
+      fprintf(stderr, "\nCUDA error %i in file '%s', on line %i : %s.\n\n",    \
+              err, __FILE__, __LINE__, cudaGetErrorString(err));               \
+      exit(EXIT_FAILURE);                                                      \
+    }                                                                          \
+  }
+
+// Error handling wrapper for CUDA Rand API calls
+#define CURAND_CALL(call)                                                      \
+  {                                                                            \
+    curandStatus status = call;                                                \
+    if (status != CURAND_STATUS_SUCCESS) {                                     \
+      fprintf(stderr, "cuRand error %i in file '%s' on line %i.\n\n", status,  \
+              __FILE__, __LINE__);                                             \
+      exit(EXIT_FAILURE);                                                      \
+    }                                                                          \
+  }
+
+// int3 bound checking
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_INSIDE(idx, offset, size)                                        \
+  {                                                                            \
+    if (idx.x < offset.x || idx.y < offset.y || idx.z < offset.z ||            \
+        idx.x > offset.x + size.x || idx.y > offset.y + size.y ||              \
+        idx.z > offset.z + size.z)                                             \
+      printf("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, "       \
+             "%d)-(%d, %d, %d) \n",                                            \
+             idx.x, idx.y, idx.z, offset.x, offset.y, offset.z,                \
+             offset.x + size.x, offset.y + size.y, offset.z + size.z);         \
+  }
+#else
+#define CHECK_INSIDE(idx, offset, size)
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_INSIDE3(x, y, z, offset, size)                                   \
+  {                                                                            \
+    if (x < offset.x || y < offset.y || z < offset.z ||                        \
+        x > offset.x + size.x || y > offset.y + size.y ||                      \
+        z > offset.z + size.z)                                                 \
+      printf("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, "       \
+             "%d)-(%d, %d, %d) \n",                                            \
+             x, y, z, offset.x, offset.y, offset.z, offset.x + size.x,         \
+             offset.y + size.y, offset.z + size.z);                            \
+  }
+#else
+#define CHECK_INSIDE3(x, y, z, offset, size)
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_RANGE(idx, low, high)                                            \
+  {                                                                            \
+    if (idx < low || idx > high)                                               \
+      printf(                                                                  \
+          "GPU INDEX_OUT_OF_RANGE ERROR: index (%d) not in range [%d, %d] \n", \
+          idx, low, high);                                                     \
+  }
+#else
+#define CHECK_RANGE(idx, low, high)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // HAVE_CUDA
+
+
+#cmakedefine HAVE_HIP
+#cmakedefine HAVE_RCCL
+
+#ifdef HAVE_HIP
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+#ifdef HAVE_RCCL
+#include <rccl.h>
+#endif
+
+#ifdef __HIPCC__
+#define HOST_DEVICE __host__ __device__
+#else
+#define HOST_DEVICE
+#endif
+
+#ifdef __cplusplus
+  extern "C" {
+#endif
+
+#include <stdio.h>
+
+  using gpuStream_t = hipStream_t;
+  using gpuEvent_t = hipEvent_t;
+  using gpuError_t = hipError_t;
+  #define gpuMemcpyAsync hipMemcpyAsync
+  #define gpuMemcpyPeerAsync hipMemcpyPeerAsync
+  #define gpuMemcpyDeviceToHost hipMemcpyDeviceToHost
+  #define gpuMemcpyHostToDevice hipMemcpyHostToDevice
+  #define gpuMemcpyDeviceToDevice hipMemcpyDeviceToDevice
+  #define gpuErrorLaunchFailure hipErrorLaunchFailure
+  #define gpuGetDevice hipGetDevice
+  #define gpuStreamQuery hipStreamQuery
+  #define gpuSuccess hipSuccess
+  #define gpuErrorNotReady hipErrorNotReady
+  #define gpuErrorLaunchFailure hipErrorLaunchFailure
+  #define gpuSetDevice hipSetDevice
+  #define gpuDeviceReset hipDeviceReset
+  #define gpuGetDeviceCount hipGetDeviceCount
+  #define gpuDeviceCanAccessPeer hipDeviceCanAccessPeer
+  #define gpuDeviceEnablePeerAccess hipDeviceEnablePeerAccess
+  #define gpuDeviceProp hipDeviceProp_t
+  #define gpuGetDeviceProperties hipGetDeviceProperties
+  #define gpurandState hiprandState
+  #define gpuHostRegister hipHostRegister
+  #define gpuHostRegisterPortable hipHostRegisterPortable
+
+// Allow easy indexing into deice-side 3D array
+#define INDEX3D(dx, dy, i, j, k) ((i) + ((j)*dx) + ((k)*dx * dy))
+
+// Error handling wrapper for HIP RUNTIME API calls (no-sync)
+#define GPU_RT_SAFE_CALL(call)                                                 \
+  {                                                                            \
+    hipError_t err = call;                                                     \
+    if (err != hipSuccess) {                                                   \
+      fprintf(stderr, "\nHIP error %i in file '%s', on line %i : %s.\n\n",     \
+              err, __FILE__, __LINE__, hipGetErrorString(err));                \
+      exit(EXIT_FAILURE);                                                      \
+    }                                                                          \
+  }
+
+// // Error handling wrapper for HIP Rand API calls
+// #  define CURAND_CALL( call ) { \
+//     curandStatus status = call; \
+//     if(status != CURAND_STATUS_SUCCESS) { \
+//         fprintf(stderr, "cuRand error %i in file '%s' on line %i.\n\n", \
+//                 status, __FILE__, __LINE__ ); \
+//         exit(EXIT_FAILURE); \
+//     } }
+
+// int3 bound checking
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_INSIDE(idx, offset, size)                                        \
+  {                                                                            \
+    if (idx.x < offset.x || idx.y < offset.y || idx.z < offset.z ||            \
+        idx.x > offset.x + size.x || idx.y > offset.y + size.y ||              \
+        idx.z > offset.z + size.z)                                             \
+      printf("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, "       \
+             "%d)-(%d, %d, %d) \n",                                            \
+             idx.x, idx.y, idx.z, offset.x, offset.y, offset.z,                \
+             offset.x + size.x, offset.y + size.y, offset.z + size.z);         \
+  }
+#else
+#define CHECK_INSIDE(idx, offset, size)
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_INSIDE3(x, y, z, offset, size)                                   \
+  {                                                                            \
+    if (x < offset.x || y < offset.y || z < offset.z ||                        \
+        x > offset.x + size.x || y > offset.y + size.y ||                      \
+        z > offset.z + size.z)                                                 \
+      printf("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, "       \
+             "%d)-(%d, %d, %d) \n",                                            \
+             x, y, z, offset.x, offset.y, offset.z, offset.x + size.x,         \
+             offset.y + size.y, offset.z + size.z);                            \
+  }
+#else
+#define CHECK_INSIDE3(x, y, z, offset, size)
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+#define CHECK_RANGE(idx, low, high)                                            \
+  {                                                                            \
+    if (idx < low || idx > high)                                               \
+      printf(                                                                  \
+          "GPU INDEX_OUT_OF_RANGE ERROR: index (%d) not in range [%d, %d] \n", \
+          idx, low, high);                                                     \
+  }
+#else
+#define CHECK_RANGE(idx, low, high)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // HAVE_HIP
+
+#cmakedefine HAVE_SYCL
+
+#ifdef HAVE_SYCL
+
+#include <cstring>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <utility>
+
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
+#include <CL/sycl.hpp>
+namespace sycl = cl::sycl;
+#endif
+
+#include <level_zero/ze_api.h>
+#include <level_zero/zes_api.h>
+#include <sycl/ext/oneapi/backend/level_zero.hpp>
+
+#define HOST_DEVICE
+#define __host__
+#define __device__
+
+using gpuStream_t = sycl::queue;
+using gpuEvent_t = sycl::event;
+#define gpuGetDevice syclGetDevice
+#define GPU_RT_SAFE_CALL
+#define gpuSetDevice syclSetDevice
+#define gpuGetDeviceCount syclGetDeviceCount
+
+using int3 = sycl::int3;
+using uint3 = sycl::uint3;
+using make_double3 = sycl::double3;
+using make_int3 = sycl::int3;
+using float3 = sycl::float3;
+using double3 = sycl::double3;
+
+// Allow easy indexing into deice-side 3D array
+#define INDEX3D(dx, dy, i, j, k) ((i) + ((j)*dx) + ((k)*dx * dy))
+#define CHECK_INSIDE(idx, offset, size)
+#define CHECK_INSIDE3(x, y, z, offset, size)
+#define CHECK_RANGE(idx, low, high)
+
+class device_ext : public sycl::device {
+public:
+  device_ext() : sycl::device(), _ctx(*this) {}
+  ~device_ext() { std::lock_guard<std::mutex> lock(m_mutex); }
+  device_ext(const sycl::device &base) : sycl::device(base), _ctx(*this) {}
+
+private:
+  sycl::context _ctx;
+  mutable std::mutex m_mutex;
+};
+
+static inline int get_tid() { return syscall(SYS_gettid); }
+
+class dev_mgr {
+public:
+  int current_device() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = _thread2dev_map.find(get_tid());
+    if (it != _thread2dev_map.end()) {
+      check_id(it->second);
+      return it->second;
+    }
+    printf("WARNING: no SYCL device found in the map, returning "
+           "DEFAULT_DEVICE_ID\n");
+    return DEFAULT_DEVICE_ID;
+  }
+  device_ext *get_sycl_device(int id) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    check_id(id);
+    return (_devs[id].first).get();
+  }
+  sycl::context *get_sycl_context(int id) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    check_id(id);
+    return (_devs[id].second).get();
+  }
+
+  void select_device(int id) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    check_id(id);
+    _thread2dev_map[get_tid()] = id;
+  }
+  int device_count() { return static_cast<int>(_devs.size()); }
+
+  void memGetInfo(size_t *m_free, size_t *m_total) {
+    size_t mfree = 0, mtotal = 0;
+    int current_devID = this->current_device();
+    sycl::device *myDev = get_sycl_device(current_devID);
+
+    ze_device_handle_t ze_device =
+        sycl::get_native<sycl::backend::ext_oneapi_level_zero>(*myDev);
+    zes_device_handle_t zes_device = (zes_device_handle_t)ze_device;
+
+    uint32_t module_count = 0;
+    zesDeviceEnumMemoryModules(zes_device, &module_count, nullptr);
+    if (module_count > 0) {
+      std::vector<zes_mem_handle_t> module_list(module_count);
+      std::vector<zes_mem_state_t> state_list(module_count);
+
+      zesDeviceEnumMemoryModules(zes_device, &module_count, module_list.data());
+
+      for (uint32_t i = 0; i < module_count; ++i) {
+        zesMemoryGetState(module_list[i], &(state_list[i]));
+        mfree += state_list[i].free;
+        mtotal += state_list[i].size;
+      }
+    }
+
+    *m_free = mfree;
+    *m_total = mtotal;
+    return;
+  }
+
+  /// Returns the instance of device manager singleton.
+  static dev_mgr &instance() {
+    static dev_mgr d_m;
+    return d_m;
+  }
+  dev_mgr(const dev_mgr &) = delete;
+  dev_mgr &operator=(const dev_mgr &) = delete;
+  dev_mgr(dev_mgr &&) = delete;
+  dev_mgr &operator=(dev_mgr &&) = delete;
+
+private:
+  mutable std::mutex m_mutex;
+
+  dev_mgr() {
+    std::vector<sycl::device> sycl_all_devs =
+        sycl::device::get_devices(sycl::info::device_type::gpu);
+
+    for (auto &dev : sycl_all_devs) {
+      if (dev.get_info<sycl::info::device::partition_max_sub_devices>() > 0) {
+        auto subDevicesDomainNuma = dev.create_sub_devices<
+            sycl::info::partition_property::partition_by_affinity_domain>(
+            sycl::info::partition_affinity_domain::numa);
+        for (auto &tile : subDevicesDomainNuma) {
+          _devs.push_back(
+              std::make_pair(std::make_shared<device_ext>(tile),
+                             std::make_shared<sycl::context>(tile)));
+        }
+      } else {
+        _devs.push_back(std::make_pair(std::make_shared<device_ext>(dev),
+                                       std::make_shared<sycl::context>(dev)));
+      }
+    }
+  }
+
+  void check_id(int id) const {
+    if (id >= static_cast<int>(_devs.size())) {
+      throw std::runtime_error("SYCL: invalid device id");
+    }
+  }
+
+  std::vector<
+      std::pair<std::shared_ptr<device_ext>, std::shared_ptr<sycl::context>>>
+      _devs;
+  /// DEFAULT_DEVICE_ID is used, if current_device() can not find current
+  /// thread id in _thread2dev_map, which means default device should be used
+  /// for the current thread.
+  const int DEFAULT_DEVICE_ID = 0;
+  /// thread-id to device-id map.
+  std::map<int, int> _thread2dev_map;
+};
+
+/// Util function to get the current device (in int).
+static inline void syclGetDevice(int *id) {
+  *id = dev_mgr::instance().current_device();
+}
+
+/// Util function to get the current sycl::device by id.
+static inline device_ext *sycl_get_device(int id) {
+  return dev_mgr::instance().get_sycl_device(id);
+}
+/// Util function to get the current sycl::context by id.
+static inline sycl::context *sycl_get_context(int id) {
+  return dev_mgr::instance().get_sycl_context(id);
+}
+
+/// Util function to set a device by id. (to _thread2dev_map)
+static inline void syclSetDevice(int id) {
+  dev_mgr::instance().select_device(id);
+}
+
+/// Util function to get number of GPU devices (default: explicit scaling)
+static inline void syclGetDeviceCount(int *id) {
+  *id = dev_mgr::instance().device_count();
+}
+
+/// Util function to get free, totoal memory in bytes for the active GPU
+static inline void syclMemGetInfo(size_t *free, size_t *total) {
+  dev_mgr::instance().memGetInfo(free, total);
+}
+
+#endif // HAVE_SYCL
+
+#endif // SCI_GPU_DEFS_H

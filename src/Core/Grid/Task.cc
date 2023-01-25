@@ -1472,7 +1472,8 @@ void Task::doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
                              size_t count, GPUMemcpyKind kind)
 {
   if (m_action)
-    m_action->doKokkosDeepCopy(dTask, deviceNum, dst,src, count, kind);
+    m_action->doKokkosDeepCopy(dTask, deviceNum, dst,src, count,
+                               Uintah::Task::GPUMemcpyKind(kind));
 }
 
 //_____________________________________________________________________________

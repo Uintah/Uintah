@@ -1,0 +1,12 @@
+set( HYPRE_SRC ${HYPRE_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverBase.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverPFMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverSMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverSparseMSG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverCG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverHybrid.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverGMRES.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverAMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverFAC.cc
+    PARENT_SCOPE
+    )

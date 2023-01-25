@@ -28,7 +28,7 @@
 #define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
 
 #include <Core/Grid/Variables/GPUReductionVariableBase.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <string>
 

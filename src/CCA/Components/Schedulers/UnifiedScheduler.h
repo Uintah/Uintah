@@ -27,7 +27,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>

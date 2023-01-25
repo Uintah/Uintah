@@ -24,7 +24,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <spatialops/Nebo.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 template< typename FieldT >
 ScalabilityTestSrcUncoupled<FieldT>::

@@ -40,7 +40,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 #include <CCA/Components/Wasatch/FieldTypes.h>

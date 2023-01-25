@@ -1,0 +1,21 @@
+set( ARCHES_SRC ${ARCHES_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/AlmgrenMMS.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryInfo.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/FileInit.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ForcingTurbulence.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/GridInfo.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/InitLagrangianParticleSize.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/InitLagrangianParticleVelocity.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/InitializeFactory.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/MassFlowRate.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/RandParticleLoc.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShunnMMS.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShunnMMSP3.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceNormals.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceVolumeFractionCalc.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TaskAlgebra.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreen3D.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/UtilityFactory.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/WaveFormInit.cc
+    PARENT_SCOPE
+    )

@@ -25,7 +25,7 @@
 #ifndef UINTAH_GPUSTENCIL7_H
 #define UINTAH_GPUSTENCIL7_H
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 namespace Uintah {

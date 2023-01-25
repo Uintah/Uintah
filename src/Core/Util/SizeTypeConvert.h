@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,6 +42,13 @@
 #if HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
+
+#if HAVE_STDINT_H
+#  include <stdint.h>
+#  include <cstdint>
+#endif
+#  include <stdint.h>
+#  include <cstdint>
 
 namespace Uintah {
 

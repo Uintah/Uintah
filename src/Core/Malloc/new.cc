@@ -179,7 +179,7 @@ AllocatorResetDefaultTagLineNumber()
 
 void*
 operator
-new( size_t size ) throw( std::bad_alloc )
+new( size_t size ) noexcept(false)
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -196,7 +196,7 @@ new( size_t size ) throw( std::bad_alloc )
 
 void*
 operator
-new[]( size_t size ) throw( std::bad_alloc )
+new[]( size_t size ) noexcept(false)
 {
   if(!default_allocator) {
     MakeDefaultAllocator();

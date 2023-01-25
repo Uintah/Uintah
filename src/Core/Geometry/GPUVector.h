@@ -25,7 +25,7 @@
 #ifndef CORE_GEOMETRY_GPUVECTOR_H
 #define CORE_GEOMETRY_GPUVECTOR_H
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 namespace Uintah {
 

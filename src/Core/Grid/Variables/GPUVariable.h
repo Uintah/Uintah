@@ -28,7 +28,7 @@
 #define UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
 
 #include <sci_defs/kokkos_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 namespace Uintah {
 

@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,9 +42,9 @@
 // In order to compile on Mira, we must match their spec, so we have to turn off the const.
 // The following define does that:
 
-@DEF_MPI_CONST_WORKS@
+#define MPICONST @MPICONST@
 
-@DEF_MPI_MAX_THREADS@
-@DEF_MPI3_ENABLED@
+#define MPI_MAX_THREADS 64       // <--- need to get this from introspection in the future
+#define UINTAH_ENABLE_MPI3 false // <--- need to get this from introspection in the future
 
 #endif // SCI_DEFS_MPI_H
