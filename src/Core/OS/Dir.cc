@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -323,7 +323,7 @@ Dir::getFilenamesBySuffix( const string         & suffix,
 //______________________________________________________________________
 //
 bool
-Dir::exists()
+Dir::exists() const
 {
   struct stat buf;
   if(LSTAT(name_.c_str(),&buf) != 0)

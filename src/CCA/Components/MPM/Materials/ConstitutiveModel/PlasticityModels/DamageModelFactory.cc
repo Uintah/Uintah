@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ThresholdDamage.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ThresholdDamageVar.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/BrittleDamage.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -83,6 +84,9 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
   }
   else if (dam_type == "Threshold") {
     return( scinew ThresholdDamage( child, flags, materialManager ) );
+  }
+  else if (dam_type == "ThresholdVar") {
+    return( scinew ThresholdDamageVar( child, flags, materialManager ) );
   }
   else if (dam_type == "Brittle") {
     return( scinew BrittleDamage( child ) );

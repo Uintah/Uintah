@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -204,7 +204,7 @@ printTask( const Patch       * patch
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank()  << " ";
+    msg << "Rank-"  << Uintah::Parallel::getMPIRank()  << " ";
     msg << std::left;
     msg.width(50);
     msg << where << " \tL-"
@@ -225,12 +225,12 @@ printTask( const PatchSubset * patches
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where;
     
-    if ( patches->empty() ){
+    if ( patches == nullptr || patches->empty() ){
       msg << "  \tEmpty patch subset";
     } 
     else {
@@ -253,12 +253,12 @@ printTask( const PatchSubset * patches
 {
   if (out){
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where;
     
-    if ( patches->empty() ){
+    if ( patches == nullptr || patches->empty() ){
       msg << "  \tEmpty patch subset";
     } 
     else {
@@ -343,10 +343,13 @@ printSchedule( const PatchSet    * patches
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << " L-" << getLevel(patches)->getIndex();
+    msg << where;
+    if ( patches ){
+       msg << " L-" << getLevel(patches)->getIndex();
+    }
     DOUT(out, msg.str());
   }
 }
@@ -361,10 +364,13 @@ printSchedule( const LevelP      & level
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-"  << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << " L-" << level->getIndex();
+    msg << where;
+    if ( level ){
+      msg << " L-" << level->getIndex();
+    }
     DOUT(out, msg.str());
   }
 }

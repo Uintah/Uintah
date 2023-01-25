@@ -6,48 +6,78 @@
 #   TaskStats.8.0
 # Reported values are cumulative over 10 timesteps (1 through 10)
 # --Rank: 0  TaskStats stats for time step 10 at time=0.000361991
-#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 ExecTime  [seconds] : 0.00243167     
-#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 WaitTime  [seconds] : 15.4305        
-#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 ExecTime  [seconds] : 8.8556e-05     
-#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 WaitTime  [seconds] : 17.3495        
-#   Rank: 0  Task: BirthDeath::computeModel                            ExecTime  [seconds] : 0.138191       
-#   Rank: 0  Task: BirthDeath::computeModel                            WaitTime  [seconds] : 207.923        
-#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     ExecTime  [seconds] : 0.00397551     
-#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     WaitTime  [seconds] : 2.63334        
-#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  ExecTime  [seconds] : 0.00704061     
-#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  WaitTime  [seconds] : 2.51305        
-#   Rank: 0  Task: BoundaryCondition::setIntrusionDensity              ExecTime  [seconds] : 0.00242956     
+#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 ExecTime  [seconds] : 0.00243167
+#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 WaitTime  [seconds] : 15.4305
+#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 ExecTime  [seconds] : 8.8556e-05
+#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 WaitTime  [seconds] : 17.3495
+#   Rank: 0  Task: BirthDeath::computeModel                            ExecTime  [seconds] : 0.138191
+#   Rank: 0  Task: BirthDeath::computeModel                            WaitTime  [seconds] : 207.923
+#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     ExecTime  [seconds] : 0.00397551
+#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     WaitTime  [seconds] : 2.63334
+#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  ExecTime  [seconds] : 0.00704061
+#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  WaitTime  [seconds] : 2.51305
+#   Rank: 0  Task: BoundaryCondition::setIntrusionDensity              ExecTime  [seconds] : 0.00242956
 #   Rank: 0  Task: BoundaryCondition::setIntrusionDensity              WaitTime  [seconds] : 88.9903
 #
 #  To output the exectime files set the environmental variable
 #     SCI_DEBUG ExecOut:+
 #
-#   Note that the 
+#   output:
+## Processes: 32
+#                Task                                 Ave(sec)        Max(sec)        Min(sec)     Max Rank   Min Rank 
+#   ICE::computeTempFC                                |  0.44162     |  1.4454      |   0.026152    | 2         | 27        
+#   RigidMPM::interpolateToParticlesAndUpdate         |  0.28831     |  0.86484     |   2.622e-05   | 8         | 31        
+#   ICE::setupRHS                                     |  0.28457     |  0.63705     |   0.061897    | 3         | 5         
+#   MPMICE::interpolateCCToNC                         |  0.20353     |  0.70214     |   0.0010998   | 14        | 0         
+#   MPMICE::computeLagrangianValuesMPM                |  0.15689     |  0.81972     |   3.228e-05   | 6         | 31     
 #
 #______________________________________________________________________
 
 
 computeAve_Max_function()
 {
-  count=$1         # number of mpi ranks
-  fname=$2         # base file name
+  local count=$1         # number of mpi ranks
+  local fname=$2         # base file name
 
   awk  -F " " -v count=$count -v fname=$fname.summary \
-  '{
-    ave[$1] += $2
-    
-    if( max[$1] < $2 )
-      max[$1]=$2
-  }
-  END\
+  '
   {
+    #  $1:  rank
+    #  $2:  task name
+    #  $3:  time
+    
+    # initialize each element of the arrays
+    taskname[$2]+=1
+    
+    if( taskname[$2] == 1 ){
+      min[$2]=$3
+      max[$2]=$3
+      sum[$2]=0.0
+    }
+  
+    sum[$2] += $3
+
+    if( max[$2] < $3 )
+    {
+      max[$2]=$3
+      maxRank[$2]=$1
+    }    
+    
+    if( min[$2] > $3 )
+    {
+      min[$2]=$3
+      minRank[$2]=$1
+    }
+  }
+
+  END {
     # __________________________________
     #  Write out a header
-    printf ("#%20s %40s %10s","Task",  "Ave(sec)", "Max(sec)\n") >> fname
-    
+    printf ("#%20s %40s %15s %15s %12s %12s","Task",  "Ave(sec)", "Max(sec)", "Min(sec)", "Max Rank", "Min Rank \n") >> fname
+
     # Write out individual task and times
-    for (i in ave)
-      printf "%-50s|  %-10g|  %g\n", i, ave[i]/count, max[i]
+    for (i in sum)
+      printf "%-50s|  %-12.5g|  %-12.5g|   %-12.5g| %-10i| %-10i\n", i, sum[i]/count, max[i], min[i], maxRank[i], minRank[i]
   }' scratch/$fname.clean > scratch/$fname.summary
 }
 
@@ -60,28 +90,35 @@ computeAve_Max_function()
 mkdir scratch
 
 fname=TaskStats
-count=`ls -1 $fname* | wc -l`
-timesteps=`cat $fname* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}'`
+count=$( ls -1 $fname* | wc -l )
+#timesteps=$( cat $fname* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}' )
+timesteps=$( awk -F "timesteps" '/timesteps/{print $2}' $fname.*.0 )
 
 cat $fname.* > scratch/$fname.all
 
 #__________________________________
 #   Clean up the task file so it's easier to parse
+
 #     1) Replace "Task :" with "|"
 sed -i s/"Task: "/\|/g scratch/$fname.all
 
-#     2) clean out the header lines and squeeze the repeative spaces
-sed /"Reported values are cumulative"/,+1d scratch/$fname.all >  scratch/$fname.clean
+#     2) delete "  Rank: "
+sed -i s/"  Rank: "//g scratch/$fname.all
+
+#     3) clean out the header lines (#)
+sed /^#/d scratch/$fname.all >  scratch/$fname.clean
+
+#     4 squeeze teh repeative spaces
 grep ExecTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/ExecTime
 grep WaitTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/WaitTime
 
-#     3) Replace "<Exec/Wait>Time [seconds] :" with "|"
+#     4) Replace "<Exec/Wait>Time [seconds] :" with "|"
 sed -i s/" ExecTime \[seconds\] : "/\|/g scratch/ExecTime
 sed -i s/" WaitTime \[seconds\] : "/\|/g scratch/WaitTime
 
-#     4) Replace " " with "_" in any of the task names
-awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/ExecTime > scratch/ExecTime.clean
-awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/WaitTime > scratch/WaitTime.clean
+#     5) Replace " " with "_" in any of the task names
+awk -F "|" '{ gsub(/ /, "_", $2); print $1 " " $2 " " $3 }' scratch/ExecTime > scratch/ExecTime.clean
+awk -F "|" '{ gsub(/ /, "_", $2); print $1 " " $2 " " $3 }' scratch/WaitTime > scratch/WaitTime.clean
 
 
 #__________________________________
@@ -89,16 +126,20 @@ awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/WaitTime > scratch/
 
 cat > ExecTime.summary << fin
 #----------------------------------------------------------
-#   Ave:  Time spent executing task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Ave:  Time spent executing a task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
 #   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
+#   Min:  Minimum time spent executing the task summed over 10 timesteps $timesteps.
+#   Tasks run inside a subscheduler are not included.
 #----------------------------------------------------------
 # Processes: $count
 fin
 
 cat > WaitTime.summary << fin
 #----------------------------------------------------------
-#   Ave:  The time elapsed from when this task was marked initiated until the time it actually executed (in seconds), summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
-#   Max:  Maximum over all ranks and summed over 10 timesteps $timesteps.
+#   Ave:  The elapsed time from when a task was initiated until it actually executed (in seconds), summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
+#   Min:  Minimum time spent executing the task summed over 10 timesteps $timesteps.
+#   Tasks run inside a subscheduler are not included.
 #----------------------------------------------------------
 # Processes: $count
 fin
@@ -109,11 +150,11 @@ computeAve_Max_function $count ExecTime
 computeAve_Max_function $count WaitTime
 
 #__________________________________
-#  Sort the times 
+#  Sort the times
 sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/ExecTime.summary >> ExecTime.summary
 sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/WaitTime.summary >> WaitTime.summary
 
-more ExecTime.summary 
+more ExecTime.summary
 more WaitTime.summary
 
-/bin/rm -rf scratch
+#/bin/rm -rf scratch

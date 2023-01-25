@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+
+  <Meta>
+    <title>F-1-20220302-01-20PCF Validation - artificially made foam</title>
+  </Meta>
+  <!--  let's use MKS units:
+        meter, kilogram, second, newton (kg*m/s^2), pascal (N/m^2), joule (N*m), watt (J/s), radian -->
+
+<SimulationComponent type="sfmpm" />
+
+<Time>
+  <maxTime>0.0090</maxTime>
+  <initTime>0.0</initTime>
+  <delt_min>1e-9</delt_min>
+  <delt_max>1e-2</delt_max>
+  <delt_init>1e-9</delt_init>
+  <timestep_multiplier>0.3</timestep_multiplier>
+</Time>
+
+<MPM>
+  <DoExplicitHeatConduction> false </DoExplicitHeatConduction>
+  <XPIC2> false </XPIC2>
+  <time_integrator>explicit</time_integrator>
+  <interpolator>   gimp    </interpolator>
+  <boundary_traction_faces>[zminus]</boundary_traction_faces>
+</MPM>
+
+<DataArchiver>
+  <filebase>SolidSamplePA202020.SFMPM.uda</filebase>
+  <outputInterval>1e-4</outputInterval>
+  <!-- We want to record a reasonable amount of data, probably 100-1000 datapoints is fine-->
+  <save label = "p.x"/>
+  <save label = "p.stress"/>
+  <save label = "p.scalefactor"/>
+  <save label = "p.alpha"/>
+  <save label = "p.epsf"/>
+  <save label = "p.mass"/>
+  <save label = "p.volume"/>
+  <save label = "p.localizedMPM"/>
+  <save label = "g.mass"/>
+  <save label = "p.plasticStrain"/>
+  <save label = "BndyForce_zminus"/>
+<!--
+  <save label = "RigidReactionForce"/>
+  <save label = "TotalMass"/>
+-->
+  <checkpoint cycle = "4" interval = "0.0025"/>
+</DataArchiver>
+
+<PhysicalConstants>
+  <gravity>[0,0,0]</gravity>
+</PhysicalConstants>
+
+<MaterialProperties>
+  <MPM>
+    <material name = "Piston-316L annealed cold-rolled">
+      <density>2000.0</density> <!-- kg/m^3 -->
+      <constitutive_model type = "rigid">
+        </constitutive_model>
+      <thermal_conductivity>1.0</thermal_conductivity>
+      <specific_heat>1.004e-5</specific_heat>
+      <geom_object>
+        <box label = "Piston-box">
+          <min>[-0.02,-0.02,0.020]</min>
+          <max>[ 0.02, 0.02,0.021]</max>
+        </box>
+        <res>[2,2,2]</res>
+        <velocity>[0.0, 0.0, 0.0]</velocity> <!-- m/s -->
+        <temperature>300</temperature>
+      </geom_object>
+    </material>
+
+    <material name = "PCF-20-Foam-10x10x10mm">
+      <density>320.</density> <!-- kg/m^3 -->
+      <constitutive_model type="p_alpha">
+        <shear_modulus> 45.0e6 </shear_modulus>
+        <K0>210.0e6</K0>  
+        <rhoS>1185.18</rhoS>
+        <Ks>190.0e7</Ks>
+        <Ps>1.6e7</Ps>
+        <Pe>8.4e6</Pe>
+        <T_0>300.</T_0>
+        <C_0>1266.</C_0>
+        <Gamma_0>1.5</Gamma_0>
+        <S_alpha>1.2</S_alpha>
+        <!-- Plasticity Parameters -->
+        <yield_stress> 4.3e6 </yield_stress>
+        <hardening_modulus> 0 </hardening_modulus>
+      </constitutive_model>
+      <erosion algorithm = "ZeroStress"/>
+      <damage_model type="Threshold">
+          <failure_mean> 3.5e6       </failure_mean>
+          <failure_std>  3.5e5       </failure_std>
+          <failure_distrib>gauss     </failure_distrib>
+          <failure_criteria>MaximumPrincipalStress</failure_criteria>
+      </damage_model>
+<!--
+-->
+        <thermal_conductivity>1.0</thermal_conductivity>
+        <specific_heat>1.004e-5</specific_heat>
+
+      <geom_object>
+        <box label = "sample">
+          <min>[-0.01,-0.01, 0.00]</min>
+          <max>[ 0.01, 0.01, 0.02]</max>
+        </box>
+        <res>[2,2,2]</res>
+        <velocity>[0.0, 0.0, 0.0]</velocity> <!-- m/s -->
+        <temperature>300</temperature>
+
+      </geom_object>
+
+    </material>
+
+    </MPM>
+</MaterialProperties>
+
+<Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[-0.0,  -0.0,   0.0]</lower>
+        <upper>[ 0.024, 0.024, 0.022]</upper>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[2, 2, 3]</patches>
+      </Box>
+      <spacing>[0.001, 0.001, 0.001]</spacing>
+      <!-- spacing should be twice the size of each image voxel -->
+    </Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <!-- This should make particles stick to the -z face so the foam cube won't slide around-->
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+</Uintah_specification>

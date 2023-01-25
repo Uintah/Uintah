@@ -16,16 +16,6 @@ public:
     WaveFormInit<T,CT>( std::string task_name, int matl_index, const std::string var_name );
     ~WaveFormInit<T,CT>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (WaveFormInit) class.
@@ -58,17 +48,13 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels(){};
 
@@ -102,48 +88,6 @@ private:
   WaveFormInit<T, CT>::~WaveFormInit()
   {}
 
-  //--------------------------------------------------------------------------------------------------
-  template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &WaveFormInit<T, CT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T, typename CT>
-  TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
   template <typename T, typename CT>
   void WaveFormInit<T, CT>::problemSetup( ProblemSpecP& db ){
 
@@ -186,8 +130,7 @@ private:
   }
 
   template <typename T, typename CT>
-  template <typename ExecSpace, typename MemSpace>
-  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& dep_field = tsk_info->get_field<T>( _var_name );
     CT& ind_field = tsk_info->get_field<CT>( _ind_var_name );

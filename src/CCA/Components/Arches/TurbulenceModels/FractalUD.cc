@@ -58,48 +58,6 @@ namespace Uintah{
   FractalUD::~FractalUD()
   {}
 
-  //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FractalUD::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &FractalUD::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &FractalUD::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FractalUD::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskEvalFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &FractalUD::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &FractalUD::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &FractalUD::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &FractalUD::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FractalUD::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  TaskAssignedExecutionSpace FractalUD::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
   //---------------------------------------------------------------------------------
   void
     FractalUD::problemSetup( ProblemSpecP& db ){
@@ -199,8 +157,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template <typename ExecSpace, typename MemSpace>
-  void FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void
+    FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
       // CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
       //mu_sgc.initialize(0.0);
@@ -265,8 +223,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template <typename ExecSpace, typename MemSpace>
-  void FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void
+    FractalUD::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     }
 
   //---------------------------------------------------------------------------------
@@ -294,8 +252,8 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------------
-  template <typename ExecSpace, typename MemSpace>
-  void FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void
+    FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
       constSFCXVariable<double>& uFaceX = tsk_info->get_field<constSFCXVariable<double> >(Ux_face_name);
       constSFCXVariable<double>& uFaceY = tsk_info->get_field<constSFCXVariable<double> >(Uy_face_name);

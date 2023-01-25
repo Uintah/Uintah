@@ -1,0 +1,241 @@
+<Uintah_specification>
+  <Meta>
+    <title>Variable density flow with species transport</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <ModelBasedOnSpeciesAndEnthalpy>
+    	<maxIterations>100</maxIterations>
+    	<tolerance>1e-9</tolerance>
+    </ModelBasedOnSpeciesAndEnthalpy>
+            
+    <TimeIntegrator>FE</TimeIntegrator>  
+
+    <!-- Set the initial condition expression for velocity components -->    
+   <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+
+    
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="H2"/>
+      <GaussianFunction amplitude="0.2" deviation="1.5e-3" mean="0.0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <FieldClipping tasklist="initialization">
+      <FieldExpression type="SVOL" min="0.0" max="0.1">
+        <NameTag name="H2" />        
+      </FieldExpression>
+    </FieldClipping>
+
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <GaussianFunction amplitude="-0.0" deviation="2e-5" mean="0.0" baseline="0.20">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="800" deviation="2e-4" mean="0" baseline="700">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <!-- Build an equation for the enthalpy -->
+    <TransportEquation equation="enthalpy">
+      <SolutionVariable>rho_enthalpy</SolutionVariable>
+      <PrimitiveVariable>enthalpy</PrimitiveVariable>
+      <PropertiesFromPoKiTT/>
+       <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </TransportEquation>   
+    
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="enthalpy" state="STATE_NONE"/>
+      <NameTag name="heat_capacity"/>
+    </ForceOnGraph>
+    
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="enthalpy" state="STATE_NP1"/>
+      <NameTag name="heat_capacity"/>
+    </ForceOnGraph>   
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+         
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>       
+      </Viscosity>  
+      <ComputeMassResidual/>
+      <Pressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-8  </tolerance>
+            <maxiterations>  1000   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+    
+        <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/h2.xml</CanteraInputFile>
+      <CanteraGroup>gas</CanteraGroup>
+      <DiffusiveFlux direction="X">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>10000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_init>1e-7</delt_init>
+    <delt_min>1e-7</delt_min>
+    <delt_max>1e-7</delt_max>
+    <max_Timesteps>10</max_Timesteps>
+    <timestep_multiplier>1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-H2-rxn-premixed-xdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="3" timestepInterval="5"/>
+    <save label="x-mom"/>
+    <save label="density"/>
+    <save label="u"/>
+    <save label="divu"/>
+    <save label="viscosity"/>    
+    <save label="ContinuityResidual"/>
+    <save label="Mixture_MW"/>
+    
+    <save label="H2"/>
+    <save label="d_density_d_H2"/>
+    <save label="H2_diffFlux_X"/>
+    <save label="rho_H2_convFlux_X"/>
+    <save label="H2_EOS_Coupling"/>
+    <save label="H2_diff_coeff"/>
+    <save label="rho_H2_rhs"/>
+    
+    <save label="O2"/>
+    <save label="d_density_d_O2"/>
+    <save label="O2_diffFlux_X"/>
+    <save label="rho_O2_convFlux_X"/>
+    <save label="O2_EOS_Coupling"/>
+    <save label="O2_diff_coeff"/>
+    <save label="rho_O2_rhs"/>
+
+    <save label="OH"/>
+    <save label="d_density_d_OH"/>
+    <save label="OH_diffFlux_X"/>
+    <save label="rho_OH_convFlux_X"/>
+    <save label="OH_EOS_Coupling"/>
+    <save label="OH_diff_coeff"/>
+    <save label="rho_OH_rhs"/>
+    
+    <save label="N2"/>
+    <save label="N2_diffFlux_X"/>
+    <save label="N2_diff_coeff"/>    
+
+    <save label="O"/>
+    
+    <save label="enthalpy"/>
+    <save label="rho_enthalpy"/>
+    <save label="rho_enthalpy_rhs"/>
+    <save label="d_density_d_enthalpy"/>
+    <save label="enthalpy_diffFlux_X"/>
+    <save label="rho_enthalpy_convFlux_X"/>
+    <save label="enthalpy_EOS_Coupling"/>
+
+    <save label="rr_H2"/>
+    <save label="rr_O2"/>
+    <save label="rr_OH"/>
+<!--     <save label="rr_C"/> -->
+	  <save label="rr_N2"/>
+    <save label="rr_O"/>    
+        
+    <save label="pressure"/>
+    <save label="thermodynamic_pressure"/>
+    <save label="thermodynamic_pressure_rhs"/>
+    <save label="velocity_dot_grad_thermodynamic_pressure_X"/>
+    <save label="pressure_src"/>
+    <save label="Temperature"/>    
+    <save label="pressure_rhs"/>
+    <save label="pressure_src"/>
+    <save label="dilatation"/>
+    
+    <save label="heat_capacity"/>
+    <save label="pressureMaterialDerivative"/>
+    <save label="pressureMaterialDerivative_partial"/>
+    <save label="divu_pressure_drift_correction"/>
+    <save label="adiabatic_index"/>
+
+  </DataArchiver> 
+
+  <Grid>
+    <BoundaryConditions>
+	  <DefaultMaterial>all</DefaultMaterial>
+	  <Face side="x-" type="Open" name="Face_x-"/>
+	  <Face side="x+" type="Open" name="Face_x+"/>
+    </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[-5.0e-3,-5.0e-3,-5.0e-3]</lower>
+        <upper>[ 5.0e-3, 5.0e-3, 5.0e-3]</upper>
+        <resolution>[256,1,1]</resolution>
+        <patches>[4,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

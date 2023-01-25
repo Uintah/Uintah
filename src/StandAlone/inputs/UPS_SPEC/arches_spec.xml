@@ -1,6 +1,56 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
+  <BCType>
+          <inputfile        spec="REQUIRED STRING"  need_applies_to="var TurbulentInlet" />
+
+          <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
+          <timeperiod       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="var TurbulentInlet"/>
+
+          <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
+
+          <variable         spec="OPTIONAL NO_DATA" attribute1="label REQUIRED STRING"/>
+
+          <!-- When using the FromFile or VelocityFileInput interface, one must supply a default in the
+          event that the handoff file does not contain an iterator for the specified geometry -->
+          <default          spec="REQUIRED NO_DATA"
+                              attribute1="type      REQUIRED STRING 'Neumann, Dirichlet"
+                              attribute2="value     OPTIONAL DOUBLE"
+                              attribute3="velvalue  OPTIONAL VECTOR"
+                              need_applies_to="var VelocityFileInput FromFile"/>
+
+          <!-- Swirl No. -->
+          <!-- swirl_no = 2/3*vel_tangential/vel_axial -->
+          <!-- This definition is from Combustion Aerodynamics J.M. BEER and N.A. 1983 equation 5.14 -->
+          <!-- assumes: constant density, constant tangential and axial components of velocity  -->
+          <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl, ScalarSwirl"/>
+          <!-- swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+          <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl, ScalarSwirl"/>
+
+          <!-- For DQMOM: when using swirl one must clarify which component of velocity this phase variable represents.
+               This is needed because the velocity names are user-specified. To specify it, we assume that the normal
+               component is X and so the Y and Z "components" must be specified. This will vary face-to-face and component to
+               component.
+               Example: Face = y-, therefore Y would be assigned to z-velocity component and Z would be assigned to the
+               x-velocity component to maintain a right-handed coordinate system.
+          -->
+          <swirl_coord      spec="OPTIONAL STRING 'Y,Z'"  need_applies_to="var ScalarSwirl"/>
+
+          <!-- Stabilized Atmospheric Boundary Layer -->
+          <!-- When using StABL, the free stream velocity is specified in the <value> tag. -->
+          <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]-->
+          <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity -->
+          <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 -->
+
+          <!-- One might want to specify a non-normal, mass flow inlet. This allows one to specify those components -->
+          <massflow_unitVector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet, PartMassFlowInlet"/> <!-- Specify the vector. The Normal component value is ignored. -->
+
+          <which_vel   spec="OPTIONAL STRING" need_applies_to= "var Custom"/> <!--This a MMS BC for almgren problem only for verification-->
+          <coordinates spec="OPTIONAL NO_DATA" attribute1 = "x REQUIRED STRING"
+                       attribute2 = "y REQUIRED STRING" need_applies_to= "var Custom"/> <!-- used in MMS_almgren BC -->  
+  </BCType>
+
+
   <CFD>
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
@@ -127,7 +177,7 @@
           <!-- note that the use of this still requires u,v,w be defined -->
           <PoissonSolver                spec="REQUIRED NO_DATA"
                                         need_applies_to="type poisson">
-            <include href="solver_spec.xml" section="Parameters" />
+            <include href="solver_spec.xml" section="Solver/Parameters" />
           </PoissonSolver>
         </utility>
 
@@ -1325,7 +1375,7 @@
                                         attribute1="label REQUIRED STRING"/>
           <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
 
-          <include href="solver_spec.xml" section="Parameters" />
+          <include href="solver_spec.xml" section="Solver/Parameters" />
         </PressureSolver>
 
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
@@ -1467,7 +1517,7 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
 
-          <include href="solver_spec.xml" section="Parameters" />
+          <include href="solver_spec.xml" section="Solver/Parameters" />
 
         </PressureSolver>
       </KMomentum>
@@ -2614,9 +2664,6 @@
         </Moment>
 
       </CQMOM>
-      <ArchesExample                    spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING" >
-      </ArchesExample>
     </ARCHES>
   </CFD>
 

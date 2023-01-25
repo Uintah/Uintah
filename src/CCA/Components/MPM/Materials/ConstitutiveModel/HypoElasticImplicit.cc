@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,6 +34,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
@@ -167,7 +168,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
     parent_old_dw->get(pstress,             lb->pStressLabel,             pset);
     parent_old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
+    old_dw->get(dispNew,Il->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
@@ -346,7 +347,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
+    new_dw->get(dispNew,Il->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 

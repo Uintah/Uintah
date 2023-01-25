@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,6 @@
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -225,17 +224,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                            , const MaterialSet  * matls
                                            );
 
-
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * old_posLabel
-                                           , const VarLabelList & old_labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            which
-                                           );
-
     virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
                                            , const VarLabel     * old_posLabel
                                            , const VarLabelList & old_labels
@@ -302,8 +290,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
-
-    virtual void setMaxGhostCellsCollectionPhase(bool val) {m_max_ghost_cell_collection_phase = val;}
+    
+    // number of schedulers and subschedulers
+    int m_num_schedulers {0};
 
   protected:
 
@@ -338,7 +327,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
     // method of getting data from an old to a new grid).
-protected:
     bool                                m_is_copy_data_timestep{false};
     bool                                m_is_init_timestep{false};
     bool                                m_is_restart_init_timestep{false};
@@ -418,7 +406,6 @@ protected:
     std::ofstream*              m_mem_logfile{nullptr};
 
     Relocate                    m_relocate_1;
-    Relocate                    m_relocate_2;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)
@@ -453,10 +440,6 @@ protected:
 
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};
-
-    bool m_max_ghost_cell_collection_phase{false}; //DS 06012020: GPU resize problems require max ghost cells for variables should be collected across tasks. To do this,
-                                                   //one has to call scheduleTimestep, scheduleInitialize etc to go through all tasks, but task should not be added into
-                                                   //the task graph during this collection phase. So return from addTask if m_max_ghost_cell_collection_phase == true
 
     // task-graph needs access to reduction task map, etc
     friend class TaskGraph;

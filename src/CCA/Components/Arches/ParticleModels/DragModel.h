@@ -42,16 +42,6 @@ namespace Uintah{
     DragModel<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~DragModel<IT, DT>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -87,17 +77,13 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   private:
 
@@ -146,60 +132,6 @@ namespace Uintah{
   DragModel<IT, DT>::~DragModel()
   {}
 
-  //--------------------------------------------------------------------------------------------------
-  template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &DragModel<IT, DT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &DragModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &DragModel<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &DragModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskEvalFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &DragModel<IT, DT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &DragModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &DragModel<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &DragModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskTimestepInitFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &DragModel<IT, DT>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename IT, typename DT>
-  TaskAssignedExecutionSpace DragModel<IT, DT>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels DragModel needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
@@ -263,8 +195,7 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  template <typename ExecSpace, typename MemSpace>
-  void DragModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void DragModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
@@ -295,8 +226,7 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  template <typename ExecSpace, typename MemSpace> void
-  DragModel<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void DragModel<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
@@ -352,8 +282,7 @@ namespace Uintah{
   }
 
   template <typename IT, typename DT>
-  template <typename ExecSpace, typename MemSpace>
-  void DragModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void DragModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     IT& rhoG = tsk_info->get_field<IT>(_gas_density_name);
     IT& velU = tsk_info->get_field<IT>(_gas_u_velocity_name);

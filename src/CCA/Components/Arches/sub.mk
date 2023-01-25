@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -164,13 +164,7 @@ $(SRCDIR)/Source.$(OBJEXT) : \
 #else
    REAL_EXT=$(OBJEXT)
 #endif
-
-# (Possibly) CUDA versions:
-$(EXTRA_DIR)$(SRCDIR)/BoundaryCondition.$(REAL_EXT) :  $(SRCDIR)/fortran/mmbcvelocity_fort.h         \
-                                                       $(SRCDIR)/fortran/mm_computevel_fort.h        \
-                                                       $(SRCDIR)/fortran/mm_explicit_fort.h          \
-                                                       $(SRCDIR)/fortran/mm_explicit_oldvalue_fort.h \
-                                                       $(SRCDIR)/fortran/mm_explicit_vel_fort.h      
+    
 $(EXTRA_DIR)$(SRCDIR)/Discretization.$(REAL_EXT) :  \
                                                        $(SRCDIR)/fortran/prescoef_var_fort.h         \
                                                        $(SRCDIR)/fortran/uvelcoef_fort.h             \
@@ -220,7 +214,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/ParticleModels      \
            $(SRCDIR)/PropertyModels      \
            $(SRCDIR)/PropertyModelsV2    \
-					 $(SRCDIR)/ChemMixV2           \
+           $(SRCDIR)/ChemMixV2           \
            $(SRCDIR)/BoundaryConditions  \
            $(SRCDIR)/Radiation           \
            $(SRCDIR)/Radiation/fortran   \
@@ -228,11 +222,10 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/SourceTermsV2       \
            $(SRCDIR)/Task                \
            $(SRCDIR)/Transport           \
-					 $(SRCDIR)/TurbulenceModels    \
+           $(SRCDIR)/TurbulenceModels    \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
-           $(SRCDIR)/WallHTModels        \
-           $(SRCDIR)/ArchesExamples
+           $(SRCDIR)/WallHTModels
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -104,6 +104,7 @@ class DataArchive {
 private:
   struct DataFileInfo; // Forward declaration
 
+
 public:
   DataArchive( const std::string & filebase,               // <- Name to save UDA under.
                const int           processor     = 0,      // use if you want to different processors to read different parts of the archive.
@@ -156,10 +157,13 @@ public:
                        std::vector<const TypeDescription *>  & types );
 
   void queryGlobals(   std::vector<std::string>              & names,
+                       std::vector<int>                      & num_matls,
                        std::vector<const TypeDescription *>  &  );
 
+  static std::vector<double> m_emptyVectorD;
   void queryTimesteps( std::vector<int>                      & index,
-                       std::vector<double>                   & times );
+                       std::vector<double>                   & times,
+                       std::vector<double>                   & delT_vector=m_emptyVectorD );
 
   void queryProcessors( unsigned int & nProcs );
   
@@ -472,6 +476,7 @@ private:
   std::vector<TimeData> d_timeData;
   std::vector<int>      d_ts_indices;
   std::vector<double>   d_ts_times;
+  std::vector<double>   d_ts_oldDelTs;
 
   // global bits and endianness - read from index.xml ONLY if not in timestep.xml
   std::string d_globalEndianness;

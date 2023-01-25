@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -357,14 +357,6 @@ template< typename FluxT >
       factory.register_expression( new BuilderZ(diffFluxTag) );
       hasDiffusiveFlux = true;
     }
-
-    if(!hasDiffusiveFlux){
-      std::ostringstream msg;
-      msg << "Attempted to register Placeholders for diffusive flux expressions but no valid tags were detected. "
-          << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
   }
 
   //------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -74,7 +74,7 @@ class LoadBalancer;
       
   ****************************************/
     
-  //! Handles outputting the data.
+  // Handles outputting the data.
   class DataArchiver : public UintahParallelComponent, public Output {
 
   public:
@@ -88,28 +88,28 @@ class LoadBalancer;
     
     static bool m_wereSavesAndCheckpointsInitialized;
 
-    //! Sets up when the DataArchiver will output and what data, according
-    //! to params.  If you only need to use DataArchiver to copy 
-    //! data, then MaterialManager can be a nullptr.
+    // Sets up when the DataArchiver will output and what data, according
+    // to params.  If you only need to use DataArchiver to copy 
+    // data, then MaterialManager can be a nullptr.
     virtual void problemSetup( const ProblemSpecP    & params,
                                const ProblemSpecP    & restart_prob_spec,
                                const MaterialManagerP& materialManager );
 
     virtual void outputProblemSpec( ProblemSpecP & root_ps );
 
-    //! This function will set up the output for the simulation.  As part
-    //! of this it will output the input.xml and index.xml in the uda
-    //! directory.  Call after calling all problemSetups.
+    // This function will set up the output for the simulation.  As part
+    // of this it will output the input.xml and index.xml in the uda
+    // directory.  Call after calling all problemSetups.
     virtual void initializeOutput( const ProblemSpecP & params,
                                    const GridP& grid );
 
-    //! Call this when restarting from a checkpoint after calling
-    //! problemSetup.  This will copy time step directories and dat
-    //! files up to the specified time step from restartFromDir if
-    //! fromScratch is false and will set time and time step variables
-    //! appropriately to continue smoothly from that time step.
-    //! If time step is negative, then all time steps will get copied
-    //! if they are to be copied at all (fromScratch is false).
+    // Call this when restarting from a checkpoint after calling
+    // problemSetup.  This will copy time step directories and dat
+    // files up to the specified time step from restartFromDir if
+    // fromScratch is false and will set time and time step variables
+    // appropriately to continue smoothly from that time step.
+    // If time step is negative, then all time steps will get copied
+    // if they are to be copied at all (fromScratch is false).
     virtual void restartSetup( const Dir    & restartFromDir,
                                const int      startTimeStep,
                                const int      timeStep,
@@ -117,63 +117,71 @@ class LoadBalancer;
                                const bool     fromScratch,
                                const bool     removeOldDir );
 
-    //! Call this after problemSetup it will copy the data and
-    //! checkpoint files ignore dumping reduction/sole variables.
+    // Call this after problemSetup it will copy the data and
+    // checkpoint files ignore dumping reduction/sole variables.
     virtual void postProcessUdaSetup( Dir& fromDir );
 
-    //! Copy a section between udas .
-    void copySection( const Dir & fromDir, const Dir & toDir, const std::string & file, const std::string & section );
+    // Copy a section between udas .
+    void copySection( const Dir & fromDir, 
+                      const Dir & toDir, 
+                      const std::string & file, 
+                      const std::string & section );
 
-    //! Copy a section from another uda's to our index.xml.
-    void copySection( Dir & fromDir, const std::string & section ) { copySection( fromDir, m_outputDir, "index.xml", section ); }
+    // Copy a section from another uda's to our index.xml.
+    void copySection( Dir & fromDir, const std::string & section ) { 
+      copySection( fromDir, m_outputDir, "index.xml", section ); 
+    }
 
-    //! Checks to see if this is an output time step. 
-    //! If it is, setup directories and xml files that we need to output.
-    //! Call once per time step, and if recompiling,
-    //! after all the other tasks are scheduled.
-    virtual void finalizeTimeStep( const GridP      & /* grid */,
-                                   SchedulerP & /* scheduler */,
+    // Checks to see if this is an output time step. 
+    // If it is, setup directories and xml files that we need to output.
+    // Call once per time step, and if recompiling,
+    // after all the other tasks are scheduled.
+    virtual void finalizeTimeStep( const GridP  & /* grid */,
+                                   SchedulerP   & /* scheduler */,
                                    bool         recompile = false );
            
-    //! schedule the output tasks if we are recompiling the taskgraph.  
-    virtual void sched_allOutputTasks( const GridP      & /* grid */,
-                                       SchedulerP & /* scheduler */,
+    // schedule the output tasks if we are recompiling the taskgraph.  
+    virtual void sched_allOutputTasks( const GridP & /* grid */,
+                                       SchedulerP  & /* scheduler */,
                                        bool         recompile = false );
                                       
-    //! Call this after the time step has been executed to find the
-    //! next time step to output
+    // Call this after the time step has been executed to find the
+    // next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool restart,
                                                     const GridP& grid );
 
-    //! Called after a time step recompute where delta t is adjusted
-    //! to make sure an output and/or checkpoint time step is needed.
+    // Called after a time step recompute where delta t is adjusted
+    // to make sure an output and/or checkpoint time step is needed.
     virtual void recompute_OutputCheckPointTimeStep();
 
-    //! write meta data to xml files 
-    //! Call after time step has completed.
+    // write meta data to xml files 
+    // Call after time step has completed.
     virtual void writeto_xml_files( const GridP & grid );
 
     virtual void writeto_xml_files( std::map< std::string,
                                     std::pair<std::string,
                                     std::string> > &modifiedVars );
 
-    //! Returns as a string the name of the top of the output directory.
+    // Returns as a string the name of the top of the output directory.
     virtual const std::string getOutputLocation() const;
 
-    //! Normally saved vars are scrubbed if not needed for the next
-    //! time step. By pass scubbing when running in situ or if wanting
-    //! to save the previous time step.
+    // Returns bool, does the outputdir exist
+    virtual bool doesOutputDirExist() const;
+
+    // Normally saved vars are scrubbed if not needed for the next
+    // time step. By pass scubbing when running in situ or if wanting
+    // to save the previous time step.
     virtual void setScrubSavedVariables( bool val ) { scrubSavedVariables = val; };
 
-    //! Asks if the task graph needs to be recompiled.
+    // Asks if the task graph needs to be recompiled.
     virtual bool needRecompile( const GridP & grid );
 
     virtual void recompile(const GridP& grid);
 
-    //! The task that handles the outputting.  Scheduled in
-    //! finalizeTimeStep.  Handles outputs and checkpoints and
-    //! differentiates between them in the last argument.  Outputs
-    //! as binary the data acquired from VarLabel in p_dir.
+    // The task that handles the outputting.  Scheduled in
+    // finalizeTimeStep.  Handles outputs and checkpoints and
+    // differentiates between them in the last argument.  Outputs
+    // as binary the data acquired from VarLabel in p_dir.
     void outputVariables( const ProcessorGroup *,
                           const PatchSubset    * patch,
                           const MaterialSubset * matls, 
@@ -181,48 +189,52 @@ class LoadBalancer;
                           DataWarehouse  * new_dw, 
                           int              type );
 
-    //! Task that handles outputting non-checkpoint global
-    //! reduction/sole variables.  Scheduled in finalizeTimeStep.
+    // Task that handles outputting non-checkpoint global
+    // reduction/sole variables.  Scheduled in finalizeTimeStep.
     void outputGlobalVars( const ProcessorGroup *,
                            const PatchSubset    * patch,
                            const MaterialSubset * matls,
                                  DataWarehouse  * old_dw,
                                  DataWarehouse  * new_dw );
 
-    //! Get the time the next output will occur
+    // Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
-    //! Get the time step the next output will occur
+    
+    // Get the time step the next output will occur
     virtual int  getNextOutputTimeStep() const { return m_nextOutputTimeStep; }
+    
     // Pushes output back by one time step.
     virtual void postponeNextOutputTimeStep() { ++m_nextOutputTimeStep; }
 
-    //! Get the time/time step/wall time of the next checkpoint will occur
+    // Get the time/time step/wall time of the next checkpoint will occur
     virtual double getNextCheckpointTime()     const { return m_nextCheckpointTime; }
     virtual int    getNextCheckpointTimeStep() const { return m_nextCheckpointTimeStep; }
     virtual int    getNextCheckpointWallTime() const { return m_nextCheckpointWallTime; }
 
-    //! Returns true if data will be output this time step
+    // Returns true if data will be output this time step
     virtual void setOutputTimeStep( bool val, const GridP & grid );
     virtual bool isOutputTimeStep() const { return m_isOutputTimeStep; }
 
-    //! Returns true if data will be checkpointed this time step
+    // Returns true if data will be checkpointed this time step
     virtual void setCheckpointTimeStep( bool val, const GridP & grid );
     virtual bool isCheckpointTimeStep() const { return m_isCheckpointTimeStep; }
 
-    //! Get the directory of the current time step for outputting info.
+    // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimeStepOutputLocation() const { return m_lastTimeStepLocation; }
 
     bool isLabelSaved ( const std::string & label ) const;
        
-    //! Allow a component to adjust the output and checkpoint
-    //! interval on the fly.
+    // Allow a component to adjust the output and checkpoint
+    // interval on the fly.
     void   setOutputInterval( double inv );
-    double getOutputInterval()         const { return m_outputInterval; }
+    double getOutputInterval()             const { return m_outputInterval; }
+    
     void   setOutputTimeStepInterval( int inv );
-    int    getOutputTimeStepInterval() const { return m_outputTimeStepInterval; }
+    int    getOutputTimeStepInterval()     const { return m_outputTimeStepInterval; }
 
     void   setCheckpointInterval( double inv );
     double getCheckpointInterval()         const { return m_checkpointInterval; }
+    
     void   setCheckpointTimeStepInterval( int inv );
     int    getCheckpointTimeStepInterval() const { return m_checkpointTimeStepInterval; }
 
@@ -235,7 +247,7 @@ class LoadBalancer;
     void   setSaveAsUDA()  { m_outputFileFormat = UDA; }
     void   setSaveAsPIDX() { m_outputFileFormat = PIDX; }
 
-    //! Called by in situ VisIt to force the dump of a time step's data.
+    // Called by in situ VisIt to force the dump of a time step's data.
     void outputTimeStep( const GridP& grid,
                          SchedulerP& sched,
                          bool previous );
@@ -259,14 +271,16 @@ class LoadBalancer;
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
     bool getUseLocalFileSystems() const { return m_useLocalFileSystems; };
      
-    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
+    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { 
+      m_runtimeStats = runtimeStats; 
+    };
      
-    // Returns trus if an output or checkpoint exists for the time step
+    // Returns true if an output or checkpoint exists for the time step
     bool outputTimeStepExists( unsigned int ts );
     bool checkpointTimeStepExists( unsigned int ts );
     
-    //! problemSetup parses the ups file into a list of these
-    //! (m_saveLabelNames)
+    // problemSetup parses the ups file into a list of these
+    // (m_saveLabelNames)
     struct SaveNameItem {
       std::string         labelName;
       std::string         compressionMode;
@@ -282,13 +296,20 @@ class LoadBalancer;
                                ConsecutiveRangeSet & prevMatls,
                                MaterialSetP        & prevMatlSet );
 
-      const MaterialSet*    getMaterialSet( int level ) const { return matlSet.at( level ).get_rep(); }
+      const MaterialSet* getMaterialSet( int level ) const { 
+        return matlSet.at( level ).get_rep(); 
+      }
+      
       const MaterialSubset* getMaterialSubset( const Level * level ) const;
 
       const VarLabel* label;
+      
       std::map<int, MaterialSetP> matlSet;
     };
-
+    
+    
+  //______________________________________________________________________
+  //
   private:
      
     enum outputFileFormat { UDA, PIDX };
@@ -296,53 +317,65 @@ class LoadBalancer;
       
     //__________________________________
     //         PIDX related
-    //! output the all of the saveLabels in PIDX format
+    // output the all of the saveLabels in PIDX format
     size_t
-    saveLabels_PIDX( const ProcessorGroup      * pg,
-                     const PatchSubset         * patches,      
-                     DataWarehouse       * new_dw,          
+    saveLabels_PIDX( const ProcessorGroup  * pg,
+                     const PatchSubset     * patches,      
+                     DataWarehouse         * new_dw,          
                      int                   type,
                      std::vector< SaveItem > & saveLabels,
                      const TypeDescription::Type TD,
                      Dir                   ldir,        // uda/timeStep/levelIndex
-                     const std::string         & dirName,     // CCVars, SFC*Vars
-                     ProblemSpecP        & doc );
+                     const std::string     & dirName,     // CCVars, SFC*Vars
+                     ProblemSpecP          & doc );
                            
-    //! Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
+    // Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
     std::vector<DataArchiver::SaveItem> 
     findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
                               const TypeDescription::Type     type );
       
-    //! bulletproofing so user can't save unsupported var type
+    // bulletproofing so user can't save unsupported var type
     void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,
                              const std::vector< TypeDescription::Type > & pidxVarTypes );
            
     // Writes out the <Grid> and <Data> sections into the
     // timestep.xml file by creating a DOM and then writing it out.
-    void writeGridOriginal(   const bool hasGlobals, const GridP & grid, ProblemSpecP rootElem );
+    void writeGridOriginal(   const bool hasGlobals, 
+                              const GridP & grid, 
+                              ProblemSpecP rootElem );
 
-    // Writes out the <Grid> and <Data> sections (respectively) to separate files (that are associated with timestep.xml) using a XML streamer.
-    void writeGridTextWriter( const bool hasGlobals, const std::string & grid_path, const GridP & grid );
-    void writeDataTextWriter( const bool hasGlobals, const std::string & data_path, const GridP & grid,
+    // Writes out the <Grid> and <Data> sections (respectively) to separate files 
+    // (that are associated with timestep.xml) using a XML streamer.
+    void writeGridTextWriter( const bool hasGlobals, 
+                              const std::string & grid_path, 
+                              const GridP & grid );
+                              
+    void writeDataTextWriter( const bool hasGlobals, 
+                              const std::string & data_path, 
+                              const GridP & grid,
                               const std::vector< std::vector<bool> > & procOnLevel );
 
     // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
-    void writeGridBinary(     const bool hasGlobals, const std::string & grid_path, const GridP & grid );
+    void writeGridBinary(     const bool hasGlobals, 
+                              const std::string & grid_path, 
+                              const GridP & grid );
 
     //__________________________________
-    //! returns a ProblemSpecP reading the xml file xmlName.
-    //! You will need to that you need to call ProblemSpec::releaseDocument
+    // returns a ProblemSpecP reading the xml file xmlName.
+    // You will need to that you need to call ProblemSpec::releaseDocument
     ProblemSpecP loadDocument( const std::string & xmlName );
 
-    //! creates the uda directory with a trailing version suffix
+    // creates the uda directory with a trailing version suffix
     void makeVersionedDir();
 
-    void initSaveLabels(  SchedulerP & sched, bool initTimeStep );
+    void initSaveLabels(  SchedulerP & sched, 
+                          bool initTimeStep );
+                          
     void initCheckpoints( const SchedulerP & sched );
 
-    //! helper for beginOutputTimeStep - creates and writes
-    //! the necessary directories and xml files to begin the 
-    //! output time step.
+    // helper for beginOutputTimeStep - creates and writes
+    // the necessary directories and xml files to begin the 
+    // output time step.
     void makeTimeStepDirs(      Dir& dir,
                                 std::vector<SaveItem>& saveLabels,
                           const GridP& grid,
@@ -353,7 +386,7 @@ class LoadBalancer;
 
     std::vector<MPI_Comm> m_pidxComms; // Array of MPI Communicators for PIDX usage...
        
-    //! creates communicator every AMR level required for PIDX
+    // creates communicator every AMR level required for PIDX
     void createPIDXCommunicator(       std::vector<SaveItem> & saveLabels,
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
@@ -368,27 +401,27 @@ class LoadBalancer;
 #endif
     int m_lastOutputOfTimeStepXML = -1; 
 
-    //! helper for finalizeTimeStep - schedules a task for each var's output
-    void scheduleOutputTimeStep(       std::vector<SaveItem> & saveLabels,
+    // helper for finalizeTimeStep - schedules a task for each var's output
+    void sched_outputVariables(        std::vector<SaveItem> & saveLabels,
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
                                        bool                    isThisCheckpoint );
 
-    //! Helper for finalizeTimeStep - determines if, based on the current
-    //! time and time step, this will be an output or checkpoint time step.
+    // Helper for finalizeTimeStep - determines if, based on the current
+    // time and time step, this will be an output or checkpoint time step.
     void beginOutputTimeStep( const GridP & grid );
 
-    //! helper for initializeOutput - writes the initial index.xml file,
-    //! both setting the m_indexDoc var and writing it to disk.
+    // helper for initializeOutput - writes the initial index.xml file,
+    // both setting the m_indexDoc var and writing it to disk.
     void createIndexXML(Dir& dir);
 
-    //! helper for restartSetup - adds the restart field to index.xml
+    // helper for restartSetup - adds the restart field to index.xml
     void addRestartStamp(       ProblemSpecP   indexDoc,
                           const Dir          & fromDir,
                           const int            timestep );
 
-    //! helper for restartSetup - copies the time step directories AND
-    //! time step entries in index.xml
+    // helper for restartSetup - copies the time step directories AND
+    // time step entries in index.xml
     void copyTimeSteps( const Dir  & fromDir,
                         const Dir  & toDir,
                         const int    startTimeStep,
@@ -396,15 +429,15 @@ class LoadBalancer;
                         const bool   removeOld,
                         const bool   areCheckpoints = false );
 
-    //! helper for restartSetup - copies the global dat files to 
-    //! new uda dir (from startTimeStep to maxTimeStep)
+    // helper for restartSetup - copies the global dat files to 
+    // new uda dir (from startTimeStep to maxTimeStep)
     void copyDatFiles( const Dir & fromDir,
                        const Dir & toDir,
                        const int   startTimeStep,
                        const int   maxTimeStep,
                        const bool  removeOld );
 
-    //! add saved global (reduction/sole) variables to index.xml
+    // add saved global (reduction/sole) variables to index.xml
     void indexAddGlobals();
 
     // setupLocalFileSystems() and setupSharedFileSystem() are used to
@@ -419,49 +452,60 @@ class LoadBalancer;
     void setupSharedFileSystem(); // Verifies that all ranks see a shared FS.
     void saveSVNinfo();
 
-    //! string for uda dir (actual dir will have postpended numbers
-    //! i.e., filebase.000
+    // string for uda dir (actual dir will have postpended numbers
+    // i.e., filebase.000
     std::string m_filebase { "" };
 
     ApplicationInterface * m_application{nullptr};
     LoadBalancer         * m_loadBalancer{nullptr};
     
-    //! pointer to simulation state, to get time step and time info
+    // pointer to simulation state, to get time step and time info
     MaterialManagerP m_materialManager;
 
     // Only one of these should be non-zero.  The value is read
     // from the .ups file.
-    double m_outputInterval {0};         // In seconds.
-    int    m_outputTimeStepInterval {0}; // Number of time steps.
+    
+    // In seconds.
+    double m_outputInterval {0};
+             
+    // Number of time steps.
+    int    m_outputTimeStepInterval {0}; 
+    
+    // used when m_outputInterval != 0
+    double m_nextOutputTime {0};     
+  
+    // used when m_outputTimeStepInterval != 0
+    int    m_nextOutputTimeStep {0}; 
+    
+    // Output the last time step.
+    bool   m_outputLastTimeStep {false}; 
+    
+    // top of uda dir 
+    Dir    m_outputDir;                    
 
-    double m_nextOutputTime {0};     // used when m_outputInterval != 0
-    int    m_nextOutputTimeStep {0}; // used when m_outputTimeStepInterval != 0
-
-    bool   m_outputLastTimeStep {false}; // Output the last time step.
-     
-    Dir    m_outputDir;                    //!< top of uda dir
-
-    //! Represents whether this proc will output non-processor-specific
-    //! files
+    // Represents whether this proc will output non-processor-specific  files
     bool   m_writeMeta {false};
 
-    //! Whether or not to save the initialization time step
+    // Whether or not to save the initialization time step
     bool   m_outputInitTimeStep {false};
 
-    //! last timestep dir (filebase.000/t#)
+    // last timestep dir (filebase.000/t#)
     std::string m_lastTimeStepLocation {"invalid"};
 
-    //! List of current output dirs
+    // List of current output dirs
     std::list<std::string> m_outputTimeStepDirs;
     
-    bool m_isOutputTimeStep {false};      //!< set if an output time step
-    bool m_isCheckpointTimeStep {false};  //!< set if a checkpoint time step
+    // set if an output time step
+    bool m_isOutputTimeStep {false};  
+      
+    // set if a checkpoint time step  
+    bool m_isCheckpointTimeStep {false};  
 
-    //! Whether or not particle vars are saved
-    //! Requires p.x to be set
+    //  Whether or not particle vars are saved
+    //  Requires p.x to be set
     bool m_saveParticleVariables {false}; 
 
-    //! Wheter or not p.x is saved 
+    //  Wheter or not p.x is saved 
     bool m_saveP_x {false};
      
     std::string m_particlePositionName{ "p.x" };
@@ -476,11 +520,11 @@ class LoadBalancer;
     // on a shared file system.)
     bool m_useLocalFileSystems{false};
 
-    //! m_saveLabelNames is a temporary list containing VarLabel
-    //! names to be saved and the materials to save them for.  The
-    //! information will be basically transferred to m_saveLabels or
-    //! m_saveGlobalLabels after mapping VarLabel names to their
-    //! actual VarLabel*'s.
+    // m_saveLabelNames is a temporary list containing VarLabel
+    // names to be saved and the materials to save them for.  The
+    // information will be basically transferred to m_saveLabels or
+    // m_saveGlobalLabels after mapping VarLabel names to their
+    // actual VarLabel*'s.
     std::list< SaveNameItem > m_saveLabelNames;
     std::vector< SaveItem >   m_saveLabels;
     std::vector< SaveItem >   m_saveGlobalLabels;
@@ -489,8 +533,8 @@ class LoadBalancer;
     ConsecutiveRangeSet m_prevMatls;
     MaterialSetP m_prevMatlSet {nullptr};
 
-    //! m_checkpointLabelNames is a temporary list containing
-    //! the names of labels to save when checkpointing
+    // m_checkpointLabelNames is a temporary list containing
+    // the names of labels to save when checkpointing
     std::vector< SaveItem > m_checkpointLabels;
     std::vector< SaveItem > m_checkpointGlobalLabels;
 
@@ -506,21 +550,23 @@ class LoadBalancer;
 
     bool m_checkpointLastTimeStep {false}; // Checkpoint the last time step.
 
-    //! How many checkpoint dirs to keep around
+    //  How many checkpoint dirs to keep around
     int m_checkpointCycle {2};
 
-    //! Top of checkpoints dir
+    //  Top of checkpoints dir
     Dir m_checkpointsDir {""};
 
-    //! List of current checkpoint dirs
+    //  List of current checkpoint dirs
     std::list<std::string> m_checkpointTimeStepDirs;
     
-    //!< used when m_checkpointInterval != 0. Simulation time in seconds.
+    //  used when m_checkpointInterval != 0. Simulation time in seconds.
     double m_nextCheckpointTime {0};
-    //!< used when m_checkpointTimeStepInterval != 0.  Integer - time step
-    int    m_nextCheckpointTimeStep {0};
-    //!< used when m_checkpointWallTimeInterval != 0.  Integer seconds.
-    int    m_nextCheckpointWallTime {0};
+    
+    //  used when m_checkpointTimeStepInterval != 0.  Integer - time step
+    int m_nextCheckpointTimeStep {0};
+    
+    //  used when m_checkpointWallTimeInterval != 0.  Integer seconds.
+    int m_nextCheckpointWallTime {0};
 
     // 
     bool m_outputPreviousTimeStep     {false};
@@ -542,10 +588,10 @@ class LoadBalancer;
     // because it is possible to do an output
     // and a checkpoint at the same time.
 
-    //! index.xml
+    // index.xml
     ProblemSpecP m_XMLIndexDoc {nullptr};
 
-    //! checkpoints/index.xml
+    // checkpoints/index.xml
     ProblemSpecP m_CheckpointXMLIndexDoc {nullptr};
 
     ProblemSpecP m_upsFile {nullptr};
@@ -574,6 +620,7 @@ class LoadBalancer;
     //__________________________________
     //  PostProcessUda related
     bool m_doPostProcessUda {false};
+    
     //  Used for migrating restart time step directories.
     std::map< int, int> m_restartTimeStepIndicies;
        
@@ -584,9 +631,9 @@ class LoadBalancer;
     // a value from the index.xml file
     int getTimeStepTopLevel();
 
-    //! Normally saved vars are scrubbed if not needed for the next
-    //! time step. By pass scubbing when running in situ or if wanting
-    //! to save the previous time step.
+    // Normally saved vars are scrubbed if not needed for the next
+    // time step. By pass scubbing when running in situ or if wanting
+    // to save the previous time step.
     bool scrubSavedVariables { true };
     
     //-----------------------------------------------------------
@@ -606,7 +653,6 @@ class LoadBalancer;
     bool m_outputDoubleAsFloat {false};
 
     //-----------------------------------------------------------
-
     // These four variables affect the global var output only.
     
     // For outputing the sim time and/or time step with the global vars
@@ -620,23 +666,20 @@ class LoadBalancer;
 
     
     //-----------------------------------------------------------
-    std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
+    std::string TranslateVariableType( std::string type, 
+                                       bool isThisCheckpoint );
 
-    //-----------------------------------------------------------
-    // RNJ - 
-    //
+    
     // This is the number of times the DataArchiver will retry
     // a file system operation before it gives up and throws
     // an exception.
-    //-----------------------------------------------------------
-
     int m_fileSystemRetrys {10};
 
-    //! This is if you want to pass in the uda extension on the command line
+    // This is if you want to pass in the uda extension on the command line
     int m_udaSuffix {-1};
 
-    //! The number of levels the DA knows about.  If this changes,
-    //! we need to redo output and Checkpoint tasks.
+    // The number of levels the DA knows about.  If this changes,
+    // we need to redo output and Checkpoint tasks.
     int m_numLevelsInOutput {0};
 
     ReductionInfoMapper< RuntimeStatsEnum, double > *m_runtimeStats;
@@ -649,7 +692,7 @@ class LoadBalancer;
 #endif
     
 #if SCI_ASSERTION_LEVEL >= 2
-    //! double-check to make sure that DA::output is only called once per level per processor per type
+    // double-check to make sure that DA::output is only called once per level per processor per type
     std::vector<bool> m_outputCalled;
     std::vector<bool> m_checkpointCalled;
     bool m_checkpointGlobalCalled {false};

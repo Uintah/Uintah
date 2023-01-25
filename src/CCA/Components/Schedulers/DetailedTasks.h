@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
 #include <CCA/Components/Schedulers/DetailedDependency.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -39,13 +40,13 @@
 
 #include <Core/Lockfree/Lockfree_Pool.hpp>
 
-#include <sci_defs/gpu_defs.h>
-#include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
+
+#include <sci_defs/cuda_defs.h>
 
 #include <map>
 #include <queue>
@@ -233,9 +234,9 @@ public:
     return m_task_priority_alg;
   }
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
 
-  void addDeviceValidateRequiresAndModifiesCopies( DetailedTask * dtask );
+  void addDeviceValidateRequiresCopies( DetailedTask * dtask );
 
   void addDevicePerformGhostCopies( DetailedTask * dtask );
 
@@ -247,13 +248,13 @@ public:
 
   void addDeviceExecutionPending( DetailedTask * dtask );
 
-  void addHostValidateRequiresAndModifiesCopies( DetailedTask * dtask );
+  void addHostValidateRequiresCopies( DetailedTask * dtask );
 
   void addHostCheckIfExecutable( DetailedTask * dtask );
 
   void addHostReadyToExecute( DetailedTask * dtask );
 
-  bool getDeviceValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
+  bool getDeviceValidateRequiresCopiesTask( DetailedTask *& dtask );
 
   bool getDevicePerformGhostCopiesTask( DetailedTask *& dtask );
 
@@ -265,7 +266,7 @@ public:
 
   bool getDeviceExecutionPendingTask( DetailedTask *& dtask );
 
-  bool getHostValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
+  bool getHostValidateRequiresCopiesTask( DetailedTask *& dtask );
 
   bool getHostCheckIfExecutableTask( DetailedTask *& dtask );
 
@@ -372,7 +373,6 @@ private:
   TaskQueue  m_initial_ready_tasks;
   TaskPQueue m_mpi_completed_tasks;
   std::atomic<int> m_atomic_initial_ready_tasks_size { 0 };
-  std::atomic<int> atomic_task_to_debug_size { 0 };
   std::atomic<int> m_atomic_mpi_completed_tasks_size { 0 };
 
   // This "generation" number is to keep track of which InternalDependency
@@ -396,7 +396,7 @@ private:
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
 
   using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t
@@ -404,13 +404,13 @@ private:
                                  , std::allocator
                                  >;
 
-  TaskPool             device_validateRequiresAndModifiesCopies_pool{};
+  TaskPool             device_validateRequiresCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};
   TaskPool             device_validateGhostCopies_pool{};
   TaskPool             device_checkIfExecutable_pool{};
   TaskPool             device_readyToExecute_pool{};
   TaskPool             device_executionPending_pool{};
-  TaskPool             host_validateRequiresAndModifiesCopies_pool{};
+  TaskPool             host_validateRequiresCopies_pool{};
   TaskPool             host_checkIfExecutable_pool{};
   TaskPool             host_readyToExecute_pool{};
 

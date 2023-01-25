@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -59,12 +59,11 @@ static DebugStream dbg("ARCHES_PRESS_SOLVE",false);
 // Default constructor for PressureSolver
 //______________________________________________________________________
 PressureSolver::PressureSolver(ArchesLabel* label,
-                               const MPMArchesLabel* MAlb,
                                BoundaryCondition* bndry_cond,
                                PhysicalConstants* phys_const,
                                const ProcessorGroup* myworld,
                                SolverInterface* hypreSolver):
-                                     d_lab(label), d_MAlab(MAlb),
+                                     d_lab(label),
                                      d_boundaryCondition(bndry_cond),
                                      d_physicalConsts(phys_const),
                                      d_myworld(myworld),
@@ -94,7 +93,7 @@ PressureSolver::~PressureSolver()
 void
 PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
-  //do_custom_arches_linear_solve = true; // Use the custom Arches linear solve instead of hypre
+  //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
 
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
@@ -176,7 +175,7 @@ void PressureSolver::scheduleInitialize( const LevelP& level,
 {
   if(do_custom_arches_linear_solve){
     int archIndex = 0; // only one arches material
-    custom_solver = scinew linSolver(d_MAlab,   this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),
+    custom_solver = scinew linSolver( this, d_boundaryCondition ,d_physicalConsts ,d_lab->d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex(),
                                                                                              d_lab->d_mmgasVolFracLabel,
                                                                                              d_lab->d_cellTypeLabel,
                                                                                              d_lab->d_presCoefPBLMLabel,
@@ -232,11 +231,6 @@ void PressureSolver::sched_solve(const LevelP& level,
                            timelabels, extraProjection, pressLabel);
 
   sched_normalizePress(    sched, perproc_patches, matls, pressLabel,timelabels);
-
-
-  if ((d_MAlab)&&(!(extraProjection))) {
-    sched_addHydrostaticTermtoPressure(sched, perproc_patches, matls, timelabels);
-  }
 }
 
 //______________________________________________________________________
@@ -288,9 +282,6 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
 #ifdef divergenceconstraint
   tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,  gn, 0);
 #endif
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gac, 1);
-  }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) && !extraProjection ) {
     tsk->computes(d_lab->d_presCoefPBLMLabel);
@@ -380,14 +371,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     //__________________________________
     calculatePressureCoeff(patch, &vars, &constVars);
-
-    // Modify pressure coefficients for multimaterial formulation
-    if (d_MAlab) {
-      new_dw->get(constVars.voidFraction, d_lab->d_mmgasVolFracLabel, d_indx, patch,gac, 1);
-
-      mmModifyPressureCoeffs(patch, &vars,  &constVars);
-
-    }
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           &vars,

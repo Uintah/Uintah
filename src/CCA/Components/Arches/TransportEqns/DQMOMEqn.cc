@@ -610,15 +610,20 @@ DQMOMEqn::computePsi( const ProcessorGroup* pc,
     old_dw->get( af_z, d_fieldLabels->d_areaFractionFZLabel, matlIndex, patch, gac, 2 );
 
     if ( d_which_limiter == UPWIND ){
-      DQMOM_CONV(up,UpwindConvection);
+      UpwindStruct up;
+      DQMOM_CONV(up);
     } else if ( d_which_limiter == SUPERBEE ){
-      DQMOM_CONV(sb,SuperBeeConvection);
+      SuperBeeStruct sb;
+      DQMOM_CONV(sb);
     } else if ( d_which_limiter == ROE ){
-      DQMOM_CONV(roe,RoeConvection);
+      RoeStruct roe;
+      DQMOM_CONV(roe);
     } else if ( d_which_limiter == CENTRAL ){
-      DQMOM_CONV(central,CentralConvection);
+      CentralStruct central;
+      DQMOM_CONV(central);
     } else if ( d_which_limiter == VANLEER ){
-      DQMOM_CONV(vl,VanLeerConvection);
+      VanLeerStruct vl;
+      DQMOM_CONV(vl);
     }
 
   }

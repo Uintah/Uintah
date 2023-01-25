@@ -13,48 +13,6 @@ MMS_scalar::~MMS_scalar()
 {}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &MMS_scalar::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &MMS_scalar::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_scalar::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &MMS_scalar::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_scalar::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &MMS_scalar::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &MMS_scalar::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_scalar::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &MMS_scalar::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_scalar::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace MMS_scalar::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 MMS_scalar::problemSetup( ProblemSpecP& db ){
 
@@ -145,8 +103,8 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& f_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_label);
   CCVariable<double>& s_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_source_label);
@@ -214,8 +172,8 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& f_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_label);
   CCVariable<double>& s_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_source_label);

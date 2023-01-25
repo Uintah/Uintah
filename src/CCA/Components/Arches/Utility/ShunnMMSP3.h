@@ -14,16 +14,6 @@ public:
     ShunnMMSP3<T>( std::string task_name, int matl_index, const std::string var_name );
     ~ShunnMMSP3<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (ShunnMMSP3) class.
@@ -58,17 +48,13 @@ protected:
 
     void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels(){};
 
@@ -120,47 +106,6 @@ private:
   template <typename T>
   ShunnMMSP3<T>::~ShunnMMSP3()
   {}
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &ShunnMMSP3<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -255,8 +200,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void ShunnMMSP3<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void ShunnMMSP3<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& f_mms = tsk_info->get_field<T>(m_var_name);
     constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
@@ -271,7 +215,7 @@ private:
       const int ioff = m_ijk_off[0];
       const int joff = m_ijk_off[1];
       const int koff = m_ijk_off[2];
-      Uintah::parallel_for( range, [&, ioff, joff, koff](int i, int j, int k){
+      Uintah::parallel_for( range, [&](int i, int j, int k){
         //const double phi_f = (1.0 + sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*
         //                sin(m_k*m_pi*(y(i,j,k)-m_vf*time_d))*cos(m_w0*m_pi*time_d))/(1.0 +
         //                m_rho0/m_rho1+(1.0-m_rho0/m_rho1)*sin(m_k*m_pi*(x(i,j,k)-m_uf*time_d))*

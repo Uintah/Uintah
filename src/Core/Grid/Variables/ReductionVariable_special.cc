@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -360,6 +360,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
   *ptr++ = value.get()->x();
   *ptr++ = value.get()->y();
   *ptr++ = value.get()->z();
+  index += 3*sizeof(double);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -375,6 +376,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
   value.get()->x(*ptr++);
   value.get()->y(*ptr++);
   value.get()->z(*ptr++);
+  index += 3*sizeof(double);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -401,6 +403,7 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
   *ptr++ = value.get()->x();
   *ptr++ = value.get()->y();
   *ptr++ = value.get()->z();
+  index += 3*sizeof(double);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -416,6 +419,7 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
   value.get()->x(*ptr++);
   value.get()->y(*ptr++);
   value.get()->z(*ptr++);
+  index += 3*sizeof(double);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -442,6 +446,7 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
   *ptr++ = value.get()->x();
   *ptr++ = value.get()->y();
   *ptr++ = value.get()->z();
+  index += 3*sizeof(double);
 }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -457,6 +462,7 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
   value.get()->x(*ptr++);
   value.get()->y(*ptr++);
   value.get()->z(*ptr++);
+  index += 3*sizeof(double);
 }
 
 } // end namespace Uintah

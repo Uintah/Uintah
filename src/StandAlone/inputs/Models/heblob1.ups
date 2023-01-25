@@ -2,12 +2,12 @@
 
 
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
        <title>none</title>
-   </Meta>    
+   </Meta>
 
    <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
@@ -67,7 +67,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-                     
+
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
@@ -131,13 +131,13 @@
               <resolution>   [100,100,1] </resolution>
            </Box>
        </Level>
-    </Grid>    
+    </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>HeliumBlob1.uda</filebase>
-      <outputInterval>0.1</outputInterval> 
+      <outputInterval>0.1</outputInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
@@ -148,7 +148,7 @@
       <save label="TotalMass"/>
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
-   
+
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -156,13 +156,13 @@
          <cfl>0.35</cfl>
        <ICE>
        <advection type = "SecondOrder"/>
-       
+
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00           </knob_for_speedSound>
         </TimeStepControl>
-       
-         
+
+
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
@@ -180,11 +180,11 @@
             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
-      </ICE>        
+      </ICE>
     </CFD>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>[0,-9.81,0]</gravity>
        <reference_pressure> 101325.0  </reference_pressure>
@@ -197,11 +197,11 @@
          <material name = "BackgroundGas">
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>      true                </isSurroundingMatl>
-           
-           <dynamic_viscosity>      0.0                 </dynamic_viscosity>     
-           <thermal_conductivity>   0.0                 </thermal_conductivity>  
-           <specific_heat>          716.5               </specific_heat>         
-           <gamma>                  1.4                 </gamma>                 
+
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          716.5               </specific_heat>
+           <gamma>                  1.4                 </gamma>
            <!--____________________________________ -->
            <!-- How domain gets initialized         -->
            <!--____________________________________ -->
@@ -220,7 +220,7 @@
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.0,.0]          </velocity>
               <density>       1.176829268292683           </density>
-              <pressure>      101325.0                 </pressure>     
+              <pressure>      101325.0                 </pressure>
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
@@ -228,49 +228,48 @@
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,0.0,0.0]       </velocity>
               <density>        0.1626119988637622      </density>
-              <pressure>      101325.0                 </pressure>     
+              <pressure>      101325.0                 </pressure>
               <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-      </ICE>       
-       
+      </ICE>
+
 
     </MaterialProperties>
-  
+
     <Models>
-      <Model type = "SimpleRxn">
-        <SimpleRxn> 
+      <Model type = "BinaryProperties">
+        <BinaryProperties>
           <material>BackgroundGas</material>
-          <scalar name = "f">                                                   
-            <constants>                                                         
-              <f_stoichometric>          0.06207   </f_stoichometric>           
-              <diffusivity>              0.0       </diffusivity>               
-              <initialize_diffusion_knob>  0       </initialize_diffusion_knob> 
-              <rho_air>            1.176829268292683  </rho_air>                
-              <rho_fuel>           0.1626119988637622  </rho_fuel>              
-              <cv_air>               716.5         </cv_air>                    
-              <cv_fuel>              3115.6        </cv_fuel>                   
-              <R_air>                287.0         </R_air>                     
-              <R_fuel>               2077.03       </R_fuel>                    
-              <thermalCond_air>      0.0           </thermalCond_air>           
-              <thermalCond_fuel>     0.0           </thermalCond_fuel>          
-              <viscosity_air>        0             </viscosity_air>             
-              <viscosity_fuel>       0             </viscosity_fuel>            
-           </constants>                                                         
-           <geom_object>                                                       
-             <difference>                                                    
+          <scalar name = "f">
+            <constants>
+              <diffusivity>              0.0       </diffusivity>
+              <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
+              <rho_A>            1.176829268292683 </rho_A>
+              <rho_B>           0.1626119988637622 </rho_B>
+              <cv_A>              716.5            </cv_A>
+              <cv_B>              3115.6           </cv_B>
+              <R_A>               287.0            </R_A>
+              <R_B>               2077.03          </R_B>
+              <thermalCond_A>     0.0              </thermalCond_A>
+              <thermalCond_B>     0.0              </thermalCond_B>
+              <dynamic_viscosity_A>  0             </dynamic_viscosity_A>
+              <dynamic_viscosity_B>  0             </dynamic_viscosity_B>
+           </constants>
+           <geom_object>
+             <difference>
                <box label="world"/>
                <cylinder label="HeBlob"/>
-             </difference>                                                   
-             <scalar>    0.00   </scalar>                                    
-            </geom_object>                                                     
-            <geom_object>                                                      
+             </difference>
+             <scalar>    0.00   </scalar>
+            </geom_object>
+            <geom_object>
               <cylinder label="HeBlob"/>
-              <scalar>    1.00   </scalar>                                    
-            </geom_object>                                                     
-          </scalar>  
-        </SimpleRxn>                                                            
-      </Model> 
-    </Models>                
+              <scalar>    1.00   </scalar>
+            </geom_object>
+          </scalar>
+        </BinaryProperties>
+      </Model>
+    </Models>
 
 </Uintah_specification>

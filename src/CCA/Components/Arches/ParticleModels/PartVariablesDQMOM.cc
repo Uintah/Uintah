@@ -10,48 +10,6 @@ TaskInterface( task_name, matl_index ) {
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &PartVariablesDQMOM::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 PartVariablesDQMOM::problemSetup( ProblemSpecP& db ){
 
@@ -103,8 +61,8 @@ PartVariablesDQMOM::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+PartVariablesDQMOM::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   computeSurfaceAreaFraction( patch, tsk_info );
 
@@ -137,8 +95,8 @@ PartVariablesDQMOM::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   computeSurfaceAreaFraction( patch, tsk_info );
 

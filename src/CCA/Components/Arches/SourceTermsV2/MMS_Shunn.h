@@ -14,16 +14,6 @@ public:
     MMS_Shunn<T>( std::string task_name, int matl_index, MaterialManagerP materialManager  );
     ~MMS_Shunn<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (MMS_Shunn) class.
@@ -60,17 +50,13 @@ public:
     void register_compute_bcs( std::vector<VarInfo>& variable_registry, const int time_substep,
                                const bool pack_tasks){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 
@@ -116,53 +102,6 @@ TaskInterface( task_name, matl_index ) , _materialManager(materialManager){
 //--------------------------------------------------------------------------------------------------
 template <typename T>
 MMS_Shunn<T>::~MMS_Shunn(){
-}
-
-//--------------------------------------------------------------------------------------------------
-template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &MMS_Shunn<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-template <typename T>
-TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -246,8 +185,7 @@ void MMS_Shunn<T>::register_initialize( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template <typename ExecSpace, typename MemSpace>
-void MMS_Shunn<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void MMS_Shunn<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_source(patch, tsk_info);
 
@@ -260,8 +198,7 @@ void MMS_Shunn<T>::register_timestep_init( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template <typename ExecSpace, typename MemSpace>
-void MMS_Shunn<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void MMS_Shunn<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 
@@ -292,8 +229,7 @@ void MMS_Shunn<T>::register_timestep_eval( std::vector<VarInfo>&
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-template <typename ExecSpace, typename MemSpace>
-void MMS_Shunn<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void MMS_Shunn<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_source( patch, tsk_info );
 

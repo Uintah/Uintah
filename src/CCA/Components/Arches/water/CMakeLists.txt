@@ -1,4 +1,0 @@
-set( ARCHES_SRC ${ARCHES_SRC}
-    ${CMAKE_CURRENT_SOURCE_DIR}/watertp.cc
-    PARENT_SCOPE
-    )

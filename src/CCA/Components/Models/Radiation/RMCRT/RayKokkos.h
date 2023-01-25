@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,174 +35,30 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Parallel/MasterLock.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/gpu_defs.h>
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_KOKKOS_GPU)
+#ifdef HAVE_CUDA
   #include <curand.h>
   #include <curand_kernel.h>
 #endif
+
+#include <Kokkos_Random.hpp>
 
 #include <iostream>
 #include <cmath>
 #include <string>
 #include <vector>
 
+
+Uintah::MasterLock rand_init_mutex{};
+
 class ApplicationInterface;
 
 namespace Uintah{
-
-  struct RMCRT_flags{
-
-    struct xyz {
-      unsigned int x{0};
-      unsigned int y{0};
-      unsigned int z{0};
-    };
-
-    xyz finePatchLow;
-    xyz finePatchSize;
-
-    unsigned int startCell{0};
-    unsigned int endCell{0};
-    unsigned int cellsPerGroup{0};
-  }; // struct RMCRT_flags
-
-  struct LevelParams {
-
-    double Dx[3];                // cell spacing
-    double anchor[3];            // level anchor
-
-    LevelParams() = default;
-
-    //Allow only copying, which is needed for functors.
-    LevelParams(const LevelParams& rhs) {
-      this->Dx[0] = rhs.Dx[0];
-      this->Dx[1] = rhs.Dx[1];
-      this->Dx[2] = rhs.Dx[2];
-      this->anchor[0] = rhs.anchor[0];
-      this->anchor[1] = rhs.anchor[1];
-      this->anchor[2] = rhs.anchor[2];
-    }
-
-    void operator=(const LevelParams& rhs){
-      this->Dx[0] = rhs.Dx[0];
-      this->Dx[1] = rhs.Dx[1];
-      this->Dx[2] = rhs.Dx[2];
-      this->anchor[0] = rhs.anchor[0];
-      this->anchor[1] = rhs.anchor[1];
-      this->anchor[2] = rhs.anchor[2];
-    }
-
-    LevelParams(LevelParams&& rhs) = delete;
-
-    void operator=(LevelParams&& rhs) = delete;
-
-    //__________________________________
-    //  Portable version of level::getCellPosition()
-    KOKKOS_INLINE_FUNCTION
-    void getCellPosition(const int x, const int y, const int z, double cellPos[3]) const
-    {
-      cellPos[0] = anchor[0] + (Dx[0] * x) + (0.5 * Dx[0]);
-      cellPos[1] = anchor[1] + (Dx[1] * y) + (0.5 * Dx[1]);
-      cellPos[2] = anchor[2] + (Dx[2] * z) + (0.5 * Dx[2]);
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void print() const {
-      printf(" Dx: [%g,%g,%g]\n", Dx[0], Dx[1], Dx[2]);
-    }
-  }; // struct LevelParams
-
-  struct LevelParamsML : public LevelParams {
-
-    int    regionLo[3];          // never use these regionLo/Hi in the kernel
-    int    regionHi[3];          // they vary on every patch and must be passed into the kernel
-    int    refinementRatio[3];
-    //int    index;                // level index
-    //bool   hasFinerLevel;
-
-    LevelParamsML() = default;
-
-    //Allow only copying, which is needed for functors.
-    LevelParamsML(const LevelParamsML& rhs) : LevelParams(rhs) {
-      this->regionLo[0] = rhs.regionLo[0];
-      this->regionLo[1] = rhs.regionLo[1];
-      this->regionLo[2] = rhs.regionLo[2];
-      this->regionHi[0] = rhs.regionHi[0];
-      this->regionHi[1] = rhs.regionHi[1];
-      this->regionHi[2] = rhs.regionHi[2];
-      this->refinementRatio[0] = rhs.refinementRatio[0];
-      this->refinementRatio[1] = rhs.refinementRatio[1];
-      this->refinementRatio[2] = rhs.refinementRatio[2];
-    }
-
-    void operator=(const LevelParamsML& rhs) {
-      LevelParams::operator=(rhs);
-      this->regionLo[0] = rhs.regionLo[0];
-      this->regionLo[1] = rhs.regionLo[1];
-      this->regionLo[2] = rhs.regionLo[2];
-      this->regionHi[0] = rhs.regionHi[0];
-      this->regionHi[1] = rhs.regionHi[1];
-      this->regionHi[2] = rhs.regionHi[2];
-      this->refinementRatio[0] = rhs.refinementRatio[0];
-      this->refinementRatio[1] = rhs.refinementRatio[1];
-      this->refinementRatio[2] = rhs.refinementRatio[2];
-    }
-
-    LevelParamsML(LevelParamsML&& rhs) = delete;
-
-    void operator=(LevelParamsML&& rhs) = delete;
-
-    //__________________________________
-    //  Portable version of level::mapCellToCoarser()
-    KOKKOS_INLINE_FUNCTION
-    void mapCellToCoarser(int idx[3]) const
-    {
-
-      //TODO, level::mapCellToCoarser has this code.  Do we need it here too?
-      //IntVector refinementRatio = m_refinement_ratio;
-      //while (--level_offset) {
-      //  refinementRatio = refinementRatio * m_grid->getLevel(m_index - level_offset)->m_refinement_ratio;
-      //}
-      //IntVector ratio = idx / refinementRatio;
-
-      int ratio[3];
-      ratio[0] = idx[0] / refinementRatio[0];
-      ratio[1] = idx[1] / refinementRatio[1];
-      ratio[2] = idx[2] / refinementRatio[2];
-
-      // If the fine cell index is negative
-      // you must add an offset to get the right
-      // coarse cell. -Todd
-      int offset[3] = {0,0,0};
-
-      if ( (idx[0] < 0) && (refinementRatio[0]  > 1 )){
-        offset[0] = (int)fmod( (double)idx[0], (double)refinementRatio[0] ) ;
-      }
-
-      if ( (idx[1] < 0) && (refinementRatio[1] > 1 )){
-        offset[1] = (int)fmod( (double)idx[1], (double)refinementRatio[1] ) ;
-      }
-
-      if ( (idx[2] < 0) && (refinementRatio[2] > 1)){
-        offset[2] = (int)fmod( (double)idx[2], (double)refinementRatio[2] ) ;
-      }
-
-      idx[0] = ratio[0] + offset[0];
-      idx[1] = ratio[1] + offset[1];
-      idx[2] = ratio[2] + offset[2];
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void print() {
-      printf( " LevelParams: Dx: [%g,%g,%g] ", Dx[0], Dx[1], Dx[2]);
-      printf( " regionLo: [%i,%i,%i], regionHi: [%i,%i,%i] ",regionLo[0], regionLo[1], regionLo[2], regionHi[0], regionHi[1], regionHi[2]);
-      printf( " RefineRatio: [%i,%i,%i]\n",refinementRatio[0], refinementRatio[1], refinementRatio[2]);
-    }
-  }; // struct LevelParamsML
 
   class Ray : public RMCRTCommon  {
 
@@ -261,9 +117,7 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const bool backoutTemp = false);
 
-      void BC_bulletproofing( const ProblemSpecP& rmcrtps,
-                              const bool chk_temp,
-                              const bool chk_absk );
+      void BC_bulletproofing( const ProblemSpecP& rmcrtps );
 
       template< class T, class V >
       void setBC( CCVariable<T>& Q_CC,
@@ -326,7 +180,6 @@ namespace Uintah{
                                 };
 
       enum Algorithm{ dataOnion,
-                      dataOnionSlim,       // Derek's experimental fast implementation
                       coarseLevel,
                       singleLevel
                     };
@@ -341,8 +194,6 @@ namespace Uintah{
       int d_cellTypeCoarsenLogic{ROUNDUP};           // how to coarsen a cell type
 
       enum cellTypeCoarsenLogic{ROUNDUP, ROUNDDOWN};
-
-      Algorithm d_algorithm{dataOnion};
 
       ROI_algo  d_ROI_algo{entireDomain};
       Point d_ROI_minPt;
@@ -369,30 +220,25 @@ namespace Uintah{
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
-      bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
-      IntVector m_virtual_ROI {IntVector(0,0,0)};
-
       //__________________________________
-      template<class T, typename ExecSpace, typename MemSpace>
-      void rayTrace( const PatchSubset* patches,
+      template<class T>
+      void rayTrace( const ProcessorGroup* pg,
+                     const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     OnDemandDataWarehouse* old_dw,
-                     OnDemandDataWarehouse* new_dw,
-                     UintahParams& uintahParams,
-                     ExecutionObject<ExecSpace, MemSpace>& execObj,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw,
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW which_sigmaT4_dw,
                      Task::WhichDW which_celltype_dw );
 
       //__________________________________
-      template<int numLevels, typename T, typename ExecSpace, typename MemSpace>
-      void rayTrace_dataOnion( const PatchSubset* patches,
+      template<class T>
+      void rayTrace_dataOnion( const ProcessorGroup* pg,
+                               const PatchSubset* patches,
                                const MaterialSubset* matls,
-                               OnDemandDataWarehouse* old_dw,
-                               OnDemandDataWarehouse* new_dw,
-                               UintahParams& uintahParams,
-                               ExecutionObject<ExecSpace, MemSpace>& execObj,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw,
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
@@ -497,6 +343,46 @@ namespace Uintah{
       return ( a.x() > b.x() && a.y() > b.y() && a.z() > b.z() );
     }
   }; // class Ray
+
+  template < typename RandomGenerator>
+  class KokkosRandom {
+
+    public:
+
+      // Initialize once within host code (synchronizes streams on GPU)
+      KokkosRandom( bool seedWithTime ) {
+      {
+        std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
+
+        if (!seeded) {
+
+          // Seed using time
+          uint64_t ticks{0};
+
+          if (seedWithTime) {
+            ticks = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+          }
+
+          m_rand_pool = RandomGenerator(ticks);
+          seeded      = true;
+        }
+      } // std::lock_guard
+    }
+
+    RandomGenerator& getRandPool() { return m_rand_pool; }
+
+  private:
+
+    static bool seeded;
+    static RandomGenerator m_rand_pool;
+
+  };  // class KokkosRandom
+
+  template <typename RandomGenerator>
+  bool KokkosRandom<RandomGenerator>::seeded = false;
+
+  template <typename RandomGenerator>
+  RandomGenerator KokkosRandom<RandomGenerator>::m_rand_pool;
 
 } // namespace Uintah
 

@@ -427,7 +427,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
                + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol ) / weightph
                * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
          }
-         Z = std::sqrt(2.0) * Arches::erfinv(1.0-2.0*zFact );
+         Z = std::sqrt(2.0) * erfinv(1.0-2.0*zFact );
          
          double rate = std::min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
          devol_rate(i,j,k) = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass

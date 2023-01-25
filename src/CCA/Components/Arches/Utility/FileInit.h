@@ -16,16 +16,6 @@ public:
       ( std::string task_name, int matl_index, const std::string var_name );
     ~FileInit<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool pack_tasks);
@@ -36,17 +26,13 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels(){};
 
@@ -70,7 +56,7 @@ public:
 
     };
 
-//private:
+private:
 
     int m_var_idx;
     const std::string m_var_name;
@@ -78,9 +64,8 @@ public:
     std::string m_var3_name;
 
     std::string m_filename;
-    typedef std::vector<double> CellToValues;
+    typedef std::map<IntVector, double > CellToValues;
     CellToValues m_data;
-    int nx,ny,nz;
 
     void readInputFile( std::string, const bool read_vector );
 
@@ -100,47 +85,6 @@ public:
   template <typename T>
   FileInit<T>::~FileInit()
   {}
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FileInit<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FileInit<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FileInit<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       , &FileInit<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                       //, &FileInit<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &FileInit<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FileInit<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FileInit<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FileInit<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FileInit<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -168,19 +112,17 @@ public:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    auto phi = tsk_info->get_field<T, double, MemSpace>(m_var_name);
+    T& phi = tsk_info->get_field<T>(m_var_name);
 
-    Uintah::parallel_initialize( execObj, 0.0, phi );
-
-    int x=nx,y=ny,z=nz;
-    double * data = m_data.data();
+    phi.initialize(0.0);
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      phi(i,j,k) = data[i*y*z+j*z+k];
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+
+      IntVector loc(i,j,k);
+      phi(i,j,k) = m_data[loc];
 
     });
   }
@@ -196,12 +138,11 @@ public:
       throw ProblemSetupException("Unable to open the given input file: " + filename, __FILE__, __LINE__);
     }
 
-    int N;
+    int nx,ny,nz,N;
     nx = getInt(file);
     ny = getInt(file);
     nz = getInt(file);
     N = nx*ny*nz;
-    m_data=std::vector<double> (N);
 
     for ( int II = 0; II < N; II++ ){
 
@@ -231,7 +172,7 @@ public:
 
       }
 
-      m_data[i*ny*nz+j*nz+k]=value;
+      m_data.insert(std::make_pair(IntVector(i,j,k), value));
 
     }
 

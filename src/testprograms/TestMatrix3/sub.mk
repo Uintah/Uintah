@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -61,30 +61,5 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SRCS    := $(SRCDIR)/perfmatrix3.cc
 PROGRAM := $(SRCDIR)/perfmatrix3
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := $(ALL_STATIC_PSE_LIBS)
-else
-  PSELIBS := \
-	testprograms/TestSuite \
-	CCA/Ports              \
-	Core/Exceptions        \
-	Core/Geometry          \
-	Core/Grid              \
-	Core/Parallel          \
-	Core/Math         
-endif
-
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(M_LIBRARY)
-else
-  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
-endif
-
 
 include $(SCIRUN_SCRIPTS)/program.mk

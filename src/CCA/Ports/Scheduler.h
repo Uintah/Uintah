@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -183,16 +183,6 @@ class Scheduler : public UintahParallelPort {
                                            , const MaterialSet  * matls
                                            ) = 0;
 
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * posLabel
-                                           , const VarLabelList & labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            w
-                                           ) = 0;
-
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).
@@ -256,8 +246,6 @@ class Scheduler : public UintahParallelPort {
     virtual bool isRestartInitTimestep() const  = 0;
 
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
-
-    virtual void setMaxGhostCellsCollectionPhase(bool val) = 0;
 
   private:
 

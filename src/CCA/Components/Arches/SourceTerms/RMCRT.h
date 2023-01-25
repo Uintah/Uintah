@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,6 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -76,7 +75,6 @@ public:
 
   RMCRT_Radiation( std::string      srcName,
                    ArchesLabel    * labels,
-                   MPMArchesLabel * MAlab,
                    string_vector    reqLabelNames,
                    const ProcessorGroup * my_world,
                    std::string      type);
@@ -138,7 +136,7 @@ public:
 
       RMCRT_Radiation* build()
       {
-        return scinew RMCRT_Radiation( m_name, m_labels, m_MAlab, m_required_label_names, m_my_world, m_type );
+        return scinew RMCRT_Radiation( m_name, m_labels, m_required_label_names, m_my_world, m_type );
       }
 
     private:
@@ -146,7 +144,6 @@ public:
       std::string         m_name;
       std::string         m_type{"rmcrt_radiation"};
       ArchesLabel*        m_labels{nullptr};
-      MPMArchesLabel*     m_MAlab{nullptr};
       const ProcessorGroup* m_my_world;
       std::vector<std::string> m_required_label_names;
   }; // class Builder
@@ -259,7 +256,6 @@ private:
   //
 
   enum Algorithm{ dataOnion,
-                  dataOnionSlim,
                   coarseLevel,
                   singleLevel,
                   radiometerOnly       // VRFlux is computed at radiometer locations
@@ -272,7 +268,6 @@ private:
 
   Ray                  * m_RMCRT{nullptr};
   ArchesLabel          * m_labels{nullptr};
-  MPMArchesLabel       * m_MAlab{nullptr};
   BoundaryCondition    * m_boundaryCondition{nullptr};
   Properties           * d_props{nullptr};
   const ProcessorGroup * m_my_world;

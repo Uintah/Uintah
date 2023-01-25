@@ -53,23 +53,24 @@ int main()
   // set RNG seed
   srand48(0);
 
-  bool uniform_size_distribution = false;
-  bool specified_size_distribution = true;
+  bool uniform_size_distribution = true;
+  bool specified_size_distribution = false;
 
   // RVEsize is the edge length of the 2D sample
   double RVEsize = 0.1;
 
   // targetVF is the total volume fraction (area fraction, really)
   // that you wish to reach
-  double targetVF = 0.65;
+  double targetVF = 0.83;
 
   // If you just want to specify a minimum and maximum grain size and
   // have a distribution in between, you only need to change diam_min, diam_max
   // and n_sizes.
   // diam_min is the minimum grain diameter
-  double diam_min = 0.000625;
+//  double diam_min = 0.000625;
+  double diam_min = 0.00250;
   // diam_max is the maximum grain diameter
-  double diam_max = 0.011250;
+  double diam_max = 0.01250;
   // How many sizes of grains do you want to use
   int n_sizes = 10;
   // Parameters for user to change - END IF AN EQUAL SIZE DISTRIBUTION IS O.K.

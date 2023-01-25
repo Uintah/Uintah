@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,8 @@
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
+#include <CCA/Components/OnTheFlyAnalysis/spatialAvg.h>
+#include <CCA/Components/OnTheFlyAnalysis/turbulentFluxes.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -44,7 +46,7 @@
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
-  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>  
+  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #endif
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -71,27 +73,40 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const MaterialManagerP materialManager,
                               const ProblemSpecP& prob_spec)
 {
-  std::string module("");
+  // the factory can use either of these xml tags
+  ProblemSpecP base_ps;
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
+  ProblemSpecP pp_ps = prob_spec->findBlock("PostProcess");
+
+  if( da_ps ){
+    base_ps = da_ps;
+  } 
+  else{
+    base_ps = pp_ps;
+  }
+
 
   std::vector<AnalysisModule*> modules;
- 
-  if (da_ps) {
-  
-    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
+
+  if (base_ps) {
+
+    for( ProblemSpecP module_ps = base_ps->findBlock( "Module" );
                       module_ps != nullptr;
                       module_ps = module_ps->findNextBlock( "Module" ) ) {
-                        
+
       if( !module_ps ) {
         throw ProblemSetupException( "\nERROR<DataAnalysis>: Could not find find <Module> tag.\n", __FILE__, __LINE__ );
       }
-      
+
       std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
-      module = attributes["name"];
+      std::string module = attributes["name"];
 
       if ( module == "statistics" ) {
         modules.push_back( scinew statistics(          myworld, materialManager, module_ps) );
+      }
+      else if ( module == "spatialAvg" ) {
+        modules.push_back( scinew spatialAvg(          myworld, materialManager, module_ps) );
       }
       else if ( module == "lineExtract" ) {
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
@@ -110,6 +125,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       }
       else if ( module == "minMax" ) {
         modules.push_back( scinew MinMax(              myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "turbulentFluxes" ) {
+        modules.push_back( scinew turbulentFluxes(     myworld, materialManager, module_ps ) );
       }
 
 #if !defined( NO_ICE )
@@ -134,14 +152,14 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "firstLawThermo" ) {
         modules.push_back( scinew FirstLawThermo(      myworld, materialManager, module_ps ) );
       }
-#endif    
+#endif
 
       else {
         std::ostringstream msg;
         msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
         throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
-    } 
+    }
   }
   return modules;
 }

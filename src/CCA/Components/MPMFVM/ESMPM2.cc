@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -159,14 +159,6 @@ void ESMPM2::scheduleRestartInitialize(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level, cout_doing, "ESMPM2::scheduleRestartInitialize");
   d_amrmpm->scheduleRestartInitialize(level, sched);
-}
-
-void ESMPM2::restartInitialize()
-{
-  if(cout_doing.active())
-    cout_doing << "Doing restartInitialize \t\t\t ESMPM2" << std::endl;
-
-  d_amrmpm->restartInitialize();
 }
 
 void ESMPM2::scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched)

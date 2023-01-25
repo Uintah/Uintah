@@ -26,7 +26,7 @@ if [ "$OS" = "Linux" ]; then
 
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
-     '--enable-optimize=-O3 -fno-ipa-cp-clone -mfpmath=sse' \\"
+     '--enable-optimize=-O3 -mfpmath=sse' \\"
 
   #_________________
   #  machine specific variables
@@ -35,7 +35,7 @@ if [ "$OS" = "Linux" ]; then
     COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-     --with-petsc=/usr/local/petsc-3.10.5 \\
+     --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
      --with-boost=/usr/local/boost-1.65.1 \\
      --enable-arches \\
      --enable-examples \\
@@ -49,7 +49,7 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --with-petsc=/usr/local/petsc-3.10.5 \\
+      --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
       --with-boost=/usr/local/boost-1.65.1 \\
       --with-cuda=/usr \\
       --enable-gencode=52 \\
@@ -64,8 +64,8 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --with-petsc=/usr/local/petsc-3.10.5 \\
-      --with-boost=/usr/local/boost-1.65.1 \\
+      --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
+     --with-boost=/usr/local/boost-1.65.1 \\
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"

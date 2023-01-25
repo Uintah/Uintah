@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,14 +84,11 @@ private:
                            SchedulerP& sched,
                            MixingRxnModel* model );
 
-  template <typename ExecSpace, typename MemSpace>
-  void setDependBCs( const PatchSubset* patches,
+  void setDependBCs( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     OnDemandDataWarehouse* old_dw,
-                     OnDemandDataWarehouse* new_dw,
-                     UintahParams& uintahParams,
-                     ExecutionObject<ExecSpace, MemSpace>& execObj,
-                     MixingRxnModel* model );
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw, MixingRxnModel* model );
 
   std::map<std::string, MixingRxnModel*> m_tables;        ///< The lookup interface
   MaterialManagerP& m_materialManager;                    ///< Material manager

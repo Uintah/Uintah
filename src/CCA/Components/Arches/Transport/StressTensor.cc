@@ -21,49 +21,6 @@ TaskInterface( task_name, matl_index ){
 //--------------------------------------------------------------------------------------------------
 StressTensor::~StressTensor(){
 }
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace StressTensor::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &StressTensor::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &StressTensor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &StressTensor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &StressTensor::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &StressTensor::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &StressTensor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &StressTensor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &StressTensor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &StressTensor::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace StressTensor::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace StressTensor::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
 //--------------------------------------------------------------------------------------------------
 void StressTensor::problemSetup( ProblemSpecP& db ){
 
@@ -105,18 +62,22 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
 
-  auto sigma11 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
-  auto sigma12 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
-  auto sigma13 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
-  auto sigma22 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
-  auto sigma23 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
-  auto sigma33 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
-  parallel_initialize(execObj, 0.0, sigma11, sigma12, sigma13, sigma22, sigma23, sigma33);
+  sigma11.initialize(0.0);
+  sigma12.initialize(0.0);
+  sigma13.initialize(0.0);
+  sigma22.initialize(0.0);
+  sigma23.initialize(0.0);
+  sigma33.initialize(0.0);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -135,26 +96,30 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
-  auto D  = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
-  auto eps_x = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
-  auto eps_y = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
-  auto eps_z = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& D  = tsk_info->get_field<constCCVariable<double> >(m_t_vis_name);
+  constSFCXVariable<double>& eps_x = tsk_info->get_field<constSFCXVariable<double> >(m_eps_x_name);
+  constSFCYVariable<double>& eps_y = tsk_info->get_field<constSFCYVariable<double> >(m_eps_y_name);
+  constSFCZVariable<double>& eps_z = tsk_info->get_field<constSFCZVariable<double> >(m_eps_z_name);
 
-  auto sigma11 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
-  auto sigma12 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
-  auto sigma13 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
-  auto sigma22 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
-  auto sigma23 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
-  auto sigma33 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   // initialize all velocities
-  parallel_initialize(execObj, 0.0, sigma11, sigma12, sigma13, sigma22, sigma23, sigma33);
+  sigma11.initialize(0.0);
+  sigma12.initialize(0.0);
+  sigma13.initialize(0.0);
+  sigma22.initialize(0.0);
+  sigma23.initialize(0.0);
+  sigma33.initialize(0.0);
 
   Vector Dx = patch->dCell();
 
@@ -163,12 +128,8 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
- 
-  //auto apply_uVelStencil=functorCreationWrapper(  uVel,  Dx); // non-macro approach gives cuda streaming error downstream
-  //auto apply_vVelStencil=functorCreationWrapper(  vVel,  Dx);
-  //auto apply_wVelStencil=functorCreationWrapper(  wVel,  Dx);
 
-  Uintah::parallel_for(execObj, x_range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     double dudy = 0.0;
     double dudz = 0.0;
@@ -183,10 +144,6 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
                                + 0.5 * (D(i-1,j,k)+D(i,j,k)) );
     const double mu23  = 0.5 * ( 0.5 * ( D(i,j,k)+D(i,j,k-1))
                                + 0.5 * (D(i,j-1,k)+D(i,j-1,k-1)) );
-
-    //apply_uVelStencil(dudx,dudy,dudz,i,j,k);  // non-macro approach gives cuda streaming error downstream, likely due to saving templated value as reference instead of value. But must save by reference to suppor legacy code.  poosibly Use getKokkosView in functor constructor
-    //apply_vVelStencil(dvdx,dvdy,dvdz,i,j,k);
-    //apply_wVelStencil(dwdx,dwdy,dwdz,i,j,k);
 
     {
       STENCIL3_1D(1);
@@ -224,7 +181,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNx, highNx,1,1,0,0,0,0);
   Uintah::BlockRange range1(lowNx, highNx);
-  Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( range1, [&](int i, int j, int k){
 
     const double mu11  = D(i-1,j,k); // it does not need interpolation
     const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k) * (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
@@ -237,7 +194,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNy, highNy,0,0,1,1,0,0);
   Uintah::BlockRange range2(lowNy, highNy);
-  Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( range2, [&](int i, int j, int k){
     const double mu22 = D(i,j-1,k);  // it does not need interpolation
     const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k) * (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
     sigma22(i,j,k) =  mu22 * 2.0*dvdy;
@@ -249,10 +206,29 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 
   GET_WALL_BUFFERED_PATCH_RANGE(lowNz, highNz,0,0,0,0,1,1);
   Uintah::BlockRange range3(lowNz, highNz);
-  Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( range3, [&](int i, int j, int k){
     const double mu33 = D(i,j,k-1);  // it does not need interpolation
     const double dwdz  = eps_z(i,j,k)*eps_z(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
     sigma33(i,j,k) = mu33 * 2.0*dwdz;
 
   });
+}
+
+void StressTensor::VelocityDerivative_central(double &dudx, double &dudy, double &dudz, const Array3<double> &u, const Vector& Dx, int i, int j, int k)
+{
+
+  using namespace Uintah::ArchesCore;
+
+  {
+  STENCIL3_1D(0);
+    dudx = (u(IJK_) - u(IJK_M_))/Dx.x();
+  }
+  {
+  STENCIL3_1D(1);
+    dudy = (u(IJK_) - u(IJK_M_))/Dx.y();
+  }
+  {
+  STENCIL3_1D(2);
+    dudz = (u(IJK_) - u(IJK_M_))/Dx.z();
+  }
 }

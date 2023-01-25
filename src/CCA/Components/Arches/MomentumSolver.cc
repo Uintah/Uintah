@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,6 @@
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -58,13 +57,12 @@ using namespace std;
 //****************************************************************************
 MomentumSolver::
 MomentumSolver(const ArchesLabel* label,
-               const MPMArchesLabel* MAlb,
                TurbulenceModel* turb_model,
                BoundaryCondition* bndry_cond,
                PhysicalConstants* physConst,
                std::map<std::string, std::shared_ptr<TaskFactoryBase> >* task_factory_map
              ) :
-               d_lab(label), d_MAlab(MAlb),
+               d_lab(label),
                d_turbModel(turb_model),
                d_boundaryCondition(bndry_cond),
                d_physicalConsts(physConst),
@@ -330,10 +328,6 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->pressure_out,  gac, 1);
   }
 
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gac, 1);
-  }
-
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -396,10 +390,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    if (d_MAlab) {
-      new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,indx, patch, gac, 1);
-    }
-
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,indx, patch);
@@ -409,14 +399,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->copyOut(velocityVars.vVelRhoHat,       d_lab->d_vVelRhoHatLabel,   indx, patch);
     new_dw->copyOut(velocityVars.wVelRhoHat,       d_lab->d_wVelRhoHatLabel,   indx, patch);
 
-    if (d_MAlab) {
-      d_boundaryCondition->calculateVelocityPred_mm(patch, delta_t,
-                                                    cellinfo,&velocityVars, &constVelocityVars);
-
-    }else {
-      d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
+    d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
                                      constVelocityVars.density, constVelocityVars.pressure, volFraction);
-    }
 
     // boundary condition
     Patch::FaceType mface = Patch::xminus;
@@ -611,15 +595,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     }
   }
 
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_MAlab->d_uVel_mmLinSrcLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_uVel_mmNonlinSrcLabel,gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_vVel_mmLinSrcLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_vVel_mmNonlinSrcLabel,gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_wVel_mmLinSrcLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_wVel_mmNonlinSrcLabel,gn, 0);
-  }
-
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
@@ -758,19 +733,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // get multimaterial momentum source terms
-    // get velocities for MPMArches with extra ghost cells
-
-    if (d_MAlab) {
-      new_dw->get(constVelocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,indx, patch,gn, 0);
-      new_dw->get(constVelocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,indx, patch,gn, 0);
-      new_dw->get(constVelocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,indx, patch,gn, 0);
-
-      new_dw->get(constVelocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,   indx, patch,gn, 0);
-      new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,   indx, patch,gn, 0);
-      new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,   indx, patch,gn, 0);
-    }
-
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateTemporary(velocityVars.uVelocityCoeff[ii],         patch);
       new_dw->allocateTemporary(velocityVars.vVelocityCoeff[ii],         patch);
@@ -845,14 +807,10 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     //                                     &constVelocityVars);
 
     //----------------------------------
-    // If not doing MPMArches, then need to
-    // take of the wall shear stress
+    // compute the wall shear stress
     // This adds the contribution to the nonLinearSrc of each
     // direction depending on the boundary conditions.
-    // if ( !d_MAlab ){
-    //   d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction, IsImag );
-    // }
-
+    
     if ( d_wall_closure == "constant_coefficient" ){
 
       d_boundaryCondition->wallStressConstSmag(
@@ -1040,12 +998,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
     //__________________________________
 
-    // add multimaterial momentum source term
-    if (d_MAlab){
-      d_source->computemmMomentumSource(pc, patch, cellinfo,
-                                        &velocityVars, &constVelocityVars);
-    }
-
     // Adding new sources from factory:
     SourceTermFactory& factory = SourceTermFactory::self();
     for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
@@ -1119,10 +1071,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-     // sets coefs in the direction of the wall to zero
-    //  d_boundaryCondition->wallVelocityBC(patch, cellinfo,
-    //                                    &velocityVars, &constVelocityVars);
-
     //  d_source->modifyVelMassSource(patch, volFraction,
     //                                &velocityVars, &constVelocityVars);
 
@@ -1137,14 +1085,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     d_discretize->calculateVelDiagonal(patch,&velocityVars);
 
-    if (d_MAlab) {
-      d_boundaryCondition->calculateVelRhoHat_mm(patch, delta_t,
-                                                 cellinfo, &velocityVars,
-                                                 &constVelocityVars);
-    } else {
-      d_rhsSolver->calculateHatVelocity(patch, delta_t,
+    d_rhsSolver->calculateHatVelocity(patch, delta_t,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
-    }
 
     double time_shift =
       delta_t * timelabels->time_position_multiplier_before_average;

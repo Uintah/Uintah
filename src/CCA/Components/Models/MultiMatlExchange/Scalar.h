@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -52,6 +52,9 @@ namespace ExchangeModels{
     virtual void problemSetup(const ProblemSpecP & prob_spec);
 
     virtual void outputProblemSpec(ProblemSpecP & prob_spec);
+
+    virtual void sched_initialize( SchedulerP&,
+                                   const LevelP& level){};
 
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,     

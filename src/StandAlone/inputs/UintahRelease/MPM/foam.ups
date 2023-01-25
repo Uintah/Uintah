@@ -90,6 +90,8 @@
        <type>rigid</type>
        <stop_time>3.50 </stop_time>
        <direction>[0, 0, 1]</direction>
+       <master_material> 0 </master_material>
+       <materials> [0,1] </materials>
       </contact>
     </MPM>
 

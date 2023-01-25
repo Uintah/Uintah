@@ -1,7 +1,7 @@
 /*
  * The MIT Licbense
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,9 +48,8 @@
 
 
 namespace Uintah {
-
-template<unsigned int max_dep_request_at_a_time, class fileTYPE>
-Interp_class<max_dep_request_at_a_time>*
+template<class fileTYPE>
+Interp_class*
 loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::string> &d_savedDep_var ,  std::map<std::string,double> &d_constants)  
 {
 
@@ -58,6 +57,8 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   if (d_savedDep_var.size()==0)
     loadAll=true;
 
+  std::vector<std::vector<double> > *indep_headers;
+  std::vector<int> *d_allIndepVarNum;            ///< std::vector storing the grid size for the Independent variables
   std::vector<std::string> d_allIndepVarNames;     ///< Vector storing all independent variable names from table file
   std::vector<std::string> d_allDepVarUnits;       ///< Units for the dependent variables
 
@@ -68,11 +69,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
 
   d_allIndepVarNames = std::vector<std::string>(d_indepvarscount);
 
-#ifdef HAVE_KOKKOS
-  tempIntContainer<Kokkos::HostSpace> d_allIndepVarNum("array_of_ind_var_sizes",d_indepvarscount);  //< std::vector storing the grid size for the Independent variables
-#else
-  std::vector<int> *d_allIndepVarNum=scinew std::vector<int>(d_indepvarscount);                     //< std::vector storing the grid size for the Independent variables
-#endif
+  d_allIndepVarNum =scinew std::vector<int>(d_indepvarscount);
 
   for (int ii = 0; ii < d_indepvarscount; ii++){
     std::string varname = getString( fp );
@@ -80,11 +77,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   }
   for (int ii = 0; ii < d_indepvarscount; ii++){
     int grid_size = getInt( fp );
-#ifdef HAVE_KOKKOS
-    d_allIndepVarNum(ii) = grid_size;
-#else
     (*d_allIndepVarNum)[ii] = grid_size;
-#endif
   }
 
   int d_varscount = getInt( fp );
@@ -129,63 +122,37 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   }
 
   //indep vars grids
+  indep_headers = scinew std::vector<std::vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
 
 
-#ifdef HAVE_KOKKOS
-    int max_size=0;
-    for (int i = 0; i < d_indepvarscount - 1; i++) {
-      max_size=max(max_size, d_allIndepVarNum(i+1)); // pad this non-square portion of the table = (
-    }
-    tempTableContainer<Kokkos::HostSpace> indep_headers("secondary_independent_variables",d_indepvarscount-1,max_size);
-
-    tempTableContainer<Kokkos::HostSpace> i1("primary_independent_variable",d_allIndepVarNum(d_indepvarscount-1),d_allIndepVarNum(0));
-#else
-    std::vector<std::vector<double> > *indep_headers = scinew std::vector<std::vector<double> >(d_indepvarscount-1);  //vector contains 2 -> N dimensions
-    for (int i = 0; i < d_indepvarscount - 1; i++) {
-      (*indep_headers)[i] = std::vector<double>((*d_allIndepVarNum)[i+1]);
-    }
-
-    std::vector<std::vector<double> > *i1=scinew std::vector<std::vector<double> >((*d_allIndepVarNum)[d_indepvarscount-1], std::vector<double>((*d_allIndepVarNum)[0])  );
-#endif
-
+  for (int i = 0; i < d_indepvarscount - 1; i++) {
+    (*indep_headers)[i] = std::vector<double>((*d_allIndepVarNum)[i+1]);
+  }
+    std::vector<std::vector<double> > *i1=scinew std::vector<std::vector<double> >((*d_allIndepVarNum)[d_indepvarscount-1]);
+  for (int i = 0; i < (*d_allIndepVarNum)[d_indepvarscount-1]; i++) {
+    (*i1)[i] = std::vector<double>((*d_allIndepVarNum)[0]);
+  }
   //assign values (backwards)
   for (int i = d_indepvarscount-2; i>=0; i--) {
-#ifdef HAVE_KOKKOS
-    for (int j = 0; j < d_allIndepVarNum(i+1) ; j++) 
-#else
-    for (int j = 0; j < (*d_allIndepVarNum)[i+1] ; j++) 
-#endif
-    {
+    for (int j = 0; j < (*d_allIndepVarNum)[i+1] ; j++) {
       double v = getDouble( fp );
-#ifdef HAVE_KOKKOS
-      indep_headers(i, j) = v;
-#else
       (*indep_headers)[i][j] = v;
-#endif
     }
   }
 
   int size=1;
   //ND size
   for (int i = 0; i < d_indepvarscount; i++) {
-#ifdef HAVE_KOKKOS
-    size = size*d_allIndepVarNum(i);
-#else
     size = size*(*d_allIndepVarNum)[i];
-#endif
   }
-  int num_dep_vars=loadAll ? d_varscount : d_savedDep_var.size();
-#ifdef HAVE_KOKKOS
-    tempTableContainer<Kokkos::HostSpace> table("ClassicMixingTable",num_dep_vars,size);
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    tempTableContainer table("ClassicMixingTable",loadAll ? d_varscount : d_savedDep_var.size(),size);
 #else
-    tempTableContainer* table=new tempTableContainer(num_dep_vars , std::vector<double> (size,0.0));
+    tempTableContainer* table=new tempTableContainer(loadAll ? d_varscount : d_savedDep_var.size() , std::vector<double> (size,0.0));
 #endif
 
-#ifdef HAVE_KOKKOS
-  int size2 = size/d_allIndepVarNum(d_indepvarscount-1);
-#else
   int size2 = size/(*d_allIndepVarNum)[d_indepvarscount-1];
-#endif
   proc0cout << "Table size " << size << std::endl;
 
   proc0cout << "Reading in the dependent variables: " << std::endl;
@@ -199,42 +166,24 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
         }
 
 
-#ifdef HAVE_KOKKOS
-        for (int mm = 0; mm < d_allIndepVarNum(d_indepvarscount-1); mm++) 
-#else
-        for (int mm = 0; mm < (*d_allIndepVarNum)[d_indepvarscount-1]; mm++) 
-#endif
-        {
+        for (int mm = 0; mm < (*d_allIndepVarNum)[d_indepvarscount-1]; mm++) {
           if (read_assign) {
-#ifdef HAVE_KOKKOS
-            for (int i = 0; i < d_allIndepVarNum(0); i++)
-#else
-            for (int i = 0; i < (*d_allIndepVarNum)[0]; i++)
-#endif
-            {
+            for (int i = 0; i < (*d_allIndepVarNum)[0]; i++) {
               double v = getDouble(fp);
               if ( index_map[kk] >-1){
-#ifdef HAVE_KOKKOS
-              i1(mm,i) = v;
-#else
               (*i1)[mm][i] = v;
-#endif
               }
             }
           } else {
             //read but don't assign inbetween vals
-#ifdef HAVE_KOKKOS
-            for (int i = 0; i < d_allIndepVarNum(0); i++) {
-#else
             for (int i = 0; i < (*d_allIndepVarNum)[0]; i++) {
-#endif
               getDouble(fp);
             }
           }
           for (int j=0; j<((d_indepvarscount > 1) ? size2 : size); j++) { // since 1D is a special case
             double v = getDouble(fp);
             if ( index_map[kk] >-1){
-#ifdef HAVE_KOKKOS
+#ifdef UINTAH_ENABLE_KOKKOS
               table(index_map[kk],j + mm*size2) = v;
 #else
               (*table)[index_map[kk] ][j + mm*size2] = v;
@@ -248,13 +197,12 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
       if ( read_assign ) { read_assign = false; }
     }
 
-#ifdef HAVE_KOKKOS
-        ClassicTableInfo infoStruct(indep_headers, d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
-    return   scinew Interp_class<max_dep_request_at_a_time>( table,d_allIndepVarNum, indep_headers, i1,infoStruct);
-#else
-    ClassicTableInfo infoStruct(*indep_headers, *d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
+  ClassicTableInfo infoStruct(*indep_headers, *d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
 
-    return   scinew Interp_class<max_dep_request_at_a_time>(*table,*d_allIndepVarNum, *indep_headers, *i1,infoStruct);
+#ifdef UINTAH_ENABLE_KOKKOS
+    return   scinew Interp_class( table,*d_allIndepVarNum, *indep_headers, *i1, infoStruct);
+#else
+    return   scinew Interp_class( *table,*d_allIndepVarNum, *indep_headers, *i1, infoStruct);
 #endif
 
 }
@@ -393,10 +341,8 @@ checkForConstants(std::stringstream &table_stream,
 }
 #endif
 
-template <unsigned int max_dep_request_at_a_time>
 static
-Interp_class<max_dep_request_at_a_time>*
-SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requested_depVar_names={} ){
+Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requested_depVar_names={} ){
   // Create sub-ProblemSpecP object
   //
   // Obtain object parameters
@@ -431,7 +377,7 @@ SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requeste
       Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
-    table_contents = scinew char[table_size];
+    table_contents = scinew char[table_size+1];
   }
 
   Uintah::MPI::Bcast(table_contents, table_size, MPI_CHAR, 0,
@@ -453,7 +399,7 @@ SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requeste
 
   checkForConstants(gzFp, tableFileName,d_constant );
   gzrewind(gzFp);
-  Interp_class<max_dep_request_at_a_time>* return_pointer =  loadMixingTable<max_dep_request_at_a_time>(gzFp, tableFileName, requested_depVar_names ,d_constant );
+  Interp_class * return_pointer =  loadMixingTable(gzFp, tableFileName, requested_depVar_names ,d_constant );
   gzclose(gzFp);
 
   proc0cout << "Table successfully loaded into memory!" << std::endl;
@@ -463,7 +409,7 @@ SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requeste
 #else
  checkForConstants(table_contents_stream, tableFileName,d_constant );
   table_contents_stream.seekg(0);
- Interp_class<max_dep_request_at_a_time>* return_pointer = loadMixingTable<max_dep_request_at_a_time>(table_contents_stream,tableFileName,  requested_depVar_names  ,d_constant );
+ Interp_class * return_pointer = loadMixingTable(table_contents_stream,tableFileName,  requested_depVar_names  ,d_constant );
   if (mpi_rank != 0)
     delete [] table_contents;
   return return_pointer;

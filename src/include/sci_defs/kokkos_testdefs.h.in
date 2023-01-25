@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,29 +25,7 @@
 #ifndef SCI_KOKKOS_DEFS_H
 #define SCI_KOKKOS_DEFS_H
 
-#include "gpu_defs.h"
-
 @DEF_KOKKOS@
-
-@DEF_HAVE_KOKKOS_GPU@
-
-#if defined(HAVE_KOKKOS)
-
-#include <Kokkos_Macros.hpp>
-
-  #if defined(HAVE_KOKKOS_GPU)
-    #define TASK_MANAGES_EXECSPACE
-    #define USE_KOKKOS_PARALLEL_FOR
-    #define USE_KOKKOS_DEEPCOPY
-    #define USE_KOKKOS_VIEW
-    #define USE_KOKKOS_INSTANCE
-  #endif
-
-#if defined(KOKKOS_ENABLE_SYCL)
-using int3 = sycl::int3;
-#endif
-
-#endif
 
 /* 
    For reference, (if Kokkos is enabled, then) you are linking against this Kokkos:

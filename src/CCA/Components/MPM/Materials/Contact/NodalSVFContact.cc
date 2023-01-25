@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,6 +53,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <vector>
 
@@ -142,7 +143,9 @@ void NodalSVFContact:: exMomIntegrated( const ProcessorGroup*           ,
     old_dw-> get(NC_CCweight, lb->NC_CCweightLabel, 0, patch, gnone, 0);
      
     for(int m=0;m<numMatls;m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
       new_dw-> get              (gmass[dwi],          lb->gMassLabel,         dwi, patch, gnone, 0);
       new_dw-> get              (gvolume[dwi],        lb->gVolumeLabel,       dwi, patch, gnone, 0);
       new_dw-> getModifiable    (gvelocity_star[dwi], lb->gVelocityStarLabel, dwi, patch);

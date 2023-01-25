@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -93,10 +93,10 @@ WARNING
     // variable is not used for anything else in the program.
     static TypeDescription::Register registerMe;
 
-    CCVariable(CCVariable<T>&&);
-    CCVariable(const CCVariable<T>&);
+
 
   protected:
+    CCVariable(const CCVariable<T>&);
 
   private:
     static TypeDescription* td;
@@ -158,13 +158,6 @@ WARNING
   template<class T>
   CCVariable<T>::CCVariable()
   {
-  }
-
-  template<class T>
-  CCVariable<T>::CCVariable(CCVariable<T>&& other)
-    : GridVariable<T>(other)
-  {
-    // Implementing this somehow turned on and properly supported Return Value Optimization (RVO).  I'm not entirely sure why -- Brad P June 2018
   }
 
   template<class T>

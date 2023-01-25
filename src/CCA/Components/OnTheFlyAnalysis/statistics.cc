@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,16 +24,11 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 
-#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
@@ -43,25 +38,20 @@
 #include <iomanip>
 
 //______________________________________________________________________
-//    TO DO:
-//   Each variable needs to keep track of the timestep.  The user can add
-//   a variable in a checkpoint.
-//______________________________________________________________________
-//
+
 
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_doing("STATISTICS_DOING_COUT", false);
-static DebugStream cout_dbg("STATISTICS_DBG_COUT", false);
+Dout dout_OTF_stats("statistics",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+Dout dbg_OTF_stats("statistics_dbg",  "OnTheFlyAnalysis", "Displays detailed debugging info.", false);
 
 //______________________________________________________________________
-statistics::statistics( const ProcessorGroup* myworld,
+statistics::statistics( const ProcessorGroup*  myworld,
                         const MaterialManagerP materialManager,
-                        const ProblemSpecP& module_spec )
+                        const ProblemSpecP&    module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
   d_monitorCell = IntVector(0,0,0);
   d_doHigherOrderStats = false;
@@ -76,7 +66,8 @@ statistics::statistics( const ProcessorGroup* myworld,
 //__________________________________
 statistics::~statistics()
 {
-  cout_doing << " Doing: destorying statistics " << endl;
+  DOUTR(dout_OTF_stats, "Doing destructor statistics");
+
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
@@ -93,8 +84,11 @@ statistics::~statistics()
     if( d_doHigherOrderStats ){
       VarLabel::destroy( Q.Qsum3_Label );
       VarLabel::destroy( Q.Qmean3_Label );
+      VarLabel::destroy( Q.Qskewness_Label );
+      
       VarLabel::destroy( Q.Qsum4_Label );
       VarLabel::destroy( Q.Qmean4_Label );
+      VarLabel::destroy( Q.Qkurtosis_Label );
     }
   }
 
@@ -113,7 +107,7 @@ void statistics::problemSetup(const ProblemSpecP &,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tstatistics" << endl;
+  DOUTR(dout_OTF_stats, "Doing statistics::problemSetup");
 
   int numMatls  = m_materialManager->getNumMatls();
 
@@ -121,43 +115,33 @@ void statistics::problemSetup(const ProblemSpecP &,
   //  Read in timing information
   m_module_spec->require("timeStart",  d_startTime);
   m_module_spec->require("timeStop",   d_stopTime);
-  
+
   // Start time < stop time
   if(d_startTime > d_stopTime ){
     throw ProblemSetupException("\n ERROR:statistics: startTime > stopTime. \n", __FILE__, __LINE__);
   }
-  
+
   // debugging
   m_module_spec->get("monitorCell",    d_monitorCell);
 
-
   //__________________________________
-  //  read in when each variable started 
+  //  read in when each variable started
   string comment = "__________________________________\n"
                    "\tIf you want to overide the value of\n \t  startTimeTimestep\n \t  startTimeTimestepReynoldsStress\n"
                    "\tsee checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
 
-  
-  //__________________________________
-  // find the material to extract data from.  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
 
+  //__________________________________
+  // find the material to extract data from.
   Material* matl = nullptr;
 
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } 
-  else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    matl = m_materialManager->getMaterial(indx);
-  } 
+  }
   else {
-    matl = m_materialManager->getMaterial(0);
+    throw ProblemSetupException("ERROR:AnalysisModule:statistics: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -165,12 +149,14 @@ void statistics::problemSetup(const ProblemSpecP &,
   vector<int> m;
   m.push_back( defaultMatl );
 
+  //__________________________________
+  //
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
   m_module_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
 
     proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
-  } 
+  }
   else {
     proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
   }
@@ -201,13 +187,9 @@ void statistics::problemSetup(const ProblemSpecP &,
     }
     m.push_back(matl);
 
-
     // What is the label name and does it exist?
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("statistics label not found: " + name , __FILE__, __LINE__);
-    }
+    VarLabel* label = VarLabel::find( name, "ERROR statistics::problemSetup <analyze>");
 
     //__________________________________
     // Only CCVariable Doubles and Vectors for now
@@ -303,36 +285,45 @@ void statistics::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   //  On restart read the starttimestep for each variable from checkpoing/t***/timestep.xml
-  if(restart_prob_spec){ 
+  if(restart_prob_spec){
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
-    
+
+    // bulletproofing
+    if (!da_rs_ps){
+      string msg = "ERROR DataAnalysis:Statistics  The xml section below is missing from checkpoints/t*****/timestep.xml: \n\n \
+      <DataAnalysisRestart>           \n \
+        <Module name=\"statistics\">  \n \
+          <StartTimestep>             \n \
+            <scalar-v>XX</scalar-v>   \n \
+            <scalar-f>XX</scalar-f>   \n \
+          </StartTimestep>            \n \
+        </Module>                     \n \
+      </DataAnalysisRestart>";
+      
+      throw ProblemSetupException(msg, __FILE__, __LINE__);
+    }
+
     ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "statistics");
     ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
-    
+
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
       int timestep;
       st_ps->require( Q.Q_Label->getName().c_str(), timestep  );
       Q.setStart(timestep);
-      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;                   
-      
+      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;
+
     }
   }
 
   //__________________________________
   //  create the matl set
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
   d_matlSet = scinew MaterialSet();
-  d_matlSet->addAll(m);
+  d_matlSet->addAll_unique(m);
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
@@ -348,7 +339,7 @@ void statistics::problemSetup(const ProblemSpecP &,
 void statistics::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
-  printSchedule( level,cout_doing,"statistics::scheduleInitialize" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleInitialize" );
 
   Task* t = scinew Task("statistics::initialize",
                    this,&statistics::initialize);
@@ -384,7 +375,7 @@ void statistics::initialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing statistics::initialize");
+    printTask(patches, patch, dout_OTF_stats, "Doing statistics::initialize");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
@@ -421,7 +412,7 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level)
 {
 
-  printSchedule( level,cout_doing,"statistics::scheduleRestartInitialize" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleRestartInitialize" );
 
   DataWarehouse* new_dw = sched->getLastDW();
 
@@ -488,6 +479,9 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   // only add task if a variable was not found in old_dw
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), d_matlSet);
+  } 
+  else{             
+    delete t;        // to prevent a memory leak
   }
 }
 
@@ -502,7 +496,7 @@ void statistics::restartInitialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing statistics::restartInitialize");
+    printTask(patches, patch, dout_OTF_stats, "Doing statistics::restartInitialize");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats Q = d_Qstats[i];
@@ -533,13 +527,6 @@ void statistics::restartInitialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-//
-void
-statistics::restartInitialize()
-{
-}
-
-//______________________________________________________________________
 //  output the starting timestep for each variable
 //  The user can turn add variables on restarts
 void
@@ -565,16 +552,16 @@ statistics::outputProblemSpec( ProblemSpecP& root_ps)
 void statistics::scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level)
 {
-  printSchedule( level,cout_doing,"statistics::scheduleDoAnalysis" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleDoAnalysis" );
 
   Task* t = scinew Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
   t->requires(Task::OldDW, m_timeStepLabel);
   t->requires(Task::OldDW, m_simulationTimeLabel);
-  
+
   Ghost::GhostType  gn  = Ghost::None;
-  
+
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
 
@@ -597,7 +584,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
       t->requires( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
     }
 #endif
-    
+
     t->computes ( Q.Qsum_Label,       matSubSet );
     t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
@@ -673,7 +660,7 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_doing,"Doing statistics::doAnalysis");
+    printTask(patches, patch, dout_OTF_stats, "Doing statistics::doAnalysis");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
@@ -761,7 +748,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  timeStep_vartype timeStep_var;      
+  timeStep_vartype timeStep_var;
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
 
@@ -858,6 +845,10 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
+  if( !Q.computeRstess ){
+    return;
+  }
+  
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
@@ -911,8 +902,8 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
-  
-  timeStep_vartype timeStep_var;      
+
+  timeStep_vartype timeStep_var;
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
 

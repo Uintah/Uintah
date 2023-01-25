@@ -72,21 +72,28 @@ def ignorePerformanceTests( TESTS ):
         myTests.append( test )
   return myTests
         
-    
+
 #______________________________________________________________________    
 # Function used for checking the input files
 # skip tests that contain 
 #    <outputInitTimestep/> AND  outputTimestepInterval > 1
 def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
-  
+  from xml.etree.ElementTree import ParseError
+
   # these options are OK
   if startFrom == "checkpoint" or startFrom == "postProcessUda" or do_restart == 0:
     return True
 
   # load index.xml into tree
-  ET     = ElementTree()
-  uintah = ET.parse(inputxml)
+  ET = ElementTree()
+
+  try:
+    uintah = ET.parse(inputxml)
+  except ParseError:
+    print('    *** ERROR: The xml file {} is corrupt and cannot be parsed'.format(inputxml))
+    return False
+  
   
   #  Note <outputInitTimestep/> + outputTimestepInterval > 1 the uda/index.xml != restartUda/index.xml
   #             ( initTS )              ( intrvl )
@@ -105,7 +112,7 @@ def isValid_inputFile( inputxml, startFrom, do_restart ):
    
   if ( initTS != None and intrvl > 1 ):
     print('     isValid_inputFile %s'% inputxml)
-    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
+    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.")
     return False
   else:
     return True
@@ -464,7 +471,9 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     #________________________________
     # is the input file valid
     if isValid_inputFile( inputxml, startFrom, do_restart ) == False:
+      failcode = 1
       print ("    Now skipping test %s " % testname)
+      system("echo '  :%s:  The ups file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.' >> %s/%s-short.log" % (testname,startpath,application))
       continue
         
     #__________________________________
@@ -473,7 +482,6 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     create_gs = "%s-%s" % (create_gs0, startFrom)
     
     rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
-    system("rm inputs")
       
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
@@ -499,7 +507,6 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
         if rc > 0:
           failcode = 1
-        system("rm inputs")
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure

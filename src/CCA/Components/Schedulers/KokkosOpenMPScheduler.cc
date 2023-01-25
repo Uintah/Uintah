@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,6 @@
 
 #include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
@@ -42,9 +41,9 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#if defined( KOKKOS_ENABLE_OPENMP )
+#ifdef UINTAH_ENABLE_KOKKOS
   #include <Kokkos_Core.hpp>
-#endif //KOKKOS_ENABLE_OPENMP
+#endif //UINTAH_ENABLE_KOKKOS
 
 #include <atomic>
 #include <cstring>
@@ -69,7 +68,6 @@ namespace {
   Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
-  Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
 
   volatile int  g_num_tasks_done{0};
 
@@ -156,7 +154,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   if (d_myworld->myRank() == 0) {
-    std::cout << "WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
+    std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
@@ -189,7 +187,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
 
-  RuntimeStats::initialize_timestep(m_task_graphs);
+  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
   TaskGraph* tg = m_task_graphs[tgnum];
@@ -263,7 +261,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   while ( g_num_tasks_done < m_num_tasks ) {
 
-#if defined( KOKKOS_ENABLE_OPENMP )
+#ifdef UINTAH_ENABLE_KOKKOS
 
     auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
@@ -280,11 +278,11 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
                                     , m_num_partitions
                                     , m_threads_per_partition );
 
-#else //KOKKOS_ENABLE_OPENMP
+#else // UINTAH_ENABLE_KOKKOS
 
     this->runTasks();
 
-#endif // HAVE_KOKKOS
+#endif // UINTAH_ENABLE_KOKKOS
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
@@ -359,8 +357,6 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                        )
 {
 
-  std::lock_guard<Uintah::MasterLock> task_consumed_guard(g_mark_task_consumed_mutex);
-
   // Update the count of tasks consumed by the scheduler.
   (*numTasksDone)++;
 
@@ -374,20 +370,6 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                     << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
-
-//______________________________________________________________________
-//
-void
-KokkosOpenMPScheduler::runReadyTask( DetailedTask* readyTask )
-{
-  if (readyTask->getTask()->getType() == Task::Reduction) {
-    MPIScheduler::initiateReduction(readyTask);
-  }
-  else {
-    MPIScheduler::runTask(readyTask, m_curr_iteration.load(std::memory_order_relaxed));
-  }
-}
-
 
 //______________________________________________________________________
 //
@@ -543,9 +525,7 @@ KokkosOpenMPScheduler::myRankThread()
 {
   std::ostringstream out;
 
-#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
-  out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::impl_hardware_thread_id();
-#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+#ifdef UINTAH_ENABLE_KOKKOS
   out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::hardware_thread_id();
 #else
   out << Uintah::Parallel::getMPIRank();

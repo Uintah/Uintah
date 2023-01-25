@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -257,7 +257,7 @@ CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[$3]],[[$8]])],[
+AC_TRY_LINK([$3],[$8],[
 eval $1_LIB_DIR='"$6"'
 
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
@@ -592,7 +592,7 @@ if test "$__extern_c" = "yes"; then
 }"
 fi
 
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[$__sci_pound_includes]],[[$8]])],[
+AC_TRY_LINK($__sci_pound_includes,[$8],[
 
 if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
@@ -797,10 +797,10 @@ done
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100), Volta (GV100) and Ampere (A100) architectures  now (APH 10/16/18; JKH+MGM 12/10/21)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \) -a \( "$cuda_gencode" != "80" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100) and Volta (GV100) architectures  now (APH 10/16/18)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \); then
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 30, 35, 50, 52, 60, 70, 80] )
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 30, 35, 50, 52, 60, 70] )
 fi  
   
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
@@ -809,13 +809,6 @@ NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 #  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
-    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
-  elif test "$i" = "-maxrregcount"; then
-    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
-  elif [[ "$i" == [0-9]* ]]; then
-    # This is an integer.  Assume it was a value of a prior parameter (like -maxrregcount 128)
-    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
-  elif test "$i" = "--expt-extended-lambda"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   else
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"

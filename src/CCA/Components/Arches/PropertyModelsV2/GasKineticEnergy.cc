@@ -13,48 +13,6 @@ GasKineticEnergy::~GasKineticEnergy(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GasKineticEnergy::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GasKineticEnergy::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &GasKineticEnergy::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GasKineticEnergy::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GasKineticEnergy::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &GasKineticEnergy::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GasKineticEnergy::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GasKineticEnergy::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GasKineticEnergy::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 GasKineticEnergy::problemSetup( ProblemSpecP& db ){
 
@@ -83,11 +41,11 @@ GasKineticEnergy::register_initialize( std::vector<ArchesFieldContainer::Variabl
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void GasKineticEnergy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+GasKineticEnergy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto ke = tsk_info->get_field<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
-  parallel_initialize(execObj,0.0,ke);
+  CCVariable<double>& ke = tsk_info->get_field<CCVariable<double> >( m_kinetic_energy );
+  ke.initialize(0.0);
 
 }
 
@@ -108,22 +66,21 @@ GasKineticEnergy::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // cc gas velocities
-  auto u = tsk_info->get_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
-  auto v = tsk_info->get_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
-  auto w = tsk_info->get_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  constCCVariable<double>& u = tsk_info->get_field<constCCVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& v = tsk_info->get_field<constCCVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& w = tsk_info->get_field<constCCVariable<double> >(m_w_vel_name);
 
-  auto ke = tsk_info->get_field<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
-  parallel_initialize(execObj,0.0,ke);
+  CCVariable<double>& ke = tsk_info->get_field<CCVariable<double> >( m_kinetic_energy );
+  ke.initialize(0.0);
   double ke_p = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  //Uintah::parallel_reduce_min(execObj, range, KOKKOS_LAMBDA (const int i, const int j, const int k, double & m_dt ){
-  Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (const int i, const int j, const int k, double& ke_sum){
+  Uintah::parallel_for( range, [&](int i, int j, int k){
     ke(i,j,k) = 0.5*(u(i,j,k)*u(i,j,k) + v(i,j,k)*v(i,j,k) +w(i,j,k)*w(i,j,k));
-    ke_sum += ke(i,j,k);
-  }, ke_p);
+    ke_p += ke(i,j,k);
+  });
   // check if ke is diverging in this patch
   if ( ke_p > m_max_ke )
     throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);

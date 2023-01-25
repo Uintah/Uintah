@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,10 +31,8 @@ namespace Uintah
   std::ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b)
   {    
     int last = b.mySize-1;
-    IntVector l_start (b.listOfCells_[0][0] ,b.listOfCells_[0][1] ,b.listOfCells_[0][2] );
-    IntVector l_end (b.listOfCells_[last][0] ,b.listOfCells_[last][1] ,b.listOfCells_[last][2] );
-    out << "[ListOfCellsIterator with " << b.mySize<< " elements, first cell in list: "<< l_start 
-        << " last cell in list: " << l_end << "]";
+    out << "[ListOfCellsIterator with " << b.mySize<< " elements, first cell in list: "<< b.listOfCells_[0] 
+        << " last cell in list: " << b.listOfCells_[last] << "]";
 
     return out;
 

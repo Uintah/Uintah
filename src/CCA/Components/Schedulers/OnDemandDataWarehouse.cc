@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,8 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -60,12 +58,12 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
-  #include <Core/Geometry/GPUVector.h>
   #include <Core/Util/DebugStream.h>
 #endif
 
@@ -85,8 +83,8 @@ using namespace Uintah;
 namespace Uintah {
 
   extern Dout g_mpi_dbg;
-
-#if defined(HAVE_GPU)
+  extern Dout g_DA_dbg;
+#ifdef HAVE_CUDA
   extern DebugStream gpudbg;
 #endif
 
@@ -145,16 +143,17 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 {
   doReserve();
 
-  varLock = new Uintah::MasterLock{};
-
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
 
   if (Uintah::Parallel::usingDevice()) {
-    int numDevices = getNumDevices();
+    int numDevices;
+    cudaError_t retVal;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+
     for (int i = 0; i < numDevices; i++) {
-      // These gpuDWs should only live host side.  Ideally these don't
-      // need to be created at all as a separate datawarehouse, but
-      // could be contained within this datawarehouse
+      //those gpuDWs should only live host side.
+      //Ideally these don't need to be created at all as a separate datawarehouse,
+      //but could be contained within this datawarehouse
 
       GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
       std::ostringstream out;
@@ -167,6 +166,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
   }
 
 #endif
+
 }
 
 //______________________________________________________________________
@@ -174,7 +174,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
   clear();
-  delete varLock;
 }
 
 //______________________________________________________________________
@@ -211,7 +210,7 @@ OnDemandDataWarehouse::clear()
   m_running_tasks.clear();
 
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
 
   if (Uintah::Parallel::usingDevice()) {
     //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
@@ -328,12 +327,68 @@ OnDemandDataWarehouse::get(       ReductionVariableBase & var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
-    proc0cout << "get() failed in dw: " << this << ", level: " << level << "\n";
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(ReductionVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank() );
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
   m_level_DB.get( label, matlIndex, level, var );
+}
+
+//______________________________________________________________________
+//    get a std::map<int,T> of reduction variables from the DW
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+std::map<int,T> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel       * label
+                                                       , const MaterialSubset * matls
+                                                       )
+{
+  std::map<int,T>  reductionVars;
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+    sumVartype reductionVar;
+
+    get( reductionVar, label, nullptr, dwi);
+    reductionVars[dwi] = reductionVar;
+  }
+
+  return reductionVars;
+}
+//
+// Explicit template instantiations:
+template std::map<int,double> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+template std::map<int,Vector> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+
+//__________________________________
+//        double
+std::map<int,double>
+OnDemandDataWarehouse::get_sum_vartypeD( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+  return get_sum_vartypeT<double>( label,  matls );
+}
+
+//__________________________________
+//        Uintah::Vector
+std::map<int,Vector>
+OnDemandDataWarehouse::get_sum_vartypeV( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+  return get_sum_vartypeT<Vector>( label,  matls );
 }
 
 //______________________________________________________________________
@@ -347,7 +402,15 @@ OnDemandDataWarehouse::get(       SoleVariableBase& var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(SoleVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank());
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex, "on sole", __FILE__, __LINE__) );
   }
 
@@ -424,25 +487,24 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
   }
 }
 
-#if defined(HAVE_GPU)
+#ifdef HAVE_CUDA
 
-// void
-// OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
-//   CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
-// }
+void
+OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
+  //  CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
+}
 
 int
 OnDemandDataWarehouse::getNumDevices() {
   int numDevices = 0;
+  cudaError_t retVal;
 
   if (Uintah::Parallel::usingDevice()) {
     numDevices = 1;
   }
 
-#if defined(HAVE_CUDA)
-  // If multiple devices are desired.
-  CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
-#endif
+  //if multiple devices are desired, use this:
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
 
   return numDevices;
 }
@@ -464,10 +526,6 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
     }
     case TypeDescription::Stencil7 : {
       return sizeof(Stencil7);
-      break;
-    }
-    case TypeDescription::Vector : {
-      return sizeof(Vector);
       break;
     }
     default : {
@@ -497,10 +555,6 @@ OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
     }
     case TypeDescription::Stencil7 : {
       device_var = new GPUGridVariable<GPUStencil7>();
-      break;
-    }
-    case TypeDescription::Vector : {
-      device_var = new GPUGridVariable<gpuVector>();
       break;
     }
     default : {
@@ -533,10 +587,6 @@ OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
        device_var = new GPUPerPatch<GPUStencil7>();
        break;
      }
-     case TypeDescription::Vector : {
-       device_var = new GPUPerPatch<gpuVector>();
-       break;
-     }
      default : {
        SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
      }
@@ -565,10 +615,6 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
     }
     case TypeDescription::Stencil7 : {
      device_var = new GPUReductionVariable<GPUStencil7>();
-     break;
-    }
-    case TypeDescription::Vector : {
-     device_var = new GPUReductionVariable<gpuVector>();
      break;
     }
     default : {
@@ -1009,6 +1055,12 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
 
     ReductionVariableBase* var;
 
+    // debugging info
+    int levelIndx = level ? level->getIndex() : -1;
+    DOUTR(g_mpi_dbg, " DW:reduceMPI label: " << label->getName() << " matlIndex " << matlIndex << " level: "
+          << levelIndx << " exists: " <<  m_level_DB.exists( label, matlIndex, level ) );
+
+
     if( m_level_DB.exists( label, matlIndex, level ) ) {
       var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     }
@@ -1017,7 +1069,6 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
       var = dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
       var->setBenignValue();
 
-      DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " reduceMPI: initializing (" <<label->getName() <<")" );
       m_level_DB.put( label, matlIndex, level, var, d_scheduler->copyTimestep(), true );
     }
 
@@ -1109,7 +1160,57 @@ OnDemandDataWarehouse::put( const ReductionVariableBase & var
   // Put it in the database
   bool init = (d_scheduler->copyTimestep()) || !(m_level_DB.exists( label, matlIndex, level ));
   m_level_DB.putReduce( label, matlIndex, level, var.clone(), init );
+
 }
+
+//______________________________________________________________________
+//
+//    Put a std::map of Sum<T> reduction variables
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+void
+OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, T>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls
+                                      )
+{
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+
+    put( sumVartype(reductionVars[dwi]),  label, nullptr, dwi);
+  }
+}
+
+//
+// Explicit template instantiations:
+
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, double> rv ,const VarLabel * l,const MaterialSubset * matls);
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, Vector> rv ,const VarLabel * l,const MaterialSubset * matls);
+
+//__________________________________
+//  Vector
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, Vector>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<Vector>( reductionVars, label, matls );
+}
+//__________________________________
+//    double
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, double>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<double>( reductionVars, label, matls );
+}
+
 
 //______________________________________________________________________
 //
@@ -1196,6 +1297,27 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex   numParticles
 
   return psubset;
 }
+//______________________________________________________________________
+//  Delete the particle subset from the
+void
+OnDemandDataWarehouse::deleteParticleSubset( ParticleSubset*  pset )
+{
+  IntVector low        = pset->getLow();
+  IntVector high       = pset->getHigh();
+  const Patch*  patch  = pset->getPatch();
+  int matlIndex        = pset->getMatlIndex();
+
+  if (g_dw_get_put_dbg.active()) {
+    std::stringstream mesg;
+    mesg << " DW ID " << getID() << " deleteParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+         << " (" << low << ", " << high << ") size: " << pset->numParticles() << "\n";
+    DOUTR(true, mesg.str());
+  }
+
+  ASSERT(!patch->isVirtual());
+
+  deletePSetRecord( m_pset_db, patch, low, high, matlIndex, pset );
+}
 
 //______________________________________________________________________
 //
@@ -1273,6 +1395,41 @@ OnDemandDataWarehouse::insertPSetRecord(       psetDBType     & subsetDB
     psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
     subsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, psubset));
     psubset->addReference();
+  }
+}
+//______________________________________________________________________
+//    Delete a particleSubset record from the data base
+void
+OnDemandDataWarehouse::deletePSetRecord(       psetDBType     & subsetDB
+                                       , const Patch          * patch
+                                       ,       IntVector        low
+                                       ,       IntVector        high
+                                       ,       int              matlIndex
+                                       ,       ParticleSubset * psubset
+                                       )
+{
+
+#if SCI_ASSERTION_LEVEL >= 1
+  ParticleSubset* subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
+  if (subset == nullptr) {
+    if (d_myworld->myRank() == 0) {
+      DOUTR( true, "  No particle set found: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high );
+      printParticleSubsets();
+    }
+    SCI_THROW(InternalError("Particle set was not found for deletiion", __FILE__, __LINE__));
+  }
+#endif
+
+  {
+    psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
+    psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+
+    subsetDB.erase(key);
+
+    if(psubset && psubset->removeReference()) {
+      delete psubset;
+    }
   }
 }
 //______________________________________________________________________
@@ -1718,7 +1875,7 @@ OnDemandDataWarehouse::getParticleVariable( const VarLabel       * label
   }
   else {
     SCI_THROW(
-        InternalError("getParticleVariable( Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__) );
+        InternalError("getParticleVariable (Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__) );
   }
 }
 
@@ -1897,8 +2054,8 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
                                      , const VarLabel         * label
                                      ,       int                matlIndex
                                      , const Patch            * patch
-                                     ,       Ghost::GhostType   gtype         /* = Ghost::None */
-                                     ,       int                numGhostCells /* = 0 */
+                                     ,       Ghost::GhostType   gtype
+                                     ,       int                numGhostCells
                                      )
 {
 #if SCI_ASSERTION_LEVEL >= 1
@@ -1928,21 +2085,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
 
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
-
-  //DS 06162020 Allocate ghost layer needed by device variables (label->getMaxDeviceGhost()). Similar functionality to computeWithScratchGhost.
-  //This avoids reallocation during rewindow and ensures that getGridVariable returns original window pointer for modification.
-  //If rewindow reallocates the variable, it  does not update the original variable in m_var_DB, but creates a copy. As a results modifications
-  //occur in copy and not in the original. The simplest option is to allocate max ghosts in advance for every variable  so that rewindow never reallocates.
-  //getMaxDeviceGhost returns 0 for cpu only execution. So no difference to CPU only version.
-  //TODO: getMaxDeviceGhost does not count RMCRT tasks graphs and might conflict. Need to fix later.
-  //TODO: check the impact on super patch.
-  //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
-  if ( numGhostCells < label->getMaxDeviceGhost() ) {
-    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), label->getMaxDeviceGhostType(), label->getMaxDeviceGhost(), lowOffset, highOffset);
-  } else {
-    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
-  }
-
+  Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
   patch->computeExtents(basis, label->getBoundaryLayer(), lowOffset, highOffset, lowIndex, highIndex);
 
   if (!s_combine_memory) {
@@ -2777,6 +2920,15 @@ OnDemandDataWarehouse::print(       std::ostream & intout
     checkGetAccess( label, matlIndex, nullptr );
     ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     var->print( intout );
+
+    // Debugging output
+    if( g_DA_dbg.active() ){
+      std::ostringstream me;
+      var->print( me );
+
+      int levelIndx = level ? level->getIndex() : -1;
+      DOUTR(true, " OnDemandDataWarehouse::print " << label->getName() << " matl: "<< matlIndex << " "  << me.str() << " level: " << levelIndx );
+    }
   }
   catch( UnknownVariable& ) {
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on print ", __FILE__, __LINE__) );
@@ -3050,7 +3202,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
         continue;
       }
 
-      if ( ignoreMissingNeighbors == false && m_var_DB.exists( label, matlIndex, neighbor ) ) {
+      if (m_var_DB.exists( label, matlIndex, neighbor )) {
         std::vector<Variable*> varlist;
         // Go through the main var plus any foreign vars for this label/material/patch
         m_var_DB.getlist( label, matlIndex, neighbor, varlist );
@@ -3105,41 +3257,6 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
 
 //______________________________________________________________________
 //
-/*
-DS 06162020 numGhostCells related (ngc) scenarios in getGridVar:
-With GPU:
-G1. ngc = 0: No ghost cells needed
-G2. ngc > 0 and <= label->getMaxDeviceGhost(): ghost cells for tasks in normal/regular task graph. The value passed should be <= max device ghost cells
-G3. ngc > label->getMaxDeviceGhost() and <= SHRT_MAX: ghost cells for any RMCRT task variables from RMCRT task graph
-Without GPU:
-G4. ngc = 0: No ghost cells needed
-G5. ngc > 0 and label->getMaxDeviceGhost() always returns 0 without gpu: ghost cells for tasks in normal/regular task graph.
-
-Rewindow scenarios:
-R1. no_reallocation_needed==false: Reallocation needed - each thread (or rather each call) will form a new copy, no race conditions. Copy will not be reused
-R2. no_reallocation_needed==true : Reallocation NOT needed. Existing variable will be reused and could be shared among threads. Possible race condition.
-
-Status flag update rules:
-Status flag should be updated if and only if BOTH of the following conditions are satisfied:
-S1. only for R2 (because R2 is shared and can be resued, but R1 is not shared and can not be reused.)
-S2. final ngc>0 and the shared window size is EXACTLY same as patch + final ngc (i.e. low and high indices computed by computeVariableExtents)
-    e.g. if final ngc = 2 and window size is 4, then there is a possibility that some task might request ngc=4 later (especially RMCRT), that's why
-    window of size 4 was allocated at the beginning. So do not set status to Valid for final ngc < 4 or it might conflict with task with ngc=4.
-    In the worst case, if the window is allocated which is greater than ALL ngc requests, ghost cells will be always gathered, but it will ensure correctness.
-
-
-Handling combinations of G and R scenarios using status flag if needed (actual implementation):
-Compute final ngc as:
-  if(ngc > 0){
-    final ngc = max(ngc, label->getMaxDeviceGhost())
-  }
-G* R1: Reallocation needed. Shared patch can not be reused so always copy values and never update status. (ideally G1 R1 and G4 R1 not possible)
-G1 R2: set final ngc = 0 and return without setting flag to valid because ghost cells are not gathered.
-G2 R2: set final ngc = label->getMaxDeviceGhost(). If status==valid, return existing var (ghost cells are valid), else gather ghost cells and set status to valid if S1 and S2 are met.
-G3 R2: set final ngc = ngc, gather ghost cells again and update status
-G4 R2: same as G1 R2
-G5 R2: set final ngc = ngc, gather ghost cells and return. Do not worry about status
- */
 void
 OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const VarLabel         * label
@@ -3147,13 +3264,8 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const Patch            * patch
                                  ,       Ghost::GhostType   gtype
                                  ,       int                numGhostCells
-                                 ,       int                exactWindow/*=0*/   //reallocate even if existing window is larger than requested. Exactly match dimensions
                                  )
 {
-  if ( numGhostCells > 0 && numGhostCells < label->getMaxDeviceGhost() ) {
-      numGhostCells = label->getMaxDeviceGhost();
-  }
-
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
@@ -3184,7 +3296,8 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
   }
   else {
     IntVector lowIndex, highIndex;
-    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, std::max(label->getMaxDeviceGhost(), numGhostCells), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
+    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells, lowIndex, highIndex);
+
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18
@@ -3192,33 +3305,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     // reallocation needed: Ignore this if this is the initialization dw in its old state.
     // The reason for this is that during initialization it doesn't know what ghost cells will be required of it for the next timestep.
     // (This will be an issue whenever the task graph changes to require more ghost cells from the old datawarehouse).
-
-    bool no_reallocation_needed = false;
-
-    //DS 0106202: no_reallocation_needed = false, then rewindow will allocate a new pointer and copy everything. Remember, it does not modify
-    //the pointer in m_var_DB. m_var_DB still points to old smaller pointer and same is returned if other thread requests the same variable.
-    //Thus the new pointer thus becomes after resizing becomes exclusive to the calling thread and there are no race conditions - This
-    //happens in most of the CPU tasks variable which are allocated without scratch ghost cells. In case of GPU tasks, data is allocated with
-    //scratch ghost cells. Thus rewindow returns no_reallocation_needed = false, as the requested ghost cells fall within the already allocated
-    //region. Thus all threads get the same pointer and that leads to data races. Not sure whether those data races are causing errors.
-    //Possible fix: Use same max ghost cell count if  numGhostCells>0 and also use status flags to ensure only 1 thread gathers ghosts. Rest
-    //of the threads can use those values as and when ready.
-
-    //DS 06162020 Added logic to rewindowExact. Ensures the allocated space has exactly same size as the requested. This is needed for D2H copy.
-    //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
-    //TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
-    //variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
-    if(exactWindow==0)
-      no_reallocation_needed = var.rewindow( lowIndex, highIndex );
-    else{
-      no_reallocation_needed = var.rewindowExact( lowIndex, highIndex );
-      if(no_reallocation_needed==false){
-        printf("Error in rewindowing variable %s on patch %d\n", label->getName().c_str(), patch->getID() );
-        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "Error in rewindowing variable" , __FILE__, __LINE__) );
-      }
-    }
-
-    if ( no_reallocation_needed == false && g_warnings_dbg ) {
+    if ( !var.rewindow( lowIndex, highIndex ) && g_warnings_dbg ) {
       static bool warned = false;
              bool ignore = m_is_initialization_DW && m_finalized;
       if (!ignore && !warned) {
@@ -3238,55 +3325,26 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
       }
     }
 
-    if (numGhostCells == 0) { //Scenarios G1* and G4*
-      return; // no need to gather ghost cells. Do not update status. Return. Scenarios G1* and G4*
-    }
-    bool should_gather = false;
+    std::vector<ValidNeighbors> validNeighbors;
+    getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
+    for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 
-
-    if (Parallel::usingDevice() == false) { //G5*
-      should_gather = true; //G5 R2: set final ngc = ngc, gather ghost cells and return. Do not worry about status
-    }
-    else {
-      if(no_reallocation_needed == true && numGhostCells == label->getMaxDeviceGhost()){ //G2 R2
-        if (compareAndSwapAwaitingGhostDataOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID())) {
-          should_gather = true;
-        }
+      GridVariableBase* srcvar = var.cloneType();
+      GridVariableBase* tmp = iter->validNeighbor;
+      srcvar->copyPointer(*tmp);
+      if (iter->neighborPatch->isVirtual()) {
+        srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
       }
-      else //G3 R2
-        should_gather = true;
-    }
+      try {
+        var.copyPatch(srcvar, iter->low, iter->high);
 
-    if (should_gather) {
-      std::vector<ValidNeighbors> validNeighbors;
-      getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
-      for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
-
-        if (iter->validNeighbor) {
-          GridVariableBase* srcvar = var.cloneType();
-          GridVariableBase* tmp = iter->validNeighbor;
-          srcvar->copyPointer(*tmp);
-          if (iter->neighborPatch->isVirtual()) {
-            srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
-          }
-          try {
-            var.copyPatch(srcvar, iter->low, iter->high);
-
-          } catch (InternalError& e) {
-            std::cout << " Bad range: " << iter->low << " " << iter->high
-                      << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
-                      << std::endl;
-            throw e;
-          }
-          delete srcvar;
-        }
+      } catch (InternalError& e) {
+        std::cout << " Bad range: " << iter->low << " " << iter->high
+                  << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
+                  << std::endl;
+        throw e;
       }
-      if (Parallel::usingDevice() && no_reallocation_needed == true && numGhostCells == label->getMaxDeviceGhost()) {//this is need because rmcrt task graph might have different values of getMaxDeviceGhost. if condition avoids the conflict
-        setValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ); //ghosts are ready
-      }
-    }
-    else { //threads which does not get to copy the data should wait until copy is completed.
-      while (isValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID()) == false );
+      delete srcvar;
     }
   }
 }
@@ -3300,8 +3358,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    , const MaterialSubset * matls
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
-  this->transferFrom( from, label, patches, matls, execObj, false, nullptr );
+  this->transferFrom( from, label, patches, matls, nullptr, false, nullptr );
 }
 
 //______________________________________________________________________
@@ -3314,8 +3371,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    ,       bool             replace
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
-  this->transferFrom( from, label, patches, matls, execObj, replace, nullptr );
+  this->transferFrom( from, label, patches, matls, nullptr, replace, nullptr );
 }
 
 //______________________________________________________________________
@@ -3329,30 +3385,26 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
                                    , const PatchSubset    * newPatches
                                    )
 {
-  ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> execObj;
-  this->transferFrom( from, label, patches, matls, execObj, replace, newPatches );
+  this->transferFrom( from, label, patches, matls, nullptr, replace, newPatches );
 }
 
 //______________________________________________________________________
 //
-// Copy a var from the parameter DW to this one.  If newPatches
-// is not null, then it associates the copy of the variable with
-// newPatches, and otherwise it uses patches (the same it finds
-// the variable with.
-
-// transferFrom() will perform a deep copy on the data if it's in the
-// CPU or GPU.  GPU transferFrom is not yet supported for GPU PerPatch
-// variables.  See the GPU's transferFrom() method for many more more
-// details.
-template <typename ExecSpace, typename MemSpace>
+//! Copy a var from the parameter DW to this one.  If newPatches
+//! is not null, then it associates the copy of the variable with
+//! newPatches, and otherwise it uses patches (the same it finds
+//! the variable with.
+//transferFrom() will perform a deep copy on the data if it's in the CPU or GPU.
+//GPU transferFrom is not yet supported for GPU PerPatch variables.
+//See the GPU's transferFrom() method for many more more details.
 void
-OnDemandDataWarehouse::transferFrom(       DataWarehouse                        * from
-                                   , const VarLabel                             * label
-                                   , const PatchSubset                          * patches
-                                   , const MaterialSubset                       * matls
-                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
-                                   ,       bool                                   replace
-                                   , const PatchSubset                          * newPatches
+OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
+                                   , const VarLabel       * label
+                                   , const PatchSubset    * patches
+                                   , const MaterialSubset * matls
+                                   ,       void           * dtask
+                                   ,       bool             replace
+                                   , const PatchSubset    * newPatches
                                    )
 {
   OnDemandDataWarehouse* fromDW = dynamic_cast<OnDemandDataWarehouse*>( from );
@@ -3379,52 +3431,40 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             m_var_DB.put( label, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
-#if defined(HAVE_GPU)
+
+#ifdef HAVE_CUDA
+
           if (Uintah::Parallel::usingDevice()) {
-            // See if it's in the GPU.  Both the source and destination
-            // must be in the GPU data warehouse, both must be listed
-            // as "allocated", and both must have the same variable
-            // sizes.  If those conditions match, then it will do a
-            // device to device memcopy call.  hard coding it for the
-            // 0th GPU.
+            //See if it's in the GPU.  Both the source and destination must be in the GPU data warehouse,
+            //both must be listed as "allocated", and both must have the same variable sizes.
+            //If those conditions match, then it will do a device to device memcopy call.
+            //hard coding it for the 0th GPU
             const Level * level = patch->getLevel();
             const int levelID = level->getID();
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
-#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-            bool foundGPU = getGPUDW(0)->transferFrom(execObj.getInstance(),
-                                        *device_var_source, *device_var_dest,
-                                        from->getGPUDW(0),
-                                        label->getName().c_str(), patchID, matl, levelID);
-#else
-            cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
-            if(!stream) {
-              std::cout << "ERROR! transferFrom() does not have access to "
-                        << "the task and its associated CUDA stream. You need "
-                        << "to update the task's callback function to include "
-                        << "more parameters which supplies this information. "
-                        << "Then pass that detailed task pointer into the "
-                        << "transferFrom method. As an example, see the "
-                        << "parameters for Poisson1::timeAdvanceUnified."
-                        << std::endl;
-              throw InternalError("OnDemandDataWarehouse::transferFrom() "
-                                  "needs access to the task's pointer and "
-                                  "its associated CUDA stream.\n",
-                                  __FILE__, __LINE__);
+            if(!dtask) {
+              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."
+                        << " You need to update the task's callback function to include more parameters which supplies this information."
+                        << " Then you need to pass that detailed task pointer into the transferFrom method."
+                        << " As an example, please see the parameters for UnifiedSchedulerTest::timeAdvanceUnified."   << std::endl;
+              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__);
             }
-            // The GPU assigns streams per task. For transferFrom to
-            // work, it *must* know which stream to use.
-            bool foundGPU = getGPUDW(0)->transferFrom(stream,
-                                        *device_var_source, *device_var_dest,
-                                        from->getGPUDW(0),
-                                        label->getName().c_str(), patchID, matl, levelID);
-#endif
+            //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
+            bool foundGPU = getGPUDW(0)->transferFrom(((DetailedTask*)dtask)->getCudaStreamForThisTask(0),
+                                                      *device_var_source, *device_var_dest,
+                                                      from->getGPUDW(0),
+                                                      label->getName().c_str(), patchID, matl, levelID);
+
             if (!found && foundGPU) {
               found = true;
             }
           }
+
 #endif
+
+
           if (!found) {
             SCI_THROW(UnknownVariable(label->getName(), fromDW->getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
@@ -4150,278 +4190,4 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
     mesg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" " << " \tinto DW: " << d_generation;
     DOUTR(true, mesg.str());
   }
-}
-
-//______________________________________________________________________
-//
-// DS: 01042020: fix for OnDemandDW race condition
-//bool
-//OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
-//{
-  //assuming varLock will be already secured in allocate method
-
-//  bool allocated = false;
-//  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-//  atomicDataStatus* status = nullptr;
-//
-//  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-//    if (it != atomicStatusInHostMemory.end()) {
-//        printf("ERROR:OnDemandDataWarehouse::compareAndSwapAllocate( ) already allocated. Possible race condition or duplicate allocation.\n");
-//        varLock->unlock();
-//        exit(-1);
-//    } else {
-//      //insert here
-//      atomicDataStatus newVarStatus = ALLOCATED;
-//      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-//      varLock->unlock();
-//      return true;
-//    }
-//}
-
-//______________________________________________________________________
-//
-bool
-OnDemandDataWarehouse::isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
-{
-  varLock->lock();
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (atomicStatusInHostMemory.find(lpml) != atomicStatusInHostMemory.end()) {
-    bool retVal = ((__sync_fetch_and_or(&(atomicStatusInHostMemory.at(lpml)), 0) & VALID) == VALID);
-    varLock->unlock();
-    return retVal;
-  } else {
-    varLock->unlock();
-    return false;
-  }
-}
-
-//______________________________________________________________________
-//
-// TODO: This needs to be turned into a compare and swap operation
-bool
-OnDemandDataWarehouse::compareAndSwapSetValidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
-{
-  varLock->lock();
-  bool settingValid = false;
-  while (!settingValid) {
-    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-    if (it != atomicStatusInHostMemory.end()) {
-      atomicDataStatus *status = &(it->second);
-      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if ((oldVarStatus & VALID) == VALID) {
-        //Something else already took care of it.  So this task won't manage it.
-        varLock->unlock();
-        return false;
-      } else {
-        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
-        atomicDataStatus newVarStatus = oldVarStatus & ~COPYING_IN;
-        newVarStatus = newVarStatus | VALID;
-        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
-      }
-    } else {
-      atomicDataStatus newVarStatus = VALID | ALLOCATED;
-      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-      varLock->unlock();
-      return true;
-    }
-  }
-  varLock->unlock();
-  return true;
-}
-
-//______________________________________________________________________
-//
-bool
-OnDemandDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
-{
-  varLock->lock();
-  bool settingValid = false;
-  while (!settingValid) {
-    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-    if (it != atomicStatusInHostMemory.end()) {
-      atomicDataStatus *status = &(it->second);
-      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if ((oldVarStatus & VALID) != VALID) {
-        //Something else already took care of it.  So this task won't manage it.
-        varLock->unlock();
-        return false;
-      } else {
-        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
-        atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
-        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
-      }
-    } else {
-      atomicDataStatus newVarStatus = ALLOCATED;
-      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-      varLock->unlock();
-      return true;
-    }
-  }
-  varLock->unlock();
-  return true;
-}
-
-//______________________________________________________________________
-//
-// returns false if something else already claimed to copy or has copied data into the CPU.
-// returns true if we are the ones to manage this variable's ghost data.
-bool
-OnDemandDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patchID, int matlIndx, int levelIndx)
-{
-
-  atomicDataStatus* status = nullptr;
-
-  // get the status
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  varLock->lock();
-  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-  if (it != atomicStatusInHostMemory.end()) {
-    status = &(it->second);
-  } else {
-    //insert here??
-    atomicDataStatus newVarStatus = COPYING_IN;
-    atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-    varLock->unlock();
-    return true;
-  }
-  varLock->unlock();
-
-  bool copyingin = false;
-  while (!copyingin) {
-    // get the address
-    atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-    if (((oldVarStatus & COPYING_IN) == COPYING_IN) ||
-       ((oldVarStatus & VALID) == VALID) ||
-       ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
-        // Something else already took care of it.  So this task won't manage it.
-        return false;
-      } else {
-      //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
-      atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
-      newVarStatus = newVarStatus & ~UNKNOWN;
-      copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
-    }
-  }
-  return true;
-}
-
-//______________________________________________________________________
-//
-bool
-OnDemandDataWarehouse::compareAndSwapAwaitingGhostDataOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
-{
-  bool allocating = false;
-
-  varLock->lock();
-  while (!allocating) {
-    //get the address
-    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-    if (it != atomicStatusInHostMemory.end()) {
-      atomicDataStatus *status = &(it->second);
-      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if (((oldVarStatus & AWAITING_GHOST_COPY) == AWAITING_GHOST_COPY) || ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
-        //Something else already took care of it.  So this task won't manage it.
-        varLock->unlock();
-        return false;
-      } else {
-        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
-        atomicDataStatus newVarStatus = oldVarStatus | AWAITING_GHOST_COPY;
-        allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
-      }
-    } else {
-      varLock->unlock();
-      printf("ERROR:OnDemandDataWarehouse::compareAndSwapAwaitingGhostDataOnCPU( )  Variable %s not found.\n", label);
-      exit(-1);
-      return false;
-    }
-  }
-  varLock->unlock();
-  return true;
-}
-
-//______________________________________________________________________
-//
-bool
-OnDemandDataWarehouse::isValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
-{
-  varLock->lock();
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-  if (it != atomicStatusInHostMemory.end()) {
-    bool retVal = ((__sync_fetch_and_or(&(it->second), 0) & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS);
-    varLock->unlock();
-    return retVal;
-  } else {
-    varLock->unlock();
-    printf("var not found\n");
-    return false;
-  }
-}
-
-//______________________________________________________________________
-//
-// TODO: This needs to be turned into a compare and swap operation
-void
-OnDemandDataWarehouse::setValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
-{
-  varLock->lock();
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-  if (it != atomicStatusInHostMemory.end()) {
-    //UNKNOWN
-    //make sure the valid is still turned on
-    __sync_or_and_fetch(&(it->second ), VALID);
-
-    //turn off AWAITING_GHOST_COPY
-    __sync_and_and_fetch(&(it->second ), ~AWAITING_GHOST_COPY);
-
-    //turn on VALID_WITH_GHOSTS
-    __sync_or_and_fetch(&(it->second ), VALID_WITH_GHOSTS);
-
-    varLock->unlock();
-  } else {
-    varLock->unlock();
-    exit(-1);
-  }
-}
-
-//______________________________________________________________________
-//
-// returns false if something else already changed a valid variable to valid awaiting ghost data
-// returns true if we are the ones to manage this variable's ghost data.
-bool
-OnDemandDataWarehouse::compareAndSwapSetInvalidWithGhostsOnCPU( char const* label, int patchID, int matlIndx, int levelIndx)
-{
-  bool allocating = false;
-
-  varLock->lock();
-  while (!allocating) {
-    //get the address
-    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-    if (it != atomicStatusInHostMemory.end()) {
-      atomicDataStatus *status = &(it->second);
-      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if ((oldVarStatus & VALID_WITH_GHOSTS) == 0) {
-        //Something else already took care of it.  So this task won't manage it.
-        varLock->unlock();
-        return false;
-      } else {
-        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
-        atomicDataStatus newVarStatus = oldVarStatus & ~VALID_WITH_GHOSTS;
-        allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
-      }
-    } else {
-      varLock->unlock();
-      atomicDataStatus newVarStatus = ALLOCATED;
-      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-      varLock->unlock();
-      return true;
-    }
-  }
-  varLock->unlock();
-  return true;
 }

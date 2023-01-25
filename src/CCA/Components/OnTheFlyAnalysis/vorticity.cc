@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,15 +27,10 @@
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 
-#include <CCA/Ports/ApplicationInterface.h>
+
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
@@ -51,31 +46,37 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "VORTICITY_DBG_COUT:+" 
+//  setenv SCI_DEBUG "VORTICITY_DBG_COUT:+"
+
 static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
+
+Dout dout_OTF_VTY("vorticity",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+
 //______________________________________________________________________
 vorticity::vorticity(const ProcessorGroup* myworld,
                      const MaterialManagerP materialManager,
                      const ProblemSpecP& module_spec)
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matl_set = 0;
-  v_lb = scinew vorticityLabel();
   I_lb  = scinew ICELabel();
+
+  vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
 
   required = false;
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 vorticity::~vorticity()
 {
-  cout_doing << " Doing: destorying vorticity " << endl;
+  DOUTR(dout_OTF_VTY, "Doing destructor vorticity");
+
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-  VarLabel::destroy(v_lb->vorticityLabel);
-  delete v_lb;
+
+  VarLabel::destroy(vorticityLabel);
   delete I_lb;
 }
 
@@ -88,12 +89,17 @@ void vorticity::problemSetup(const ProblemSpecP& ,
                              std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tvorticity" << endl;
-  
-  v_lb->vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
-  
+
+  DOUTR(dout_OTF_VTY, "Doing vorticity::problemSetup");
+
   // determine which material index to compute
-  d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  
+  if(m_module_spec->findBlock("material") ){
+    d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
+  }
+  else {
+    throw ProblemSetupException("ERROR:AnalysisModule:vorticity: Missing <material> tag. \n", __FILE__, __LINE__);
+  }
+
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
   d_matl_set = scinew MaterialSet();
@@ -116,23 +122,22 @@ void vorticity::problemSetup(const ProblemSpecP& ,
 void vorticity::scheduleDoAnalysis(SchedulerP  & sched,
                                    const LevelP& level)
 {
-  cout_doing << "vorticity::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("vorticity::doAnalysis", 
+  printSchedule( level, dout_OTF_VTY,"vorticity::scheduleDoAnalysis" );
+
+  Task* t = scinew Task("vorticity::doAnalysis",
                    this,&vorticity::doAnalysis);
-  
+
   Ghost::GhostType gac = Ghost::AroundCells;
-  
-  t->requires(Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
-  t->computes(v_lb->vorticityLabel, d_matl_sub);
+
+  t->requires( Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
+  t->computes( vorticityLabel, d_matl_sub);
 
 #ifdef HAVE_VISIT
-  if( required )
-  {
-    Ghost::GhostType  gn = Ghost::None;
-    t->requires(Task::OldDW, v_lb->vorticityLabel, d_matl_sub, gn, 0);
+  if( required ) {
+    t->requires( Task::OldDW, vorticityLabel, d_matl_sub, m_gn, 0);
   }
-#endif    
-  
+#endif
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -143,26 +148,21 @@ void vorticity::doAnalysis(const ProcessorGroup * pg,
                            const MaterialSubset * matl_sub ,
                            DataWarehouse        * old_dw,
                            DataWarehouse        * new_dw)
-{       
-  const Level* level = getLevel(patches);
-  
+{
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
-    cout_doing << pg->myRank() << " " 
-               << "Doing doAnalysis (vorticity)\t\t\t\tL-"
-               << level->getIndex()
-               << " patch " << patch->getGridIndex()<< endl;
+
+    printTask(patches, patch, dout_OTF_VTY,"Doing vorticity::doAnalysis");
 
     Ghost::GhostType gac = Ghost::AroundCells;
-    
+
     CCVariable<Vector> vorticity;
     constCCVariable<Vector> vel_CC;
-    
+
     int indx = d_matl->getDWIndex();
-    new_dw->get(vel_CC,               I_lb->vel_CCLabel,    indx,patch,gac, 1);
-    new_dw->allocateAndPut(vorticity, v_lb->vorticityLabel, indx,patch);
-  
+    new_dw->get(vel_CC,               I_lb->vel_CCLabel, indx,patch,gac, 1);
+    new_dw->allocateAndPut( vorticity, vorticityLabel,   indx,patch);
+
     vorticity.initialize(Vector(0.0));
 
     //__________________________________
@@ -170,35 +170,35 @@ void vorticity::doAnalysis(const ProcessorGroup * pg,
     Vector dx = patch->dCell();
     double delX = dx.x();
     double delY = dx.y();
-    double delZ = dx.z();    
-    
+    double delZ = dx.z();
+
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      
+
       IntVector r   = c + IntVector(1,0,0);   // right
       IntVector l   = c - IntVector(1,0,0);   // left
 
       IntVector t   = c + IntVector(0,1,0);   // top
       IntVector b   = c - IntVector(0,1,0);   // bottom
-      
+
       IntVector frt = c + IntVector(0,0,1);   // front
       IntVector bck = c - IntVector(0,0,1);   // back
-                        
-       // second-order central difference     
+
+       // second-order central difference
       double du_dy = (vel_CC[ t ].x() - vel_CC[ b ].x())/(2.0 * delY);
       double du_dz = (vel_CC[frt].x() - vel_CC[bck].x())/(2.0 * delZ);
 
       double dv_dx = (vel_CC[ r ].y() - vel_CC[ l ].y())/(2.0 * delX);
-      double dv_dz = (vel_CC[frt].y() - vel_CC[bck].y())/(2.0 * delZ);    
+      double dv_dz = (vel_CC[frt].y() - vel_CC[bck].y())/(2.0 * delZ);
 
       double dw_dx = (vel_CC[ r ].z() - vel_CC[ l ].z())/(2.0 * delX);
       double dw_dy = (vel_CC[ t ].z() - vel_CC[ b ].z())/(2.0 * delY);
-      
+
       double omega_x = dw_dy - dv_dz;
       double omega_y = du_dz - dw_dx;
       double omega_z = dv_dx - du_dy;
 
       vorticity[c] = Vector(omega_x,omega_y,omega_z);
-    }         
+    }
   }  // patches
 }

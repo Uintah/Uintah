@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--______________________________________________________________________
+#
+#  Input file to reproduces the results in the reference.  
+# The domain length was computed using the script:
+# cavityFlowParameters.m
+#
+#  Note you have to let the problems run for a long time for them to reach steady state.
+# Reference:'
+#   Varakos, G., Mitsoulis, E., and Assimacopoulos, D.
+#   Natural Convection Flow In A Square Cavity Revisited: Laminar and Turbulent Models With Wall Functions
+#   International Journal for Numerical Methods in Fluids, Vol 18, 695-719, 1994
+______________________________________________________________________-->
+
+
+
+<Uintah_specification>
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Natural convection in a square cavity.</title>
+   </Meta>
+
+   <SimulationComponent type="ice" />
+   <Solver type="hypre"/>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            15          </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <max_Timesteps>      50          </max_Timesteps>
+       <max_delt_increase>    1        </max_delt_increase>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                            <value> 0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"
+                           label = "Temperature"  var = "Dirichlet">
+                            <value> 320</value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Dirichlet">
+                              <value> 300.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0,0,0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]       </lower>
+              <upper>         [8.411731e-02, 8.411731e-02, 8.762220e-04]  </upper>
+              <extraCells>   [1,1,1]       </extraCells>
+              <patches>      [3,3,1]       </patches>
+              <resolution>   [96,96,1]   </resolution>
+           </Box>
+       </Level>
+    </Grid>
+    
+    <!--  Ra                             upper
+     1.000000e+03      [8.411751e-03, 8.411751e-03, 8.762240e-05] 
+     1.000000e+04      [1.812255e-02, 1.812255e-02, 1.887766e-04] 
+     1.000000e+05      [3.904383e-02, 3.904383e-02, 4.067065e-04] 
+     1.000000e+06      [8.411731e-02, 8.411731e-02, 8.762220e-04]
+     1.000000e+08      [3.904374e-01, 3.904374e-01, 4.067056e-03]
+     1.000000e+10      [1.812247e+00, 1.812247e+00, 1.887757e-02]
+    -->
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>Ra_1e6_96.uda</filebase>
+       
+      <outputTimestepInterval> 10 </outputTimestepInterval>
+       
+  <!--<outputInterval>1</outputInterval> -->
+      
+      <save label="vel_CC"/>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="rho_CC"/>
+      <save label="temp_CC"/>
+      <save label="vorticity"/>
+      
+      <checkpoint timestepInterval="25" cycle="1"/>
+   </DataArchiver>
+
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.4</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0        </knob_for_speedSound>
+        </TimeStepControl>
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           1       </skip>
+            <jump>           0       </jump>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+        </ImplicitSolver>
+
+      </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->
+    <PhysicalConstants>
+       <gravity>            [0,-9.81,0]      </gravity>
+       <reference_pressure> 101464.51392  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--  Air at 35C (308K)                                                 -->
+    <!--  from "Fluid Mechanics Fundamentals and Applications"              -->
+    <!--  Cengel & Cimbala                                                  -->
+    <!--  Pr:    0.7268      Prandtl Number                                 -->
+    <!--  alpha: 2.277e-5    Thermal Diffusivity m^2/s                      -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name="air">
+           <isSurroundingMatl>  true        </isSurroundingMatl>
+           <EOS type = "ideal_gas">         </EOS>
+           <dynamic_viscosity>  1.895e-5    </dynamic_viscosity>
+           <thermal_conductivity>  0.02625  </thermal_conductivity> 
+           <specific_heat>      719.28      </specific_heat>
+           <gamma>              1.4         </gamma>
+           <geom_object>
+              <box label="wholeDomain">
+                  <min>       [-1.0, -1.0,-1.0]  </min>
+                  <max>       [ 2.0,  2.0, 2.0]  </max>
+              </box>
+              <res>           [2,2,2]       </res>
+              <velocity>      [0.,0.,0.]    </velocity>
+              <density>       1.145         </density>
+              <pressure>      101464.51392  </pressure>
+              <temperature>   308.0         </temperature>
+           </geom_object>
+         </material>
+      </ICE>
+    </MaterialProperties>
+<!--__________________________________-->
+  <DataAnalysis>
+    <Module name="vorticity">
+      <material>air</material>
+    </Module> 
+  </DataAnalysis>
+</Uintah_specification>

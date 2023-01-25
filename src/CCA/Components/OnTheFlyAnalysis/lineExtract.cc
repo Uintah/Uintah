@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,19 +28,11 @@
 #include <Core/Grid/Variables/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
-#include <Core/Grid/Grid.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <sys/stat.h>
@@ -54,34 +46,36 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "LINEEXTRACT_DBG_COUT:+"
-static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
-static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
+//  setenv SCI_DEBUG "LineExtract:+"
+Dout dout_OTF_LE( "LineExtract",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+Dout dbg_OTF_LE( "LineExtract_dbg", "OnTheFlyAnalysis", "Displays detailed debugging info.", false);
+
 //______________________________________________________________________
 lineExtract::lineExtract(const ProcessorGroup* myworld,
                          const MaterialManagerP materialManager,
                          const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matl_set = 0;
-  d_zero_matl = 0;
-  ps_lb = scinew lineExtractLabel();
+  m_lb = scinew lineExtractLabel();
+  m_lb->lastWriteTimeLabel  =  VarLabel::create("lastWriteTime_lineE",
+                                            max_vartype::getTypeDescription());
+
+  m_lb->fileVarsStructLabel = VarLabel::create("FileInfo_lineExtract",
+                                            PerPatch<FileInfoP>::getTypeDescription());
 }
 
 //__________________________________
 lineExtract::~lineExtract()
 {
-  cout_doing << " Doing: destorying lineExtract " << endl;
+  DOUTR( dout_OTF_LE, " Doing: Destructor lineExtract " );
+
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-   if(d_zero_matl && d_zero_matl->removeReference()) {
-    delete d_zero_matl;
-  }
 
-  VarLabel::destroy(ps_lb->lastWriteTimeLabel);
-  VarLabel::destroy(ps_lb->fileVarsStructLabel);
-  delete ps_lb;
+  VarLabel::destroy(m_lb->lastWriteTimeLabel);
+  VarLabel::destroy(m_lb->fileVarsStructLabel);
+  delete m_lb;
 
   // delete each line
   vector<line*>::iterator iter;
@@ -98,15 +92,9 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
                                std::vector<std::vector<const VarLabel* > > &PState,
                                std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
+  DOUTR( dout_OTF_LE, "Doing lineExtract::problemSetup" );
 
   int numMatls  = m_materialManager->getNumMatls();
-
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_lineE",
-                                            max_vartype::getTypeDescription());
-
-  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo_lineExtract",
-                                            PerPatch<FileInfoP>::getTypeDescription());
 
   //__________________________________
   //  Read in timing information
@@ -119,21 +107,12 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     throw ProblemSetupException("lineExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
-
   // find the material to extract data from.  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
   if(m_module_spec->findBlock("material") ){
     d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   }
-  else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    d_matl = m_materialManager->getMaterial(indx);
-  }
   else {
-    d_matl = m_materialManager->getMaterial(0);
+    throw ProblemSetupException("ERROR:AnalysisModule:lineExtract: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = d_matl->getDWIndex();
@@ -165,20 +144,9 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     m.push_back(matl);
   }
 
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
   //Construct the matl_set
-  d_matl_set->addAll(m);
+  d_matl_set->addAll_unique(m);
   d_matl_set->addReference();
-
-  // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
-  d_zero_matl->add(0);
-  d_zero_matl->addReference();
 
   //__________________________________
   //  Read in variables label names
@@ -186,10 +154,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     var_spec->getAttributes(attribute);
 
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find( name );
-    if( label == nullptr ){
-      throw ProblemSetupException("lineExtract: analyze label not found: " + name , __FILE__, __LINE__);
-    }
+    VarLabel* label =VarLabel::find( name, "ERROR  lineExtract::problemSetup:Analyze" );
 
     //__________________________________
     //  Bulletproofing
@@ -267,50 +232,19 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     bool Y = (start.y() == end.y());  // 2 out of 3 of these must be true
     bool Z = (start.z() == end.z());
 
-    bool validLine = false;
     int  loopDir = -9;               // direction to loop over
 
     if( !X && Y && Z){
-      validLine = true;
       loopDir = 0;
     }
     if( X && !Y && Z){
-      validLine = true;
       loopDir = 1;
     }
     if( X && Y && !Z){
-      validLine = true;
       loopDir = 2;
     }
-    if(validLine == false){
-      ostringstream warn;
-      warn << "\n ERROR:lineExtract: the line that you've specified " << start
-           << " " << end << " is not parallel to the coordinate system. \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
 
-    //line can't exceed computational domain
-    BBox compDomain;
-    grid->getSpatialRange(compDomain);
-
-    Point min = compDomain.min();
-    Point max = compDomain.max();
-
-    if(start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-       end.x() > max.x()   ||end.y() > max.y()    || end.z() > max.z() ){
-      ostringstream warn;
-      warn << "\n ERROR:lineExtract: the line that you've specified " << start
-           << " " << end << " begins or ends outside of the computational domain. \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
-    if(start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-      ostringstream warn;
-      warn << "\n ERROR:lineExtract: the line that you've specified " << start
-           << " " << end << " the starting point is > than the ending point \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
+    bulletProofing_LinesPlanes( objectType::line, grid, "lineExtract", start,end );
 
     // Start time < stop time
     if(d_startTime > d_stopTime){
@@ -332,13 +266,14 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
 void lineExtract::scheduleInitialize(SchedulerP   & sched,
                                      const LevelP & level)
 {
-  cout_doing << "lineExtract::scheduleInitialize " << endl;
+  printSchedule(level,dout_OTF_LE,"lineExtract::scheduleInitialize");
+
   Task* t = scinew Task("lineExtract::initialize",
                   this, &lineExtract::initialize);
 
-  t->computes(ps_lb->lastWriteTimeLabel);
-  t->computes(ps_lb->fileVarsStructLabel, d_zero_matl);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+  t->computes( m_lb->lastWriteTimeLabel );
+  t->computes( m_lb->fileVarsStructLabel, m_zeroMatl );
+  sched->addTask(t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
 void lineExtract::initialize(const ProcessorGroup *,
@@ -347,12 +282,13 @@ void lineExtract::initialize(const ProcessorGroup *,
                              DataWarehouse        *,
                              DataWarehouse        * new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tlineExtract" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    printTask(patches, patch, dout_OTF_LE,"Doing lineExtract::initialize");
+
     double tminus = d_startTime - 1.0/m_analysisFreq;
-    new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
+    new_dw->put( max_vartype(tminus), m_lb->lastWriteTimeLabel );
 
     //__________________________________
     //  initialize fileInfo struct
@@ -360,9 +296,9 @@ void lineExtract::initialize(const ProcessorGroup *,
     FileInfo* myFileInfo = scinew FileInfo();
     fileInfo.get() = myFileInfo;
 
-    new_dw->put(fileInfo,    ps_lb->fileVarsStructLabel, 0, patch);
+    new_dw->put(fileInfo,    m_lb->fileVarsStructLabel, 0, patch);
 
-    if(patch->getGridIndex() == 0){   // only need to do this once
+    if( patch->getGridIndex() == 0 ){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
 
       //  Bulletproofing
@@ -388,7 +324,8 @@ void lineExtract::scheduleRestartInitialize(SchedulerP   & sched,
 void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
                                      const LevelP & level)
 {
-  cout_doing << "lineExtract::scheduleDoAnalysis " << endl;
+  printSchedule( level, dout_OTF_LE,"lineExtract::scheduleDoAnalysis" );
+
   Task* t = scinew Task("lineExtract::doAnalysis",
                    this,&lineExtract::doAnalysis);
 
@@ -397,11 +334,9 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
   sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true);
 
 
-  sched_TimeVars( t, level, ps_lb->lastWriteTimeLabel, true );
+  sched_TimeVars( t, level, m_lb->lastWriteTimeLabel, true );
 
-  t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
-
-  Ghost::GhostType gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
 
   //__________________________________
   //
@@ -409,21 +344,21 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
     // bulletproofing
     if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
-      throw InternalError("lineExtract: scheduleDoAnalysis label not found: " + name , __FILE__, __LINE__);
+      throw InternalError("lineExtract: scheduleDoAnalysis label ("+name+") not found.", __FILE__, __LINE__);
     }
 
     MaterialSubset* matSubSet = scinew MaterialSubset();
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
 
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, gac, 1);
+    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
   }
 
-  t->computes(ps_lb->fileVarsStructLabel, d_zero_matl);
+  t->computes(m_lb->fileVarsStructLabel, m_zeroMatl);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -439,8 +374,8 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
   timeVars tv;
 
-  getTimeVars( old_dw, level, ps_lb->lastWriteTimeLabel, tv );
-  putTimeVars( new_dw, ps_lb->lastWriteTimeLabel, tv );
+  getTimeVars( old_dw, level, m_lb->lastWriteTimeLabel, tv );
+  putTimeVars( new_dw, m_lb->lastWriteTimeLabel, tv );
 
   if( tv.isItTime == false ){
     return;
@@ -453,9 +388,10 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
     // Note: after regridding this may not exist for this patch in the old_dw
     PerPatch<FileInfoP> fileInfo;
 
-    if( old_dw->exists( ps_lb->fileVarsStructLabel, 0, patch ) ){
-      old_dw->get(fileInfo, ps_lb->fileVarsStructLabel, 0, patch);
-    }else{
+    if( old_dw->exists( m_lb->fileVarsStructLabel, 0, patch ) ){
+      old_dw->get( fileInfo, m_lb->fileVarsStructLabel, 0, patch );
+    }
+    else{
       FileInfo* myFileInfo = scinew FileInfo();
       fileInfo.get() = myFileInfo;
     }
@@ -469,16 +405,14 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
     int proc =
       m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
 
-    cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
+    DOUTR( dbg_OTF_LE, "   working on patch " << patch->getID() << " which is on proc " << proc );
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
     if( proc == pg->myRank() ){
 
-     cout_doing << pg->myRank() << " "
-                << "Doing doAnalysis (lineExtract)\t\t\t\tL-"
-                << level->getIndex()
-                << " patch " << patch->getGridIndex()<< endl;
+      printTask(patches, patch, dout_OTF_LE,"Doing lineExtract::doAnalysis");
+
       //__________________________________
       // loop over each of the variables
       // load them into the data vectors
@@ -514,8 +448,7 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
         // bulletproofing
         if(d_varLabels[i] == nullptr){
           string name = d_varLabels[i]->getName();
-          throw InternalError("lineExtract: analyze label not found: "
-                          + name , __FILE__, __LINE__);
+          throw InternalError("lineExtract: analyze label(" + name + ") not found", __FILE__, __LINE__);
         }
 
         const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
@@ -604,26 +537,18 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
 
         // create the directory structure
-        string udaDir   = m_output->getOutputLocation();
-        string dirName  = d_lines[l]->name;
-        string linePath = udaDir + "/" + dirName;
+        const string udaDir    = m_output->getOutputLocation();
+        const string levelIndx = to_string( level->getIndex() );
+        const string path      =   d_lines[l]->name + "/L-" + levelIndx;
 
-        ostringstream li;
-        li<<"L-"<<level->getIndex();
-        string levelIndex = li.str();
-        string path       = linePath + "/" + levelIndex;
-
-        if( d_isDirCreated.count(path) == 0){
-          createDirectory(linePath, levelIndex);
-          d_isDirCreated.insert(path);
-        }
+        createDirectory( 0777, udaDir, path );
 
         // find the physical domain and index range
         // associated with this patch
         Point start_pt = d_lines[l]->startPt;
         Point end_pt   = d_lines[l]->endPt;
 
-        double stepSize(d_lines[l]->stepSize);
+        double stepSize( d_lines[l]->stepSize);
         Vector dx    = patch->dCell();
         double dxDir = dx[d_lines[l]->loopDir];
         double tmp   = stepSize/dxDir;
@@ -632,7 +557,7 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
         step = Max(step, 1);
 
         Box patchDomain = patch->getExtraBox();
-        if(level->getIndex() > 0){ // ignore extra cells on fine patches
+        if( level->getIndex() > 0 ){ // ignore extra cells on fine patches
           patchDomain = patch->getBox();
         }
         // intersection
@@ -655,12 +580,13 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
         for(CellIterator iter=iterLim; !iter.done();iter+=step) {
 
-          if (!patch->containsCell(*iter))
+          if (!patch->containsCell(*iter)){
             continue;  // just in case - the point-to-cell logic might throw us off on patch boundaries...
+          }
 
           IntVector c = *iter;
           ostringstream fname;
-          fname<<path<<"/i"<< c.x() << "_j" << c.y() << "_k"<< c.z();
+          fname<< udaDir <<"/"<< path << "/i" << c.x() << "_j" << c.y() << "_k" << c.z();
           string filename = fname.str();
 
           //__________________________________
@@ -668,11 +594,13 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
           //  if it's not in the fileInfo struct then create it
           FILE *fp;
 
+          cout << " filename: " << filename << endl;
+
           if( myFiles.count(filename) == 0 ){
             createFile(filename, fp);
             myFiles[filename] = fp;
-
-          } else {
+          }
+          else {
             fp = myFiles[filename];
           }
 
@@ -710,16 +638,17 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
     // reuse the Handle fileInfo and just replace the contents
     fileInfo.get().get_rep()->files = myFiles;
 
-    new_dw->put(fileInfo, ps_lb->fileVarsStructLabel, 0, patch);
+    new_dw->put(fileInfo, m_lb->fileVarsStructLabel, 0, patch);
   }  // patches
 }
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
-void lineExtract::createFile(string& filename,  FILE*& fp)
+void lineExtract::createFile( const string& filename,
+                              FILE*& fp)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
   ifstream doExists( filename.c_str() );
-  if(doExists){
+  if( doExists ){
     fp = fopen(filename.c_str(), "a");
     return;
   }
@@ -821,29 +750,4 @@ void lineExtract::fprintf_Arrays( FILE*& fp,
              w, VectorData[i][c].y(),
              w, VectorData[i][c].z() );
    }
-}
-
-//______________________________________________________________________
-// create the directory structure   lineName/LevelIndex
-//
-void
-lineExtract::createDirectory(string& lineName, string& levelIndex)
-{
-  DIR *check = opendir(lineName.c_str());
-  if ( check == nullptr ) {
-    cout << Parallel::getMPIRank() << "lineExtract:Making directory " << lineName << endl;
-    MKDIR( lineName.c_str(), 0777 );
-  } else {
-    closedir(check);
-  }
-
-  // level index
-  string path = lineName + "/" + levelIndex;
-  check = opendir(path.c_str());
-  if ( check == nullptr ) {
-    cout << "lineExtract:Making directory " << path << endl;
-    MKDIR( path.c_str(), 0777 );
-  } else {
-    closedir(check);
-  }
 }

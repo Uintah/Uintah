@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2018 The University of Utah
+ * Copyright (c) 2010-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -100,6 +100,7 @@
 //-- includes for coal models --//
 #include <CCA/Components/Wasatch/Coal/CoalEquation.h>
 #include <CCA/Components/Wasatch/Transport/SetupCoalModels.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h>
 #endif
 
 using std::endl;
@@ -407,9 +408,10 @@ namespace WasatchCore{
     // TSAAD: keep the line of code below for future use. at this time, there is no apparent use for
     // it. it doesn't do anything.
     //    m_scheduler->setPositionVar(pPosLabel);
-    double deltMin, deltMax;
+    double deltMin, deltMax, deltInit;
     uintahSpec->findBlock("Time")->require("delt_min", deltMin);
     uintahSpec->findBlock("Time")->require("delt_max", deltMax);
+    uintahSpec->findBlock("Time")->getWithDefault( "delt_init", deltInit, deltMax );
     const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
     
     // Multithreading in ExprLib and SpatialOps
@@ -443,6 +445,10 @@ namespace WasatchCore{
     // register expressions that calculate coordinates
     register_coordinate_expressions(graphCategories_, isPeriodic_);
     
+    // register an expression for the initial time step
+    graphCategories_[INITIALIZATION  ]->exprFactory
+                                      ->register_expression( scinew Expr::ConstantExpr<SpatialOps::SingleValueField>::Builder(TagNames::self().dt, deltInit) );
+
     //
     // extract the density tag for scalar transport equations and momentum equations
     // and perform error handling
@@ -633,11 +639,6 @@ namespace WasatchCore{
     // are typically associated with, e.g. initial conditions, source terms, or post-processing.
     //
     create_expressions_from_input( uintahSpec, graphCategories_ );
-    
-    //
-    // setup property evaluations
-    //
-    setup_property_evaluation( wasatchSpec_, graphCategories_, persistentFields_ );
 
     //
     // get the turbulence params, if any, and parse them.
@@ -645,6 +646,25 @@ namespace WasatchCore{
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
     TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
+
+
+    //
+    // Build species transport equations
+    //
+    Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
+    if( specEqnParams ){
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams,
+                                                           wasatchSpec_,
+                                                           momEqnParams,
+                                                           turbParams,
+                                                           densityTag,
+                                                           graphCategories_,
+                                                           persistentFields_,
+                                                           *dualTimeMatrixInfo_,
+                                                           dualTimeMatrixInfo_->doBlockImplicit );
+      adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
+    }
 
     //
     // Build transport equations.  This registers all expressions as
@@ -664,22 +684,9 @@ namespace WasatchCore{
     }
 
     //
-    // Build species transport equations
+    // setup property evaluations
     //
-    Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
-    Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
-    if( specEqnParams ){
-      EquationAdaptors specEqns = parse_species_equations( specEqnParams,
-                                                           wasatchSpec_,
-                                                           momEqnParams,
-                                                           turbParams,
-                                                           densityTag,
-                                                           graphCategories_,
-                                                           *dualTimeMatrixInfo_,
-                                                           dualTimeMatrixInfo_->doBlockImplicit );
-      adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
-    }
-
+    setup_property_evaluation( wasatchSpec_, graphCategories_, persistentFields_ );
     //
     // Build coupled transport equations scalability test for wasatch.
     //
@@ -734,6 +741,14 @@ namespace WasatchCore{
 
     {
       PreconditioningParser precondParser( wasatchSpec_, graphCategories_ );
+    }
+
+    if( specEqnParams && (flow_treatment() == LOWMACH) ){
+      // add an equation for the thermodynamic pressure if the flow treatment is low-Mach
+      // and we are transporting species
+      adaptors_.push_back( parse_thermodynamic_pressure_equation( wasatchSpec_,
+                                                                  graphCategories_,
+                                                                  persistentFields_ ));
     }
 
     //
@@ -799,6 +814,18 @@ namespace WasatchCore{
     }
 
     // -----------------------------------------------------------------------
+    // ideal gas density solve tester
+    //
+    #ifdef HAVE_POKITT
+    if( wasatchSpec_->findBlock("TestSpeciesEnthalpyDensitySolver") ){
+      Uintah::ProblemSpecP testParams = wasatchSpec_->findBlock("TestSpeciesEnthalpyDensitySolver");
+      test_low_mach_species_density_solver( testParams,
+                                            graphCategories_,
+                                            persistentFields_ );
+    }
+    #endif
+
+    // -----------------------------------------------------------------------
     // nested expression tester
     //
     if( wasatchSpec_->findBlock("TestNestedExpression") ){
@@ -806,8 +833,8 @@ namespace WasatchCore{
       test_nested_expression( testParams,
                               graphCategories_,
                               persistentFields_ );
-    }    
-    
+    }
+
     //
     // force additional expressions on the graph
     //
@@ -1088,14 +1115,7 @@ namespace WasatchCore{
   void Wasatch::scheduleRestartInitialize( const Uintah::LevelP& level,
                                            Uintah::SchedulerP& sched )
   {
-    if( needPressureSolve_ ) m_solver->scheduleRestartInitialize(level, sched, materials_);
-  }
-
-  //--------------------------------------------------------------------
-  
-  void Wasatch::restartInitialize()
-  {
-    isRestarting_ = true;
+     isRestarting_ = true;
 
     // Accessing the m_materialManager->allMaterials( "Wasatch" ) must
     // be done after problemSetup. The material manager will create
@@ -1107,6 +1127,8 @@ namespace WasatchCore{
         particlesHelper_->set_materials(get_wasatch_materials());
       }
     } 
+    
+    if( needPressureSolve_ ) m_solver->scheduleRestartInitialize(level, sched, materials_);
   }
 
   //--------------------------------------------------------------------

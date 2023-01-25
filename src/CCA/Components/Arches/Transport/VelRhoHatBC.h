@@ -18,7 +18,7 @@
 
 namespace Uintah{
 
-  class VelRhoHatBC : public AtomicTaskInterface {
+  class VelRhoHatBC : AtomicTaskInterface {
 
 public:
 
@@ -27,16 +27,6 @@ public:
 
     /** @brief Default destructor **/
     ~VelRhoHatBC();
-
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -49,14 +39,7 @@ public:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                                 const int time_substep, const bool pack_tasks );
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
-
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
-
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     /** @brief Builder class containing instructions on how to build the task **/
     class Builder : public AtomicTaskInterface::AtomicTaskBuilder {
@@ -70,15 +53,12 @@ public:
         VelRhoHatBC* build()
         { return scinew VelRhoHatBC( m_task_name, m_matl_index ); };
 
-      private:
+      protected:
 
         std::string m_task_name;
         int m_matl_index;
 
     };
-
-template <typename ExecSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
-void set_mom_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,grid_T& var, const Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter);
 
 private:
 

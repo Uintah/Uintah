@@ -3,7 +3,7 @@
 #______________________________________________________________________
 #  This script performs bulletproofing checks and calls
 #  the perl script (compare_dat_files.pl) which does the dat file comparisons.
-# 
+#
 #   exit return values:
 #     -1:   no dat files to compare
 #      0:   The dat files are withn allowable errors
@@ -21,7 +21,7 @@ rel_tol=$4  # Relative tolerance
 if [ ! -d "$test_uda" ]; then
   echo "$test_uda doesn't exist"
   exit 1
-fi  
+fi
 if [ ! -d "$gs_uda" ]; then
   echo "$gs_uda doesn't exist"
   exit 1
@@ -29,8 +29,12 @@ fi
 
 #__________________________________
 #  are dat file present?
-n_dats_uda=`find $test_uda -maxdepth 1 -type f -name '*.dat' | wc -l`
-n_dats_gs=`find $gs_uda -maxdepth 1 -type f -name '*.dat' | wc -l`
+dats_uda=$( grep ReductionVariable "$test_uda/index.xml" | cut -f 2 -d \" | tr "\n" " " )
+dats_gs=$(  grep ReductionVariable "$gs_uda/index.xml"   | cut -f 2 -d \" | tr "\n" " " )
+
+n_dats_uda=$( echo $dats_uda    | wc -w)
+n_dats_gs=$(  echo $dats_uda_gs | wc -w)
+
 sum=$((n_dats_uda + n_dats_gs))
 
 if [ $sum == 0 ]; then
@@ -41,37 +45,32 @@ fi
 #__________________________________
 # do both udas have dat files?
 
-diff $test_uda $gs_uda | grep -E 'Only.*dat' > $tmpFile
+diff "$test_uda" "$gs_uda" | grep -E 'Only.*dat' > $tmpFile
 
-missing_dats=`wc --lines < $tmpFile`
+missing_dats=$( wc --lines < $tmpFile )
 
-if [ ${missing_dats} != "0" ]; then
-  
-  dats=`cat $tmpFile | grep $test_uda | cut -f 2 -d :`
-  
-  if [ ! -z $dats ]; then
+if [ "${missing_dats}" != "0" ]; then
+
+  dats=$( cat $tmpFile | grep $test_uda | cut -f 2 -d : )
+
+  if [ ! -z "$dats" ]; then
     echo "   ERROR: Missing dat files ($dats) in the gold standard uda"
     exit 2
   fi
-  
-  dats=`cat $tmpFile | grep $gs_uda | cut -f 2 -d :`  
-  
-  if [ ! -z $dats  ]; then
+
+  dats=$( cat $tmpFile | grep $gs_uda | cut -f 2 -d : )
+
+  if [ ! -z "$dats"  ]; then
     echo "   ERROR: Missing dat files ($dats) in the gold standard uda"
-    exit 2 
+    exit 2
   fi
 fi
 /bin/rm $tmpFile
 
 #__________________________________
 # perform comparison
-WD=`pwd`
-cd $test_uda
-dats=`ls -1 *.dat`
-testdat=`ls -1 *.dat | head -n 1`
-cd $WD
 
-compare_dat_files.pl $abs_tol $rel_tol $test_uda/ $gs_uda/ $dats
+compare_dat_files.pl $abs_tol $rel_tol $test_uda/ "$gs_uda/" ${dats_uda}
 
 retval=$?
 

@@ -14,49 +14,6 @@ TaskInterface( task_name, matl_index ), _Nenv(N),_materialManager(materialManage
 DepositionVelocity::~DepositionVelocity(){
 }
 
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &DepositionVelocity::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &DepositionVelocity::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &DepositionVelocity::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &DepositionVelocity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionVelocity::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &DepositionVelocity::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &DepositionVelocity::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &DepositionVelocity::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &DepositionVelocity::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionVelocity::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace DepositionVelocity::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 DepositionVelocity::problemSetup( ProblemSpecP& db ){
 
@@ -194,8 +151,8 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
   }
 }
 
-template <typename ExecSpace, typename MemSpace>
-void DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& deposit_velocity = tsk_info->get_field<CCVariable<double> >(m_task_name);
   CCVariable<double>& impact_velocity  = tsk_info->get_field<CCVariable<double> >(_impact_velocity_name);
@@ -275,8 +232,8 @@ DepositionVelocity::register_timestep_eval(
 
 }
 
-template <typename ExecSpace, typename MemSpace>
-void DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const int FLOW = -1;
   Vector Dx = patch->dCell(); // cell spacing

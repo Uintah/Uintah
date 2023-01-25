@@ -15,16 +15,6 @@ public:
     HandOff<T>( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
     ~HandOff<T>(){}
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
@@ -35,17 +25,13 @@ public:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels();
 
@@ -95,60 +81,7 @@ private:
 
   };
 
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &HandOff<T>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &HandOff<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &HandOff<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &HandOff<T>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace HandOff<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
+  //Function definitions ---------------------------------------------------------------------------
   template <typename T>
   void HandOff<T>::problemSetup( ProblemSpecP& db ){
 
@@ -194,8 +127,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& var = tsk_info->get_field<T>( m_task_name );
     var.initialize(0.0);
@@ -285,8 +217,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace> void
-  HandOff<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void HandOff<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
@@ -311,9 +242,8 @@ private:
   }
 
   //------------------------------------------------------------------------------------------------
-  template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void HandOff<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  template <typename T> void
+  HandOff<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     // NOTE: If the BC is any kind of custom bc AND isn't covered in the
     //       handoff list then we will just apply the default BC even though
@@ -366,7 +296,7 @@ private:
         Uintah::ListOfCellsIterator& cell_iter
           = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
           IntVector ijk(i,j,k);
           IntVector orig_ijk(i,j,k);

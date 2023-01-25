@@ -1,5 +1,18 @@
 <Uintah_Include>
 
+   <ParticleBC     spec="OPTIONAL NO_DATA" children1="ONE_OF(CHILD Wall, Inlet)">
+     <!-- spec for particle wall boundary -->
+     <Wall                   spec="OPTIONAL NO_DATA" attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+       <Restitution          spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+     </Wall>
+
+     <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+     <Inlet                  spec="OPTIONAL NO_DATA">
+       <ParticlesPerSecond   spec="OPTIONAL DOUBLE"/>
+     </Inlet>
+   </ParticleBC>
+
+
   <CommonTags>
     <!-- 
         Re-opening the Uintah CommonTags block to add in some tags
@@ -88,6 +101,16 @@
 	<TargetVelocities spec="REQUIRED VECTOR"/>
 	<geom_object  spec="REQUIRED"/>	<!--This can be set from a common geometry or defined in here -->      
 	</FanModel>
+
+  <!--Fan model based on thrust force needed to keep drone in hover.-->
+    <ActuatorDisk   spec="MULTIPLE NO_DATA"
+              attribute1="name REQUIRED STRING"
+              attribute2="payload REQUIRED DOUBLE"
+              attribute3="rotors REQUIRED INTEGER" 
+              attribute4="radius REQUIRED DOUBLE">
+    <ThrustDirection spec="REQUIRED VECTOR"/>
+    <geom_object  spec="REQUIRED"/>    <!--This can be set from a common geometry or defined in here -->
+    </ActuatorDisk>
 
 
 	<!-- provides a scalar source model to achieve a target interior value -->
@@ -563,7 +586,7 @@
     <!-- Spec for boundary condition expression types -->
     <BCExpression  spec="MULTIPLE NO_DATA"
                    attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, GaussianFunction,
+                   children1="ONE_OF(CHILD LinearFunction, LinearFunctionTime, ParabolicFunction, PowerLawFunction, GaussianFunction,
                                            VarDenMMSVelocity, VarDenMMSMomentum, VarDenMMSSolnVar, 
                                            VarDenMMSDensity, VarDenMMSMixtureFraction,
                                            VDCorMMSVelocity, VDCorMMSMixtureFraction, VDCorMMSMomentum,
@@ -579,6 +602,13 @@
                       attribute2="intercept REQUIRED DOUBLE" >
         <NameTag      spec="REQUIRED" />
       </LinearFunction>
+      
+      <!--linear function of time: a t + b -->
+      <LinearFunctionTime spec="OPTIONAL NO_DATA"
+                          attribute1="slope REQUIRED DOUBLE"      
+                          attribute2="intercept REQUIRED DOUBLE" >
+        <NameTag          spec="REQUIRED" />
+      </LinearFunctionTime>
       
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
@@ -734,6 +764,7 @@
     <BasicExpression      spec="MULTIPLE" />
 
 	<FanModel      spec="MULTIPLE" />
+  <ActuatorDisk spec="MULTIPLE"/>
 	<TargetValueSource      spec="MULTIPLE" />
     <BCExpression         spec="MULTIPLE" />
  
@@ -848,10 +879,15 @@
       <!-- The enthalpy equation does special treatment for diffusive
            fluxes, and requires the thermal conductivity and viscosity.
         -->
-      <ThermalConductivity  spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+      
+      <!-- if this block is specified, get properties from
+       -->
+      <PropertiesFromPoKiTT spec="OPTIONAL NO_DATA" />
+      
+      <ThermalConductivity  spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
         <NameTag            spec="REQUIRED" />
       </ThermalConductivity>
-      <HeatCapacity         spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+      <HeatCapacity         spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
         <NameTag            spec="REQUIRED" />
       </HeatCapacity>
       <RadiativeSourceTerm  spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
@@ -907,7 +943,7 @@
       </SimpleEmission>
       
       <DiscreteOrdinates spec="OPTIONAL NO_DATA" attribute1="order REQUIRED INTEGER"><!-- '2, 4,6 , 8'"-->
-        <include href="solver_spec.xml" section="Parameters" />
+        <include href="solver_spec.xml" section="Solver/Parameters" />
       </DiscreteOrdinates>
       
     </Radiation>
@@ -1126,7 +1162,7 @@
              -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/> 
                
-          <include href="solver_spec.xml" section="Parameters" />
+          <include href="solver_spec.xml" section="Solver/Parameters" />
       </Pressure>
     </MomentumEquations>
 
@@ -1164,7 +1200,7 @@
       
       <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>                
       
-      <include href="solver_spec.xml" section="Parameters" />
+      <include href="solver_spec.xml" section="Solver/Parameters" />
       
     </PoissonEquation>
 
@@ -1203,6 +1239,22 @@
       </DensityWeightedMixtureFraction>
     </TwoStreamMixing>
     
+    <!--
+     Calculate density from fluid composition and temperature.
+     -->
+    <ModelBasedOnSpeciesAndEnthalpy spec="OPTIONAL NO_DATA">
+        <tolerance                  spec="REQUIRED DOUBLE" />
+        <maxIterations              spec="REQUIRED INTEGER"/>
+    </ModelBasedOnSpeciesAndEnthalpy>
+
+    <TestSpeciesEnthalpyDensitySolver spec="OPTIONAL NO_DATA">
+        <CanteraInputFile             spec="REQUIRED STRING" />
+        <CanteraGroup                 spec="REQUIRED STRING" />
+        <tolerance                    spec="REQUIRED DOUBLE" />
+        <maxIterations                spec="REQUIRED INTEGER"/>
+    </TestSpeciesEnthalpyDensitySolver>
+        
+        
     <!--
         Tabular property specification.  Use this to specify property
         evaluation from a TabProps file.
@@ -1497,13 +1549,13 @@
    <!-- Test epression tree execution within an expression -->
    <!-- ================== -->
 
-   <TestNestedExpression spec="OPTIONAL NO_DATA">
-       <NameTag spec="REQUIRED"/>
-       <numIterations      spec="REQUIRED INTEGER"/>
-       <dependentVariables spec="REQUIRED NO_DATA">
-         <NameTag spec="MULTIPLE" />
-       </dependentVariables>
-   </TestNestedExpression>
+    <TestNestedExpression spec="OPTIONAL NO_DATA">
+        <NameTag spec="REQUIRED"/>
+        <numIterations      spec="REQUIRED INTEGER"/>
+        <dependentVariables spec="REQUIRED NO_DATA">
+          <NameTag spec="MULTIPLE" />
+        </dependentVariables>
+    </TestNestedExpression>
 
   </Wasatch>
 

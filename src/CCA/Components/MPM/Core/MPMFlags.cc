@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,6 +63,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_artificialViscCoeff1          =  0.2;
   d_artificialViscCoeff2          =  2.0;
   d_useLoadCurves                 =  false;
+  d_keepPressBCNormalToSurface    =  false;
   d_useCBDI                       =  false;
   d_useCPTI                       =  false;
   d_useCohesiveZones              =  false;
@@ -88,6 +89,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doExplicitHeatConduction           =  true;
   d_deleteGeometryObjects              =  false;
   d_doPressureStabilization            =  false;
+  d_doCapDensity = false;
   d_computeNodalHeatFlux               =  false;
   d_computeScaleFactor                 =  false;
   d_doTransientImplicitHeatConduction  =  true;
@@ -99,20 +101,26 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_min_part_mass                      =  3.e-15;
   d_min_subcycles_for_F                =  1;
   d_min_mass_for_acceleration          =  0;            // Min mass to allow division by in computing acceleration
-  d_max_vel                            =  3.e105;
   d_with_ice                           =  false;
-  d_with_arches                        =  false;
   d_myworld                            =  myworld;
   
   d_reductionVars = scinew reductionVars();
-  d_reductionVars->mass             = false;
-  d_reductionVars->momentum         = false;
-  d_reductionVars->thermalEnergy    = false;
-  d_reductionVars->strainEnergy     = false;
-  d_reductionVars->accStrainEnergy  = false;
-  d_reductionVars->KE               = false;
-  d_reductionVars->volDeformed      = false;
-  d_reductionVars->centerOfMass     = false;
+  d_reductionVars->mass                = false;
+  d_reductionVars->momentum            = false;
+  d_reductionVars->thermalEnergy       = false;
+  d_reductionVars->strainEnergy        = false;
+  d_reductionVars->accStrainEnergy     = false;
+  d_reductionVars->KE                  = false;
+  d_reductionVars->volDeformed         = false;
+  d_reductionVars->centerOfMass        = false;
+  d_reductionVars->sumTransmittedForce = false;
+
+  //******* Hydro-mechanical coupling MPM
+  d_coupledflow = false;
+  d_coupledflow_contact = false; //Changed to true if contact is specified
+  d_waterdampingCoeff = 0.0;
+  d_soliddampingCoeff = 0.0;
+  d_PorePressureFilter = false;
 
   //******* Reactive Flow Component
   d_doScalarDiffusion   =  false;  // for diffusion component found  in ReactiveFlow
@@ -158,6 +166,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   //__________________________________
   //  Set the on/off flags to determine which
   // reduction variables are computed
+  d_DA = dataArchive;
   d_reductionVars->mass           = dataArchive->isLabelSaved("TotalMass");
   d_reductionVars->momentum       = dataArchive->isLabelSaved("TotalMomentum");
   d_reductionVars->thermalEnergy  = dataArchive->isLabelSaved("ThermalEnergy");
@@ -206,9 +215,16 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("use_load_curves",             d_useLoadCurves);
+  mpm_flag_ps->get("keepPressBCNormalToSurface",  d_keepPressBCNormalToSurface);
   mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
+
+  // Hydro mechanical coupling
+  mpm_flag_ps->get("coupled_flow_analysis", d_coupledflow);
+  mpm_flag_ps->get("solid_damping_coef", d_soliddampingCoeff);
+  mpm_flag_ps->get("water_damping_coef", d_waterdampingCoeff);
+  mpm_flag_ps->get("PorePressureFilter", d_PorePressureFilter);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
     if (d_myworld->myRank() == 0){
@@ -229,13 +245,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoExplicitHeatConduction",          d_doExplicitHeatConduction);
   mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
   mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
+  mpm_flag_ps->get("DoCapDensity", d_doCapDensity);
   mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
   mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
   mpm_flag_ps->get("do_grid_reset",                     d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",             d_min_part_mass);
   mpm_flag_ps->get("minimum_subcycles_for_F",           d_min_subcycles_for_F);
   mpm_flag_ps->get("minimum_mass_for_acc",              d_min_mass_for_acceleration);
-  mpm_flag_ps->get("maximum_particle_velocity",         d_max_vel);
   mpm_flag_ps->get("UsePrescribedDeformation",          d_prescribeDeformation);
 
   if(d_prescribeDeformation){
@@ -382,6 +398,7 @@ else{
     dbg << " RefineParticles             = " << d_refineParticles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
+    dbg << " Keep PressBC Normal         = " << d_keepPressBCNormalToSurface << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
@@ -412,6 +429,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
+  ps->appendElement("keepPressBCNormalToSurface", d_keepPressBCNormalToSurface);
   ps->appendElement("use_CBDI_boundary_condition",        d_useCBDI);
   ps->appendElement("exactDeformation",                   d_exactDeformation);
   ps->appendElement("DoImplicitHeatConduction",           d_doImplicitHeatConduction);
@@ -419,6 +437,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoExplicitHeatConduction",           d_doExplicitHeatConduction);
   ps->appendElement("DeleteGeometryObjects",              d_deleteGeometryObjects);
   ps->appendElement("DoPressureStabilization",            d_doPressureStabilization);
+  ps->appendElement("DoCapDensity", d_doCapDensity);
   ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);
   ps->appendElement("DoThermalExpansion",                 d_doThermalExpansion);
@@ -427,8 +446,13 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("minimum_particle_mass",              d_min_part_mass);
   ps->appendElement("minimum_subcycles_for_F",            d_min_subcycles_for_F);
   ps->appendElement("minimum_mass_for_acc",               d_min_mass_for_acceleration);
-  ps->appendElement("maximum_particle_velocity",          d_max_vel);
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
+
+  // Hydro mechanical coupling
+  ps->appendElement("coupled_flow_analysis", d_coupledflow);
+  ps->appendElement("water_damping_coef", d_waterdampingCoeff);
+  ps->appendElement("solid_damping_coef", d_soliddampingCoeff);
+  ps->appendElement("PorePressureFilter", d_PorePressureFilter);
 
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);

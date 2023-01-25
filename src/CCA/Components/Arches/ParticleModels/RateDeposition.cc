@@ -16,54 +16,6 @@ TaskInterface( task_name, matl_index ), _Nenv(N) {}
 RateDeposition::~RateDeposition(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RateDeposition::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &RateDeposition::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &RateDeposition::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &RateDeposition::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &RateDeposition::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &RateDeposition::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &RateDeposition::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RateDeposition::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 RateDeposition::problemSetup( ProblemSpecP& db ){
 
@@ -225,8 +177,8 @@ RateDeposition::register_initialize( std::vector<AFC_VI>& variable_registry , co
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
@@ -350,8 +302,8 @@ RateDeposition::register_timestep_init( std::vector<AFC_VI>& variable_registry ,
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int e=0; e< _Nenv;e++){
     const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
@@ -507,8 +459,8 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   //double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
   // const double B0=0; const doulbe B1=0; const double B3=0;

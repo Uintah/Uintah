@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -184,15 +184,14 @@ int main()
       exit(1);
     }
     
-// Commenting out, ints are always finite, by definition.
-//    if (!std::isfinite(nodeIndx[y].n1) ||
-//	!std::isfinite(nodeIndx[y].n2) || !std::isfinite(nodeIndx[y].n3)) {
-//      cout << "I've detected a number that isn't finite"<<endl;
-//      cout << nodeIndx[y].n1 << " " <<
-//	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl;
-//      cout << " Now exiting "<<endl;
-//      exit(1);
-//    }
+    if (!std::isfinite(nodeIndx[y].n1) || 
+	!std::isfinite(nodeIndx[y].n2) || !std::isfinite(nodeIndx[y].n3)) {
+      cout << "I've detected a number that isn't finite"<<endl;
+      cout << nodeIndx[y].n1 << " " <<
+	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl; 
+      cout << " Now exiting "<<endl;
+      exit(1);        
+    } 
   }
   
   //__________________________________

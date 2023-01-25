@@ -14,16 +14,6 @@ public:
     ShunnMMS<T>( std::string task_name, int matl_index, const std::string var_name );
     ~ShunnMMS<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (ShunnMMS) class.
@@ -58,17 +48,13 @@ protected:
 
     void register_compute_bcs( std::vector<AFC::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels(){};
 
@@ -102,47 +88,6 @@ private:
   template <typename T>
   ShunnMMS<T>::~ShunnMMS()
   {}
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &ShunnMMS<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       //, &ShunnMMS<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                       //, &ShunnMMS<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &ShunnMMS<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ShunnMMS<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace ShunnMMS<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -187,8 +132,7 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& f_mms = tsk_info->get_field<T>(m_var_name);
     constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);

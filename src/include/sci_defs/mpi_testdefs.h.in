@@ -42,9 +42,9 @@
 // In order to compile on Mira, we must match their spec, so we have to turn off the const.
 // The following define does that:
 
-#define MPICONST @MPICONST@
+@DEF_MPI_CONST_WORKS@
 
-#define MPI_MAX_THREADS 64       // <--- need to get this from introspection in the future
-#define UINTAH_ENABLE_MPI3 false // <--- need to get this from introspection in the future
+@DEF_MPI_MAX_THREADS@
+@DEF_MPI3_ENABLED@
 
 #endif // SCI_DEFS_MPI_H

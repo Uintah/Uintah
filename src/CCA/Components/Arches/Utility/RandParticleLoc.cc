@@ -1,43 +1,6 @@
 #include <CCA/Components/Arches/Utility/RandParticleLoc.h>
 
 namespace Uintah {
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &RandParticleLoc::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &RandParticleLoc::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &RandParticleLoc::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &RandParticleLoc::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RandParticleLoc::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskEvalFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace RandParticleLoc::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
 //--------------------------------------------------------------------------------------------------
 void
 RandParticleLoc::problemSetup( ProblemSpecP& db ){
@@ -60,8 +23,8 @@ RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::Variable
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> PVarTuple;
 

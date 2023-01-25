@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,7 +49,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
-#include <sci_defs/gpu_defs.h>
+#include <sci_defs/cuda_defs.h>
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"

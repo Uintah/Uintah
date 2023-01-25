@@ -16,16 +16,6 @@ public:
     FaceParticleVel<T>( std::string task_name, int matl_index, const std::string var_name );
     ~FaceParticleVel<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
 
@@ -59,17 +49,13 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 
@@ -124,54 +110,6 @@ private:
   FaceParticleVel<T>::~FaceParticleVel()
   {}
 
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FaceParticleVel<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                       //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &FaceParticleVel<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskEvalFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                       //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &FaceParticleVel<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void FaceParticleVel<T>::problemSetup( ProblemSpecP& db ){
 
@@ -217,8 +155,7 @@ private:
   }
 
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -230,23 +167,25 @@ private:
       std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
       std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-      auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
-      auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
-      auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
+      FXT& up_f = tsk_info->get_field<FXT>(up_face_i);
+      FYT& vp_f = tsk_info->get_field<FYT>(vp_face_i);
+      FZT& wp_f = tsk_info->get_field<FZT>(wp_face_i);
 
       std::string up_i = ArchesCore::append_env(up_root,ienv);
       std::string vp_i = ArchesCore::append_env(vp_root,ienv);
       std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-      auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
-      auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
-      auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
+      CT& up = tsk_info->get_field<CT>(up_i);
+      CT& vp = tsk_info->get_field<CT>(vp_i);
+      CT& wp = tsk_info->get_field<CT>(wp_i);
 
-      Uintah::parallel_initialize( execObj, 0.0, up_f, vp_f, wp_f );
+      up_f.initialize(0.0);
+      vp_f.initialize(0.0);
+      wp_f.initialize(0.0);
 
-      ArchesCore::doInterpolation( execObj, range, up_f, up, -1,  0,  0, m_int_scheme );
-      ArchesCore::doInterpolation( execObj, range, vp_f, vp,  0, -1,  0, m_int_scheme );
-      ArchesCore::doInterpolation( execObj, range, wp_f, wp,  0,  0, -1, m_int_scheme );
+      ArchesCore::doInterpolation( range, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range, wp_f, wp,  0,  0, -1, m_int_scheme );
 
     }
   }
@@ -257,8 +196,7 @@ private:
   }
 
   template <typename T>
-  template <typename ExecSpace, typename MemSpace> void
-  FaceParticleVel<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+  void FaceParticleVel<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
   //======TIME STEP EVALUATION:
   template <typename T>
@@ -285,8 +223,7 @@ private:
   }
 
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void FaceParticleVel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void FaceParticleVel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -296,17 +233,17 @@ private:
       std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
       std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-      auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
-      auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
-      auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
+      FXT& up_f = tsk_info->get_field<FXT>(up_face_i);
+      FYT& vp_f = tsk_info->get_field<FYT>(vp_face_i);
+      FZT& wp_f = tsk_info->get_field<FZT>(wp_face_i);
 
       std::string up_i = ArchesCore::append_env(up_root,ienv);
       std::string vp_i = ArchesCore::append_env(vp_root,ienv);
       std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-      auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
-      auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
-      auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
+      CT& up = tsk_info->get_field<CT>(up_i);
+      CT& vp = tsk_info->get_field<CT>(vp_i);
+      CT& wp = tsk_info->get_field<CT>(wp_i);
 
       GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1);
       GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1);
@@ -316,11 +253,13 @@ private:
       Uintah::BlockRange range_y( low_fy_patch_range, high_fy_patch_range );
       Uintah::BlockRange range_z( low_fz_patch_range, high_fz_patch_range );
 
-      Uintah::parallel_initialize( execObj, 0.0, up_f, vp_f, wp_f );
+      up_f.initialize(0.0);
+      vp_f.initialize(0.0);
+      wp_f.initialize(0.0);
 
-      ArchesCore::doInterpolation( execObj, range_x, up_f, up, -1,  0,  0, m_int_scheme );
-      ArchesCore::doInterpolation( execObj, range_y, vp_f, vp,  0, -1,  0, m_int_scheme );
-      ArchesCore::doInterpolation( execObj, range_z, wp_f, wp,  0,  0, -1, m_int_scheme );
+      ArchesCore::doInterpolation( range_x, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range_y, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range_z, wp_f, wp,  0,  0, -1, m_int_scheme );
 
     }
   }

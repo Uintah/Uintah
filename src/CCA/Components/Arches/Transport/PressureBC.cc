@@ -15,42 +15,6 @@ PressureBC::~PressureBC()
 {}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PressureBC::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PressureBC::loadTaskInitializeFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PressureBC::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &PressureBC::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &PressureBC::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &PressureBC::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &PressureBC::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureBC::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PressureBC::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace PressureBC::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void PressureBC::problemSetup( ProblemSpecP& db ){
   m_press = "pressure";
 }
@@ -68,10 +32,9 @@ void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto p = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_press );
+  CCVariable<double>& p = tsk_info->get_field<CCVariable<double> >( m_press );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -85,7 +48,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 
     if ( my_type == WALL_BC || my_type == INLET_BC  ){
 
-      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         // enforce dp/dn = 0
         p(i,j,k) = p(i-iDir[0],j-iDir[1],k-iDir[2]);
 
@@ -94,7 +57,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
     } else if ( my_type == OUTLET_BC || my_type == PRESSURE_BC ) {
 
       //enforce p = 0
-      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+      parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         p(i,j,k) = -p(i-iDir[0],j-iDir[1],k-iDir[2]);
       });
     }

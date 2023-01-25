@@ -150,7 +150,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       const VarLabel* rhs_lab = VarLabel::find( rhs_tag[i] ); 
       old_dw->get( phi_old           , phi_lab , indx , patch , ghost_type, n_extra  );
       
-      new_dw->getModifiable( phi , phi_lab , indx , patch, ghost_type, n_extra  );
+      new_dw->getModifiable ( phi , phi_lab , indx , patch, ghost_type, n_extra  );
 
       new_dw->get( rhs               , rhs_lab , indx , patch , ghost_type, n_extra  );
 

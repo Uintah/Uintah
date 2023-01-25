@@ -33,12 +33,12 @@ namespace Uintah {
   enum LIMITER { NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER, FOURTH };
 
 #define SUPERBEEMACRO(r) \
-  my_psi = ( r < huge ) ? max( min( 2.*r, 1.), min(r, 2. ) ) : 2.; \
-  my_psi = max( 0., my_psi );
+  my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.; \
+  my_psi = std::max( 0., my_psi );
 
 #define ROEMACRO(r) \
-  my_psi = ( r < huge ) ? min(1., r) : 1.; \
-  my_psi = max(0., my_psi);
+  my_psi = ( r < huge ) ? std::min(1., r) : 1.; \
+  my_psi = std::max(0., my_psi);
 
 #define VANLEERMACRO(r) \
   my_psi = ( r < huge ) ? ( r + fabs(r) ) / ( 1. + fabs(r) ) : 2.; \
@@ -70,7 +70,7 @@ namespace Uintah {
                  , const Vector & Dx
                  )
       :
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#ifdef UINTAH_ENABLE_KOKKOS
         rhs( rhs.getKokkosView() )
       , flux_x( flux_x.getKokkosView() )
       , flux_y( flux_y.getKokkosView() )
@@ -81,7 +81,7 @@ namespace Uintah {
       , flux_y( flux_y )
       , flux_z( flux_z )
 #endif
-      , Dx( Dx )
+      , Dx(Dx)
     {}
 
     void operator()(int i, int j, int k) const
@@ -97,11 +97,11 @@ namespace Uintah {
 
   private:
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-    KokkosView3<      double, Kokkos::HostSpace> rhs;
-    KokkosView3<const double, Kokkos::HostSpace> flux_x;
-    KokkosView3<const double, Kokkos::HostSpace> flux_y;
-    KokkosView3<const double, Kokkos::HostSpace> flux_z;
+#ifdef UINTAH_ENABLE_KOKKOS
+    KokkosView3<      double> rhs;
+    KokkosView3<const double> flux_x;
+    KokkosView3<const double> flux_y;
+    KokkosView3<const double> flux_z;
 #else
     T    & rhs;
     CFXT & flux_x;
@@ -113,28 +113,27 @@ namespace Uintah {
   }; // struct IntegrateFlux
 
   /** @struct ComputeConvectiveFluxHelper **/
-  enum convType { FourthConvection
-                , UpwindConvection
-                , CentralConvection
-                , VanLeerConvection
-                , RoeConvection
-                , SuperBeeConvection
-                };
+  struct FourthConvection{};
+  struct UpwindConvection{};
+  struct CentralConvection{};
+  struct VanLeerConvection{};
+  struct RoeConvection{};
+  struct SuperBeeConvection{};
 
-  template <typename PSIX_T, typename PSIY_T, typename PSIZ_T, typename grid_T>
+  template <typename PSIX_T, typename PSIY_T, typename PSIZ_T>
   struct ComputeConvectiveFlux4 {
 
-    ComputeConvectiveFlux4( const grid_T & i_phi
-                          , const grid_T & i_u
-                          , const grid_T & i_v
-                          , const grid_T & i_w
-                          ,       PSIX_T & i_psi_x
-                          ,       PSIY_T & i_psi_y
-                          ,       PSIZ_T & i_psi_z
-                          ,       grid_T & i_flux_x
-                          ,       grid_T & i_flux_y
-                          ,       grid_T & i_flux_z
-                          , const grid_T & i_eps
+    ComputeConvectiveFlux4( const Array3<double> & i_phi
+                          , const Array3<double> & i_u
+                          , const Array3<double> & i_v
+                          , const Array3<double> & i_w
+                          ,       PSIX_T         & i_psi_x
+                          ,       PSIY_T         & i_psi_y
+                          ,       PSIZ_T         & i_psi_z
+                          ,       Array3<double> & i_flux_x
+                          ,       Array3<double> & i_flux_y
+                          ,       Array3<double> & i_flux_z
+                          , const Array3<double> & i_eps
                           )
       : phi( i_phi )
       , u( i_u )
@@ -160,9 +159,9 @@ namespace Uintah {
       {
         STENCIL5_1D(0);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc  =  eps(IJK_) * eps(IJK_M_);
 
-        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
       }
 
       //Y-dir
@@ -186,17 +185,17 @@ namespace Uintah {
 
   private:
 
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & v;
-    const grid_T & w;
-          PSIX_T & psi_x;
-          PSIY_T & psi_y;
-          PSIZ_T & psi_z;
-          grid_T & flux_x;
-          grid_T & flux_y;
-          grid_T & flux_z;
-    const grid_T & eps;
+    const Array3<double> & phi;
+    const Array3<double> & u;
+    const Array3<double> & v;
+    const Array3<double> & w;
+          PSIX_T         & psi_x;
+          PSIY_T         & psi_y;
+          PSIZ_T         & psi_z;
+          Array3<double> & flux_x;
+          Array3<double> & flux_y;
+          Array3<double> & flux_z;
+    const Array3<double> & eps;
 
   }; // struct ComputeConvectiveFlux4
 
@@ -204,231 +203,157 @@ namespace Uintah {
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
              The template arguments arrise from the potential use of temporary (non-const)
-             variables. Typically, one would use T=grid_T and CT=const grid_T
+             variables. Typically, one would use T=Array3<double> and CT=const Array3<double>
              when not using temporary variables. However, since temporary variables can ONLY
-             be non-const, one should use CT=grid_T in that case.
+             be non-const, one should use CT=Array3<double> in that case.
   **/
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT, unsigned int Cscheme>
   struct ComputeConvectiveFlux1D {
 
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
+    ComputeConvectiveFlux1D( const Array3<double> & i_phi
+                           , const Array3<double> & i_u
+                           ,       Array3<double> & i_flux
+                           , const Array3<double> & i_eps
+                           ,       int              i_dir
+                           )
+      : phi( i_phi )
+      , u( i_u )
+      , flux( i_flux )
+      , eps( i_eps )
+      , dir( i_dir )
+    {}
+
+    // Default operator - throw an error
+    void operator()( int i, int j, int k ) const
     {
       throw InvalidValue("Error: Convection scheme not valid.",__FILE__, __LINE__);
     }
+
+    void operator()( const UpwindConvection& scheme, int i, int j, int k ) const
+    {
+      STENCIL3_1D(dir);
+
+      const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+      const double afc = eps(IJK_)*eps(IJK_M_);
+
+      flux(IJK_) = afc * u(IJK_) * Sup;
+    }
+
+    void operator()( const CentralConvection& scheme, int i, int j, int k ) const
+    {
+      STENCIL3_1D(dir);
+
+      const double afc = eps(IJK_)*eps(IJK_M_);
+
+      flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+    }
+
+    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const
+    {
+      const double tiny = 1.0e-16;
+      const double huge = 1.0e10;
+
+      double my_psi;
+
+      STENCIL5_1D(dir);
+
+      double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
+                               fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
+
+      SUPERBEEMACRO(r);
+
+      const double afc  = eps(IJK_)* eps(IJK_M_) ;
+      const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+
+      my_psi *= afc * afcm;
+
+      const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+      const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+
+      flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+    }
+
+    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const
+    {
+      const double tiny = 1.0e-16;
+      const double huge = 1.0e10;
+
+      double my_psi;
+
+      STENCIL5_1D(dir);
+
+      double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
+                               fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny )) ;
+
+      VANLEERMACRO(r);
+
+      const double afc  = eps(IJK_)* eps(IJK_M_) ;
+      const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+
+      my_psi *= afc * afcm;
+
+      const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+      const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+
+      flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+    }
+
+    void operator()( const RoeConvection& scheme, int i, int j, int k ) const
+    {
+      const double tiny = 1.0e-16;
+      const double huge = 1.0e10;
+
+      double my_psi;
+
+      STENCIL5_1D(dir);
+
+      double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
+                               fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ));
+
+      ROEMACRO(r);
+
+      const double afc  = eps(IJK_)* eps(IJK_M_) ;
+      const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+
+      my_psi *= afc * afcm;
+
+      const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
+      const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
+
+      flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+    }
+
+    void operator()(const FourthConvection& scheme, int i, int j, int k ) const
+    {
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
+      STENCIL5_1D(dir);
+
+      const double afc  = eps(IJK_)* eps(IJK_M_) ;
+
+      flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
+    }
+
+  private:
+
+    const Array3<double> & phi;
+    const Array3<double> & u;
+          Array3<double> & flux;
+    const Array3<double> & eps;
+          int              dir;
+
   }; // struct ComputeConvectiveFlux1D
 
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, UpwindConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        STENCIL3_1D(dir);
-
-        const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = eps(IJK_)*eps(IJK_M_);
-
-        flux(IJK_) = afc * u(IJK_) * Sup;
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, UpwindConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, CentralConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        STENCIL3_1D(dir);
-
-        const double afc = eps(IJK_)*eps(IJK_M_);
-
-        flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, CentralConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, SuperBeeConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      const double tiny = 1.0e-16;
-      const double huge = 1.0e10;
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        double my_psi;
-
-        STENCIL5_1D(dir);
-
-        double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-                                 fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ));
-
-        SUPERBEEMACRO(r);
-
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
-
-        my_psi *= afc * afcm;
-
-        const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-        my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
-
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi );
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, SuperBeeConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, VanLeerConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      const double tiny = 1.0e-16;
-      const double huge = 1.0e10;
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        double my_psi;
-
-        STENCIL5_1D(dir);
-
-        double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-                                 fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ));
-
-        VANLEERMACRO(r);
-
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
-
-        my_psi *= afc * afcm;
-
-        const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-        my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
-
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi);
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, VanLeerConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, RoeConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      const double tiny = 1.0e-16;
-      const double huge = 1.0e10;
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        double my_psi;
-
-        STENCIL5_1D(dir);
-
-        double r = u(IJK_) > 0 ? fabs(( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny )) :
-                                 fabs(( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ));
-
-        ROEMACRO(r);
-
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
-
-        my_psi *= afc * afcm;
-
-        const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, RoeConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, FourthConvection> {
-
-    void get_flux( ExecutionObject<ExecSpace, MemSpace>   execObj
-                 , BlockRange                           & range
-                 , grid_CT                              & phi
-                 , grid_CT                              & u
-                 , grid_T                               & flux
-                 , grid_CT                              & eps
-                 , int                                    dir
-                 )
-    {
-      const double c1{7./12.};
-      const double c2{-1./12.};
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        STENCIL5_1D(dir);
-
-        const double afc  = eps(IJK_)* eps(IJK_M_) ;
-
-        flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
-      });
-    }
-  }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, FourthConvection>
-
-  template <typename grid_T, typename grid_CT, unsigned int Cscheme>
   struct ComputeConvectiveFlux {
 
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
+    ComputeConvectiveFlux( const Array3<double> & i_phi
+                         , const Array3<double> & i_u
+                         , const Array3<double> & i_v
+                         , const Array3<double> & i_w
+                         ,       Array3<double> & i_flux_x
+                         ,       Array3<double> & i_flux_y
+                         ,       Array3<double> & i_flux_z
+                         , const Array3<double> & i_eps
                          )
       : phi( i_phi )
       , u( i_u )
@@ -445,43 +370,8 @@ namespace Uintah {
     {
       throw InvalidValue("Error: Convection scheme not valid.",__FILE__, __LINE__);
     }
- 
-  private:
 
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-
-  }; // struct ComputeConvectiveFlux
-
-  template <typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, UpwindConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    void operator()(  int i, int j, int k ) const
+    void operator()( const UpwindConvection& scheme, int i, int j, int k ) const
     {
       //X-dir
       {
@@ -514,44 +404,8 @@ namespace Uintah {
       }
     }
 
-  private:
-
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, UpwindConvection>
-
-  template <typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, CentralConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    void operator()( int i, int j, int k ) const
+    void operator()( const CentralConvection& scheme, int i, int j, int k ) const
     {
-
       //X-dir
       {
         STENCIL3_1D(0);
@@ -580,42 +434,7 @@ namespace Uintah {
       }
     }
 
-  private:
-
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, CentralConvection>
-
-  template <typename grid_T , typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, SuperBeeConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    void operator()( int i, int j, int k ) const
+    void operator()( const SuperBeeConvection& scheme, int i, int j, int k ) const
     {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
@@ -687,42 +506,7 @@ namespace Uintah {
       }
     }
 
-  private:
-
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, SuperBeeConvection>
-
-  template <typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, VanLeerConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    void operator()(  int i, int j, int k ) const
+    void operator()( const VanLeerConvection& scheme, int i, int j, int k ) const
     {
       const double tiny = 1.0e-16;
       const double huge = 1.0e10;
@@ -768,7 +552,7 @@ namespace Uintah {
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
       }
 
       //Z-dir
@@ -794,43 +578,11 @@ namespace Uintah {
       }
     }
 
-  private:
-
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, VanLeerConvection>
-
-  template <typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, RoeConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    void operator()( int i, int j, int k ) const
+    void operator()( const RoeConvection& scheme, int i, int j, int k ) const
     {
+      const double tiny = 1.0e-16;
+      const double huge = 1.0e10;
+
       //X-dir
       {
         double my_psi;
@@ -872,7 +624,7 @@ namespace Uintah {
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
       }
 
       //Z-dir
@@ -898,46 +650,12 @@ namespace Uintah {
       }
     }
 
-  private:
-
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-    const double    tiny{1.0e-16};
-    const double    huge{1.0e10};
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, RoeConvection>
-
-  template <typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux<grid_T, grid_CT, FourthConvection> {
-
-    ComputeConvectiveFlux( const grid_CT & i_phi
-                         , const grid_CT & i_u
-                         , const grid_CT & i_v
-                         , const grid_CT & i_w
-                         ,       grid_T  & i_flux_x
-                         ,       grid_T  & i_flux_y
-                         ,       grid_T  & i_flux_z
-                         , const grid_CT & i_eps
-                         )
-      : phi( i_phi )
-      , u( i_u )
-      , v( i_v )
-      , w( i_w )
-      , flux_x( i_flux_x )
-      , flux_y( i_flux_y )
-      , flux_z( i_flux_z )
-      , eps( i_eps )
-    {}
-
-    // Default operator - throw an error
-    void operator()( int i, int j, int k ) const
+    void
+    operator()(const FourthConvection& scheme, int i, int j, int k ) const
     {
+      double c1 = 7./12.;
+      double c2 = -1./12.;
+
       //X-dir
       {
         STENCIL5_1D(0);
@@ -951,7 +669,7 @@ namespace Uintah {
       {
         STENCIL5_1D(1);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc  =  eps(IJK_) * eps(IJK_M_);
 
         flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
       }
@@ -968,455 +686,16 @@ namespace Uintah {
 
   private:
 
-    const grid_CT & phi;
-    const grid_CT & u;
-    const grid_CT & v;
-    const grid_CT & w;
-          grid_T  & flux_x;
-          grid_T  & flux_y;
-          grid_T  & flux_z;
-    const grid_CT & eps;
-    const double    c1 {7./12.};
-    const double    c2 {-1./12.};
-
-  }; // struct ComputeConvectiveFlux<grid_T, grid_CT, FourthConvection>
-
-  //====================================================================================
-  // WARNING: CODE DUPLICATION
-  //====================================================================================
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT, unsigned int Cscheme>
-  struct ComputeConvectiveFlux3D {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-      {
-      throw InvalidValue(
-        "Error: Convection scheme not valid.",__FILE__, __LINE__);
-      }
-  }; // struct ComputeConvectiveFlux3D
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, UpwindConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          STENCIL3_1D(0);
-
-          const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_x(IJK_) = afc * u(IJK_) * Sup;
-        }
-
-        //Y-dir
-        {
-          STENCIL3_1D(1);
-
-          const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_y(IJK_) = afc * v(IJK_) * Sup;
-        }
-
-        //Z-dir
-        {
-          STENCIL3_1D(2);
-
-          const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_z(IJK_) = afc * w(IJK_) * Sup;
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, UpwindConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, CentralConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          STENCIL3_1D(0);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
-        }
-
-        //Y-dir
-        {
-          STENCIL3_1D(1);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
-        }
-
-        //Z-dir
-        {
-          STENCIL3_1D(2);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-
-          flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, CentralConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, SuperBeeConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      const double tiny = 1.0e-16;
-      const double huge = 1.0e10;
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(0);
-
-          const double r = u(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          SUPERBEEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-
-        //Y-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(1);
-
-          const double r = v(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          SUPERBEEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-
-        //Z-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(2);
-          const double r = w(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          SUPERBEEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, SuperBeeConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, VanLeerConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      const double tiny = 1.0e-16;
-      const double huge = 1.0e10;
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(0);
-
-          const double r = u(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          VANLEERMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-
-        //Y-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(1);
-
-          const double r = v(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          VANLEERMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-
-        //Z-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(2);
-
-          const double r = w(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          VANLEERMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, VanLeerConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, RoeConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      const double tiny{1.0e-16};
-      const double huge{1.0e10};
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(0);
-
-          const double r = u(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          ROEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
-        }
-
-        //Y-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(1);
-
-          const double r = v(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          ROEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
-        }
-
-        //Z-dir
-        {
-          double my_psi;
-
-          STENCIL5_1D(2);
-
-          const double r = w(IJK_) > 0 ? fabs( ( phi(IJK_M_) - phi(IJK_MM_) ) / ( phi(IJK_) - phi(IJK_M_) + tiny ) ):
-                                         fabs( ( phi(IJK_) - phi(IJK_P_) ) / ( phi(IJK_M_) - phi(IJK_) + tiny ) );
-
-          ROEMACRO(r);
-
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
-
-          my_psi *= afc * afcm;
-
-          const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
-
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, RoeConvection>
-
-  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
-  struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, FourthConvection> {
-
-    void get_flux(       ExecutionObject<ExecSpace, MemSpace> & execObj
-                 ,       BlockRange                           & range
-                 , const grid_CT                              & phi
-                 , const grid_CT                              & u
-                 , const grid_CT                              & v
-                 , const grid_CT                              & w
-                 ,       grid_T                               & flux_x
-                 ,       grid_T                               & flux_y
-                 ,       grid_T                               & flux_z
-                 , const grid_CT                              & eps
-                 )
-    {
-      const double c1 {7./12.};
-      const double c2 {-1./12.};
-
-      parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-
-        //X-dir
-        {
-          STENCIL5_1D(0);
-
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
-
-          flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
-        }
-
-        //Y-dir
-        {
-          STENCIL5_1D(1);
-
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
-
-          flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
-        }
-
-        //Z-dir
-        {
-          STENCIL5_1D(2);
-
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
-
-          flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
-        }
-      });
-    }
-  }; // struct ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T, grid_CT, FourthConvection>
+    const Array3<double> & phi;
+    const Array3<double> & u;
+    const Array3<double> & v;
+    const Array3<double> & w;
+          Array3<double> & flux_x;
+          Array3<double> & flux_y;
+          Array3<double> & flux_z;
+    const Array3<double> & eps;
+
+  }; // struct ComputeConvectiveFlux
 
   /**
       @struct GetPsi
@@ -1424,14 +703,19 @@ namespace Uintah {
       actually used, this function should throw an error since the specialized versions
       are the functors actually doing the work.
   **/
-  template <typename grid_T, unsigned int Cscheme>
+  struct SuperBeeStruct{};
+  struct UpwindStruct{};
+  struct CentralStruct{};
+  struct RoeStruct{};
+  struct VanLeerStruct{};
+
   struct GetPsi {
 
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
+    GetPsi( const Array3<double> & i_phi
+          ,       Array3<double> & i_psi
+          , const Array3<double> & i_u
+          , const Array3<double> & i_eps
+          , const int              i_dir
           )
       : phi( i_phi )
       , u( i_u )
@@ -1444,40 +728,10 @@ namespace Uintah {
 
     void operator()(int i, int j, int k) const
     {
-      throw InvalidValue("Error: No implementation of this limiter type or direction in Arches.h",__FILE__, __LINE__);
+      throw InvalidValue("Error: No implementation of this limiter type or direction in Arches.h", __FILE__, __LINE__);
     }
 
-  private:
-
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
-
-  }; // struct GetPsi
-
-  template <typename grid_T>
-  struct GetPsi<grid_T, SuperBeeConvection> {
-
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
-          )
-      : phi( i_phi )
-      , u( i_u )
-      , eps( i_eps )
-      , psi( i_psi )
-      , dir( i_dir )
-      , huge( 1.e10 )
-      , tiny( 1.e-32 )
-    {}
-
-    void operator()( int i, int j, int k) const
+    void operator()(const SuperBeeStruct& op, int i, int j, int k) const
     {
       double my_psi;
       double r;
@@ -1496,37 +750,7 @@ namespace Uintah {
       psi(IJK_) = my_psi * afc * afcm;
     }
 
-  private:
-
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
-
-  }; // struct GetPsi<grid_T, SuperBeeConvection>
-
-  template <typename grid_T>
-  struct GetPsi<grid_T, RoeConvection> {
-
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
-          )
-      : phi( i_phi )
-      , u( i_u )
-      , eps( i_eps )
-      , psi( i_psi )
-      , dir( i_dir )
-      , huge( 1.e10 )
-      , tiny( 1.e-32 )
-    {}
-
-    void operator()( int i, int j, int k) const
+    void operator()(const RoeStruct& op, int i, int j, int k) const
     {
       double my_psi;
       double r;
@@ -1545,37 +769,7 @@ namespace Uintah {
       psi(IJK_) = my_psi * afc * afcm;
     }
 
-  private:
-
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
-
-  }; // struct GetPsi<grid_T, RoeConvection>
-
-  template <typename grid_T>
-  struct GetPsi<grid_T, VanLeerConvection> {
-
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
-          )
-      : phi( i_phi )
-      , u( i_u )
-      , eps( i_eps )
-      , psi( i_psi )
-      , dir( i_dir )
-      , huge( 1.e10 )
-      , tiny( 1.e-32 )
-    {}
-
-    void operator()( int i, int j, int k) const
+    void operator()(const VanLeerStruct& op, int i, int j, int k) const
     {
       double my_psi;
       double r;
@@ -1594,87 +788,27 @@ namespace Uintah {
       psi(IJK_) = my_psi * afc * afcm;
     }
 
-  private:
-
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
-
-  }; // struct GetPsi<grid_T, VanLeerConvection>
-
-  template <typename grid_T>
-  struct GetPsi<grid_T, UpwindConvection> {
-
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
-          )
-      : phi( i_phi )
-      , u( i_u )
-      , eps( i_eps )
-      , psi( i_psi )
-      , dir( i_dir )
-      , huge( 1.e10 )
-      , tiny( 1.e-32 )
-    {}
-
-    void operator()( int i, int j, int k) const
+    void operator()(const UpwindStruct& op, int i, int j, int k) const
     {
       psi(IJK_) = 0.;
     }
 
-  private:
-
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
-
-  }; // struct GetPsi<grid_T, UpwindConvection>
-
-  template <typename grid_T>
-  struct GetPsi<grid_T, CentralConvection> {
-
-    GetPsi( const grid_T & i_phi
-          ,       grid_T & i_psi
-          , const grid_T & i_u
-          , const grid_T & i_eps
-          , const int      i_dir
-          )
-      : phi( i_phi )
-      , u( i_u )
-      , eps( i_eps )
-      , psi( i_psi )
-      , dir( i_dir )
-      , huge( 1.e10 )
-      , tiny( 1.e-32 )
-    {}
-
-    void operator()(int i, int j, int k) const
+    void operator()(const CentralStruct& op, int i, int j, int k) const
     {
       psi(IJK_) = 1.;
     }
 
   private:
 
-    const grid_T & phi;
-    const grid_T & u;
-    const grid_T & eps;
-          grid_T & psi;
-    const int      dir;
-    const double   huge;
-    const double   tiny;
+    const Array3<double> & phi;
+    const Array3<double> & u;
+    const Array3<double> & eps;
+          Array3<double> & psi;
+    const int              dir;
+    const double           huge;
+    const double           tiny;
 
-  }; // struct GetPsi<grid_T, CentralConvection>
+  }; // struct GetPsi
 
   /**
     @class ConvectionHelper

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,8 +28,7 @@
 #define UINTAH_GRID_VARIABLES_GPUGRIDVARIABLE_H
 
 #include <Core/Grid/Variables/GPUGridVariableBase.h>
-
-#include <cstdio>
+#include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
   
@@ -189,8 +188,7 @@ namespace Uintah {
 
   template<class T> class GPUGridVariable: public GPUGridVariableBase, public GPUArray3<T> {
 
-    friend class KokkosScheduler;   // allow scheduler access
-    friend class UnifiedScheduler;  // allow scheduler access
+      friend class UnifiedScheduler;  // allow Scheduler access
 
     public:
 

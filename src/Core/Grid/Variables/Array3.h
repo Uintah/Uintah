@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,12 @@
 #ifndef UINTAH_HOMEBREW_ARRAY3_H
 #define UINTAH_HOMEBREW_ARRAY3_H
 
+#include <Core/Grid/Variables/BlockRange.hpp>
+
 #include <Core/Grid/Variables/Array3Window.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
-#include <Core/Parallel/LoopExecution.hpp>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Int130.h>
@@ -38,16 +40,15 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
-#include <sci_defs/gpu_defs.h>
-#include <sci_defs/kokkos_defs.h>
-
 #include <iosfwd>
 
 #include <type_traits>
 
-#ifdef HAVE_KOKKOS
+#include <sci_defs/kokkos_defs.h>
+
+#ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
-#endif
+#endif //UINTAH_ENABLE_KOKKOS
 
 namespace Uintah {
 
@@ -88,7 +89,7 @@ public:
   Array3(int size1, int size2, int size3) {
     d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
     d_window->addReference();
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -104,7 +105,7 @@ public:
     if(d_window) {
       d_window->addReference();
     }
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -116,7 +117,7 @@ public:
     if(d_window) {
       d_window->addReference();
     }
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -141,7 +142,7 @@ public:
       d_window=0;
     }
     d_window = copy.d_window;
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -154,7 +155,6 @@ public:
     else
       return IntVector(0,0,0);
   }
-  template <typename ExecSpace = Kokkos::OpenMP>
   void initialize(const T& value) {
     d_window->initialize(value);
   }
@@ -184,7 +184,7 @@ public:
     IntVector size = highIndex-lowIndex;
     d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
     d_window->addReference();
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -204,7 +204,6 @@ public:
 
   // return true iff no reallocation is needed
   bool rewindow(const IntVector& lowIndex, const IntVector& highIndex);
-  bool rewindowExact(const IntVector& lowIndex, const IntVector& highIndex);
 
   inline const Array3Window<T>* getWindow() const {
     return d_window;
@@ -213,69 +212,37 @@ public:
     return d_window;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-  inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
+#ifdef UINTAH_ENABLE_KOKKOS
+  inline KokkosView3<T> getKokkosView() const
   {
-    // Kokkos Views don't reference count, but OnDemand Data
-    // Warehouse's GridVariables will clean themselves up when it goes
-    // out of scope and the ref count hits zero.  Uintah's KokkosView3
-    // API means that the GridVariables are out of scope but the
-    // KokkosView3 remains.  So we have the KokkosView3 also manage
-    // Array3Data ref counting.
-    if (!m_view.m_A3Data) {
-      m_view.m_A3Data = d_window->getData();
-      m_view.m_A3Data->addReference();
-	  }
     return m_view;
   }
-#endif
 
-// For now, if it's a homogeneous only Kokkos environment, use Kokkos
-// Views If it's a legacy environment or a CUDA environment, use the
-// original way of accessing data.
-#if !defined(HAVE_GPU) && defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-
-  // Note: Dan Sunderland used a Kokkos define
-  // KOKKOS_FORCEINLINE_FUNCTION, however, this caused problems when
-  // trying to compile with CUDA, as it tried to put a __device__
-  // __host__ header (needed for GPU builds) instead of
-  // __attribute__((always_inline)) (which makes sense in a CPU build
-  // as Array3.h won't ever run on the GPU).
-
-  // I couldn't find a way to ask Kokkos to be smart and choose a
-  // non-CUDA version here, so I'll just explicitly provide the gcc
-  // one as this will never be compiled as CUDA code.  Brad Peterson
-  // Nov 23 2017
-  //KOKKOS_FORCEINLINE_FUNCTION
-  __attribute__((always_inline))
-    T& operator[](const IntVector& idx) const
+  KOKKOS_FORCEINLINE_FUNCTION
+    const T& operator[](const IntVector& idx) const
     {
       return m_view(idx[0],idx[1],idx[2]);
     }
 
-  //KOKKOS_FORCEINLINE_FUNCTION
-  __attribute__((always_inline))
+  KOKKOS_FORCEINLINE_FUNCTION
     T& operator[](const IntVector& idx)
     {
       return m_view(idx[0],idx[1],idx[2]);
     }
 
-  //KOKKOS_FORCEINLINE_FUNCTION
-  __attribute__((always_inline))
-    T& operator()(int i, int j, int k) const
+  KOKKOS_FORCEINLINE_FUNCTION
+    const T& operator()(int i, int j, int k) const
     {
       return m_view(i,j,k);
     }
 
-  //KOKKOS_FORCEINLINE_FUNCTION
-  __attribute__((always_inline))
+  KOKKOS_FORCEINLINE_FUNCTION
     T& operator()(int i, int j, int k)
     {
       return m_view(i,j,k);
     }
 #else
-
-  inline T& operator[](const IntVector& idx) const {
+  inline const T& operator[](const IntVector& idx) const {
     return d_window->get(idx);
   }
 
@@ -283,8 +250,8 @@ public:
     return d_window->get(idx);
   }
 
-  inline T& operator()(int i, int j, int k) const {
-    return d_window->get(i,j,k);
+  inline const T& operator()(int i, int j, int k) const {
+    return (*this)[IntVector(i,j,k)];
   }
 
   inline T& operator()(int i, int j, int k) {
@@ -292,17 +259,6 @@ public:
   }
 #endif
 
-  inline T& get(const IntVector& idx) const {
-    return d_window->get(idx);
-  }
-
-  inline T& get(int i, int j, int k) const {
-    return d_window->get(i,j,k);
-  }
-
-  inline T& get(int i, int j, int k) {
-    return d_window->get(i,j,k);
-  }
   BlockRange range() const
   {
     return BlockRange{getLowIndex(), getHighIndex()};
@@ -394,14 +350,9 @@ protected:
   Array3& operator=(const Array3& copy);
 
 private:
-  // These two data members are marked as mutable due to a need for lambdas.
-  // When Grid Variables are lambda captured with [=], they are captured as *const*.
-  // But we need to let grid variables be modified, and so we set these data members as
-  // mutable, which gets around the const.
-  mutable Array3Window<T>* d_window{nullptr};
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-  //Array3 variables should never go outside of HostSpace.
-  mutable KokkosView3<T, Kokkos::HostSpace> m_view{};
+  Array3Window<T>* d_window{nullptr};
+#if defined(UINTAH_ENABLE_KOKKOS)
+  KokkosView3<T> m_view{};
 #endif
 };
 
@@ -461,7 +412,7 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
     oldWindow=0;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined(UINTAH_ENABLE_KOKKOS)
   if (d_window) {
     m_view = d_window->getKokkosView();
   }
@@ -471,61 +422,6 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
 }
 
 // return true iff no reallocation is needed
-
-//DS 06162020 Added logic to rewindowExact. Ensures the allocated space has exactly same size as the requested. This is needed for D2H copy.
-//Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
-//TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
-//variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
-template <class T>
-bool Array3<T>::rewindowExact(const IntVector& lowIndex, const IntVector& highIndex) {
-  if (!d_window) {
-    resize(lowIndex, highIndex);
-    return false; // reallocation needed
-  }
-  bool match = true;
-  IntVector relLowIndex = lowIndex - d_window->getOffset();
-  IntVector relHighIndex = highIndex - d_window->getOffset();
-  IntVector size = d_window->getData()->size();
-  for (int i = 0; i < 3; i++) {
-    ASSERT(relLowIndex[i] < relHighIndex[i]);
-    if ((relLowIndex[i] != 0) || (relHighIndex[i] != size[i])) {
-      match = false;
-      break;
-    }
-  }
-  Array3Window<T>* oldWindow = d_window;
-  bool no_reallocation_needed = false;
-  if (match) {
-    d_window=scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(), lowIndex, highIndex);
-    no_reallocation_needed = true;
-  }
-  else {
-    // will have to re-allocate and copy
-    IntVector offset = oldWindow->getOffset();
-    IntVector oldHigh = oldWindow->getHighIndex();
-    printf("### Error. Allocated size does not exactly match with the requested size. allocated: offset %d %d %d high: %d %d %d requested: low %d %d %d high  %d %d %d\n",
-           offset[0], offset[1], offset[2], oldHigh[0], oldHigh[1], oldHigh[2],
-           lowIndex[0], lowIndex[1], lowIndex[2], highIndex[0], highIndex[1], highIndex[2]);
-  }
-  d_window->addReference();
-  if(oldWindow->removeReference())
-  {
-    delete oldWindow;
-    oldWindow=0;
-  }
-
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-  if (d_window) {
-    m_view = d_window->getKokkosView();
-  }
-#endif
-
-  // return true iff no reallocation is needed
-  return no_reallocation_needed;
-}
-
-
-
 template <>
 inline void Array3<double>::write(std::ostream& out, const IntVector& l, const IntVector& h, bool outputDoubleAsFloat)
 {

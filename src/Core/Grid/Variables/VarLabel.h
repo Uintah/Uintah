@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,7 +32,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <Core/Grid/Ghost.h>
 
 
 namespace Uintah {
@@ -89,9 +88,9 @@ public:
 
   IntVector getBoundaryLayer() const { return m_boundary_layer; }
 
-  void allowMultipleComputes();
+  void schedReductionTask(bool input);
 
-  bool allowsMultipleComputes() const { return m_allow_multiple_computes; }
+  bool doSchedReductionTask() const { return m_sched_reduction_task; }
 
   static VarLabel* find( const std::string& name );
 
@@ -144,11 +143,6 @@ public:
 
   friend std::ostream & operator<<( std::ostream & out, const VarLabel & vl );
 
-  //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
-  inline int getMaxDeviceGhost() const {return m_max_device_ghost;}
-  inline void setMaxDeviceGhost(int val) const {m_max_device_ghost = val;}
-  inline Ghost::GhostType getMaxDeviceGhostType() const {return m_max_device_ghost_type;}
-  inline void setMaxDeviceGhostType (Ghost::GhostType val) const {m_max_device_ghost_type = val;}
 
 private:
 
@@ -171,11 +165,8 @@ private:
   static  std::string         s_default_compression_mode;
   static  std::string         s_particle_position_name;
 
-  // Allow a variable of this label to be computed multiple times in a TaskGraph without complaining.
-  bool                        m_allow_multiple_computes{false};
-
-  mutable int                 m_max_device_ghost{0};	//DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
-  mutable Ghost::GhostType    m_max_device_ghost_type{Ghost::None};
+  // Allow this VarLabel to be computed multiple times in a TaskGraph without complaining.
+  bool                        m_sched_reduction_task{true};
 
   // eliminate copy, assignment and move
   VarLabel( const VarLabel & )            = delete;

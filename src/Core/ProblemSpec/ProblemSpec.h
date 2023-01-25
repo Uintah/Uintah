@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -151,6 +151,17 @@ public:
   //////////////////////////////////////////////////////////////
   // find the first child node with given node name
   ProblemSpecP findBlock( const std::string & name ) const;
+  
+  
+  std::vector<xmlNode*> 
+  recursiveFind_xmlNodes( std::vector<xmlNode*> nodesFound,
+                          xmlNode           *   a_node, 
+                          const std::string &   tagname,
+                          const bool            isTopLevelNode) const;
+
+  //////////
+  //  recursively find all nodes with the given  tagname
+  std::vector<ProblemSpecP> findBlocksRecursive( const std::string & name ) const;
 
   //////////
   // find the first child node with given node name and attribute 

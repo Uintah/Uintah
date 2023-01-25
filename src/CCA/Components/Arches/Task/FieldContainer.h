@@ -427,38 +427,6 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a user managed variable. **/
-      template <typename T>
-      void get_unmanaged_field( const std::string name, T& field ){
-
-        VariableInformation ivar = get_variable_information( name, false );
-
-        if ( ivar.depend == MODIFIES ){
-          _new_dw->getModifiable( field, ivar.label, m_matl_index, _patch );
-        } else if ( ivar.depend == COMPUTES ) {
-          _new_dw->allocateAndPut( field, ivar.label, m_matl_index, _patch );
-        }
-
-      }
-
-      /** @brief Get a user managed variable. **/
-      template <typename T>
-      void get_const_unmanaged_field( const std::string name,
-                                      T& field ){
-
-        VariableInformation ivar = get_variable_information( name, false );
-
-        if ( ivar.dw == OLDDW ){
-
-          _old_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
-
-        } else {
-
-          _new_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
-
-        }
-      }
-
       /** @brief Return a reference to the NEW DW **/
       DataWarehouse* getNewDW(){
         return _new_dw;
@@ -469,13 +437,18 @@ namespace Uintah{
         return _old_dw;
       }
 
-      const Patch* getPatch(){
-        return _patch;
-      }
+    private:
 
-      int getMaterialIndex(){
-        return m_matl_index;
-      }
+      FieldContainerMap _nonconst_var_map;
+      ConstFieldContainerMap _const_var_map;
+      UintahParticleMap _particle_map;
+      ConstUintahParticleMap _const_particle_map;
+      const Patch* _patch;
+
+      const int m_matl_index;
+      DataWarehouse* _old_dw;
+      DataWarehouse* _new_dw;
+      VariableRegistry _variable_reg;
 
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name. **/
@@ -497,19 +470,6 @@ namespace Uintah{
         throw InvalidValue( msg.str(), __FILE__, __LINE__ );
 
       }
-
-    private:
-
-      FieldContainerMap _nonconst_var_map;
-      ConstFieldContainerMap _const_var_map;
-      UintahParticleMap _particle_map;
-      ConstUintahParticleMap _const_particle_map;
-      const Patch* _patch;
-
-      const int m_matl_index;
-      DataWarehouse* _old_dw;
-      DataWarehouse* _new_dw;
-      VariableRegistry _variable_reg;
 
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name with specified DW. **/

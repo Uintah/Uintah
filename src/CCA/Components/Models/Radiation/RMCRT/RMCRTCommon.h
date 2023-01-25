@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,7 +31,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -55,12 +54,6 @@
 class MTRand;
 
 namespace Uintah{
-
-  // For the RMCRT slim version
-  struct Combined_RMCRT_Required_Vars {
-    float abskg;    //For now, let negative cellType indicate cellType status
-    float sigmaT4;
-  };
 
   class RMCRTCommon  {
 
@@ -130,25 +123,6 @@ namespace Uintah{
 
 
       //__________________________________
-      // For RMCRT slim
-      void sched_combineAbskgSigmaT4CellType( 
-                    const LevelP& level,
-                    SchedulerP& sched,
-                    Task::WhichDW temp_dw,
-                    const bool includeEC );
-
-      //__________________________________
-      // For RMCRT slim
-      template< class T>
-      void combineAbskgSigmaT4CellType( 
-                    const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    Task::WhichDW which_temp_dw );
-
-      //__________________________________
       //
       void reflect(double& fs,
                    IntVector& cur,
@@ -193,39 +167,51 @@ namespace Uintah{
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
 
-      template <typename ExecSpace, typename MemSpace>
-      void carryForward_FineLevelLabels ( const PatchSubset* patches,
+      void carryForward_FineLevelLabels ( DetailedTask* dtask,
+                                          Task::CallBackEvent event,
+                                          const ProcessorGroup*,
+                                          const PatchSubset* patches,
                                           const MaterialSubset* matls,
-                                          OnDemandDataWarehouse* old_dw,
-                                          OnDemandDataWarehouse* new_dw,
-                                          UintahParams& uintahParams,
-                                          ExecutionObject<ExecSpace, MemSpace>& execObj );
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
+                                          void* old_TaskGpuDW,
+                                          void* new_TaskGpuDW,
+                                          void* stream,
+                                          int deviceID );
 
       void sched_carryForward_VarLabels ( const LevelP & level,
                                           SchedulerP   & sched,
                                           const std::vector< const VarLabel* > varLabels);
 
-      template <typename ExecSpace, typename MemSpace>
-      void carryForward_VarLabels( const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   OnDemandDataWarehouse* old_dw,
-                                   OnDemandDataWarehouse* new_dw,
-                                   UintahParams& uintahParams,
-                                   ExecutionObject<ExecSpace, MemSpace>& execObj,
-                                   const std::vector< const VarLabel* > varLabels);
+      void carryForward_VarLabels(DetailedTask* dtask,
+                                  Task::CallBackEvent event,
+                                  const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw,
+                                  void* old_TaskGpuDW,
+                                  void* new_TaskGpuDW,
+                                  void* stream,
+                                  int deviceID,
+                                  const std::vector< const VarLabel* > varLabels);
 
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
                                     const int tg_num  = -1 );
 
-      template <typename ExecSpace, typename MemSpace>
-      void carryForward_Var( const PatchSubset*,
+      void carryForward_Var( DetailedTask* dtask,
+                             Task::CallBackEvent event,
+                             const ProcessorGroup*,
+                             const PatchSubset*,
                              const MaterialSubset*,
-                             OnDemandDataWarehouse*,
-                             OnDemandDataWarehouse*,
-                             UintahParams& uintahParams,
-                             ExecutionObject<ExecSpace, MemSpace>& execObj,
+                             DataWarehouse*,
+                             DataWarehouse*,
+                             void* old_TaskGpuDW,
+                             void* new_TaskGpuDW,
+                             void* stream,
+                             int deviceID,
                              const VarLabel* variable );
 
       //__________________________________
@@ -291,6 +277,7 @@ namespace Uintah{
 
       static bool d_isSeedRandom;                   // are seeds random
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons
+      static int  d_destructorCount;                // number of times through the destructor
 
       // These are initialized once in registerVarLabels().
       static int           d_matl;
@@ -304,9 +291,6 @@ namespace Uintah{
       static const VarLabel* d_divQLabel;
       static const VarLabel* d_boundFluxLabel;
       static const VarLabel* d_radiationVolqLabel;
-
-      // For RMCRT slim
-      static const VarLabel* d_abskgSigmaT4CellTypeLabel;
 
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature

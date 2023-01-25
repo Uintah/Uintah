@@ -34,7 +34,6 @@
    <MPM>
      <interpolator>gimp</interpolator>
      <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
-     <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
      <use_load_curves> true </use_load_curves>
      <axisymmetric> true </axisymmetric>
    </MPM>

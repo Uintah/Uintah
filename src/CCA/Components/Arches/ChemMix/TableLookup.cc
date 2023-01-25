@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,7 +32,6 @@
 
 // Uintah includes
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Parallel/Portability.h>
 
 using namespace std;
 namespace Uintah{
@@ -137,31 +136,25 @@ TableLookup::sched_setDependBCs( const LevelP& level,
                                  SchedulerP& sched,
                                  MixingRxnModel* model ){
 
-  auto TaskDependencies = [&](Task* tsk) {
-    std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
+  Task* tsk = scinew Task("setDependBCs", this, &TableLookup::setDependBCs, model );
 
-    for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
-      tsk->modifies( i->second );
-    }
-  };
+  std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
 
-  create_portable_tasks(TaskDependencies, this,
-                        "setDependBCs",
-                        &TableLookup::setDependBCs<UINTAH_CPU_TAG>,
-                        //&TableLookup::setDependBCs<KOKKOS_OPENMP_TAG>,
-                        //&TableLookup::setDependBCs<KOKKOS_DEVICE_TAG>,
-                        sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, model);
+  for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
+    tsk->modifies( i->second );
+  }
+
+  sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-TableLookup::setDependBCs( const PatchSubset* patches,
+void
+TableLookup::setDependBCs( const ProcessorGroup* pc,
+                           const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           OnDemandDataWarehouse* old_dw,
-                           OnDemandDataWarehouse* new_dw,
-                           UintahParams& uintahParams,
-                           ExecutionObject<ExecSpace, MemSpace>& execObj ,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
                            MixingRxnModel* model )
 {
   for (int p=0; p < patches->size(); p++){
@@ -194,7 +187,7 @@ TableLookup::setDependBCs( const PatchSubset* patches,
               m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
             if ( (*spec).bcType == DIRICHLET ){
-              parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
                 var(i,j,k) = (*spec).value;
               });
             } else {

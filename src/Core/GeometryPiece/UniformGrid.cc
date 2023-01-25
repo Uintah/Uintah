@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -151,7 +151,7 @@ UniformGrid::UniformGrid(const UniformGrid& copy)
   d_max_min = copy.d_max_min;
 
   d_grid.resize(copy.d_grid.getLowIndex(),copy.d_grid.getHighIndex());
-  serial_for( d_grid.range(), [&](int i, int j, int k) {
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = copy.d_grid(i,j,k);
   });
 
@@ -163,7 +163,7 @@ UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
   if (this == &rhs)
     return *this;
 
-  serial_for( d_grid.range(), [&](int i, int j, int k) {
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k).clear();
   });
 
@@ -172,7 +172,7 @@ UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
   d_bound_box = rhs.d_bound_box;
   d_max_min = rhs.d_max_min;
 
-  serial_for( d_grid.range(), [&](int i, int j, int k) {
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = rhs.d_grid(i,j,k);
   });
 

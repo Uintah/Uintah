@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,8 +27,8 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
+#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
@@ -48,13 +48,11 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/hypre_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_HYPRE)
-#  include <sci_defs/hypre_defs.h>
+#ifdef HAVE_HYPRE
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#elif defined(HAVE_PETSC)
-#  include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #endif
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
@@ -71,8 +69,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Core/Parallel/LoopExecution.hpp>
-
 using namespace std;
 using namespace Uintah;
 
@@ -84,7 +80,6 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 // Default constructor for DORadiationModel
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
-                                   const MPMArchesLabel* MAlab,
                                    const ProcessorGroup* myworld,
                                    bool sweepMethod ):
                                    d_myworld(myworld),
@@ -332,19 +327,15 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   else{
     db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
     if (!_sweepMethod){
-#if defined(HAVE_PETSC)
       if (linear_sol == "petsc"){
 
         d_linearSolver = scinew RadPetscSolver(d_myworld);
 
-      }
-#elif defined(HAVE_HYPRE)
-      else if (linear_sol == "hypre"){
+      } else if (linear_sol == "hypre"){
 
         d_linearSolver = scinew RadHypreSolver(d_myworld);
 
       }
-#endif
       d_linearSolver->problemSetup(db);
     }
   }
@@ -455,16 +446,16 @@ DORadiationModel::computeOrdinatesOPL()
 
     // unit vector specifying direction of that are orthogonal.  You must have 8 entries.
     const                                             //    omu    oeta      oxi   wt
-    std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 },
+    std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 }, 
                                                           {-2e-16, 1.0,     2e-16, 0 },
                                                           {2e-16, -2e-16,   1.0,   0 },
                                                           {-1.0,  -2e-16,   2e-16, 0 },
                                                           {2e-16,  1.0,    -2e-16, 0 },  // NULL at 5
                                                           {-2e-16, 1.0,    -2e-16, 0 },  // NULL at 6
                                                           {2e-16, -1.0,    -2e-16, 0 },
-                                                          {-2e-16,-2e-16,  -1.0,   0 } };
-    const int nthElement = m_totalOrds/8;
-
+                                                          {-2e-16,-2e-16,  -1.0,   0 } };   
+    const int nthElement = m_totalOrds/8;   
+    
     insertEveryNth( orthogonalCosineDirs, nthElement, 0,  m_omu );
     insertEveryNth( orthogonalCosineDirs, nthElement, 1,  m_oeta );
     insertEveryNth( orthogonalCosineDirs, nthElement, 2,  m_oxi );
@@ -576,7 +567,7 @@ struct computeAMatrix{
                        areaTB(_areaTB),
                        vol(_vol),
                        intFlow(_intFlow),
-#if defined( KOKKOS_ENABLE_OPENMP )
+#ifdef UINTAH_ENABLE_KOKKOS
                        cellType(_cellType.getKokkosView()),
                        wallTemp(_wallTemp.getKokkosView()),
                        abskt(_abskt.getKokkosView()),
@@ -604,7 +595,7 @@ struct computeAMatrix{
                        fluxX(_fluxX) ,
                        fluxY(_fluxY) ,
                        fluxZ(_fluxZ)
-#endif //HAVE_KOKKOS
+#endif //UINTAH_ENABLE_KOKKOS
                                     { SB=5.67e-8;  // W / m^2 / K^4
                                       dirX = (omu  > 0.0)? -1 : 1;
                                       dirY = (oeta > 0.0)? -1 : 1;
@@ -660,22 +651,21 @@ struct computeAMatrix{
        double vol;
        int    intFlow;
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )
-       KokkosView3<const int,    Kokkos::HostSpace> cellType;
-       KokkosView3<const double, Kokkos::HostSpace> wallTemp;
-       KokkosView3<const double, Kokkos::HostSpace> abskt;
+#ifdef UINTAH_ENABLE_KOKKOS
+       KokkosView3<const int>    cellType;
+       KokkosView3<const double> wallTemp;
+       KokkosView3<const double> abskt;
 
-       KokkosView3<double, Kokkos::HostSpace> srcIntensity;
-       KokkosView3<double, Kokkos::HostSpace> matrixB;
-       KokkosView3<double, Kokkos::HostSpace> west;
-       KokkosView3<double, Kokkos::HostSpace> south;
-       KokkosView3<double, Kokkos::HostSpace> bottom;
-       KokkosView3<double, Kokkos::HostSpace> center;
-       KokkosView3<double, Kokkos::HostSpace> scatSource;
-       KokkosView3<double, Kokkos::HostSpace> fluxX;
-       KokkosView3<double, Kokkos::HostSpace> fluxY;
-       KokkosView3<double, Kokkos::HostSpace> fluxZ;
+       KokkosView3<double> srcIntensity;
+       KokkosView3<double> matrixB;
+       KokkosView3<double> west;
+       KokkosView3<double> south;
+       KokkosView3<double> bottom;
+       KokkosView3<double> center;
+       KokkosView3<double> scatSource;
+       KokkosView3<double> fluxX;
+       KokkosView3<double> fluxY;
+       KokkosView3<double> fluxZ;
 #else
        constCCVariable<int>    & cellType;
        constCCVariable<double> & wallTemp;
@@ -691,7 +681,7 @@ struct computeAMatrix{
        CCVariable<double> & fluxX;
        CCVariable<double> & fluxY;
        CCVariable<double> & fluxZ;
-#endif
+#endif //UINTAH_ENABLE_KOKKOS
 
        double SB;
        int    dirX;
@@ -716,7 +706,7 @@ struct compute4Flux{
                    oeta(_oeta),  ///< absolute value of solid angle weighted y-component
                    oxi(_oxi),    ///< absolute value of solid angle weighted z-component
                    wt(_wt),
-#if defined( KOKKOS_ENABLE_OPENMP )
+#ifdef UINTAH_ENABLE_KOKKOS
                    intensity(_intensity.getKokkosView()),
                    fluxX(_fluxX.getKokkosView()) ,
                    fluxY(_fluxY.getKokkosView()) ,
@@ -728,7 +718,7 @@ struct compute4Flux{
                    fluxY(_fluxY) ,
                    fluxZ(_fluxZ) ,
                    volQ(_volQ)
-#endif //HAVE_KOKKOS
+#endif //UINTAH_ENABLE_KOKKOS
                      { }
 
        void operator()(int i , int j, int k ) const {
@@ -746,14 +736,13 @@ struct compute4Flux{
        double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )
-       KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
+#ifdef UINTAH_ENABLE_KOKKOS
+       KokkosView3<constDouble_or_double> intensity; ///< intensity solution from linear solve
 
-       KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
-       KokkosView3<double, Kokkos::HostSpace> fluxY;   ///< y-directional flux ( positive or negative direction)
-       KokkosView3<double, Kokkos::HostSpace> fluxZ;   ///< z-directional flux ( positive or negative direction)
-       KokkosView3<double, Kokkos::HostSpace> volQ;    ///< Incident radiation
+       KokkosView3<double> fluxX;   ///< x-directional flux ( positive or negative direction)
+       KokkosView3<double> fluxY;   ///< y-directional flux ( positive or negative direction)
+       KokkosView3<double> fluxZ;   ///< z-directional flux ( positive or negative direction)
+       KokkosView3<double> volQ;    ///< Incident radiation
 #else
        constCCVar_or_CCVar& intensity; ///< intensity solution from linear solve
 
@@ -761,8 +750,7 @@ struct compute4Flux{
        CCVariable<double>& fluxY;  ///< y-directional flux ( positive or negative direction)
        CCVariable<double>& fluxZ;  ///< z-directional flux ( positive or negative direction)
        CCVariable<double>& volQ;   ///< Incident radiation
-#endif
-
+#endif //UINTAH_ENABLE_KOKKOS
 };
 
 //***************************************************************************
@@ -1304,6 +1292,13 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
       new_dw->get( emissSrc, _emissSrc_label[iband], matlIndex, patch, m_gn,0 );
     }
 
+    int i;
+    int im;
+    int j;
+    int jm;
+    int k ;
+    int km;
+
     const int kstart = (m_plusZ[dir] ? idxLo.z() : idxHi.z()); // allows for direct logic in triple for loop
     const int jstart = (m_plusY[dir] ? idxLo.y() : idxHi.y());
     const int istart = (m_plusX[dir] ? idxLo.x() : idxHi.x());
@@ -1316,45 +1311,6 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int jEnd = m_plusY[dir] ? idxHi.y() : -idxLo.y();
     const int iEnd = m_plusX[dir] ? idxHi.x() : -idxLo.x();
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )    
-    KokkosView3<const int, Kokkos::HostSpace>    kv_cellType  = cellType.getKokkosView();
-    KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc  = emissSrc.getKokkosView();
-    KokkosView3<const double, Kokkos::HostSpace> kv_abskt     = abskt.getKokkosView();
-    KokkosView3<double, Kokkos::HostSpace>       kv_intensity = intensity.getKokkosView();
-
-    const int zdir = m_ziter[dir];
-    const int ydir = m_yiter[dir];
-    const int xdir = m_xiter[dir];
-    ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> execObj;
-    int n_thread_partitions = 4; // 4 appears to optimium on a 4 core machine.......... meaning 1-22 threads per patch.
-    if (_LspectralSolve){
-      KokkosView3<const double, Kokkos::HostSpace> kv_abskg_array =  abskg_array[iband].getKokkosView();
-      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
-        int km=k-zdir;
-        int jm=j-ydir;
-        int im=i-xdir;
-        kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + (kv_abskg_array(i,j,k)  + kv_abskt(i,j,k))*vol);
-        kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=m_ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
-      }, m_plusX[dir], m_plusY[dir], m_plusZ[dir], n_thread_partitions);
-    }else{
-      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
-        int km=k-zdir;
-        int jm=j-ydir;
-        int im=i-xdir;
-        kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi  +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + kv_abskt(i,j,k)*vol);
-        kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=m_ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
-      }, m_plusX[dir], m_plusY[dir], m_plusZ[dir], n_thread_partitions);
-    }
-#else
-    int i;
-    int im;
-    int j;
-    int jm;
-    int k ;
-    int km;
 
     //--------------------------------------------------------//
     // definition of abskt -> abskg_soot + abskg + sum(abskp_i) + scatkt
@@ -1397,7 +1353,6 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
         } // end j loop
       } // end k loop
     }
-#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
   } // end band loop
   return;
 }

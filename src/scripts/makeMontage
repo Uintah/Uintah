@@ -8,12 +8,21 @@
 
 unalias rm
 
-set tile_geom = "2x1"           # 1x2 is top bottom, 2x1 is side by side
+set tile_geom = "2x1"                   # 1x2 is top bottom, 2x1 is side by side
 
-set dir1  = "04.13.17/movie"    #path to images that you want on the left half
-set dir2  = "04.17.17/movie"    #path to images that you want on the right half
-set fname = "combined" 
-set ext   = "png"               # extension on the image files
+set dir1  = "without_UV_light/view2/jpegs"    # path to images that you want on the left half
+set dir2  = "with_UV_light/view2/jpegs"       # path to images that you want on the right half
+set fname = "movie" 
+set ext   = "jpeg"                      # extension on the image files
+
+
+# bulletproofing
+if ( ! -e $dir1 || ! -e $dir2 ) then
+  echo "  Error: one of the directories ($dir1) or ($dir2) was not found."
+  echo "  Now exiting...."
+  exit -1
+endif
+
 
 # find the size of the image
 set img   = `find $dir1 -maxdepth 1 -name "*.$ext" | head -n 1`
@@ -33,12 +42,14 @@ foreach T ( $dir1/*.$ext )
  if ( -e $dir1/$me && -e $dir2/$me ) then
  
    set num = `basename $T .$ext`
+   set paddedNum = `printf  "%04d\n" $num`
+   
    echo "  combining $num images"
 
    montage -tile $tile_geom \
            -geometry $size  \
            $dir1/$num.$ext \
            $dir2/$num.$ext \
-           $fname$num.$ext
+           $fname.$paddedNum.$ext
   endif
 end

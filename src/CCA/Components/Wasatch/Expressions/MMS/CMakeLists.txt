@@ -1,6 +1,0 @@
-set( WASATCH_SRC ${WASATCH_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/TaylorVortex.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Varden2DMMS.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/VardenMMS.cc
-        PARENT_SCOPE
-    )

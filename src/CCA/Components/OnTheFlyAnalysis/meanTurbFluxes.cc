@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,18 +24,11 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/meanTurbFluxes.h>
 
-#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Disclosure/TypeUtils.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <iostream>
@@ -53,28 +46,28 @@ Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug str
 //______________________________________________________________________
 /*
 Verification steps:
-    1)  Edit: 
+    1)  Edit:
         src/CCA/Components/OnTheFlyAnalysis/meanTurbFluxesVerify.py
-        nPlaneCells   = np.array( [30, 30, 1]) 
+        nPlaneCells   = np.array( [30, 30, 1])
         change nPlaneCells to match your problem.
-        
+
     2)  Execute: meanTurbFluxesVerify.py
         To generate the files "testDistribution.txt" and "covariance.txt"
-        
+
     3) Modify the labels used in meanTurbFluxes section
             <velocity label="verifyVelocity" />
-            <analyze label="verifyScalar"     weighting="nCells" /> 
+            <analyze label="verifyScalar"     weighting="nCells" />
             <analyze label="verifyVelocity"   weighting="nCells" />
-       
+
        Also turn on verification task:
         <enableVerificationTask/>
-     
+
      4) Run the simulation and compare:
          <uda>/TurbFluxes/<timestep>/L-0/verifyScalar_turbFlux_0, normalTurbStrss_0,  shearTurbStrss_0
-        
+
         to
         "covariance.txt"
-          
+
 ______________________________________________________________________*/
 
 meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
@@ -82,7 +75,6 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
                                 const ProblemSpecP      & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matl_set    = nullptr;
   d_monitorCell = IntVector(0,0,0);
 
   d_planeAve_1 = scinew planeAverage( myworld, materialManager, module_spec, true,  true, 0);
@@ -135,11 +127,11 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   d_planeAve_2->setComponents( m_application );
 
   const ProblemSpecP & notUsed = {nullptr};
-  d_planeAve_1->problemSetup( notUsed, notUsed, grid, PState, PState_preReloc);
-  d_planeAve_2->problemSetup( notUsed, notUsed, grid, PState, PState_preReloc);
+  d_planeAve_1->problemSetup( notUsed, notUsed, grid, PState, PState_preReloc );
+  d_planeAve_2->problemSetup( notUsed, notUsed, grid, PState, PState_preReloc );
 
   // debugging
-  m_module_spec->get(    "monitorCell",      d_monitorCell);
+  m_module_spec->get("monitorCell",      d_monitorCell);
 
   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
@@ -153,8 +145,9 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
   const Material*  matl;
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } else {
-    matl = m_materialManager->getMaterial(0);
+  }
+  else {
+    throw ProblemSetupException("ERROR:AnalysisModule:momentumAnalysis: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -179,11 +172,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
   vel_ps->getAttributes( attribute );
   string labelName = attribute["label"];
-  d_velocityVar->label   = VarLabel::find( labelName );
-
-  if( d_velocityVar->label == nullptr ){
-    throw ProblemSetupException("meanTurbFluxes: velocity label not found: " + labelName , __FILE__, __LINE__);
-  }
+  d_velocityVar->label =VarLabel::find( labelName, "ERROR  meanTurbFluxes:problemSetup, velocity label" );
 
   d_velocityVar->matl  = defaultMatl;
 
@@ -224,10 +213,7 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     //__________________________________
     // label name
     string labelName = attribute["label"];
-    VarLabel* label  = VarLabel::find(labelName);
-    if( label == nullptr ){
-      throw ProblemSetupException("meanTurbFluxes: analyze label not found: " + labelName , __FILE__, __LINE__);
-    }
+    VarLabel* label = VarLabel::find( labelName, "ERROR  meanTurbFluxes:problemSetup:analyze" );
 
     if (label == d_velocityVar->label ){  // velocity label has already been processed
       continue;
@@ -254,24 +240,24 @@ void meanTurbFluxes::problemSetup(const ProblemSpecP &,
     // define intermediate quantity label names
     const TypeDescription * td_D   = CCVariable<double>::getTypeDescription();
     const TypeDescription * td_V   = CCVariable<Vector>::getTypeDescription();
-    
+
     VarLabel* primeLabel     = VarLabel::create( labelName + "_prime",    td_D );        // Q'
     VarLabel* turbFluxLabel  = VarLabel::create( labelName + "_turbFlux", td_V );        // u'Q', v'Q', w'Q'
 
-    // Bulletproofing 
+    // Bulletproofing
     if ( labelName == "press_CC" && attribute["matl"].empty() ){
       throw ProblemSetupException("meanTurbFluxes: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
 
     // Read in the optional level index
     int level = ALL_LEVELS;
-    if (attribute["level"].empty() == false){
+    if( attribute["level"].empty() == false ){
       level = atoi(attribute["level"].c_str());
     }
 
     //  Read in the optional material index
     int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
+    if( attribute["matl"].empty() == false ){
       matl = atoi(attribute["matl"].c_str());
     }
 
@@ -385,7 +371,7 @@ void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
   if( ! d_doVerification ){
     return;
   }
-  
+
   Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
                     this,&meanTurbFluxes::populateVerifyLabels );
 
@@ -406,7 +392,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
 
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
-    
+
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::verification");
 
     int matl = d_velocityVar->matl;
@@ -476,7 +462,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
     ifs.seekg( fpos );
 
     int l = 0;
-    
+
     while ( l != lineNum){
       getline(ifs, line, '\n');
       l++;
@@ -534,7 +520,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
         for ( auto x = pLo.x(); x<pHi.x(); x++ ) {
           IntVector p0;
           IntVector cur;
-          
+
           p0  = d_planeAve_1->transformCellIndex(x, y, plane0_idx);
           cur = d_planeAve_1->transformCellIndex(x, y, planeN_idx);
 
@@ -560,14 +546,14 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
 //  Return the number of lines after the header
 //
 //  This is tricky!
-//  
+//
 //  Algorithm;
 //    1) Create a map that contains the patchID and file offset for
-//       all patches containing the 0th plane.  
+//       all patches containing the 0th plane.
 //
 //    2) For find the equivalent patch that contains plane 0, based on the transformed
 //       patch low index.
-//    
+//
 //    3) Look in the map for the offset of the equivalent patch
 //  WARNING:  This could be slow on large core count simulations
 //______________________________________________________________________
@@ -626,7 +612,7 @@ meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
   //  Find the equivalent patch containing plane0
   //  pLo.z() = 0 is on plane0
   IntVector plane0_cell     = d_planeAve_1->transformCellIndex( pLo.x(), pLo.y(), 0 );
-  
+
   const Patch* plane0_patch = level->getPatchFromIndex( plane0_cell, false );
   int id_p0 = plane0_patch->getID();
 
@@ -668,7 +654,7 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
   // Q -> Q'
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
-    t->requires( Task::NewDW, Q->label, Q->matSubSet, Ghost::None, 0 );
+    t->requires( Task::NewDW, Q->label, Q->matSubSet, m_gn, 0 );
     t->computes ( Q->primeLabel );
   }
 
@@ -729,7 +715,7 @@ void meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
     string name = Q->label->getName();
     ostringstream err;
     err << "\n\tERROR meanTurbFluxes::calc_Q_prime.  Could not find the planarAverage"
-        << " for the variable (" << name << ")."  
+        << " for the variable (" << name << ")."
         << " \n\t" << name << " must be one of the variables"
         << " listed in the ups file: <DataAnalysis>-><Module name=\"meanTurbFluxes\">-><Variables>-><analyze>\n";
     throw InternalError( err.str(), __FILE__, __LINE__ );
@@ -823,7 +809,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
-    
+
     printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluxes");
 
     constCCVariable<Vector> velPrime;
@@ -868,7 +854,7 @@ void meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      
+
       Vector vel = velPrime[c];
       diag[c] = Vector( vel.x() * vel.x(),        // u'u'
                         vel.y() * vel.y(),        // v'v'

@@ -43,13 +43,6 @@
 #  include <inttypes.h>
 #endif
 
-#if HAVE_STDINT_H
-#  include <stdint.h>
-#  include <cstdint>
-#endif
-#  include <stdint.h>
-#  include <cstdint>
-
 namespace Uintah {
 
   // pass in a pointer to a 64-bit int, but depending upon nByteMode it may

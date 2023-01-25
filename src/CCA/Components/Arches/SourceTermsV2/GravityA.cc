@@ -14,48 +14,6 @@ GravityA::~GravityA()
 {}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GravityA::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GravityA::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &GravityA::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &GravityA::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &GravityA::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &GravityA::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GravityA::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &GravityA::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &GravityA::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &GravityA::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &GravityA::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GravityA::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GravityA::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace GravityA::loadTaskRestartInitFunctionPointers()
-{
- return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 GravityA::problemSetup( ProblemSpecP& db ){
 
@@ -110,39 +68,35 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto density = tsk_info->get_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  const double ref_density = m_ref_density;
 
   if (m_gravity[0] != 0.0) {
-    double aGravity = m_gravity[0]; // acceleration due to gravity
-    auto gx = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
-    parallel_initialize(execObj,0.0,gx);
+    SFCXVariable<double>& gx = tsk_info->get_field<SFCXVariable<double> >(m_gx_label);
+    gx.initialize(0.0);
 
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];
     });
 
   } else if (m_gravity[1] != 0.0) {
-    double aGravity = m_gravity[1]; // acceleration due to gravity
-    auto gy = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
-    parallel_initialize(execObj,0.0,gy);
+    SFCYVariable<double>& gy = tsk_info->get_field<SFCYVariable<double> >(m_gy_label);
+    gy.initialize(0.0);
 
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];
     });
 
   } else if (m_gravity[2] != 0.0) {
-    double aGravity = m_gravity[2]; // acceleration due to gravity
-    auto gz = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
-    parallel_initialize(execObj,0.0,gz);
+    SFCZVariable<double>& gz = tsk_info->get_field<SFCZVariable<double> >(m_gz_label);
+    gz.initialize(0.0);
 
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];
     });
 
   }
@@ -157,8 +111,8 @@ GravityA::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+GravityA::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 
@@ -181,39 +135,35 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto density = tsk_info->get_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  const double ref_density = m_ref_density;
 
   if (m_gravity[0] != 0.0) {
-    double aGravity = m_gravity[0]; // acceleration due to gravity
-    auto gx = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
-    parallel_initialize(execObj,0.0,gx);
+    SFCXVariable<double>& gx = tsk_info->get_field<SFCXVariable<double> >(m_gx_label);
+    gx.initialize(0.0);
 
-    Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];
     });
 
   } else if (m_gravity[1] != 0.0) {
-    double aGravity = m_gravity[1]; // acceleration due to gravity
-    auto gy = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
-    parallel_initialize(execObj,0.0,gy);
+    SFCYVariable<double>& gy = tsk_info->get_field<SFCYVariable<double> >(m_gy_label);
+    gy.initialize(0.0);
 
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];
     });
 
   } else if (m_gravity[2] != 0.0) {
-    double aGravity = m_gravity[2]; // acceleration due to gravity
-    auto gz = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
-    parallel_initialize(execObj,0.0,gz);
+    SFCZVariable<double>& gz = tsk_info->get_field<SFCZVariable<double> >(m_gz_label);
+    gz.initialize(0.0);
 
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];
     });
 
   }

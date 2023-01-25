@@ -5,7 +5,6 @@
 #include <Core/Grid/MaterialManagerP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 
 /**
@@ -48,7 +47,7 @@ namespace Uintah{
 class DORadiation: public SourceTermBase {
 public:
 
-  DORadiation( std::string srcName, ArchesLabel* labels, MPMArchesLabel* MAlab,
+  DORadiation( std::string srcName, ArchesLabel* labels,
                std::vector<std::string> reqLabelNames, const ProcessorGroup* my_world,
                std::string type );
 
@@ -149,14 +148,13 @@ void checkReductionVars( const ProcessorGroup * pg,
       ~Builder(){}
 
       DORadiation* build()
-      { return scinew DORadiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); }
+      { return scinew DORadiation( _name, _labels, _required_label_names, _my_world, _type ); }
 
     private:
 
       std::string _name;
       std::string _type;
       ArchesLabel* _labels;
-      MPMArchesLabel* _MAlab;
       const ProcessorGroup* _my_world;
       std::vector<std::string> _required_label_names;
 
@@ -214,7 +212,6 @@ private:
 
   DORadiationModel* _DO_model;
   ArchesLabel*    _labels;
-  MPMArchesLabel* _MAlab;
   RadPropertyCalculator* _prop_calculator;
   const ProcessorGroup*  _my_world;
 

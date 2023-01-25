@@ -20,13 +20,11 @@ using namespace Uintah;
 
 DORadiation::DORadiation( std::string src_name,
                           ArchesLabel* labels,
-                          MPMArchesLabel* MAlab,
                           vector<std::string> req_label_names,
                           const ProcessorGroup* my_world,
                           std::string type )
 : SourceTermBase( src_name, labels->d_materialManager, req_label_names, type ),
   _labels( labels ),
-  _MAlab(MAlab),
   _my_world(my_world){
 
   // NOTE: This boundary condition here is bogus.  Passing it for
@@ -137,7 +135,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     _sweepMethod = enum_linearSolve;
   }
 
-  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world, _sweepMethod);
+  _DO_model = scinew DORadiationModel( _labels, _my_world, _sweepMethod);
   _DO_model->problemSetup( db );
 
   d_nbands=_DO_model->spectralBands();
@@ -1192,7 +1190,7 @@ if (timeSubStep==0){
     for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
       std::stringstream tasknamec;
       tasknamec << "DORadiation::sweeping_initialize_" <<ord;
-      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC, ord);
+      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC,ord);
 
       tskc->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
       tskc->requires( Task::NewDW,_T_label, gn, 0 );
@@ -1273,47 +1271,50 @@ if (timeSubStep==0){
 
             tsk2->modifies( _IntensityLabels[idx]);
 
+            Task::SearchTG NewTG = Task::SearchTG::NewTG;  // possibly search new TG for computes
+
             // --- Turn on and off communication depending on phase and intensity using equation:  iStage = iPhase + intensity_within_octant_x, 8 different patch subsets, due to 8 octants ---//
             if ( _DO_model->xDir(first_intensity) ==1 &&
                  _DO_model->yDir(first_intensity) ==1 &&
                  _DO_model->zDir(first_intensity) ==1){
 
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){ // Adding bands, made this logic painful. To fit the original abstraction, the bands loop should be merged with int_x loop.
                 sched->addTask( tsk2,_RelevantPatchesXpYpZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYpZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYmZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYmZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYpZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYpZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYmZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
-              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, false);
+              tsk2->requires( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYmZm2[istage-int_x] , m_matls, Radiation_TG);
               }

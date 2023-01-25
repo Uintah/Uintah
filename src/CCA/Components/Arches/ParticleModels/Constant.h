@@ -30,16 +30,6 @@ namespace Uintah{
     Constant<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~Constant<T>(){};
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -74,21 +64,13 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
-
-    /** @brief Set the actual value of the constant to the grid variable **/
-    template <typename ExecSpace, typename MemSpace>
-    void set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
   private:
 
@@ -96,6 +78,9 @@ namespace Uintah{
 
     const int _N;                      //<<< The number of "environments"
     std::vector<double> _const;        //<<< constant source value/environment
+
+    /** @brief Set the actual value of the constant to the grid variable **/
+    void set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   };
 
@@ -119,53 +104,6 @@ namespace Uintah{
   Constant<T>::Constant( std::string task_name, int matl_index,
                          const std::string base_var_name, const int N ) :
   TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskInitializeFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &Constant<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       , &Constant<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &Constant<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &Constant<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &Constant<T>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                       , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                       //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &Constant<T>::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                       );
-  }
-
-  //--------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace Constant<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -192,10 +130,9 @@ namespace Uintah{
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void Constant<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void Constant<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    set_value( patch, tsk_info, execObj );
+    set_value( patch, tsk_info );
 
   }
 
@@ -214,27 +151,24 @@ namespace Uintah{
   }
 
   template <typename T>
-  template <typename ExecSpace, typename MemSpace> void
-  Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    set_value( patch, tsk_info, execObj );
+    set_value( patch, tsk_info );
 
   }
 
   template <typename T>
-  template <typename ExecSpace, typename MemSpace>
-  void Constant<T>::set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  void Constant<T>::set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for ( int ei = 0; ei < _N; ei++ ){
 
       std::string name = ArchesCore::append_env( _base_var_name, ei );
-      auto model_value = tsk_info->get_field<T, double, MemSpace>(name);
+      T& model_value = tsk_info->get_field<T>(name);
+      model_value.initialize(_const[ei]);
 
       name = ArchesCore::append_qn_env( _base_var_name, ei );
-      auto model_qn_value = tsk_info->get_field<T, double, MemSpace>(name);
-
-      const double init_val = _const[ei];
-      Uintah::parallel_initialize( execObj, init_val, model_value, model_qn_value );
+      T& model_qn_value = tsk_info->get_field<T>(name);
+      model_qn_value.initialize(_const[ei]);
 
     }
 

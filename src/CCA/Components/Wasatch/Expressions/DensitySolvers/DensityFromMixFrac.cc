@@ -216,8 +216,7 @@ namespace WasatchCore{
   evaluate()
   {
     using namespace SpatialOps;
-    typedef typename Expr::Expression<FieldT>::ValVec SVolFieldVec;
-    SVolFieldVec& results = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& results = this->get_value_vec();
 
     FieldT& rho    = *results[0];
     FieldT& dRhodF = *results[1];

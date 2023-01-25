@@ -19,7 +19,7 @@
 
 namespace Uintah{
 
-  class AddPressGradient : public AtomicTaskInterface {
+  class AddPressGradient : AtomicTaskInterface {
 
 public:
 
@@ -28,16 +28,6 @@ public:
 
     /** @brief Default destructor **/
     ~AddPressGradient();
-
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -50,14 +40,7 @@ public:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                         const int time_substep, const bool pack_tasks );
 
-    template <typename ExecSpace, typename MemSpace>
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
-
-    template <typename ExecSpace, typename MemSpace>
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
-
-    template <typename ExecSpace, typename MemSpace>
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     /** @brief Builder class containing instructions on how to build the task **/
     class Builder : public AtomicTaskInterface::AtomicTaskBuilder {

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -189,8 +189,7 @@ namespace WasatchCore{
     virtual void setup_diffusive_flux( FieldTagInfo& );
     virtual void setup_convective_flux( FieldTagInfo& );
     virtual void setup_source_terms( FieldTagInfo&, Expr::TagList& );
-    virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
-                                          const Expr::TagList& srcTags  );
+    virtual Expr::ExpressionID setup_rhs( FieldTagInfo&, const Expr::TagList& );
 
     Uintah::ProblemSpecP params_;
     const bool hasConvection_;

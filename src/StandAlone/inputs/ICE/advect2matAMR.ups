@@ -20,7 +20,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps>     50           </max_Timesteps>
+       <max_Timesteps>     25           </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -135,11 +135,11 @@
       <Level>
         <Box label="1">
           <lower>        [0,0,0]    </lower>
-          <upper>        [1,1,.05]    </upper>
+          <upper>        [1,1,1]    </upper>
           <extraCells>   [1,1,1]    </extraCells>
-          <patches>      [2,2,1]    </patches>
+          <patches>      [2,2,2]    </patches>
         </Box>
-        <spacing>         [0.025,0.025,0.05]    </spacing>
+        <spacing>         [0.025,0.025,0.025]    </spacing>
       </Level>
     </Grid>
 
@@ -182,10 +182,10 @@
       
       <Regridder type="Tiled">
         <max_levels>                   2       </max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]   </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]    </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
-        <min_patch_size>           [[10,10,1]] </min_patch_size>
+        <cell_refinement_ratio>    [[2,2,2]]   </cell_refinement_ratio>
+        <cell_stability_dilation>   [2,2,2]    </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,1]     </min_boundary_cells>
+        <min_patch_size>           [[10,10,10]] </min_patch_size>
         <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
       </Regridder>
     </AMR>
@@ -217,12 +217,12 @@
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                 <box label="blobInMiddle">
-                    <min>       [ 0.4, 0.4, 0.0 ]       </min>
-                    <max>       [ 0.5, 0.5, 0.1 ]       </max>
+                    <min>       [ 0.4, 0.4, 0.4 ]       </min>
+                    <max>       [ 0.6, 0.6, 0.6 ]       </max>
                 </box>
              </difference>
                <res>           [2,2,2]                  </res>
-               <velocity>      [100,100,0]              </velocity>
+               <velocity>      [100,100,100]              </velocity>
                <density>       1.7899909957225715000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -237,7 +237,7 @@
            <geom_object>
                 <box label="blobInMiddle">              </box>
                <res>            [2,2,2]                 </res>
-               <velocity>       [100,100,0]             </velocity>
+               <velocity>       [100,100,100]             </velocity>
                <density>        1.789990995722571500e+00</density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
@@ -253,11 +253,23 @@
     </MaterialProperties>           
     <!--____________________________________________________________________-->
 
-  <!--
+ 
     <DataAnalysis>
-    
-  
-       <Module name="lineExtract">
+
+      <Module name = "minMax">
+        <material>air</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"   matl="1"/>
+          <analyze label="vel_CC"    matl="1"/>
+        </Variables>
+      </Module>
+
+ 
+      <Module name="lineExtract">
        
         <material>Atmosphere</material>
         <samplingFrequency> 1e10 </samplingFrequency>
@@ -273,23 +285,28 @@
 
         <lines>
           <line name="X_line"> 
-                <startingPt>  [0.0, 0.5, 0]   </startingPt>
-                <endingPt>    [1.0, 0.5, 0]   </endingPt>
+                <startingPt>  [0.0, 0.5, 0.5]   </startingPt>
+                <endingPt>    [1.0, 0.5, 0.5]   </endingPt>
                 <stepSize> 0.1 </stepSize>
           </line>
           <line name="Y_line"> 
-                <startingPt>  [0.5, 0.0, 0]   </startingPt>
-                <endingPt>    [0.5, 1.0, 0]   </endingPt>
+                <startingPt>  [0.5, 0.0, 0.5]   </startingPt>
+                <endingPt>    [0.5, 1.0, 0.5]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+          <line name="Z_line"> 
+                <startingPt>  [0.5, 0.5, 0.0]   </startingPt>
+                <endingPt>    [0.5, 0.5, 1.0]   </endingPt>
                 <stepSize> 0.1 </stepSize>
           </line>
         </lines>
       </Module>
-      
+    
       <Module name="planeExtract">
        
         <material>Atmosphere</material>
         <samplingFrequency> 1e10 </samplingFrequency>
-        <timeStart>      0.001   </timeStart>
+        <timeStart>         0.00 </timeStart>
         <timeStop>          100  </timeStop>
        
         <Variables>
@@ -301,15 +318,12 @@
 
         <planes>
           <plane name="XY_plane"> 
-                <timeStart>   0.00124283   </timeStart>
-                <timeStop>    0.00129687   </timeStop>
-                <startingPt>  [0.4, 0.4, 0]   </startingPt>
-                <endingPt>    [0.6, 0.6, 0]   </endingPt>
+                <startingPt>  [0.4, 0.4, 0.5]   </startingPt>
+                <endingPt>    [0.6, 0.6, 0.5]   </endingPt>
           </plane>
         </planes>
       </Module>
 
-      
       <Module name="planeAverage">
        
         <material>Atmosphere</material>
@@ -328,6 +342,7 @@
         </Variables>
 
       </Module>
+
     </DataAnalysis>  
--->      
+      
 </Uintah_specification>

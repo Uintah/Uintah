@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2018 The University of Utah
+ * Copyright (c) 2016-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,8 @@
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
+#include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
+
 #include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
 
@@ -82,6 +84,7 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
                          const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
                          GraphCategories& gc,
+                         std::set<std::string>& persistentFields,
                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                          bool computeKineticsJacobian )
 {
@@ -101,19 +104,34 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
   Expr::ExpressionFactory&   factory = *gc[ADVANCE_SOLUTION]->exprFactory;
   Expr::ExpressionFactory& icFactory = *gc[INITIALIZATION  ]->exprFactory;
 
-  Expr::TagList yiTags;
+  const bool isLowMach =  Wasatch::flow_treatment() == LOWMACH;
+  Expr::Context context = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
+
+  Expr::TagList yiTags, yiInitTags;
   for( int i=0; i<nspec; ++i ){
     const std::string specName = CanteraObjects::species_name(i);
-    const Expr::Tag specTag( specName, Expr::STATE_NONE );
-    yiTags.push_back( specTag );
+    yiTags    .push_back( Expr::Tag( specName, context          ) );
+    yiInitTags.push_back( Expr::Tag( specName, Expr::STATE_NONE ) );
 
     if( i == nspec-1 ) continue; // don't build the nth species equation
 
     proc0cout << "Setting up transport equation for species " << specName << std::endl;
-    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams, wasatchSpec, turbParams, i, gc, densityTag, velTags, temperatureTag, tagNames.mixMW, dualTimeMatrixInfo, computeKineticsJacobian );
+    SpeciesTransportEquation* specEqn = scinew SpeciesTransportEquation( specEqnParams,
+                                                                         wasatchSpec,
+                                                                         turbParams,
+                                                                         i,
+                                                                         gc,
+                                                                         persistentFields,
+                                                                         densityTag,
+                                                                         velTags,
+                                                                         temperatureTag,
+                                                                         tagNames.mixMW,
+                                                                         dualTimeMatrixInfo,
+                                                                         computeKineticsJacobian );
     specEqns.push_back( new EqnTimestepAdaptor<FieldT>(specEqn) );
 
     // default to zero mass fraction for species unless specified otherwise
+    const Expr::Tag& specTag = yiInitTags[i];
     if( !icFactory.have_entry( specTag ) ){
       icFactory.register_expression( scinew Expr::ConstantExpr<FieldT>::Builder(specTag,0.0) );
     }
@@ -127,19 +145,25 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
       std::ostringstream msg;
       msg << e.what()
           << std::endl
-          << "ERORR while setting initial conditions on species: '" << specName << std::endl;
+          << "ERROR while setting initial conditions on species: '" << specName << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
   }
 
   // mixture molecular weight
-  factory  .register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags, pokitt::MASS ) );
-  icFactory.register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags, pokitt::MASS ) );
+  factory  .register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags    , pokitt::MASS ) );
+  icFactory.register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiInitTags, pokitt::MASS ) );
 
   // the last species mass fraction
   typedef pokitt::SpeciesN<FieldT>::Builder SpecN;
-  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::CLIPSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
-  icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+  factory  .register_expression( scinew SpecN( yiTags    [nspec-1], yiTags    , pokitt::CLIPSPECN,  DEFAULT_NUMBER_OF_GHOSTS ) );
+  icFactory.register_expression( scinew SpecN( yiInitTags[nspec-1], yiInitTags, pokitt::ERRORSPECN, DEFAULT_NUMBER_OF_GHOSTS ) );
+
+  if( isLowMach ){
+    const Expr::Tag ynTag = Expr::Tag( yiTags[nspec-1].name(), Expr::STATE_N );
+    factory.register_expression( scinew Expr::PlaceHolder<FieldT>::Builder( ynTag ) );
+    persistentFields.insert(ynTag.name());
+  }
 
   // register stuff for dual time
   Expr::TagList rhoYiTags;
@@ -164,6 +188,7 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
                           const TurbulenceParameters& turbParams,
                           const int specNum,
                           GraphCategories& gc,
+                          std::set<std::string>& persistentFields,
                           const Expr::Tag densityTag,
                           const Expr::TagList velTags,
                           const Expr::Tag temperatureTag,
@@ -175,16 +200,26 @@ SpeciesTransportEquation( Uintah::ProblemSpecP params,
   wasatchSpec_( wasatchSpec ),
   turbParams_ ( turbParams  ),
   specNum_    ( specNum     ),
-  primVarTag_( CanteraObjects::species_name(specNum), Expr::STATE_NONE ),
-  densityTag_    ( densityTag     ),
-  temperatureTag_( temperatureTag ),
-  mmwTag_        ( mmwTag         ),
-  velTags_       ( velTags        ),
-  nspec_( CanteraObjects::number_species() ),
+  primVarTag_( CanteraObjects::species_name(specNum), flowTreatment_ == LOWMACH ? Expr::STATE_N : Expr::STATE_NONE ),
+  primVarNP1Tag_ ( primVarTag_.name(), Expr::STATE_NP1  ),
+  primVarInitTag_( primVarTag_.name(), Expr::STATE_NONE ),
+  densityTag_    ( densityTag                           ),
+  densityNP1Tag_ ( densityTag.name(), Expr::STATE_NP1   ),
+  densityInitTag_( densityTag.name(), Expr::STATE_NONE  ),
+  temperatureTag_( temperatureTag                       ),
+  mmwTag_        ( mmwTag                               ),
+  velTags_       ( velTags                              ),
+  nspec_         ( CanteraObjects::number_species()     ),
+  isStrong_      ( true                                 ),
+  persistentFields_  ( persistentFields   ),
   dualTimeMatrixInfo_( dualTimeMatrixInfo )
 {
+  Expr::Context contextN = flowTreatment_== LOWMACH ? Expr::STATE_N : Expr::STATE_NONE;
   for( int i=0; i<nspec_; ++i ){
-    yiTags_.push_back( Expr::Tag( CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+    const std::string specName = CanteraObjects::species_name(i);
+    yiTags_    .push_back( Expr::Tag( specName, contextN         ) );
+    yiNP1Tags_ .push_back( Expr::Tag( specName, Expr::STATE_NP1  ) );
+    yiInitTags_.push_back( Expr::Tag( specName, Expr::STATE_NONE ) );
   }
 
   // set the Jacobian
@@ -209,7 +244,7 @@ SpeciesTransportEquation::initial_condition( Expr::ExpressionFactory& icFactory 
   }
   typedef ExprAlgebra<FieldT>::Builder Algebra;
   return icFactory.register_expression( scinew Algebra( initial_condition_tag(),
-                                                        tag_list( this->primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
+                                                        tag_list( primVarInitTag_, densityInitTag_ ),
                                                         ExprAlgebra<FieldT>::PRODUCT) );
 }
 
@@ -222,8 +257,6 @@ setup_boundary_conditions( WasatchBCHelper& bcHelper,
 {
   Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
   Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
-
-  const TagNames& tagNames = TagNames::self();
 
   assert( !isConstDensity_ );
 
@@ -272,7 +305,6 @@ setup_boundary_conditions( WasatchBCHelper& bcHelper,
     switch ( myBndSpec.type ){
       case WALL:
       {
-        const TagNames& tagNames = TagNames::self();
         const Uintah::Patch::FaceType& face = myBndSpec.face;
         const std::string dir = (face==Uintah::Patch::xminus || face==Uintah::Patch::xplus) ? "X"
                               : (face==Uintah::Patch::yminus || face==Uintah::Patch::yplus) ? "Y"
@@ -426,13 +458,8 @@ setup_boundary_conditions( WasatchBCHelper& bcHelper,
 
       case USER:
       default:
-      {
-        std::ostringstream msg;
-        msg << "ERROR: VELOCITY, OPEN, and OUTFLOW boundary conditions are not currently supported for compressible flows in Wasatch. " << bndName
-        << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        // do nothing
         break;
-      }
     }
   }
 }
@@ -444,8 +471,6 @@ SpeciesTransportEquation::apply_initial_boundary_conditions( const GraphHelper& 
                                                              WasatchBCHelper& bcHelper )
 {
   const Category taskCat = INITIALIZATION;
-  std::cout << "taskCat set to INITIALIZATION\n";
-
   Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
   // multiply the initial condition by the volume fraction for embedded geometries
@@ -481,8 +506,9 @@ void
 SpeciesTransportEquation::apply_boundary_conditions( const GraphHelper& graphHelper,
                                                      WasatchBCHelper& bcHelper )
 {
+  const bool isLowMach = flowTreatment_ == LOWMACH;
+  const bool setOnExtraOnly = isLowMach;
   const Category taskCat = ADVANCE_SOLUTION;
-  std::cout << "taskCat set to ADVANCE_SOLUTION\n";
   bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
   bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
@@ -491,17 +517,27 @@ SpeciesTransportEquation::apply_boundary_conditions( const GraphHelper& graphHel
   const Expr::Tag temporaryYTag( "temporary_" + this->primVarTag_.name() + "_for_bcs", Expr::STATE_NONE );
   bcHelper.apply_boundary_condition<FieldT>( temporaryYTag, taskCat, true );
 
-
-  const TagNames& tagNames = TagNames::self();
   const std::string normalConvFluxName_nodir = this->solnVarName_ + "_convFlux_";
-  const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalDiffFluxName_nodir + 'X', Expr::STATE_NONE), taskCat);
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalDiffFluxName_nodir + 'Y', Expr::STATE_NONE), taskCat);
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalDiffFluxName_nodir + 'Z', Expr::STATE_NONE), taskCat);
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalConvFluxName_nodir + 'X', Expr::STATE_NONE), taskCat);
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalConvFluxName_nodir + 'Y', Expr::STATE_NONE), taskCat);
-  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalConvFluxName_nodir + 'Z', Expr::STATE_NONE), taskCat);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalConvFluxName_nodir + 'X', Expr::STATE_NONE), taskCat, setOnExtraOnly);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalConvFluxName_nodir + 'Y', Expr::STATE_NONE), taskCat, setOnExtraOnly);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalConvFluxName_nodir + 'Z', Expr::STATE_NONE), taskCat, setOnExtraOnly);
   bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBC::SPECIES, taskCat, this->specNum_);
+
+  // if the flow treatment is low-Mach, diffusive fluxes for STATE_NP1 are used to estimate div(u) so we must
+  // set boundary conditions at STATE_NP1 as well as STATE_NONE when initial conditions are set
+  const Expr::Context diffFluxContext = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
+  const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalDiffFluxName_nodir + 'X', diffFluxContext), taskCat, setOnExtraOnly);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalDiffFluxName_nodir + 'Y', diffFluxContext), taskCat, setOnExtraOnly);
+  bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalDiffFluxName_nodir + 'Z', diffFluxContext), taskCat, setOnExtraOnly);
+
+  if(isLowMach){
+//    const Category initCat = INITIALIZATION;
+//    const Expr::Context initContext = Expr::STATE_NONE;
+//    bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
+//    bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
+//    bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -531,14 +567,69 @@ SpeciesTransportEquation::setup_rhs( FieldTagInfo& info,
 
   info[PRIMITIVE_VARIABLE] = primVarTag_;
 
-  Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+  Expr::ExpressionFactory& solnFactory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+  Expr::ExpressionFactory& initFactory = *gc_[INITIALIZATION  ]->exprFactory;
 
-  factory.register_expression( new PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+  if( flowTreatment_ == COMPRESSIBLE ){
+    solnFactory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+  }
 
-  const bool isConstDensity = false;
-  const bool isStrongForm   = true;
+  // for variable density flows:
+  if( flowTreatment_ == LOWMACH ){
+    infoNP1_ [PRIMITIVE_VARIABLE]  = primVarNP1Tag_;
+    infoInit_[PRIMITIVE_VARIABLE]  = primVarInitTag_;
+
+    EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    if( vNames.has_embedded_geometry() ){
+      infoNP1_ [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+      infoNP1_ [AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+      infoNP1_ [AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+      infoNP1_ [AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+
+      infoInit_[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+      infoInit_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+      infoInit_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+      infoInit_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+    }
+
+    // put source term tag in infoInit_ if that tag is found in infoNP1_
+    const FieldTagInfo::const_iterator ifld = infoNP1_.find( SOURCE_TERM );
+    if( ifld != infoNP1_.end() )
+    {
+      infoInit_[SOURCE_TERM] =  Expr::Tag( ifld->second.name(), Expr::STATE_NONE);
+    }
+
+    if(isStrong_){
+      solnFactory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag_, this->solnvar_np1_tag(), densityNP1Tag_ ) );
+      solnFactory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder(primVarTag_) );
+      persistentFields_.insert( primVarTag_.name() );
+    }
+
+    const Expr::Tag scalEOSTag(primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
+    const Expr::Tag dRhoDYiTag = tagNames.derivative_tag( densityTag_, primVarTag_ );
+
+    typedef typename ScalarEOSCoupling<FieldT>::Builder ScalarEOSBuilder;
+    // todo: check whether or not 'srcTags' should be for ScalarEOSBuilder at initialization
+    solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , srcTags, densityNP1Tag_ , dRhoDYiTag, isStrong_) );
+    initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, srcTags, densityInitTag_, dRhoDYiTag, isStrong_) );
+
+    // register an expression for divu. divu is just a constant expression to which we add the
+    // necessary couplings from the scalars that represent the equation of state.
+    typedef typename Expr::ConstantExpr<SVolField>::Builder ConstBuilder;
+
+    if( !solnFactory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
+      solnFactory.register_expression( new ConstBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
+    }
+    if( !initFactory.have_entry( tagNames.divu ) ) {
+      initFactory.register_expression( new ConstBuilder(tagNames.divu, 0.0));
+    }
+
+    solnFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+    initFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+  }
+
   typedef ScalarRHS<FieldT>::Builder RHS;
-  return factory.register_expression( scinew RHS( rhsTag_, info, srcTags, densityTag_, isConstDensity, isStrongForm, tagNames.drhodt ) );
+  return solnFactory.register_expression( scinew RHS( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
 }
 
 //------------------------------------------------------------------------------

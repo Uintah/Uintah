@@ -1,17 +1,17 @@
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
-# 
+#  Copyright (c) 1997-2021 The University of Utah
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
 #  deal in the Software without restriction, including without limitation the
 #  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 #  sell copies of the Software, and to permit persons to whom the Software is
 #  furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included in
 #  all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -60,8 +60,8 @@ ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link
   ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
 
-  # Function to create a make rule to copy the original .cc file from the
-  # ../src/ tree to the .../binary/ tree and rename it with a .cu extension.
+  # Function to create a make rule to copy the original .cc file from the .../src/ tree
+  # to the .../binary/ tree and rename it with a .cu extension.
   #
   define make-cuda-target
     $(OBJTOP_ABS)/$(SRCDIR)/$1.cu : $(SRCTOP_ABS)/$(SRCDIR)/$1.cc
@@ -75,13 +75,13 @@ endif
 
 COMPONENTS = CCA/Components
 
-# Arches 
+# Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES_LIBS = $(COMPONENTS)/Arches
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   ARCHES_DIR = $(COMPONENTS)/Arches
-  ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran 
+  ARCHES_SUB_LIBS = $(ARCHES_DIR)/fortran
 endif
 
 # Examples
@@ -130,11 +130,6 @@ ifeq ($(BUILD_MPM),yes)
 #       $(MPM_DIR)/Crack
 endif
 
-# MPM-Arches
-ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
-  MPMARCHES_LIB = $(COMPONENTS)/MPMArches
-endif
-
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
   MPMFVM_LIB = $(COMPONENTS)/MPMFVM
@@ -176,7 +171,7 @@ ALL_PSE_CORE_LIBS =        \
         Core/OS            \
         Core/Parallel      \
         Core/ProblemSpec   \
-        Core/Util          
+        Core/Util
 
 ALL_PSE_RUNTIME_LIBS =                      \
         CCA/Ports                           \
@@ -208,7 +203,6 @@ ALL_PSE_LIBS =                              \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
-        $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
@@ -232,7 +226,6 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
-    $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \
@@ -272,7 +265,7 @@ ALL_STATIC_PSE_LIBS =                   \
 # Now begin including all of the makefile fragments (sub.mk's)
 #
 
-ALLSUBDIRS := . 
+ALLSUBDIRS := .
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 ## Remove duplicates from the final list of include paths.
@@ -316,7 +309,7 @@ SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 # Don't use the list of dirs directly because the timestamp on the directly changes
 # when files are modified inside of it... by using a '.created' file, the MAKEFILEDIRS
 # dependency is not invoked accept as needed.
-MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS)) 
+MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS))
 
 # etags generation
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
@@ -329,36 +322,13 @@ ETAGS := @ETAGS@
 CTAGS := ctags
 
 ################################################################################
-# Place SVN code revision number into .../bin/include/svn_info.h.  This target
-# will kick off every time you run make in order to determine if the SVN revision 
-# number has changed.
+# Call a shell script that updates the git log information in include/git_info.h. 
+# This target will execute every time you run make.  The variables in git_info are
+# output by sus
 
-$(OBJTOP_ABS)/include/svn_info.h : .FORCE
-	@IFS=' ';                                                                                \
-         tmp_svn=`svn info $(SRCTOP_ABS) 2> /dev/null` ;                                         \
-         sed -e "s%UNKNOWN_REVISION%`echo $$tmp_svn | grep Revision`%"                           \
-             -e "s%UNKNOWN_DATE%`echo $$tmp_svn | grep Date`%"                                   \
-             -e "s%UNKNOWN_URL%`echo $$tmp_svn | grep ^URL`%"                                    \
-             $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new;   \
-         if test -z "$$tmp_svn"; then                                                            \
-            rm $(OBJTOP_ABS)/include/svn_info.h.new;                                             \
-            if test -f $(OBJTOP_ABS)/include/svn_info.h; then                                    \
-               echo "WARNING: svn info failed... svn_info.h will not contain revision number.";  \
-            else                                                                                 \
-               echo "Warning, svn info failed... using generic .../<bin>/include/svn_info.h";    \
-               cp $(SRCTOP_ABS)/include/svn_info.h.template $(OBJTOP_ABS)/include/svn_info.h;    \
-            fi                                                                                   \
-         else                                                                                    \
-            cmp -s  $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;       \
-            if test "$$?" -eq 0; then                                                            \
-               rm $(OBJTOP_ABS)/include/svn_info.h.new;                                          \
-            else                                                                                 \
-               echo "Creating .../<bin>/include/svn_info.h";                                     \
-               mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;         \
-            fi                                                                                   \
-         fi
-
-# Dummy target to force above svn_info target to kick off every time.
+$(OBJTOP_ABS)/include/git_info.h : .FORCE
+	$(SRCTOP_ABS)/include/git_info.sh $(SRCTOP_ABS) $(OBJTOP_ABS)
+# Dummy target to force above git_info target to kick off every time.
 .FORCE :
 
 ################################################################################
@@ -474,7 +444,7 @@ endif
 	@( find Core           -name "*.o" -exec rm -f {} \;)
 	@( find Core           -name "*.d" -exec rm -f {} \;)
 	@( find StandAlone     -name "*.o" -exec rm -f {} \;)
-	@( find StandAlone     -name "*.d" -exec rm -f {} \;) 
+	@( find StandAlone     -name "*.d" -exec rm -f {} \;)
 	@( find VisIt          -name "*.o" -exec rm -f {} \;)
 	@( find VisIt          -name "*.d" -exec rm -f {} \;)
        #
@@ -551,7 +521,7 @@ endif
 show_zlib :
 ifeq ($(IS_STATIC_BUILD),no)
   ifneq ($(IS_OSX),yes)
-	@ldd lib/*.so StandAlone/sus | grep libz[\.] 
+	@ldd lib/*.so StandAlone/sus | grep libz[\.]
   else
 	@otool -L lib/*.dylib StandAlone/sus | grep libz[\.]
   endif
@@ -562,7 +532,7 @@ endif
 #########################################################################################################
 # Targets for regression testing...
 
-gold_standards :
+gold_standards goldStandards :
 	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                        \
          echo -n "Started at: "; date;                                                                           \
          cd $(OBJTOP_ABS)/TestData;                                                                              \
@@ -595,10 +565,8 @@ lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE) : $(CLEANLIBS)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Building libgpu_extra_link.$(SO_OR_A_FILE)..."
 	@$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
-	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   else
 	$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
-	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   endif
 
 endif

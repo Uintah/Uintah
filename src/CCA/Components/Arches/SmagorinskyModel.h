@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -68,7 +68,6 @@ WARNING
 
 namespace Uintah {
 class ArchesLabel;
-class MPMArchesLabel;
 class PhysicalConstants;
 class BoundaryCondition;
 
@@ -81,7 +80,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Blank constructor for SmagorinskyModel.
   SmagorinskyModel(const ArchesLabel* label, 
-                   const MPMArchesLabel* MAlb,
                    PhysicalConstants* phyConsts,
                    BoundaryCondition* bndryCondition);
 

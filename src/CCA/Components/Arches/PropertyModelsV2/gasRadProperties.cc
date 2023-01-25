@@ -24,47 +24,6 @@ gasRadProperties::~gasRadProperties( )
   delete _calc;
 }
 
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &gasRadProperties::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &gasRadProperties::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &gasRadProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &gasRadProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &gasRadProperties::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &gasRadProperties::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     //, &gasRadProperties::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
-                                     //, &gasRadProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &gasRadProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &gasRadProperties::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace gasRadProperties::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
 
 //---------------------------------------------------------------------------
 //Method: Problem Setup
@@ -145,8 +104,8 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
   register_variable( _abskg_name, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
 }
 
-template <typename ExecSpace, typename MemSpace>
-void gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >( _abskg_name);
 
@@ -158,12 +117,16 @@ void gasRadProperties::register_restart_initialize( VIVec& variable_registry , c
 
 }
 
+void gasRadProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+}
+
 void gasRadProperties::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
 }
 
-template <typename ExecSpace, typename MemSpace> void
-gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+
+void gasRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 
@@ -192,8 +155,9 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 }
 
-template <typename ExecSpace, typename MemSpace>
-void gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+
+void
+gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >(_abskg_name);

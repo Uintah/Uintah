@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -286,7 +286,10 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
                  << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -386,7 +389,11 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       cout_doing <<"Doing applyHCBoundaryConditions " <<"\t\t\t\t IMPM"
                  << "\n" << "\n";
     }
-    IntVector lowIndex,highIndex;
+
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -481,7 +488,10 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex,highIndex;
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -537,7 +547,10 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex,highIndex;
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -636,7 +649,10 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex,highIndex;
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -730,11 +746,9 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
       cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
-    IntVector lowIndex,highIndex;
-    if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
-    } else if(d_flag->d_8or27==27){
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    if(d_flag->d_8or27>=27){
       lowIndex = patch->getExtraNodeLowIndex();
       highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }
@@ -816,8 +830,11 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
 
     delt_vartype dt;
     old_dw->get(dt, d_lb->delTLabel,patch->getLevel());
-                                                                                
-    IntVector lowIndex,highIndex;
+      
+    int inf = std::numeric_limits<int>::infinity();
+    IntVector lowIndex(inf,inf,inf);
+    IntVector highIndex(inf,inf,inf);
+
     if(d_flag->d_8or27==8){
       lowIndex = patch->getNodeLowIndex();
       highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);

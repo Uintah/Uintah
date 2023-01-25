@@ -6,7 +6,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>Thannel Flow with an powerlaw initial flow field</title>
+       <title>Channel Flow with an powerlaw initial flow field</title>
    </Meta>
 
    <SimulationComponent type="ice" />
@@ -22,7 +22,7 @@
        <delt_init>          1.0e-9      </delt_init>
        <max_delt_increase>  2           </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps>      100           </max_Timesteps>
+       <max_Timesteps>      1           </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -30,23 +30,12 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-    
-      <inletVelocity type="powerLawProfile">
-        <verticalDirection> 1           </verticalDirection>
-        <exponent>          0.21        </exponent>
-        <maxHeight>         0.05        </maxHeight>
-        <material>          atmosphere  </material>
+      
+      <include href="inputs/ICE/channelFlow.xml" section="inletVelocity" type="powerLawProfile"/>
 
-        <variance>
-          <C_mu>            0.0845      </C_mu>         
-          <frictionVel>     0.26        </frictionVel>  
-        </variance>
-
-      </inletVelocity>
- <!--
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet"> 
-                            <value> 101325. </value> 
+        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+                            <value> 0 </value> 
         </BCType> 
         <BCType id = "0"   label = "Velocity"     var = "powerLawProfile" >
                             <value> [4.32,0.0,0.0] </value>
@@ -79,7 +68,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
--->
+
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -127,13 +116,11 @@
        <Level>
            <Box label="1">
               <lower>        [0, 0.0,0]          </lower>
-              <upper>        [1, 0.5,0.005]     </upper>
-              <extraCells>   [0,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
-              <resolution>   [128,64,1]           </resolution>
+              <upper>        [1, 0.5,0.05]     </upper>
+              <extraCells>   [1,1,1]             </extraCells>
+              <patches>      [4,2,1]             </patches>
+              <resolution>   [128,64,10]           </resolution>
            </Box>
-
-           <periodic>        [1,0,0]             </periodic>
        </Level>
        
     </Grid>    
@@ -141,14 +128,16 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>channelFlow_PowerLaw.uda</filebase>
+      <filebase>UDA</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
+      <outputInitTimestep/>
+    <!--  <outputInterval>0.1</outputInterval> -->
       <save label="vel_CC"/>
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
-      <checkpoint interval="0.75" cycle="2"/>
+     <!-- <checkpoint interval="1" cycle="2"/> -->
    </DataArchiver>
 
     
@@ -186,22 +175,10 @@
             <relax_type>      2      </relax_type>
            </Parameters>
         </ImplicitSolver>
-        
-        <customInitialization>             
-          <powerLawProfile>
-            <verticalDirection> 1           </verticalDirection>
-            <exponent>          0.21        </exponent>
-            <maxHeight>         0.05         </maxHeight>
-            <material>          atmosphere  </material>
-            <U_infinity>        [4.32, 0, 0]</U_infinity>
-        
-            <variance>
-              <C_mu>              0.0845    </C_mu>
-              <frictionVel>       0.26      </frictionVel>  
-            </variance>
-
-          </powerLawProfile>
-        </customInitialization>
+ 
+        <customInitialization> 
+          <include href="inputs/ICE/channelFlow.xml" section="powerLawProfile"/>
+        </customInitialization> 
       </ICE>        
     </CFD>
 
@@ -218,7 +195,7 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <ICE>
-         <material>
+         <material name="atmosphere">
            <EOS type = "ideal_gas">                   </EOS>                   
            <dynamic_viscosity>  1.e-3                 </dynamic_viscosity>     
            <thermal_conductivity>0.0                  </thermal_conductivity>  

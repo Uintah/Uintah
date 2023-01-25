@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -37,13 +37,9 @@ else
   SRCS += $(SRCDIR)/FakeRadPetscSolver.cc
 endif
 
-# Notes to avoid linking errors in CUDA, HIP, SYCL, OpenMPTarget, DORadiationModel needs to be defined
-# without HYPRE.
 ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/DORadiationModel.cc \
           $(SRCDIR)/RadHypreSolver.cc   
-else
-  SRCS += $(SRCDIR)/DORadiationModel.cc
 endif
 
 

@@ -1,0 +1,54 @@
+#!/bin/bash
+#______________________________________________________________________
+#  6/9/2022
+#  This script kills all processes and sub processes related to VisIt
+#______________________________________________________________________
+
+
+echo -e "\nKilling frontendlauncher.py"
+pkill -9 --full "python.*frontendlauncher.py"
+
+echo -e "\nKilling the zombie python processess"
+parents_of_dead_kids=$(ps -ef | grep [d]efunct  | awk '{print $3}')
+
+echo "($parents_of_dead_kids)"
+
+if [[ ${#parents_of_dead_kids[@]} -ne 1 ]]; then
+  echo "$parents_of_dead_kids"
+  kill -9 "$parents_of_dead_kids"
+fi
+
+echo -e "\nKilling viewer"
+killall --verbose --user "$USER"  viewer
+
+echo -e "\nKilling engine_par"
+killall --verbose --user "$USER"  engine_par
+
+echo -e "\nKilling md_server"
+killall --verbose --user "$USER"  mdserver
+
+echo -e "\nKilling vcl"
+killall --verbose --user "$USER"  vcl
+
+echo "__________________________________"
+echo " Processes still running"
+ps -u "$USER" | grep -e vcl -e engine_par -e mdserver -e viewer
+
+
+pids=$( ps -u "$USER" | grep -e vcl -e engine_par -e mdserver -e viewer | awk '{print $1}'  )
+
+pids_clean=$(echo "$pids" | tr '\n' ' ')
+
+
+if [[ ${#pids_clean[@]} -ne 0 ]]; then
+  echo "__________________________________"
+  echo " Now killing processes that won't die"
+
+  for p in ${pids_clean}; do
+   echo "kill $p"
+    kill -9 "$p"
+  done
+
+fi
+
+exit

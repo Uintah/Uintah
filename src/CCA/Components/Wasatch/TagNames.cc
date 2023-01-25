@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -80,11 +80,14 @@ namespace WasatchCore{
   sootAgglomerationRate    ( "soot_agglomeration_rate"     , Expr::STATE_NONE ),
 
   // thermochemistry related variables
-  soundspeed         ( "sound_speed"         , Expr::STATE_NONE ),
-  heatCapacity       ( "heat_capacity"       , Expr::STATE_NONE ),
-  cp                 ( "cp"                  , Expr::STATE_NONE ),
-  cv                 ( "cv"                  , Expr::STATE_NONE ),
-  thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),
+  soundspeed              ( "sound_speed"           , Expr::STATE_NONE ),
+  heatCapacity            ( "heat_capacity"         , Expr::STATE_NONE ), // having both 'heatCapacity' and 'cp' seems like a bad idea...
+  cp                      ( "cp"                    , Expr::STATE_NONE ),
+  cv                      ( "cv"                    , Expr::STATE_NONE ),
+  thermalConductivity     ( "thermal_conductivity"  , Expr::STATE_NONE ),
+  thermodynamicPressure   ( "thermodynamic_pressure", Expr::STATE_N    ),
+  thermodynamicPressureNP1( "thermodynamic_pressure", Expr::STATE_NP1  ),
+  backgroundPressure      ( "background_pressure"   , Expr::STATE_NONE ),
   
   // NSCBC related vars
   dudx( "dudx", Expr::STATE_NONE ),
@@ -135,16 +138,19 @@ namespace WasatchCore{
   pHeatCapacity(  "p.heatCapacity", Expr::STATE_NONE ),
   
   // predictor related variables
-  star           ( "*"),
-  rhs            ( "_rhs"),
-  convectiveflux ( "_convFlux_"),
-  diffusiveflux  ( "_diffFlux_"),
-  pressuresrc    ( "pressure_src"  , Expr::STATE_NONE ),
-  divu           ( "divu"          , Expr::STATE_NONE ),
-  drhodt         ( "drhodt"        , Expr::STATE_NONE ),
-  drhodtnp1      ( "drhodt"        , Expr::STATE_NP1  ),
-  unconvergedpts ( "UnconvergedPts", Expr::STATE_NONE ),
-
+  star             ( "*"),
+  rhs              ( "_rhs"),
+  convectiveflux   ( "_convFlux_"),
+  diffusiveflux    ( "_diffFlux_"),
+  pressuresrc      ( "pressure_src"                      , Expr::STATE_NONE ),
+  divu             ( "divu"                              , Expr::STATE_NONE ),
+  drhodt           ( "drhodt"                            , Expr::STATE_NONE ),
+  drhodtnp1        ( "drhodt"                            , Expr::STATE_NP1  ),
+  unconvergedpts   ( "UnconvergedPts"                    , Expr::STATE_NONE ),
+  DPDt             ( "pressureMaterialDerivative"        , Expr::STATE_N    ),
+  DPDtNP1          ( "pressureMaterialDerivative"        , Expr::STATE_NP1  ),
+  partialDPDt      ( "pressureMaterialDerivative_partial", Expr::STATE_NONE ),
+  adiabaticIndex   ( "adiabatic_index"                   , Expr::STATE_NONE ),
   
   // mms varden
   mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),
@@ -188,7 +194,7 @@ namespace WasatchCore{
     return Expr::Tag(someName + star + rhs, newContext);
   }
   
-    Expr::Tag TagNames::derivative_tag( const std::string depVar,
+  Expr::Tag TagNames::derivative_tag( const std::string depVar,
                                       const std::string indepVar ) const
   {
     return Expr::Tag( "d_"+depVar+"_d_"+indepVar, Expr::STATE_NONE );

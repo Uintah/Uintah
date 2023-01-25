@@ -173,14 +173,9 @@ linSolver::sched_buildAMatrix(SchedulerP& sched,
 
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  //Ghost::GhostType  gn  = Ghost::None;
-  //Ghost::GhostType  gaf = Ghost::AroundFaces;
 
   tsk->requires(Task::NewDW, d_cellTypeLabel,       gac, 1);
   // get drhodt that goes in the rhs of the pressure equation
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_mmgasVolFracLabel, gac, 1);
-  }
 
   tsk->computes(d_presCoefPBLMLabel);
 
@@ -229,10 +224,6 @@ linSolver::buildAMatrix(const ProcessorGroup* pc,
       }}}
 
     d_pressureSolver->calculatePressureCoeff(patch, &vars, &constVars);
-    // Modify pressure coefficients for multimaterial formulation
-    if (d_MAlab) {
-      new_dw->get(constVars.voidFraction, d_mmgasVolFracLabel, d_indx, patch,gac, 1);
-    }
 
     //Vector Dx = patch->dCell();
     //double volume = Dx.x()*Dx.y()*Dx.z();

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -116,7 +116,9 @@ namespace Uintah {
     virtual void scheduleInitialize(SchedulerP& scheduler,
                                     const LevelP& level) = 0;
 
-      
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level) = 0;
+
     virtual void scheduleComputeStableTimeStep(SchedulerP& scheduler,
                                                const LevelP& level) = 0;
       
@@ -146,15 +148,15 @@ namespace Uintah {
     virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
                                            const VarLabel* var);
 
-    virtual std::vector<TransportedVariable*> getTransportedVars() {return d_trans_vars; }
-    virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_reflux_vars; }
+    virtual std::vector<TransportedVariable*> getTransportedVars() {return d_transVars; }
+    virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_refluxVars; }
 
     virtual bool computesThermoTransportProps() const
     { return m_modelComputesThermoTransportProps; }
 
   // protected:
-    std::vector<TransportedVariable*> d_trans_vars;
-    std::vector<AMRRefluxVariable*> d_reflux_vars;
+    std::vector<TransportedVariable*> d_transVars;
+    std::vector<AMRRefluxVariable*> d_refluxVars;
 
     bool m_modelComputesThermoTransportProps {false};
 

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -168,18 +168,15 @@ HAVE_KOKKOS        := @HAVE_KOKKOS@
 KOKKOS_INCLUDE     := @INC_KOKKOS_H@
 KOKKOS_LIBRARY     := @KOKKOS_LIB_DIR_FLAG@ @KOKKOS_LIB_FLAG@
 
-HAVE_CUDA        := @HAVE_CUDA@
-CUDA_INCLUDE     := @INC_CUDA_H@
-CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
-
-HAVE_GPU        := @HAVE_GPU@
-HAVE_KOKKOS_GPU := @HAVE_KOKKOS_GPU@
-
 MPI_INCLUDE := @INC_MPI_H@
 MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
 
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
+
+HAVE_CUDA        := @HAVE_CUDA@
+CUDA_INCLUDE     := @INC_CUDA_H@
+CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
 
 HAVE_TIFF := @HAVE_TIFF@
 TIFF_LIBRARY := @TIFF_LIB_FLAG@ @TIFF_LIB_DIR_FLAG@
@@ -369,18 +366,18 @@ else
           ifeq ($(SCI_MAKE_BE_QUIET),true)
 	          @echo "Compiling: $<"
 	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-            #     @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           else
-	          @echo "Compiling and Creating dependency information (stdout):"
+	          @echo "CREATING DEPENDENCY INFORMATION:"
 	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-            #     @echo "ACTUALLY COMPILING:"
-            #     $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	          @echo "ACTUALLY COMPILING:"
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           endif
         else
 	        @echo ".cc rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
@@ -458,24 +455,24 @@ else
 	  @rm -f $(basename $@).$(F77_DEPEND_EXT)
           ifeq ($(SCI_MAKE_BE_QUIET),true)
             # This just generates the .d dependency file:
-	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
 
             # The following if/grep/sed is necessary to fix the .d file for the PGI compiler on Ranger:
 	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
 
             # Now do the actual compile!
-            #@echo "Fortran:   $<"
-            #@$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+	    @echo "Fortran:   $<"
+	    @$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
           else
 	    @echo "CREATING DEPENDENCY INFORMATION:"
-	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
 
             # The following if/grep/sed is necessary for PGI compiler on Ranger:
 	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
 
             # Now do the actual compile!
-            #@echo "ACTUALLY COMPILING:"
-            #$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+	    @echo "ACTUALLY COMPILING:"
+	    $(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
           endif
         else
 	  @echo "Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE) (for $@)"

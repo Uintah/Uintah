@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,13 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/AMRMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
@@ -112,7 +115,9 @@ using namespace std;
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)
 {
+  d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
+  d_Al = scinew AMRMPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -123,12 +128,17 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 
   d_flags = flags;
 
+  // Hydro-mechanical coupling MPM
+  d_coupledflow = flags->d_coupledflow;
+
   registerPermanentParticleState(matl);
 }
 
 ParticleCreator::~ParticleCreator()
 {
+  delete d_Hlb;
   delete d_lb;
+  delete d_Al;
 }
 
 particleIndex 
@@ -407,7 +417,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp)) {
           Vector areacomps;
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
           if (d_doScalarDiffusion) {
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
                                      pvars.parea[pidx].y()*areacomps.y(),
@@ -432,7 +442,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
 IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps)
+                                          Vector& areacomps, int dwi)
 {
   IntVector ret(0,0,0);
   int k=0;
@@ -443,8 +453,18 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = pbc->loadCurveID(); 
+      if (pbc->flagMaterialPoint(pp, dxpp)
+       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
+         ret(k) = pbc->loadCurveID();
+         k++;
+      }
+    }
+    else if (bcs_type == "Torque") {
+      TorqueBC* tbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (tbc->flagMaterialPoint(pp, dxpp)
+       && (tbc->loadCurveMatl()==dwi || tbc->loadCurveMatl()==-99)) {
+         ret(k) = tbc->loadCurveID();
          k++;
       }
     }
@@ -482,8 +502,13 @@ void ParticleCreator::printPhysicalBCs()
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
-      PressureBC* pbc = 
+      PressureBC* pbc =
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *pbc << endl;
+    }
+    if (bcs_type == "Torque") {
+      TorqueBC* pbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *pbc << endl;
     }
     if (bcs_type == "HeatFlux") {
@@ -574,17 +599,31 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
                                   d_lb->diffusion->pExternalScalarFlux, subset);
   }
+
+  if (d_coupledflow) {  // Harmless that rigid allocates and put, as long as
+                        // nothing it put
+      new_dw->allocateAndPut(pvars.pSolidMass, d_Hlb->pSolidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidMass, d_Hlb->pFluidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorosity, d_Hlb->pPorosityLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorePressure, d_Hlb->pPorePressureLabel,
+          subset);
+      new_dw->allocateAndPut(pvars.pPrescribedPorePressure,
+          d_Hlb->pPrescribedPorePressureLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidVelocity, d_Hlb->pFluidVelocityLabel,
+          subset);
+  }
+
   if(d_withGaussSolver){
      new_dw->allocateAndPut(pvars.pPosCharge,
-                                          d_lb->pPosChargeLabel,    subset);
+                                          d_Al->pPosChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pNegCharge,
-                                          d_lb->pNegChargeLabel,    subset);
+                                          d_Al->pNegChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_lb->pPosChargeGradLabel,subset);
+                                          d_Al->pPosChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_lb->pNegChargeGradLabel,subset);
+                                          d_Al->pNegChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pPermittivity,
-                                          d_lb->pPermittivityLabel, subset);
+                                          d_Al->pPermittivityLabel, subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -642,7 +681,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
-        
           IntVector idx(ix, iy, iz);
           Point p = lower + dxpp*idx;
           if (!b2.contains(p)){
@@ -745,12 +783,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
-#if 0
-//  if(p.z()>0.04 && p.z()<0.0444){
-  if(p.z()>0.0424 && p.z()<0.0468){
-    pvars.plocalized[i] = 1.0;
-  }
-#endif
 
   // For AMR
   const Level* curLevel = patch->getLevel();
@@ -782,6 +814,22 @@ ParticleCreator::initializeParticle(const Patch* patch,
     }
     pvars.pTempGrad[i] = Vector(0.0);
   
+    if (d_coupledflow &&
+        !matl->getIsRigid()) {  // mass is determined by incoming porosity
+        double rho_s = matl->getInitialDensity();
+        double rho_w = matl->getWaterDensity();
+        double n = matl->getPorosity();
+        pvars.pmass[i] = (n * rho_w + (1.0 - n) * rho_s) * pvars.pvolume[i];
+        pvars.pFluidMass[i] = rho_w * pvars.pvolume[i];
+        pvars.pSolidMass[i] = rho_s * pvars.pvolume[i];
+        pvars.pFluidVelocity[i] = pvars.pvelocity[i];
+        pvars.pPorosity[i] = n;
+        pvars.pPorePressure[i] = matl->getInitialPorepressure();
+        pvars.pPrescribedPorePressure[i] = Vector(0., 0., 0.);
+        pvars.pdisp[i] = Vector(0., 0., 0.);
+    }
+    else { // Using original line of MPM
+
     double vol_frac_CC = 1.0;
     try {
      if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
@@ -796,6 +844,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
       pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
     }
     pvars.pdisp[i]        = Vector(0.,0.,0.);
+
+    } // end else
+
   }
   
   if(d_with_color){
@@ -826,15 +877,13 @@ ParticleCreator::initializeParticle(const Patch* patch,
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
   GeometryPieceP piece = (*obj)->getPiece();
-  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
-  pvars.psurfgrad[i] = Vector(0.,0.,0.);
-
-#if 0
-//  if(p.z()>0.0424 && p.z()<0.0468){
-  if(p.z()>0.0424 && p.z()<0.0474){
+  FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+  if(fgp){
     pvars.psurface[i] = 1.0;
+  } else {
+    pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
   }
-#endif
+  pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
@@ -872,9 +921,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // class to do the counting
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
+    Vector dX = patch->dCell();
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
-    sgp->setCellSize(patch->dCell());
+    sgp->setCellSize(dX);
     if(fgp){
       fgp->setCpti(d_useCPTI);
       fgp->readPoints(patch->getID());
@@ -983,7 +1033,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
             double permittivity = permittivities->at(ii);
             vars.d_object_permittivity[obj].push_back(permittivity);
           }
-        } 
+        }
       }  // patch contains cell
     }
     //sgp->deletePoints();
@@ -1032,7 +1082,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-  
 
   if (d_with_color){
     particle_state.push_back(d_lb->pColorLabel);
@@ -1059,21 +1108,41 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
                                                       particle_state_preReloc);
   }
 
+  if (d_coupledflow && !matl->getIsRigid()) {
+      //if (d_coupledflow ) {
+      particle_state.push_back(d_Hlb->pFluidMassLabel);
+      particle_state.push_back(d_Hlb->pSolidMassLabel);
+      particle_state.push_back(d_Hlb->pPorePressureLabel);
+      particle_state.push_back(d_Hlb->pPorosityLabel);
+
+      // Error Cannot find in relocateParticles ???
+
+      particle_state_preReloc.push_back(d_Hlb->pFluidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pSolidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorePressureLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorosityLabel_preReloc);
+
+      if (d_flags->d_integrator_type == "explicit") {
+          particle_state.push_back(d_Hlb->pFluidVelocityLabel);
+          particle_state_preReloc.push_back(d_Hlb->pFluidVelocityLabel_preReloc);
+      }
+  }
+
   if(d_withGaussSolver){
-    particle_state.push_back(d_lb->pPosChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeLabel_preReloc);
+    particle_state.push_back(d_Al->pPosChargeLabel);
+    particle_state_preReloc.push_back(d_Al->pPosChargeLabel_preReloc);
 
-    particle_state.push_back(d_lb->pNegChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
+    particle_state.push_back(d_Al->pNegChargeLabel);
+    particle_state_preReloc.push_back(d_Al->pNegChargeLabel_preReloc);
 
-    particle_state.push_back(d_lb->pPosChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeGradLabel_preReloc);
+    particle_state.push_back(d_Al->pPosChargeGradLabel);
+    particle_state_preReloc.push_back(d_Al->pPosChargeGradLabel_preReloc);
 
-    particle_state.push_back(d_lb->pNegChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeGradLabel_preReloc);
+    particle_state.push_back(d_Al->pNegChargeGradLabel);
+    particle_state_preReloc.push_back(d_Al->pNegChargeGradLabel_preReloc);
 
-    particle_state.push_back(d_lb->pPermittivityLabel);
-    particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);
+    particle_state.push_back(d_Al->pPermittivityLabel);
+    particle_state_preReloc.push_back(d_Al->pPermittivityLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
@@ -1108,7 +1177,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
-  if(d_flags->d_useLogisticRegression){
+  if(d_flags->d_useLogisticRegression || d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
   }
@@ -1189,7 +1258,6 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   //  Check the candidate points which surround the point just passed
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
-  
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))

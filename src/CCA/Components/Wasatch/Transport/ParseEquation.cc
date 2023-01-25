@@ -2,7 +2,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,8 @@
 #include <CCA/Components/Wasatch/Transport/MomentTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/EnthalpyTransportEquation.h>
 #ifdef HAVE_POKITT
-#include "SpeciesTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/ThermodynamicPressureTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/TarTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/SootTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/SootParticleTransportEquation.h>
@@ -93,7 +94,6 @@ namespace WasatchCore{
 
     scalarEqnParams->getAttribute( "equation", eqnLabel );
     scalarEqnParams->get( "SolutionVariable", solnVariable );
-
 
 
     //___________________________________________________________________________
@@ -164,6 +164,7 @@ namespace WasatchCore{
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
                            GraphCategories& gc,
+                           std::set<std::string>& persistentFields,
                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                            const bool computeKineticsJacobian )
   {
@@ -186,15 +187,20 @@ namespace WasatchCore{
     const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
     const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
 
-    return setup_species_equations( params,
-                                    wasatchSpec,
-                                    turbParams,
-                                    densityTag,
-                                    velTags,
-                                    TagNames::self().temperature,
-                                    gc,
-                                    dualTimeMatrixInfo,
-                                    computeKineticsJacobian );
+    std::vector<EqnTimestepAdaptorBase*>
+    eqns =
+    setup_species_equations( params,
+                             wasatchSpec,
+                             turbParams,
+                             densityTag,
+                             velTags,
+                             TagNames::self().temperature,
+                             gc,
+                             persistentFields,
+                             dualTimeMatrixInfo,
+                             computeKineticsJacobian );
+
+    return eqns;
 #   else
     // nothing to do - return empty equation set.
     std::vector<EqnTimestepAdaptorBase*> eqns;
@@ -203,6 +209,32 @@ namespace WasatchCore{
   }
 
   //==================================================================
+
+  EqnTimestepAdaptorBase*
+  parse_thermodynamic_pressure_equation( Uintah::ProblemSpecP wasatchSpec,
+                                         GraphCategories& gc,
+                                         std::set<std::string>& persistentFields )
+  {
+    EqnTimestepAdaptor<FieldT>* eqnAdaptor = nullptr;
+#   ifdef HAVE_POKITT
+    // add an equation for the thermodynamic pressure if the flow treatment is low-Mach
+    ThermodymamicPressureTransportEquation*
+    pressEqn =
+    scinew ThermodymamicPressureTransportEquation( wasatchSpec,
+                                                   gc,
+                                                   persistentFields );
+
+    eqnAdaptor = new EqnTimestepAdaptor<FieldT>(pressEqn);
+
+    return eqnAdaptor;
+#   else
+    // nothing to do - return empty equation set.
+    std::vector<EqnTimestepAdaptorBase*> eqns;
+    return eqnAdaptor;
+#   endif
+  }
+
+ //==================================================================
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_tar_and_soot_equations( Uintah::ProblemSpecP params,
@@ -553,7 +585,6 @@ namespace WasatchCore{
     const Expr::Tag drhodfTag = tagNames.derivative_tag( densityTag, primVarName );
     const Expr::Tag scalarEOSCouplingTag(primVarName + "_EOS_Coupling", Expr::STATE_NONE);
 
-
     std::string x1="X", x2="Y";
     if( varDens2DMMSParams->findAttribute("x1") ) varDens2DMMSParams->getAttribute("x1",x1);
     if( varDens2DMMSParams->findAttribute("x2") ) varDens2DMMSParams->getAttribute("x2",x2);
@@ -625,10 +656,12 @@ namespace WasatchCore{
       if( momentumSpec->findBlock("Viscosity")->findBlock("FromPoKiTT") ){
         typedef pokitt::Viscosity<SVolField>::Builder Visc;
         Expr::TagList yiTags;
+        Expr::Context context = Wasatch::flow_treatment() == LOWMACH ? Expr::STATE_N : Expr::STATE_NONE;
         for( int i=0; i<CanteraObjects::number_species(); ++i ){
-          yiTags.push_back( Expr::Tag( CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+          yiTags.push_back( Expr::Tag( CanteraObjects::species_name(i), context ) );
         }
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Visc( viscTag, TagNames::self().temperature, yiTags ) );
+        const Expr::Tag temperatureTag = Expr::Tag( TagNames::self().temperature.name(), context );
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Visc( viscTag, temperatureTag, yiTags ) );
       }
     }
 #   endif

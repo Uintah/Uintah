@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,6 +36,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
@@ -328,7 +329,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
     parent_old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
     parent_old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
+    old_dw->get(dispNew,Il->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,            pset);
@@ -544,7 +545,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
+    new_dw->get(dispNew,Il->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -653,7 +654,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+  task->requires(Task::OldDW,Il->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
   task->computes(lb->pdTdtLabel,           matlset);  
@@ -679,7 +680,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
   task->requires(Task::OldDW, pStatedataLabel,             matlset,gnone);
   task->requires(Task::OldDW, pRandLabel,                  matlset,gnone);
-  task->requires(Task::NewDW, lb->dispNewLabel,   matlset,Ghost::AroundCells,1);
+  task->requires(Task::NewDW, Il->dispNewLabel,   matlset,Ghost::AroundCells,1);
                                                                                 
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pdTdtLabel,                           matlset);

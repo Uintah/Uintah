@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2018 The University of Utah
+#  Copyright (c) 2010-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,8 @@ CUDA_ENABLED_SRCS =              \
      BoundaryConditionsParabolic \
      BoundaryConditionsPowerLaw  \
      BoundaryConditionsGaussian \
-     BoundaryConditionsPrimvar 
+     BoundaryConditionsPrimvar \
+     BoundaryConditionsTimeLinear
 
 ifeq ($(HAVE_CUDA),yes)
 

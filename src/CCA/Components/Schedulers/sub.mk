@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,7 @@
 #
 #
 # Makefile fragment for this subdirectory
+#
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -35,7 +36,6 @@ SRCS += \
         $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
-        $(SRCDIR)/KokkosScheduler.cc          \
         $(SRCDIR)/KokkosOpenMPScheduler.cc    \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
@@ -48,22 +48,18 @@ SRCS += \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
 
-ifeq ($(HAVE_GPU),yes)
-  SRCS += $(SRCDIR)/GPUGridVariableInfo.cc    \
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cu       \
+          $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
           $(SRCDIR)/GPUMemoryPool.cc
 
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu
   DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
-else ifeq ($(HAVE_KOKKOS),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cc
-endif
-
 endif
 
 PSELIBS := \
         CCA/Components/ProblemSpecification \
+        CCA/Components/DataArchiver \
         CCA/Ports        \
         Core/Containers  \
         Core/Disclosure  \

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -433,7 +433,7 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
   int ierr;
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
+  PetscClassId id = INT_MAX;
   if (U) {
     PetscObjectGetClassId((PetscObject)U, &id);
   }

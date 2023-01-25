@@ -31,6 +31,7 @@ sub cleanStr {
   if( $n == 1 ){
     $inputs[0] =~ s/\n//g;        # remove newlines
     $inputs[0] =~ s/ //g;         # remove white spaces
+    $inputs[0] =~ s/"//g;         # remove quotes
     return $inputs[0];
   }
 
@@ -42,6 +43,7 @@ sub cleanStr {
   foreach $i (@inputs){
     $i =~ s/\n//g;        # remove newlines
     $i =~ s/ //g;         # remove white spaces
+    $i =~ s/"//g;         # remove quotes
     my $l = length $i;
     
     if ($l > 0){
@@ -56,17 +58,17 @@ sub cleanStr {
 #   The paths can be either a scalar or an array
 sub setPath{
   my($input, @paths) = @_;
-  
+
+  # remove quotes from the input
+  $input =~ s/"//g;
+    
   if( -e $input ){
     return $input;
-  } 
-
+  }
+  
   # the input file may have a wildcard
   if($input =~ m/\*/){
-    my @files = glob($input);
-    foreach  my $file (@files){
-      print "The file contains a wild card, ignoring  ($file)\n";
-    }
+    system("file -E $input > /dev/null 2>&1")  == 0 || die("\nInvalid path($input)");
     return $input;
   }
 
@@ -79,7 +81,7 @@ sub setPath{
   }
   
   #  Bulletproofing
-  print "\n \nERROR:setupFrameWork:\n";
+  print "\n \nERROR:setPath():\n";
   print "The file: \n ($input) \n";
   
   foreach my $path (@paths){

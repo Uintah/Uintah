@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -72,6 +72,7 @@ SRCS += \
         Core/Geometry/BBox.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
+        Core/Geometry/PolyPlane.cc \
         Core/Geometry/Point.cc \
         Core/Geometry/Tensor.cc \
         Core/Geometry/Vector.cc \
@@ -79,9 +80,6 @@ SRCS += \
         Core/Disclosure/TypeDescription.cc \
         Core/Disclosure/TypeUtils.cc 
 
-ifneq ($(HAVE_CUDA),yes)
-  SRCS += Core/Geometry/PolyPlane.cc
-endif
 
 PSELIBS := \
 	Core/Exceptions Core/Containers \

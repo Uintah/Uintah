@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,6 +48,7 @@ namespace Uintah {
 class GeometryObject;
 class SDInterfaceModel;
 class FluxBCModel;
+class AMRMPMLabel;
 
 class AMRMPM : public SerialMPM {
 
@@ -441,6 +442,7 @@ private:
   Ghost::GhostType  d_gac;            // for readability
   Ghost::GhostType  d_gan;
   Ghost::GhostType  d_gn;
+  AMRMPMLabel* Al;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   std::string d_CFI_interpolator;     // user can override interpolator at CFI

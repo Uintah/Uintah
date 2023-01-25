@@ -1,37 +1,47 @@
 import numpy as np
 import h5py
 import struct
-import itertools
+import io
 import os
 import xml.etree.ElementTree as ET
 import ast
-import sys
-import types
 import argparse
 """
 Filename:   uda2xmf.py
 
-Summary:    
+Summary:
             This is a python script for the post-processing of Uintah *.uda output files.
-            Approximate particle domains are visualized for GIMP, CPDI and CPTI 
-            interpolators, using the XDMF *.xmf file format, which can be visualized 
-            using tools like ParaView or VisIt. 
+            Approximate particle domains are visualized for GIMP, CPDI and CPTI
+            interpolators, using the XDMF *.xmf file format, which can be visualized
+            using tools like ParaView or VisIt.
 
-Usage:      python uda2xmf.py [-flages] <uda_directory>
+serial Usage:      python3 uda2xmf.py [-flags] <uda_directory>
+
+parallel Usage:    mpirun -np x python3 uda2xmf.py [-flags] <uda_directory>
+
+WARNING:  You must use the same MPI that was used to compile mpi4py.  On Debian
+Buster use mpirun.openmpi.
+
 
 Input:      Uintah *.uda directory
-Output:     XDMF *.xmf and HDF5 *.h5 files for visualization 
-            
+Output:     XDMF *.xmf and HDF5 *.h5 files for visualization
+
+
+
 Revisions:  YYMMDD    Author            Comments
 -------------------------------------------------------------------------------------
-            171201    Cody Herndon, Brian Phung, Ashley Spear Speed up of python code 
-            151201    Brian Leavy       Initial visualization of particle domains 
-""" 
+            171201    Cody Herndon, Brian Phung, Ashley Spear Speed up of python code
+            151201    Brian Leavy       Initial visualization of particle domains
+"""
+
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    if rank == 0:
+      print("uda2xmf.py: You must use the same MPI library version when running the script in parallel.")
+      print("uda2xmf.py: MPI library Version: ",MPI.Get_library_version() )
 
 except ImportError:
     comm = None
@@ -60,6 +70,23 @@ class Data_parser:
 
         for node in range(nodes):
             point.append(struct.unpack(endian_flag+"ddd", binfile_handle.read(24)))
+
+        return np.array(point)
+
+    @staticmethod
+    def parse_ParticleVariable_IntVector(binfile_handle, nodes, endian_flag):
+        """!
+        @brief Parses three integers for a IntVector.
+
+        @param binfile_handle binary file to read from, already at the start point
+        @param nodes the number of nodes to be read
+        @param endian_flag the endianness of the data, as determine by the struct lib
+        @return a numpy array of data
+        """
+        point = []
+
+        for node in range(nodes):
+            point.append(struct.unpack(endian_flag+"iii", binfile_handle.read(12)))
 
         return np.array(point)
 
@@ -128,6 +155,23 @@ class Data_parser:
 
         for node in range(nodes):
             point.append(struct.unpack(endian_flag+"Q", binfile_handle.read(8)))
+
+        return np.array(point)
+
+    @staticmethod
+    def parse_ParticleVariable_int(binfile_handle, nodes, endian_flag):
+        """!
+        @brief Parses one int for a scalar.
+
+        @param binfile_handle binary file to read from, already at the start point
+        @param nodes the number of nodes to be read
+        @param endian_flag the endianness of the data, as determine by the struct lib
+        @return a numpy array of data
+        """
+        point = []
+
+        for node in range(nodes):
+            point.append(struct.unpack(endian_flag+"i", binfile_handle.read(4)))
 
         return np.array(point)
 
@@ -216,6 +260,30 @@ class Data_parser:
         @return None
         """
         pass
+
+    @staticmethod
+    def generate_xmf_ParticleVariable_IntVector(xml_root, h5_file_path, h5_data_dims):
+        """!
+        @brief Appends particle IntVector descriptor to the xmf xml root.
+
+        @param xml_root xmf descriptor root
+        @param h5_file_path file and h5 path to data
+        @param h5_data_dims data dimensions as returned from data.shape
+        @return None
+        """
+        variable = h5_file_path.split("/")[-1]
+
+        attribute = ET.SubElement(xml_root, "Attribute")
+        attribute.attrib["Name"] = variable
+        attribute.attrib["Center"] = "Cell"
+        attribute.attrib["Type"] = "Vector"
+
+        data_item = ET.SubElement(attribute, "DataItem")
+        data_item.attrib["Format"] = "HDF"
+        data_item.attrib["Dimensions"] = str(h5_data_dims[0])+" "+str(h5_data_dims[1])
+        data_item.attrib["Precision"] = "4"
+        data_item.attrib["DataType"] = "Int"
+        data_item.text = h5_file_path
 
     @staticmethod
     def generate_xmf_ParticleVariable_Vector(xml_root, h5_file_path, h5_data_dims):
@@ -314,6 +382,30 @@ class Data_parser:
         data_item.text = h5_file_path
 
     @staticmethod
+    def generate_xmf_ParticleVariable_Int(xml_root, h5_file_path, h5_data_dims):
+        """!
+        @brief Appends particle Int descriptor to the xmf xml root.
+
+        @param xml_root xmf descriptor root
+        @param h5_file_path file and h5 path to data
+        @param h5_data_dims data dimensions as returned from data.shape
+        @return None
+        """
+        variable = h5_file_path.split("/")[-1]
+
+        attribute = ET.SubElement(xml_root, "Attribute")
+        attribute.attrib["Name"] = variable
+        attribute.attrib["Center"] = "Cell"
+        attribute.attrib["Type"] = "Scalar"
+
+        data_item = ET.SubElement(attribute, "DataItem")
+        data_item.attrib["Format"] = "HDF"
+        data_item.attrib["Dimensions"] = str(h5_data_dims[0])+" "+str(h5_data_dims[1])
+        data_item.attrib["Precision"] = "4"
+        data_item.attrib["DataType"] = "Int"
+        data_item.text = h5_file_path
+
+    @staticmethod
     def generate_xmf_NCVariable_Double(xml_root, h5_file_path, h5_data_dims):
         """!
         @brief Appends Node Centered double descriptor to the xmf xml root.
@@ -355,20 +447,24 @@ class Variable_data_factory:
     """
     _data_lookup = {}
     _data_lookup["ParticleVariable<Point>"] = Data_parser.parse_ParticleVariable_Point
+    _data_lookup["ParticleVariable<IntVector>"] = Data_parser.parse_ParticleVariable_IntVector
     _data_lookup["ParticleVariable<Vector>"] = Data_parser.parse_ParticleVariable_Vector
     _data_lookup["ParticleVariable<double>"] = Data_parser.parse_ParticleVariable_double
     _data_lookup["ParticleVariable<Matrix3>"] = Data_parser.parse_ParticleVariable_Matrix3
     _data_lookup["ParticleVariable<long64>"] = Data_parser.parse_ParticleVariable_long64
+    _data_lookup["ParticleVariable<int>"] = Data_parser.parse_ParticleVariable_int
     _data_lookup["NCVariable<double>"] = Data_parser.parse_NCVariable_double
     _data_lookup["NCVariable<Vector>"] = Data_parser.parse_NCVariable_Vector
     _data_lookup["NCVariable<Matrix3>"] = Data_parser.parse_NCVariable_Matrix3
 
     _generate_xmf = {}
     _generate_xmf["ParticleVariable<Point>"] = Data_parser.generate_xmf_ParticleVariable_Point
+    _generate_xmf["ParticleVariable<IntVector>"] = Data_parser.generate_xmf_ParticleVariable_IntVector
     _generate_xmf["ParticleVariable<Vector>"] = Data_parser.generate_xmf_ParticleVariable_Vector
     _generate_xmf["ParticleVariable<double>"] = Data_parser.generate_xmf_ParticleVariable_Double
     _generate_xmf["ParticleVariable<Matrix3>"] = Data_parser.generate_xmf_ParticleVariable_Matrix3
     _generate_xmf["ParticleVariable<long64>"] = Data_parser.generate_xmf_ParticleVariable_Long64
+    _generate_xmf["ParticleVariable<int>"] = Data_parser.generate_xmf_ParticleVariable_Int
     _generate_xmf["NCVariable<double>"] = Data_parser.generate_xmf_NCVariable_Double
     _generate_xmf["NCVariable<Vector>"] = Data_parser.generate_xmf_NCVariable_Vector
     _generate_xmf["NCVariable<Matrix3>"] = Data_parser.generate_xmf_NCVariable_Matrix3
@@ -389,10 +485,10 @@ class Variable_data_factory:
         @return a numpy array of the data
         """
         if not endian_flag:
-            if Variable_data_factory.endianness is "little-endian":
+            if Variable_data_factory.endianness == "little-endian":
                 endian_flag = "<"
 
-            elif Variable_data_factory.endianness is "big-endian":
+            elif Variable_data_factory.endianness == "big-endian":
                 endian_flag = ">"
 
             else:
@@ -431,6 +527,7 @@ class Domain_calculators():
     corners_per_particle['cpti'] = 4
     corners_per_particle['linear'] = 8
     corners_per_particle['cpdi'] = 8
+    corners_per_particle['fast_cpdi'] = 8
     corners_per_particle['gimp'] = 8
 
     @staticmethod
@@ -559,6 +656,7 @@ class Domain_factory():
     _interpolator['cpti'] = Domain_calculators._calculate_cpti_domain
     _interpolator['linear'] = Domain_calculators._calculate_gimp_domain
     _interpolator['cpdi'] = Domain_calculators._calculate_gimp_domain
+    _interpolator['fast_cpdi'] = Domain_calculators._calculate_gimp_domain
     _interpolator['gimp'] = Domain_calculators._calculate_gimp_domain
 
     @staticmethod
@@ -600,7 +698,7 @@ class Variable:
             # no 'numParticles', is probably 'NCVariable' type, use nnodes
             self.particles = Patch_lightweight.nnodes[self.var_patch]
 
-        f = open(self.datafile, "r")
+        f = io.open(self.datafile, "rb")
 
         self.dataset = Variable_data_factory.parse(self.var_type, f, int(self.start), int(self.end), int(self.particles))
         f.close()
@@ -732,8 +830,6 @@ class Patch_lightweight(Lightweight_container):
         super(Patch_lightweight, self).__init__()
 
         self.pid = int(patch_element.find(".//id").text)
-        p_num = str(self.pid).zfill(5)
-#        self.name = "p"+p_num
         self.proc = int(patch_element.find(".//proc").text)
 
 #        self.low_index = ast.literal_eval(patch_element.find(".//lowIndex").text)
@@ -919,7 +1015,7 @@ class Timestep_lightweight(Lightweight_container):
             if name == "p.scalefactor":
                 scalefactors.append(element)
 
-        if len(scalefactors) is 0:
+        if len(scalefactors) == 0:
             for centroid in centroids:
                 domains.append(( centroid, ("",[]) ))
 
@@ -948,7 +1044,7 @@ class Timestep_lightweight(Lightweight_container):
 
             for i, element in enumerate(domain[0][1]):
                 # CPTI/CPDI
-                if self.interpolator == 'cpti' or self.interpolator == 'cpdi':
+                if self.interpolator == 'cpti' or self.interpolator == 'cpdi'or self.interpolator == 'fast_cpdi':
                     # pack rvectors with scalefactors
                     # scalefactor vectors passed as a len=9 array
                     scale = domain[1][1][i]
@@ -1038,14 +1134,14 @@ class Timestep_lightweight(Lightweight_container):
 
         for element in datasets:
             if element[0] not in paths:
-                if len(element[1]) is not 0:
+                if len(element[1]) != 0:
                     paths.append(element[0])
                     path_data.append(element[1])
 
             else:
                 index = paths.index(element[0])
 
-                if len(element[1]) is not 0:
+                if len(element[1]) != 0:
                     path_data[index] = np.append(path_data[index], element[1], 0)
 
         return (paths, path_data)
@@ -1080,12 +1176,12 @@ class Timestep_lightweight(Lightweight_container):
         if self.interpolator == 'cpti':
             topology.attrib["TopologyType"] = "Tetrahedron"
             if args.xdmf2:
-              topology.attrib[ "NumberOfElements"] = str(topo_data_element.shape[0])
+                topology.attrib[ "NumberOfElements"] = str(topo_data_element.shape[0])
 
         else:
             topology.attrib["TopologyType"] = "Hexahedron"
             if args.xdmf2:
-              topology.attrib[ "NumberOfElements"] = str(topo_data_element.shape[0])
+                topology.attrib[ "NumberOfElements"] = str(topo_data_element.shape[0])
 
         topo_data = ET.SubElement(topology, "DataItem")
         topo_data.attrib["Format"] = "HDF"
@@ -1093,7 +1189,6 @@ class Timestep_lightweight(Lightweight_container):
         topo_data.attrib["Precision"] = "8"
 
         topo_data.text = topo_data_path
-        topo_shape = h5_handle[h5_path+path[0]].shape
         topo_data.attrib["Dimensions"] = str(topo_data_element.shape[0])+" "+str(topo_data_element.shape[1])
 
 
@@ -1140,7 +1235,7 @@ class Uda_lightweight(Lightweight_container):
         if os.path.isdir(root_folder):
             self.root_folder = root_folder
 
-            if self.root_folder[-1] is not "/":
+            if self.root_folder[-1] != "/":
                 self.root_folder += "/"
 
             read_error = self._read_input()
@@ -1177,7 +1272,13 @@ class Uda_lightweight(Lightweight_container):
         timestep_elems = index_root.findall(".//timesteps/timestep")
 
         for ele in timestep_elems:
-            self.contents.append(Timestep_lightweight(ele, self.root_folder))
+
+            # ignore timestep 0
+            if ele.text != '0':
+              self.contents.append(Timestep_lightweight(ele, self.root_folder))
+
+            else:
+              print( "Ignoring timestep 0")
 
             if target_timestep:
                 if self.contents[-1].name not in target_timestep:
@@ -1300,11 +1401,13 @@ class Uda_lightweight(Lightweight_container):
                     else:
                         done = True
 
-        xmf_handle.write(ET.tostring(root))
+        longXMLStr=ET.tostring(root).decode()  # <>.decode() is for python2/3 compatibility
+        #print( "root: ", longXMLStr)
+
+        xmf_handle.write( longXMLStr )
 
     @staticmethod
     def generate_descriptor_parallel(item):
-        result = []
 
         item.parse()
 
@@ -1349,8 +1452,6 @@ class Uda_lightweight(Lightweight_container):
         @param xmf_handle the handle of the opened xmf file
         @return xml root node
         """
-        h5_path = self.name+"/"
-        h5_root = h5_filename+":"+h5_path
 
         root = ET.Element("Xdmf")
         root.attrib["Version"] = "2.0"
@@ -1364,8 +1465,10 @@ class Uda_lightweight(Lightweight_container):
         timeseries_grid.attrib["CollectionType"] = "Temporal"
 
         return root
+#______________________________________________________________________
 
 if __name__=="__main__":
+
     if rank == 0:
         parser = argparse.ArgumentParser()
 
@@ -1390,14 +1493,16 @@ if __name__=="__main__":
 
         uda = Uda_lightweight(args.uda, target_timestep=timesteps)
 
-        prefix=args.uda.split('/')[-1].split('.')[0]
-        xml_root = prefix+'.xmf' 
-        h5_root = prefix+'.h5' 
+        udaPath = os.path.normpath(args.uda)
+        prefix = os.path.basename(udaPath)
+
+        print( "uda: ", prefix)
+
+        xml_root = prefix+'.xmf'
+        h5_root = prefix+'.h5'
 
         h = h5py.File(h5_root, "w")
         x = open(xml_root, "w")
-
-
 
         uda.generate_descriptors(h, x)
         h.close()
@@ -1412,8 +1517,9 @@ if __name__=="__main__":
         ack = 0
 
         while len(items) > 0:
-            if items[0].verbose:
-                print("Parsing timestep "+items[0].name+" in thread "+str(rank))
+            #if items[0].verbose:
+            print("Parsing timestep "+items[0].name+" in thread "+str(rank))
+
             dataset = Uda_lightweight.generate_descriptor_parallel(items[0])
             comm.send(dataset, dest=0, tag=3)
             # poor man's semaphore

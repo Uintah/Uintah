@@ -1,8 +1,6 @@
 #ifndef Uintah_Component_Arches_InverseErrorFunction_h
 #define Uintah_Component_Arches_InverseErrorFunction_h
 
-namespace Arches {
-
 inline double erfinv (double x);
 /*----------------------------------------------------------------------------*/
 #define erfinv_a3 -0.140543331
@@ -85,6 +83,5 @@ inline double erfinv (double x)
 #undef erfinv_d2
 #undef erfinv_d1
 #undef erfinv_d0
-}
 
 #endif

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -204,15 +204,16 @@ VarLabel::getFullName( int matlIndex, const Patch * patch ) const
   return out.str();
 }
 
+
 //______________________________________________________________________
 //
 void
-VarLabel::allowMultipleComputes()
+VarLabel::schedReductionTask( bool input)
 {
    if (!m_td->isReductionVariable()) {
-     SCI_THROW(InternalError(std::string("Only reduction variables may allow multiple computes.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
+     SCI_THROW(InternalError(std::string("Only reduction variables may set this flag.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
    }
-   m_allow_multiple_computes = true;
+   m_sched_reduction_task = input;
 }
 
 namespace Uintah {

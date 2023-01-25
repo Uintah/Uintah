@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -714,6 +714,11 @@ Level::getOverlapCellsInRegion( const selectType & patches,
       std::pair<int,int> patchIds = std::make_pair( Id, neighborId );
 
       auto result = m_overLapPatches.find( patchIds );
+
+      if ( result==m_overLapPatches.end() ){
+        continue;
+      }
+
       overlap ol  = result->second;
 
       // does the overlapping patches intersect with the region extents?
@@ -730,8 +735,8 @@ Level::getOverlapCellsInRegion( const selectType & patches,
 #if 0   // debugging
         std::cout << "  getOverlapCellsInRegion  patches: " << ol.patchIDs.first << ", " << ol.patchIDs.second
                   << "\n   region:      " << regionLow   << ",              " << regionHigh        
-                  << "\n   ol.low:      " << ol.lowIndex << " ol.high:      " << ol.highIndex  << " nCells: " << ol.nCells
-                  << "\n   intrsct.low: " << ol.lowIndex << " intrsct.high: " << ol.highIndex 
+                  << "\n   ol.low:      " << ol.lowIndex << " ol.high:      " << ol.highIndex 
+                  << "\n   intrsct.low: " << intrsctLow  << " intrsct.high: " << intrsctHigh 
                   << " overlapCells: " << nOverlapCells  << " minOverlapCells: " << minOverlapCells << " totalOverlapCells: " << totalOverlapCells << std::endl;
 #endif
       }

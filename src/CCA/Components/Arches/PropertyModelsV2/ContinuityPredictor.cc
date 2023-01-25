@@ -13,48 +13,6 @@ ContinuityPredictor::~ContinuityPredictor(){
 }
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ContinuityPredictor::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ContinuityPredictor::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &ContinuityPredictor::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ContinuityPredictor::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &ContinuityPredictor::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ContinuityPredictor::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ContinuityPredictor::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace ContinuityPredictor::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void
 ContinuityPredictor::problemSetup( ProblemSpecP& db ){
 
@@ -90,11 +48,11 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto Balance = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_balance );
-  parallel_initialize(execObj,0.0,Balance);
+  CCVariable<double>& Balance = tsk_info->get_field<CCVariable<double> >( m_label_balance );
+  Balance.initialize(0.0);
 
 }
 
@@ -106,8 +64,8 @@ ContinuityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::V
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-ContinuityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+ContinuityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 
@@ -128,16 +86,16 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto xmom = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
-  auto ymom = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
-  auto zmom = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
+  constSFCXVariable<double>& xmom = tsk_info->get_field<constSFCXVariable<double> >(ArchesCore::default_uMom_name);
+  constSFCYVariable<double>& ymom = tsk_info->get_field<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
+  constSFCZVariable<double>& zmom = tsk_info->get_field<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
 
-  auto drho_dt = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_drhodt );
-  auto Balance = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_balance );
-  parallel_initialize(execObj,0.0,Balance);
+  constCCVariable<double>& drho_dt = tsk_info->get_field<constCCVariable<double> >( m_label_drhodt );
+  CCVariable<double>& Balance = tsk_info->get_field<CCVariable<double> >( m_label_balance );
+  Balance.initialize(0.0);
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();
   const double area_NS = DX.x()*DX.z();
@@ -145,7 +103,7 @@ void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const double vol     = DX.x()*DX.y()*DX.z();
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( range, [&](int i, int j, int k){
     Balance(i,j,k) = vol*drho_dt(i,j,k) + ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
                                             area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
                                             area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) ));

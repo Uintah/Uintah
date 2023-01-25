@@ -62,7 +62,7 @@ PRODUCTION_TESTS_NO_COAL = [
    ("methane_fire"                      , "methane_fire.ups"                                        , 1   , "All"   , ["exactComparison"])   ,
    ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                                   , 4   , "All"   , ["exactComparison"]) ,
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   ,
-#   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1   , "All"   , ["exactComparison"])   ,
    ("dqmom_test_2"                      , "DQMOM_regression/dqmom_test_2.ups"                       , 1   , "All"   , ["exactComparison"])   ,
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1   , "All"   , ["exactComparison"])   ,
@@ -207,7 +207,7 @@ NIGHTLYTESTS = [
 ]
 
 # Tests that are run during local regression testing
-LOCAL_TESTS = [
+LOCALTESTS = [
 ]
 
 # NO RMCRT due to the segfault on the MAC
@@ -221,13 +221,13 @@ DEBUG = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCAL_TESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
+#LIST: LOCALTESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
 #__________________________________
 
 
 # returns the list
 def getTestList(me) :
-  if me == "LOCAL_TESTS":
+  if me == "LOCALTESTS":
     TESTS = RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS
   elif me == "KOKKOS_TESTS":
     TESTS = KOKKOS_TESTS

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -647,9 +647,9 @@ Discretization::calculateVelDiagonal(const Patch* patch,
                                                         coeff_vars->wVelocityCoeff[Arches::AB],
                                                         coeff_vars->wVelocityCoeff[Arches::AP],
                                                         coeff_vars->wVelLinearSrc);
-  Uintah::serial_for( rangex, doADiagonalX);
-  Uintah::serial_for( rangey, doADiagonalY);
-  Uintah::serial_for( rangez, doADiagonalZ);
+  Uintah::parallel_for( rangex, doADiagonalX);
+  Uintah::parallel_for( rangey, doADiagonalY);
+  Uintah::parallel_for( rangez, doADiagonalZ);
 }
 
 //****************************************************************************

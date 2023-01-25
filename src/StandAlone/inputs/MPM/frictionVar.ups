@@ -1,0 +1,152 @@
+<Uintah_specification>
+    <Meta>
+        <title>FrictionExample</title>
+        <info>
+         This file demonstrates the use of multiple contact boundary conditions.
+        </info>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+    <Time>
+        <maxTime>1.0</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.25</timestep_multiplier>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <XPIC2>true</XPIC2>
+        <withColor> true </withColor>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
+    </MPM>
+    <DataArchiver>
+        <filebase>FrictionVarExample.uda</filebase>
+        <outputInterval>0.1</outputInterval>
+        <save label="p.x"></save>
+        <save label="p.mass"></save>
+        <save label="p.color"></save>
+        <save label="p.volume"></save>
+        <save label="p.velocity"></save>
+        <save label="p.scalefactor"></save>
+        <save label="p.deformationMeasure"></save>
+        <save label="p.displacement"></save>
+        <save label="p.stress"></save>
+        <save label="KineticEnergy"></save>
+        <save label="TotalMomentum"></save>
+        <save label="g.velocity"></save>
+        <checkpoint interval="0.1" cycle="2"></checkpoint>
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="BasePiece">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0.0]</velocity>
+                    <temperature>0</temperature>
+                    <color>0</color>
+                    <box label="Base">
+                        <min>[-1.5,-1.0,0.0] </min>
+                        <max>[ 1.5, 1.0,0.2] </max>
+                    </box>
+                </geom_object>
+            </material>
+
+            <material name="Skipper">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.5,0.0,-.5]</velocity>
+                  <temperature>0</temperature>
+                  <color>1</color>
+                  <box label = "smooth">
+                    <min>[-1.4,-0.4,0.3] </min>
+                    <max>[-1.0, 0.0,0.5] </max>
+                  </box>
+                </geom_object>
+
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.5,0.0,-.5]</velocity>
+                  <temperature>0</temperature>
+                  <color>1.1</color>
+                  <box label = "rough">
+                    <min>[-1.4, 0.0,0.3] </min>
+                    <max>[-1.0, 0.4,0.5] </max>
+                  </box>
+                </geom_object>
+            </material>
+
+            <contact>
+                <type>friction_LRVar</type>
+                <materials>[0,1]</materials>
+                <master_material>1</master_material>
+                <variable_friction>
+                  <entry>
+                    <color> 1.0   </color>
+                    <mu>0.05</mu>
+                  </entry>
+                  <entry>
+                    <color> 1.1   </color>
+                    <mu>0.9</mu>
+                  </entry>
+                </variable_friction>
+            </contact>
+
+        </MPM>
+    </MaterialProperties>
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-1.5,-0.5,0.0]</lower>
+                <upper>[-0.5, 0.5,0.6]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[2,2,1]</patches>
+                <resolution>[10,10,6]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+
+            <Face side="z-">
+                <BCType var="symmetry" id="0" label="Symmetric"> </BCType>
+                <BCType var="Neumann" id="1" label="Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="Dirichlet" id="all" label="Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

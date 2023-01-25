@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2021 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -45,9 +45,6 @@ SRCS += \
         $(SRCDIR)/Poisson2.cc      \
         $(SRCDIR)/Poisson3.cc      \
         $(SRCDIR)/Poisson4.cc      \
-        $(SRCDIR)/PortableDependencyTest.cc  \
-        $(SRCDIR)/PortableDependencyTest1.cc \
-        $(SRCDIR)/GPUResizeTest1.cc          \
         $(SRCDIR)/RegionDB.cc      \
         $(SRCDIR)/RegridderTest.cc \
         $(SRCDIR)/SolverTest1.cc   \
@@ -61,12 +58,10 @@ ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc
 endif
 
-ifneq ($(HAVE_KOKKOS),yes)
-  ifeq ($(HAVE_CUDA),yes)
-    SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc
-    SRCS += $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-    DLINK_FILES += CCA/Components/Examples/UnifiedSchedulerTestKernel.o
-  endif
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc       \
+          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
+  DLINK_FILES += CCA/Components/Examples/UnifiedSchedulerTestKernel.o
 endif
 
 PSELIBS := \

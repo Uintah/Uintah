@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ShellMPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -53,6 +54,8 @@ static DebugStream debug("ShellMat", false);
 ShellMaterial::ShellMaterial(ProblemSpecP& ps, MPMFlags* Mflag)
     : ConstitutiveModel(Mflag)
 {
+  Sl = scinew ShellMPMLabel();
+
   // Read Material Constants
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
@@ -107,6 +110,7 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps, MPMFlags* Mflag)
 //
 ShellMaterial::~ShellMaterial()
 {
+  delete Sl;
   VarLabel::destroy(pNormalRotRateLabel); 
   VarLabel::destroy(pDefGradTopLabel);
   VarLabel::destroy(pDefGradCenLabel);
@@ -157,19 +161,19 @@ ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
                                 std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
-  from.push_back(lb->pThickTopLabel);
-  from.push_back(lb->pInitialThickTopLabel);
-  from.push_back(lb->pThickBotLabel);
-  from.push_back(lb->pInitialThickBotLabel);
-  from.push_back(lb->pNormalLabel);
-  from.push_back(lb->pInitialNormalLabel);
+  from.push_back(Sl->pThickTopLabel);
+  from.push_back(Sl->pInitialThickTopLabel);
+  from.push_back(Sl->pThickBotLabel);
+  from.push_back(Sl->pInitialThickBotLabel);
+  from.push_back(Sl->pNormalLabel);
+  from.push_back(Sl->pInitialNormalLabel);
 
-  to.push_back(lb->pThickTopLabel_preReloc);
-  to.push_back(lb->pInitialThickTopLabel_preReloc);
-  to.push_back(lb->pThickBotLabel_preReloc);
-  to.push_back(lb->pInitialThickBotLabel_preReloc);
-  to.push_back(lb->pNormalLabel_preReloc);
-  to.push_back(lb->pInitialNormalLabel_preReloc);
+  to.push_back(Sl->pThickTopLabel_preReloc);
+  to.push_back(Sl->pInitialThickTopLabel_preReloc);
+  to.push_back(Sl->pThickBotLabel_preReloc);
+  to.push_back(Sl->pInitialThickBotLabel_preReloc);
+  to.push_back(Sl->pNormalLabel_preReloc);
+  to.push_back(Sl->pInitialNormalLabel_preReloc);
 
   from.push_back(pNormalRotRateLabel); 
   from.push_back(pDefGradTopLabel);
@@ -199,12 +203,12 @@ ShellMaterial::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(lb->pThickTopLabel,        matlset);
-  task->computes(lb->pInitialThickTopLabel, matlset);
-  task->computes(lb->pThickBotLabel,        matlset);
-  task->computes(lb->pInitialThickBotLabel, matlset);
-  task->computes(lb->pNormalLabel,          matlset);
-  task->computes(lb->pInitialNormalLabel,   matlset);
+  task->computes(Sl->pThickTopLabel,        matlset);
+  task->computes(Sl->pInitialThickTopLabel, matlset);
+  task->computes(Sl->pThickBotLabel,        matlset);
+  task->computes(Sl->pInitialThickBotLabel, matlset);
+  task->computes(Sl->pNormalLabel,          matlset);
+  task->computes(Sl->pInitialNormalLabel,   matlset);
 
   task->computes(pNormalRotRateLabel, matlset);
   task->computes(pDefGradTopLabel,    matlset);
@@ -317,7 +321,7 @@ ShellMaterial::addComputesRequiresParticleRotToGrid(Task* task,
   task->requires(Task::OldDW, lb->pSizeLabel,          matlset, gan, NGN);
   task->requires(Task::OldDW,   pNormalRotRateLabel,     matlset, gan, NGN);
   task->requires(Task::NewDW,   lb->gMassLabel,          matlset, gan, NGN);
-  task->computes(lb->gNormalRotRateLabel, matlset);
+  task->computes(Sl->gNormalRotRateLabel, matlset);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -365,7 +369,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     new_dw->get(gMass,          lb->gMassLabel, dwi,     patch, gan, NGN);
 
     // Allocate arrays for the grid data
-    new_dw->allocateAndPut(gRotRate, lb->gNormalRotRateLabel, dwi,patch);
+    new_dw->allocateAndPut(gRotRate, Sl->gNormalRotRateLabel, dwi,patch);
     gRotRate.initialize(Vector(0,0,0));
 
     // Interpolate particle data to Grid data.  Attempt to conserve 
@@ -416,11 +420,11 @@ ShellMaterial::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::OldDW, lb->pThickTopLabel,           matlset, gnone);
-  task->requires(Task::OldDW, lb->pInitialThickTopLabel,    matlset, gnone);
-  task->requires(Task::OldDW, lb->pThickBotLabel,           matlset, gnone);
-  task->requires(Task::OldDW, lb->pInitialThickBotLabel,    matlset, gnone);
-  task->requires(Task::OldDW, lb->pNormalLabel,             matlset, gnone);
+  task->requires(Task::OldDW, Sl->pThickTopLabel,           matlset, gnone);
+  task->requires(Task::OldDW, Sl->pInitialThickTopLabel,    matlset, gnone);
+  task->requires(Task::OldDW, Sl->pThickBotLabel,           matlset, gnone);
+  task->requires(Task::OldDW, Sl->pInitialThickBotLabel,    matlset, gnone);
+  task->requires(Task::OldDW, Sl->pNormalLabel,             matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, pNormalRotRateLabel,          matlset, gnone);
   task->requires(Task::OldDW, pDefGradTopLabel,             matlset, gnone);
@@ -429,12 +433,12 @@ ShellMaterial::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pStressTopLabel,              matlset, gnone);
   task->requires(Task::OldDW, pStressCenLabel,              matlset, gnone);
   task->requires(Task::OldDW, pStressBotLabel,              matlset, gnone);
-  task->requires(Task::NewDW, lb->gNormalRotRateLabel,      matlset, gac, NGN);
+  task->requires(Task::NewDW, Sl->gNormalRotRateLabel,      matlset, gac, NGN);
 
-  task->computes(lb->pThickTopLabel_preReloc,           matlset);
-  task->computes(lb->pInitialThickTopLabel_preReloc,    matlset);
-  task->computes(lb->pThickBotLabel_preReloc,           matlset);
-  task->computes(lb->pInitialThickBotLabel_preReloc,    matlset);
+  task->computes(Sl->pThickTopLabel_preReloc,           matlset);
+  task->computes(Sl->pInitialThickTopLabel_preReloc,    matlset);
+  task->computes(Sl->pThickBotLabel_preReloc,           matlset);
+  task->computes(Sl->pInitialThickBotLabel_preReloc,    matlset);
   task->computes(pDefGradTopLabel_preReloc,             matlset);
   task->computes(pDefGradCenLabel_preReloc,             matlset);
   task->computes(pDefGradBotLabel_preReloc,             matlset);
@@ -493,13 +497,13 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector>        gVelocity, gRotRate; 
     delt_vartype                   delT; 
     old_dw->get(pMass,       lb->pMassLabel,               pset);
-    old_dw->get(pThickTop,   lb->pThickTopLabel,           pset);
-    old_dw->get(pThickBot,   lb->pThickBotLabel,           pset);
-    old_dw->get(pThickTop0,  lb->pInitialThickTopLabel,    pset);
-    old_dw->get(pThickBot0,  lb->pInitialThickBotLabel,    pset);
+    old_dw->get(pThickTop,   Sl->pThickTopLabel,           pset);
+    old_dw->get(pThickBot,   Sl->pThickBotLabel,           pset);
+    old_dw->get(pThickTop0,  Sl->pInitialThickTopLabel,    pset);
+    old_dw->get(pThickBot0,  Sl->pInitialThickBotLabel,    pset);
     old_dw->get(pX,          lb->pXLabel,                  pset);
     old_dw->get(pSize,       lb->pSizeLabel,               pset);
-    old_dw->get(pNormal,     lb->pNormalLabel,             pset);
+    old_dw->get(pNormal,     Sl->pNormalLabel,             pset);
     old_dw->get(pVelocity,   lb->pVelocityLabel,           pset);
     old_dw->get(pRotRate,    pNormalRotRateLabel,          pset);
     old_dw->get(pDefGradTop, pDefGradTopLabel,             pset);
@@ -512,7 +516,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
     old_dw->get(delT,        lb->delTLabel, getLevel(patches));
     new_dw->get(gVelocity,   lb->gVelocityStarLabel,    dwi, patch, gac, NGN);
-    new_dw->get(gRotRate,    lb->gNormalRotRateLabel, dwi, patch, gac, NGN);
+    new_dw->get(gRotRate,    Sl->gNormalRotRateLabel, dwi, patch, gac, NGN);
 
     // Allocate for updated variables in new_dw 
     ParticleVariable<double>  pVolume_new, pThickTop_new, pThickBot_new,
@@ -521,11 +525,11 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
                               pStressTop_new, pStressCen_new, pStressBot_new, 
                               pStress_new, pDefGrad_new;
     new_dw->allocateAndPut(pVolume_new,    lb->pVolumeLabel_preReloc,     pset);
-    new_dw->allocateAndPut(pThickTop_new,  lb->pThickTopLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pThickTop0_new, lb->pInitialThickTopLabel_preReloc,
+    new_dw->allocateAndPut(pThickTop_new,  Sl->pThickTopLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pThickTop0_new, Sl->pInitialThickTopLabel_preReloc,
                            pset);
-    new_dw->allocateAndPut(pThickBot_new,  lb->pThickBotLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pThickBot0_new, lb->pInitialThickBotLabel_preReloc,
+    new_dw->allocateAndPut(pThickBot_new,  Sl->pThickBotLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pThickBot0_new, Sl->pInitialThickBotLabel_preReloc,
                            pset);
     new_dw->allocateAndPut(pDefGradTop_new, pDefGradTopLabel_preReloc,    pset);
     new_dw->allocateAndPut(pDefGradCen_new, pDefGradCenLabel_preReloc,    pset);
@@ -774,7 +778,7 @@ ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
   task->requires(Task::OldDW,   lb->pXLabel,               matlset, gan, NGN);
   task->requires(Task::OldDW, lb->pSizeLabel,            matlset, gan, NGN);
   task->requires(Task::NewDW,   pAverageMomentLabel,       matlset, gan, NGN);
-  task->computes(lb->gNormalRotMomentLabel, matlset);
+  task->computes(Sl->gNormalRotMomentLabel, matlset);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -819,7 +823,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
 
     // Allocate stuff to be written to datawarehouse
     NCVariable<Vector> gRotMoment;
-    new_dw->allocateAndPut(gRotMoment, lb->gNormalRotMomentLabel,  
+    new_dw->allocateAndPut(gRotMoment, Sl->gNormalRotMomentLabel,  
                            dwi, patch);
     gRotMoment.initialize(Vector(0,0,0));
 
@@ -863,10 +867,10 @@ ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
   task->requires(Task::OldDW,   lb->pXLabel,                matlset, gac, NGN);
 
   task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gac, NGN);
-  task->requires(Task::OldDW,   lb->pNormalLabel,           matlset, gac, NGN);
+  task->requires(Task::OldDW,   Sl->pNormalLabel,           matlset, gac, NGN);
   task->requires(Task::NewDW,   pNormalDotAvStressLabel,    matlset, gac, NGN);
   task->requires(Task::NewDW,   pRotMassLabel,              matlset, gac, NGN);
-  task->requires(Task::NewDW,   lb->gNormalRotMomentLabel,  matlset, gac, NGN);
+  task->requires(Task::NewDW,   Sl->gNormalRotMomentLabel,  matlset, gac, NGN);
   task->computes(pNormalRotAccLabel, matlset);
 }
 
@@ -908,10 +912,10 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 
     old_dw->get(pSize,     lb->pSizeLabel,                   pset);
     old_dw->get(pDefGrad,  lb->pDeformationMeasureLabel,     pset);
-    old_dw->get(pNormal,     lb->pNormalLabel,                 pset);
+    old_dw->get(pNormal,     Sl->pNormalLabel,                 pset);
     new_dw->get(pRotMass,    pRotMassLabel,                    pset);
     new_dw->get(pNDotAvSig,  pNormalDotAvStressLabel,          pset);
-    new_dw->get(gRotMoment,  lb->gNormalRotMomentLabel, dwi, patch, gac, NGN);
+    new_dw->get(gRotMoment,  Sl->gNormalRotMomentLabel, dwi, patch, gac, NGN);
 
     // Create variables for the results
     ParticleVariable<Vector> pRotAcc;
@@ -960,16 +964,16 @@ ShellMaterial::addComputesRequiresRotRateUpdate(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset, gnone);
-  task->requires(Task::OldDW, lb->pNormalLabel,            matlset, gnone);
-  task->requires(Task::OldDW, lb->pInitialNormalLabel,     matlset, gnone);
+  task->requires(Task::OldDW, Sl->pNormalLabel,            matlset, gnone);
+  task->requires(Task::OldDW, Sl->pInitialNormalLabel,     matlset, gnone);
   task->requires(Task::OldDW, pNormalRotRateLabel,         matlset, gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset, gnone);
-  task->requires(Task::NewDW, lb->pThickTopLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW, lb->pThickBotLabel_preReloc, matlset, gnone);
+  task->requires(Task::NewDW, Sl->pThickTopLabel_preReloc, matlset, gnone);
+  task->requires(Task::NewDW, Sl->pThickBotLabel_preReloc, matlset, gnone);
   task->requires(Task::NewDW, pNormalRotAccLabel,          matlset, gnone);
 
-  task->computes(lb->pNormalLabel_preReloc,             matlset);
-  task->computes(lb->pInitialNormalLabel_preReloc,      matlset);
+  task->computes(Sl->pNormalLabel_preReloc,             matlset);
+  task->computes(Sl->pInitialNormalLabel_preReloc,      matlset);
   task->computes(pNormalRotRateLabel_preReloc,          matlset);
 }
 
@@ -1004,17 +1008,17 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
     // Get the needed data
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     old_dw->get(pMass,     lb->pMassLabel,              pset);
-    old_dw->get(pNormal,   lb->pNormalLabel,            pset);
-    old_dw->get(pNormal0,  lb->pInitialNormalLabel,     pset);
+    old_dw->get(pNormal,   Sl->pNormalLabel,            pset);
+    old_dw->get(pNormal0,  Sl->pInitialNormalLabel,     pset);
     old_dw->get(pRotRate,  pNormalRotRateLabel,         pset);
-    new_dw->get(pThickTop, lb->pThickTopLabel_preReloc, pset);
-    new_dw->get(pThickBot, lb->pThickBotLabel_preReloc, pset);
+    new_dw->get(pThickTop, Sl->pThickTopLabel_preReloc, pset);
+    new_dw->get(pThickBot, Sl->pThickBotLabel_preReloc, pset);
     old_dw->get(pVol,      lb->pVolumeLabel,            pset);
     new_dw->get(pRotAcc,   pNormalRotAccLabel,          pset);
 
     // Allocate the updated particle variables
-    new_dw->allocateAndPut(pNormal_new,  lb->pNormalLabel_preReloc,     pset);
-    new_dw->allocateAndPut(pNormal0_new, lb->pInitialNormalLabel_preReloc,
+    new_dw->allocateAndPut(pNormal_new,  Sl->pNormalLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pNormal0_new, Sl->pInitialNormalLabel_preReloc,
                            pset);
     new_dw->allocateAndPut(pRotRate_new, pNormalRotRateLabel_preReloc, pset);
 

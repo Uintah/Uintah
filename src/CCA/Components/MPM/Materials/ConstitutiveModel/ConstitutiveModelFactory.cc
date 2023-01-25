@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@
 #endif
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Kayenta.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ProgramBurn.h>
@@ -56,6 +56,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TH_Water.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNH.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNHVar.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/NonLocalDruckerPrager.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca.h>
@@ -75,9 +76,9 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/MaxwellWeichert.h>
 
 // Geomaterials
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/HypoplasticB.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/MohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/QADamage.h>
 
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
@@ -108,8 +109,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException("No type for constitutive_model", __FILE__, __LINE__);
 
   if (flags->d_integrator_type != "implicit" &&
-      flags->d_integrator_type != "explicit" &&
-      flags->d_integrator_type != "fracture"){
+      flags->d_integrator_type != "explicit"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
@@ -146,8 +146,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   //__________________________________
   //  All use UCNH
   else if (cm_type ==  "comp_neo_hook") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew UCNH( child, flags, false, false ) );
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -169,14 +168,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "cnh_mms") {
     return( scinew CNH_MMS( child, flags ) );
   }
+  else if (cm_type ==  "UCNHVar" ){
+    return( scinew UCNHVar( child, flags, false, false ) );
+  } 
   //__________________________________
   
   else if (cm_type == "TransIsoHypoFrictional") {
     return(scinew TransIsoHypoFrictional(child,flags));
   }
   else if (cm_type ==  "trans_iso_hyper") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew TransIsoHyper(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -185,8 +186,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
   else if (cm_type ==  "visco_trans_iso_hyper") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew ViscoTransIsoHyper(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -208,8 +208,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew TH_Water(child,flags));
   }
   else if (cm_type ==  "visco_scram"){
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew ViscoScram(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -221,8 +220,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew ViscoSCRAMHotSpot(child,flags));
   }
   else if (cm_type ==  "hypo_elastic") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew HypoElastic(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -244,9 +242,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
   }
-  else if (cm_type == "diamm"){
-    return(scinew Diamm(child,flags));
-  }
+//  else if (cm_type == "diamm"){
+//    return(scinew Diamm(child,flags));
+//  }
 #endif
 
   else if (cm_type ==  "mw_visco_elastic"){
@@ -280,9 +278,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
   }
-//  else if (cm_type ==  "camclay"){
-//    return(scinew CamClay(child,flags));
-//  }
+  //else if (cm_type ==  "camclay"){
+  //  return(scinew CamClay(child,flags));
+ //}
   else if (cm_type ==  "rf_elastic_plastic"){
     computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));
@@ -294,7 +292,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     } else {
       ostringstream msg;
       msg << "\n ERROR: One may not use TongeRameshPTR along with \n"
-          << " the fracture or implicit intergrator \n";
+          << " the implicit intergrator \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
   }
@@ -323,8 +321,7 @@ else if (cm_type == "HypoplasticB") {
   }
 
   else if (cm_type == "QADamage") {
-	  if (flags->d_integrator_type == "explicit" ||
-		  flags->d_integrator_type == "fracture") {
+	  if (flags->d_integrator_type == "explicit") {
 		  return(scinew QADamage(child, flags, false, false));
 	  }
 	  else if (flags->d_integrator_type == "implicit") {

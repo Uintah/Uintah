@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps >      10          </max_Timesteps>
+       <max_Timesteps >      50          </max_Timesteps>
        <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
@@ -119,7 +119,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>2ddiw.uda</filebase>
-      <outputInterval>.01</outputInterval>
+      <outputInterval>0.0001</outputInterval>
       <save label = "mom_L_ME_CC"/>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -132,6 +132,7 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
+      <checkpoint timestepInterval="40" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -239,6 +240,7 @@
             
     <!--____________________________________________________________________-->
     <DataAnalysis>
+
 
        <Module name="particleExtract">
        

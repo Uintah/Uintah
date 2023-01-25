@@ -1,0 +1,51 @@
+#______________________________________________________________________
+#  This file contains commonly used bash functions
+#______________________________________________________________________
+# Print a message to stderr and exit with error code 1
+
+end_die ()
+{
+  if [[ -n "$1" ]]; then
+    echo -e "\n\n$1" 1>&2
+  fi
+  exit 1
+}
+
+#______________________________________________________________________
+# Print a message to stderr and exit with error code 1 if command not found.
+
+commandExists ()
+{
+  which "$1" >& /dev/null
+
+  if [[ "$?" != "0" ]]; then
+    end_die " The command: (${1}) was not found, now exiting"
+  fi
+}
+
+#______________________________________________________________________
+#  returns 0 if an integer otherwise returns 1
+
+isInteger()
+{
+  if [ "$1" -eq "$1" ] 2>/dev/null
+  then
+      return 0
+  else
+      return 1
+  fi
+}
+#______________________________________________________________________
+#  remove the directory either immediately or through an at job
+function cleanUp()
+{
+  echo -e "\nThe directory (${1}) will be removed (${2}."
+
+  if [[ ${2} == "now" ]]; then
+    /bin/rm -rf ${1}
+  fi
+
+  if [[ ${2} != "now" ]]; then
+    echo "/bin/rm -rf ${1}" |  at -v now "${2}"
+  fi
+}

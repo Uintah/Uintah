@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,6 +34,7 @@ namespace Uintah {
   class ExamplesLabel {
   public:
 
+    //__________________________________
     // For SimpleCFD
     const VarLabel* bctype;
     const VarLabel* xvelocity;
@@ -63,6 +64,7 @@ namespace Uintah {
     const VarLabel* vcforce;
     const VarLabel* NN;
 
+    //__________________________________
     // For AMRSimpleCFD
     const VarLabel* pressure2;
     const VarLabel* pressure2_matrix;
@@ -73,7 +75,10 @@ namespace Uintah {
     const VarLabel* density_gradient_mag;
 
 
+    //__________________________________
     // For ParticleTest1
+    const VarLabel* timeStepLabel;
+    const VarLabel* dummyLabel;
     const VarLabel* pXLabel;
     const VarLabel* pXLabel_preReloc;
     const VarLabel* pMassLabel;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,9 +29,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-#include <sci_defs/gpu_defs.h>
-#include <sci_defs/kokkos_defs.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/cuda_defs.h>
 
 #ifndef NO_ARCHES
 #  include <CCA/Components/Arches/Arches.h>
@@ -39,7 +38,7 @@
 
 #ifndef NO_EXAMPLES
 
-#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
+#ifdef HAVE_CUDA
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #endif
 
@@ -49,17 +48,12 @@
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/Heat.hpp>
 #include <CCA/Components/Examples/DOSweep.h>
-#ifndef NO_MODELS_RADIATION
 #include <CCA/Components/Examples/RMCRT_Test.h>
-#endif
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/Poisson4.h>
-#include <CCA/Components/Examples/PortableDependencyTest.h>
-#include <CCA/Components/Examples/PortableDependencyTest1.h>
-#include <CCA/Components/Examples/GPUResizeTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/SolverTest2.h>
@@ -85,10 +79,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-#  include <CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/MPM/SingleHydroMPM.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -248,6 +239,13 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "sfmpm ";
   }
 
+  if (sim_comp == "shmpm" || sim_comp == "SHmpm" || sim_comp == "SHMPM") {
+      return scinew SingleHydroMPM(myworld, materialManager);
+  }
+  else {
+      turned_on_options += "shmpm ";
+
+  }
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(myworld, materialManager);
   }
@@ -260,17 +258,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "impm ";
-  }
-#endif
-
-  //----------------------------
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-  if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "mpmarches ";
   }
 #endif
 
@@ -423,27 +410,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "poisson4 ";
   }
 
-  if (sim_comp == "portabledependencytest" || sim_comp == "PORTABLEDEPENDENCYTEST") {
-    return scinew PortableDependencyTest(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "portabledependencytest ";
-  }
-
-  if (sim_comp == "portabledependencytest1" || sim_comp == "PORTABLEDEPENDENCYTEST1") {
-    return scinew PortableDependencyTest1(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "portabledependencytest1 ";
-  }
-
-  if (sim_comp == "gpuresizetest1" || sim_comp == "GPURESIZETEST1") {
-    return scinew GPUResizeTest1(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "gpuresizetest1 ";
-  }
-
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
     return scinew RMCRT_Test(myworld, materialManager);
@@ -479,7 +445,7 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "wave ";
   }
 
-#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
+#ifdef HAVE_CUDA
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(myworld, materialManager);
   }

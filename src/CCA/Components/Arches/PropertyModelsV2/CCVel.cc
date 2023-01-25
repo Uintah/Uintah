@@ -12,54 +12,6 @@ TaskInterface( task_name, matl_index ){}
 CCVel::~CCVel(){}
 
 //--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &CCVel::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &CCVel::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &CCVel::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &CCVel::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &CCVel::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &CCVel::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskTimestepInitFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &CCVel::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &CCVel::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &CCVel::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace CCVel::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
 void CCVel::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
@@ -139,12 +91,11 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  compute_velocities( execObj, patch, tsk_info );
+  compute_velocities( patch, tsk_info );
 
-  compute_vorticity( execObj, patch, tsk_info );
+  compute_vorticity( patch, tsk_info );
 
 }
 
@@ -164,23 +115,19 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto old_u_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_u_vel_name_cc);
-  auto old_v_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_v_vel_name_cc);
-  auto old_w_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_w_vel_name_cc);
+  constCCVariable<double>& old_u_cc = tsk_info->get_field<constCCVariable<double> >(m_u_vel_name_cc);
+  constCCVariable<double>& old_v_cc = tsk_info->get_field<constCCVariable<double> >(m_v_vel_name_cc);
+  constCCVariable<double>& old_w_cc = tsk_info->get_field<constCCVariable<double> >(m_w_vel_name_cc);
 
-  auto u_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
-  auto v_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
-  auto w_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
+  CCVariable<double>& u_cc = tsk_info->get_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->get_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->get_field<CCVariable<double> >(m_w_vel_name_cc);
 
-  Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      u_cc(i,j,k)=old_u_cc(i,j,k);
-      v_cc(i,j,k)=old_v_cc(i,j,k);
-      w_cc(i,j,k)=old_w_cc(i,j,k);
-    });
+  u_cc.copy(old_u_cc);
+  v_cc.copy(old_v_cc);
+  w_cc.copy(old_w_cc);
 
 }
 
@@ -204,48 +151,47 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  compute_velocities( execObj, patch, tsk_info );
+  compute_velocities( patch, tsk_info );
 
-  compute_vorticity( execObj, patch, tsk_info );
+  compute_vorticity( patch, tsk_info );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void CCVel::compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto u = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto v = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto w = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  constSFCXVariable<double>& u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  auto u_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
-  auto v_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
-  auto w_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
+  CCVariable<double>& u_cc = tsk_info->get_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->get_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->get_field<CCVariable<double> >(m_w_vel_name_cc);
 
-  parallel_initialize(execObj,0.0,u_cc,v_cc,w_cc);
+  u_cc.initialize(0.0);
+  v_cc.initialize(0.0);
+  w_cc.initialize(0.0);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  ArchesCore::doInterpolation( execObj, range, u_cc, u , 1, 0, 0, m_int_scheme );
-  ArchesCore::doInterpolation( execObj, range, v_cc, v , 0, 1, 0, m_int_scheme );
-  ArchesCore::doInterpolation( execObj, range, w_cc, w , 0, 0, 1, m_int_scheme );
+  ArchesCore::doInterpolation(range, u_cc, u , 1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation(range, v_cc, v , 0, 1, 0, m_int_scheme );
+  ArchesCore::doInterpolation(range, w_cc, w , 0, 0, 1, m_int_scheme );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void CCVel::compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+void CCVel::compute_vorticity( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto u = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto v = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto w = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto& u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  auto& v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  auto& w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  auto w_x = tsk_info->get_field<CCVariable<double>, double, MemSpace>("x_vorticity");
-  auto w_y = tsk_info->get_field<CCVariable<double>, double, MemSpace>("y_vorticity");
-  auto w_z = tsk_info->get_field<CCVariable<double>, double, MemSpace>("z_vorticity");
+  auto& w_x = tsk_info->get_field<CCVariable<double>>("x_vorticity");
+  auto& w_y = tsk_info->get_field<CCVariable<double>>("y_vorticity");
+  auto& w_z = tsk_info->get_field<CCVariable<double>>("z_vorticity");
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Vector DX = patch->dCell();
@@ -254,7 +200,7 @@ void CCVel::compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, con
   // const double Fdy = 4*DX[1];
   // const double Fdz = 4*DX[2];
 
-  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+  Uintah::parallel_for(range, [&](int i, int j, int k){
 
     // Cell-centered values for cell-centered vorticity - but has the negative
     //  behavior of decaying the vorticity in the higher wavenumbers.

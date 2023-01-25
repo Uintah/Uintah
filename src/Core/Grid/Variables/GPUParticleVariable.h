@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,15 +28,14 @@
 #define UINTAH_GPUPARTICLEVARIABLE_H
 
 #include <Core/Grid/Variables/GPUParticleVariableBase.h>
-#include <sci_defs/gpu_defs.h>
+#include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
 
 template<class T>
 class GPUParticleVariable : public GPUParticleVariableBase {
 
-  friend class KokkosScheduler;   // allow scheduler access
-  friend class UnifiedScheduler;  // allow scheduler access
+  friend class UnifiedScheduler; // allow Scheduler access
 
   public:
 

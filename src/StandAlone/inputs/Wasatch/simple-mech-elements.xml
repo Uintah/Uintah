@@ -1,0 +1,16 @@
+<ctml>
+  <elementData caseSensitive="no">
+	<element name="A" atomicWt = "10.0" atomicNumber = "10">
+           <entropy298 value = "100.0">
+             <source>
+             </source>
+           </entropy298>
+    </element>
+    <element name="B" atomicWt = "8.0" atomicNumber = "8">
+        <entropy298 value = "100.0">
+            <source>
+            </source>
+        </entropy298>
+    </element>
+    </elementData>
+</ctml>

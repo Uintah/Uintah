@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -108,6 +108,17 @@ void SlipExch::outputProblemSpec(ProblemSpecP & matl_ps )
   model_ps->appendElement( "solidMatlIndex", d_solidMatlIndx );
   model_ps->appendElement( "thermal_accommodation_coeff",  d_thermal_accommodation_coeff);
   model_ps->appendElement( "momentum_accommodation_coeff", d_momentum_accommodation_coeff);
+}
+
+//______________________________________________________________________
+//
+void SlipExch::sched_initialize( SchedulerP&,
+                                 const LevelP& level)
+{
+  printSchedule( level, dbgExch, "SlipExch::sched_initialize" );
+  const MaterialSet* ice_matls = d_matlManager->allMaterials( "ICE" );
+  const MaterialSet* mpm_matls = d_matlManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = d_matlManager->allMaterials();
 }
 
 //______________________________________________________________________

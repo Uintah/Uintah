@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,7 +31,6 @@
 #include <CCA/Components/Arches/KokkosSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -65,10 +64,8 @@ Arches::Arches(const ProcessorGroup* myworld,
                const MaterialManagerP materialManager) :
   ApplicationCommon(myworld, materialManager)
 {
-  m_MAlab               = 0;
   m_nlSolver            = 0;
   m_physicalConsts      = 0;
-  m_with_mpmarches      = false;
 
   //lagrangian particles:
   m_particlesHelper = scinew ArchesParticlesHelper();
@@ -143,7 +140,6 @@ Arches::problemSetup( const ProblemSpecP     & params,
   if (   db->findBlock("ExplicitSolver") ) {
 
     builder = scinew ExplicitSolver::Builder( m_materialManager,
-                                              m_MAlab,
                                               m_physicalConsts,
                                               d_myworld,
                                               m_particlesHelper,
@@ -171,24 +167,22 @@ Arches::problemSetup( const ProblemSpecP     & params,
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
   // of task after all of the problemSetups have been called.
-  if(!m_with_mpmarches) {
-    if(!m_output) {
-      throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
-    }
+  if(!m_output) {
+    throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
+  }
 
-    m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
-                                                       m_materialManager,
-                                                       params);
+  m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
+                                                     m_materialManager,
+                                                     params);
 
-    if(m_analysis_modules.size() != 0) {
-      vector<AnalysisModule*>::iterator iter;
-      for( iter  = m_analysis_modules.begin();
-           iter != m_analysis_modules.end(); iter++) {
-        AnalysisModule* am = *iter;
-        std::vector<std::vector<const VarLabel* > > dummy;
-        am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
-        am->problemSetup(params, materials_ps, grid, dummy, dummy);
-      }
+  if(m_analysis_modules.size() != 0) {
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = m_analysis_modules.begin();
+         iter != m_analysis_modules.end(); iter++) {
+      AnalysisModule* am = *iter;
+      std::vector<std::vector<const VarLabel* > > dummy;
+      am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+      am->problemSetup(params, materials_ps, grid, dummy, dummy);
     }
   }
 
@@ -198,7 +192,7 @@ Arches::problemSetup( const ProblemSpecP     & params,
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
-        << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n";
+        << " inside of the <AMR> section for multi-level ARCHES. \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
@@ -245,12 +239,6 @@ Arches::scheduleRestartInitialize( const LevelP& level,
 
   m_nlSolver->sched_restartInitialize( level, sched );
 
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-Arches::restartInitialize()
-{
 }
 
 //--------------------------------------------------------------------------------------------------

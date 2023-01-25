@@ -63,7 +63,7 @@ foreach uda ($udas[*])
       cat "$uda/$Y" >> "$master_uda/$Y.tmp"
 
       # remove the header from the temporary file  If one exists
-      sed -i /'[:digit:]'/d "$master_uda/$Y.tmp"
+      sed  -i -n '/[[:digit:]]/p' "$master_uda/$Y.tmp"
 
       # now reconstruct the file and remove duplicate lines
       # sort the file by time 

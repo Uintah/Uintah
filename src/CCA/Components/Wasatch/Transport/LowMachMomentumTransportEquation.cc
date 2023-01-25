@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -125,11 +125,11 @@ namespace WasatchCore{
         psrcTagList.push_back(tagNames.drhodt );
       }
 
-      // create an expression for divu. In the case of variable density flows, the scalar equations
-      // will add their contributions to this expression
+      // create an expression for divu partial. In the case of variable density flows, the scalar equations
+      // will add their contributions to this expression.
       if( !factory.have_entry( tagNames.divu ) ) {
-        typedef typename Expr::ConstantExpr<SVolField>::Builder divuBuilder;
-        factory.register_expression( new divuBuilder(tagNames.divu, 0.0));
+        typedef typename Expr::ConstantExpr<SVolField>::Builder ConstBuilder;
+        factory.register_expression( new ConstBuilder(tagNames.divu, 0.0));
       }
 
       const Expr::ExpressionID
@@ -241,7 +241,6 @@ namespace WasatchCore{
     Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
-    
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
                                                     ( (enablePressureSolve || factory.have_entry( this->pressureTag_ )) ? this->pressureTag_ : Expr::Tag()),
@@ -440,39 +439,6 @@ namespace WasatchCore{
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           break;
         }
-        case SYMMETRY:
-        {
-          if( isNormal ){
-            BndCondSpec momBCSpec = {this->solnVarName_, "none", 0.0, DIRICHLET, DOUBLE_TYPE};
-            BndCondSpec velBCSpec = {this->thisVelTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
-            bcHelper.add_boundary_condition(bndName, momBCSpec);
-            bcHelper.add_boundary_condition(bndName, velBCSpec);
-            
-            BndCondSpec rhsFullBCSpec = {this->rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
-            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
-            
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),"none", 0.0, DIRICHLET,FUNCTOR_TYPE};
-            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
-          }
-          else {
-            
-            BndCondSpec momBCSpec = {this->solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
-            BndCondSpec velBCSpec = {this->thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-            bcHelper.add_boundary_condition(bndName, momBCSpec);
-            bcHelper.add_boundary_condition(bndName, velBCSpec);
-
-            BndCondSpec rhsFullBCSpec = {this->rhs_name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
-
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),"none", 0.0, NEUMANN,FUNCTOR_TYPE};
-            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
-          }
-          
-          // Set the pressure to Neumann 0
-          BndCondSpec pressureBCSpec = {this->pressureTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
-          break;
-        }
         case USER:
         {
           // pass through the list of user specified BCs that are relevant to this transport equation
@@ -503,8 +469,6 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
     
     if( !this->is_constant_density() ){
-      const TagNames& tagNames = TagNames::self();
-      
       // set bcs for density
       const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
@@ -530,8 +494,6 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
 
     if( !this->is_constant_density() ){
-      const TagNames& tagNames = TagNames::self();
-
       // set bcs for density
       const Expr::Tag densityNP1Tag( this->densityTag_.name(), Expr::STATE_NP1 );
       bcHelper.apply_boundary_condition<SVolField>( densityNP1Tag, taskCat );

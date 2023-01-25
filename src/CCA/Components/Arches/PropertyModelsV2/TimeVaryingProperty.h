@@ -18,16 +18,6 @@ public:
     TimeVaryingProperty<T>( std::string task_name, int matl_index );
     ~TimeVaryingProperty<T>();
 
-    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
-
-    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
-
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels(){
@@ -118,41 +108,6 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   TimeVaryingProperty<T>::~TimeVaryingProperty(){}
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace TimeVaryingProperty<T>::loadTaskComputeBCsFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace TimeVaryingProperty<T>::loadTaskInitializeFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace TimeVaryingProperty<T>::loadTaskEvalFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace TimeVaryingProperty<T>::loadTaskTimestepInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TaskAssignedExecutionSpace TimeVaryingProperty<T>::loadTaskRestartInitFunctionPointers()
-  {
-    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>

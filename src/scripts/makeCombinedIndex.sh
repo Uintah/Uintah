@@ -1,7 +1,8 @@
 #! /bin/bash
+#______________________________________________________________________
 
-# makeCombinedIndex.sh creates a list of timesteps from multiple UDAs that can be 
-# used in a single index.xml file to refer to multiple UDA directories.
+# makeCombinedIndex.sh creates a list of timesteps from multiple udas 
+# and generates a single index.xml file that you can point to.
 #
 # Run makeCombinedIndex.sh in the directory containing the UDAs of interest.
 

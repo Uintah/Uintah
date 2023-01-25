@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2021 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -213,8 +213,6 @@ class TaskGraph {
                                       , const GridP & oldGrid
                                       , const bool    hasDistalReqs = false
                                       );
-
-    void overrideGhostCells(const std::vector<Task*> &sorted_tasks);	//DS: 01042020: fix for OnDemandDW race condition
 
     inline DetailedTasks* getDetailedTasks()
     {

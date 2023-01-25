@@ -15,48 +15,6 @@ TaskInterface( task_name, matl_index )
 WALE::~WALE()
 {}
 
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace WALE::loadTaskComputeBCsFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace WALE::loadTaskInitializeFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &WALE::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &WALE::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &WALE::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &WALE::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &WALE::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers()
-{
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &WALE::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
-                                     , &WALE::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
-                                     //, &WALE::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
-                                     //, &WALE::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &WALE::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
-                                     );
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace WALE::loadTaskTimestepInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
-//--------------------------------------------------------------------------------------------------
-TaskAssignedExecutionSpace WALE::loadTaskRestartInitFunctionPointers()
-{
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
-}
-
 //---------------------------------------------------------------------------------
 void
 WALE::problemSetup( ProblemSpecP& db ){
@@ -130,26 +88,24 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 
   register_variable( m_total_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
-  register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry );
 
 }
 
 //---------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto mu_sgc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_total_vis_name);
-  auto mu_turb = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_turb_viscosity_name);
-  auto IsI = tsk_info->get_field< CCVariable<double>, double, MemSpace>(m_IsI_name);
-
-  parallel_initialize(execObj,0.0, mu_sgc, mu_turb, IsI);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
 
 }
 
 //---------------------------------------------------------------------------------
 void
 WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
-                              variable_registry, const int time_substep, const bool packed_tasks){
+                              variable_registry, const int time_substep , const bool packed_tasks){
 
   register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
@@ -161,7 +117,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
-  register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry, time_substep );
+  register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_total_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, AFC::COMPUTES ,  variable_registry, time_substep );
@@ -172,33 +128,32 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 //---------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace>
-void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+void
+WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  auto CCuVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_cc_u_vel_name);
-  auto CCvVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_cc_v_vel_name);
-  auto CCwVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_cc_w_vel_name);
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  auto mu_sgc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_total_vis_name);
-  auto mu_turb = tsk_info->get_field<CCVariable<double> ,double, MemSpace>(m_turb_viscosity_name);
-  auto IsI = tsk_info->get_field< CCVariable<double>, double, MemSpace>(m_IsI_name);
-  auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
-  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& IsI = tsk_info->get_field< CCVariable<double> >(m_IsI_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
-  parallel_initialize(execObj, 0.0, IsI, mu_sgc);
+  IsI.initialize(0.0);
+  mu_sgc.initialize(0.0);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
 //  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   const double SMALL = 1e-16;
-  const double local_Cs = m_Cs;
-  const double local_molecular_visc = m_molecular_visc;
-  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::parallel_for( range, [&](int i, int j, int k){
 
     double uep = 0.0;
     double uwp = 0.0;
@@ -302,13 +257,14 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
 
     const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.)+SMALL);
 
-    mu_sgc(i,j,k) = pow(local_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + local_molecular_visc;
+    mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + m_molecular_visc;
     IsI(i,j,k) = sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - local_molecular_visc; //
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
   });
+
   Uintah::ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(execObj,patch,mu_sgc,vol_fraction);
-  bcfilter.apply_zero_neumann(execObj,patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
 
 }
 } //namespace Uintah
