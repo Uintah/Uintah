@@ -41,10 +41,15 @@
     #define USE_KOKKOS_DEEPCOPY
     #define USE_KOKKOS_VIEW
     #define USE_KOKKOS_INSTANCE
+    #define USE_KOKKOS_INSTANCE_OPENMP
   #endif
 
-#if defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_CUDA)
+// int3 is defined in Cuda 
+#elif defined(KOKKOS_ENABLE_HIP)
 using int3 = sycl::int3;
+#elif defined(KOKKOS_ENABLE_SYCL)
+using int3 = hip::int3;
 #endif
 
 #endif

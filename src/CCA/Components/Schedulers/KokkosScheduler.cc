@@ -618,6 +618,9 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   while ( m_num_tasks_done < m_num_tasks ) {
 #if defined( KOKKOS_ENABLE_OPENMP )
 
+#if defined(USE_KOKKOS_INSTANCE_OPENMP)
+    // Use the Kokkos Open MP instances
+#else
     auto task_runner = [&] ( int partition_id, int num_partitions ) {
 
       // Each partition executes this block of code
@@ -633,6 +636,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
                                     , num_partitions
                                     , threads_per_partition
                                     );
+#endif
 
 #else // KOKKOS_ENABLE_OPENMP
 
