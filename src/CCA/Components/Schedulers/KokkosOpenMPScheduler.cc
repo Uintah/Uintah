@@ -262,29 +262,33 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 //---------------------------------------------------------------------------
 
   while ( g_num_tasks_done < m_num_tasks ) {
-
 #if defined( KOKKOS_ENABLE_OPENMP )
 
+#if defined(USE_KOKKOS_INSTANCE_OPENMP)
+    // Use the Kokkos Open MP instances
+#else
     auto task_worker = [&] ( int partition_id, int num_partitions ) {
 
       // Each partition created executes this block of code
-      // A task_worker can run either a serial task, e.g. threads_per_partition == 1
-      //       or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
+      // A task_worker can run either a serial task, (e.g. threads_per_partition == 1)
+      //       or a Kokkos-based data parallel task, (e.g. threads_per_partition > 1)
 
       this->runTasks();
 
-    }; //end task_worker
+    }; // end task_worker
 
     // Executes task_workers
     Kokkos::OpenMP::partition_master( task_worker
                                     , m_num_partitions
-                                    , m_threads_per_partition );
+                                    , m_threads_per_partition
+                                    );
+#endif
 
-#else //KOKKOS_ENABLE_OPENMP
+#else // !KOKKOS_ENABLE_OPENMP
 
     this->runTasks();
 
-#endif // HAVE_KOKKOS
+#endif // KOKKOS_ENABLE_OPENMP
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );

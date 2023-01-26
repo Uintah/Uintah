@@ -623,7 +623,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 #else
     auto task_runner = [&] ( int partition_id, int num_partitions ) {
 
-      // Each partition executes this block of code
+      // Each partition created executes this block of code
       // A task_runner can run either a serial task (e.g., m_threads_per_partition == 1)
       //       or a Kokkos-based data parallel task (e.g., m_threads_per_partition > 1)
 
@@ -638,7 +638,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
                                     );
 #endif
 
-#else // KOKKOS_ENABLE_OPENMP
+#else // !KOKKOS_ENABLE_OPENMP
 
     this->runTasks( 0 );
 
