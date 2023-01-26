@@ -46,10 +46,10 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 // int3 is defined in Cuda 
-#elif defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-using int3 = sycl::int3;
-#elif defined(KOKKOS_ENABLE_SYCL)
+#elif defined(KOKKOS_ENABLE_HIP)
 using int3 = hip::int3;
+#elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+using int3 = sycl::int3;
 #endif
 
 #endif
