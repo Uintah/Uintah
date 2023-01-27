@@ -95,9 +95,9 @@ void Ray::rayTraceGPU(const PatchSubset* patches,
     //__________________________________
     // varLabel name struct
 
-    varLabelNames*  labelNames = new varLabelNames;
+    varLabelNames*  labelNames = new varLabelNames;    // CUDA doesn't support C++ strings
 
-    labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
+    labelNames->abskg   = d_abskgLabel->getName().c_str();
     labelNames->sigmaT4 = d_sigmaT4Label->getName().c_str();
     labelNames->divQ    = d_divQLabel->getName().c_str();
     labelNames->celltype  = d_cellTypeLabel->getName().c_str();
@@ -539,9 +539,9 @@ void Ray::rayTraceDataOnionGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSp
                                           ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
                                           int timeStep,
                                           bool modifies_divQ,
-                                          Task::WhichDW,
-                                          Task::WhichDW,
-                                          Task::WhichDW);
+                                          Task::WhichDW which_abskg_dw,
+                                          Task::WhichDW which_sigmaT4_dw,
+                                          Task::WhichDW which_celltype_dw);
 
 template
 void Ray::rayTraceDataOnionGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
@@ -553,6 +553,6 @@ void Ray::rayTraceDataOnionGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceS
                                            ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
                                            int timeStep,
                                            bool modifies_divQ,
-                                           Task::WhichDW,
-                                           Task::WhichDW,
-                                           Task::WhichDW);
+                                           Task::WhichDW which_abskg_dw,
+                                           Task::WhichDW which_sigmaT4_dw,
+                                           Task::WhichDW which_celltype_dw);
