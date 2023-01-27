@@ -48,8 +48,13 @@
 // int3 is defined in Cuda 
 #elif defined(KOKKOS_ENABLE_HIP)
 using int3 = hip::int3;
-#elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif defined(KOKKOS_ENABLE_SYCL)
 using int3 = sycl::int3;
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+struct int3
+{
+    int x, y, z;
+};
 #endif
 
 #endif
