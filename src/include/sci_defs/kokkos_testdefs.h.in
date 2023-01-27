@@ -53,8 +53,15 @@ using int3 = sycl::int3;
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 struct int3
 {
-    int x, y, z;
-};
+  int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
+
+  int x, y, z;
+}
+
+int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
+
+#define __host__
+
 #endif
 
 #endif
