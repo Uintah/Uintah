@@ -5224,7 +5224,8 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
 #endif
 #else
       cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
-#endif      dtask->setCudaStreamForThisTask(*iter, stream);
+#endif
+      dtask->setCudaStreamForThisTask(*iter, stream);
     }
   }
 }
