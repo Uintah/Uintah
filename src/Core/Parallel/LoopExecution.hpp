@@ -244,6 +244,8 @@ enum TASKGRAPH {
      #define KOKKOS_DEVICE_TAG          Kokkos::Experimental::HIP COMMA Kokkos::Experimental::HIPSpace
     #elif defined( KOKKOS_ENABLE_SYCL )
       #define KOKKOS_DEVICE_TAG         Kokkos::Experimental::SYCL COMMA Kokkos::Experimental::SYCLDeviceUSMSpace
+    #elif defined( KOKKOS_ENABLE_OPENMPTARGET )
+      #define KOKKOS_DEVICE_TAG         Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
     #else
       #define KOKKOS_DEVICE_TAG         Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
     #endif
@@ -1719,6 +1721,8 @@ template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+#else
+void
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP) or defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& initializationValue,  Ts & ... inputs) {
