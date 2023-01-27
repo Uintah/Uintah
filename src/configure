@@ -34,7 +34,6 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
-# ##
 ## IMPORTANT!!!  Configure developers, PLEASE READ:
 ##
 ## The following BULLET PROOFING needs to be placed manually into
@@ -48,8 +47,6 @@
 ## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
 ## (just after the MIT license), and uncomment the following line:
 ##
-enable_option_checking=fatal
-
 #
 ## -------------------- ##
 ## M4sh Initialization. ##
@@ -36620,7 +36617,7 @@ cat > conftest-kokkos.cc <<EOF
 int
 main()
 {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
   return 0;
 #else
   return 1;
