@@ -56,11 +56,12 @@ struct int3
   int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
 
   int x, y, z;
-}
+};
 
 int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
 
 #define __host__
+#define __device__
 
 #endif
 
