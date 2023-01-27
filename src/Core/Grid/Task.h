@@ -2701,7 +2701,7 @@ template<typename ExecSpace, typename MemSpace>
 template<typename ES>
 typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
 Task::ActionPortableBase<ExecSpace, MemSpace>::
-checkKokkosInstanceDoneForThisTask_impl<ES>(intptr_t dTask, unsigned int device_id) const
+checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask, unsigned int device_id) const
 {
   return true;
 }
@@ -2712,7 +2712,7 @@ template<typename ExecSpace, typename MemSpace>
 template<typename ES>
 typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value, bool>::type
 Task::ActionPortableBase<ExecSpace, MemSpace>::
-checkKokkosInstanceDoneForThisTask_impl<ES>(intptr_t dTask, unsigned int device_id) const
+checkKokkosInstanceDoneForThisTask_impl(intptr_t dTask, unsigned int device_id) const
 {
   // ARS - FIXME
   if (device_id != 0) {
@@ -2777,7 +2777,7 @@ template<typename ES>
 typename std::enable_if<std::is_same<ES, UintahSpaces::CPU>::value ||
                         std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
 Task::ActionPortableBase<ExecSpace, MemSpace>::
-doKokkosDeepCopy_impl<ES>(intptr_t dTask, unsigned int deviceNum,
+doKokkosDeepCopy_impl(intptr_t dTask, unsigned int deviceNum,
                           void* dst, void* src,
                           size_t count, GPUMemcpyKind kind)
 {
@@ -2791,7 +2791,7 @@ template<typename ES>
 typename std::enable_if<!std::is_same<ES, UintahSpaces::CPU>::value &&
                         !std::is_same<ES, Kokkos::OpenMP   >::value, void>::type
 Task::ActionPortableBase<ExecSpace, MemSpace>::
-doKokkosDeepCopy_impl<ES>(intptr_t dTask, unsigned int deviceNum,
+doKokkosDeepCopy_impl(intptr_t dTask, unsigned int deviceNum,
                           void* dst, void* src,
                           size_t count, GPUMemcpyKind kind)
 {
