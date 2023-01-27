@@ -82,7 +82,9 @@ namespace Kokkos {
       class OpenMPTarget {};
       class OpenMPTargetSpace {};
     }
-#elif !defined( KOKKOS_ENABLE_OPENMP )
+#endif
+
+#if !defined( KOKKOS_ENABLE_OPENMP )
   // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
   // This logic may be temporary if all GPU functionality is merged
   // into the Kokkos scheduler and the Unified Scheduler is no longer
@@ -447,7 +449,6 @@ struct int_3
 //----------------------------------------------------------------------------
 
 // -------------------------------------  parallel_for loops  ---------------------------------------------
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -471,10 +472,8 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   });
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -498,11 +497,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   });
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(HAVE_KOKKOS)
-
-#if defined(HAVE_KOKKOS)
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -662,8 +657,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //  });
 }
 
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
@@ -696,7 +690,6 @@ parallel_for( BlockRange const & r, const Functor & functor )
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -767,10 +760,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   }, red);
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -800,11 +791,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   }, red);
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(HAVE_KOKKOS)
-
-#if defined(HAVE_KOKKOS)
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -932,8 +919,7 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
 
 }
 
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
@@ -968,7 +954,6 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 // -------------------------------------  parallel_reduce_min loops  ---------------------------------------------
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -995,10 +980,8 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   red = min(tmp0,red);
 }
-#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -1026,11 +1009,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
   red = min(tmp0,red);
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(HAVE_KOKKOS)
-
-#if defined(HAVE_KOKKOS)
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -1127,8 +1106,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 }
 
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 // TODO: This appears to not do any "min" on the reduction.
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -1177,7 +1155,6 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 }
 
 // -------------------------------------  sweeping_parallel_for loops  ---------------------------------------------
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -1272,10 +1249,8 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     }); // end Kokkos::parallel_for
   } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
-#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -1370,27 +1345,21 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     }); // end Kokkos::parallel_for
   } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
-#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(HAVE_KOKKOS)
-
-#if defined(HAVE_KOKKOS)
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
-    SCI_THROW(InternalError("Error: sweeps on cuda has not been implimented .", __FILE__, __LINE__));
+    SCI_THROW(InternalError("Error: sweeps on GPU has not been implimented .", __FILE__, __LINE__));
 }
 
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 // Allows the user to specify a vector (or view) of indices that
 // require an operation, often needed for boundary conditions and
 // possibly structured grids.
-// TODO: Can this be called parallel_for_unstructured?
-#if defined(HAVE_KOKKOS)
+
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -1403,16 +1372,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   });
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-
-// Allows the user to specify a vector (or view) of indices that
-// require an operation, often needed for boundary conditions and
-// possibly structured grids
-// TODO: Can this be called parallel_for_unstructured?
-
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -1425,24 +1386,15 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   });
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(HAVE_KOKKOS)
-
-// Allows the user to specify a vector (or view) of indices that
-// require an operation, often needed for boundary conditions and
-// possibly structured grids This GPU version is mostly a copy of the
-// original GPU version.
-// TODO: Can this be called parallel_for_unstructured?
-// TODO: Make streamable.
-
-#if defined(HAVE_KOKKOS)
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
+  // This GPU version is mostly a copy of the original GPU version.
+  // TODO: Make streamable.
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance();
 #else
@@ -1490,10 +1442,9 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 
 }
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+
 #if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
@@ -1516,8 +1467,7 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
   });
 }
-#endif  //#if defined(HAVE_KOKKOS_GPU)
-#endif  //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU)
 
 // ------------------------------  parallel_initialize loops and its helper functions  ------------------------------
 
@@ -1527,13 +1477,12 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 // ------------------------------------------------------------------------------------------------------------------
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
-                            const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
+                            const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ) {
 
   // TODO: This should probably be serialized and not use a
   // Kokkos::parallel_for?
@@ -1565,16 +1514,14 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //  }
 //}
 
-#endif //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
-#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
-                            const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
+                            const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ) {
 
   // TODO: This should probably be serialized and not use a
   // Kokkos::parallel_for?
@@ -1606,19 +1553,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //  }
 //}
 
-#endif //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif //#if defined(HAVE_KOKKOS)
-
-template <class TTT> // Needed for the casting inside of the Variadic
-                     // template, also allows for nested templating
-using Alias = TTT;
-
-#if defined(HAVE_KOKKOS)
-
-template <typename T, typename MemSpace> // Forward Declaration of KokkosView3
-class KokkosView3;
-
-#if defined(HAVE_KOKKOS_GPU)
+#elif defined(HAVE_KOKKOS_GPU)
 
 /* DS 11052019: Wrote alternative (and simpler) version of
  * parallel_initialize_grouped for cuda The previous version seems to
@@ -1634,7 +1569,7 @@ class KokkosView3;
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
-                const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
+			    const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ) {
 
         // n_cells is the max of cells total to process among
         // collection of vars (the view of Kokkos views).  For
@@ -1728,7 +1663,17 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 }
 */
-#endif //#if defined(HAVE_KOKKOS_GPU)
+
+#endif  // #if defined(HAVE_KOKKOS_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+template <class TTT> // Needed for the casting inside of the Variadic
+                     // template, also allows for nested templating
+using Alias = TTT;
+
+#if defined(HAVE_KOKKOS)
+
+template <typename T, typename MemSpace> // Forward Declaration of KokkosView3
+class KokkosView3;
 
 //For array of Views
 template<typename T, typename MemSpace, unsigned int Capacity>
@@ -1774,7 +1719,7 @@ template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
-#endif //#if defined(KOKKOS_ENABLE_OPENMP) or defined(KOKKOS_ENABLE_OPENMPTARGET)
+#endif  // #if defined(KOKKOS_ENABLE_OPENMP) or defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& initializationValue,  Ts & ... inputs) {
 
@@ -1838,8 +1783,8 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
     //parallel_initialize_single<ExecSpace>(execObj, inputs_, inside_value ); // safer version, less ambitious
   }
 }
-#endif
-#endif //#if defined(HAVE_KOKKOS)
+#endif  // #if defined(HAVE_KOKKOS_GPU)
+#endif  // #if defined(HAVE_KOKKOS)
 
 template< typename T, typename T2, const unsigned int T3>
 void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // for vectors
@@ -1916,9 +1861,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   };
 }
-#endif //#if defined( HAVE_KOKKOS )
+#endif  // #if defined( HAVE_KOKKOS )
 
-#if defined( HAVE_KOKKOS )
 #if defined(HAVE_KOKKOS_GPU)
 
 // This FunctorBuilder exists because I couldn't go the lambda
@@ -1954,7 +1898,6 @@ struct FunctorBuilderReduce {
   }
 };
 #endif //if defined(HAVE_KOKKOS_GPU)
-#endif //if defined(HAVE_KOKKOS)
 
 } // namespace Uintah
 
