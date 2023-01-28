@@ -249,8 +249,6 @@ public:
 
 //-----------------------------------------------------------------------------
 #if defined(HAVE_GPU)
-  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
-  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
 
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
@@ -270,6 +268,16 @@ public:
     SCI_THROW(InternalError("DetailedTask::getDeviceNums - Should not be called.", __FILE__, __LINE__));
   };
 
+#ifdef USE_KOKKOS_INSTANCE
+
+  // These three methods are pass through methods to the actual task
+  // similar to doit.
+  void clearKokkosInstancesForThisTask();
+
+  bool checkAllKokkosInstancesDoneForThisTask() const;
+
+  // These methods are defined so that the UnifiedScheduler
+  // compiles. However the UnifiedScheduler is not used.
   void setCudaStreamForThisTask( unsigned int deviceNum, cudaStream_t * s )
   {
     printf("ERROR: DetailedTask::setCudaStreamForThisTask - Should not be called.\n");
@@ -282,16 +290,6 @@ public:
     SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
   };
 
-#ifdef USE_KOKKOS_INSTANCE
-
-  // These three methods are pass through methods to the actual task
-  // similar to doit.
-  void clearKokkosInstancesForThisTask();
-
-  bool checkAllKokkosInstancesDoneForThisTask() const;
-
-  // These methods are defined so that the UnifiedScheduler
-  // compiles. However the UnifiedScheduler is not used.
   void reclaimCudaStreamsIntoPool()
   {
     printf("ERROR: DetailedTask::reclaimCudaStreamsIntoPool - Should not be called.\n");
@@ -310,6 +308,8 @@ public:
     SCI_THROW(InternalError("DetailedTask::checkAllCudaStreamsDoneForThisTask - Should not be called.", __FILE__, __LINE__));
   };
 #else
+
+  // Pass through methods
   void reclaimCudaStreamsIntoPool();
 
   void clearCudaStreamsForThisTask();
@@ -317,8 +317,23 @@ public:
   bool checkCudaStreamDoneForThisTask( unsigned int deviceNum ) const;
 
   bool checkAllCudaStreamsDoneForThisTask() const;
+
+  void setCudaStreamForThisTask( unsigned int deviceNum, cudaStream_t * s )
+  {
+    printf("ERROR: DetailedTask::setCudaStreamForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::setCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
+
+  cudaStream_t* getCudaStreamForThisTask( unsigned int deviceNum ) const
+  {
+    printf("ERROR: DetailedTask::getCudaStreamForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
 #endif
 #else
+  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
+  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
+
   void assignDevice( unsigned int device );
 
   // Most tasks will only run on one device.
@@ -448,7 +463,9 @@ private:
 //  bool         m_completed{false};
 //  unsigned int m_deviceNum{0};
 
-#ifndef TASK_MANAGES_EXECSPACE
+#ifdef TASK_MANAGES_EXECSPACE
+  // Defined in Task.h
+#else
   deviceNumSet  m_deviceNums;
   cudaStreamMap m_cudaStreams;
 #endif
@@ -614,14 +631,6 @@ public:
     bool allHostVarsProcessingReady(std::vector<OnDemandDataWarehouseP> & m_dws);
 
     bool allGPUVarsProcessingReady(std::vector<OnDemandDataWarehouseP> & m_dws);
-
-    // void freeCudaStreamsFromPool();
-
-    // cudaStream_t* getCudaStreamFromPool( int device );
-
-    cudaError_t freeDeviceRequiresMem();
-
-    cudaError_t freeComputesMem();
 
     // struct GPUGridVariableInfo {
 

@@ -266,6 +266,9 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 #if defined(USE_KOKKOS_INSTANCE_OPENMP)
     // Use the Kokkos Open MP instances
+    // Use the Kokkos Open MP instances
+    SCI_THROW(InternalError("Use the Kokkos Open MP instances - "
+			    "not implemented", __FILE__, __LINE__));
 #else
     auto task_worker = [&] ( int partition_id, int num_partitions ) {
 

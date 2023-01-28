@@ -1024,7 +1024,11 @@ DetailedTask::deleteTemporaryTaskVars()
 {
   // clean out the host list
   while (!taskHostMemoryPoolItems.empty()) {
+  // ARS - FIX ME
+#if defined(USE_KOKKOS_INSTANCE)
+#else
     cudaHostUnregister(taskHostMemoryPoolItems.front());
+#endif
     // TODO: Deletes a void*, and that doesn't call any object destructors
     delete[] taskHostMemoryPoolItems.front();
     taskHostMemoryPoolItems.pop();

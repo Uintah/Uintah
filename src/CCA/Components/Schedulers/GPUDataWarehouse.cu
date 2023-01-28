@@ -1629,6 +1629,8 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
 __device__ GPUDataWarehouse::dataItem*
 GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
+  // ARS - FIX ME
+#ifdef __CUDA_ARCH__
   //This upcoming __syncthreads is needed.  With CUDA function calls are inlined.
   // If you don't have it this upcoming __syncthreads here's what I think can happen:
 
@@ -1708,6 +1710,9 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
   }
 
   return &d_varDB[index];
+#else
+  return nullptr;
+#endif
 }
 
 //______________________________________________________________________
@@ -2136,9 +2141,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars( const int threadIdxX,
   int blockDimZ = 1;
 
   int blockID = 0;
-// int blockID = (blockIdx.x +     // blockID on the grid
-//             blockIdx.y * gridDim.x +
-  //             blockIdx.z * gridDim.x * gridDim.y);
+  // int blockID = (blockIdx.x +     // blockID on the grid
+  //                blockIdx.y * gridDim.x +
+  //                blockIdx.z * gridDim.x * gridDim.y);
   int threadID = (threadIdxX +   // threadID in the block
                   threadIdxY * blockDimX +
                   threadIdxZ * blockDimX * blockDimY);
@@ -3861,6 +3866,8 @@ GPUDataWarehouse::getPlacementNewBuffer()
 __device__ bool
 GPUDataWarehouse::isThread0_Blk0()
 {
+  // ARS - FIX ME
+#ifdef __CUDA_ARCH__
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
                   blockIdx.z * gridDim.x * gridDim.y);
@@ -3871,6 +3878,9 @@ GPUDataWarehouse::isThread0_Blk0()
   bool test(blockID == 0 && threadID == 0);
 
   return test;
+#else
+  return 0;
+#endif
 }
 
 //______________________________________________________________________
@@ -3880,11 +3890,16 @@ GPUDataWarehouse::isThread0_Blk0()
 __device__ bool
 GPUDataWarehouse::isThread0()
 {
+  // ARS - FIX ME
+#ifdef __CUDA_ARCH__
   int threadID = threadIdx.x +  threadIdx.y + threadIdx.z;
 
   bool test(threadID == 0 );
 
   return test;
+#else
+  return 0;
+#endif
 }
 
 //______________________________________________________________________
@@ -3893,10 +3908,13 @@ GPUDataWarehouse::isThread0()
 __device__ void
 GPUDataWarehouse::printThread()
 {
+  // ARS - FIX ME
+#ifdef __CUDA_ARCH__
   int threadID = threadIdx.x + threadIdx.y + threadIdx.z;
 
   printf( "Thread [%i,%i,%i], ID: %i\n",
           threadIdx.x, threadIdx.y, threadIdx.z, threadID);
+#endif
 }
 
 //______________________________________________________________________
@@ -3905,10 +3923,13 @@ GPUDataWarehouse::printThread()
 __device__ void
 GPUDataWarehouse::printBlock()
 {
+  // ARS - FIX ME
+#ifdef __CUDA_ARCH__
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
                   blockIdx.z * gridDim.x * gridDim.y);
 
   printf( "Block  [%i,%i,%i], ID: %i\n",
           blockIdx.x, blockIdx.y, blockIdx.z, blockID);
+#endif
 }
