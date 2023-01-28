@@ -37,13 +37,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
-
-#if defined(HAVE_KOKKOS_GPU)
-  #include <curand.h>
-  #include <curand_kernel.h>
-#endif
 
 #include <iostream>
 #include <cmath>
