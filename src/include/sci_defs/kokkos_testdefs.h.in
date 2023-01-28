@@ -41,16 +41,23 @@
     #define USE_KOKKOS_DEEPCOPY
     #define USE_KOKKOS_VIEW
     #define USE_KOKKOS_INSTANCE
-    #define USE_KOKKOS_INSTANCE_OPENMP
+//    #define USE_KOKKOS_INSTANCE_OPENMP
   #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-// int3 is defined in Cuda 
+// int3 is defined in Cuda
+
 #elif defined(KOKKOS_ENABLE_HIP)
+using cudaStream_t = void;
 using int3 = hip::int3;
+
 #elif defined(KOKKOS_ENABLE_SYCL)
+using cudaStream_t = void;
 using int3 = sycl::int3;
+
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+using cudaStream_t = void;
+
 struct int3
 {
   int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
@@ -63,11 +70,126 @@ int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
 #define __host__
 #define __device__
 
-#endif
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+using cudaStream_t = void;
+
+struct int3
+{
+  int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
+  int3(const int3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
+
+  int x, y, z;
+};
+
+inline int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
+
+#define __host__
+#define __device__
+
+#else
+
+#define __host__
+#define __device__
+#define __shared__
+
+#define HAVE_GPU
+#define HAVE_KOKKOS_GPU
+
+#define TASK_MANAGES_EXECSPACE
+#define USE_KOKKOS_PARALLEL_FOR
+#define USE_KOKKOS_DEEPCOPY
+#define USE_KOKKOS_VIEW
+#define USE_KOKKOS_INSTANCE
+//    #define USE_KOKKOS_INSTANCE_OPENMP
+
+using cudaStream_t = void;
+
+struct int3
+{
+  int3() : x(0), y(0), z(0) {}
+  int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
+  int3(const int3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
+
+  int& operator[](const int& i) { return xyz[i]; }
+
+  union {
+    struct {
+      int xyz[3];
+    };
+    struct {
+      int x, y, z;
+    };
+  };
+};
+
+inline int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
+
+struct uint3
+{
+  uint3() : x(0), y(0), z(0) {}
+  uint3(unsigned int _x, unsigned int _y, unsigned int _z) : x(_x), y(_y), z(_z) {}
+  uint3(const uint3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
+
+  unsigned int& operator[](const int& i) { return xyz[i]; }
+
+  union {
+    struct {
+      unsigned int xyz[3];
+    };
+    struct {
+      unsigned int x, y, z;
+    };
+  };
+};
+
+inline uint3 make_uint3(unsigned int x, unsigned int y, unsigned int z) { return uint3(x, y, z); }
+
+struct float3
+{
+  float3() : x(0), y(0), z(0) {}
+  float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+  float3(const float3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
+
+  float& operator[](const int& i) { return xyz[i]; }
+
+  union {
+    struct {
+      float xyz[3];
+    };
+    struct {
+      float x, y, z;
+    };
+  };
+};
+
+inline float3 make_float3(float x, float y, float z) { return float3(x, y, z); }
+
+
+struct double3
+{
+  double3() : x(0), y(0), z(0) {}
+  double3(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
+  double3(const double3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
+
+  double& operator[](const int& i) { return xyz[i]; }
+
+  union {
+    struct {
+      double xyz[3];
+    };
+    struct {
+      double x, y, z;
+    };
+  };
+};
+
+inline double3 make_double3(double x, double y, double z) { return double3(x, y, z); }
 
 #endif
 
-/* 
+#endif //  #if defined(HAVE_KOKKOS)
+
+/*
    For reference, (if Kokkos is enabled, then) you are linking against this Kokkos:
 
    @KOKKOS_LIB_DIR_FLAG@
@@ -79,4 +201,3 @@ int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
 */
 
 #endif
-
