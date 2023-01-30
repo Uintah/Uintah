@@ -69,22 +69,7 @@ int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
 
 #define __host__
 #define __device__
-
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-using cudaStream_t = void;
-
-struct int3
-{
-  int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
-  int3(const int3 &copy) : x(copy.x), y(copy.y), z(copy.z) {}
-
-  int x, y, z;
-};
-
-inline int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
-
-#define __host__
-#define __device__
+#define __shared__
 
 #else
 
