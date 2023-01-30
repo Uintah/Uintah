@@ -71,18 +71,24 @@
 using namespace std;
 using namespace Uintah;
 
-//HYPRE_USING_CUDA gets defined in HYPRE_config.h if hypre is configured with cuda.
-//if HYPRE_USING_CUDA or HYPRE_USING_KOKKOS (with kokkos-cuda backend) is enabled, 
-//copy all values to gpu memory buffer and then pass it to SetBoxValues. Rest everything remains same.
-//This is a temporary solution to get the code working. TODO: 
-//1. Analyze performance of hypre gpu solve without considering the copying time. (look at solve only time)
-//2. Improve performance, if possible. 
-//3. If gpu hypre performs faster than mpi only cpu hypre, convert this code into portable task
-//   (similar to CharOx)
-//4. If gpu hypre can not perform, possibly use cpu only version. (may be with thread as rank approach)
+// HYPRE_USING_CUDA gets defined in HYPRE_config.h if hypre is
+// configured with cuda. If HYPRE_USING_CUDA or HYPRE_USING_KOKKOS
+// (with kokkos-cuda backend) is enabled, copy all values to gpu
+// memory buffer and then pass it to SetBoxValues. Rest everything
+// remains same.
+
+// This is a temporary solution to get the code working. TODO: 
+// 1. Analyze performance of hypre gpu solve without considering the
+//    copying time. (look at solve only time)
+// 2. Improve performance, if possible.
+// 3. If gpu hypre performs faster than mpi only cpu hypre, convert
+//    this code into portable task (similar to CharOx)
+// 4. If gpu hypre can not perform, possibly use cpu only
+//    version. (may be with thread as rank approach)
 
 //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
 #define cudaErrorCheck(err) \
   if(err != cudaSuccess) { \
     printf("error in cuda call at %s: %d. %s: %s\n", __FILE__, __LINE__, cudaGetErrorName(err), cudaGetErrorString(err)); \
@@ -158,7 +164,8 @@ namespace Uintah {
       VarLabel::destroy(m_hypre_solver_label);
 
       //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
       if(m_buff){
         cudaErrorCheck(cudaFree(m_buff));
       }
@@ -195,7 +202,8 @@ namespace Uintah {
       if (m_buff_size < buff_size) {
         m_buff_size = buff_size;
 
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
         if (m_buff) {
           cudaErrorCheck(cudaFree((void*)m_buff));
         }
@@ -304,21 +312,27 @@ namespace Uintah {
       const ProcessorGroup * pg = uintahParams.getProcessorGroup();
 
       if(pg->myRank()==0){
-#if defined(HYPRE_USING_CUDA) || \
-  (defined(HYPRE_USING_KOKKOS) && (defined(HAVE_KOKKOS_GPU)))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
         bool hypre_cuda = true;
 #else
         bool hypre_cuda = false;
 #endif
-        if(std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value){
+        if(std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value) {
           if(hypre_cuda == false){
-            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is kokkos, but hypre is NOT configured with kokkos. ######\n", __FILE__, __LINE__);
+            printf("######  Error at file %s, line %d: "
+		   "ExecSpace of HypreSolver task in Uintah is kokkos, "
+		   "but hypre is NOT configured with kokkos. ######\n",
+		   __FILE__, __LINE__);
             exit(1);
           }
         }
         else{
-          if(hypre_cuda == true){
-            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
+          if(hypre_cuda == true) {
+            printf("######  Error at file %s, line %d: "
+		   "ExecSpace of HypreSolver task in Uintah is CPU, "
+		   "but hypre is configured with cuda. ######\n",
+		   __FILE__, __LINE__);
             exit(1);
           }
         }
@@ -1008,7 +1022,8 @@ namespace Uintah {
         HYPRE_StructPFMGSetSkipRelax   (precond_solver,  m_params->skip);
         HYPRE_StructPFMGSetLogging     (precond_solver,  0);
 
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
         //DS 10252019: added levels to be solved on GPU. coarser level will be executed on CPU, which is faster. 12 is determined by experiments.
         //Can be modified later or added into ups file.
         //MGM 11162022: deprecated HYPRE function and deprecated whole "feature" of Device-Level in PFMG/SMG.
@@ -1157,7 +1172,8 @@ namespace Uintah {
   {
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
     //-------------MGM:11162022: Upgrade to latest kokkos 3.7.00.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
 //  int argc = 0;
     //std::string
     HYPRE_Init();
@@ -1179,7 +1195,8 @@ namespace Uintah {
   HypreSolver2::~HypreSolver2()
   {
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if (defined(HAVE_CUDA) && defined(HYPRE_USING_CUDA)) || \
+  (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
     HYPRE_Finalize();
 #endif
     //-----------------  end of hypre-cuda  -----------------
