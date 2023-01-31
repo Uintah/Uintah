@@ -3777,12 +3777,17 @@ GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU(char const* label, int
         it->second.var->curGhostCells = -1;
       }
     } else {
-      varLock->unlock();
-      /* DS 11052019: Commented error. Even if variable is not found in the gpu dw, consider it to be invalid (at least in principle)
-       * This is needed to mark variable in GPU dw invalid if it is modified on CPU. Should not throw error at this time if the variable is not existing on GPU
+      /* DS 11052019: Commented error. Even if variable is not found
+       * in the gpu dw, consider it to be invalid (at least in
+       * principle) This is needed to mark variable in GPU dw invalid
+       * if it is modified on CPU. Should not throw error at this time
+       * if the variable is not existing on GPU
        */
-      /*printf("ERROR: GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU() - Variable %s not found.\n", label);
-      exit(-1);*/
+      // printf("ERROR: GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU() - "
+      // 	     "Variable %s not found.\n", label);
+      // varLock->unlock();
+      // exit(-1);
+
       retVal = false;
       allocating = true;
       break;
