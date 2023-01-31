@@ -916,7 +916,7 @@ public:
   }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(HAVE_KOKKOS_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getGridVariable( const VarLabel         * label
@@ -987,7 +987,7 @@ public:
   }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(HAVE_KOKKOS_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstGridVariable( const VarLabel         * label
