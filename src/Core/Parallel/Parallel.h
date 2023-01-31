@@ -51,7 +51,7 @@ class ProcessorGroup;
 
 CLASS
    Parallel
-   
+
 
 GENERAL INFORMATION
 
@@ -62,13 +62,13 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Parallel
 
 DESCRIPTION
-  
+
 ****************************************/
 
 class Parallel {
@@ -86,13 +86,13 @@ class Parallel {
       };
 
       //////////
-      // Initializes MPI if necessary. 
+      // Initializes MPI if necessary.
       static void initializeManager( int& argc, char**& arg );
 
       //////////
       // Check to see whether initializeManager has been called
       static bool isInitialized();
-      
+
       //////////
       // Shuts down and finalizes the MPI runtime in a safe manner
       static void finalizeManager( Circumstances cirumstances = NormalShutdown );
@@ -109,7 +109,7 @@ class Parallel {
       //////////
       // Returns the size of MPI_Comm
       static int getMPISize();
-      
+
       //////////
       // Sets the type of CPU scheduler threads
       static void setCpuThreadEnvironment( CpuThreadEnvironment threadType );
@@ -141,7 +141,7 @@ class Parallel {
       //////////
       // Sets the number of CUDA streams per task
       static void setCudaStreamsPerTask( unsigned int num );
-      
+
       //////////
       // Sets the name of the task name to time
       static void setTaskNameToTime( const std::string& taskNameToTime );
@@ -189,7 +189,7 @@ class Parallel {
       //////////
       // Sets the number of task runner threads to the value specified
       static void setNumThreads( int num );
-      
+
       //////////
       // Sets the number of task runner OMP thread partitions to the value specified
       static void setNumPartitions( int num );

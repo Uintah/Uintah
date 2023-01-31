@@ -27,8 +27,6 @@
 
 #include <Core/Parallel/Parallel.h>
 
-#include <sci_defs/kokkos_defs.h>
-
 #include <mutex>
 
 #ifdef _OPENMP
@@ -39,10 +37,10 @@ namespace Uintah {
 
 class MasterLock
 {
-
-  // Specific to OpenMP- and std::thread-based implementations
-  // To avoid mixing thread environment types (e.g. using mutexes in an OpenMP threaded environment),
-  // this class determines which kind of locking to use dependent on the parallel thread environment.
+  // Specific to OpenMP- and std::thread-based implementations.
+  // To avoid mixing thread environment types (e.g. using mutexes in
+  // an OpenMP threaded environment), this class determines which kind
+  // of locking to use dependent on the parallel thread environment.
 
   // This lock can be used as follows:
   //
@@ -52,15 +50,18 @@ class MasterLock
   //
   // 2.) std::unique_lock<MasterLock>
   //
-  //       std::unique_lock is a general-purpose mutex ownership wrapper allowing deferred locking, time-constrained
-  //       attempts at locking, recursive locking, transfer of lock ownership, and use with condition variables.
+  //       std::unique_lock is a general-purpose mutex ownership
+  //       wrapper allowing deferred locking, time-constrained
+  //       attempts at locking, recursive locking, transfer of lock
+  //       ownership, and use with condition variables.
   //
   //      OR
   //
   // 3.) std::lock_guard<MasterLock>
   //
-  //       std::lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for
-  //       owning a mutex for the duration of a scoped block.
+  //       std::lock_guard is a mutex wrapper that provides a
+  //       convenient RAII-style mechanism for owning a mutex for the
+  //       duration of a scoped block.
 
 
   public:
