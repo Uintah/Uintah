@@ -127,7 +127,9 @@ void PortableDependencyTest1::modifyTask( task_parameters )
 		Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA(int i, int j, int k, int &wrong){
 			if(newphi(i, j, k) != expected){	//verify expected value before updating
 				wrong++;
+#if !defined(KOKKOS_ENABLE_SYCL)
 				printf("modifies: expected mismatch: %d %d %d %f %f\n", i, j, k, newphi(i,j,k), expected);
+#endif
 			}
 			newphi(i, j, k) = newphi(i, j, k) + 0.5;
 		}, wrong);
@@ -156,7 +158,9 @@ void PortableDependencyTest1::requireTask( task_parameters )
 		Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA(int i, int j, int k, int &wrong){
 			if(newphi(i, j, k) != expected){
 				wrong++;
+#if !defined(KOKKOS_ENABLE_SYCL)
 				printf("requires: expected mismatch: %d %d %d %f %f\n", i, j, k, newphi(i,j,k), expected);
+#endif
 			}
 		}, wrong);
 	}
