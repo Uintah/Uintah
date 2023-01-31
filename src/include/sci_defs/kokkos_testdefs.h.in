@@ -56,36 +56,20 @@ using cudaStream_t = void;
 using int3 = sycl::int3;
 
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-using cudaStream_t = void;
 
-struct int3
-{
-  int3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
+// #define HAVE_GPU
+// #define HAVE_KOKKOS_GPU
 
-  int x, y, z;
-};
-
-int3 make_int3(int x, int y, int z) { return int3(x, y, z); }
-
-#define __host__
-#define __device__
-#define __shared__
-
-#else
+// #define TASK_MANAGES_EXECSPACE
+// #define USE_KOKKOS_PARALLEL_FOR
+// #define USE_KOKKOS_DEEPCOPY
+// #define USE_KOKKOS_VIEW
+// #define USE_KOKKOS_INSTANCE
+// //    #define USE_KOKKOS_INSTANCE_OPENMP
 
 #define __host__
 #define __device__
 #define __shared__
-
-#define HAVE_GPU
-#define HAVE_KOKKOS_GPU
-
-#define TASK_MANAGES_EXECSPACE
-#define USE_KOKKOS_PARALLEL_FOR
-#define USE_KOKKOS_DEEPCOPY
-#define USE_KOKKOS_VIEW
-#define USE_KOKKOS_INSTANCE
-//    #define USE_KOKKOS_INSTANCE_OPENMP
 
 using cudaStream_t = void;
 
