@@ -155,49 +155,6 @@ enum TASKGRAPH {
 #define STRV(...) #__VA_ARGS__
 #define STRVX(...) STRV(__VA_ARGS__)
 
-// Boilerplate alert.  This can be made much cleaner in C++17 with
-// compile time if statements (if constexpr() logic.)  We would be
-// able to use the following "using" statements instead of the
-// "#defines", and do compile time comparisons like so: if constexpr
-// (std::is_same< Kokkos::Cuda, TAG1 >::value) { For C++11, the
-// process is doable but just requires a muck of boilerplating to get
-// there, instead of the above if statement, I instead opted for a
-// weirder system where I compared the tags as strings if
-// (strcmp(STRVX(ORIGINAL_KOKKOS_DEVICE_TAG), STRVX(TAG1)) == 0) {
-// Further, the C++11 way ended up defining a tag as more of a string
-// of code rather than an actual data type.
-
-//using UINTAH_CPU_TAG = UintahSpaces::CPU;
-//using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
-//using KOKKOS_DEFAULT_HOST_TAG = Kokkos::DefaultHostExecutionSpace;
-//using KOKKOS_DEFAULT_DEVICE_TAG = Kokkos::DefaultExecutionSpace;
-//using KOKKOS_DEVICE_TAG = Kokkos::Cuda;
-
-// Main concept of the below tags: Whatever tags the user supplies is
-// directly compiled into the Uintah binary build.  In case of a
-// situation where a user supplies a tag that isn't valid for that
-// build, such as KOKKOS_DEVICE_TAG in a non-CUDA build, the tag is
-// "downgraded" to one that is valid.  So in a non-CUDA build,
-// KOKKOS_DEVICE_TAG gets associated with Kokkos::OpenMP or
-// UintahSpaces::CPU.  This helps ensure that the compiler never
-// attempts to compile anything with a Kokkos::Cuda data type in a
-// non-GPU build
-#define ORIGINAL_UINTAH_CPU_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define ORIGINAL_KOKKOS_OPENMP_TAG          Kokkos::OpenMP COMMA Kokkos::HostSpace
-#define ORIGINAL_KOKKOS_DEFAULT_HOST_TAG    Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-#define ORIGINAL_KOKKOS_DEFAULT_DEVICE_TAG  Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-
-#if defined( KOKKOS_ENABLE_CUDA )
-  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Cuda COMMA Kokkos::CudaSpace
-#elif defined( KOKKOS_ENABLE_HIP )
-  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Experimental::HIP COMMA Kokkos::Experimental::HIPSpace
-#elif defined( KOKKOS_ENABLE_SYCL )
-  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Experimental::SYCL COMMA Kokkos::Experimental::SYCLDeviceUSMSpace
-#else
-#define ORIGINAL_KOKKOS_DEVICE_TAG          Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-#endif
-
-
 // Example of Kokkos options following Kokkos internal order:
 //     https://github.com/kokkos/kokkos/blob/develop/core/src/Kokkos_Core_fwd.hpp
 //     https://github.com/kokkos/kokkos/wiki/Initialization
@@ -285,6 +242,12 @@ enum TASKGRAPH {
   #define KOKKOS_DEFAULT_DEVICE_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_DEVICE_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
+
+// #pragma message "The value of UINTAH_CPU_TAG: "            STRVX(UINTAH_CPU_TAG)
+// #pragma message "The value of KOKKOS_OPENMP_TAG: "         STRVX(KOKKOS_OPENMP_TAG)
+// #pragma message "The value of KOKKOS_DEFAULT_HOST_TAG: "   STRVX(KOKKOS_DEFAULT_HOST_TAG)
+// #pragma message "The value of KOKKOS_DEFAULT_DEVICE_TAG: " STRVX(KOKKOS_DEFAULT_DEVICE_TAG)
+// #pragma message "The value of KOKKOS_DEVICE_TAG: "         STRVX(KOKKOS_DEVICE_TAG)
 
 namespace Uintah {
 
