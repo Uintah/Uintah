@@ -49,13 +49,19 @@
 
 #elif defined(KOKKOS_ENABLE_HIP)
 using cudaStream_t = void;
-using int3 = hip::int3;
+using int3    = hip::int3;
+using uint3   = hip::uint3;
+using float3  = hip::float3;
+using double3 = hip::double3;
 
-#elif defined(KOKKOS_ENABLE_SYCL)
-using cudaStream_t = void;
-using int3 = sycl::int3;
+// #elif defined(KOKKOS_ENABLE_SYCL)
+// int3 requires access methods .x() vs direct access .x
+// so roll our own for now as is done for OpenMPTarget
 
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+// using cudaStream_t = void;
+// using int3 = sycl::int3;
+
+#elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 // #define HAVE_GPU
 // #define HAVE_KOKKOS_GPU
