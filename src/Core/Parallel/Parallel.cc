@@ -300,7 +300,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   // TODO: Set sensible defaults after deprecating use of
   // Kokkos::OpenMP with the Unified Scheduler
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   if ( s_num_partitions <= 0 ) {
     s_num_partitions = 1;
   }
@@ -373,7 +373,7 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
 #else
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
@@ -385,7 +385,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 
 #ifdef THREADED_MPI_AVAILABLE
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if ( s_num_partitions > 0 ) {
       std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
       std::cout << "Parallel: " << s_num_partitions << " OpenMP thread " << plural << " per MPI process\n";

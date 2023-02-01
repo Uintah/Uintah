@@ -33,7 +33,7 @@
   #include <Kokkos_Macros.hpp>
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   #include <Core/Grid/Variables/Array3.h>
 #endif
 
@@ -139,7 +139,7 @@ WARNING
     inline const T& operator[](Index idx) const
     { return this->rep_[idx]; }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const
       {
         auto v = this->rep_.getKokkosView();

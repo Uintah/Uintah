@@ -105,7 +105,7 @@ namespace Uintah {
         return *( _field_container->get_const_field<T>(name, args...) );
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       /** @brief Return a CONST grid variable **/
       template <typename T, typename PODType, typename MemSpace, typename... Args>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::HostSpace>::value, KokkosView3<PODType, Kokkos::HostSpace>>::type
@@ -163,7 +163,7 @@ namespace Uintah {
         return  *(_field_container->get_field<T>(name, args...));
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       /** @brief Return a NON-CONST grid variable **/
       template <typename T, typename PODType, typename MemSpace, typename... Args>
       typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::HostSpace>::value, KokkosView3<PODType, Kokkos::HostSpace>>::type
@@ -190,7 +190,7 @@ namespace Uintah {
         return T();
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<PODType, Kokkos::HostSpace> >::type
       get_empty_field()
@@ -232,7 +232,7 @@ namespace Uintah {
         _field_container->get_unmanaged_field<T>( name, field );
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       template <typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
       get_unmanaged_uintah_field(       FIELD_TYPE  & field
@@ -269,7 +269,7 @@ namespace Uintah {
         _field_container->get_unmanaged_field( name, field );
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       template <typename T, typename ElemType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
       get_unmanaged_uintah_field( const std::string                     name
@@ -347,7 +347,7 @@ namespace Uintah {
     return struct1DArray<T, MaxCapacity>( num ); // perform deep copy (should be ok since it is an empty CCVariable?)
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
   typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
   createContainer( int num = MaxCapacity )
@@ -372,7 +372,7 @@ namespace Uintah {
     return struct1DArray<T, MaxCapacity>( num ); // perform deep copy (should be ok since it is an empty CCVariable?)
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
   typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
   createConstContainer( int num = MaxCapacity )

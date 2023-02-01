@@ -576,7 +576,7 @@ struct computeAMatrix{
                        areaTB(_areaTB),
                        vol(_vol),
                        intFlow(_intFlow),
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
                        cellType(_cellType.getKokkosView()),
                        wallTemp(_wallTemp.getKokkosView()),
                        abskt(_abskt.getKokkosView()),
@@ -660,8 +660,7 @@ struct computeAMatrix{
        double vol;
        int    intFlow;
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
        KokkosView3<const int,    Kokkos::HostSpace> cellType;
        KokkosView3<const double, Kokkos::HostSpace> wallTemp;
        KokkosView3<const double, Kokkos::HostSpace> abskt;
@@ -716,7 +715,7 @@ struct compute4Flux{
                    oeta(_oeta),  ///< absolute value of solid angle weighted y-component
                    oxi(_oxi),    ///< absolute value of solid angle weighted z-component
                    wt(_wt),
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
                    intensity(_intensity.getKokkosView()),
                    fluxX(_fluxX.getKokkosView()) ,
                    fluxY(_fluxY.getKokkosView()) ,
@@ -746,8 +745,7 @@ struct compute4Flux{
        double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
        KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
 
        KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
@@ -1316,8 +1314,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int jEnd = m_plusY[dir] ? idxHi.y() : -idxLo.y();
     const int iEnd = m_plusX[dir] ? idxHi.x() : -idxLo.x();
 
-//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-#if defined( KOKKOS_ENABLE_OPENMP )    
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     KokkosView3<const int, Kokkos::HostSpace>    kv_cellType  = cellType.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc  = emissSrc.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_abskt     = abskt.getKokkosView();
@@ -1397,7 +1394,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
         } // end j loop
       } // end k loop
     }
-#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
+#endif // end KOKKOS_ENABLE_OPENMP // && _OPENMP
   } // end band loop
   return;
 }

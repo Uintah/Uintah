@@ -638,7 +638,7 @@ public:
     return var;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getCCVariable( const VarLabel         * label
@@ -699,7 +699,7 @@ public:
     return constVar;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
   getConstCCVariable( const VarLabel         * label
@@ -756,7 +756,7 @@ public:
     return var;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getNCVariable( const VarLabel         * label
@@ -813,7 +813,7 @@ public:
     return constVar;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
   getConstNCVariable( const VarLabel         * label
@@ -870,7 +870,7 @@ public:
     return var;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getGridVariable( const VarLabel         * label
@@ -893,7 +893,7 @@ public:
   }
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMPTARGET ) // && defined( _OPENMP )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::Experimental::OpenMPTargetSpace >::value, KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace> >::type
   getGridVariable( const VarLabel         * label
@@ -951,7 +951,7 @@ public:
     return constVar;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
   getConstGridVariable( const VarLabel         * label
@@ -969,7 +969,7 @@ public:
   }
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMPTARGET ) // && defined( _OPENMP )
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::Experimental::OpenMPTargetSpace >::value, KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace> >::type
   getConstGridVariable( const VarLabel         * label
@@ -1025,7 +1025,7 @@ public:
     }
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & kvar

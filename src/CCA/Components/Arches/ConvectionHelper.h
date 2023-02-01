@@ -70,7 +70,7 @@ namespace Uintah {
                  , const Vector & Dx
                  )
       :
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
         rhs( rhs.getKokkosView() )
       , flux_x( flux_x.getKokkosView() )
       , flux_y( flux_y.getKokkosView() )
@@ -97,7 +97,7 @@ namespace Uintah {
 
   private:
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     KokkosView3<      double, Kokkos::HostSpace> rhs;
     KokkosView3<const double, Kokkos::HostSpace> flux_x;
     KokkosView3<const double, Kokkos::HostSpace> flux_y;

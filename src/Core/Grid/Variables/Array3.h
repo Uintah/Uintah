@@ -88,7 +88,7 @@ public:
   Array3(int size1, int size2, int size3) {
     d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
     d_window->addReference();
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -104,7 +104,7 @@ public:
     if(d_window) {
       d_window->addReference();
     }
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -116,7 +116,7 @@ public:
     if(d_window) {
       d_window->addReference();
     }
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -141,7 +141,7 @@ public:
       d_window=0;
     }
     d_window = copy.d_window;
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -184,7 +184,7 @@ public:
     IntVector size = highIndex-lowIndex;
     d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
     d_window->addReference();
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     if (d_window) {
       m_view = d_window->getKokkosView();
     }
@@ -213,7 +213,7 @@ public:
     return d_window;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
   {
     // Kokkos Views don't reference count, but OnDemand Data
@@ -233,7 +233,7 @@ public:
 // For now, if it's a homogeneous only Kokkos environment, use Kokkos
 // Views If it's a legacy environment or a CUDA environment, use the
 // original way of accessing data.
-#if !defined(HAVE_GPU) && defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if !defined(HAVE_GPU) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
 
   // Note: Dan Sunderland used a Kokkos define
   // KOKKOS_FORCEINLINE_FUNCTION, however, this caused problems when
@@ -399,7 +399,7 @@ private:
   // But we need to let grid variables be modified, and so we set these data members as
   // mutable, which gets around the const.
   mutable Array3Window<T>* d_window{nullptr};
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   //Array3 variables should never go outside of HostSpace.
   mutable KokkosView3<T, Kokkos::HostSpace> m_view{};
 #endif
@@ -461,7 +461,7 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
     oldWindow=0;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   if (d_window) {
     m_view = d_window->getKokkosView();
   }
@@ -514,7 +514,7 @@ bool Array3<T>::rewindowExact(const IntVector& lowIndex, const IntVector& highIn
     oldWindow=0;
   }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   if (d_window) {
     m_view = d_window->getKokkosView();
   }

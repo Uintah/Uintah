@@ -209,7 +209,7 @@ namespace Uintah {
     get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
 //    template<typename MemSpace>
 //    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
 //    get_ref_to_iterator(){ return listOfCells_; }

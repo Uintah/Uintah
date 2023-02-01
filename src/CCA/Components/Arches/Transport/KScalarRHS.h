@@ -186,7 +186,7 @@ doConvection(       ExecutionObject<ExecSpace, MemSpace> & execObj
     }
 }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void>::type

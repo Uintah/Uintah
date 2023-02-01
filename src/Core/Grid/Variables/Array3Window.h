@@ -36,7 +36,7 @@
   #include <Kokkos_Macros.hpp>
 #endif
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 
@@ -133,7 +133,7 @@ template<class T> class Array3Window : public RefCounted {
         return data->get(i-offset.x(), j-offset.y(), k-offset.z());
       }
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
       template< typename U = T >
       inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
       getKokkosView() const
