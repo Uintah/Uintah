@@ -1089,6 +1089,7 @@ CharOxidationps<T>::eval( const Patch                                * patch
 
       if ( count > 90 ) {
       //if ( count > 1 ) {
+#if !defined(KOKKOS_ENABLE_SYCL)
         printf( "warning no solution found in char ox: [env %d %d, %d, %d ]\n", local_Nenv, i, j, k );
         printf( "F[0]: %g\n",            F[0] );
         printf( "F[1]: %g\n",            F[1] );
@@ -1111,6 +1112,7 @@ CharOxidationps<T>::eval( const Patch                                * patch
         printf( "x_org: %g\n",           x_org );
         printf( "p_rho: %g\n",           p_rho );
         printf( "p_void0: %g\n",         local_p_void0 );
+#endif
       }
 
       double char_mass_rate      = 0.0;
