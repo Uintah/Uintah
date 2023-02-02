@@ -60,6 +60,8 @@
 #include <krylov.h>
 
 #include <iomanip>
+#include <typeinfo>
+#include <cxxabi.h>
 
 //#define PRINTSYSTEM
 
@@ -346,21 +348,25 @@ namespace Uintah {
 #else
         bool hypre_gpu = false;
 #endif
+        int status;
+        char *name =
+          abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
         if(std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value) {
           if(hypre_gpu == false) {
             printf("######  Error at file %s, line %d: "
-                   "ExecSpace of HypreSolver task in Uintah is kokkos, "
-                   "but hypre is NOT configured with gpu. ######\n",
-                   __FILE__, __LINE__);
+                   "ExecSpace of HypreSolver task in Uintah is %s, "
+                   "but hypre is NOT configured for the gpu. ######\n",
+                   __FILE__, __LINE__, name);
             exit(1);
           }
         }
         else{
           if(hypre_gpu == true) {
             printf("######  Error at file %s, line %d: "
-                   "ExecSpace of HypreSolver task in Uintah is CPU, "
-                   "but hypre is configured with gpu. ######\n",
-                   __FILE__, __LINE__);
+                   "ExecSpace of HypreSolver task in Uintah is %s, "
+                   "but hypre is configured for the gpu. ######\n",
+                   __FILE__, __LINE__, name);
             exit(1);
           }
         }
