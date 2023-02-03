@@ -107,10 +107,10 @@ namespace Uintah {
     
     //  *_p = pointer
     HYPRE_StructSolver * solver_p = nullptr;
-    HYPRE_StructSolver * precond_solver_p;
-    HYPRE_StructMatrix * HA_p;
-    HYPRE_StructVector * HB_p;
-    HYPRE_StructVector * HX_p;
+    HYPRE_StructSolver * precond_solver_p = nullptr;
+    HYPRE_StructMatrix * HA_p = nullptr;
+    HYPRE_StructVector * HB_p = nullptr;
+    HYPRE_StructVector * HX_p = nullptr;
 
     //__________________________________
     //
@@ -118,11 +118,11 @@ namespace Uintah {
       isRecomputeTimeStep  = false;
       solver_type          = smg;
       precond_solver_type  = diagonal;
-      solver_p             = 0;
-      precond_solver_p     = 0;
-      HA_p = 0;
-      HB_p = 0;
-      HX_p = 0;
+      solver_p             = nullptr;
+      precond_solver_p     = nullptr;
+      HA_p = nullptr;
+      HB_p = nullptr;
+      HX_p = nullptr;
     };
     //__________________________________
     //
@@ -163,7 +163,7 @@ namespace Uintah {
           Parallel::exitAll( 1 );
         }
         delete solver_p;
-        solver_p = 0;
+        solver_p = nullptr;
       }
 
       if (*precond_solver_p) {
@@ -192,23 +192,23 @@ namespace Uintah {
           Parallel::exitAll( 1 );
         }
         delete precond_solver_p;
-        precond_solver_p = 0;
+        precond_solver_p = nullptr;
       }
 
       if (HA_p) {
         HYPRE_StructMatrixDestroy( *HA_p );
         delete HA_p;  
-        HA_p = 0;
+        HA_p = nullptr;
       }
       if (HB_p){
         HYPRE_StructVectorDestroy( *HB_p );
         delete HB_p;  
-        HB_p = 0;
+        HB_p = nullptr;
       }
       if (HX_p) {
         HYPRE_StructVectorDestroy( *HX_p );
         delete HX_p;  
-        HX_p = 0;
+        HX_p = nullptr;
       }
     };
   };
