@@ -137,7 +137,7 @@ namespace Uintah {
     //
     virtual ~hypre_solver_struct() {
 
-      if (*solver_p) {
+      if (solver_p != nullptr) {
         switch (solver_type) {
         case smg:
           HYPRE_StructSMGDestroy(*solver_p);
@@ -166,7 +166,7 @@ namespace Uintah {
         solver_p = nullptr;
       }
 
-      if (*precond_solver_p) {
+      if (precond_solver_p != nullptr) {
         switch (precond_solver_type) {
         case smg:
           HYPRE_StructSMGDestroy(*precond_solver_p);
@@ -195,17 +195,17 @@ namespace Uintah {
         precond_solver_p = nullptr;
       }
 
-      if (HA_p) {
+      if (HA_p != nullptr) {
         HYPRE_StructMatrixDestroy( *HA_p );
         delete HA_p;  
         HA_p = nullptr;
       }
-      if (HB_p){
+      if (HB_p != nullptr){
         HYPRE_StructVectorDestroy( *HB_p );
         delete HB_p;  
         HB_p = nullptr;
       }
-      if (HX_p) {
+      if (HX_p != nullptr) {
         HYPRE_StructVectorDestroy( *HX_p );
         delete HX_p;  
         HX_p = nullptr;
