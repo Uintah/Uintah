@@ -394,7 +394,7 @@ namespace Uintah {
       }
 
       struct hypre_solver_struct* hypre_solver_s =
-        m_hypre_solverP.get().get_rep();
+        hypre_solverP.get().get_rep();
 
       bool recompute = hypre_solver_s->isRecomputeTimeStep;
 
