@@ -152,7 +152,7 @@ namespace Uintah {
     {
       // Time Step
       m_timeStepLabel    = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
+      m_m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
                                                SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
@@ -168,7 +168,7 @@ namespace Uintah {
 
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
-      VarLabel::destroy(m_hypre_solver_label);
+      VarLabel::destroy(m_m_hypre_solver_label);
 
       //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
@@ -383,14 +383,14 @@ namespace Uintah {
 
        //________________________________________________________
       // get struct from data warehouse
-      struct hypre_solver_struct* hypre_solver_s = 0;
+      struct hypre_solver_struct* hypre_solver_s = nullptr;
 
-      if ( new_dw->exists( m_hypre_solver_label ) ) {
-        new_dw->get( m_hypre_solverP, m_hypre_solver_label );
+      if ( new_dw->exists( m_m_hypre_solver_label ) ) {
+        new_dw->get( m_hypre_solverP, m_m_hypre_solver_label );
       }
       else {
-        old_dw->get( m_hypre_solverP, m_hypre_solver_label );
-        new_dw->put( m_hypre_solverP, m_hypre_solver_label );
+        old_dw->get( m_hypre_solverP, m_m_hypre_solver_label );
+        new_dw->put( m_hypre_solverP, m_m_hypre_solver_label );
       }
 
       hypre_solver_s = m_hypre_solverP.get().get_rep();
@@ -772,6 +772,7 @@ namespace Uintah {
         case sparsemsg:{
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver_p;
+
           if ( do_setup ) {
             HYPRE_StructSparseMSGDestroy(*solver);
           }
@@ -886,6 +887,7 @@ namespace Uintah {
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructGMRESDestroy(*solver);
           }
+
           if (timeStep == 1 || recompute || do_setup ) {
             HYPRE_StructGMRESCreate(pg->getComm(),solver);
 
@@ -1213,7 +1215,7 @@ namespace Uintah {
 #endif
 
     const VarLabel*    m_timeStepLabel;
-    const VarLabel*    m_hypre_solver_label;
+    const VarLabel*    m_m_hypre_solver_label;
     SoleVariable<hypre_solver_structP> m_hypre_solverP;
     bool   m_firstPassThrough;
     double m_movingAverage;
@@ -1254,7 +1256,7 @@ namespace Uintah {
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
-    hypre_solver_label = VarLabel::create("hypre_solver_label",
+    m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
 
     m_params = scinew HypreParams();
@@ -1265,6 +1267,10 @@ namespace Uintah {
 
   HypreSolver2::~HypreSolver2()
   {
+    // Scrub from the data warehouse so that when hypre is finialize
+    // all hypre structures have be deleted.
+    m_dw->scrub( m_hypre_solver_label );
+
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
     HYPRE_Finalize();
@@ -1272,7 +1278,7 @@ namespace Uintah {
     //-----------------  end of hypre-cuda  -----------------
 
     VarLabel::destroy(m_timeStepLabel);
-    VarLabel::destroy(hypre_solver_label);
+    VarLabel::destroy(m_hypre_solver_label);
     delete m_params;
   }
 
@@ -1365,7 +1371,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches on this proc when scheduling
 
-    task->computes(hypre_solver_label);
+    task->computes(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1385,7 +1391,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches  on this proc when scheduling restarts with regridding
 
-    task->computes(hypre_solver_label);
+    task->computes(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1411,7 +1417,9 @@ namespace Uintah {
     hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
 
     hypre_solverP.setData( hypre_struct );
-    new_dw->put( hypre_solverP, hypre_solver_label );
+    new_dw->put( hypre_solverP, m_hypre_solver_label );
+
+    m_dw = new_dw;
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1504,13 +1512,13 @@ namespace Uintah {
 
       // solve struct
       if (isFirstSolve) {
-        task->requires( Task::OldDW, hypre_solver_label);
-        task->computes( hypre_solver_label);
+        task->requires( Task::OldDW, m_hypre_solver_label);
+        task->computes( m_hypre_solver_label);
       }  else {
-        task->requires( Task::NewDW, hypre_solver_label);
+        task->requires( Task::NewDW, m_hypre_solver_label);
       }
 
-      sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
+      sched->overrideVariableBehavior(m_hypre_solver_label->getName(),false,true,false,false,true);
 
       task->setType(Task::Hypre);
 

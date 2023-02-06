@@ -149,7 +149,7 @@ namespace Uintah {
           HYPRE_StructSparseMSGDestroy(*solver_p);
           break;
         case pcg:
-          HYPRE_StructPCGDestroy(*solver_p);
+	  HYPRE_StructPCGDestroy(*solver_p);
           break;
         case gmres:
           HYPRE_StructGMRESDestroy(*solver_p);
@@ -322,9 +322,11 @@ namespace Uintah {
                            
     SolverType stringToSolverType( std::string str );
 
-    const VarLabel * m_timeStepLabel;
-    const VarLabel * hypre_solver_label;
-    
+    const VarLabel * m_timeStepLabel = nullptr;
+    const VarLabel * m_hypre_solver_label = nullptr;
+
+    DataWarehouse  * m_dw = nullptr;
+
     HypreParams * m_params = nullptr;
     
   };
