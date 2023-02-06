@@ -557,8 +557,8 @@ public:
                          );
 
   void scrub( const VarLabel * label
-            ,       int        matlIndex
-            , const Patch    * patch
+            ,       int        matlIndex = -1
+            , const void     * domain = nullptr
             );
 
   void initializeScrubs(       int                        dwid

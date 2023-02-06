@@ -2923,7 +2923,7 @@ OnDemandDataWarehouse::setScrubCount( const VarLabel * var
 void
 OnDemandDataWarehouse::scrub( const VarLabel * var
                             ,       int        matlIndex
-                            , const Patch    * patch
+                            , const void     * domain
                             )
 {
   switch (var->typeDescription()->getType()) {
@@ -2934,11 +2934,13 @@ OnDemandDataWarehouse::scrub( const VarLabel * var
     case TypeDescription::SFCZVariable :
     case TypeDescription::PerPatch :
     case TypeDescription::ParticleVariable : {
-      m_var_DB.scrub(var, matlIndex, patch);
+      m_var_DB.scrub(var, matlIndex, (Patch *) domain);
       break;
     }
     case TypeDescription::SoleVariable : {
-      SCI_THROW(InternalError("scrub called for sole variable: "+var->getName(), __FILE__, __LINE__));
+      m_level_DB.scrub(var, matlIndex, (Level *) domain);
+      break;
+      // SCI_THROW(InternalError("scrub called for sole variable: "+var->getName(), __FILE__, __LINE__));
     }
     case TypeDescription::ReductionVariable : {
       // Reductions are not scrubbed

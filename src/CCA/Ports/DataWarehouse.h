@@ -132,6 +132,10 @@ public:
   virtual void put(Variable*, const VarLabel*, int matlIndex,
                    const Patch*) = 0;
 
+  virtual void scrub( const VarLabel * label
+                    ,       int        matlIndex = -1
+                    , const void     * domain = nullptr) = 0;
+
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
                    const Level* level = 0, int matlIndex = -1) = 0;
