@@ -59,9 +59,9 @@ namespace Uintah {
   class HypreParams : public SolverParameters {
   public:
     HypreParams(){}
-    
+
     ~HypreParams() {}
-    
+
     // Parameters common for all Hypre Solvers
     std::string solvertype;         // String corresponding to solver type
     std::string precondtype;        // String corresponding to preconditioner type
@@ -72,14 +72,14 @@ namespace Uintah {
     int         logging;            // Log Hypre solver (using Hypre options)
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
-    
+
     // SMG parameters
     int    npre;               // # pre relaxations for Hypre SMG solver
     int    npost;              // # post relaxations for Hypre SMG solver
-    
+
     // PFMG parameters
     int    skip;               // Hypre PFMG parameter
-    
+
     // SparseMSG parameters
     int    jump;               // Hypre Sparse MSG parameter
   };
@@ -100,11 +100,11 @@ namespace Uintah {
   //______________________________________________________________________
   //
   struct hypre_solver_struct : public RefCounted {
-    
+
     SolverType           solver_type;
     SolverType           precond_solver_type;
     bool                 isRecomputeTimeStep;
-    
+
     //  *_p = pointer
     HYPRE_StructSolver * solver_p = nullptr;
     HYPRE_StructSolver * precond_solver_p = nullptr;
@@ -129,10 +129,10 @@ namespace Uintah {
     void print()
     {
       std::cout << "  Solver  type: " << solver_type << " solver: " << &solver_p <<  " " << *solver_p << "\n";
-                
+
       std::cout << "  Precond type: " << precond_solver_type << " solver: " << &precond_solver_p << " " << *solver_p << "\n";
     };
-    
+
     //__________________________________
     //
     virtual ~hypre_solver_struct() {
@@ -149,7 +149,7 @@ namespace Uintah {
           HYPRE_StructSparseMSGDestroy(*solver_p);
           break;
         case pcg:
-	  HYPRE_StructPCGDestroy(*solver_p);
+          HYPRE_StructPCGDestroy(*solver_p);
           break;
         case gmres:
           HYPRE_StructGMRESDestroy(*solver_p);
@@ -197,17 +197,17 @@ namespace Uintah {
 
       if (HA_p != nullptr) {
         HYPRE_StructMatrixDestroy( *HA_p );
-        delete HA_p;  
+        delete HA_p;
         HA_p = nullptr;
       }
       if (HB_p != nullptr){
         HYPRE_StructVectorDestroy( *HB_p );
-        delete HB_p;  
+        delete HB_p;
         HB_p = nullptr;
       }
       if (HX_p != nullptr) {
         HYPRE_StructVectorDestroy( *HX_p );
-        delete HX_p;  
+        delete HX_p;
         HX_p = nullptr;
       }
     };
@@ -216,7 +216,7 @@ namespace Uintah {
   typedef Handle<hypre_solver_struct> hypre_solver_structP;
 
   void swapbytes( Uintah::hypre_solver_structP& );
-  
+
   // Note the general template for SoleVariable::readNormal will not
   // recognize the swapbytes correctly. So specialize it here.
   // Somewhat moot because the swapbytes for hypre_solver_structP is
@@ -225,17 +225,17 @@ namespace Uintah {
   inline void SoleVariable<hypre_solver_structP>::readNormal(std::istream& in, bool swapBytes)
   {
     ssize_t linesize = (ssize_t)(sizeof(hypre_solver_structP));
-    
+
     hypre_solver_structP val;
-    
+
     in.read((char*) &val, linesize);
-    
+
     if (swapBytes)
       Uintah::swapbytes(val);
-    
+
     value = std::make_shared<hypre_solver_structP>(val);
   }
-  
+
   //______________________________________________________________________
   //
   class HypreSolver2 : public SolverCommon {
@@ -245,7 +245,7 @@ namespace Uintah {
 
     virtual void readParameters(       ProblemSpecP & params,
                                  const std::string  & name  );
-                                 
+
     virtual SolverParameters * getParameters(){ return m_params; }
 
     /**
@@ -257,7 +257,7 @@ namespace Uintah {
      *  @param A Varlabel of the coefficient matrix \[\mathbf{A}\]
      *  @param which_A_dw The datawarehouse in which the coefficient matrix lives.
      *  @param x The varlabel of the solutio1n vector.
-     *  @param modifies_x A boolean that specifies the behaviour of the task 
+     *  @param modifies_x A boolean that specifies the behaviour of the task
                           associated with the ScheduleSolve. If set to true,
                           then the task will only modify x. Otherwise, it will
                           compute x. This is a key option when you are computing
@@ -268,16 +268,16 @@ namespace Uintah {
      * @param guess_dw Specifies the datawarehouse of the initial guess.
      * @param params Specifies the solver parameters usually parsed from the input file.
      *
-     */    
+     */
     virtual void scheduleSolve( const LevelP           & level_in,
                                       SchedulerP       & sched_in,
                                 const MaterialSet      * matls_in,
                                 const VarLabel         * A_in,
-                                      Task::WhichDW      which_A_dw_in,  
+                                      Task::WhichDW      which_A_dw_in,
                                 const VarLabel         * x_in,
                                       bool               modifies_x_in,
                                 const VarLabel         * b_in,
-                                      Task::WhichDW      which_b_dw_in,  
+                                      Task::WhichDW      which_b_dw_in,
                                 const VarLabel         * guess_in,
                                       Task::WhichDW      which_guess_dw_in,
                                       bool               isFirstSolve_in = true );
@@ -302,15 +302,14 @@ namespace Uintah {
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls );
-                                     
+
     virtual void scheduleRestartInitialize( const LevelP      & level,
                                                   SchedulerP  & sched,
                                             const MaterialSet * matls);
 
     virtual std::string getName();
 
-    void allocateHypreMatrices(       DataWarehouse * new_dw,
-                                const bool            isRestart );
+    virtual void finialize();  // Used to cleanup Thirdparty libs (Hypre)
 
   private:
     void initialize( const ProcessorGroup *,
@@ -319,16 +318,16 @@ namespace Uintah {
                            DataWarehouse  * old_dw,
                            DataWarehouse  * new_dw,
                      const bool             isRestart);
-                           
+
+    void allocateHypreMatrices(       DataWarehouse * new_dw,
+                                const bool            isRestart );
+
     SolverType stringToSolverType( std::string str );
 
     const VarLabel * m_timeStepLabel = nullptr;
     const VarLabel * m_hypre_solver_label = nullptr;
 
-    DataWarehouse  * m_dw = nullptr;
-
     HypreParams * m_params = nullptr;
-    
   };
 }
 

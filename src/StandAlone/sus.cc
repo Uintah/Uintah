@@ -857,6 +857,7 @@ int main( int argc, char *argv[], char *env[] )
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
     loadBalancer->attachPort( "scheduler", scheduler );
+    solverComp->attachPort( "scheduler", scheduler );
 
     scheduler->setStartAddr( start_addr );
     scheduler->addReference();
@@ -922,6 +923,11 @@ int main( int argc, char *argv[], char *env[] )
     ups = nullptr;
 
     simController->run();
+
+    // Clean up the solver - finialize the thirdparty libs
+    if( solver ) {
+      solver->finialize();
+    }
 
     // Clean up release all the components.
     if( regridder ) {

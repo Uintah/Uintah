@@ -86,6 +86,8 @@ namespace Uintah {
                                
     virtual std::string getName();
     
+    virtual void finialize() {};  // Used to cleanup Thirdparty libs (Hypre)
+
     // AMRSolver does not require initialization... but we need an empty
     // routine to satisfy inheritance.
     virtual void scheduleInitialize( const LevelP      & level,

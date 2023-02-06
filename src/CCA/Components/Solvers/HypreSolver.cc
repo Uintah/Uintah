@@ -1267,16 +1267,6 @@ namespace Uintah {
 
   HypreSolver2::~HypreSolver2()
   {
-    // Scrub from the data warehouse so that when hypre is finialize
-    // all hypre structures have be deleted.
-    m_dw->scrub( m_hypre_solver_label );
-
-    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
-    HYPRE_Finalize();
-#endif
-    //-----------------  end of hypre-cuda  -----------------
-
     VarLabel::destroy(m_timeStepLabel);
     VarLabel::destroy(m_hypre_solver_label);
     delete m_params;
@@ -1418,8 +1408,6 @@ namespace Uintah {
 
     hypre_solverP.setData( hypre_struct );
     new_dw->put( hypre_solverP, m_hypre_solver_label );
-
-    m_dw = new_dw;
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1434,6 +1422,24 @@ namespace Uintah {
                           )
   {
     allocateHypreMatrices( new_dw, isRestart );
+  }
+
+  void HypreSolver2::finialize()  // Used to cleanup Thirdparty libs (Hypre)
+  {
+    // Scrub from the data warehouse so that when HYPRE_Finalize is
+    // called all hypre structures have be deleted.
+    DataWarehouse* dw = m_scheduler->getLastDW();
+
+    if ( dw && dw->exists( m_hypre_solver_label ) ) {
+      dw->scrub( m_hypre_solver_label );
+    }
+
+    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
+    HYPRE_Finalize();
+#endif
+    //-----------------  end of hypre-cuda  -----------------
+
   }
 
   //---------------------------------------------------------------------------------------------
