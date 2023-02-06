@@ -151,8 +151,8 @@ namespace Uintah {
       , m_isFirstSolve(isFirstSolve_in)
     {
       // Time Step
-      m_timeStepLabel    = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
+      m_timeStepLabel      = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+      m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
                                                SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
@@ -168,7 +168,7 @@ namespace Uintah {
 
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
-      VarLabel::destroy(m_m_hypre_solver_label);
+      VarLabel::destroy(m_hypre_solver_label);
 
       //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
@@ -383,17 +383,19 @@ namespace Uintah {
 
        //________________________________________________________
       // get struct from data warehouse
-      struct hypre_solver_struct* hypre_solver_s = nullptr;
+      SoleVariable<hypre_solver_structP> hypre_solverP;
 
-      if ( new_dw->exists( m_m_hypre_solver_label ) ) {
-        new_dw->get( m_hypre_solverP, m_m_hypre_solver_label );
+      if ( new_dw->exists( m_hypre_solver_label ) ) {
+        new_dw->get( hypre_solverP, m_hypre_solver_label );
       }
       else {
-        old_dw->get( m_hypre_solverP, m_m_hypre_solver_label );
-        new_dw->put( m_hypre_solverP, m_m_hypre_solver_label );
+        old_dw->get( hypre_solverP, m_hypre_solver_label );
+        new_dw->put( hypre_solverP, m_hypre_solver_label );
       }
 
-      hypre_solver_s = m_hypre_solverP.get().get_rep();
+      struct hypre_solver_struct* hypre_solver_s =
+        m_hypre_solverP.get().get_rep();
+
       bool recompute = hypre_solver_s->isRecomputeTimeStep;
 
       //__________________________________
@@ -1215,8 +1217,8 @@ namespace Uintah {
 #endif
 
     const VarLabel*    m_timeStepLabel;
-    const VarLabel*    m_m_hypre_solver_label;
-    SoleVariable<hypre_solver_structP> m_hypre_solverP;
+    const VarLabel*    m_hypre_solver_label;
+
     bool   m_firstPassThrough;
     double m_movingAverage;
 
@@ -1426,13 +1428,19 @@ namespace Uintah {
 
   void HypreSolver2::finialize()  // Used to cleanup Thirdparty libs (Hypre)
   {
-    // Scrub from the data warehouse so that when HYPRE_Finalize is
-    // called all hypre structures have be deleted.
-    DataWarehouse* dw = m_scheduler->getLastDW();
+    // Scrub the Unitah Hypre struct from the data warehouse so that
+    // when HYPRE_Finalize is called all hypre structures have been deleted.
+    DataWarehouse* dw = nullptr;
+    DataWarehouse* last_dw = m_scheduler->getLastDW();
 
-    if ( dw && dw->exists( m_hypre_solver_label ) ) {
-      dw->scrub( m_hypre_solver_label );
-    }
+    int i = 0;
+    do {
+      dw = m_scheduler->get_dw(i++);
+
+      if ( dw && dw->exists( m_hypre_solver_label ) ) {
+        dw->scrub( m_hypre_solver_label );
+      }
+    } while( dw != last_dw );
 
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
