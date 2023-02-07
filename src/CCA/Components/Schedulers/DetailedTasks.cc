@@ -40,7 +40,7 @@
 
 #include <sci_defs/visit_defs.h>
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
   #include <Core/Parallel/CrowdMonitor.hpp>
 #endif
 
@@ -75,7 +75,7 @@ namespace {
   Dout g_message_tags_task_stats_dbg("MessageTagTaskStats", "DetailedTasks", "stats on MPI message tag task assignment", false);
 #endif  
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
   struct device_transfer_complete_queue_tag{};
   struct device_finalize_prep_queue_tag{};
   struct device_ready_queue_tag{};
@@ -1201,7 +1201,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
 
 }
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
 
 //_____________________________________________________________________________
 //

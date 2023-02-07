@@ -62,7 +62,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #endif
 
@@ -164,7 +164,7 @@ static void usage( const std::string& message,
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]                     : This usage information\n";
     std::cerr << "-d[ebug]                    : List the debug streams\n";
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
     std::cerr << "-gpu                        : Use available GPU devices, requires multi-threaded Unified scheduler\n";
     std::cerr << "-cuda_threads_per_block <#> : Number of threads per CUDA block\n";
     std::cerr << "-cuda_blocks_per_loop <#>   : Number of CUDA blocks per loop \n";
@@ -390,7 +390,7 @@ int main( int argc, char *argv[], char *env[] )
       restartRemoveOldDir = true;
     }
     else if (arg == "-gpucheck") {
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
       int retVal = UnifiedScheduler::verifyAnyGpuActive();
       if (retVal == 1) {
         std::cout << "At least one GPU detected!" << std::endl;
@@ -403,7 +403,7 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(2);
     }
     else if(arg == "-gpu") {
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
       Uintah::Parallel::setUsingDevice( true );
 #else
       std::cout << "Not compiled for GPU support" << std::endl;
@@ -411,7 +411,7 @@ int main( int argc, char *argv[], char *env[] )
 #endif
     }
     else if (arg == "-cuda_threads_per_block") {
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
       int cuda_threads_per_block = 0;
       if (++i == argc) {
         usage("You must provide a number of threads per streaming multiprocessor (SM) for -cuda_threads_per_block", arg, argv[0]);
@@ -428,7 +428,7 @@ int main( int argc, char *argv[], char *env[] )
 #endif
     }
     else if (arg == "-cuda_blocks_per_loop") {
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
       int cuda_blocks_per_loop = 0;
       if (++i == argc) {
         usage("You must provide a number of streaming multiprocessors (SMs) per loop for -cuda_blocks_per_loop", arg, argv[0]);
@@ -445,7 +445,7 @@ int main( int argc, char *argv[], char *env[] )
 #endif
     }
     else if (arg == "-cuda_streams_per_task") {
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
       int cuda_streams_per_task = 0;
       if (++i == argc) {
         usage("You must provide a number of CUDA streams per task for -cuda_streams_per_task", arg, argv[0]);

@@ -48,7 +48,7 @@ SRCS += \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
 
-ifeq ($(HAVE_GPU),yes)
+ifeq ($(UINTAH_USING_GPU),yes)
   SRCS += $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
           $(SRCDIR)/GPUMemoryPool.cc

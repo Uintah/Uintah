@@ -3,6 +3,8 @@
 
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 //==================================================================================================
 
 /**
@@ -115,7 +117,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       /** @brief Return a CONST grid variable **/
       template <typename T, typename PODType, typename MemSpace>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, KokkosView3<PODType, Kokkos::DefaultExecutionSpace::memory_space>>::type
@@ -131,7 +133,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       /** @brief Return a CONST grid variable **/
       template <typename T, typename PODType, typename MemSpace>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, KokkosView3<PODType, Kokkos::DefaultExecutionSpace::memory_space>>::type
@@ -173,7 +175,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       /** @brief Return a NON-CONST grid variable **/
       template <typename T, typename PODType, typename MemSpace>
       typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, KokkosView3<PODType, Kokkos::DefaultExecutionSpace::memory_space>>::type
@@ -200,7 +202,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<PODType, Kokkos::DefaultExecutionSpace::memory_space> >::type
       get_empty_field()
@@ -246,7 +248,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       template <typename T, typename ElemType, typename MemSpace, typename FIELD_TYPE>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
       get_unmanaged_uintah_field(       FIELD_TYPE  & field
@@ -280,7 +282,7 @@ namespace Uintah {
       }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
       template <typename T, typename ElemType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
       get_unmanaged_uintah_field( const std::string                     name
@@ -356,7 +358,7 @@ namespace Uintah {
   }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   template <typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
   typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
   createContainer( int num = MaxCapacity )
@@ -381,7 +383,7 @@ namespace Uintah {
   }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   template <typename T, typename elemType, unsigned int MaxCapacity, typename MemSpace>
   typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, struct1DArray<KokkosView3<elemType, MemSpace>, MaxCapacity> >::type
   createConstContainer( int num = MaxCapacity )

@@ -29,13 +29,13 @@
 
 @DEF_KOKKOS@
 
-@DEF_HAVE_KOKKOS_GPU@
+@DEF_KOKKOS_USING_GPU@
 
 #if defined(HAVE_KOKKOS)
 
 #include <Kokkos_Macros.hpp>
 
-  #if defined(HAVE_KOKKOS_GPU)
+  #if defined(KOKKOS_USING_GPU)
     #define TASK_MANAGES_EXECSPACE
     #define USE_KOKKOS_PARALLEL_FOR
     #define USE_KOKKOS_DEEPCOPY
@@ -63,8 +63,8 @@ using double3 = hip::double3;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 
-// #define HAVE_GPU
-// #define HAVE_KOKKOS_GPU
+// #define UINTAH_USING_GPU
+// #define KOKKOS_USING_GPU
 
 // #define TASK_MANAGES_EXECSPACE
 // #define USE_KOKKOS_PARALLEL_FOR
