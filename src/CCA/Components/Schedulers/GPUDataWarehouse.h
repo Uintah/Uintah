@@ -398,7 +398,7 @@ public:
 
   };
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   // ______________________________________________________________________
   // Kokkos methods
   template <typename T>

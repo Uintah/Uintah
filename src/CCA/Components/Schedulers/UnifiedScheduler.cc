@@ -86,7 +86,7 @@ namespace {
 } // namespace
 
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
 
 namespace Uintah {
 

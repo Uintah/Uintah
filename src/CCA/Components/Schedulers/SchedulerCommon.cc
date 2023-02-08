@@ -878,7 +878,7 @@ SchedulerCommon::addTask(       Task        * task
                         )
 {
 
-#if defined(HAVE_GPU)
+#if defined(UINTAH_USING_GPU)
   //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
   //in case modifieswithscratchghost is used.
   //tg_num != 1 avoid updating max ghosts from RMCRT task graphs.

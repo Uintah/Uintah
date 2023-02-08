@@ -219,7 +219,7 @@ namespace Uintah {
     get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
 //    template<typename MemSpace>
 //    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> >::type
 //    get_ref_to_iterator() {
@@ -304,7 +304,7 @@ namespace Uintah {
     std::vector<int_3> listOfCells_{};
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
     Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> listOfCells_gpu;
     //bool copied_to_gpu{false};
     volatile int copied_to_gpu{0}; //0: not copied, 1: copying, 2: copied

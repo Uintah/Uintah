@@ -129,7 +129,7 @@ struct ClassicTableInfo {
                   const ClassicTableInfo &cti )
       : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in), tableInfo(cti)
     {
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
            int numDim=d_allIndepVarNo.size();
            int max_size=0;
            int size=d_allIndepVarNo(0); // size of a single dep variable
@@ -392,7 +392,7 @@ struct ClassicTableInfo {
     ) const {
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
     typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
@@ -405,7 +405,7 @@ struct ClassicTableInfo {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-#endif // end defined(HAVE_KOKKOS_GPU)
+#endif // end defined(KOKKOS_USING_GPU)
 #endif // end defined(HAVE_KOKKOS)
 
     template< typename MemSpace, unsigned int numOfDep>
@@ -443,7 +443,7 @@ struct ClassicTableInfo {
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
     }
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
     typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
@@ -451,7 +451,7 @@ struct ClassicTableInfo {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,g_table2,g_d_allIndepVarNo,g_indep,g_ind_1);
     }
-#endif // end defined(HAVE_KOKKOS_GPU)
+#endif // end defined(KOKKOS_USING_GPU)
 #endif // end defined(HAVE_KOKKOS)
 
     template< typename MemSpace, unsigned int numOfDep>
@@ -736,7 +736,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableC
   }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, tableContainer<Kokkos::DefaultExecutionSpace::memory_space> >::type
   getTable(){
@@ -780,7 +780,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::me
 
     const ClassicTableInfo tableInfo; // variable names, units, and table keys
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   protected:
     tableContainer<Kokkos::DefaultExecutionSpace::memory_space> g_table2;          // All dependent variables
     intContainer  <Kokkos::DefaultExecutionSpace::memory_space> g_d_allIndepVarNo; // size of independent variable array, for all independent variables

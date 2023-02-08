@@ -315,7 +315,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   // TODO, only display if gpu mode is turned on and if these values
   // weren't set.
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
   if ( s_using_device ) {
     if ( s_cuda_threads_per_block <= 0 ) {
       s_cuda_threads_per_block = 256;
@@ -401,7 +401,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     }
 #endif
 
-#if defined(HAVE_KOKKOS_GPU)
+#if defined(KOKKOS_USING_GPU)
     if ( s_using_device ) {
       if ( s_cuda_blocks_per_loop > 0 ) {
         std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";

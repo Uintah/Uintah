@@ -25,7 +25,7 @@
 #ifndef SCI_GPU_DEFS_H
 #define SCI_GPU_DEFS_H
 
-@DEF_HAVE_GPU@
+@DEF_UINTAH_USING_GPU@
 
 #endif
 
