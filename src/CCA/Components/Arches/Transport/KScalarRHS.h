@@ -34,8 +34,6 @@
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
-
 #define  IMAX_SIZE 10 
 
 namespace Uintah{
@@ -214,7 +212,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
 }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void>::type

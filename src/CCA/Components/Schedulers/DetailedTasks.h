@@ -42,7 +42,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
@@ -233,7 +233,7 @@ public:
     return m_task_priority_alg;
   }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 
   void addDeviceValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
@@ -396,7 +396,7 @@ private:
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 
   using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t

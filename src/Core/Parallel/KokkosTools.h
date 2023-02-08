@@ -68,7 +68,7 @@ class KokkosRandom;
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPTargetRandomPool;
 // MGM - std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Experimental::OpenMPTarget > > > openMPTargetRandomPool;
 #endif
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace > > > cudaRandomPool;
 #endif
 
@@ -112,7 +112,7 @@ void cleanupKokkosTools() {
       openMPTargetRandomPool.release();
     }
 #endif
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
     if (cudaRandomPool) {
       cudaRandomPool.release();
     }
@@ -136,7 +136,7 @@ GetKokkosRandom1024Pool() {
 }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
 template <typename ExecSpace>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>::type
 GetKokkosRandom1024Pool() {

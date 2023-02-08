@@ -45,7 +45,7 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
@@ -337,7 +337,7 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
           const MaterialSubset* matls, int nComm) = 0;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW() const {
     int i = 0;
@@ -361,7 +361,7 @@ protected:
   // many previous time steps had taken place before the restart.
   int d_generation;
   
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
 private:

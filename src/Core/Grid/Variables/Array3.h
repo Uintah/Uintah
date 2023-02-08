@@ -233,7 +233,7 @@ public:
 // For now, if it's a homogeneous only Kokkos environment, use Kokkos
 // Views If it's a legacy environment or a CUDA environment, use the
 // original way of accessing data.
-#if !defined(UINTAH_USING_GPU) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if !defined(HAVE_GPU) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
 
   // Note: Dan Sunderland used a Kokkos define
   // KOKKOS_FORCEINLINE_FUNCTION, however, this caused problems when

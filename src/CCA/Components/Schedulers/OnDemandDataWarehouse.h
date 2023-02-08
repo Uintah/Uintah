@@ -42,7 +42,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -486,7 +486,7 @@ public:
 
   virtual void finalize();
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   static int getNumDevices();
   // static void uintahSetCudaDevice(int deviceNum);
   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
@@ -661,7 +661,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getCCVariable( const VarLabel         * label
@@ -717,7 +717,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstCCVariable( const VarLabel         * label
@@ -779,7 +779,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getNCVariable( const VarLabel         * label
@@ -831,7 +831,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstNCVariable( const VarLabel         * label
@@ -916,7 +916,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined(HAVE_KOKKOS_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getGridVariable( const VarLabel         * label
@@ -987,7 +987,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined(HAVE_KOKKOS_GPU) && !defined( KOKKOS_ENABLE_OPENMPTARGET )
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstGridVariable( const VarLabel         * label
@@ -1049,7 +1049,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & var
@@ -1229,7 +1229,8 @@ private:
                             ,       int        line
                             );
 
-#if defined(UINTAH_USING_GPU)
+
+#if defined(HAVE_GPU)
 
   std::map<Patch*, bool> assignedPatches; // indicates where a given patch should be stored in an accelerator
 

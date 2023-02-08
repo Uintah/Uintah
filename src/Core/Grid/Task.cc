@@ -1099,7 +1099,7 @@ Task::doit( const PatchSubset           * patches
   }
 }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 //______________________________________________________________________
 //
 #ifdef TASK_MANAGES_EXECSPACE
@@ -1829,7 +1829,7 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
 }
 #endif // #ifdef USE_KOKKOS_INSTANCE - STREAMS
 #endif // #ifdef TASK_MANAGES_EXECSPACE
-#endif // #if defined(UINTAH_USING_GPU)
+#endif // #if defined(HAVE_GPU)
 
 //______________________________________________________________________
 //

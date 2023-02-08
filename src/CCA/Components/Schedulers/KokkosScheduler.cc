@@ -42,7 +42,7 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   // ARS - true if cuda or kokkos??
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -98,7 +98,7 @@ namespace {
 } // namespace
 
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 // ARS - true if cuda or kokkos??
 extern Uintah::MasterLock cerrLock;
 
@@ -371,7 +371,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
 
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
     // ARS - true if cuda or kokkos??
     // DS: 10312019: If GPU task is going to modify any variable, mark
     // that variable as invalid on CPU.
@@ -390,7 +390,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
     // ARS - true if cuda or kokkos??
     if (Uintah::Parallel::usingDevice()) {
 
@@ -457,7 +457,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
 
   MPIScheduler::postMPISends(dtask, iteration);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
     // ARS - true if cuda or kokkos??
     if (Uintah::Parallel::usingDevice()) {
       dtask->deleteTaskGpuDataWarehouses();
@@ -649,7 +649,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
       runTask(g_HypreTask, m_curr_iteration, 0, g_hypre_task_event);
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
     // ARS - true if cuda or kokkos??
       if(g_hypre_task_event == CallBackEvent::GPU)
         m_detailed_tasks->addDeviceExecutionPending(g_HypreTask);
@@ -771,7 +771,7 @@ KokkosScheduler::runTasks( int thread_id )
 
     bool havework = false;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
     // ARS - true if cuda or kokkos??
     bool usingDevice = Uintah::Parallel::usingDevice();
     bool gpuInitReady = false;
@@ -819,7 +819,7 @@ KokkosScheduler::runTasks( int thread_id )
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
           markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
           // ARS - true if cuda or kokkos??
           cpuRunReady = true;
 #endif
@@ -842,7 +842,7 @@ KokkosScheduler::runTasks( int thread_id )
       else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
         havework = true;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
         // ARS - true if cuda or kokkos??
         /*
          * (1.2.1)
@@ -907,7 +907,7 @@ KokkosScheduler::runTasks( int thread_id )
          }
       }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
       // ARS - true if cuda or kokkos??
       else if (usingDevice) {
         /*
@@ -1120,7 +1120,7 @@ KokkosScheduler::runTasks( int thread_id )
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);
       }
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
       // ARS - true if cuda or kokkos??
       else if (gpuInitReady) {
         // Prepare to run a GPU task.
@@ -1252,7 +1252,7 @@ KokkosScheduler::runTasks( int thread_id )
 #endif
       else {
         // Prepare to run a CPU task.
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
         // ARS - true if cuda or kokkos??
         if (cpuInitReady) {
 
@@ -1342,7 +1342,7 @@ KokkosScheduler::runTasks( int thread_id )
           }
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
           // ARS - true if cuda or kokkos??
           // See note above near cpuInitReady.  Some CPU tasks may
           // internally interact with GPUs without modifying the

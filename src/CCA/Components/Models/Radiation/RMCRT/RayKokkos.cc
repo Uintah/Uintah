@@ -785,7 +785,7 @@ Ray::rayTrace( const PatchSubset* patches,
         }
       }
     } else {  //if ( Parallel::usingDevice() )
-//#if defined(KOKKOS_USING_GPU)
+//#if defined(HAVE_KOKKOS_GPU)
 //      GPUDataWarehouse* abskg_gdw    = nullptr;
 //      GPUDataWarehouse* sigmaT4_gdw  = nullptr;
 //      GPUDataWarehouse* celltype_gdw = nullptr;
@@ -862,7 +862,7 @@ Ray::rayTrace( const PatchSubset* patches,
 //      RT_flags.endCell = numCells;
 
 //      Uintah::BlockRange range;
-//#if defined(KOKKOS_USING_GPU)
+//#if defined(HAVE_KOKKOS_GPU)
 //      int numKernels = dtask->getTask()->maxStreamsPerTask();
 //      IntVector hiRange(256,0,0);
 //      // Split up a functor into four loops.  Gets better GPU occupancy this way.
@@ -1799,7 +1799,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   CCVariable<Stencil7> boundFlux_fine;
   CCVariable<double>   radiationVolq_fine;
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
   KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> abskg_view[numLevels];
   KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> sigmaT4OverPi_view[numLevels];
   KokkosView3<const int, Kokkos::DefaultExecutionSpace::memory_space> cellType_view[numLevels];
@@ -1921,7 +1921,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       }
     }
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
     // Get the Kokkos Views from the simulation variables
     const Level* curLevel = fineLevel;
     const Patch* curPatch = patch;
@@ -1947,7 +1947,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //Get the computational variables on the fine level
     divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
     radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
-#elif !defined( KOKKOS_USING_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#elif !defined( HAVE_KOKKOS_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
     for(int L = 0; L<numLevels; L++) {
       LevelP level = new_dw->getGrid()->getLevel(L);
       if (level->hasFinerLevel() ) {
@@ -1997,7 +1997,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
     divQ_fine_view          = divQ_fine.getKokkosView();
     radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
-#endif // end  !defined( KOKKOS_USING_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#endif // end  !defined( HAVE_KOKKOS_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
 
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
@@ -2030,13 +2030,13 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       //       For Kokkos::CUDA builds, the KOKKOS_OPENMP_TAG is downshifted to UINTAH_CPU_TAG in Core/Parallel/LoopExecution.h.
       //       This bulletproofing is to prevent Kokkos::CUDA builds from attempting to build for the not yet supported UINTAH_CPU_TAG.
       // TODO: Add support for Mersenne Twister-based random number generation
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
       auto random_pool = Uintah::GetKokkosRandom1024Pool<Kokkos::DefaultExecutionSpace>( );
 #else
       auto random_pool = Uintah::GetKokkosRandom1024Pool<ExecSpace>( );
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS_GPU)
       rayTrace_dataOnion_solveDivQFunctor<T, Kokkos::DefaultExecutionSpace::memory_space,
                                           decltype(random_pool), numLevels> functor( random_pool
 #else

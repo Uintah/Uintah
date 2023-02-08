@@ -34,7 +34,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
@@ -57,7 +57,7 @@ class DetailedTasks;
 
 //_____________________________________________________________________________
 //
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   struct TaskGpuDataWarehouses {
     GPUDataWarehouse* TaskGpuDW[2];
   };
@@ -158,7 +158,7 @@ public:
     }
   };
 
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
   struct delayedCopyingInfo {
     delayedCopyingInfo( GpuUtilities::LabelPatchMatlLevelDw   lpmld_
                       , DeviceGridVariableInfo                devGridVarInfo_
@@ -248,7 +248,7 @@ public:
   double task_exec_time() const { return m_exec_timer().seconds(); }
 
 //-----------------------------------------------------------------------------
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
@@ -457,7 +457,7 @@ private:
 
 
 //-----------------------------------------------------------------------------
-#if defined(UINTAH_USING_GPU)
+#if defined(HAVE_GPU)
 private:
 //  bool         m_deviceExternallyReady{false};
 //  bool         m_completed{false};
