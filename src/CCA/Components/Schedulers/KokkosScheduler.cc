@@ -43,7 +43,6 @@
 #include <sci_defs/cuda_defs.h>
 
 #if defined(UINTAH_USING_GPU)
-  // ARS - true if cuda or kokkos??
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
@@ -99,7 +98,6 @@ namespace {
 
 
 #if defined(UINTAH_USING_GPU)
-// ARS - true if cuda or kokkos??
 extern Uintah::MasterLock cerrLock;
 
 namespace {
@@ -201,13 +199,11 @@ KokkosScheduler::~KokkosScheduler()
 int
 KokkosScheduler::verifyAnyGpuActive()
 {
-
 #if defined(HAVE_CUDA_NOT_NEEDED)
   // ARS - true if cuda or kokkos??
 
-  // ARS called from sus as a checkout (no further
-  // execution). Normally this call would exit out but want sus to
-  // exit out.
+  // ARS called from sus as a check (no further execution). Normally
+  // this call would exit out but sus should exit out.
 
   // CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
 
@@ -372,7 +368,6 @@ KokkosScheduler::runTask( DetailedTask  * dtask
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
 
 #if defined(UINTAH_USING_GPU)
-    // ARS - true if cuda or kokkos??
     // DS: 10312019: If GPU task is going to modify any variable, mark
     // that variable as invalid on CPU.
     if (event == CallBackEvent::GPU) {
@@ -391,7 +386,6 @@ KokkosScheduler::runTask( DetailedTask  * dtask
   if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
 
 #if defined(UINTAH_USING_GPU)
-    // ARS - true if cuda or kokkos??
     if (Uintah::Parallel::usingDevice()) {
 
       //DS: 10312019: If CPU task is going to modify any variable,
@@ -458,7 +452,6 @@ KokkosScheduler::runTask( DetailedTask  * dtask
   MPIScheduler::postMPISends(dtask, iteration);
 
 #if defined(UINTAH_USING_GPU)
-    // ARS - true if cuda or kokkos??
     if (Uintah::Parallel::usingDevice()) {
       dtask->deleteTaskGpuDataWarehouses();
     }
@@ -621,7 +614,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 #if defined(USE_KOKKOS_INSTANCE_OPENMP)
     // Use the Kokkos Open MP instances
     SCI_THROW(InternalError("Use the Kokkos Open MP instances - "
-			    "not implemented", __FILE__, __LINE__));
+                            "not implemented", __FILE__, __LINE__));
 #else
     auto task_runner = [&] ( int partition_id, int num_partitions ) {
 
@@ -648,16 +641,18 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+
       runTask(g_HypreTask, m_curr_iteration, 0, g_hypre_task_event);
+
 #if defined(UINTAH_USING_GPU)
-    // ARS - true if cuda or kokkos??
       if(g_hypre_task_event == CallBackEvent::GPU)
         m_detailed_tasks->addDeviceExecutionPending(g_HypreTask);
 #endif
       g_have_hypre_task = false;
     }
-
   } // end while ( m_num_tasks_done < m_num_tasks )
+
+  ASSERT(m_num_tasks_done == m_num_tasks);
 
   //---------------------------------------------------------------------------
 
@@ -763,7 +758,6 @@ KokkosScheduler::markTaskConsumed( int          & numTasksDone
 void
 KokkosScheduler::runTasks( int thread_id )
 {
-
   while( m_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
@@ -772,7 +766,6 @@ KokkosScheduler::runTasks( int thread_id )
     bool havework = false;
 
 #if defined(UINTAH_USING_GPU)
-    // ARS - true if cuda or kokkos??
     bool usingDevice = Uintah::Parallel::usingDevice();
     bool gpuInitReady = false;
     bool gpuValidateRequiresAndModifiesCopies = false;
@@ -820,7 +813,6 @@ KokkosScheduler::runTasks( int thread_id )
           havework = true;
           markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
 #if defined(UINTAH_USING_GPU)
-          // ARS - true if cuda or kokkos??
           cpuRunReady = true;
 #endif
         }
@@ -843,7 +835,6 @@ KokkosScheduler::runTasks( int thread_id )
         havework = true;
 
 #if defined(UINTAH_USING_GPU)
-        // ARS - true if cuda or kokkos??
         /*
          * (1.2.1)
          *
@@ -908,7 +899,6 @@ KokkosScheduler::runTasks( int thread_id )
       }
 
 #if defined(UINTAH_USING_GPU)
-      // ARS - true if cuda or kokkos??
       else if (usingDevice) {
         /*
          * (1.4)
@@ -1121,7 +1111,6 @@ KokkosScheduler::runTasks( int thread_id )
         MPIScheduler::initiateReduction(readyTask);
       }
 #if defined(UINTAH_USING_GPU)
-      // ARS - true if cuda or kokkos??
       else if (gpuInitReady) {
         // Prepare to run a GPU task.
 
@@ -1198,14 +1187,15 @@ KokkosScheduler::runTasks( int thread_id )
         }
       } else if (gpuRunReady) {
 
-        // Run the task on the GPU!
+        // Get out of the partition master if there is a hypre task
         if ( readyTask->getTask()->getType() == Task::Hypre ) {
-          // Get out of the partition master if there is a hypre task
           g_hypre_task_event = CallBackEvent::GPU;
           g_HypreTask = readyTask;
           g_have_hypre_task = true;
           return;
         }
+
+        // Run the task on the GPU.
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
 
         // See if we're dealing with 32768 ghost cells per patch.  If
@@ -1253,7 +1243,6 @@ KokkosScheduler::runTasks( int thread_id )
       else {
         // Prepare to run a CPU task.
 #if defined(UINTAH_USING_GPU)
-        // ARS - true if cuda or kokkos??
         if (cpuInitReady) {
 
           // Some CPU tasks still interact with the GPU.  For example,
@@ -1332,18 +1321,18 @@ KokkosScheduler::runTasks( int thread_id )
           }
         } else if (cpuRunReady) {
 #endif
-          // Run CPU task.
+          // Get out of the partition master if there is a hypre task
           if ( readyTask->getTask()->getType() == Task::Hypre ) {
-            // Get out of the partition master if there is a hypre task
             g_hypre_task_event = CallBackEvent::CPU;
             g_HypreTask = readyTask;
             g_have_hypre_task = true;
             return;
           }
+
+          // Run the task on the CPU.
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
 #if defined(UINTAH_USING_GPU)
-          // ARS - true if cuda or kokkos??
           // See note above near cpuInitReady.  Some CPU tasks may
           // internally interact with GPUs without modifying the
           // structure of the data warehouse.
@@ -1362,8 +1351,7 @@ KokkosScheduler::runTasks( int thread_id )
         MPIScheduler::processMPIRecvs(TEST);
       }
     }
-  }  //end while (numTasksDone < ntasks)
-  ASSERT(m_num_tasks_done == m_num_tasks);
+  }  // end while (numTasksDone < ntasks)
 }  // end runTasks()
 
 //______________________________________________________________________
