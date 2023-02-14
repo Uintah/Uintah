@@ -48,11 +48,9 @@
 // int3 is defined in Cuda
 
 #elif defined(KOKKOS_ENABLE_HIP)
+// int3 is defined in Hip
+
 using cudaStream_t = void;
-using int3    = hip::int3;
-using uint3   = hip::uint3;
-using float3  = hip::float3;
-using double3 = hip::double3;
 
 // #elif defined(KOKKOS_ENABLE_SYCL)
 // int3 requires access methods .x() vs direct access .x
@@ -62,16 +60,6 @@ using double3 = hip::double3;
 // using int3 = sycl::int3;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-
-// #define UINTAH_USING_GPU
-// #define KOKKOS_USING_GPU
-
-// #define TASK_MANAGES_EXECSPACE
-// #define USE_KOKKOS_PARALLEL_FOR
-// #define USE_KOKKOS_DEEPCOPY
-// #define USE_KOKKOS_VIEW
-// #define USE_KOKKOS_INSTANCE
-// //    #define USE_KOKKOS_INSTANCE_OPENMP
 
 #define __host__
 #define __device__
