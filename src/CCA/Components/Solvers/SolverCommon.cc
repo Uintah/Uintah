@@ -58,6 +58,9 @@ void SolverCommon::getComponents()
 //
 void SolverCommon::releaseComponents()
 {
+  // Clean up the solver - finialize the thirdparty libs
+  finialize();
+
   releasePort( "scheduler" );
 
   m_scheduler  = nullptr;

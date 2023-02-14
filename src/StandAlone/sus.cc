@@ -924,11 +924,6 @@ int main( int argc, char *argv[], char *env[] )
 
     simController->run();
 
-    // Clean up the solver - finialize the thirdparty libs
-    if( solver ) {
-      solver->finialize();
-    }
-
     // Clean up release all the components.
     if( regridder ) {
       regridder->releaseComponents();

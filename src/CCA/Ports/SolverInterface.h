@@ -195,8 +195,6 @@ namespace Uintah {
                                       Task::WhichDW      which_guess_dw,
                                       bool               isFirstSolve = true ) = 0;
 
-    virtual void finialize() = 0;  // Used to cleanup Thirdparty libs (Hypre)
-
     virtual std::string getName() = 0;
     
     //----------------------------------------------------------------------------------------------
