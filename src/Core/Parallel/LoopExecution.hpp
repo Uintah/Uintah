@@ -313,45 +313,46 @@ struct struct1DArray
 {
   unsigned short int runTime_size{CAPACITY};
   T arr[CAPACITY];
-  struct1DArray(){}
+  HOST_DEVICE struct1DArray() {}
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
-#ifndef NDEBUG
-    if(runTime_size > CAPACITY){
-      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
-    }
-#endif
+  HOST_DEVICE struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
+// #ifndef NDEBUG
+//     if(runTime_size > CAPACITY){
+//       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
+//     }
+// #endif
     for (unsigned int i = 0; i < runTime_size; i++) {
       arr[i] = container[i];
     }
   }
 
 // This constructor supports the initialization list interface
-  struct1DArray(  std::initializer_list<T> const myList) : runTime_size(myList.size()) {
-#ifndef NDEBUG
-    if(runTime_size > CAPACITY){
-      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (initializer_list constructor).", __FILE__, __LINE__);
-    }
-#endif
+  HOST_DEVICE struct1DArray(std::initializer_list<T> const myList)
+    : runTime_size(myList.size()) {
+// #ifndef NDEBUG
+//     if(runTime_size > CAPACITY){
+//       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (initializer_list constructor).", __FILE__, __LINE__);
+//     }
+// #endif
     std::copy(myList.begin(), myList.begin()+runTime_size,arr);
   }
 
 // This constructor allows for only the runtime_size to be specified
-  struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
-#ifndef NDEBUG
-    if(runTime_size > CAPACITY){
-      throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
-    }
-#endif
+  HOST_DEVICE struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
+// #ifndef NDEBUG
+//     if(runTime_size > CAPACITY){
+//       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
+//     }
+// #endif
   }
 
-  inline T& operator[](unsigned int index) {
+  HOST_DEVICE inline T& operator[](unsigned int index) {
     return arr[index];
   }
 
-  inline const T& operator[](unsigned int index) const {
+  HOST_DEVICE inline const T& operator[](unsigned int index) const {
     return arr[index];
   }
 
@@ -366,13 +367,13 @@ struct struct2DArray
 {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
-  struct2DArray(){}
+  HOST_DEVICE struct2DArray() {}
   unsigned short int i_runTime_size{CAPACITY_FIRST_DIMENSION};
   unsigned short int j_runTime_size{CAPACITY_SECOND_DIMENSION};
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  struct2DArray(const Container& container, int first_dim_runtimeSize=CAPACITY_FIRST_DIMENSION, int second_dim_runtimeSize=CAPACITY_SECOND_DIMENSION) : i_runTime_size(first_dim_runtimeSize) ,  j_runTime_size(second_dim_runtimeSize) {
+  HOST_DEVICE struct2DArray(const Container& container, int first_dim_runtimeSize=CAPACITY_FIRST_DIMENSION, int second_dim_runtimeSize=CAPACITY_SECOND_DIMENSION) : i_runTime_size(first_dim_runtimeSize) ,  j_runTime_size(second_dim_runtimeSize) {
     for (unsigned int i = 0; i < i_runTime_size; i++) {
       for (unsigned int j = 0; j < j_runTime_size; j++) {
         arr[i][j] = container[i][j];
@@ -381,33 +382,35 @@ struct struct2DArray
     }
   }
 
-  inline struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
+  HOST_DEVICE inline struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
     return arr[index];
   }
 
-  inline const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
+  HOST_DEVICE inline const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
     return arr[index];
   }
 
 }; // end struct struct2DArray
 
-struct int_3
-{
-  int dim[3]; // indices for x y z dimensions
+#define int_3 IntVector
 
-  int_3(){}
+// struct int_3
+// {
+//   int dim[3]; // indices for x y z dimensions
 
-  int_3( const int i, const int j, const int k ) {
-    dim[0]=i;
-    dim[1]=j;
-    dim[2]=k;
-  }
+//   HOST_DEVICE int_3() {}
 
-  inline const int& operator[]( unsigned int index) const {
-    return dim[index];
-  }
+//   HOST_DEVICE int_3( const int i, const int j, const int k ) {
+//     dim[0]=i;
+//     dim[1]=j;
+//     dim[2]=k;
+//   }
 
-}; // end struct int_3
+//   HOST_DEVICE inline const int& operator[]( unsigned int index) const {
+//     return dim[index];
+//   }
+
+// }; // end struct int_3
 
 //----------------------------------------------------------------------------
 // Start parallel loops
@@ -1534,7 +1537,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
-			    const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ) {
+    const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ) {
 
         // n_cells is the max of cells total to process among
         // collection of vars (the view of Kokkos views).  For

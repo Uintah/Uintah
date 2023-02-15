@@ -41,26 +41,28 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
 #include <iosfwd>
 
 namespace Uintah {
-
 
 class IntVector {
 
 public:
 
-  inline  IntVector() {}
-  inline ~IntVector() {}
+  HOST_DEVICE inline  IntVector() {}
+  HOST_DEVICE inline ~IntVector() {}
 
-  inline IntVector( const IntVector & copy )
+  HOST_DEVICE inline IntVector( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
     }
   }
 
-  inline IntVector& operator=( const IntVector & copy )
+  HOST_DEVICE inline IntVector& operator=( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
@@ -68,7 +70,7 @@ public:
     return *this;
   }
 
-  inline explicit IntVector( const Point & p )
+  HOST_DEVICE inline explicit IntVector( const Point & p )
   {
     m_value[0] = static_cast<int>(p.x());
     m_value[1] = static_cast<int>(p.y());
@@ -180,11 +182,11 @@ public:
   //           i(1)=i.y()
   //           i(2)=i.z()
   //   --tan
-  inline int  operator()( int i ) const { return m_value[i]; }
-  inline int& operator()( int i )       { return m_value[i]; }
+  HOST_DEVICE inline int  operator()( int i ) const { return m_value[i]; }
+  HOST_DEVICE inline int& operator()( int i )       { return m_value[i]; }
 
-  inline int  operator[]( int i ) const { return m_value[i]; }
-  inline int& operator[]( int i )       { return m_value[i]; }
+  HOST_DEVICE inline int  operator[]( int i ) const { return m_value[i]; }
+  HOST_DEVICE inline int& operator[]( int i )       { return m_value[i]; }
 
   inline int x() const { return m_value[0]; }
   inline int y() const { return m_value[1]; }

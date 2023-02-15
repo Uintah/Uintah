@@ -37,9 +37,11 @@
 #ifndef Geometry_Vector_h
 #define Geometry_Vector_h 1
 
-
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
+
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #include   <string>
 #include   <iosfwd>
@@ -76,26 +78,26 @@ public:
   !!! */
 
   //Note vector(0)=vector.x();vector(1)=vector.y();vector(2)=vector.z()
-  inline double& operator()(int idx) {
+  HOST_DEVICE inline double& operator()(int idx) {
     // Ugly, but works
     return (&x_)[idx];
   }
 
   //Note vector(0)=vector.x();vector(1)=vector.y();vector(2)=vector.z()
-  inline double operator()(int idx) const {
+  HOST_DEVICE inline double operator()(int idx) const {
     // Ugly, but works
     return (&x_)[idx];
   }
 #endif
 
   //Note vector[0]=vector.x();vector[1]=vector.y();vector[2]=vector.z()
-  inline double& operator[](int idx) {
+  HOST_DEVICE inline double& operator[](int idx) {
     // Ugly, but works
     return (&x_)[idx];
   }
 
   //Note vector[0]=vector.x();vector[1]=vector.y();vector[2]=vector.z()
-  inline double operator[](int idx) const {
+  HOST_DEVICE inline double operator[](int idx) const {
     // Ugly, but works
     return (&x_)[idx];
   }
@@ -123,11 +125,11 @@ public:
   friend inline Vector Cross(const Vector&, const Vector&);
   friend inline Vector Abs(const Vector&);
   inline void x(double);
-  inline double x() const;
+  HOST_DEVICE inline double x() const;
   inline void y(double);
-  inline double y() const;
+  HOST_DEVICE inline double y() const;
   inline void z(double);
-  inline double z() const;
+  HOST_DEVICE inline double z() const;
 
   inline void u(double);
   inline double u() const;
@@ -398,7 +400,7 @@ inline void Vector::x(double d)
     x_=d;
 }
 
-inline double Vector::x() const
+HOST_DEVICE inline double Vector::x() const
 {
     return x_;
 }
@@ -408,7 +410,7 @@ inline void Vector::y(double d)
     y_=d;
 }
 
-inline double Vector::y() const
+HOST_DEVICE inline double Vector::y() const
 {
     return y_;
 }
@@ -418,7 +420,7 @@ inline void Vector::z(double d)
     z_=d;
 }
 
-inline double Vector::z() const
+HOST_DEVICE inline double Vector::z() const
 {
     return z_;
 }

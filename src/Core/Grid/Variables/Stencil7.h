@@ -28,6 +28,10 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
+
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
 #include <iostream>
 
 namespace Uintah {
@@ -39,36 +43,34 @@ namespace Uintah {
     double  w, e, s, n, b, t;
     // diagonal term
     double p;
-    
-    double& operator[](int index) {
-      ASSERTRANGE(index, 0, 7);
+
+    HOST_DEVICE double& operator[](int index) {
+      // ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
-    const double& operator[](int index) const {
-      ASSERTRANGE(index, 0, 7);
+    HOST_DEVICE const double& operator[](int index) const {
+      // ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
 
-    void initialize(double a){
+    HOST_DEVICE void initialize(double a){
       w = a;
       e = a;
       s = a;
-      n = a; 
-      b = a; 
+      n = a;
+      b = a;
       t = a;
       p = a;
     }
 
     // constructors
-    Stencil7(){}
-    
-    inline Stencil7(double init) : 
+    HOST_DEVICE Stencil7(){}
+
+    HOST_DEVICE inline Stencil7(double init) :
       w(init), e(init),
       s(init), n(init),
       b(init), t(init),
       p(init){}
-    
-    
   };
 
   std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
