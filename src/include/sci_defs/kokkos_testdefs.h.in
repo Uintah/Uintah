@@ -47,8 +47,14 @@
 #if defined(KOKKOS_ENABLE_CUDA)
 // int3 is defined in Cuda
 
+#ifndef HAVE_CUDA
+#define HOST_DEVICE
+#endif
+
 #elif defined(KOKKOS_ENABLE_HIP)
 // int3 is defined in Hip
+
+#define HOST_DEVICE __host__ __device__
 
 using cudaStream_t = void;
 
@@ -60,6 +66,11 @@ using cudaStream_t = void;
 // using int3 = sycl::int3;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+#define HOST_DEVICE
+
+void __syncthreads() {};
+void __threadfence() {};
 
 #define __host__
 #define __device__
