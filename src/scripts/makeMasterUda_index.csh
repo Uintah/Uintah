@@ -35,6 +35,11 @@ if ( $status ) then
 endif
 
 
+if( ! -e $masterUda ) then
+  echo "ERROR: makeMasterUda: can't find the directory (masterUda)"
+  exit
+endif
+
 echo ""
 echo "---------------------------------------"
 foreach X ($udas[*])
