@@ -78,8 +78,8 @@ public:
 
   ExecSpace getInstance() const {
     if ( m_instances.size() == 0 ) {
-      std::cout << "Requested a stream that doesn't exist." << std::endl;
-      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
+      std::cout << "Requested an instance (0) that doesn't exist." << std::endl;
+      SCI_THROW(InternalError("Requested an instance (0) that doesn't exist.", __FILE__, __LINE__));
     } else {
       return m_instances[0];
     }
@@ -87,7 +87,7 @@ public:
 
   ExecSpace getInstance(unsigned int i) const {
     if ( i >= m_instances.size() ) {
-      std::cout << "Requested an instance that doesn't exist." << std::endl;
+      std::cout << "Requested an instance (" << i << ") that doesn't exist." << std::endl;
       SCI_THROW(InternalError("Requested an instance that doesn't exist.", __FILE__, __LINE__));
     } else {
       return m_instances[i];
