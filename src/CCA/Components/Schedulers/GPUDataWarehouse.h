@@ -599,7 +599,7 @@ public:
   copyGpuGhostCellsToGpuVars();
 #endif
 
-  HOST_DEVICE bool ghostCellCopiesNeeded();
+  __host__ bool ghostCellCopiesNeeded();
   __host__ void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndx, int levelIndx = 0);
 
 
