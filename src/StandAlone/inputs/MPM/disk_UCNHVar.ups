@@ -28,6 +28,8 @@
        <save label = "p.volume" levels = "-1"/>
        <save label = "p.velocity" levels = "-1"/>
        <save label = "p.color" levels = "-1"/>
+       <save label = "p.epsf" levels = "-1"/>
+       <save label = "p.localizedMPM"/>
        <save label = "p.particleID" levels = "-1"/>
        <save label = "p.plasticStrain" levels = "-1"/>
        <save label = "p.scalefactor" levels = "-1"/>
@@ -76,6 +78,23 @@
                   </entry>
                 </variable_properties>
               </constitutive_model>
+              <erosion algorithm = "ZeroStress"/>
+              <damage_model type="ThresholdVar">
+                <variable_properties>
+                  <entry>
+                    <color> 0.0   </color>
+                    <mean>7.0e4</mean>
+                    <std>7.0e3</std>
+                  </entry>
+                  <entry>
+                    <color> 1.0   </color>
+                    <mean>7.0e3</mean>
+                    <std>7.0e2</std>
+                  </entry>
+                </variable_properties>
+                  <failure_distrib>gauss     </failure_distrib>
+                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              </damage_model>
               <geom_object>
                 <difference>
                   <cylinder label = "gp2">

@@ -2618,6 +2618,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<Vector> newCCVel;
     constCCVariable<double> density;
     constCCVariable<double> drhodt;
+    constCCVariable<double> volFraction;
 
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
@@ -2666,6 +2667,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->get(newWVel        , d_lab->d_wVelocitySPBCLabel , indx , patch , gaf , 1);
     new_dw->get(drhodt         , d_lab->d_filterdrhodtLabel  , indx , patch , gn  , 0);
     new_dw->get(density        , d_lab->d_densityCPLabel     , indx , patch , gac , 1);
+    new_dw->get(volFraction  ,   d_lab->d_volFractionLabel, indx,patch, gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
@@ -2858,6 +2860,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     }
 
+    // For intrusion inlets:
+    CCVariable<double> mass_src_intrusion;
+    new_dw->allocateTemporary(mass_src_intrusion, patch);
+    mass_src_intrusion.initialize(0.0);
+    d_boundaryCondition->addIntrusionMassRHS(patch, mass_src_intrusion);
+
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
@@ -2875,18 +2883,23 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                             (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
                             (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
 
-          residual[idx] = (0.5*(density[idxU]+density[idx])*newUVel[idxU]-
+          residual[idx] = ((0.5*(density[idxU]+density[idx])*newUVel[idxU]-
                            0.5*(density[idx]+density[idxxminus])*newUVel[idx])/cellinfo->sew[ii]+
                           (0.5*(density[idxV]+density[idx])*newVVel[idxV]-
                            0.5*(density[idx]+density[idxyminus])*newVVel[idx])/cellinfo->sns[jj]+
                           (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
                            0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
-                          drhodt[idx]/vol;
+                          drhodt[idx]/vol)*volFraction[idx];
 
           //adding the mass sources to the residual
           for (unsigned int iii=0; iii < d_mass_sources.size(); iii++){
             residual[idx] -= mass_srcs[iii][idx];
           }
+
+	  // Add intrusion mass sources to the residual
+          if ( d_boundaryCondition->is_using_new_intrusion() ){
+            residual[idx] -= (mass_src_intrusion[idx]/vol)*volFraction[idx];
+	  }
 
           if ( d_solvability ){
             residual[idx] += vol_integral*dt/vol;

@@ -1,5 +1,27 @@
 #!/usr/bin/env perl
-
+#
+# The MIT License
+#
+# Copyright (c) 1997-2021 The University of Utah
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+#
 #______________________________________________________________________
 #  MasterScript.pl:
 ##
@@ -112,13 +134,13 @@ $ENV{"PATH"} = "$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScri
 # bulletproofing
 print "----------------------   \n";
 print "Using the following commands:\n";
-system("which sus") == 0               || die("\nCannot find the command sus.  You may want to set <sus_path> in components.xml, or run in Uintah:StandAlone dir $@");
+system("which sus") == 0               || die("\nERROR: Cannot find the command sus.  You may want to set <sus_path> in components.xml, or run in Uintah:StandAlone dir $@");
 #system("which octave")  == 0           || die("\nCannot find the command octave.  You may want to comment this out if you're not using octave $@");
 #system("which gnuplot") == 0           || die("\nCannot find the command gnuplot.  You may want to comment this out if you're not using octave  $@");
-system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
-system("which xmlstarlet")  == 0       || die("\nCannot find the command xmlstarlet $@");
-system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
-system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
+system("which mpirun")  == 0           || die("\nERROR: Cannot find the command mpirun $@");
+system("which xmlstarlet")  == 0       || die("\nERROR: Cannot find the command xmlstarlet $@");
+system("which replace_XML_line")  == 0 || die("\nERROR: Cannot find the command replace_XML_line $@");
+system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command replace_XML_value $@");
 
 #__________________________________
 # loop over each component
@@ -178,16 +200,25 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      my $default_path = $src_path . "/StandAlone/inputs/";
      my $inputs_path = get_XML_value( $tstData, 'inputs_path', $default_path );
 
+
                    # UPS file
      my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
      my $upsFile  = setPath( $ups_tmp, $fw_path, $inputs_path.$component );
 
-                   # Other files needed.  This could contain wildcards 
+                   # restarts
+     my $doRestart  = cleanStr( $tstData->exists('/start/restart_uda') );
+     my $restartUda = cleanStr( $tstData->findvalue('/start/restart_uda/uda') );
+     
+     if( $doRestart ){
+       $doRestart = 1;
+       $upsFile   = '';
+     }
+                   # Other files needed.  This could contain wildcards
      if($test->exists('otherFilesToCopy') ){
        $otherFiles = cleanStr( $test->findvalue('otherFilesToCopy') );
        $otherFiles = setPath( $otherFiles, $fw_path, $inputs_path.$component ) ;
      }
-     
+
                     # find a unique testname
      my $count = 0;
      my $testNameOld = $testName;
@@ -207,25 +238,43 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      #__________________________________
      # bulletproofing
      # do these files exist
-     if (! -e $upsFile ||
-         ! -e $tstFile ){
+     if ( $doRestart == 0 && (! -e $upsFile || ! -e $tstFile ) ){
        print "\n \nERROR:setupFrameWork:\n";
        print "The ups file: \n        ($upsFile) \n";
        print "or the tst file: \n     ($tstFile)\n";
-       print "or the other file(s) \n ($otherFiles) \n";
+       print "do not exist.  Now exiting\n";
+       exit
+     }     
+     
+     if ( $doRestart == 1 && (! -e $restartUda || ! -e $tstFile ) ){
+       print "\n \nERROR:setupFrameWork:\n";
+       print "The restart uda: \n     ($restartUda) \n";
+       print "or the tst file: \n     ($tstFile)\n";
        print "do not exist.  Now exiting\n";
        exit
      }
 
+     #__________________________________
      # copy the config files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
-     system("cp -f $upsFile $tstFile $otherFiles $testing_path");
-
+     
+     if( $doRestart ){
+       system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path");
+     } 
+     else {
+       system("cp -f $upsFile $testing_path");
+     }
+     
+     system("cp -f  $tstFile $testing_path");
+     
+     system("cp -rf $otherFiles $testing_path > /dev/null 2>&1");
+     
      system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
 
      chdir($testing_path);
 
+     #__________________________________
      # make a symbolic link to sus
      my $sus = `which sus`;
      system("ln -s $sus > /dev/null 2>&1");
@@ -234,18 +283,18 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      system("ln -s $inputs_path > /dev/null 2>&1");
 
      # create any symbolic links requested by that component
-     if( @symLinks ){
-       foreach my $s (@symLinks) {
-         if( $s ne ""){
-           print " creating symbolic link: $s \n";
-           system("ln -s $s> /dev/null 2>&1");
-         }
+     foreach my $s (@symLinks) {
+       if( defined $s ){
+         print " creating symbolic link: $s \n";
+         system("ln -s $s> /dev/null 2>&1");
        }
      }
+
 
      print "\n\n===================================================================================\n";
      print "Test Name      : $testName \n";
      print "ups File       : $upsFile \n";
+     print "restartUda     : $restartUda \n";
      print "tst File       : $tstFile \n";
      print "inputs dir     : $inputs_path\n";
      print "sus            : $sus";
@@ -265,10 +314,18 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
      #__________________________________
      # run the tests
-     print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
-     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
-     system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
-
+     if( $doRestart) {                 # restarting
+       print "\n\nLaunching: run_tests_restart.pl $tst_basename\n\n";
+       my @args = (" $scripts_path/run_tests_restart.pl","$testing_path/$tst_basename", "$fw_path");
+       system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
+     }
+     else{
+     
+       print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
+       my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
+       system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
+     }
+     
      chdir("..");
    }  # loop over tests
 

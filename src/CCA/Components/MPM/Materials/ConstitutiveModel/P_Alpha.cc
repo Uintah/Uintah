@@ -60,6 +60,8 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->getWithDefault("Ku", d_initialData.Ku,.1*d_initialData.K0);
   ps->getWithDefault("shear_modulus", d_initialData.shear,      0.0);
   ps->getWithDefault("yield_stress",  d_initialData.FlowStress, 9.e99);
+  ps->getWithDefault("hardening_modulus",  d_initialData.Kh, 0.0);
+
 
   const TypeDescription* P_dbl =ParticleVariable<double>::getTypeDescription();
 
@@ -112,7 +114,8 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("Ks",      d_initialData.Ks);
   cm_ps->appendElement("Ku",      d_initialData.Ku);
   cm_ps->appendElement("shear_modulus", d_initialData.shear);
-  cm_ps->appendElement("yield_stress", d_initialData.FlowStress);
+  cm_ps->appendElement("yield_stress",  d_initialData.FlowStress);
+  cm_ps->appendElement("hardening_modulus", d_initialData.Kh);
   cm_ps->appendElement("T_0",     d_initialData.T_0);
   cm_ps->appendElement("C_0",     d_initialData.C_0);
   cm_ps->appendElement("Gamma_0", d_initialData.Gamma_0);
@@ -297,7 +300,8 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double Ks = d_initialData.Ks;
     double Ku = d_initialData.Ku;
     double shear = d_initialData.shear;
-    double rhoS = d_initialData.rhoS;
+    double rhoS  = d_initialData.rhoS;
+    double Kh    = d_initialData.Kh;  // shear hardening modulus
 
     // Density and alpha at which model stops being elastic
     double rhoP     = rho_orig/(1.-Pe/K0);
@@ -335,12 +339,17 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
 
       // Check for plastic loading
       double flow = d_initialData.FlowStress;
-      double fTrial = sTnorm - sqtwthds*flow;
+      //double fTrial = sTnorm - sqtwthds*flow;
+      double  plasStrain  = pPlasticStrain[idx];
+      double fTrial = sTnorm - sqtwthds*(Kh*plasStrain + flow);
+
 
       if (fTrial > 0.0) {
         // plastic
         // Compute increment of slip in the direction of flow
-        double delgamma = fTrial/(2.0*muBar);
+//        double delgamma = fTrial/(2.0*muBar);
+        double delgamma = (fTrial/(2.0*muBar)) / (1.0 + (Kh/(3.0*muBar)));
+
         Matrix3 normal   = tauDevTrial/sTnorm;
 
         // The actual shear stress

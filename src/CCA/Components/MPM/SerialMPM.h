@@ -339,6 +339,14 @@ protected:
                                                DataWarehouse* new_dw);
 
   //////////
+  // Insert Documentation Here:
+  virtual void computeGridVelocityForFTM(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
+
+  //////////
   // Insert Documentation Here:                            
   void setGridBoundaryConditions(const ProcessorGroup*,
                                  const PatchSubset* patches,
@@ -511,6 +519,10 @@ protected:
 
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
                                        const MaterialSet*);
+
+  virtual void scheduleComputeGridVelocityForFTM(SchedulerP&,
+                                                 const PatchSet*,
+                                                 const MaterialSet*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);

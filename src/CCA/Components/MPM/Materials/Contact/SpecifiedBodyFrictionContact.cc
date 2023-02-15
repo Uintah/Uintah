@@ -126,6 +126,11 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
     NGP=2;
     NGN=2;
   }
+
+  ps->getWithDefault("OneOrTwoStep",     d_oneOrTwoStep, 1);
+  if(flag->d_XPIC2==true){
+    d_oneOrTwoStep = 2;
+  }
 }
 
 
@@ -151,6 +156,7 @@ void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("include_rotation",    d_includeRotation);
   contact_ps->appendElement("mu",                  d_mu);
   contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
+  contact_ps->appendElement("OneOrTwoStep",        d_oneOrTwoStep);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -205,6 +211,179 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+ if(d_oneOrTwoStep==2){
+  simTime_vartype simTime;
+  old_dw->get(simTime, lb->simulationTimeLabel);
+
+  Ghost::GhostType  gnone = Ghost::None;
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
+
+  // Retrieve necessary data from DataWarehouse
+  std::vector<constNCVariable<double> > gmass(numMatls);
+  std::vector<NCVariable<Vector> >      gvelocity(numMatls);
+  std::vector<constNCVariable<double> > gvolume(numMatls);
+  std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    constNCVariable<double> NC_CCweight;
+    constNCVariable<int>    alphaMaterial;
+    constNCVariable<Vector> normAlphaToBeta;
+    old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,     0,patch, gnone, 0);
+    new_dw->get(alphaMaterial,     lb->gAlphaMaterialLabel,  0,patch, gnone, 0);
+    new_dw->get(normAlphaToBeta,   lb->gNormAlphaToBetaLabel,0,patch, gnone, 0);
+
+    for(int m=0;m<matls->size();m++){
+     MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+     int dwi = mpm_matl->getDWIndex();
+     new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone, 0);
+     new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
+                                                            dwi,patch,gnone, 0);
+     new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwi,patch);
+    }
+
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    
+    // rigid_velocity just means that the master_material's initial velocity
+    // remains constant through the simulation, until d_stop_time is reached.
+    // If the velocity comes from a profile specified in a file, or after
+    // d_stop_time, rigid_velocity is false
+    bool  rigid_velocity = true;
+    Vector requested_velocity(0.0, 0.0, 0.0);
+    Vector requested_omega(0.0, 0.0, 0.0);
+    Vector requested_origin(0.0, 0.0, 0.0);
+    if(simTime>d_stop_time) {
+      rigid_velocity = false;
+      requested_velocity = d_vel_after_stop;
+    } else if(d_vel_profile.size()>0) {
+      rigid_velocity = false;
+      requested_velocity = findValFromProfile(simTime, d_vel_profile);
+      if(d_includeRotation){
+        requested_origin = findValFromProfile(simTime, d_ori_profile);
+        requested_omega  = findValFromProfile(simTime, d_rot_profile);
+      }
+    }
+
+    // If rotation axis is aligned with a ordinal direction,
+    // use the exact treatment, otherwise default to the approximate
+    int rotation_axis = -99;
+    if(d_includeRotation){
+      double ROL = requested_omega.length();
+      if(fabs(Dot(requested_omega/ROL,Vector(1.,0.,0.))) > 0.99){
+        rotation_axis=0;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,1.,0.))) > 0.99){
+        rotation_axis=1;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,0.,1.))) > 0.99){
+        rotation_axis=2;
+      }
+    }
+
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      IntVector c = *iter; 
+
+      Vector rotation_part(0.0,0.0,0.0);
+      Vector r(0.0,0.0,0.0);
+
+      if(d_includeRotation){
+       Point NodePos = patch->getNodePosition(c);
+       Point NewNodePos = NodePos;
+       // vector from node to a point on the axis of rotation
+       r = NodePos - requested_origin.asPoint();
+       if(rotation_axis==0){  //rotation about x-axis
+         double posz = NodePos.z() - requested_origin.z();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posz,posy);
+         double thetaPlus = theta+requested_omega[0]*delT;
+         double R = sqrt(posy*posy + posz*posz);
+         NewNodePos = Point(NodePos.x(),
+                            R*cos(thetaPlus)+requested_origin.y(),
+                            R*sin(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==1){  //rotation about y-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posz = NodePos.z() - requested_origin.z();
+         double theta = atan2(posx,posz);
+         double thetaPlus = theta+requested_omega[1]*delT;
+         double R = sqrt(posz*posz + posx*posx);
+         NewNodePos = Point(R*sin(thetaPlus)+requested_origin.x(),
+                            NodePos.y(),
+                            R*cos(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==2){  //rotation about z-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posy,posx);
+         double thetaPlus = theta+requested_omega[2]*delT;
+         double R = sqrt(posx*posx + posy*posy);
+         NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
+                            R*sin(thetaPlus)+requested_origin.y(),
+                            NodePos.z());
+       } 
+       rotation_part = (NewNodePos - NodePos)/delT;
+       if(rotation_axis==-99){
+         // normal vector from the axis of rotation to the node
+         //Vector axis_norm=requested_omega/(requested_omega.length()+1.e-100);
+         //Vector rad = r - Dot(r,axis_norm)*axis_norm;
+         rotation_part = Cross(requested_omega,r);
+       }
+      }
+      
+      Vector rigid_vel = rotation_part + requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity[d_material][c];
+      }
+
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
+      int alpha=alphaMaterial[c];
+      if(alpha>=0){  // Only work on nodes where alpha!=-99
+        for(int  n = 0; n < numMatls; n++){
+          if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
+          Vector new_vel = rigid_vel;
+
+          if(n==d_material){
+            gvelocity[n][c] =  new_vel;
+          } else if (!compare(gmass[d_material][c], 0.) &&
+                     !compare(gmass[n][c],0)) {
+            double separation = gmatlprominence[n][c] -
+                                gmatlprominence[alpha][c];
+            if(separation <= 0.0){
+              Vector deltaVelocity=gvelocity[n][c] - new_vel;
+              Vector normal = -1.0*normAlphaToBeta[c];
+              double normalDeltaVel=Dot(deltaVelocity,normal);
+              Vector Dv(0.,0.,0.);
+              if(normalDeltaVel > 0.0){
+
+                Vector normal_normaldV = normal*normalDeltaVel;
+                Vector dV_normalDV = deltaVelocity - normal_normaldV;
+                Vector surfaceTangent = 
+                                   dV_normalDV/(dV_normalDV.length()+1.e-100);
+                double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+                double frictionCoefficient=
+                  Min(d_mu,tangentDeltaVelocity/(fabs(normalDeltaVel)+1.e-100));
+                // Calculate velocity change needed to enforce contact
+                Dv = -normal_normaldV
+                     -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+
+                gvelocity[n][c]    +=Dv;
+              }  // if normalDeltaVel > 0
+            }  // if separation
+          }  // if mass of both matls>0
+        }    // for matls
+      } else{  // alpha>=0
+        for(int  n = 0; n < numMatls; n++){
+          if(n==d_material && gmass[n][c]>1.e-99){
+            gvelocity[n][c] =  rigid_vel;
+          }
+        }
+      }
+    }      // for Node Iterator
+  } // loop over patches
+ }   // if d_oneOrTwoStep
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
@@ -459,6 +638,29 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
                                                        const PatchSet* patches,
                                                        const MaterialSet* ms) 
 {
+  Task * t = scinew Task("SpecifiedBodyFrictionContact::exMomInterpolated", 
+                      this, &SpecifiedBodyFrictionContact::exMomInterpolated);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+  
+  const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requires(Task::OldDW, lb->delTLabel);
+  t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
+  t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
+  t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
+
+  t->modifies(             lb->gVelocityLabel,   mss);
+
+  sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference()){
+    delete z_matl; // shouln't happen, but...
+  }
 }
 
 void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(

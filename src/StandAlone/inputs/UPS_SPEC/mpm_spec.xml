@@ -42,6 +42,7 @@
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
@@ -197,7 +198,7 @@
         <!--__________________________________-->
         <!-- Damage models -->
         <damage_model                  spec="OPTIONAL NO_DATA"
-                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, hancock_mackenzie, johnson_cook, none'" >
+                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, ThresholdVar, hancock_mackenzie, johnson_cook, none'" >
 
                <!-- Threshold     -->      
           <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
@@ -211,6 +212,15 @@
           <LocalizeParticles    spec="OPTIONAL BOOLEAN"               need_applies_to="type Threshold"/>
           <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
                                                                       need_applies_to="type Threshold"/> 
+
+        <!-- Variable property Threshold -->
+        <variable_properties       spec="OPTIONAL NO_DATA" >
+            <entry                 spec="MULTIPLE NO_DATA" >
+              <color               spec="REQUIRED DOUBLE" />
+              <mean                spec="REQUIRED DOUBLE" />
+              <std                 spec="REQUIRED DOUBLE" />
+            </entry>
+        </variable_properties>
 
                <!-- Brittle       -->
           <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>

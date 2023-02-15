@@ -467,6 +467,9 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
                                  sum_vartype::getTypeDescription() );
 
+  TotalMomentOfInertiaLabel = VarLabel::create( "TotalMomentOfInertia",
+                                 sum_vartype::getTypeDescription() );
+
   NeedAddMPMMaterialLabel = VarLabel::create("NeedAddMPMMaterial",
                                  sum_vartype::getTypeDescription());
 
@@ -493,6 +496,9 @@ MPMLabel::MPMLabel()
   SumTransmittedForceLabel = VarLabel::create( "SumTransmittedForce",
                                  sumvec_vartype::getTypeDescription() );
 
+  SumTransmittedTorqueLabel = VarLabel::create( "SumTransmittedTorque",
+                                 sumvec_vartype::getTypeDescription() );
+
   TotalMomentumLabel = VarLabel::create( "TotalMomentum",
                                  sumvec_vartype::getTypeDescription() );
 
@@ -510,7 +516,6 @@ MPMLabel::MPMLabel()
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<int>::getTypeDescription());
 
-  // for Fracture ----------------------------
   pDispLabel = VarLabel::create("p.displacement",
                   ParticleVariable<Vector>::getTypeDescription());
   pDispLabel_preReloc = VarLabel::create( "p.displacement+",
@@ -679,6 +684,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
+  VarLabel::destroy(TotalMomentOfInertiaLabel);
   VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
@@ -689,13 +695,13 @@ MPMLabel::~MPMLabel()
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(SumTransmittedForceLabel);
+  VarLabel::destroy(SumTransmittedTorqueLabel);
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
   VarLabel::destroy(RigidReactionTorqueLabel);
   VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
 
- // for Fracture --------------
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
   VarLabel::destroy(gDisplacementLabel);

@@ -59,6 +59,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
+  flag = MFlag;
   // read a list of values from a file
   ps->get("filename", d_filename);
 
@@ -72,8 +73,11 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   ps->get("volume_constraint",d_vol_const);
   ps->getWithDefault("normal_only", d_NormalOnly, false);
 
-  d_oneOrTwoStep = 2;
-  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
+  ps->getWithDefault("OneOrTwoStep",     d_oneOrTwoStep, 1);
+  if(flag->d_XPIC2==true){
+    d_oneOrTwoStep = 2;
+  }
+  
   ps->getWithDefault("ExcludeMaterial", d_excludeMatl, -999);
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
@@ -127,7 +131,6 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   d_materialManager = d_sS;
 
   lb = Mlb;
-  flag = MFlag;
   if(flag->d_8or27==8){
     NGP=1;
     NGN=1;
@@ -215,9 +218,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
- cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact"
-      << endl;
-#if 0
+#if 1
  if(d_oneOrTwoStep==2){
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
@@ -257,27 +258,89 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       requested_velocity = d_vel_after_stop;
       rigid_velocity = false;
     } else if(d_vel_profile.size()>0) {
+      rigid_velocity  = false;
       requested_velocity = findValFromProfile(simTime, d_vel_profile);
       if(d_includeRotation){
         requested_origin = findValFromProfile(simTime, d_ori_profile);
         requested_omega  = findValFromProfile(simTime, d_rot_profile);
       }
-      rigid_velocity  = false;
+    }
+
+    // If rotation axis is aligned with a ordinal direction,
+    // use the exact treatment, otherwise default to the approximate
+    int rotation_axis = -99;
+    if(d_includeRotation){
+      double ROL = requested_omega.length();
+      if(fabs(Dot(requested_omega/ROL,Vector(1.,0.,0.))) > 0.99){
+        rotation_axis=0;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,1.,0.))) > 0.99){
+        rotation_axis=1;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,0.,1.))) > 0.99){
+        rotation_axis=2;
+      }
     }
 
     // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
 
-      Point NodePos = patch->getNodePosition(c);
-      Vector r = NodePos - requested_origin.asPoint();
-      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+      Vector rotation_part(0.0,0.0,0.0);
+      Vector r(0.0,0.0,0.0);
+
+      if(d_includeRotation){
+       Point NodePos = patch->getNodePosition(c);
+       Point NewNodePos = NodePos;
+       // vector from node to a point on the axis of rotation
+       r = NodePos - requested_origin.asPoint();
+       if(rotation_axis==0){  //rotation about x-axis
+         double posz = NodePos.z() - requested_origin.z();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posz,posy);
+         double thetaPlus = theta+requested_omega[0]*delT;
+         double R = sqrt(posy*posy + posz*posz);
+         NewNodePos = Point(NodePos.x(),
+                            R*cos(thetaPlus)+requested_origin.y(),
+                            R*sin(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==1){  //rotation about y-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posz = NodePos.z() - requested_origin.z();
+         double theta = atan2(posx,posz);
+         double thetaPlus = theta+requested_omega[1]*delT;
+         double R = sqrt(posz*posz + posx*posx);
+         NewNodePos = Point(R*sin(thetaPlus)+requested_origin.x(),
+                            NodePos.y(),
+                            R*cos(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==2){  //rotation about z-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posy,posx);
+         double thetaPlus = theta+requested_omega[2]*delT;
+         double R = sqrt(posx*posx + posy*posy);
+         NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
+                            R*sin(thetaPlus)+requested_origin.y(),
+                            NodePos.z());
+       } 
+       rotation_part = (NewNodePos - NodePos)/delT;
+       if(rotation_axis==-99){
+         // normal vector from the axis of rotation to the node
+         //Vector axis_norm=requested_omega/(requested_omega.length()+1.e-100);
+         //Vector rad = r - Dot(r,axis_norm)*axis_norm;
+         rotation_part = Cross(requested_omega,r);
+       }
+      }
+
+      Vector rigid_vel = rotation_part + requested_velocity;
       if(rigid_velocity) {
         rigid_vel = gvelocity[d_material][c];
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       for(int n = 0; n < numMatls; n++){ // update rigid body here
-        if(!d_matls.requested(n)) continue;
+        if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
 
         // set each velocity component being modified to a new velocity
         Vector new_vel( gvelocity[n][c] );
@@ -442,7 +505,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
          rotation_part = Cross(requested_omega,r);
        }
       }
-      
+
       Vector rigid_vel = rotation_part + requested_velocity;
       if(rigid_velocity) {
         rigid_vel = gvelocity_star[d_material][c];
@@ -535,7 +598,7 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-#if 0
+#if 1
   Task * t = scinew Task("SpecifiedBodyContact::exMomInterpolated",
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
