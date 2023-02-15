@@ -315,7 +315,7 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
     //}
 
 
-    Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
+    Cs(i,j,k) = vol_fraction(i,j,k)*std::min(value,10.0);
     mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*IsI(i,j,k)*rho(i,j,k) + molecular_visc)*vol_fraction(i,j,k); //
     mu_turb(i,j,k) = mu_sgc(i,j,k) - molecular_visc; //
 
