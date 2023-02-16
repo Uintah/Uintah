@@ -28,7 +28,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
   #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>

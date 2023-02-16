@@ -43,8 +43,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <cstring>
 #include <cstddef> // TODO: What is this doing here?
@@ -54,11 +53,7 @@
 
 #define ARRAY_SIZE 16
 
-using std::max;
-using std::min;
-
 #if defined( HAVE_KOKKOS )
-#include <Kokkos_Core.hpp>
 
 // ARS - FIX ME - I do not fully understand these defines.
 namespace Kokkos {
@@ -391,26 +386,6 @@ struct struct2DArray
   }
 
 }; // end struct struct2DArray
-
-#define int_3 IntVector
-
-// struct int_3
-// {
-//   int dim[3]; // indices for x y z dimensions
-
-//   HOST_DEVICE int_3() {}
-
-//   HOST_DEVICE int_3( const int i, const int j, const int k ) {
-//     dim[0]=i;
-//     dim[1]=j;
-//     dim[2]=k;
-//   }
-
-//   HOST_DEVICE inline const int& operator[]( unsigned int index) const {
-//     return dim[index];
-//   }
-
-// }; // end struct int_3
 
 //----------------------------------------------------------------------------
 // Start parallel loops
@@ -941,12 +916,12 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
     for (int j=jb; j<je; ++j) {
       for (int i=ib; i<ie; ++i) {
         functor(i,j,k,tmp2);
-        tmp1 = min(tmp2,tmp1);
+        tmp1 = std::min(tmp2,tmp1);
       }
     }
   }, Kokkos::Min<ReductionType>(tmp0));
 
-  red = min(tmp0,red);
+  red = std::min(tmp0,red);
 }
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
@@ -969,12 +944,12 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
     for (int j=jb; j<je; ++j) {
       for (int i=ib; i<ie; ++i) {
         functor(i,j,k,tmp2);
-        tmp1 = min(tmp2,tmp1);
+        tmp1 = std::min(tmp2,tmp1);
       }
     }
   }, Kokkos::Min<ReductionType>(tmp0));
 
-  red = min(tmp0,red);
+  red = std::min(tmp0,red);
 }
 
 #elif defined(KOKKOS_USING_GPU)
@@ -1091,7 +1066,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
     for (int j=jb; j<je; ++j) {
       for (int i=ib; i<ie; ++i) {
         functor(i,j,k,tmp);
-        red = min(tmp,red);
+        red = std::min(tmp,red);
       }
     }
   }
@@ -1159,9 +1134,9 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     if  ((nphase-iphase -1)>= iphase){
       tpp =(iphase+2)*(iphase+1)/2;
 
-      tpp -= max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
-      tpp -= max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
-      tpp -= max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
+      tpp -= std::max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
+      tpp -= std::max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
+      tpp -= std::max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
 
       concurrentBlocksArray[iphase]=tpp;
     }else{
@@ -1174,8 +1149,8 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 
     int icount = 0 ;
     // Attempts to iterate over k j i , despite  spatial dependencies.
-    for (int k=0;  k< min(iphase+1,nPartitionsz);  k++ ) {
-      for (int j=0;  j< min(iphase-k+1,nPartitionsy);  j++ ) {
+    for (int k=0;  k< std::min(iphase+1,nPartitionsz);  k++ ) {
+      for (int j=0;  j< std::min(iphase-k+1,nPartitionsy);  j++ ) {
         if ((iphase -k-j) <nPartitionsx){
           xblock(icount) = iphase-k-j;
           yblock(icount) = j;
@@ -1255,9 +1230,9 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     if  ((nphase-iphase -1)>= iphase){
       tpp=(iphase+2)*(iphase+1)/2;
 
-      tpp-=max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
-      tpp-=max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
-      tpp-=max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
+      tpp -= std::max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
+      tpp -= std::max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
+      tpp -= std::max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
 
       concurrentBlocksArray[iphase]=tpp;
     } else {
@@ -1270,8 +1245,8 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 
     int icount = 0 ;
     // Attempts to iterate over k j i , despite  spatial dependencies
-    for (int k=0;  k< min(iphase+1,nPartitionsz);  k++ ) {
-      for (int j=0;  j< min(iphase-k+1,nPartitionsy);  j++ ) {
+    for (int k=0;  k< std::min(iphase+1,nPartitionsz);  k++ ) {
+      for (int j=0;  j< std::min(iphase-k+1,nPartitionsy);  j++ ) {
         if ((iphase -k-j) <nPartitionsx){
           xblock(icount)=iphase-k-j;
           yblock(icount)=j;
@@ -1333,7 +1308,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
+             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(0, list_size).set_chunk_size(1), [=](const unsigned int & iblock) {
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
@@ -1347,7 +1322,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
+             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(0, list_size).set_chunk_size(1), [=](const unsigned int & iblock) {
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
@@ -1359,7 +1334,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace ,const unsigned int list_size , const Functor & functor )
+             Kokkos::View<IntVector*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   // This GPU version is mostly a copy of the original GPU version.
   // TODO: Make streamable.
@@ -1815,7 +1790,7 @@ void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
+             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
@@ -1825,7 +1800,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             std::vector<int_3> &iterSpace ,const unsigned int list_size , const Functor & functor )
+             std::vector<IntVector> &iterSpace ,const unsigned int list_size , const Functor & functor )
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);

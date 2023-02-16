@@ -41,9 +41,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/cuda_defs.h>
-
-#ifdef HAVE_CUDA
+#if defined(UINTAH_USING_GPU)
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>

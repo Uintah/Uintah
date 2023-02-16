@@ -40,7 +40,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -48,8 +48,6 @@
   #include <Core/Grid/Variables/GPUStencil7.h>
 //  #include <Core/Util/DebugStream.h>
 #endif
-
-#include <sci_defs/kokkos_defs.h>
 
 #include <atomic>
 #include <cstring>

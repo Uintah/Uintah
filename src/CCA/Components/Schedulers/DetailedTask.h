@@ -31,8 +31,7 @@
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <Core/Grid/Task.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>

@@ -27,14 +27,11 @@
 
 #include <Core/Util/RefCounted.h>
 #include <Core/Grid/Variables/Array3Data.h>
-#include <climits>
 #include <Core/Geometry/IntVector.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
-#ifdef HAVE_KOKKOS
-  #include <Kokkos_Macros.hpp>
-#endif
+#include <climits>
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   #include <Core/Grid/Variables/KokkosViews.h>

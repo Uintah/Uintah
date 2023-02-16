@@ -31,10 +31,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #ifdef HAVE_KOKKOS
-  #include <Kokkos_Core.hpp>
   #include <Core/Grid/Variables/KokkosViews.h>
 #endif //HAVE_KOKKOS
 

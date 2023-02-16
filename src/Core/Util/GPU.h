@@ -25,7 +25,7 @@
 #ifndef Core_Util_GPU_h
 #define Core_Util_GPU_h
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 namespace Uintah {
 

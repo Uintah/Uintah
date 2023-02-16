@@ -41,8 +41,6 @@
 
 #include <map>
 
-#include <sci_defs/cuda_defs.h>
-
 namespace Uintah {
 
 //-------------------------------------------------------

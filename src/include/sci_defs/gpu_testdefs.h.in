@@ -27,5 +27,14 @@
 
 @DEF_UINTAH_USING_GPU@
 
+#include "cuda_defs.h"
+
+#include "kokkos_defs.h"
+
+// HOST_DEVICE maybe defined in the cuda or kokkos defs. 
+#if !defined(HOST_DEVICE)
+#define HOST_DEVICE
+#endif
+
 #endif
 

@@ -49,7 +49,7 @@
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 #include <CCA/Components/Arches/ArchesExamples/ExampleFactory.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 using namespace Uintah;
 

@@ -42,18 +42,13 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/TupleHelpers.hpp>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
   #ifdef TASK_MANAGES_EXECSPACE
     #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #endif
-#endif
-
-#ifdef HAVE_KOKKOS
-  #include <Kokkos_Core.hpp>
 #endif
 
 #include <set>

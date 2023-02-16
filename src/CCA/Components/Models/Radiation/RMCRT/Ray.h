@@ -37,7 +37,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
   #include <curand.h>

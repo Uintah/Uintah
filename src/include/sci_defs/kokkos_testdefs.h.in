@@ -25,15 +25,15 @@
 #ifndef SCI_KOKKOS_DEFS_H
 #define SCI_KOKKOS_DEFS_H
 
-#include "gpu_defs.h"
-
 @DEF_KOKKOS@
 
 @DEF_KOKKOS_USING_GPU@
 
 #if defined(HAVE_KOKKOS)
 
+#include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Random.hpp>
 
   #if defined(KOKKOS_USING_GPU)
     #define TASK_MANAGES_EXECSPACE
@@ -46,10 +46,6 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 // int3 is defined in Cuda
-
-#ifndef HAVE_CUDA
-#define HOST_DEVICE
-#endif
 
 #elif defined(KOKKOS_ENABLE_HIP)
 // int3 is defined in Hip
@@ -68,9 +64,6 @@ using cudaStream_t = void;
 #elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 #define HOST_DEVICE
-
-void __syncthreads() {};
-void __threadfence() {};
 
 #define __host__
 #define __device__

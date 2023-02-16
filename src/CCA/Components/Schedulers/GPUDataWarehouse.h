@@ -27,8 +27,6 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_GPUDATAWAREHOUSE_H
 #define CCA_COMPONENTS_SCHEDULERS_GPUDATAWAREHOUSE_H
 
-#include <sci_defs/cuda_defs.h>
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -38,10 +36,9 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #ifdef HAVE_KOKKOS
-  #include <Kokkos_Core.hpp>
   #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 

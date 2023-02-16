@@ -29,11 +29,12 @@
 #ifndef UINTAH_CORE_KOKKOS_TOOLS_H
 #define UINTAH_CORE_KOKKOS_TOOLS_H
 
+#include <Core/Parallel/MasterLock.h>
+
+#include <sci_defs/gpu_defs.h>
+
 #if defined( HAVE_KOKKOS ) 
 
-#include <Core/Parallel/MasterLock.h>
-#include <Kokkos_Random.hpp>
-#include <sci_defs/kokkos_defs.h>
 #include <memory>
 
 namespace {
@@ -41,7 +42,6 @@ namespace {
 }
 
 namespace Uintah {
-
 
 //----------------------------Portable Random Number Generation-------------------------------------
 
@@ -64,10 +64,12 @@ class KokkosRandom;
 #if defined(KOKKOS_ENABLE_OPENMP)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPRandomPool;
 #endif
+
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPTargetRandomPool;
 // MGM - std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Experimental::OpenMPTarget > > > openMPTargetRandomPool;
 #endif
+
 #if defined(KOKKOS_USING_GPU)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace > > > cudaRandomPool;
 #endif
@@ -107,11 +109,13 @@ void cleanupKokkosTools() {
       openMPRandomPool.release();
     }
 #endif
+
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
     if (openMPTargetRandomPool) {
       openMPTargetRandomPool.release();
     }
 #endif
+
 #if defined(KOKKOS_USING_GPU)
     if (cudaRandomPool) {
       cudaRandomPool.release();

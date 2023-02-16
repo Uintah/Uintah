@@ -36,8 +36,6 @@
 
 #include <Core/Parallel/MasterLock.h>
 
-#include <sci_defs/kokkos_defs.h>
-
 #define OLD_TABLE 1
 #undef OLD_TABLE
 

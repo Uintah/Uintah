@@ -59,8 +59,7 @@
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
 #  include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -75,7 +74,6 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
-#include <sci_defs/cuda_defs.h>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/uintah_defs.h>

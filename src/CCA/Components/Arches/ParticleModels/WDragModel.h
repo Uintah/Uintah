@@ -359,7 +359,7 @@ private:
         model(i,j,k)      = w_qn(i,j,k) * ( fDrag / t_p * (Vel(i,j,k)-pVel(i,j,k)) + gravity) / scaling_constant;
         gas_source(i,j,k) = -weight(i,j,k) * rho_pph / 6.0 * M_PI * fDrag / t_p * ( Vel(i,j,k)-pVel(i,j,k) ) * pow(l_pph,3.0);
       } else {  // rate clip, if we aren't resolving timescale
-        const double updated_weight = max(w_qn(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
+        const double updated_weight = std::max(w_qn(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
         model(i,j,k) = 1. / scaling_constant * ( updated_weight * Vel(i,j,k) - weight_p_vel(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambda_birth_placeholder );
       } // end timescale if
 

@@ -29,7 +29,7 @@
 
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 #define MAX_TABLE_DIMENSION 3

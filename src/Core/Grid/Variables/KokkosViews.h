@@ -22,11 +22,12 @@
  * IN THE SOFTWARE.
  */
  
- #ifndef UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
+#ifndef UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 #define UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 
+#include <sci_defs/gpu_defs.h>
+
 #if defined( HAVE_KOKKOS )
-#include <Kokkos_Core.hpp>
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Array3Data.h>

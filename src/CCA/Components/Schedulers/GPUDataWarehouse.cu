@@ -36,8 +36,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-#include <sci_defs/cuda_defs.h>
-
 #if defined(__CUDA_ARCH__) || \
     defined(__HIP_DEVICE_COMPILE__) || \
     defined(__sycl_device_only__)

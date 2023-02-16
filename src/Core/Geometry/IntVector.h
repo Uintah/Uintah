@@ -41,8 +41,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <iosfwd>
 
@@ -70,7 +69,7 @@ public:
     return *this;
   }
 
-  HOST_DEVICE inline explicit IntVector( const Point & p )
+  inline explicit IntVector( const Point & p )
   {
     m_value[0] = static_cast<int>(p.x());
     m_value[1] = static_cast<int>(p.y());

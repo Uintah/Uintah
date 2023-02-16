@@ -28,7 +28,7 @@
 #define UINTAH_CORE_GRID_VARIABLES_GPUPERPATCH_H
 
 #include <Core/Grid/Variables/GPUPerPatchBase.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <string>
 

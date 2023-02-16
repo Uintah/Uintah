@@ -32,7 +32,7 @@
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Util/GPU.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>

@@ -44,7 +44,7 @@
 
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 #include <Core/IO/UintahZlibUtil.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 namespace Uintah {

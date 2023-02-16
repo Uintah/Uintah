@@ -28,7 +28,7 @@
 #define UINTAH_GPUPARTICLEVARIABLEBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 namespace Uintah {
 

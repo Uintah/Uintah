@@ -711,7 +711,7 @@ PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
        // precMatrix is the inverted precondition matrix or the A matrix.  Depending on the relaxation type. 
   if (d_custom_relax_type==jacobBlock){
     int offset=cg_ghost;
-    int inside_buffer=max(cg_ghost-1,0);
+    int inside_buffer=std::max(cg_ghost-1,0);
     for (int kk=0;kk<d_stencilWidth;kk++){
       int kr=kk-offset;
       for (int jj=0;jj<d_stencilWidth;jj++){
@@ -746,7 +746,7 @@ PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
       rb_switch=0;
     }
     for (int rb_i = 0 ; rb_i <niter ; rb_i++) {
-      IntVector  iter_on_ghosts(max(cg_ghost-1-rb_i,0),max(cg_ghost-1-rb_i,0),max(cg_ghost-1-rb_i,0));
+      IntVector  iter_on_ghosts(std::max(cg_ghost-1-rb_i,0),std::max(cg_ghost-1-rb_i,0),std::max(cg_ghost-1-rb_i,0));
       Uintah::BlockRange rangedynamic(idxLo-iter_on_ghosts*patch->neighborsLow(),idxHi +iter_on_ghosts*patch->neighborsHigh() ); // assumes 1 ghost cell
       Uintah::parallel_for(execObj, rangedynamic,   KOKKOS_LAMBDA (int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
           if ( (i + j +k + rb_i +rb_switch )% 2 ==0){    
@@ -839,7 +839,7 @@ PressureEqn::cg_task2(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    auto residual = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, max(cg_ghost,1),getModifiable );
+    auto residual = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, std::max(cg_ghost,1),getModifiable );
     auto x_v   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
     auto smallP   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(d_smallPLabel , indx , patch, Ghost::None, 0 );
     auto littleQ   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(d_littleQLabel , indx , patch, Ghost::None, 0 );

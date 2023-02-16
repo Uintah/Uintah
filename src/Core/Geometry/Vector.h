@@ -40,8 +40,7 @@
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include   <string>
 #include   <iosfwd>

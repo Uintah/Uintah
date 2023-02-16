@@ -39,8 +39,7 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
 #include <Core/Grid/Variables/GPUPerPatch.h>

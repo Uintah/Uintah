@@ -48,7 +48,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #if defined(HAVE_HYPRE)
 #  include <sci_defs/hypre_defs.h>

@@ -46,12 +46,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
-
-#ifdef HAVE_KOKKOS
-#  include <Kokkos_Core.hpp>
-#endif //HAVE_KOKKOS
 
 #include <cstring>
 #include <iomanip>

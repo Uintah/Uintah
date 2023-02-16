@@ -29,13 +29,6 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
-
-#if defined(UINTAH_USING_GPU)
-  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
-#endif
-
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>

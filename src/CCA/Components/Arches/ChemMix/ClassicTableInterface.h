@@ -27,7 +27,6 @@
 #ifndef Uintah_Component_Arches_ClassicTableInterface_h
 #define Uintah_Component_Arches_ClassicTableInterface_h
 
-#include <sci_defs/kokkos_defs.h>
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 
 #define MAX_NUM_DEP_VARS 15

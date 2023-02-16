@@ -29,8 +29,7 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <iostream>
 

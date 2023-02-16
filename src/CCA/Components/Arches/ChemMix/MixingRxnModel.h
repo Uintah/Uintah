@@ -43,7 +43,7 @@
 #include     <map>
 #include     <string>
 #include     <stdexcept>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #define ALMOST_A_MAGIC_NUMBER 3
 

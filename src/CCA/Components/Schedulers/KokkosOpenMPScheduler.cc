@@ -40,19 +40,13 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
-
-#if defined( KOKKOS_ENABLE_OPENMP )
-  #include <Kokkos_Core.hpp>
-#endif //KOKKOS_ENABLE_OPENMP
+#include <sci_defs/gpu_defs.h>
 
 #include <atomic>
 #include <cstring>
 #include <iomanip>
 
-
 using namespace Uintah;
-
 
 //______________________________________________________________________
 //

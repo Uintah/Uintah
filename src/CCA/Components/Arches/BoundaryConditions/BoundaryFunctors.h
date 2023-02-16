@@ -417,7 +417,7 @@ public:
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     const BndCondSpec* spec = bnd->find(var_name);
 
@@ -482,7 +482,7 @@ template <typename ExecSpace, typename MemSpace>
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const Vector Dx = patch->dCell();
     const double norm = iDir[0]+iDir[1]+iDir[2];
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
     if ( var_help.dir == ArchesCore::NODIR || dot == 0  ){
@@ -570,7 +570,7 @@ template <typename ExecSpace, typename MemSpace>
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     const double bound_area = bnd->area;
     if ( dot == -1 ){
@@ -645,7 +645,7 @@ template <typename ExecSpace, typename MemSpace>
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     if ( m_which_vel == "u" ){
 
@@ -826,7 +826,7 @@ template <typename ExecSpace, typename MemSpace>
     const IntVector iDir = patch->faceDirection( bnd->face );
     auto sec_var = tsk_info->get_field<CT, const double, MemSpace>( m_sec_var_name);
 
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
@@ -1011,9 +1011,9 @@ template <typename ExecSpace, typename MemSpace>
     IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-    const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
-    const int_3 offset_iDir_p(offset_iDir[0],offset_iDir[1],offset_iDir[2]);
-    const int_3 offset_p(offset[0],offset[1],offset[2]);
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector offset_iDir_p(offset_iDir[0],offset_iDir[1],offset_iDir[2]);
+    const IntVector offset_p(offset[0],offset[1],offset[2]);
 
     const double p_vel_value=m_vel_value;
 

@@ -27,11 +27,7 @@
 #include <Core/Grid/Variables/constVariableBase.h>
 #include <Core/Util/Assert.h>
 
-#include <sci_defs/kokkos_defs.h>
-
-#ifdef HAVE_KOKKOS
-  #include <Kokkos_Macros.hpp>
-#endif
+#include <sci_defs/gpu_defs.h>
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
   #include <Core/Grid/Variables/Array3.h>

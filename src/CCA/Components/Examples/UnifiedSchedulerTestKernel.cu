@@ -28,7 +28,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/GPU.h>
 
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 namespace Uintah {
 
