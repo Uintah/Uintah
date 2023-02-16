@@ -167,7 +167,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_activation_time=0.0;
   ps->get("activation_time", d_activation_time);
 
-  d_possible_alpha = false;
+  d_possible_alpha = true;
   ps->get("possible_alpha_material", d_possible_alpha);
 
   // This is used for the autocycleflux boundary conditions
