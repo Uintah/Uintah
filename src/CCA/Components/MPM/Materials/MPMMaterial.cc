@@ -167,6 +167,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_activation_time=0.0;
   ps->get("activation_time", d_activation_time);
 
+  d_possible_alpha = false;
+  ps->get("possible_alpha_material", d_possible_alpha);
+
   // This is used for the autocycleflux boundary conditions
   d_do_conc_reduction = false;
   ps->get("do_conc_reduction", d_do_conc_reduction);
@@ -282,6 +285,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_force_transmitting_material",
                        d_is_force_transmitting_material);
   mpm_ps->appendElement("is_active",d_is_active);
+  mpm_ps->appendElement("possible_alpha", d_possible_alpha);
   mpm_ps->appendElement("activation_time",d_activation_time);
 
   d_cm->outputProblemSpec(mpm_ps);
@@ -315,6 +319,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_is_rigid = mat->d_is_rigid;
   d_is_force_transmitting_material = mat->d_is_force_transmitting_material;
   d_is_active = mat->d_is_active;
+  d_possible_alpha = mat->d_possible_alpha;
   d_activation_time = mat->d_activation_time;
 
   // Check to see which ParticleCreator object we need
@@ -427,6 +432,16 @@ void MPMMaterial::setIsFTM(const bool is_FTM)
 bool MPMMaterial::getIsFTM() const
 {
   return d_is_force_transmitting_material;
+}
+
+void MPMMaterial::setPossibleAlphaMaterial(const bool possible_alpha)
+{
+  d_possible_alpha=possible_alpha;
+}
+
+bool MPMMaterial::getPossibleAlphaMaterial() const
+{
+  return d_possible_alpha;
 }
 
 void MPMMaterial::setIsActive(const bool is_active)

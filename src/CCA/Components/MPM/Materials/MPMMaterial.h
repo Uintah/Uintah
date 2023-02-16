@@ -151,6 +151,9 @@ WARNING
    void setIsActive(const bool is_active);
    double getActivationTime() const;
 
+   bool getPossibleAlphaMaterial() const;
+   void setPossibleAlphaMaterial(const bool possible_alpha);
+
    double getSpecificHeat() const;
    double getThermalConductivity() const;
 
@@ -205,6 +208,9 @@ WARNING
 
    // for rigid body contact
    bool d_is_rigid;
+
+   // for frictionLR contact model
+   bool d_possible_alpha;
 
    // for undeformable force transmission
    bool d_is_force_transmitting_material;
