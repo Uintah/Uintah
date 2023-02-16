@@ -149,6 +149,7 @@ void SpecifiedBodyContact::setContactMaterialAttributes()
   MPMMaterial* mpm_matl = 
          (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
   mpm_matl->setIsRigid(true);
+  mpm_matl->setPossibleAlphaMaterial(false);
 }
 
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
@@ -538,8 +539,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
         }
 
-        if (!compare(gmass[d_material][c], 0.)
-        && (totalNodalVol/cell_vol) > d_vol_const){
+        if(!compare(gmass[d_material][c], 0.) &&
+           (totalNodalVol/cell_vol) > d_vol_const){
           Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;

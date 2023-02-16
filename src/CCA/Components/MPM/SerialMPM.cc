@@ -5850,6 +5850,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     NCVariable<Vector> normAlphaToBeta;
     std::vector<NCVariable<Int130> > ParticleList(numMPMMatls);
     std::vector<bool> IsRigidMaterial(numMPMMatls);
+    std::vector<bool> PossibleAlpha(numMPMMatls);
 
     new_dw->allocateAndPut(alphaMaterial,  lb->gAlphaMaterialLabel,   0, patch);
     new_dw->allocateAndPut(normAlphaToBeta,lb->gNormAlphaToBetaLabel, 0, patch);
@@ -5877,6 +5878,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
       new_dw->allocateTemporary(ParticleList[m], patch);
       IsRigidMaterial[m] = mpm_matl->getIsRigid();
+      PossibleAlpha[m] = mpm_matl->getPossibleAlphaMaterial();
     }
 
     // Here, find out two things:
@@ -5886,6 +5888,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       IntVector c = *iter;
       double maxMass=-9.e99;
       for(unsigned int m = 0; m < numMPMMatls; m++){
+        if(!PossibleAlpha[m]) continue;
         if(gmass[m][c] > 1.e-8*gmassglobal[c] && gmass[m][c] > 1.e-16){
           NumMatlsOnNode[c]++;
           if(gmass[m][c]>maxMass){
@@ -5898,7 +5901,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 
       double maxRigidMass=1.e-90;
       for(unsigned int m = 0; m < numMPMMatls; m++){
-        if(IsRigidMaterial[m]){
+        if(IsRigidMaterial[m] && PossibleAlpha[m]){
           if(gmass[m][c] > maxRigidMass){
             maxRigidMass=gmass[m][c];
             alphaMaterial[c]=m;
