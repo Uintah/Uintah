@@ -38,7 +38,7 @@
 
 #if defined(__CUDA_ARCH__) || \
     defined(__HIP_DEVICE_COMPILE__) || \
-    defined(__sycl_device_only__)
+    defined(__SYCL_DEVICE_ONLY__)
 #define DEVICE_COMPILE_ONLY
 #endif
 
@@ -1748,7 +1748,7 @@ __device__ GPUDataWarehouse::dataItem*
 GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
   // ARS - FIX ME
-#if defined(DEVICE_COMPILE_ONLY)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   // The upcoming __syncthreads is needed.  CUDA function calls are
   // inlined.  Without the __syncthreads here is what may possibly happen:
   // * The correct index iss found by one of the threads.
@@ -4171,7 +4171,7 @@ __device__ bool
 GPUDataWarehouse::isThread0_Blk0()
 {
   // ARS - FIX ME
-#if defined(DEVICE_COMPILE_ONLY)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
                   blockIdx.z * gridDim.x * gridDim.y);
@@ -4183,7 +4183,7 @@ GPUDataWarehouse::isThread0_Blk0()
 
   return test;
 #else
-  return 0;
+  return false;
 #endif
 }
 
@@ -4195,14 +4195,14 @@ __device__ bool
 GPUDataWarehouse::isThread0()
 {
   // ARS - FIX ME
-#if defined(DEVICE_COMPILE_ONLY)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int threadID = threadIdx.x +  threadIdx.y + threadIdx.z;
 
   bool test(threadID == 0 );
 
   return test;
 #else
-  return 0;
+  return false;
 #endif
 }
 
@@ -4213,7 +4213,7 @@ __device__ void
 GPUDataWarehouse::printThread()
 {
   // ARS - FIX ME
-#if defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int threadID = threadIdx.x + threadIdx.y + threadIdx.z;
 
   printf( "Thread [%i,%i,%i], ID: %i\n",
@@ -4228,7 +4228,7 @@ __device__ void
 GPUDataWarehouse::printBlock()
 {
   // ARS - FIX ME
-#if defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
                   blockIdx.z * gridDim.x * gridDim.y);

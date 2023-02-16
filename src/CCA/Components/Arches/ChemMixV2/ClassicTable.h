@@ -134,7 +134,7 @@ struct ClassicTableInfo {
            int max_size=0;
            int size=d_allIndepVarNo(0); // size of a single dep variable
            for (int i = 0; i < numDim- 1; i++) {
-            max_size=max(max_size, d_allIndepVarNo(i+1)); // pad this non-square portion of the table = (
+	     max_size=std::max(max_size, d_allIndepVarNo(i+1)); // pad this non-square portion of the table = (
             size*=d_allIndepVarNo(i+1);
            }
 

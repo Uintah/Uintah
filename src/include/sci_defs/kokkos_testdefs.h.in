@@ -63,6 +63,9 @@ using cudaStream_t = void;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 
+void __syncthreads() {};
+void __threadfence() {};
+
 #define HOST_DEVICE
 
 #define __host__
