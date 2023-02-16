@@ -85,7 +85,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, const i
     var.setArray3(vp.var->device_offset, vp.var->device_size, vp.var->device_ptr);
   }
   else {
-    printf("I'm GPUDW with name: \"%s\" at %p \n", _internalName, this);
+    printf("GPUDW with name: \"%s\" at %p \n", _internalName, this);
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)",
                   label, levelIndx, patchID, matlIndx);
   }
@@ -622,7 +622,8 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
       varPointers->insert(std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type(lpml, vp));
 
     if (!ret.second) {
-      printf("ERROR: GPUDataWarehouse::putUnallocatedIfNotExists( ) Failure inserting into varPointers map.\n");
+      printf("ERROR: GPUDataWarehouse::putUnallocatedIfNotExists( ) "
+             "Failure inserting into varPointers map.\n");
       varLock->unlock();
       exit(-1);
     }
@@ -835,7 +836,9 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
           {
             gpu_stats << UnifiedScheduler::myRankThread()
                << " GPUDataWarehouse::allocateAndPut( " << label << " ) - "
-               << " This non-staging/regular variable fits inside another variable that already exists.  No need to allocate another.  GPUDW has a variable for label " << label
+               << " This non-staging/regular variable fits inside another"
+               << " variable that already exists.  No need to allocate another."
+               << " GPUDW has a variable for label " << label
                << " patch " << patchID
                << " matl " << matlIndx
                << " level " << levelIndx
@@ -1387,7 +1390,9 @@ GPUDataWarehouse::put(GPUReductionVariableBase &var, size_t sizeOfDataType, char
 
   // Sanity check
   if (iter == varPointers->end()) {
-    printf("ERROR: GPUDataWarehouse::put() - Can't use put() for a host-side GPU DW without it first existing in the internal database.\n");
+    printf("ERROR: GPUDataWarehouse::put() - Can't use put() "
+           "for a host-side GPU DW without it first existing "
+           "in the internal database.\n");
     varLock->unlock();
     exit(-1);
   }
@@ -1448,7 +1453,10 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
 
   // Sanity check
   if (iter == varPointers->end()) {
-    printf("ERROR: GPUDataWarehouse::put() - Can't use put() for a host-side GPU DW without it first existing in the internal database for %s patch %d matl %d.\n", label, patchID, matlIndx);
+    printf("ERROR: GPUDataWarehouse::put() - Can't use put() "
+           "for a host-side GPU DW without it first existing in the "
+           "internal database for %s patch %d matl %d.\n",
+           label, patchID, matlIndx);
     varLock->unlock();
     exit(-1);
   }
@@ -1843,7 +1851,8 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
 #endif
 
   if (index == -1) {
-    printf("ERROR: GPUDataWarehouse::getItem() didn't find anything for %s patch %d matl %d\n", label, patchID, matlIndx);
+    printf("ERROR: GPUDataWarehouse::getItem() didn't find anything "
+           "for %s patch %d matl %d\n", label, patchID, matlIndx);
     return nullptr;
   }
 
