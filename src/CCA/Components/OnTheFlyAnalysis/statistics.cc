@@ -192,13 +192,26 @@ void statistics::problemSetup(const ProblemSpecP &,
     VarLabel* label = VarLabel::find( name, "ERROR statistics::problemSetup <analyze>");
 
     //__________________________________
-    // Only CCVariable Doubles and Vectors for now
+    // Only CC, SFCX, SFCY, SFCZ doubles and Vectors for now
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
 
-    if( td->getType() != TypeDescription::CCVariable  ||
-        ( subtype->getType() != TypeDescription::double_type &&
-          subtype->getType() != TypeDescription::Vector ) ) {
+    bool throwException = false;
+
+    if(td->getType() != TypeDescription::CCVariable   &&
+       td->getType() != TypeDescription::SFCXVariable &&
+       td->getType() != TypeDescription::SFCYVariable &&
+       td->getType() != TypeDescription::SFCZVariable ){
+       throwException = true;
+    }
+
+    // only doubles and Vectors 
+    if(subtype->getType() != TypeDescription::double_type &&
+       subtype->getType() != TypeDescription::Vector  ){
+      throwException = true;
+    }
+    
+    if(throwException){
       ostringstream warn;
       warn << "ERROR:AnalysisModule:statisticst: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -209,6 +222,7 @@ void statistics::problemSetup(const ProblemSpecP &,
     Qstats Q;
     Q.matl    = matl;
     Q.Q_Label = label;
+    Q.td      = td;
     Q.subtype = subtype;
     Q.computeRstess = false;
     Q.initializeTimestep();          // initialize the start timestep = 0;
@@ -378,30 +392,90 @@ void statistics::initialize(const ProcessorGroup*,
     printTask(patches, patch, dout_OTF_stats, "Doing statistics::initialize");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+      Qstats Q = d_Qstats[i];
+      
+      switch( Q.td->getType() ){
+        case TypeDescription::CCVariable:      // CC Variables
+              
+          switch( Q.subtype->getType() ) {
 
-      switch(Q.subtype->getType()) {
+            case TypeDescription::double_type:{         // double
+              allocateAndZeroSums< CC_D, double>( new_dw, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              allocateAndZeroSums< CC_V, Vector>( new_dw, patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
+          break;
+        case TypeDescription::SFCXVariable:      //SFCX Variables
+          switch( Q.subtype->getType() ) {
 
-        case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
+            case TypeDescription::double_type:{         // double
+              allocateAndZeroSums< SFCX_D, double >( new_dw, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              allocateAndZeroSums< SFCX_V, Vector >( new_dw, patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
           break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
+        case TypeDescription::SFCYVariable:      //SFCY Variables
+          switch( Q.subtype->getType() ) {
+
+            case TypeDescription::double_type:{         // double
+              allocateAndZeroSums< SFCY_D, double >( new_dw, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              allocateAndZeroSums< SFCY_V, Vector >( new_dw, patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
           break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
+        case TypeDescription::SFCZVariable:      //SFCZ Variables
+          switch( Q.subtype->getType() ) {
+
+            case TypeDescription::double_type:{         // double
+              allocateAndZeroSums< SFCZ_D, double >( new_dw, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              allocateAndZeroSums< SFCZ_V, Vector> ( new_dw, patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
+          break;
+        default:
+          ostringstream warn;
+          warn << "ERROR:AnalysisModule:statistics: ("<<Q.Q_Label->getName() << " "
+               << Q.td->getName() << " ) has not been implemented\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+          
       }
     }  // loop over Qstat
 
     //__________________________________
     //
-    if( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
+    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
       proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
+      allocateAndZero<CCVariable<Vector>,Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
     }
+
   }  // pathes
 }
 
@@ -423,8 +497,8 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   const PatchSubset* myPatches = ps->getSubset(rank);
   const Patch* firstPatch = myPatches->get(0);
 
-  Task* t = scinew Task("statistics::restartInitialize",
-                   this,&statistics::restartInitialize);
+  Task* t = scinew Task("statistics::initialize",
+                   this,&statistics::initialize);
 
   bool addTask = false;
 
@@ -485,46 +559,6 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   }
 }
 
-
-//______________________________________________________________________
-//
-void statistics::restartInitialize(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*,
-                                   DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch, dout_OTF_stats, "Doing statistics::restartInitialize");
-
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
-      switch(Q.subtype->getType()) {
-
-        case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
-          break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
-          break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
-      }
-    }  // loop over Qstat
-
-    //__________________________________
-    //
-    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
-
-  }  // pathes
-}
 
 //______________________________________________________________________
 //  output the starting timestep for each variable
@@ -664,24 +698,90 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
+      
+      switch(Q.td->getType()){
+        case TypeDescription::CCVariable:      // CC Variables
+          switch( Q.subtype->getType() ) {
 
-      switch(Q.subtype->getType()) {
+            case TypeDescription::double_type:{         // double
+              computeStatsWrapper< constCC_D, CC_D, double >
+                                (old_dw, new_dw, patches, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              computeStatsWrapper< constCC_V, CC_V,  Vector >
+                                (old_dw, new_dw, patches,  patch, Q);
 
-        case TypeDescription::double_type:{         // double
-          computeStatsWrapper< double >(old_dw, new_dw, patches, patch, Q);
+              computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
+
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
           break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
+        case TypeDescription::SFCXVariable:      //SFCX
+          switch( Q.subtype->getType() ) {
 
-          computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
-
+            case TypeDescription::double_type:{         // double
+              computeStatsWrapper< constSFCX_D, SFCX_D, double >
+                                  (old_dw, new_dw, patches, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              computeStatsWrapper< constSFCX_V, SFCX_V, Vector >
+                                  (old_dw, new_dw, patches,  patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
           break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
-      }
+        case TypeDescription::SFCYVariable:      //SFCY
+          switch( Q.subtype->getType() ) {
+
+            case TypeDescription::double_type:{         // double
+              computeStatsWrapper< constSFCY_D, SFCY_D, double >
+                                  (old_dw, new_dw, patches, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              computeStatsWrapper< constSFCY_V, SFCY_V, Vector >
+                                  (old_dw, new_dw, patches,  patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }  
+          break;
+        case TypeDescription::SFCZVariable:      //SFCZ
+          switch( Q.subtype->getType() ) {
+
+            case TypeDescription::double_type:{         // double
+              computeStatsWrapper< constSFCZ_D, SFCZ_D, double >
+                                  (old_dw, new_dw, patches, patch, Q);
+              break;
+            }
+            case TypeDescription::Vector: {             // Vector
+              computeStatsWrapper< constSFCZ_V, SFCZ_V, Vector >
+                                  (old_dw, new_dw, patches,  patch, Q);
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
+          break;
+        default:
+          ostringstream warn;
+          warn << "ERROR:AnalysisModule:statistics: ("<<Q.Q_Label->getName() << " "
+               << Q.td->getName() << " ) has not been implemented\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+          
+      }            
     }  // qstats loop
   }  // patches
 }
@@ -691,7 +791,9 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //  computeStatsWrapper:
-template <class T>
+template <class TConstGridVar, 
+          class TGridVar, 
+          class T>
 void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
                                       const PatchSubset* patches,
@@ -705,13 +807,13 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
   if(now < d_startTime || now > d_stopTime){
 
 //    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
-    allocateAndZeroStats<T>( new_dw, patch, Q);
+    allocateAndZeroStats< TGridVar,T >( new_dw, patch, Q);
     carryForwardSums( old_dw, new_dw, patches, Q );
   }
   else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
-    computeStats< T >(old_dw, new_dw, patch, Q);
+    computeStats< TConstGridVar, TGridVar, T >(old_dw, new_dw, patch, Q);
   }
 }
 
@@ -719,7 +821,9 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
 
 //______________________________________________________________________
 //
-template <class T>
+template <class TConstGridVar, 
+          class TGridVar, 
+          class T>
 void statistics::computeStats( DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
                                const Patch*    patch,
@@ -727,20 +831,20 @@ void statistics::computeStats( DataWarehouse* old_dw,
 {
   const int matl = Q.matl;
 
-  constCCVariable<T> Qvar;
-  constCCVariable<T> Qsum_old;
-  constCCVariable<T> Qsum2_old;
+  TConstGridVar Qvar;
+  TConstGridVar Qsum_old;
+  TConstGridVar Qsum2_old;
 
   Ghost::GhostType  gn  = Ghost::None;
   new_dw->get ( Qvar,      Q.Q_Label,      matl, patch, gn, 0 );
   old_dw->get ( Qsum_old,  Q.Qsum_Label,   matl, patch, gn, 0 );
   old_dw->get ( Qsum2_old, Q.Qsum2_Label,  matl, patch, gn, 0 );
 
-  CCVariable< T > Qsum;
-  CCVariable< T > Qsum2;
-  CCVariable< T > Qmean;
-  CCVariable< T > Qmean2;
-  CCVariable< T > Qvariance;
+  TGridVar Qsum;
+  TGridVar Qsum2;
+  TGridVar Qmean;
+  TGridVar Qmean2;
+  TGridVar Qvariance;
 
   new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
   new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
@@ -791,19 +895,19 @@ void statistics::computeStats( DataWarehouse* old_dw,
   //  Higher order stats  3rd and 4th
   if( d_doHigherOrderStats ){
 
-    constCCVariable<T> Qsum3_old;
-    constCCVariable<T> Qsum4_old;
+    TConstGridVar Qsum3_old;
+    TConstGridVar Qsum4_old;
 
     old_dw->get ( Qsum3_old, Q.Qsum3_Label, matl, patch, gn, 0 );
     old_dw->get ( Qsum4_old, Q.Qsum4_Label, matl, patch, gn, 0 );
 
-    CCVariable< T > Qsum3;
-    CCVariable< T > Qsum4;
-    CCVariable< T > Qmean3;
-    CCVariable< T > Qmean4;
+    TGridVar Qsum3;
+    TGridVar Qsum4;
+    TGridVar Qmean3;
+    TGridVar Qmean4;
 
-    CCVariable< T > Qskewness;
-    CCVariable< T > Qkurtosis;
+    TGridVar Qskewness;
+    TGridVar Qkurtosis;
     new_dw->allocateAndPut( Qsum3,     Q.Qsum3_Label,     matl, patch );
     new_dw->allocateAndPut( Qsum4,     Q.Qsum4_Label,     matl, patch );
     new_dw->allocateAndPut( Qmean3,    Q.Qmean3_Label,    matl, patch );
@@ -862,8 +966,8 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
     matSubSet->addReference();
 
     new_dw->transferFrom(    old_dw, d_velSum_Label,   patches, matSubSet );
-    allocateAndZero<Vector>( new_dw, d_velPrime_Label, d_RS_matl, patch );
-    allocateAndZero<Vector>( new_dw, d_velMean_Label,  d_RS_matl, patch );
+    allocateAndZero< CC_V, Vector >( new_dw, d_velPrime_Label, d_RS_matl, patch );
+    allocateAndZero< CC_V, Vector >( new_dw, d_velMean_Label,  d_RS_matl, patch );
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -944,52 +1048,55 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
 
 //______________________________________________________________________
 //  allocateAndZero  statistics variables
-template <class T>
+template <class TGridVar,
+          class T>
 void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
                                       const Patch* patch,
                                       const Qstats& Q )
 {
   int matl = Q.matl;
-  allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
-  allocateAndZero<T>( new_dw, Q.Qmean_Label,      matl, patch );
+  allocateAndZero< TGridVar, T >( new_dw, Q.Qvariance_Label,  matl, patch );
+  allocateAndZero< TGridVar, T >( new_dw, Q.Qmean_Label,      matl, patch );
 
   if( d_doHigherOrderStats ){
-    allocateAndZero<T>( new_dw, Q.Qskewness_Label, matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qkurtosis_Label, matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qskewness_Label, matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qkurtosis_Label, matl, patch );
   }
 
 }
 
 //______________________________________________________________________
 //  allocateAndZero  summation variables
-template <class T>
+template <class TGridVar,
+          class T>
 void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
                                       const Patch* patch,
                                       Qstats& Q )
 {
   int matl = Q.matl;
   if ( !Q.isInitialized[lowOrder] ){
-    allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qsum_Label,  matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qsum2_Label, matl, patch );
 //    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing low order sums on patch: " << patch->getID()<<endl;
   }
 
   if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
-    allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qsum3_Label, matl, patch );
+    allocateAndZero< TGridVar, T >( new_dw, Q.Qsum4_Label, matl, patch );
 //    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing high order sums on patch: " << patch->getID() << endl;
   }
 }
 
 //______________________________________________________________________
 //  allocateAndZero
-template <class T>
+template <class TGridVar,
+          class T>
 void statistics::allocateAndZero( DataWarehouse* new_dw,
                                   const VarLabel* label,
                                   const int       matl,
                                   const Patch*    patch )
 {
-  CCVariable<T> Q;
+  TGridVar Q;
   new_dw->allocateAndPut( Q, label, matl, patch );
   T zero(0.0);
   Q.initialize( zero );

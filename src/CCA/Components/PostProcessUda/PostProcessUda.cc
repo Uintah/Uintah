@@ -84,11 +84,11 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "      timestep in the original uda is processed. \n\n";
   proc0cout << "    - Use a different uda name for the modifed uda to prevent confusion with the original uda.\n\n";
   proc0cout << "    - In the new.uda/timestep.xml the follow non-essential entries will be changed:\n";
-  proc0cout << "           numProcs:      Number of procs used during the reduceUda run.\n";
+  proc0cout << "           numProcs:      Number of procs used during the postProcessUda run.\n";
   proc0cout << "           oldDelt:       Difference in timesteps, i.e., time(TS) - time (TS-1), in physical time.\n";
   proc0cout << "           proc:          The processor to patch assignment.\n\n";
   proc0cout << "    - The number of files inside of a timestep directory will now equal the number of processors used to reduce the uda\n";
-  proc0cout << "      <<< You should use the same number of processors to reduce the uda as you will use to visualize it >>> \n\n";
+  proc0cout << "      <<< You should use the same number of processors to post process the uda as you will use to visualize it >>> \n\n";
   proc0cout << "      For large runs this should speed up data transfers and post processing utilities\n\n";
   proc0cout << "    - Checkpoint directories are copied with system calls from the original -> modified uda.\n";
   proc0cout << "      Only 1 processor is used during the copy so this could be slow for large checkpoints directories.\n";
