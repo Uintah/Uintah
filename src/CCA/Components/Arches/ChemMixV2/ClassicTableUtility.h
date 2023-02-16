@@ -134,7 +134,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
 #ifdef HAVE_KOKKOS
     int max_size=0;
     for (int i = 0; i < d_indepvarscount - 1; i++) {
-      max_size=max(max_size, d_allIndepVarNum(i+1)); // pad this non-square portion of the table = (
+      max_size=std::max(max_size, d_allIndepVarNum(i+1)); // pad this non-square portion of the table = (
     }
     tempTableContainer<Kokkos::HostSpace> indep_headers("secondary_independent_variables",d_indepvarscount-1,max_size);
 
