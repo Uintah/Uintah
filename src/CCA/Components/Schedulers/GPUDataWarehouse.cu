@@ -1760,7 +1760,9 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
   //   They now run that line and see index is now -1.  That's bad.
   // To prevent this scenario, an additional __syncthreads listed
   // immediately below.
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();  // Sync before get
+#endif
 
   short numThreads = blockDim.x * blockDim.y * blockDim.z;
   // int blockID = (blockIdx.x +
@@ -1781,7 +1783,10 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
   __shared__ int index;
   index = -1;
 
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();  // Sync before get, making sure everyone set index to -1
+#endif
+
 #else
   short numThreads = 1;
   int threadID = 0;
@@ -1833,9 +1838,8 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
                         // loop to the next possible item to check for.
   }
 
-#if defined(DEVICE_COMPILE_ONLY)
-  // Sync before return.
-  __syncthreads();
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+  __syncthreads();  // Sync before return.
 #endif
 
   if (index == -1) {
@@ -4018,7 +4022,10 @@ __device__ void
 GPUDataWarehouse::print()
 {
 #if defined(DEVICE_COMPILE_ONLY)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();
+#endif
+
   if( isThread0_Blk0() ){
     printf("\nVariables in GPUDataWarehouse\n");
     for (int i = 0; i < d_numVarDBItems; i++) {
@@ -4026,7 +4033,10 @@ GPUDataWarehouse::print()
       printf("    %-15s matl: %i, patchID: %i, L-%i, size:[%i,%i,%i] pointer: %p\n", me.label, me.matlIndx,
              me.domainID, me.levelIndx, me.var_size.x, me.var_size.y, me.var_size.z, me.var_ptr);
     }
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __syncthreads();
+#endif
 
     printThread();
     printBlock();
@@ -4041,7 +4051,10 @@ HOST_DEVICE void
 GPUDataWarehouse::printError(const char* msg, const char* methodName, char const* label, const int patchID, int8_t matlIndx, int8_t levelIndx )
 {
 #if defined(DEVICE_COMPILE_ONLY)
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();
+#endif
 
   if ( isThread0() ) {
     if (label[0] == '\0') {
@@ -4057,13 +4070,17 @@ GPUDataWarehouse::printError(const char* msg, const char* methodName, char const
     //  printf("   Available levelDB labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_levelDB[i].matlIndx, d_levelDB[i].levelIndx);
     // }
 
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __syncthreads();
+#endif
 
     printThread();
     printBlock();
 
     // We know this is fatal and why, so just stop kernel execution
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __threadfence();
+#endif
     asm("trap;");
   }
 #else
@@ -4085,20 +4102,27 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();
+#endif
 
   if ( isThread0() ) {
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, matlIndx);
     // Should this just loop through the variable database and print
     // out only items with a levelIndx value greater than zero? --Brad
 
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __syncthreads();
+#endif
 
     printThread();
     printBlock();
 
     // We know this is fatal and why, so just stop kernel execution
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __threadfence();
+#endif
     asm("trap;");
   }
 #else
@@ -4114,7 +4138,10 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t levelIndx, const int patchID, int8_t matlIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();
+#endif
 
   if ( isThread0() ) {
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, patchID, matlIndx);
@@ -4128,14 +4155,18 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
       }
     }
 
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __syncthreads();
+#endif
 
     printThread();
     printBlock();
     printf("\n");
 
     // We know this is fatal and why, so just stop kernel execution
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
     __threadfence();
+#endif
     asm("trap;");
   }
 #else
@@ -4213,7 +4244,7 @@ __device__ void
 GPUDataWarehouse::printThread()
 {
   // ARS - FIX ME
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+#if defined(__CUDA_ARCH__) // || defined(__HIP_DEVICE_COMPILE__)
   int threadID = threadIdx.x + threadIdx.y + threadIdx.z;
 
   printf( "Thread [%i,%i,%i], ID: %i\n",
@@ -4228,7 +4259,7 @@ __device__ void
 GPUDataWarehouse::printBlock()
 {
   // ARS - FIX ME
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+#if defined(__CUDA_ARCH__) // || defined(__HIP_DEVICE_COMPILE__)
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
                   blockIdx.z * gridDim.x * gridDim.y);
