@@ -134,18 +134,24 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   
   ProblemSpecP matProp_ps = ups->findBlockWithOutAttribute( "MaterialProperties" );
   
-  std::vector<ProblemSpecP> matls_ps = matProp_ps->findBlocksRecursive("material");
-  
-  // create material and register it.
-  for( size_t i=0; i<matls_ps.size(); i++){
+  if( matProp_ps ){
+    std::vector<ProblemSpecP> matls_ps = matProp_ps->findBlocksRecursive("material");
 
-    ProblemSpecP mat_ps = matls_ps[i];
-    Material *mat = scinew Material( mat_ps );
+    // create material and register it.
+    for( size_t i=0; i<matls_ps.size(); i++){
 
-    m_materialManager->registerMaterial(  mat->getName() , mat );
+      ProblemSpecP mat_ps = matls_ps[i];
+      Material *mat = scinew Material( mat_ps );
 
-    proc0cout << "***  DW index = " << mat->getDWIndex() << " (" << mat->getName() << ")"  << endl;
-  } 
+      m_materialManager->registerMaterial(  mat->getName() , mat );
+
+      proc0cout << "***  DW index = " << mat->getDWIndex() << " (" << mat->getName() << ")"  << endl;
+    } 
+  }
+    else {
+    SimpleMaterial* mat = scinew SimpleMaterial();
+    m_materialManager->registerSimpleMaterial( mat );
+  }
 
   //__________________________________
   //  create the PostProcess analysis modules
