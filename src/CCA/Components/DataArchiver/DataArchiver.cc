@@ -768,12 +768,25 @@ DataArchiver::postProcessUdaSetup( Dir & fromDir )
   //  Use the indicies when creating the timestep directories
   ProblemSpecP ts_ps = indexDoc->findBlock( "timesteps" );
   ProblemSpecP ts    = ts_ps->findBlock( "timestep" );
+
+  string path  ="";
   int timestep = -9;
   int count    = 1;
 
   while( ts != nullptr ) {
     ts->get(timestep);
+
+    // get the path to the tXXXX.xml directory
+    map<string,string> attributes;
+    ts->getAttributes(attributes);
+
+    string path = attributes["href"];
+    if( path == "" ) {
+       throw InternalError("timestep href attribute not found", __FILE__, __LINE__ );
+    }
+
     m_restartTimeStepIndicies[count] = timestep;
+    m_restartTimeStepDirs[timestep]  = path;
 
     ts = ts->findNextBlock( "timestep" );
     count ++;
@@ -1137,7 +1150,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputGlobalVars");
 
-    Task* task = scinew Task( "DataArchiver::outputGlobalVars",this, 
+    Task* task = scinew Task( "DataArchiver::outputGlobalVars",this,
                               &DataArchiver::outputGlobalVars );
 
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
@@ -1147,7 +1160,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       task->requires( Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
-    task->setType( Task::OutputGlobalVars ); 
+    task->setType( Task::OutputGlobalVars );
     sched->addTask(task, nullptr , nullptr);
 
     // schedule task for non-global variables
@@ -1155,7 +1168,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
   }
 
   //__________________________________
-  //  Schedule output for a checkpoint 
+  //  Schedule output for a checkpoint
   if( delT != 0.0 &&                       // m_checkpointCycle > 0 &&
       ( m_checkpointInterval > 0 ||
         m_checkpointTimeStepInterval > 0 ||
@@ -1163,7 +1176,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputVariables (CheckpointGlobal)" );
 
-    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",this, 
+    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",this,
                               &DataArchiver::outputVariables, CHECKPOINT_GLOBAL );
 
     for( int i = 0; i < (int) m_checkpointGlobalLabels.size(); i++ ) {
@@ -3316,7 +3329,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     PIDX_physical_point physical_global_size;
     IntVector zlo = { 0, 0, 0 };
-    IntVector ohi = { 1, 1, 1 };
+    IntVector ohi = { 1, 1, 1 }; 
     BBox b;
     level->getSpatialRange( b );
 
@@ -4334,7 +4347,39 @@ DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
 
   // define the from/to directories & files
-  string fromPath = fromDir.getName()+"/"+tname.str();
+  // The fromPath has 3 possibilities
+  // 1) full path to the uda from masterUda/index.xml
+  // 2) relative path to the uda from masterUda/index.xml
+  // 3) uda/tXXXX.xml
+
+  string fromPath  = "";
+  string fromPath0 = pathname( m_restartTimeStepDirs[dir_timestep] );
+  string fromPath1 = fromDir.getName()+"/"+tname.str();
+
+  replace_substring( fromPath0, "../", "");   // remove "../" from the path
+
+  // Which path is valid
+  Dir testDir0 = Dir(fromPath0);
+  Dir testDir1 = Dir(fromPath1);
+
+  if( testDir0.exists() ){             // Possibility 1) and 2)
+    fromPath = fromPath0;
+  }
+  else if ( testDir1.exists() ){       // ../uda/tXXXX.xml
+    fromPath = fromPath1;
+  }
+  else {
+    ostringstream mesg;
+
+    printf("Current working dir: %s\n", get_current_dir_name());
+
+    mesg << "DataArchiver::copy_outputProblemSpec(): The directory "
+         << tname.str() << " not found in either: "
+         << fromPath0 << " or " << fromPath1;
+
+    throw InternalError( mesg.str(), __FILE__, __LINE__);
+  }
+
   Dir myFromDir   = Dir(fromPath);
   string fromFile = fromPath + "/timestep.xml";
 

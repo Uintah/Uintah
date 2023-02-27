@@ -47,6 +47,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/XMLUtils.h>
 
@@ -94,7 +95,7 @@ DataArchive::DataArchive( const string & filebase,
     // proc0cout << "Loading Uintah var types into type system (static build).\n";
     instantiateVariableTypes();
   }
-#endif  
+#endif
 
   if( d_filebase == "" ) {
     throw InternalError( "DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__ );
@@ -241,9 +242,9 @@ DataArchive::queryProcessors( unsigned int & nProcs )
   if( !found ) {
     throw InternalError( "DataArchive::queryProcessors 'Uintah_DataArchive' node not found in index.xml", __FILE__, __LINE__ );
   }
-  
+
   while( true ) {
-    
+
     string line = UintahXML::getLine( d_indexFile );
     if( line == "" || line == "</Uintah_DataArchive>" ) {
       return;
@@ -301,15 +302,29 @@ DataArchive::queryTimesteps( vector<int>    & index,
           double   currentTime;
           double   delT;
 
-          // Usually '.../timestep.xml'
-          string       ts_path_and_filename = d_filebase + "/" + tsfile;
-          ProblemSpecP timestepDoc = 0;
+          //__________________________________
+          //  set the path to the timestep directory
+          //  There are two possibilities
+          //  Standard: '.../timestep.xml'
+          //  Optional:  'd_filebase/timestep.xml     This comes from masterUda/index.xml
+          string ts_path  = "";
+          string ts_path0 = d_filebase + "/" + tsfile;   // tXXXX/timestep.xml
+          string ts_path1 = tsfile;                     // from masterUda/index.xml
 
-          string::size_type deliminator_index = tsfile.find("/");
-          string tnumber( tsfile, 0, deliminator_index );
+          if( validFile(ts_path0) ){             // full path from masterUda/index.xml
+            ts_path = ts_path0;
+          }
+          else if ( validFile(ts_path1) ){       // tXXXX/timestep.xml
+            ts_path = ts_path1;
+          }
+          else {
+            ostringstream mesg;
+            mesg << "DataArchive::queryTimesteps: The file "
+                 << tsfile << " not found in either: "
+                 << ts_path0 << " or " << ts_path1;
 
-          // Usually '.../grid.xml'
-          string  grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
+            throw InternalError( mesg.str(), __FILE__, __LINE__);
+          }
 
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
@@ -335,7 +350,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
           d_ts_oldDelTs.push_back( delT );
-          d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
+          d_timeData.push_back( TimeData( this, ts_path ) );
         }
       } // end while
     }
@@ -549,7 +564,7 @@ DataArchive::queryVariables( vector<string>                         & names,
 
   // PIDX hack:
   if( var_materials.size() == 0 ) {
-    
+
     for( unsigned int i = 0; i < num_matls.size(); i++ ) {
 
       ConsecutiveRangeSet set;
@@ -560,7 +575,7 @@ DataArchive::queryVariables( vector<string>                         & names,
     }
   }
   // end PIDX hack.
-  
+
 
   d_lock.unlock();
 
@@ -682,7 +697,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   //__________________________________
   //  Creating access
   PIDX_create_access( &access );
-    
+
   if( Parallel::usingMPI() ) {
     if( d_pidxComms.size() == 0 ) {
       // cout << "No pidx comms, using main comm on this: " << this << "\n";
@@ -725,7 +740,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
     typeStr = "NOT_IMPLEMENTED";
   }
   string idxFilename = levelPath.str() + typeStr + ".idx";
-    
+
   PIDX_point global_size;
 
   //cout << Uintah::Parallel::getMPIRank() << ": open pidx file: " << idxFilename << ", looking for var: " << name << "\n";
@@ -770,7 +785,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   // cout << Uintah::Parallel::getMPIRank() << ": setting var: " << full_name << "\n";
   ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
   // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
-    
+
   if( ret != PIDX_success ) {
     // PIDXOutputContext::checkReturnCode( ret, "DataArchive::setupQueryPIDX() - PIDX_set_current_variable_index failure", __FILE__, __LINE__ );
     cout << Uintah::Parallel::getMPIRank() << ": variable not found so ending pidx portion of QUERY()\n";
@@ -809,8 +824,8 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
                         const int                  timeIndex )
 {
   // cout << Uintah::Parallel::getMPIRank()
-  //      << ": pidx query called for        VARIABLE: " << name 
-  //      << ", material index " << matlIndex 
+  //      << ": pidx query called for        VARIABLE: " << name
+  //      << ", material index " << matlIndex
   //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
   //      << ", patch " << (patch ? patch->getID() : -1)
   //      << ", time index " << timeIndex << "\n";
@@ -924,7 +939,7 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
 
     // cout << Uintah::Parallel::getMPIRank() << ": level: " << level->getIndex() << ", patchoffset: " << patchOffset[0] << ", " << patchOffset[1] << ", " << patchOffset[2]
     //      << ", patchsize: " << patchSize[0] << ", " << patchSize[1] << ", " << patchSize[2] << "\n";
-    
+
     ret = PIDX_variable_read_data_layout( varDesc, patchOffset, patchSize, data->buffer, PIDX_row_major );
 
     PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDX() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__ );
@@ -957,8 +972,8 @@ DataArchive::queryPIDXSerial(       Variable     & var,
                               const int            timeIndex )
 {
   // cout << Uintah::Parallel::getMPIRank()
-  //      << ": queryPIDXSerial() called for VARIABLE: " << name 
-  //      << ", material index " << matlIndex 
+  //      << ": queryPIDXSerial() called for VARIABLE: " << name
+  //      << ", material index " << matlIndex
   //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
   //      << ", patch " << (patch ? patch->getID() : -1)
   //      << ", time index " << timeIndex << "\n";
@@ -987,7 +1002,7 @@ DataArchive::queryPIDXSerial(       Variable     & var,
 
   int ret = PIDX_close( idxFile );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDXSerial() - PIDX_close failure", __FILE__, __LINE__ );
-  
+
   ret = PIDX_close_access( access );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::queryPIDXSerial() - PIDX_close_access failure", __FILE__, __LINE__ );
 
@@ -1053,8 +1068,8 @@ DataArchive::query(       Variable     & var,
                           DataFileInfo * dfi /* = nullptr */ )
 {
   // cout << Uintah::Parallel::getMPIRank()
-  //      << ": query() called for           VARIABLE: " << name 
-  //      << ", material index " << matlIndex 
+  //      << ": query() called for           VARIABLE: " << name
+  //      << ", material index " << matlIndex
   //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
   //      << ", patch " << (patch ? patch->getID() : -1)
   //      << ", time index " << timeIndex << "\n";
@@ -1126,15 +1141,15 @@ DataArchive::query(       Variable     & var,
 
     vector<VarnameMatlPatch>::iterator iter = std::find( timedata.d_datafileInfoIndex.begin(), timedata.d_datafileInfoIndex.end(), VarnameMatlPatch(name, matlIndex, patchid ) );
     if( iter == timedata.d_datafileInfoIndex.end() ) { // Previously used the hashmap lookup( timedata.d_datafileInfo.lookup() )
-      cerr << "VARIABLE NOT FOUND: " << name 
-           << ", material index " << matlIndex 
-           << ", Level " << patch->getLevel()->getIndex() 
-           << ", patch " << patch->getID() 
+      cerr << "VARIABLE NOT FOUND: " << name
+           << ", material index " << matlIndex
+           << ", Level " << patch->getLevel()->getIndex()
+           << ", patch " << patch->getID()
            << ", time index " << timeIndex << "\n";
 
       throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
-    
+
     int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
     dfi = &timedata.d_datafileInfoValue[ pos ];
   }
@@ -1258,10 +1273,10 @@ DataArchive::query(       Variable       & var,
       queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
     }
     else {
-      cerr << "VARIABLE NOT FOUND: " << name 
-           << ", material index " << matlIndex 
-           << ", Level " << patch->getLevel()->getIndex() 
-           << ", patch " << patch->getID() 
+      cerr << "VARIABLE NOT FOUND: " << name
+           << ", material index " << matlIndex
+           << ", Level " << patch->getLevel()->getIndex()
+           << ", patch " << patch->getID()
            << ", time index " << timeIndex << "\n";
       throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
@@ -1402,14 +1417,14 @@ DataArchive::createPIDXCommunicator( const GridP & grid, LoadBalancer * lb )
 
   // Create new MPI Comms
   d_pidxComms.resize( grid->numLevels() );
-  
+
   // cout << rank << ": number of levels: " << grid->numLevels() << "\n";
 
   for( int lev = 0; lev < grid->numLevels(); lev++ ) {
 
     const LevelP& level = grid->getLevel( lev );
     const PatchSet* patches = lb->getOutputPerProcessorPatchSet( level );
-    
+
     int color = 0;
     const PatchSubset*  patchsubset = patches->getSubset( rank );
 
@@ -1449,7 +1464,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 
   map<string, VarLabel*> varMap;
 
-  map<string, int> varNameToNumMatlsMap; // FIXEME: has to be a better way to do this... 
+  map<string, int> varNameToNumMatlsMap; // FIXEME: has to be a better way to do this...
 
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find( names[i] );
@@ -1484,7 +1499,7 @@ DataArchive::restartInitialize( const int                timestep_index,
   dw->setID( ts_indices[ timestep_index ] );
 
   if( d_fileFormat == UDA ) {
-  
+
     // Make sure to load all the data so we can iterate through it.
     for( int l = 0; l < grid->numLevels(); l++ ) {
       LevelP level = grid->getLevel( l );
@@ -1512,7 +1527,7 @@ DataArchive::restartInitialize( const int                timestep_index,
       int pos = std::distance( timedata.d_datafileInfoIndex.begin(), iter );
       VarnameMatlPatch & key  = *iter;
       DataFileInfo     & data = timedata.d_datafileInfoValue[ pos ];
-      
+
       // Get the Patch from the Patch ID. An ID of -1 = nullptr is for
       // reduction and sole vars.
       const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
@@ -1521,7 +1536,7 @@ DataArchive::restartInitialize( const int                timestep_index,
       VarLabel* label = varMap[key.name_];
 
       //cout << Uintah::Parallel::getMPIRank() << ": var name is: " << *label << "\n";
-    
+
       if (label == 0) {
         throw UnknownVariable( key.name_, dw->getID(), patch, matl,
                                "on DataArchive::scheduleRestartInitialize",
@@ -1556,9 +1571,9 @@ DataArchive::restartInitialize( const int                timestep_index,
     // cout << "Here\n";
     createPIDXCommunicator( grid, lb );
 
-    
+
     // LEVEL LOOP
-    
+
     for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
 
       // cout << Uintah::Parallel::getMPIRank() << ":    on level: " << lev_num << "\n";
@@ -1566,7 +1581,7 @@ DataArchive::restartInitialize( const int                timestep_index,
       LevelP level = grid->getLevel( lev_num );
 
       // VARIABLE LOOP
-      
+
       for( map<string, VarLabel*>::iterator varMapIter = varMap.begin(); varMapIter != varMap.end(); ++varMapIter ) {
 
         const VarLabel        * label    = varMapIter->second;
@@ -1579,14 +1594,14 @@ DataArchive::restartInitialize( const int                timestep_index,
           number_of_materials = 0;
 
           // read in the reduction and sole var data here
-            
+
           // FIXME: should this happen here or outside of the level loop?
 
           Variable * red_var = label->typeDescription()->createInstance();
           // Hard-coded to 0 as only reduction (global) variables are stored in d_datafileInfoValue when using PIDX.
           DataFileInfo & data = timedata.d_datafileInfoValue[ 0 ];
           bool found;
-                
+
           // cout << Uintah::Parallel::getMPIRank() << ": calling query() on: " << var_name << "\n";
 
           found = query( *red_var, varMapIter->first, -1, nullptr, timestep_index, &data );
@@ -1673,9 +1688,9 @@ DataArchive::restartInitialize( const int                timestep_index,
 
                 VarnameMatlPatch vmp( label->getName(), matl, patch->getID() );
                 // cout << Uintah::Parallel::getMPIRank() << ": inserting data tubple: " << data << " into dataBufferMap\n";
-              
+
                 dataBufferMap[ vmp ] = data;
-                
+
                 // cout << Uintah::Parallel::getMPIRank() << ": just put var in dw for patch: " << patch->getID() << ", size of map is: " << dataBufferMap.size()
                 //      << " and map is: " << &dataBufferMap << "\n";
               }
@@ -1752,7 +1767,7 @@ DataArchive::restartInitialize( const int                timestep_index,
               //__________________________________
               // Now move the dataPIDX buffer into the array3 variable
 
-              // cout << Uintah::Parallel::getMPIRank() << ": c) var: " << vmp.name_ 
+              // cout << Uintah::Parallel::getMPIRank() << ": c) var: " << vmp.name_
               //      << ", data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer)) << " and size: " << data->size << "\n";
 
               var->readPIDX( data->buffer, data->size, timedata.d_swapBytes );
@@ -1770,7 +1785,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 
           // cout << Uintah::Parallel::getMPIRank() << ": done with matl: " << matl << ".\n";
 
-        } // end for matl 
+        } // end for matl
 
         // cout << Uintah::Parallel::getMPIRank() << ": done with var: " << var_name << ".\n";
 
@@ -1779,9 +1794,9 @@ DataArchive::restartInitialize( const int                timestep_index,
       // cout << Uintah::Parallel::getMPIRank() << ": done with level: " << lev_num << ".\n";
 
     } // end for lev_num
-   
+
 #else
-    throw InternalError( "Asked to read a PIDX UDA, but PIDX not configured.", __FILE__, __LINE__ );    
+    throw InternalError( "Asked to read a PIDX UDA, but PIDX not configured.", __FILE__, __LINE__ );
 #endif
   } // end else Reading PIDX UDA
 
@@ -1823,7 +1838,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
     varMap[names[i]] = vl;
   }
   dw->setID( timeIndex );
-  
+
   // proc0cout << "   DataArchive:postProcess_ReadUda: udaTimestep " << timesteps[timeIndex] << " timeIndex: " << timeIndex << " dw ID: " << dw->getID() << endl;
 
   TimeData& timedata = getTimeData( timeIndex );
@@ -1871,7 +1886,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
         ASSERTEQ( dw->getParticleSubset(matl, patch), particles->getParticleSubset() );
       }
     }
-    
+
     dw->put( var, label, matl, patch );
     delete var;
   }
@@ -2128,7 +2143,7 @@ DataArchive::TimeData::purgeCache()
 
   d_datafileInfoIndex.clear();
   d_datafileInfoValue.clear();
-  
+
   d_patchInfo.clear();
   d_varInfo.clear();
   d_xmlFilenames.clear();
@@ -2295,7 +2310,7 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
 
     // ARS - Commented out because the failure occurs regardless if
     // the l0 refence is present or not.
-    
+
     // if( !patchinfo.parsed )
     // {
     //   throw InternalError( "DataArchive::parsePatch() - found patch processor "

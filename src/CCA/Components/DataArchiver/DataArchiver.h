@@ -47,33 +47,33 @@ class ApplicationInterface;
 class LoadBalancer;
 
   /**************************************
-     
+
      CLASS
        DataArchiver
-      
+
        Short Description...
-      
+
      GENERAL INFORMATION
-      
+
        DataArchiver.h
-      
+
        Steven G. Parker
        Department of Computer Science
        University of Utah
-      
+
        Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
+
+
      KEYWORDS
        DataArchiver
-      
+
      DESCRIPTION
        Long description...
-      
+
      WARNING
-      
+
   ****************************************/
-    
+
   // Handles outputting the data.
   class DataArchiver : public UintahParallelComponent, public Output {
 
@@ -85,11 +85,11 @@ class LoadBalancer;
     virtual void setComponents( UintahParallelComponent *parent ) {};
     virtual void getComponents();
     virtual void releaseComponents();
-    
+
     static bool m_wereSavesAndCheckpointsInitialized;
 
     // Sets up when the DataArchiver will output and what data, according
-    // to params.  If you only need to use DataArchiver to copy 
+    // to params.  If you only need to use DataArchiver to copy
     // data, then MaterialManager can be a nullptr.
     virtual void problemSetup( const ProblemSpecP    & params,
                                const ProblemSpecP    & restart_prob_spec,
@@ -122,29 +122,29 @@ class LoadBalancer;
     virtual void postProcessUdaSetup( Dir& fromDir );
 
     // Copy a section between udas .
-    void copySection( const Dir & fromDir, 
-                      const Dir & toDir, 
-                      const std::string & file, 
+    void copySection( const Dir & fromDir,
+                      const Dir & toDir,
+                      const std::string & file,
                       const std::string & section );
 
     // Copy a section from another uda's to our index.xml.
-    void copySection( Dir & fromDir, const std::string & section ) { 
-      copySection( fromDir, m_outputDir, "index.xml", section ); 
+    void copySection( Dir & fromDir, const std::string & section ) {
+      copySection( fromDir, m_outputDir, "index.xml", section );
     }
 
-    // Checks to see if this is an output time step. 
+    // Checks to see if this is an output time step.
     // If it is, setup directories and xml files that we need to output.
     // Call once per time step, and if recompiling,
     // after all the other tasks are scheduled.
     virtual void finalizeTimeStep( const GridP  & /* grid */,
                                    SchedulerP   & /* scheduler */,
                                    bool         recompile = false );
-           
-    // schedule the output tasks if we are recompiling the taskgraph.  
+
+    // schedule the output tasks if we are recompiling the taskgraph.
     virtual void sched_allOutputTasks( const GridP & /* grid */,
                                        SchedulerP  & /* scheduler */,
                                        bool         recompile = false );
-                                      
+
     // Call this after the time step has been executed to find the
     // next time step to output
     virtual void findNext_OutputCheckPointTimeStep( const bool restart,
@@ -154,7 +154,7 @@ class LoadBalancer;
     // to make sure an output and/or checkpoint time step is needed.
     virtual void recompute_OutputCheckPointTimeStep();
 
-    // write meta data to xml files 
+    // write meta data to xml files
     // Call after time step has completed.
     virtual void writeto_xml_files( const GridP & grid );
 
@@ -184,9 +184,9 @@ class LoadBalancer;
     // as binary the data acquired from VarLabel in p_dir.
     void outputVariables( const ProcessorGroup *,
                           const PatchSubset    * patch,
-                          const MaterialSubset * matls, 
+                          const MaterialSubset * matls,
                           DataWarehouse  * old_dw,
-                          DataWarehouse  * new_dw, 
+                          DataWarehouse  * new_dw,
                           int              type );
 
     // Task that handles outputting non-checkpoint global
@@ -199,10 +199,10 @@ class LoadBalancer;
 
     // Get the time the next output will occur
     virtual double getNextOutputTime() const { return m_nextOutputTime; }
-    
+
     // Get the time step the next output will occur
     virtual int  getNextOutputTimeStep() const { return m_nextOutputTimeStep; }
-    
+
     // Pushes output back by one time step.
     virtual void postponeNextOutputTimeStep() { ++m_nextOutputTimeStep; }
 
@@ -223,25 +223,25 @@ class LoadBalancer;
     virtual const std::string& getLastTimeStepOutputLocation() const { return m_lastTimeStepLocation; }
 
     bool isLabelSaved ( const std::string & label ) const;
-       
+
     // Allow a component to adjust the output and checkpoint
     // interval on the fly.
     void   setOutputInterval( double inv );
     double getOutputInterval()             const { return m_outputInterval; }
-    
+
     void   setOutputTimeStepInterval( int inv );
     int    getOutputTimeStepInterval()     const { return m_outputTimeStepInterval; }
 
     void   setCheckpointInterval( double inv );
     double getCheckpointInterval()         const { return m_checkpointInterval; }
-    
+
     void   setCheckpointTimeStepInterval( int inv );
     int    getCheckpointTimeStepInterval() const { return m_checkpointTimeStepInterval; }
 
     void   setCheckpointWallTimeInterval( int inv );
     int    getCheckpointWallTimeInterval() const { return m_checkpointWallTimeInterval; }
 
-    bool   savingAsPIDX() const { return ( m_outputFileFormat == PIDX ); } 
+    bool   savingAsPIDX() const { return ( m_outputFileFormat == PIDX ); }
 
     // Instructs the DataArchive to save data using the original UDA format or using PIDX.
     void   setSaveAsUDA()  { m_outputFileFormat = UDA; }
@@ -258,27 +258,27 @@ class LoadBalancer;
 
     void maybeLastTimeStep( bool val ) { m_maybeLastTimeStep = val; };
     bool maybeLastTimeStep() { return m_maybeLastTimeStep; };
-     
+
     void setSwitchState(bool val) { m_switchState = val; }
-    bool getSwitchState() const { return m_switchState; }   
-    
+    bool getSwitchState() const { return m_switchState; }
+
     void   setElapsedWallTime( double val );
     double getElapsedWallTime() const { return m_elapsedWallTime; };
-     
+
     void   setCheckpointCycle( int val );
     double getCheckpointCycle() const { return m_checkpointCycle; };
-     
+
     void setUseLocalFileSystems(bool val) { m_useLocalFileSystems = val; };
     bool getUseLocalFileSystems() const { return m_useLocalFileSystems; };
-     
-    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { 
-      m_runtimeStats = runtimeStats; 
+
+    void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) {
+      m_runtimeStats = runtimeStats;
     };
-     
+
     // Returns true if an output or checkpoint exists for the time step
     bool outputTimeStepExists( unsigned int ts );
     bool checkpointTimeStepExists( unsigned int ts );
-    
+
     // problemSetup parses the ups file into a list of these
     // (m_saveLabelNames)
     struct SaveNameItem {
@@ -291,73 +291,73 @@ class LoadBalancer;
     class SaveItem {
     public:
 
-      void setMaterials( const int                   level, 
+      void setMaterials( const int                   level,
                          const ConsecutiveRangeSet & matls,
                                ConsecutiveRangeSet & prevMatls,
                                MaterialSetP        & prevMatlSet );
 
-      const MaterialSet* getMaterialSet( int level ) const { 
-        return matlSet.at( level ).get_rep(); 
+      const MaterialSet* getMaterialSet( int level ) const {
+        return matlSet.at( level ).get_rep();
       }
-      
+
       const MaterialSubset* getMaterialSubset( const Level * level ) const;
 
       const VarLabel* label;
-      
+
       std::map<int, MaterialSetP> matlSet;
     };
-    
-    
+
+
   //______________________________________________________________________
   //
   private:
-     
+
     enum outputFileFormat { UDA, PIDX };
     outputFileFormat m_outputFileFormat { UDA };
-      
+
     //__________________________________
     //         PIDX related
     // output the all of the saveLabels in PIDX format
     size_t
     saveLabels_PIDX( const ProcessorGroup  * pg,
-                     const PatchSubset     * patches,      
-                     DataWarehouse         * new_dw,          
+                     const PatchSubset     * patches,
+                     DataWarehouse         * new_dw,
                      int                   type,
                      std::vector< SaveItem > & saveLabels,
                      const TypeDescription::Type TD,
                      Dir                   ldir,        // uda/timeStep/levelIndex
                      const std::string     & dirName,     // CCVars, SFC*Vars
                      ProblemSpecP          & doc );
-                           
+
     // Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
-    std::vector<DataArchiver::SaveItem> 
+    std::vector<DataArchiver::SaveItem>
     findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
                               const TypeDescription::Type     type );
-      
+
     // bulletproofing so user can't save unsupported var type
     void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,
                              const std::vector< TypeDescription::Type > & pidxVarTypes );
-           
+
     // Writes out the <Grid> and <Data> sections into the
     // timestep.xml file by creating a DOM and then writing it out.
-    void writeGridOriginal(   const bool hasGlobals, 
-                              const GridP & grid, 
+    void writeGridOriginal(   const bool hasGlobals,
+                              const GridP & grid,
                               ProblemSpecP rootElem );
 
-    // Writes out the <Grid> and <Data> sections (respectively) to separate files 
+    // Writes out the <Grid> and <Data> sections (respectively) to separate files
     // (that are associated with timestep.xml) using a XML streamer.
-    void writeGridTextWriter( const bool hasGlobals, 
-                              const std::string & grid_path, 
+    void writeGridTextWriter( const bool hasGlobals,
+                              const std::string & grid_path,
                               const GridP & grid );
-                              
-    void writeDataTextWriter( const bool hasGlobals, 
-                              const std::string & data_path, 
+
+    void writeDataTextWriter( const bool hasGlobals,
+                              const std::string & data_path,
                               const GridP & grid,
                               const std::vector< std::vector<bool> > & procOnLevel );
 
     // Writes out the <Grid> section (associated with timestep.xml) to a separate binary file.
-    void writeGridBinary(     const bool hasGlobals, 
-                              const std::string & grid_path, 
+    void writeGridBinary(     const bool hasGlobals,
+                              const std::string & grid_path,
                               const GridP & grid );
 
     //__________________________________
@@ -368,13 +368,13 @@ class LoadBalancer;
     // creates the uda directory with a trailing version suffix
     void makeVersionedDir();
 
-    void initSaveLabels(  SchedulerP & sched, 
+    void initSaveLabels(  SchedulerP & sched,
                           bool initTimeStep );
-                          
+
     void initCheckpoints( const SchedulerP & sched );
 
     // helper for beginOutputTimeStep - creates and writes
-    // the necessary directories and xml files to begin the 
+    // the necessary directories and xml files to begin the
     // output time step.
     void makeTimeStepDirs(      Dir& dir,
                                 std::vector<SaveItem>& saveLabels,
@@ -382,13 +382,13 @@ class LoadBalancer;
                                 std::string* pTimeStepDir );
 
     PIDXOutputContext::PIDX_flags m_PIDX_flags; // Contains the knobs & switches
-#if HAVE_PIDX       
+#if HAVE_PIDX
 
     std::vector<MPI_Comm> m_pidxComms; // Array of MPI Communicators for PIDX usage...
-       
+
     // creates communicator every AMR level required for PIDX
     void createPIDXCommunicator(       std::vector<SaveItem> & saveLabels,
-                                 const GridP                 & grid, 
+                                 const GridP                 & grid,
                                        SchedulerP            & sched,
                                        bool                    isThisACheckpoint );
 
@@ -399,11 +399,11 @@ class LoadBalancer;
     // IO timesteps.  We always generate and save timestep.xml for
     // Checkpoint output.
 #endif
-    int m_lastOutputOfTimeStepXML = -1; 
+    int m_lastOutputOfTimeStepXML = -1;
 
     // helper for finalizeTimeStep - schedules a task for each var's output
     void sched_outputVariables(        std::vector<SaveItem> & saveLabels,
-                                 const GridP                 & grid, 
+                                 const GridP                 & grid,
                                        SchedulerP            & sched,
                                        bool                    isThisCheckpoint );
 
@@ -429,7 +429,7 @@ class LoadBalancer;
                         const bool   removeOld,
                         const bool   areCheckpoints = false );
 
-    // helper for restartSetup - copies the global dat files to 
+    // helper for restartSetup - copies the global dat files to
     // new uda dir (from startTimeStep to maxTimeStep)
     void copyDatFiles( const Dir & fromDir,
                        const Dir & toDir,
@@ -458,30 +458,30 @@ class LoadBalancer;
 
     ApplicationInterface * m_application{nullptr};
     LoadBalancer         * m_loadBalancer{nullptr};
-    
+
     // pointer to simulation state, to get time step and time info
     MaterialManagerP m_materialManager;
 
     // Only one of these should be non-zero.  The value is read
     // from the .ups file.
-    
+
     // In seconds.
     double m_outputInterval {0};
-             
+
     // Number of time steps.
-    int    m_outputTimeStepInterval {0}; 
-    
+    int    m_outputTimeStepInterval {0};
+
     // used when m_outputInterval != 0
-    double m_nextOutputTime {0};     
-  
+    double m_nextOutputTime {0};
+
     // used when m_outputTimeStepInterval != 0
-    int    m_nextOutputTimeStep {0}; 
-    
+    int    m_nextOutputTimeStep {0};
+
     // Output the last time step.
-    bool   m_outputLastTimeStep {false}; 
-    
-    // top of uda dir 
-    Dir    m_outputDir;                    
+    bool   m_outputLastTimeStep {false};
+
+    // top of uda dir
+    Dir    m_outputDir;
 
     // Represents whether this proc will output non-processor-specific  files
     bool   m_writeMeta {false};
@@ -494,20 +494,20 @@ class LoadBalancer;
 
     // List of current output dirs
     std::list<std::string> m_outputTimeStepDirs;
-    
+
     // set if an output time step
-    bool m_isOutputTimeStep {false};  
-      
-    // set if a checkpoint time step  
-    bool m_isCheckpointTimeStep {false};  
+    bool m_isOutputTimeStep {false};
+
+    // set if a checkpoint time step
+    bool m_isCheckpointTimeStep {false};
 
     //  Whether or not particle vars are saved
     //  Requires p.x to be set
-    bool m_saveParticleVariables {false}; 
+    bool m_saveParticleVariables {false};
 
-    //  Wheter or not p.x is saved 
+    //  Wheter or not p.x is saved
     bool m_saveP_x {false};
-     
+
     std::string m_particlePositionName{ "p.x" };
 
     double m_elapsedWallTime {0};
@@ -558,24 +558,24 @@ class LoadBalancer;
 
     //  List of current checkpoint dirs
     std::list<std::string> m_checkpointTimeStepDirs;
-    
+
     //  used when m_checkpointInterval != 0. Simulation time in seconds.
     double m_nextCheckpointTime {0};
-    
+
     //  used when m_checkpointTimeStepInterval != 0.  Integer - time step
     int m_nextCheckpointTimeStep {0};
-    
+
     //  used when m_checkpointWallTimeInterval != 0.  Integer seconds.
     int m_nextCheckpointWallTime {0};
 
-    // 
+    //
     bool m_outputPreviousTimeStep     {false};
     bool m_checkpointPreviousTimeStep {false};
-    
+
     MaterialSubset *m_tmpMatSubset {nullptr};
 
     //-----------------------------------------------------------
-    // RNJ - 
+    // RNJ -
     //
     // In order to avoid having to open and close index.xml,
     // p<xxxxx>.xml, and p<xxxxx>.data when we want to update
@@ -596,7 +596,7 @@ class LoadBalancer;
 
     ProblemSpecP m_upsFile {nullptr};
 
-    // Each level needs it's own data file handle 
+    // Each level needs it's own data file handle
     // and if we are outputting and checkpointing
     // at the same time we need two different sets.
     // Also store the filename for error-tracking purposes.
@@ -620,13 +620,14 @@ class LoadBalancer;
     //__________________________________
     //  PostProcessUda related
     bool m_doPostProcessUda {false};
-    
-    //  Used for migrating restart time step directories.
-    std::map< int, int> m_restartTimeStepIndicies;
-       
+
+    //  Used for migrating time step directories.
+    std::map< int, int>         m_restartTimeStepIndicies;
+    std::map< int, std::string> m_restartTimeStepDirs;
+
     Dir m_fromDir {""};              // keep track of the original uda
     void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
-       
+
     // Returns either the top level time step or if postProcessUda is used
     // a value from the index.xml file
     int getTimeStepTopLevel();
@@ -635,9 +636,9 @@ class LoadBalancer;
     // time step. By pass scubbing when running in situ or if wanting
     // to save the previous time step.
     bool scrubSavedVariables { true };
-    
+
     //-----------------------------------------------------------
-    // RNJ - 
+    // RNJ -
     //
     // If the <DataArchiver> section of the .ups file contains:
     //
@@ -654,22 +655,22 @@ class LoadBalancer;
 
     //-----------------------------------------------------------
     // These four variables affect the global var output only.
-    
+
     // For outputing the sim time and/or time step with the global vars
     bool m_outputGlobalVarsTimeStep {false};
     bool m_outputGlobalVarsSimTime  {true};
-    
+
     // For modulating the output frequency global vars. By default
     // they are output every time step. Note: Frequency > OnTimeStep
     unsigned int m_outputGlobalVarsFrequency {1};
     unsigned int m_outputGlobalVarsOnTimeStep {0};
 
-    
+
     //-----------------------------------------------------------
-    std::string TranslateVariableType( std::string type, 
+    std::string TranslateVariableType( std::string type,
                                        bool isThisCheckpoint );
 
-    
+
     // This is the number of times the DataArchiver will retry
     // a file system operation before it gives up and throws
     // an exception.
@@ -690,7 +691,7 @@ class LoadBalancer;
     int  m_pidx_requested_nth_rank {-1};
     bool m_pidx_checkpointing {false};
 #endif
-    
+
 #if SCI_ASSERTION_LEVEL >= 2
     // double-check to make sure that DA::output is only called once per level per processor per type
     std::vector<bool> m_outputCalled;
@@ -700,7 +701,7 @@ class LoadBalancer;
     Uintah::MasterLock m_outputLock;
 
     DataArchiver(const DataArchiver&);
-    DataArchiver& operator=(const DataArchiver&);      
+    DataArchiver& operator=(const DataArchiver&);
   };
 
 } // End namespace Uintah

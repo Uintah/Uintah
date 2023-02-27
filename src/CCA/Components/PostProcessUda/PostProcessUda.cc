@@ -148,7 +148,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
       proc0cout << "***  DW index = " << mat->getDWIndex() << " (" << mat->getName() << ")"  << endl;
     } 
   }
-    else {
+  else {                                // Arches
     SimpleMaterial* mat = scinew SimpleMaterial();
     m_materialManager->registerSimpleMaterial( mat );
   }
