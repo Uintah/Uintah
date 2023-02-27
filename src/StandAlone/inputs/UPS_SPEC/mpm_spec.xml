@@ -192,6 +192,7 @@
         <filename                        spec="OPTIONAL STRING" />
         <master_material                 spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
+        <include_rotation                spec="OPTIONAL BOOLEAN" />
       </contact>
 
       <dissolution                       spec="MULTIPLE NO_DATA" >

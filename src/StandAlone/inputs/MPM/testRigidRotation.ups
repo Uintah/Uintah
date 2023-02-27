@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+     <title>Colliding Disks, with 2 matls, 2 levels, damage and contact</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.18</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>TestRigidRotation.uda</filebase>
+       <outputInitTimestep/>
+       <outputInterval>.01</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.x" levels = "-1"/>
+       <save label = "p.volume" levels = "-1"/>
+       <save label = "p.velocity" levels = "-1"/>
+       <save label = "p.color" levels = "-1"/>
+       <save label = "p.particleID" levels = "-1"/>
+       <save label = "p.scalefactor" levels = "-1"/>
+       <save label = "p.stress" levels = "-1"/>
+       <save label = "g.mass" levels = "-1"/>
+
+       <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit  </time_integrator>
+       <interpolator>   fast_cpdi      </interpolator>
+       <withColor>      true      </withColor>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+   </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="UCNH">
+              <density>1000.0</density>
+              <constitutive_model type="UCNH">
+                 <shear_modulus>1.2e6</shear_modulus>
+                 <bulk_modulus>3.2e6</bulk_modulus>
+              </constitutive_model>
+               
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <difference>
+                  <cylinder label = "gp1">
+                     <bottom>[.0,.0,.0]</bottom>
+                     <top>[.0,.0,.05]</top>
+                     <radius> .4 </radius>
+                  </cylinder>
+                  <cylinder label = "gp2">
+                     <bottom>[.0,.0,.0]</bottom>
+                     <top>[.0,.0,.05]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                </difference>
+                  <res>[2,2,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+                  <color>             0               </color>
+              </geom_object>
+           </material>
+
+           <material name = "UCNH">
+              <density>1000.0</density>
+              <constitutive_model type="UCNH">
+                 <shear_modulus>1.2e6</shear_modulus>
+                 <bulk_modulus>3.2e6</bulk_modulus>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <cylinder label = "gp2"/>
+                <res>[2,2,1]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>12</temperature>
+                <color>             1               </color>
+              </geom_object>
+           </material>
+
+           <contact>
+              <type>specified</type>
+              <materials>[0,1]</materials>
+              <master_material>0</master_material>
+              <include_rotation> true </include_rotation>
+              <direction>[1,1,1]</direction>
+              <filename>RotateAboutZ.txt</filename>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>                  
+          <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                     <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-.5,-.5,0.0]</lower>
+              <upper>[0.5,0.5,0.05]</upper>
+              <resolution>[20,20,1]</resolution>
+              <patches>[2,1,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>

@@ -168,6 +168,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   //__________________________________
   //  Set the on/off flags to determine which
   // reduction variables are computed
+  d_DA = dataArchive;
   d_reductionVars->mass           = dataArchive->isLabelSaved("TotalMass");
   d_reductionVars->momentum       = dataArchive->isLabelSaved("TotalMomentum");
   d_reductionVars->thermalEnergy  = dataArchive->isLabelSaved("ThermalEnergy");

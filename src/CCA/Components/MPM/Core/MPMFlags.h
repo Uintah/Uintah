@@ -60,6 +60,7 @@ class Output;
     Ghost::GhostType d_particle_ghost_type{Ghost::None};
     int              d_particle_ghost_layer{0};
 
+    Output*     d_DA;
     Vector      d_gravity;
     int         d_8or27;                                       // Number of nodes a particle can interact with
     std::string d_interpolator_type;                           // Type of particle-grid interaction
