@@ -120,6 +120,20 @@ while ( $c != $n)
 end
 
 #__________________________________
+#  copy uda[1]/input.xml* to masterUda
+echo ""
+echo "__________________________________"
+echo "Copying $udas[1]/input.xml and input.xml.orig to $masterUda"
+ 
+if( ! -e $masterUda/input.xml ) then
+  cp $udas[1]/input.xml $masterUda
+endif
+
+if( ! -e $masterUda/input.xml.orig ) then
+  cp $udas[1]/input.xml.orig $masterUda
+endif
+
+#__________________________________
 # copy the index.xml file from uda[1]
 # remove all the timestep data
 echo ""
