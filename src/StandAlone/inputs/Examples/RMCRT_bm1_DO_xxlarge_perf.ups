@@ -147,7 +147,7 @@
   
   <RMCRT type = "double">
     <randomSeed>        true        </randomSeed>
-    <nDivQRays>          100        </nDivQRays>
+    <nDivQRays>          5        </nDivQRays>
     <Threshold>         0.05        </Threshold>
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
 
