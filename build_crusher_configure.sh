@@ -18,7 +18,7 @@ cd build
   --with-mpi=$MPICH_DIR \
   CC=hipcc \
   CXX=hipcc \
-  CXXFLAGS='-std=c++17 -Wno-deprecated -Wno-unused-local-typedefs -DFIXED_RANDOM_NUM -DUSING_LATEST_KOKKOS -D__HIP_ROCclr__ -D__HIP_ARCH_GFX90A__=1 -D__HIP_PLATFORM_HCC__ -D__HIP_PLATFORM_AMD__ -DHAVE_HIP -I/opt/rocm-5.2.0/include --rocm-path=/opt/rocm-5.2.0' \
+  CXXFLAGS='-std=c++17 -Wno-deprecated -Wno-unused-local-typedefs -DUSING_LATEST_KOKKOS -D__HIP_ROCclr__ -D__HIP_ARCH_GFX90A__=1 -D__HIP_PLATFORM_HCC__ -D__HIP_PLATFORM_AMD__ -DHAVE_HIP -I/opt/rocm-5.2.0/include --rocm-path=/opt/rocm-5.2.0' \
   LDFLAGS='-ldl --rocm-path=/opt/rocm-5.2.0 -L/opt/rocm-5.2.0/lib -lamdhip64' \
   F77=ftn
 
