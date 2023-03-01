@@ -97,7 +97,7 @@
         <!-- coarse Level -->
         <lower>      [0,0,0]     </lower>
         <upper>      [1, 1, 1]   </upper>
-        <resolution> [32,32,32]  </resolution>
+        <resolution> [48,32,32]  </resolution>
         <patches>    [1,1,1]     </patches>
         <extraCells> [1,1,1]     </extraCells>
       </Box>
