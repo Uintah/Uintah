@@ -12,7 +12,7 @@ cd build
 
 ../src/configure \
   --enable-64bit \
-  --enable-optimize="-g -Og" \
+  --enable-optimize="-O2" \
   --enable-examples \
   --with-kokkos=$OLCF_KOKKOS_ROOT \
   --with-mpi=$MPICH_DIR \
