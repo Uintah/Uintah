@@ -31,11 +31,11 @@ usage()
   echo ""
   echo " Usage:"
   echo "    mkdir masterUda        MANDATORY"
-  echo "    makeMasterUda_index.csh [options] uda.000  uda.001 .... uda.00N"
+  echo "    makeMasterUda_index.sh [options] uda.000  uda.001 .... uda.00N"
   echo ""
   echo " Options:"
   echo "     -f | --fullpath          Output the full path to the uda.  The default"
-  echo "                              us to output the user's input path."
+  echo "                              is to output the user's input path."
   echo "     -h | --help"
   exit
 }
