@@ -36,10 +36,17 @@ using namespace Uintah;
 
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
+#if defined(UINTAH_USING_GPU)
+#if defined(TASK_MANAGES_EXECSPACE)
 namespace {
-  Uintah::MasterLock      deviceNums_mutex{};
-  Uintah::MasterLock     cudaStreams_mutex{};
+  Uintah::MasterLock deviceNums_mutex{};
 }
+#else
+namespace {
+  Uintah::MasterLock cudaStreams_mutex{};
+}
+#endif
+#endif
 
 //______________________________________________________________________
 //
@@ -1102,7 +1109,7 @@ Task::doit( const PatchSubset           * patches
 #if defined(UINTAH_USING_GPU)
 //______________________________________________________________________
 //
-#ifdef TASK_MANAGES_EXECSPACE
+#if defined(TASK_MANAGES_EXECSPACE)
 //_____________________________________________________________________________
 //
 void
@@ -1305,7 +1312,84 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
   Kokkos::DefaultExecutionSpace instance =
     this->getKokkosInstanceForThisTask(dTask, device_id);
 
+#if defined(USE_KOKKOS_FENCE)
   instance.fence();
+
+#elif defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA)
+  cudaStream_t stream = instance.cuda_stream();
+
+  cudaError_t retVal = cudaStreamQuery(stream);
+
+  if (retVal == cudaSuccess) {
+    return true;
+  }
+  else if (retVal == cudaErrorNotReady ) {
+    return false;
+  }
+  else if (retVal ==  cudaErrorLaunchFailure) {
+    printf("ERROR! - Task::ActionNonPortableBase::checkKokkosInstanceDoneForThisTask(%d) - "
+           "CUDA kernel execution failure on Task: %s\n",
+           device_id, this->taskPtr->getName().c_str());
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " +
+                            this->taskPtr->getName() , __FILE__, __LINE__));
+    return false;
+  } else { // other error
+    printf("\nA CUDA error occurred with error code %d.\n\n"
+           "Waiting for 60 seconds\n", retVal);
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+#if defined(HAVE_CUDA)
+    CUDA_RT_SAFE_CALL (retVal);
+#endif
+    return false;
+  }
+#elif defined(HAVE_HIP) || defined(KOKKOS_ENABLE_HIP)
+  hipStream_t stream = instance.hip_stream();
+
+  hipError_t retVal = hipStreamQuery(stream);
+
+  if (retVal == hipSuccess) {
+    return true;
+  }
+  else if (retVal == hipErrorNotReady ) {
+    return false;
+  }
+  else if (retVal ==  hipErrorLaunchFailure) {
+    printf("ERROR! - Task::ActionNonPortableBase::checkKokkosInstanceDoneForThisTask(%d) - "
+           "HIP kernel execution failure on Task: %s\n",
+           device_id, this->taskPtr->getName().c_str());
+    SCI_THROW(InternalError("Detected HIP kernel execution failure on Task: " +
+                            this->taskPtr->getName() , __FILE__, __LINE__));
+    return false;
+  } else { // other error
+    printf("\nA HIP error occurred with error code %d.\n\n"
+           "Waiting for 60 seconds\n", retVal);
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+#if defined(HAVE_HIP)
+    HIP_RT_SAFE_CALL (retVal);
+#endif
+    return false;
+  }
+
+#elif defined(HAVE_SYCL) || defined(KOKKOS_ENABLE_SYCL)
+  sycl::queue que = instance.sycl_queue();
+  return que.ext_oneapi_empty();
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+#endif
 
   return true;
 }
@@ -1509,7 +1593,7 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
     m_action->syncTaskGpuDW(dTask, deviceNum, taskgpudw);
   }
 }
-#else  // #ifdef TASK_MANAGES_EXECSPACE - STREAMS
+#else  // #if defined(TASK_MANAGES_EXECSPACE) - STREAMS
 //_____________________________________________________________________________
 //
 void
@@ -1683,7 +1767,7 @@ Task::checkCudaStreamDoneForThisTask( intptr_t dTask
   else if (retVal == cudaErrorNotReady ) {
     return false;
   }
-  else if (retVal ==  cudaErrorLaunchFailure) {
+  else if (retVal == cudaErrorLaunchFailure) {
     printf("ERROR! - Task::checkCudaStreamDoneForThisTask(%d) - "
            "CUDA kernel execution failure on Task: %s\n",
            device_id, getName().c_str());
