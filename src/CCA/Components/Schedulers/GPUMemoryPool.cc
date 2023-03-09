@@ -41,9 +41,15 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
     new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
                       Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
 
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+// Not needed
+#else // if defined(USE_KOKKOS_VIEW)
 std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
               Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue> Uintah::GPUMemoryPool::gpuMemoryPoolViewInUse;
+#endif
+#else
+// Not needed
 #endif
 
 #ifdef USE_KOKKOS_INSTANCE
@@ -74,7 +80,7 @@ namespace Uintah {
 //______________________________________________________________________
 //
 void*
-GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
+GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id, size_t memSize)
 {
   // Right now the memory pool assumes that each time step is going to
   // be using variables of the same size as the previous time step So
@@ -100,7 +106,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-                    << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
+                    << " GPUMemoryPool::allocateCudaMemoryFromPool() -"
                     << " reusing space starting at " << addr
                     << " on device " << device_id
                     << " with size " << memSize
@@ -125,13 +131,20 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
       // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
       // Allocate the memory.
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+
+#if defined(USE_KOKKOS_MALLOC)
+      addr = Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(memSize);
+      
+#else // if defined(USE_KOKKOS_VIEW)
       // Kokkos equivalent - KokkosView
       Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> deviceView( "device", memSize);
 
       // ARS - FIX ME - The view should be schelped around.
       // With CUDA the raw data pointer is schelped around.
       addr = deviceView.data();
+#endif
+      
 #else
       cudaError_t err = cudaMalloc(&addr, memSize);
       if (err == cudaErrorMemoryAllocation) {
@@ -143,7 +156,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-              << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
+              << " GPUMemoryPool::allocateCudaMemoryFromPool() -"
               << " allocated GPU space starting at " << addr
               << " on device " << device_id
               << " with size " << memSize
@@ -159,13 +172,18 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
       gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem,
                                            gpuMemoryPoolDevicePtrValue>(insertItem, insertValue));
 
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+// Not needed
+#else // if defined(USE_KOKKOS_VIEW)
       // ARS - FIX ME Keep a copy of the view so the view reference
       // count is incremented which prevents the memory from being
       // de-allocated.
       gpuMemoryPoolDeviceViewItem insertView(device_id, deviceView);
       gpuMemoryPoolViewInUse.insert(std::pair<gpuMemoryPoolDeviceViewItem,
                                               gpuMemoryPoolDevicePtrValue>(insertView, insertValue));
+#endif
+// Not needed
 #endif
     }
   } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
@@ -176,7 +194,27 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
 
 //______________________________________________________________________
 //
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+void GPUMemoryPool::freeCudaMemoryFromPool()
+{
+  for(const auto &item: *gpuMemoryPoolUnused)
+  {
+    void * addr = item.second.ptr;
+    Kokkos::kokkos_free(addr);
+  }
+  
+  gpuMemoryPoolUnused->clear();
+
+  for(const auto &item: *gpuMemoryPoolInUse)
+  {
+    void * addr = item.first.ptr;
+    Kokkos::kokkos_free(addr);
+  }
+  
+  gpuMemoryPoolInUse->clear();
+}
+#else // if defined(USE_KOKKOS_VIEW)
 void GPUMemoryPool::freeViewsFromPool()
 {
   // By clearing the pool the view reference count is decremented and if
@@ -184,11 +222,31 @@ void GPUMemoryPool::freeViewsFromPool()
   gpuMemoryPoolViewInUse.clear();
 }
 #endif
+#else
+void GPUMemoryPool::freeCudaMemoryFromPool()
+{
+  for(const auto &item: *gpuMemoryPoolUnused)
+  {
+    void * addr = item.second.ptr;
+    cudaFree(addr);
+  }
+
+  gpuMemoryPoolUnused->clear();
+
+  for(const auto &item: *gpuMemoryPoolInUse)
+  {
+    void * addr = item.first.ptr;
+    Kokkos::kokkos_free(addr);
+  }
+  
+  gpuMemoryPoolInUse->clear();
+}
+#endif
 
 
 //______________________________________________________________________
 //
-bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
+bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr)
 {
   {
     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
@@ -206,7 +264,7 @@ bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-                    << " GPUMemoryPool::freeCudaSpaceFromPool() -"
+                    << " GPUMemoryPool::reclaimCudaMemoryIntoPool() -"
                     << " space starting at " << addr
                     << " on device " << device_id
                     << " with size " << memSize
@@ -225,16 +283,17 @@ bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
       gpuMemoryPoolInUse->erase(ret);
 
     } else {
-      printf("ERROR: GPUMemoryPool::freeCudaSpaceFromPool - "
-             "No memory found at pointer %p on device %u\n", addr, device_id);
-      return false;
+      // Ignore if the pools are empty as Uintah is shutting down.
+      if(gpuMemoryPoolUnused->size() || gpuMemoryPoolInUse->size() )
+      {
+	printf("ERROR: GPUMemoryPool::reclaimCudaMemoryIntoPool - "
+	       "No memory found at pointer %p on device %u\n", addr, device_id);
+	return false;
+      }
     }
   } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
 
   return true;
-
-  // TODO: Actually deallocate!!!
-  // ARS - FIX ME - Do not delete until the scheduler is deleted.
 }
 
 

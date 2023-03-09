@@ -1029,7 +1029,7 @@ DetailedTask::deleteTemporaryTaskVars()
 
   // and the device
   for (auto p : taskCudaMemoryPoolItems) {
-    GPUMemoryPool::freeCudaSpaceFromPool(p.device_id, p.ptr);
+    GPUMemoryPool::reclaimCudaMemoryIntoPool(p.device_id, p.ptr);
   }
   taskCudaMemoryPoolItems.clear();
 }

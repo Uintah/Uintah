@@ -137,11 +137,18 @@ public:
   };
 #endif
 
-  static void* allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize);
+  static void* allocateCudaMemoryFromPool(unsigned int device_id, size_t memSize);
 
-  static bool freeCudaSpaceFromPool(unsigned int device_id, void* addr);
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+  static bool reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr);
+
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+  static void freeCudaMemoryFromPool();  
+#else // if defined(USE_KOKKOS_VIEW)
   static void freeViewsFromPool();
+#endif
+#else
+  static void freeCudaMemoryFromPool();  
 #endif
 
   // Streams
@@ -170,10 +177,16 @@ private:
   static std::multimap<gpuMemoryPoolDeviceSizeItem,
                        gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
 
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+// Not needed
+#else // if defined(USE_KOKKOS_VIEW)
   // For a given device and view, holds the timestep and size.
   static std::multimap<gpuMemoryPoolDeviceViewItem,
                        gpuMemoryPoolDevicePtrValue> gpuMemoryPoolViewInUse;
+#endif
+#else
+// Not needed
 #endif
 
   // Streams

@@ -925,7 +925,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
       {
         gpu_stats << UnifiedScheduler::myRankThread()
                   << " GPUDataWarehouse::allocateAndPut(), "
-                  << " calling GPUMemoryPool::allocateCudaSpaceFromPool"
+                  << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
                   << " for " << label
                   << " patch " << patchID
                   << " material " <<  matlIndx
@@ -947,7 +947,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
 
     // Also update the var object itself
     var.setArray3(offset, size, addr);
@@ -1596,7 +1596,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
       {
         gpu_stats << UnifiedScheduler::myRankThread()
                   << " GPUDataWarehouse::allocateAndPut(),"
-                  << " calling GPUMemoryPool::allocateCudaSpaceFromPool"
+                  << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
                   << " for reduction variable " << label
                   << " patch " << patchID
                   << " material " <<  matlIndx
@@ -1611,7 +1611,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
 
     // Also update the var object itself.
     var.setData(addr);
@@ -1721,7 +1721,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
       {
         gpu_stats << UnifiedScheduler::myRankThread()
                   << " GPUDataWarehouse::allocateAndPut(),"
-                  << " calling GPUMemoryPool::allocateCudaSpaceFromPool"
+                  << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
                   << " for PerPatch variable " << label
                   << " patch " << patchID
                   << " material " <<  matlIndx
@@ -1736,7 +1736,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
 
     // Also update the var object itself
     var.setData(addr);
@@ -1946,7 +1946,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
     {
      gpu_stats << UnifiedScheduler::myRankThread()
                << " GPUDataWarehouse::init_device() -"
-               << " calling GPUMemoryPool::allocateCudaSpaceFromPool"
+               << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
                << " for Task DW of size " << objectSizeInBytes
                << " on device " << d_device_id
                << " the host GPUDW is at " << this
@@ -1956,7 +1956,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   }
 
   void* addr =
-    GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
+    GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, objectSizeInBytes);
 
   d_device_copy = (GPUDataWarehouse*) addr;
   // cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
@@ -2054,7 +2054,7 @@ GPUDataWarehouse::clear()
           {
             gpu_stats << UnifiedScheduler::myRankThread()
                       << " GPUDataWarehouse::clear() -"
-                      << " calling GPUMemoryPool::freeCudaSpaceFromPool()"
+                      << " calling GPUMemoryPool::reclaimCudaMemoryIntoPool()"
                       << " for staging var for " << varIter->first.label
                       << " at device ptr " <<  stagingIter->second.device_ptr
                       << " on device " << d_device_id
@@ -2063,7 +2063,7 @@ GPUDataWarehouse::clear()
           cerrLock.unlock();
         }
 
-        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, stagingIter->second.device_ptr) ) {
+        if (GPUMemoryPool::reclaimCudaMemoryIntoPool(d_device_id, stagingIter->second.device_ptr) ) {
           stagingIter->second.device_ptr = nullptr;
           compareAndSwapDeallocate(stagingIter->second.atomicStatusInGpuMemory);
         } else {
@@ -2092,7 +2092,7 @@ GPUDataWarehouse::clear()
           {
             gpu_stats << UnifiedScheduler::myRankThread()
                       << " GPUDataWarehouse::clear() -"
-                      << " calling GPUMemoryPool::freeCudaSpaceFromPool() "
+                      << " calling GPUMemoryPool::reclaimCudaMemoryIntoPool() "
                       << "for non-staging var for " << varIter->first.label
                       << " at device ptr " <<  varIter->second.var->device_ptr
                       << " on device " << d_device_id
@@ -2101,7 +2101,7 @@ GPUDataWarehouse::clear()
           cerrLock.unlock();
         }
 
-        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, varIter->second.var->device_ptr)) {
+        if (GPUMemoryPool::reclaimCudaMemoryIntoPool(d_device_id, varIter->second.var->device_ptr)) {
           varIter->second.var->device_ptr = nullptr;
           compareAndSwapDeallocate(varIter->second.var->atomicStatusInGpuMemory);
         } else {
@@ -2136,14 +2136,14 @@ GPUDataWarehouse::deleteSelfOnDevice()
       {
         gpu_stats << UnifiedScheduler::myRankThread()
                   << " GPUDataWarehouse::deleteSelfOnDevice - "
-                  << "calling GPUMemoryPool::freeCudaSpaceFromPool for Task DW at "
+                  << "calling GPUMemoryPool::reclaimCudaMemoryIntoPool for Task DW at "
                   << std::hex << d_device_copy
                   << " on device " << std::dec << d_device_id << std::endl;
       }
       cerrLock.unlock();
     }
 
-    GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, d_device_copy);
+    GPUMemoryPool::reclaimCudaMemoryIntoPool(d_device_id, d_device_copy);
   }
 }
 

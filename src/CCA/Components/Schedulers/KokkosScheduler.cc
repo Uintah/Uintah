@@ -118,6 +118,13 @@ thread_local  int  t_tid = 0;   // unique ID assigned in thread_driver()
 
 }} // namespace Uintah::Impl
 
+#  define CUDA_RT_SAFE_CALL( call ) {                                          \
+    cudaError err = call;                                                      \
+    if(err != cudaSuccess) {                                                   \
+        fprintf(stderr, "\nCUDA error %i in file '%s', on line %i : %s.\n\n",  \
+                err, __FILE__, __LINE__, cudaGetErrorString( err) );           \
+        exit(EXIT_FAILURE);                                                    \
+    } }
 
 //______________________________________________________________________
 //
@@ -135,13 +142,13 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
     Uintah::OnDemandDataWarehouse::s_combine_memory = false;
   }
 
-#if defined(HAVE_CUDA_NOT_NEEDED)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA)
   // ARS - true if cuda or kokkos??
   //__________________________________
   //
   if ( Uintah::Parallel::usingDevice() ) {
     // ARS - This call resets each device  - not needed???
-    gpuInitialize();
+    // gpuInitialize();
 
     // we need one of these for each GPU, as each device will have
     // it's own CUDA context
@@ -186,8 +193,14 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
 //
 KokkosScheduler::~KokkosScheduler()
 {
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+  GPUMemoryPool::freeCudaMemoryFromPool();  
+#else // if defined(USE_KOKKOS_VIEW)
   GPUMemoryPool::freeViewsFromPool();
+#endif
+#else  
+  GPUMemoryPool::freeCudaMemoryFromPool();  
 #endif
 }
 
