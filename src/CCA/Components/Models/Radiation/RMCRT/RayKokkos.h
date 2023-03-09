@@ -37,7 +37,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <iostream>
 #include <cmath>
@@ -112,8 +112,9 @@ namespace Uintah{
 
   struct LevelParamsML : public LevelParams {
 
-    int    regionLo[3];          // never use these regionLo/Hi in the kernel
-    int    regionHi[3];          // they vary on every patch and must be passed into the kernel
+    int    regionLo[3];          // Never use these regionLo/Hi in the kernel
+    int    regionHi[3];          // They vary on every patch and must
+				 // be passed into the kernel
     int    refinementRatio[3];
     //int    index;                // level index
     //bool   hasFinerLevel;
@@ -155,7 +156,6 @@ namespace Uintah{
     KOKKOS_INLINE_FUNCTION
     void mapCellToCoarser(int idx[3]) const
     {
-
       //TODO, level::mapCellToCoarser has this code.  Do we need it here too?
       //IntVector refinementRatio = m_refinement_ratio;
       //while (--level_offset) {
@@ -351,19 +351,20 @@ namespace Uintah{
 
       const VarLabel* m_timeStepLabel {nullptr};
 
-      const VarLabel* d_mag_grad_abskgLabel;
-      const VarLabel* d_mag_grad_sigmaT4Label;
-      const VarLabel* d_flaggedCellsLabel;
-      const VarLabel* d_ROI_LoCellLabel;
-      const VarLabel* d_ROI_HiCellLabel;
-      const VarLabel* d_PPTimerLabel;        // perPatch timer
+      const VarLabel* d_mag_grad_abskgLabel   {nullptr};
+      const VarLabel* d_mag_grad_sigmaT4Label {nullptr};
+      const VarLabel* d_flaggedCellsLabel     {nullptr};
+      const VarLabel* d_ROI_LoCellLabel       {nullptr};
+      const VarLabel* d_ROI_HiCellLabel       {nullptr};
+      const VarLabel* d_PPTimerLabel          {nullptr};  // perPatch timer
 
       ApplicationInterface* m_application{nullptr};
 
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
-      bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
+      bool      m_use_virtual_ROI {false};  // Use virtual ROI set in
+					    // environment variable VIR_ROI
       IntVector m_virtual_ROI {IntVector(0,0,0)};
 
       //__________________________________
