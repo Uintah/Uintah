@@ -40,7 +40,9 @@
     #define USE_KOKKOS_PARALLEL_FOR
     #define USE_KOKKOS_DEEPCOPY
     #define USE_KOKKOS_VIEW
+//    #define USE_KOKKOS_MALLOC
     #define USE_KOKKOS_INSTANCE
+    #define USE_KOKKOS_FENCE
 //    #define USE_KOKKOS_INSTANCE_OPENMP
   #endif
 
