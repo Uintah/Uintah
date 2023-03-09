@@ -1386,7 +1386,8 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
 
 #elif defined(HAVE_SYCL) || defined(KOKKOS_ENABLE_SYCL)
   sycl::queue que = instance.sycl_queue();
-  return que.ext_oneapi_empty();
+  // Not yet available.
+  //  return que.ext_oneapi_empty();
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 #endif
