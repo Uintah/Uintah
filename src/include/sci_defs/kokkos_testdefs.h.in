@@ -44,6 +44,7 @@
     #define USE_KOKKOS_INSTANCE
     #define USE_KOKKOS_FENCE
 //    #define USE_KOKKOS_INSTANCE_OPENMP
+    #define USE_KOKKOS_TEAM_POLICY
   #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
