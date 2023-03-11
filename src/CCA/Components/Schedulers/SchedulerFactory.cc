@@ -135,14 +135,18 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
 #if defined(HAVE_KOKKOS)
   // Output Execution Space and Memory Space that will be used with Kokkos builds
-  proc0cout << "Kokkos HOST Execution Space: \t\t"   << Kokkos::DefaultHostExecutionSpace::name() << std::endl;
-  proc0cout << "Kokkos HOST Memory Space: \t\t"      << Kokkos::DefaultHostExecutionSpace::memory_space::name() << std::endl;
-  proc0cout << "Kokkos DEVICE Execution Space: \t\t" << Kokkos::DefaultExecutionSpace::name() << std::endl;
-  proc0cout << "Kokkos DEVICE Memory Space: \t\t"    << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
+  proc0cout << "Kokkos HOST Execution Space: \t"
+            << Kokkos::DefaultHostExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos HOST Memory Space: \t"
+            << Kokkos::DefaultHostExecutionSpace::memory_space::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Execution Space: \t"
+            << Kokkos::DefaultExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Memory Space: \t"
+            << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
 
 #if defined(KOKKOS_USING_GPU)
     if ( Parallel::usingDevice() ) {
-      std::cout << "Kokkos Execution Policy: ";
+      std::cout << "Kokkos Execution Policy: \t";
       switch ( Parallel::getKokkosPolicy() )
       {
       case Parallel::Kokkos_Team_Policy:
@@ -151,7 +155,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
       case Parallel::Kokkos_Range_Policy:
         std::cout << "Range" << std::endl;
         if ( Parallel::getKokkosChunkSize() > 0 ) {
-          std::cout << "Kokkos Chunk Size " << Parallel::getKokkosChunkSize() << std::endl;
+          std::cout << "Kokkos Chunk Size: \t\t"
+                    << Parallel::getKokkosChunkSize() << std::endl;
         }
         break;
       case Parallel::Kokkos_MDRange_Policy:
@@ -160,7 +165,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
           int i, j, k;
           Parallel::getKokkosTileSize(i,j,k);
           if ( i > 0 || j > 0 || k > 0 ) {
-            std::cout << "Kokkos tile Size " << i << " " << j << " " << k << std::endl;
+            std::cout << "Kokkos tile Size: \t\t"
+                      << i << " " << j << " " << k << std::endl;
           }
         }
         break;
@@ -170,7 +176,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
           int i, j, k;
           Parallel::getKokkosTileSize(i,j,k);
           if ( i > 0 || j > 0 || k > 0 ) {
-            std::cout << "Kokkos tile Size " << i << " " << j << " " << k << std::endl;
+            std::cout << "Kokkos tile Size \t\t"
+                      << i << " " << j << " " << k << std::endl;
           }
         }
         break;

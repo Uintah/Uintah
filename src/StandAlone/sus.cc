@@ -504,8 +504,10 @@ int main( int argc, char *argv[], char *env[] )
         usage("The Kokkos chunk size is too small", arg, argv[0]);
         Parallel::exitAll(2);
       }
-      Uintah::Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
-      Uintah::Parallel::setKokkosChunkSize(kokkos_chunk_size);
+
+      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
+        Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
+      Parallel::setKokkosChunkSize(kokkos_chunk_size);
 #else
       std::cout << "Not compiled for Kokkos GPU support" << std::endl;
       Parallel::exitAll(2);
@@ -544,10 +546,13 @@ int main( int argc, char *argv[], char *env[] )
         Parallel::exitAll(2);
       }
 
-      Uintah::Parallel::setKokkosPolicy(Parallel::Kokkos_MDRange_Policy);
-      Uintah::Parallel::setKokkosTileSize(kokkos_tile_isize,
-                                          kokkos_tile_jsize,
-                                          kokkos_tile_ksize);
+      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy &&
+         Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy_Reverse)
+        Parallel::setKokkosPolicy(Parallel::Kokkos_MDRange_Policy);
+
+      Parallel::setKokkosTileSize(kokkos_tile_isize,
+                                  kokkos_tile_jsize,
+                                  kokkos_tile_ksize);
 #else
       std::cout << "Not compiled for Kokkos GPU support" << std::endl;
       Parallel::exitAll(2);
