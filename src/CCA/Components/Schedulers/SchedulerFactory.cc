@@ -139,6 +139,44 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   proc0cout << "Kokkos HOST Memory Space: \t\t"      << Kokkos::DefaultHostExecutionSpace::memory_space::name() << std::endl;
   proc0cout << "Kokkos DEVICE Execution Space: \t\t" << Kokkos::DefaultExecutionSpace::name() << std::endl;
   proc0cout << "Kokkos DEVICE Memory Space: \t\t"    << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
+
+#if defined(KOKKOS_USING_GPU)
+    if ( Parallel::usingDevice() ) {
+      std::cout << "Kokkos Execution Policy: ";
+      switch ( Parallel::getKokkosPolicy() )
+      {
+      case Parallel::Kokkos_Team_Policy:
+        std::cout << "Team" << std::endl;
+        break;
+      case Parallel::Kokkos_Range_Policy:
+        std::cout << "Range" << std::endl;
+        if ( Parallel::getKokkosChunkSize() > 0 ) {
+          std::cout << "Kokkos Chunk Size " << Parallel::getKokkosChunkSize() << std::endl;
+        }
+        break;
+      case Parallel::Kokkos_MDRange_Policy:
+        std::cout << "MDRange" << std::endl;
+        {
+          int i, j, k;
+          Parallel::getKokkosTileSize(i,j,k);
+          if ( i > 0 || j > 0 || k > 0 ) {
+            std::cout << "Kokkos tile Size " << i << " " << j << " " << k << std::endl;
+          }
+        }
+        break;
+      case Parallel::Kokkos_MDRange_Policy_Reverse:
+        std::cout << "MDRange reversed" << std::endl;
+        {
+          int i, j, k;
+          Parallel::getKokkosTileSize(i,j,k);
+          if ( i > 0 || j > 0 || k > 0 ) {
+            std::cout << "Kokkos tile Size " << i << " " << j << " " << k << std::endl;
+          }
+        }
+        break;
+      }
+    }
+#endif
 #endif
 
   return sch;

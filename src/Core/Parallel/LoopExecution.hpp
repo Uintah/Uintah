@@ -442,12 +442,23 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 
 #elif defined(KOKKOS_USING_GPU)
 
-#ifdef USE_KOKKOS_TEAM_POLICY
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor )
 {
+  unsigned int i_size = r.end(0) - r.begin(0);
+  unsigned int j_size = r.end(1) - r.begin(1);
+  unsigned int k_size = r.end(2) - r.begin(2);
+  unsigned int rbegin0 = r.begin(0);
+  unsigned int rbegin1 = r.begin(1);
+  unsigned int rbegin2 = r.begin(2);
 
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+
+  Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
+
+  if(kokkos_policy == Parallel::Kokkos_Team_Policy)
+  {
   // Team policy approach (reuses CUDA threads)
 
   // Overall goal, split a 3D range requested by the user into various
@@ -456,18 +467,10 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   // 3D range to a 1D range, partitioning the 1D range into groups
   // that are multiples of 32, then converting that group of 32 range
   // back into a 3D (i,j,k) index.
-  unsigned int i_size = r.end(0) - r.begin(0);
-  unsigned int j_size = r.end(1) - r.begin(1);
-  unsigned int k_size = r.end(2) - r.begin(2);
-  unsigned int rbegin0 = r.begin(0);
-  unsigned int rbegin1 = r.begin(1);
-  unsigned int rbegin2 = r.begin(2);
 
   // The user has two partitions available.  1) One is the total
   // number of streaming multiprocessors.  2) The other is splitting a
   // task into multiple streams and execution units.
-
-  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 
   // Get the requested amount of threads per streaming multiprocessor
   // (SM) and number of SMs totals.
@@ -499,7 +502,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 #endif
     //Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
-#endif~
+#endif
 
     // Use a Team Policy, this allows us to control how many threads
     // per block and how many blocks are used.
@@ -543,22 +546,15 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 #endif
 
 // ----------------- Team policy but with one stream -----------------
-//  unsigned int i_size = r.end(0) - r.begin(0);
-//  unsigned int j_size = r.end(1) - r.begin(1);
-//  unsigned int k_size = r.end(2) - r.begin(2);
-//  unsigned int rbegin0 = r.begin(0);
-//  unsigned int rbegin1 = r.begin(1);
-//  unsigned int rbegin2 = r.begin(2);
-//
 //
 //  int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
 //  int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 //
-//  //If 256 threads aren't needed, use less.
-//  //But cap at 256 threads total, as this will correspond to 256 threads in a block.
-//  //Later the TeamThreadRange will reuse those 256 threads.  For example, if teamThreadRangeSize is 800, then
-//  //Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
-//  //Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
+//  // If 256 threads aren't needed, use less.
+//  // But cap at 256 threads total, as this will correspond to 256 threads in a block.
+//  // Later the TeamThreadRange will reuse those 256 threads.  For example, if teamThreadRangeSize is 800, then
+//  // Cuda thread 0 will be assigned to n = 0, n = 256, n = 512, and n = 768,
+//  // Cuda thread 1 will be assigned to n = 1, n = 257, n = 513, and n = 769...
 //
 //  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 //  const int actualThreads = teamThreadRangeSize > cuda_threads_per_block ? cuda_threads_per_block : teamThreadRangeSize;
@@ -576,7 +572,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //    });
 //  });
 
-  // ----------------- Range policy with one stream -----------------
+// ----------------- Range policy with one stream -----------------
 //  const int teamThreadRangeSize = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
 //  const int threadsPerGroup = 256;
 //  const int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
@@ -599,78 +595,78 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //      threadNum += threadsPerGroup;
 //    }
 //  });
-}
 
-#else
+  }
+  else if(kokkos_policy == Parallel::Kokkos_Range_Policy)
+  {
+    ExecSpace instanceObject = execObj.getInstance();
 
- #define VERSION1
-// #define VERSION2
-// #define VERSION3
-// #define VERSION2a
-// #define VERSION2b
-// #define VERSION3a
-// #define VERSION3b
+    int size = Parallel::getKokkosChunkSize();
 
-template <typename ExecSpace, typename MemSpace, typename Functor>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
-parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor )
-{
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
-  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
-
-#if defined(VERSION1)
-    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace, int>(0, numItems), KOKKOS_LAMBDA(int n) {
-        const int k = n / (j_size * i_size) + rbegin2;
+    if( size > 0 )
+    {
+      Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace, int>(instanceObject, 0, numItems).set_chunk_size(size), KOKKOS_LAMBDA(int n) {
+          const int k = n / (j_size * i_size) + rbegin2;
+          const int j = (n / i_size) % j_size + rbegin1;
+          const int i = n % i_size + rbegin0;
+          functor( i, j, k );
+        });
+    }
+    else
+    {
+      Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace, int>(instanceObject, 0, numItems), KOKKOS_LAMBDA(int n) {
+          const int k = n / (j_size * i_size) + rbegin2;
         const int j = (n / i_size) % j_size + rbegin1;
         const int i = n % i_size + rbegin0;
         functor( i, j, k );
-      });
-#elif defined(VERSION2)
+        });
+    }
+  }
+  else if(kokkos_policy == Parallel::Kokkos_MDRange_Policy)
+  {
+    ExecSpace instanceObject = execObj.getInstance();
 
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {i_size, j_size, k_size}),
-                          KOKKOS_LAMBDA(int i, int j, int k) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
-#elif defined(VERSION3)
+    int i_tile, j_tile, k_tile;
+    Parallel::getKokkosTileSize(i_tile, j_tile, k_tile);
 
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {k_size, j_size, i_size}),
-                          KOKKOS_LAMBDA(int k, int j, int i) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
-#elif defined(VERSION2a)
+    if( i_tile > 0 || j_tile > 0 || k_tile > 0 )
+    {
+      Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instanceObject, {0,0,0}, {i_size, j_size, k_size}, {i_tile, j_tile, k_tile}),
+                            KOKKOS_LAMBDA(int i, int j, int k) {
+                              functor( i + rbegin0, j + rbegin1, k + rbegin2 );
+                            });
+    }
+    else
+    {
+      Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instanceObject, {0,0,0}, {i_size, j_size, k_size}),
+                            KOKKOS_LAMBDA(int i, int j, int k) {
+                              functor( i + rbegin0, j + rbegin1, k + rbegin2 );
+                            });
+    }
+  }
+  else if(kokkos_policy == Parallel::Kokkos_MDRange_Policy_Reverse)
+  {
+    ExecSpace instanceObject = execObj.getInstance();
 
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {i_size, j_size, k_size}).set_tile_size(256),
-                          KOKKOS_LAMBDA(int i, int j, int k) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
+    int i_tile, j_tile, k_tile;
+    Parallel::getKokkosTileSize(i_tile, j_tile, k_tile);
 
-#elif defined(VERSION2b)
-
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {i_size, j_size, k_size}).set_chunk_size(512),
-                          KOKKOS_LAMBDA(int i, int j, int k) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
-
-#elif defined(VERSION3)
-
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {k_size, j_size, i_size}).set_chunk_size(256),
-                          KOKKOS_LAMBDA(int k, int j, int i) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
-#elif defined(VERSION3)
-
-    Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > ({0,0,0}, {k_size, j_size, i_size}).set_chunk_size(512),
-                          KOKKOS_LAMBDA(int k, int j, int i) {
-                            functor( i + rbegin0, j + rbegin1, k + rbegin2 );
-                          });
-#endif
+    if( i_tile > 0 || j_tile > 0 || k_tile > 0 )
+    {
+      Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instanceObject, {0,0,0}, {k_size, j_size, i_size}, {k_tile, j_tile, i_tile}),
+                            KOKKOS_LAMBDA(int k, int j, int i) {
+                              functor( i + rbegin0, j + rbegin1, k + rbegin2 );
+                            });
+    }
+    else
+    {
+      Kokkos::parallel_for( Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instanceObject, {0,0,0}, {k_size, j_size, i_size}),
+                            KOKKOS_LAMBDA(int k, int j, int i) {
+                              functor( i + rbegin0, j + rbegin1, k + rbegin2 );
+                            });
+    }
+  }
 }
-#endif
 
 #endif  // #if defined(KOKKOS_USING_GPU) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 

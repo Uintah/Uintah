@@ -85,6 +85,13 @@ class Parallel {
         OPEN_MP_THREADS = 1
       };
 
+      enum Kokkos_Policy {
+            Kokkos_Team_Policy
+          , Kokkos_Range_Policy
+          , Kokkos_MDRange_Policy
+          , Kokkos_MDRange_Policy_Reverse
+      };
+
       //////////
       // Initializes MPI if necessary.
       static void initializeManager( int& argc, char**& arg );
@@ -199,6 +206,21 @@ class Parallel {
       static void setThreadsPerPartition( int num );
 
       //////////
+      // Sets the Kokkos execution policy
+      static void setKokkosPolicy( Kokkos_Policy policy );
+      static Kokkos_Policy getKokkosPolicy();
+
+  //////////
+      // Sets the Kokkos chuck size for Kokkos::RangePolicy
+      static void setKokkosChunkSize( int size );
+      static int  getKokkosChunkSize();
+
+      //////////
+      // Sets the Kokkos chuck size for Kokkos::RangePolicy
+      static void setKokkosTileSize( int isize, int jsize, int ksize );
+      static void getKokkosTileSize( int &isize, int &jsize, int &ksize );
+
+      //////////
       // Passes the specified exit code to std::exit()
       static void exitAll( int code );
 
@@ -231,6 +253,11 @@ class Parallel {
       static std::thread::id   s_main_thread_id;
       static ProcessorGroup*   s_root_context;
 
+      static Kokkos_Policy s_kokkos_policy;
+      static int s_kokkos_chunk_size;
+      static int s_kokkos_tile_i_size;
+      static int s_kokkos_tile_j_size;
+      static int s_kokkos_tile_k_size;
 };
 
 } // End namespace Uintah

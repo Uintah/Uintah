@@ -65,6 +65,13 @@ int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
 int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
+
+Parallel::Kokkos_Policy    Parallel::s_kokkos_policy           = Parallel::Kokkos_Team_Policy;
+int              Parallel::s_kokkos_chunk_size       = -1;
+int              Parallel::s_kokkos_tile_i_size      = -1;
+int              Parallel::s_kokkos_tile_j_size      = -1;
+int              Parallel::s_kokkos_tile_k_size      = -1;
+
 std::thread::id  Parallel::s_main_thread_id          = std::this_thread::get_id();
 ProcessorGroup*  Parallel::s_root_context            = nullptr;
 
@@ -275,6 +282,51 @@ Parallel::setThreadsPerPartition( int num )
 }
 
 //_____________________________________________________________________________
+//  Sets the Kokkos execution policy
+void
+Parallel::setKokkosPolicy( Parallel::Kokkos_Policy policy )
+{
+  s_kokkos_policy = policy;
+}
+
+Parallel::Kokkos_Policy
+Parallel::getKokkosPolicy()
+{
+  return s_kokkos_policy;
+}
+
+//_____________________________________________________________________________
+//  Sets/gets the Kokkos chuck size for Kokkos::RangePolicy
+void
+Parallel::setKokkosChunkSize( int size )
+{
+  s_kokkos_chunk_size = size;
+}
+
+int
+Parallel::getKokkosChunkSize()
+{
+  return s_kokkos_chunk_size;
+}
+
+//_____________________________________________________________________________
+//  Sets/gets the Kokkos chuck size for Kokkos::RangePolicy
+void Parallel::setKokkosTileSize( int isize, int jsize, int ksize )
+{
+  s_kokkos_tile_i_size = isize;
+  s_kokkos_tile_j_size = jsize;
+  s_kokkos_tile_k_size = ksize;
+}
+
+void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
+{
+  isize = s_kokkos_tile_i_size;
+  jsize = s_kokkos_tile_j_size;
+  ksize = s_kokkos_tile_k_size;
+}
+
+
+//_____________________________________________________________________________
 //
 bool
 Parallel::isInitialized()
@@ -400,15 +452,15 @@ Parallel::initializeManager( int& argc , char**& argv )
     }
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(UINTAH_USING_GPU)
     if ( s_using_device ) {
       if ( s_cuda_blocks_per_loop > 0 ) {
         std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
-        std::cout << "Parallel: " << s_cuda_blocks_per_loop << " CUDA " << plural << " per loop\n";
+        std::cout << "Parallel GPU: " << s_cuda_blocks_per_loop << " CUDA " << plural << " per loop\n";
       }
       if ( s_cuda_threads_per_block > 0 ) {
         std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
-        std::cout << "Parallel: " << s_cuda_threads_per_block << " CUDA " << plural << " per block\n";
+        std::cout << "Parallel GPU: " << s_cuda_threads_per_block << " CUDA " << plural << " per block\n";
       }
     }
 #endif
