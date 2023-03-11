@@ -137,7 +137,7 @@ static void quit(const std::string& msg = "")
   if (msg != "") {
     std::cerr << msg << "\n";
   }
-  
+
   Uintah::Parallel::finalizeManager();
   Parallel::exitAll(2);
 }
@@ -148,7 +148,7 @@ static void usage( const std::string& message,
                    const std::string& progname )
 {
   start();
-  
+
   if (Uintah::Parallel::getMPIRank() == 0) {
     std::cerr << "\n";
     if (badarg != "") {
@@ -169,8 +169,13 @@ static void usage( const std::string& message,
     std::cerr << "-cuda_streams_per_task <#>  : Number of CUDA streams per task \n";
 
 #endif
-    std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
-    std::cerr << "                            : Returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
+#if defined(KOKKOS_USING_GPU)
+    std::cerr << "-kokkos_policy <policy>     : Kokkos Execution Policy - team, range, mdrange, or mdrange_rev\n";
+    std::cerr << "-kokkos_chunk_size <#>      : Kokkos RangePolicy chunk size\n";
+    std::cerr << "-kokkos_tile_size <# # #>   : Kokkos MDRangePolicy tile size\n";
+#endif
+    std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with GPU support and there is a GPU available. \n";
+    std::cerr << "                            : Returns 2 if sus was not compiled with GPU support or there are no GPUs available. \n";
     std::cerr << "-nthreads <#>               : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
     std::cerr << "-npartitions <#>            : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler\n";
     std::cerr << "-nthreadsperpartition <#>   : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler\n";
@@ -459,11 +464,101 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(2);
 #endif
     }
+
+    else if (arg == "-kokkos_policy") {
+#if defined(KOKKOS_USING_GPU)
+      Parallel::Kokkos_Policy kokkos_policy = Parallel::Kokkos_Team_Policy;
+      if (++i == argc) {
+        usage("You must provide the policy -kokkos_policy", arg, argv[0]);
+      }
+
+      if( strcmp(argv[i], "team") == 0 )
+        kokkos_policy = Parallel::Kokkos_Team_Policy;
+      else if( strcmp(argv[i], "range") == 0 )
+        kokkos_policy = Parallel::Kokkos_Range_Policy;
+      else if( strcmp(argv[i], "mdrange") == 0 )
+        kokkos_policy = Parallel::Kokkos_MDRange_Policy;
+      else if( strcmp(argv[i], "mdrange_rev") == 0 )
+        kokkos_policy = Parallel::Kokkos_MDRange_Policy_Reverse;
+      else
+      {
+        usage("Unknown Kokkos policy", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+
+      Uintah::Parallel::setKokkosPolicy(kokkos_policy);
+#else
+      std::cout << "Not compiled for Kokkos Range Policy support" << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+
+    else if (arg == "-kokkos_chunk_size") {
+#if defined(KOKKOS_USING_GPU)
+      int kokkos_chunk_size = 0;
+      if (++i == argc) {
+        usage("You must provide the chunk size -kokkos_chunk_size", arg, argv[0]);
+      }
+      kokkos_chunk_size = atoi(argv[i]);
+      if( kokkos_chunk_size < 1 ) {
+        usage("The Kokkos chunk size is too small", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+      Uintah::Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
+      Uintah::Parallel::setKokkosChunkSize(kokkos_chunk_size);
+#else
+      std::cout << "Not compiled for Kokkos GPU support" << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+
+    else if (arg == "-kokkos_tile_size") {
+#if defined(KOKKOS_USING_GPU)
+      int kokkos_tile_isize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile i index size -kokkos_tile_size", arg, argv[0]);
+      }
+      kokkos_tile_isize = atoi(argv[i]);
+      if( kokkos_tile_isize < 1 ) {
+        usage("The Kokkos tile isize is too small", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+
+      int kokkos_tile_jsize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile j index size -kokkos_tile_size", arg, argv[0]);
+      }
+      kokkos_tile_jsize = atoi(argv[i]);
+      if( kokkos_tile_jsize < 1 ) {
+        usage("The Kokkos tile jsize is too small", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+
+      int kokkos_tile_ksize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile k index size -kokkos_tile_size", arg, argv[0]);
+      }
+      kokkos_tile_ksize = atoi(argv[i]);
+      if( kokkos_tile_ksize < 1 ) {
+        usage("The Kokkos tile ksize is too small", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+
+      Uintah::Parallel::setKokkosPolicy(Parallel::Kokkos_MDRange_Policy);
+      Uintah::Parallel::setKokkosTileSize(kokkos_tile_isize,
+                                          kokkos_tile_jsize,
+                                          kokkos_tile_ksize);
+#else
+      std::cout << "Not compiled for Kokkos GPU support" << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+
     else if (arg == "-taskname_to_time") {
-      // A hidden command line option useful for timing GPU tasks by forcing this task name to 
-      // wait until they can all be launched as a big group.  This helps time by avoiding 
-      // any interleaving of other tasks in the way.  
-      // This command line option must be paired with two additional arguments.  
+      // A hidden command line option useful for timing GPU tasks by forcing this task name to
+      // wait until they can all be launched as a big group.  This helps time by avoiding
+      // any interleaving of other tasks in the way.
+      // This command line option must be paired with two additional arguments.
       // The first being the name of the task
       // The second being the amount of times that task is expected to run in a timestep.
       i++;
@@ -575,7 +670,7 @@ int main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
+
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, nullptr, true );
 
@@ -654,7 +749,7 @@ int main( int argc, char *argv[], char *env[] )
       std::cout << "CFLAGS: " << CFLAGS << "\n";
       std::cout << "CXXFLAGS: " << CXXFLAGS << "\n";
 
-      // Run git commands Uintah 
+      // Run git commands Uintah
       if ( do_gitDiff || do_gitStatus ) {
         std::cout << "____GIT_____________________________________________________________\n";
         std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
@@ -759,7 +854,7 @@ int main( int argc, char *argv[], char *env[] )
 
         if( title.size() )
         {
-          // Have the title so pass that into the libsim 
+          // Have the title so pass that into the libsim
           char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
 
           if (new_argv != nullptr)
@@ -781,7 +876,7 @@ int main( int argc, char *argv[], char *env[] )
         }
       }
 
-      visit_LibSimArguments( argc, argv );      
+      visit_LibSimArguments( argc, argv );
     }
 #endif
 
@@ -798,7 +893,7 @@ int main( int argc, char *argv[], char *env[] )
     if ( postProcessUda ) {
       simController->setPostProcessFlags();
     }
-    
+
 #ifdef HAVE_VISIT
     simController->setVisIt( do_VisIt );
 #endif
@@ -806,12 +901,12 @@ int main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Component and application interface
     UintahParallelComponent* appComp = ApplicationFactory::create( ups, world, nullptr, udaDir );
-    
+
     ApplicationInterface* application = dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
     application->problemSetup( ups );
-    
+
 #ifdef HAVE_VISIT
     application->setVisIt( do_VisIt );
 #endif
@@ -828,7 +923,7 @@ int main( int argc, char *argv[], char *env[] )
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
     UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
-    
+
     appComp->attachPort( "solver", solver );
     solverComp->attachPort( "application", application );
 
@@ -851,7 +946,7 @@ int main( int argc, char *argv[], char *env[] )
 
     scheduler->attachPort( "load balancer", loadBalancer );
     scheduler->attachPort( "application", application );
-    
+
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
     loadBalancer->attachPort( "scheduler", scheduler );
@@ -859,7 +954,7 @@ int main( int argc, char *argv[], char *env[] )
 
     scheduler->setStartAddr( start_addr );
     scheduler->addReference();
-    
+
     if ( emit_graphs ) {
       scheduler->doEmitTaskGraphDocs();
     }
@@ -870,7 +965,7 @@ int main( int argc, char *argv[], char *env[] )
 
     dataArchiver->attachPort( "application", application );
     dataArchiver->attachPort( "load balancer", loadBalancer );
-    
+
     dataArchiver->setUseLocalFileSystems( local_filesystem );
 
     simController->attachPort( "output", dataArchiver );
@@ -908,14 +1003,14 @@ int main( int argc, char *argv[], char *env[] )
 
     appComp->getComponents();
     simController->getComponents();
-    
+
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
       simController->doRestart( udaDir, restartCheckpointIndex,
                                 restartFromScratch, restartRemoveOldDir );
     }
-    
+
     // This gives memory held by the 'ups' back before the simulation
     // starts... Assuming no one else is holding on to it...
     ups = nullptr;
@@ -942,7 +1037,7 @@ int main( int argc, char *argv[], char *env[] )
 
     delete dataArchiver;
     delete loadBalancer;
-    delete solver;   
+    delete solver;
     delete application;
     delete simController;
     delete scheduler;
@@ -953,7 +1048,7 @@ int main( int argc, char *argv[], char *env[] )
 #endif //HAVE_KOKKOS
 
   }
-  
+
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
@@ -998,7 +1093,7 @@ int main( int argc, char *argv[], char *env[] )
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     thrownException = true;
   }
-  
+
   Uintah::TypeDescription::deleteAll();
 
   /*
