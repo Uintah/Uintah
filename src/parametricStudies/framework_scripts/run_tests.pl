@@ -55,7 +55,7 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr setPath modify_xml_file modify_batchScript read_file write_file runSusCmd submitBatchScript );
+use Utilities qw( cleanStr setPath modify_xml_file modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -100,7 +100,7 @@ if( $tst_dom->exists( '/start/exitOnCrash' ) ){
   $exitOnCrash = cleanStr( $tst_dom->findvalue( '/start/exitOnCrash' ) );
 }
 $exitOnCrash = trim(uc($exitOnCrash));
-print "  Exit on crash or timeout ($exitOnCrash)\n";
+print "\tExit on crash or timeout ($exitOnCrash)\n";
 
 
 #__________________________________
@@ -109,7 +109,7 @@ my $timeout = 24*60*60;
 if( $tst_dom->exists( '/start/susTimeout_minutes' ) ){
   $timeout = cleanStr( $tst_dom->findvalue( '/start/susTimeout_minutes' ) );
 }
-print "  Simulation timeout: $timeout minutes\n";
+print "\tSimulation timeout: $timeout minutes\n";
 
 
 #__________________________________
@@ -126,11 +126,14 @@ if ( ! -e $upsFile ){
 
 #______________________________________________________________________
 # Globally, replace lines & values in the main ups file before loop over tests.
-print "  \nReplacing lines and values in base ups file\n";
+print "\n\tReplacing lines and values in base ups file\n";
 
 my @allTests_nodes = $tst_dom->findnodes('/start/AllTests');
 
 modify_xml_file( $upsFile, @allTests_nodes );
+
+runPreProcessCmd( $upsFile, "null", @allTests_nodes); 
+
 
 
 #______________________________________________________________________
@@ -158,6 +161,8 @@ foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
   print "\treplace_XML_line $fn\n";
 
   modify_xml_file( $test_ups, $test_node );
+  
+  runPreProcessCmd(  "null", "$test_ups", $test_node);
   
   #__________________________________
   #  replace any batch script values per test
