@@ -1,30 +1,33 @@
 //__________________________________
 // Basic Git Commands
 
-git clone <repository>        // copy a remote repository into a new local directory
+git clone <repository>                     // copy a remote repository into a new local directory
 
-git checkout <branch>         // switch between branches (e.g., master, kokkos_dev, etc)
+git checkout <branch>                      // switch between branches (e.g., master, kokkos_dev, etc)
 
-git checkout -b <new_branch>  // create and checkout a new branch
+git checkout -b <new_branch>               // create and checkout a new branch
 
-git pull                      // bring changes from a remote repository into a local repository
+git pull                                   // bring changes from a remote repository into a local repository
 
-git status                    // show the status of a local repository
+git status                                 // show the status of a local repository
 
-git diff                      // show differences between commits, local/remote repositories, etc
+git diff                                   // show differences between commits, local/remote repositories, etc
 
-git add <file>                // add files to the list that will be committed
+git add <file>                             // add files to the list that will be committed
 
-git rm <file>                 // removes files from the list that will be committed and the working directory
+git rm <file>                              // removes files from the list that will be committed and the working directory
 
-git commit -m "<msg>"         // commit changes to a local repository
-git push                      // push committed local changes to a remote repository
+git commit -m "<msg>"                      // commit changes to a local repository
 
-git reset --hard              // discard uncommitted local changes in tracked files
+git push                                   // push committed local changes to a remote repository
 
-git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s)
+git reset --hard                           // discard uncommitted local changes in tracked files
 
-git revert <commit>           // reverse prior commits
+git checkout -- <path or file>              // discard local changes (not committed) to a directory or file(s)
+
+git revert <commit>                        // reverse prior commits
+
+git ls-files --modified | xargs git add    // add all modified files 
 
 Notes:
 - git push is needed after git commit to bring changes into a remote repository
