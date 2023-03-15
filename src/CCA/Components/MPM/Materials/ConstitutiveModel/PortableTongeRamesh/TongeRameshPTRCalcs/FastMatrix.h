@@ -15,7 +15,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 University of Utah.
+Copyright (c) 1997-2023 The University of Utah.
 
 License for the specific language governing rights and limitations under
 Permission is hereby granted, free of charge, to any person obtaining a

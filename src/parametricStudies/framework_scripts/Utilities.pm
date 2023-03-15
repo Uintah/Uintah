@@ -1,7 +1,7 @@
 #
 # The MIT License
 #
-# Copyright (c) 1997-2021 The University of Utah
+# Copyright (c) 1997-2023 The University of Utah
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -29,10 +29,11 @@ use diagnostics;
 use warnings;
 use XML::LibXML;
 use Data::Dumper;
+use File::Which qw(which where);
 use Exporter 'import';
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(cleanStr setPath print_XML_ElementTree get_XML_value modify_xml_file modify_xml_files modify_batchScript read_file write_file runSusCmd submitBatchScript );
+our @EXPORT_OK = qw(cleanStr setPath print_XML_ElementTree get_XML_value modify_xml_file modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
 
 #______________________________________________________________________
 #
@@ -399,6 +400,76 @@ sub write_file {
 
     return;
 }
+
+#______________________________________________________________________
+
+sub runPreProcessCmd {
+  my ( $upsFile_base, $upsFile_mod, $test_nodes ) = @_;
+  
+  if( ! $test_nodes->findnodes('preProcess_cmd') ){
+    return;
+  }
+   
+  print "\n";
+
+  foreach my $ppc_node ( $test_nodes->findnodes('preProcess_cmd') ) {
+    my $cmd0      = $ppc_node->getAttribute('cmd');
+    my $whichUps  = uc( $ppc_node->getAttribute('which_ups') );
+    my $add_ups   = uc( $ppc_node->getAttribute('add_ups') );
+    my $upsFile   = "";
+
+    my @cmd = split(/ /,$cmd0);
+    
+    # bulletproofing
+    my $test1 = ( ( $add_ups eq "TRUE" )  &&( $whichUps ne "TEST_UPS" ) && ( $whichUps ne "BASE_UPS" ) );
+    my $test2 = ( ( $add_ups eq "FALSE" ) &&( $whichUps ne "NONE" ) );
+
+    if ( $test1 || $test2 ){
+      print "\n\tERROR:runPreProcessCmd:\n";
+      print "\t- The only valid options for 'which_ups' is 'TEST_UPS', 'BASE_UPS', or 'none.'\n";
+      print "\t- If 'add_ups' == false then 'which_ups' must be none.\n";
+      print "\t $ppc_node\n";
+      print "\tNow exiting\n";
+      exit 
+    }
+    if ( ( ! which($cmd[0]) ) ){
+      print "\n\tERROR:runPreProcessCmd:\n";
+      print "\tThe command specified could not be found:\n";
+      print "\t $ppc_node\n";
+      print "\tNow exiting\n";
+      exit 
+    }
+
+    if( $whichUps eq "TEST_UPS" ){
+      $upsFile = $upsFile_mod;
+    }
+    elsif ( $whichUps eq "BASE_UPS" ) {
+      $upsFile = $upsFile_base;
+    }
+
+    if ( ( ! -e $upsFile ) && ( $whichUps ne "NONE") ){
+      die("\nERROR \trunPreProcessCmd Could not find the ups file ($upsFile)\n\n");
+    }
+    
+    my @full_cmd = ( "@cmd", "$upsFile", ">> out.preProcess 2>&1" );
+    
+    my $outFile;
+    open( $outFile,">>", "out.preProcess");    
+    print  $outFile "\n______________________________________________________________________\n";
+    print  $outFile "   cmd: (@full_cmd) whichUps: ".$whichUps." Ups: ".$upsFile. "\n";
+    print  $outFile "______________________________________________________________________\n";
+    close($outFile);
+    
+    print "\tExecuting preProcessCmd (@full_cmd)\n";
+    
+    my $rc = system( "@full_cmd" );
+    
+    if( $rc != 0){
+      print "ERROR \trunPreProcessCmd, the command (@full_cmd) failed\n";
+      die("ERROR");
+    }
+  }
+};
 
 #______________________________________________________________________
 
