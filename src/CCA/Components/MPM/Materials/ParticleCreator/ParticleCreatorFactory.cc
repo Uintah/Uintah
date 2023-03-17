@@ -40,15 +40,12 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
                                                 bool allTriGeom)
 {
   ProblemSpecP cm_ps = ps->findBlock("constitutive_model");
-  string mat_type;
-  cm_ps->getAttribute("type",mat_type);
 
   if (flags->d_integrator_type == "implicit") 
     return scinew ImplicitParticleCreator(mat,flags);
 
   else if (flags->d_integrator_type == "explicit" && allTriGeom==true){ 
     return scinew TriangleParticleCreator(mat,flags);
-    //return scinew ParticleCreator(mat,flags);
   }
 
   else 

@@ -165,6 +165,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes        = 0;
+    vector<Matrix3>* psizes        = 0;
     vector<double>* temperatures   = 0;
     vector<double>* colors         = 0;
     vector<double>* concentrations = 0;
@@ -174,7 +175,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pforces        = 0;
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
-    vector<Matrix3>* psizes        = 0;
 
     if (sgp){
       volumes      = sgp->getVolume();
@@ -190,14 +190,27 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     } // if smooth geometry piece
 
-    // The following is for FileGeometryPiece, I'm not sure why this
-    // isn't in a conditional.  JG
+    // Commenting out the conditionals because with the introduction of
+    // recursive particle filling, the volumes and sizes are now computed
+    // in createPoints
 
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
-    if (volumes) {
-      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
-    }
+//    if (volumes) {
+    voliter = vars.d_object_vols[*obj].begin();
+//      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
+//    }
+
+    // For getting particle sizes (if they exist)
+    vector<Matrix3>::const_iterator sizeiter;
+//    if (psizes) {
+//      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
+    sizeiter = vars.d_object_size[*obj].begin();
+//      if (d_flags->d_AMR) {
+//        cerr << "WARNING:  The particle size when using smooth or file\n"; 
+//        cerr << "geom pieces needs some work when used with AMR" << endl;
+//      }
+//    }
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
@@ -224,20 +237,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
               vars.d_object_velocity[*obj].begin();  // new change name
     }                                                    // end gcd adds
 
-    // For getting particle sizes (if they exist)
-    vector<Matrix3>::const_iterator sizeiter;
-    if (psizes) {
-      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
-      if (d_flags->d_AMR) {
-        cerr << "WARNING:  The particle size when using smooth or file\n"; 
-        cerr << "geom pieces needs some work when used with AMR" << endl;
-      }
-    }
-
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
     if (colors) {
       if (!colors->empty()) coloriter = vars.d_object_colors[*obj].begin();
+        coloriter = vars.d_object_colors[*obj].begin();
     }
 
     // For getting particles concentrations (if they exist)
@@ -317,21 +321,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (volumes) {
-        if (!volumes->empty()) {
+//      if (volumes) {
+//        if (!volumes->empty()) {
           pvars.pvolume[pidx] = *voliter;
           pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           ++voliter;
-        }
-      }
+//        }
+//      }
 
-      if (psizes) {
+//      if (psizes) {
         // Read psize from file or get from a smooth geometry piece
-        if (!psizes->empty()) {
+//        if (!psizes->empty()) {
           pvars.psize[pidx] = *sizeiter;
           ++sizeiter;
-        }
-      }
+//        }
+//      }
 
       if (colors) {
         if (!colors->empty()) {
@@ -489,6 +493,8 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
+  int numLevelsParticleFilling =
+                            obj->getInitialData_int("numLevelsParticleFilling");
 
   // Affine transformation for making conforming particle distributions
   // to be used in the conforming CPDI simulations. The input vectors are
@@ -510,6 +516,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
+  int fullCell = ppc.x()*ppc.y()*ppc.z();
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
@@ -524,6 +531,12 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       }
     }
 
+    int numInCell = 0;
+    vector<Point> pointsInCell;
+    vector<Vector> DXP;
+    Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
+                 0.,1./((double) ppc.y()),0.,
+                 0.,0.,1./((double) ppc.z()));
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
@@ -541,10 +554,66 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
             p(1)=p1[1];
             p(2)=p1[2];
             vars.d_object_points[obj].push_back(p);
+            vars.d_object_vols[obj].push_back(dxpp.x()*dxpp.y()*dxpp.z());
+            vars.d_object_size[obj].push_back(stdSize);
+            pointsInCell.push_back(p);
+            DXP.push_back(dxpp);
+            numInCell++;
           }
         }  // z
       }  // y
     }  // x
+
+    Vector dxpr = dxpp;
+    double factor = 1.;
+    if(numInCell < fullCell){
+     for (int rr = 1; rr < numLevelsParticleFilling; rr++){
+      int numPIC = pointsInCell.size();
+      dxpr*=0.5;
+      Vector dcornerr = dxpr*0.5;
+      factor*=2.;
+      lower = patch->nodePosition(*iter) + dcornerr;
+      for(int ix=0;ix < factor*ppc.x(); ix++){
+        for(int iy=0;iy < factor*ppc.y(); iy++){
+          for(int iz=0;iz < factor*ppc.z(); iz++){
+        
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpr*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){ 
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              bool overlap = false;
+              for(int ip = 0; ip < numPIC; ip++){
+                if((p.x() >= pointsInCell[ip].x()-.5*DXP[ip].x()  && 
+                    p.x() <= pointsInCell[ip].x()+.5*DXP[ip].x()) &&
+                   (p.y() >= pointsInCell[ip].y()-.5*DXP[ip].y()  && 
+                    p.y() <= pointsInCell[ip].y()+.5*DXP[ip].y()) &&
+                   (p.z() >= pointsInCell[ip].z()-.5*DXP[ip].z()  && 
+                    p.z() <= pointsInCell[ip].z()+.5*DXP[ip].z())) {
+                    overlap = true;
+                }
+              }
+              if(!overlap){
+               vars.d_object_points[obj].push_back(p);
+               vars.d_object_vols[obj].push_back(dxpr.x()*dxpr.y()*dxpr.z());
+               vars.d_object_size[obj].push_back((1./factor)*stdSize);
+               pointsInCell.push_back(p);
+               DXP.push_back(dxpr);
+              }
+            }
+          }  // z
+        }  // y
+      }  // x
+     }
+    }  // Not a full cell
+
   }  // CellIterator
 
 /*

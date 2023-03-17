@@ -58,8 +58,14 @@ GeometryObject::GeometryObject(GeometryPieceP   geom_piece,
         case Integer:
         {
           int val;
-          ps->require(it->name,val);
-          d_int_data[it->name] = val;
+          if(it->name == "numLevelsParticleFilling") {
+            ps->getWithDefault( it->name, val, 1);
+            d_int_data[it->name] = val;
+          } 
+          else {
+            ps->require(it->name,val);
+            d_int_data[it->name] = val;
+          }
           break;
         }
         case Vector:

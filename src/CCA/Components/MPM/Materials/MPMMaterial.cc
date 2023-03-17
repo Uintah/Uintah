@@ -144,6 +144,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",            GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",               GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("numLevelsParticleFilling",GeometryObject::Integer));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A0",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A1",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A2",GeometryObject::Vector));
@@ -158,6 +159,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
 
      vector<GeometryPieceP> pieces;
      GeometryPieceFactory::create(geom_obj_ps, pieces);
@@ -182,7 +184,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
        mainpiece = pieces[0];
      }
 
-     GeometryObject* obj = scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data);
+     GeometryObject* obj = scinew GeometryObject(mainpiece, 
+                                                 geom_obj_ps, geom_obj_data);
+
+     int numLevelsParticleFilling =
+                            obj->getInitialData_int("numLevelsParticleFilling");
+     if(numLevelsParticleFilling > 1){
+       d_allTriGeometry=false;
+     }
 
      d_geom_objs.push_back( obj );
     }
