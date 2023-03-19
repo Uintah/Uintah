@@ -189,7 +189,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
      int numLevelsParticleFilling =
                             obj->getInitialData_int("numLevelsParticleFilling");
-     if(numLevelsParticleFilling > 1){
+     if(abs(numLevelsParticleFilling) > 1){
        d_allTriGeometry=false;
      }
 

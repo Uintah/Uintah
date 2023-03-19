@@ -516,7 +516,12 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
-  int fullCell = ppc.x()*ppc.y()*ppc.z();
+//  int fullCell = ppc.x()*ppc.y()*ppc.z();
+  Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
+                  0.,1./((double) ppc.y()),0.,
+                  0.,0.,1./((double) ppc.z()));
+  double vol = dxpp.x()*dxpp.y()*dxpp.z();
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
@@ -531,89 +536,167 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       }
     }
 
-    int numInCell = 0;
-    vector<Point> pointsInCell;
-    vector<Vector> DXP;
-    Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
-                 0.,1./((double) ppc.y()),0.,
-                 0.,0.,1./((double) ppc.z()));
-    for(int ix=0;ix < ppc.x(); ix++){
-      for(int iy=0;iy < ppc.y(); iy++){
-        for(int iz=0;iz < ppc.z(); iz++){
-        
-          IntVector idx(ix, iy, iz);
-          Point p = lower + dxpp*idx;
-          if (!b2.contains(p)){
-            throw InternalError("Particle created outside of patch?",
-                                 __FILE__, __LINE__);
-          }
-          if (piece->inside(p,true)){ 
-            Vector p1(p(0),p(1),p(2));
-            p1=affineTrans_A*p1+affineTrans_b;
-            p(0)=p1[0];
-            p(1)=p1[1];
-            p(2)=p1[2];
-            vars.d_object_points[obj].push_back(p);
-            vars.d_object_vols[obj].push_back(dxpp.x()*dxpp.y()*dxpp.z());
-            vars.d_object_size[obj].push_back(stdSize);
-            pointsInCell.push_back(p);
-            DXP.push_back(dxpp);
-            numInCell++;
-          }
-        }  // z
-      }  // y
-    }  // x
+    // Added on 3-18-23:  Ability to recursively add smaller particles to
+    // fill in the gaps between a surface and the particles created using the
+    // standard resolution.
+    // The code immediately below does NOT fill recursively, it is essentially
+    // just the original particle filling code
+    if(abs(numLevelsParticleFilling)<=1){  // Original code
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
 
-    Vector dxpr = dxpp;
-    double factor = 1.;
-    if(numInCell < fullCell){
-     for (int rr = 1; rr < numLevelsParticleFilling; rr++){
-      int numPIC = pointsInCell.size();
-      dxpr*=0.5;
-      Vector dcornerr = dxpr*0.5;
-      factor*=2.;
-      lower = patch->nodePosition(*iter) + dcornerr;
-      for(int ix=0;ix < factor*ppc.x(); ix++){
-        for(int iy=0;iy < factor*ppc.y(); iy++){
-          for(int iz=0;iz < factor*ppc.z(); iz++){
-        
             IntVector idx(ix, iy, iz);
-            Point p = lower + dxpr*idx;
+            Point p = lower + dxpp*idx;
             if (!b2.contains(p)){
               throw InternalError("Particle created outside of patch?",
                                    __FILE__, __LINE__);
             }
-            if (piece->inside(p,true)){ 
+            if (piece->inside(p,true)){
               Vector p1(p(0),p(1),p(2));
               p1=affineTrans_A*p1+affineTrans_b;
               p(0)=p1[0];
               p(1)=p1[1];
               p(2)=p1[2];
-              bool overlap = false;
-              for(int ip = 0; ip < numPIC; ip++){
-                if((p.x() >= pointsInCell[ip].x()-.5*DXP[ip].x()  && 
-                    p.x() <= pointsInCell[ip].x()+.5*DXP[ip].x()) &&
-                   (p.y() >= pointsInCell[ip].y()-.5*DXP[ip].y()  && 
-                    p.y() <= pointsInCell[ip].y()+.5*DXP[ip].y()) &&
-                   (p.z() >= pointsInCell[ip].z()-.5*DXP[ip].z()  && 
-                    p.z() <= pointsInCell[ip].z()+.5*DXP[ip].z())) {
-                    overlap = true;
-                }
-              }
-              if(!overlap){
-               vars.d_object_points[obj].push_back(p);
-               vars.d_object_vols[obj].push_back(dxpr.x()*dxpr.y()*dxpr.z());
-               vars.d_object_size[obj].push_back((1./factor)*stdSize);
-               pointsInCell.push_back(p);
-               DXP.push_back(dxpr);
-              }
+              vars.d_object_points[obj].push_back(p);
+              vars.d_object_vols[obj].push_back(vol);
+              vars.d_object_size[obj].push_back(stdSize);
             }
           }  // z
         }  // y
       }  // x
-     }
-    }  // Not a full cell
+    } else {  // Do recursive particle filling
+      // This code does recursive particle filling.  If the 
+      // "numLevelsParticleFilling" variable, set in <geom_object>
+      // is positive, then successively smaller particles are used to fill
+      // in the empty space, but the originally created large particles may
+      // stick out of the suface.  These are left alone.
+      // If "numLevelsParticleFilling" is negative, then particles that
+      // have a corner that falls outside the original surface are deleted
+      // and replaced with sequentially smaller particles.
 
+      int numInCell = 0;
+      vector<Point> pointsInCell;
+      vector<Vector> DXP;
+      vector<double> pvolume;
+      vector<Matrix3> psize;
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              pointsInCell.push_back(p);
+              DXP.push_back(dxpp);
+              pvolume.push_back(vol);
+              psize.push_back(stdSize);
+              numInCell++;
+            }
+          }  // z
+        }  // y
+      }  // x
+
+      Vector dxpr = dxpp;
+      double mfactor = 1.;
+      double dfactor = 1.;
+      for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
+        int numPIC = pointsInCell.size();
+        if(numLevelsParticleFilling < 0){  
+         // Remove particles that have a corner that lies outside the surface.  
+         // Fill them in below.
+          vector<int> toRemove;
+          toRemove.clear();
+          for(int ip = 0; ip < numPIC; ip++){
+             Point PIC  = pointsInCell[ip];
+             Point corner[8];
+             corner[0] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[1] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[2] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[3] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[4] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[5] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[6] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[7] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
+             for(int ic = 0; ic < 8; ic++){
+               if(!piece->inside(corner[ic],true)){
+                 toRemove.push_back(ip);
+                 break;
+               }
+             }
+          }
+          for(int ipo = toRemove.size()-1; ipo >= 0; ipo--){
+            pointsInCell.erase(pointsInCell.begin() + toRemove[ipo]);
+            DXP.erase(DXP.begin() + toRemove[ipo]);
+            pvolume.erase(pvolume.begin() + toRemove[ipo]);
+            psize.erase(psize.begin() + toRemove[ipo]);
+            numInCell--;
+          }
+        }  // if numLevelsParticleFilling < 0
+        numPIC = pointsInCell.size();
+        dxpr*=0.5;
+        Vector dcornerr = dxpr*0.5;
+        mfactor*=2.;
+        dfactor*=0.5;
+        double rvol = dfactor*dfactor*dfactor*vol;
+        lower = patch->nodePosition(*iter) + dcornerr;
+        for(int ix=0;ix < mfactor*ppc.x(); ix++){
+          for(int iy=0;iy < mfactor*ppc.y(); iy++){
+            for(int iz=0;iz < mfactor*ppc.z(); iz++){
+
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpr*idx;
+              if (!b2.contains(p)){
+                throw InternalError("Particle created outside of patch?",
+                                     __FILE__, __LINE__);
+              }
+              if (piece->inside(p,true)){ 
+                Vector p1(p(0),p(1),p(2));
+                p1=affineTrans_A*p1+affineTrans_b;
+                p(0)=p1[0];
+                p(1)=p1[1];
+                p(2)=p1[2];
+                bool overlap = false;
+                for(int ip = 0; ip < numPIC; ip++){
+                  Point PIC  = pointsInCell[ip];
+                  Vector DXPip = DXP[ip];
+                  if((p.x() >= PIC.x()-.5*DXPip.x()  && 
+                      p.x() <= PIC.x()+.5*DXPip.x()) &&
+                     (p.y() >= PIC.y()-.5*DXPip.y()  && 
+                      p.y() <= PIC.y()+.5*DXPip.y()) &&
+                     (p.z() >= PIC.z()-.5*DXPip.z()  && 
+                      p.z() <= PIC.z()+.5*DXPip.z())) {
+                      overlap = true;
+                  }
+                }
+                if(!overlap){
+                   pointsInCell.push_back(p);
+                   DXP.push_back(dxpr);
+                   pvolume.push_back(rvol);
+                   psize.push_back(dfactor*stdSize);
+                   numInCell++;
+                }
+              }
+            }  // z
+          }  // y
+        }  // x
+      }  // for ... rr
+
+      for(int ifc = 0; ifc<numInCell; ifc++){
+        vars.d_object_points[obj].push_back(pointsInCell[ifc]);
+        vars.d_object_vols[obj].push_back(pvolume[ifc]);
+        vars.d_object_size[obj].push_back(psize[ifc]);
+      }
+    }  // do recursive particle filling
   }  // CellIterator
 
 /*
