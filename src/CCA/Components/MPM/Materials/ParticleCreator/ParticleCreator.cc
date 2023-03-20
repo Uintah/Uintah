@@ -784,21 +784,21 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
         int numPIC = pointsInCell.size();
         if(numLevelsParticleFilling < 0){  
-         // Remove particles that have a corner that lies outside the surface.  
-         // Fill them in below.
+         // Remove particles if a smaller particle within it would lie
+         // outside the surface.  Fill them in below.
           vector<int> toRemove;
           toRemove.clear();
           for(int ip = 0; ip < numPIC; ip++){
              Point PIC  = pointsInCell[ip];
              Point corner[8];
-             corner[0] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
-             corner[1] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
-             corner[2] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
-             corner[3] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
-             corner[4] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
-             corner[5] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
-             corner[6] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
-             corner[7] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[0] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[1] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[2] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[3] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[4] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[5] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[6] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[7] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
              for(int ic = 0; ic < 8; ic++){
                if(!piece->inside(corner[ic],true)){
                  toRemove.push_back(ip);
