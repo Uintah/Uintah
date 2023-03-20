@@ -380,6 +380,7 @@
       <density                 spec="OPTIONAL DOUBLE" />
       <pressure                spec="OPTIONAL DOUBLE" />
       <volumeFraction          spec="OPTIONAL DOUBLE" />
+      <numLevelsParticleFilling spec="OPTIONAL INTEGER" />
       <affineTransformation_A0 spec="OPTIONAL VECTOR" /> <!-- If you like to add some new input variables to ... -->
       <affineTransformation_A1 spec="OPTIONAL VECTOR" /> <!-- "geom_object" section, you should also mention them in ... -->
       <affineTransformation_A2 spec="OPTIONAL VECTOR" /> <!-- /src/CCA/Components/MPM/Materials/ConstitutiveModel/MPMMaterial.cc -->

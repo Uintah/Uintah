@@ -177,6 +177,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes        = 0;
+    vector<Matrix3>* psizes        = 0;
     vector<double>* temperatures   = 0;
     vector<double>* colors         = 0;
     vector<double>* concentrations = 0;
@@ -186,7 +187,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pforces        = 0;
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
-    vector<Matrix3>* psizes        = 0;
     vector<Vector>*  pareas        = 0;
 
     if (sgp){
@@ -214,14 +214,27 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       }
     } // if smooth geometry piece
 
-    // The following is for FileGeometryPiece, I'm not sure why this
-    // isn't in a conditional.  JG
+    // Commenting out the conditionals because with the introduction of
+    // recursive particle filling, the volumes and sizes are now computed
+    // in createPoints
 
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
-    if (volumes) {
-      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
-    }
+//    if (volumes) {
+    voliter = vars.d_object_vols[*obj].begin();
+//      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
+//    }
+
+    // For getting particle sizes (if they exist)
+    vector<Matrix3>::const_iterator sizeiter;
+//    if (psizes) {
+//      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
+    sizeiter = vars.d_object_size[*obj].begin();
+//      if (d_flags->d_AMR) {
+//        cerr << "WARNING:  The particle size when using smooth or file\n"; 
+//        cerr << "geom pieces needs some work when used with AMR" << endl;
+//      }
+//    }
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
@@ -247,16 +260,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (!pvelocities->empty()) velocityiter =
               vars.d_object_velocity[*obj].begin();  // new change name
     }                                                    // end gcd adds
-
-    // For getting particle sizes (if they exist)
-    vector<Matrix3>::const_iterator sizeiter;
-    if (psizes) {
-      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
-      if (d_flags->d_AMR) {
-        cerr << "WARNING:  The particle size when using smooth or file\n"; 
-        cerr << "geom pieces needs some work when used with AMR" << endl;
-      }
-    }
 
     // For getting particle areas (if they exist)
     vector<Vector>::const_iterator areaiter;
@@ -347,21 +350,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (volumes) {
-        if (!volumes->empty()) {
+//      if (volumes) {
+//        if (!volumes->empty()) {
           pvars.pvolume[pidx] = *voliter;
           pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           ++voliter;
-        }
-      }
+//        }
+//      }
 
-      if (psizes) {
+//      if (psizes) {
         // Read psize from file or get from a smooth geometry piece
-        if (!psizes->empty()) {
+//        if (!psizes->empty()) {
           pvars.psize[pidx] = *sizeiter;
           ++sizeiter;
-        }
-      }
+//        }
+//      }
 
       // JBH -- pareas is defined by default for the particles, which seems
       //   okay.  However, we don't actually need it unless we're doing
@@ -453,7 +456,7 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)
+      if (pbc->flagMaterialPoint(pp, dxpp) 
        && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
          ret(k) = pbc->loadCurveID();
          k++;
@@ -502,7 +505,7 @@ void ParticleCreator::printPhysicalBCs()
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
-      PressureBC* pbc =
+      PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *pbc << endl;
     }
@@ -643,6 +646,8 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
+  int numLevelsParticleFilling =
+                            obj->getInitialData_int("numLevelsParticleFilling");
 
   // Affine transformation for making conforming particle distributions
   // to be used in the conforming CPDI simulations. The input vectors are
@@ -664,6 +669,12 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
+//  int fullCell = ppc.x()*ppc.y()*ppc.z();
+  Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
+                  0.,1./((double) ppc.y()),0.,
+                  0.,0.,1./((double) ppc.z()));
+  double vol = dxpp.x()*dxpp.y()*dxpp.z();
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
@@ -678,26 +689,167 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       }
     }
 
-    for(int ix=0;ix < ppc.x(); ix++){
-      for(int iy=0;iy < ppc.y(); iy++){
-        for(int iz=0;iz < ppc.z(); iz++){
-          IntVector idx(ix, iy, iz);
-          Point p = lower + dxpp*idx;
-          if (!b2.contains(p)){
-            throw InternalError("Particle created outside of patch?",
-                                 __FILE__, __LINE__);
+    // Added on 3-18-23:  Ability to recursively add smaller particles to
+    // fill in the gaps between a surface and the particles created using the
+    // standard resolution.
+    // The code immediately below does NOT fill recursively, it is essentially
+    // just the original particle filling code
+    if(abs(numLevelsParticleFilling)<=1){  // Original code
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              vars.d_object_points[obj].push_back(p);
+              vars.d_object_vols[obj].push_back(vol);
+              vars.d_object_size[obj].push_back(stdSize);
+            }
+          }  // z
+        }  // y
+      }  // x
+    } else {  // Do recursive particle filling
+      // This code does recursive particle filling.  If the 
+      // "numLevelsParticleFilling" variable, set in <geom_object>
+      // is positive, then successively smaller particles are used to fill
+      // in the empty space, but the originally created large particles may
+      // stick out of the suface.  These are left alone.
+      // If "numLevelsParticleFilling" is negative, then particles that
+      // have a corner that falls outside the original surface are deleted
+      // and replaced with sequentially smaller particles.
+
+      int numInCell = 0;
+      vector<Point> pointsInCell;
+      vector<Vector> DXP;
+      vector<double> pvolume;
+      vector<Matrix3> psize;
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              pointsInCell.push_back(p);
+              DXP.push_back(dxpp);
+              pvolume.push_back(vol);
+              psize.push_back(stdSize);
+              numInCell++;
+            }
+          }  // z
+        }  // y
+      }  // x
+
+      Vector dxpr = dxpp;
+      double mfactor = 1.;
+      double dfactor = 1.;
+      for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
+        int numPIC = pointsInCell.size();
+        if(numLevelsParticleFilling < 0){  
+         // Remove particles that have a corner that lies outside the surface.  
+         // Fill them in below.
+          vector<int> toRemove;
+          toRemove.clear();
+          for(int ip = 0; ip < numPIC; ip++){
+             Point PIC  = pointsInCell[ip];
+             Point corner[8];
+             corner[0] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[1] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[2] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[3] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[4] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[5] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[6] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[7] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
+             for(int ic = 0; ic < 8; ic++){
+               if(!piece->inside(corner[ic],true)){
+                 toRemove.push_back(ip);
+                 break;
+               }
+             }
           }
-          if (piece->inside(p,true)){ 
-            Vector p1(p(0),p(1),p(2));
-            p1=affineTrans_A*p1+affineTrans_b;
-            p(0)=p1[0];
-            p(1)=p1[1];
-            p(2)=p1[2];
-            vars.d_object_points[obj].push_back(p);
+          for(int ipo = toRemove.size()-1; ipo >= 0; ipo--){
+            pointsInCell.erase(pointsInCell.begin() + toRemove[ipo]);
+            DXP.erase(DXP.begin() + toRemove[ipo]);
+            pvolume.erase(pvolume.begin() + toRemove[ipo]);
+            psize.erase(psize.begin() + toRemove[ipo]);
+            numInCell--;
           }
-        }  // z
-      }  // y
-    }  // x
+        }  // if numLevelsParticleFilling < 0
+        numPIC = pointsInCell.size();
+        dxpr*=0.5;
+        Vector dcornerr = dxpr*0.5;
+        mfactor*=2.;
+        dfactor*=0.5;
+        double rvol = dfactor*dfactor*dfactor*vol;
+        lower = patch->nodePosition(*iter) + dcornerr;
+        for(int ix=0;ix < mfactor*ppc.x(); ix++){
+          for(int iy=0;iy < mfactor*ppc.y(); iy++){
+            for(int iz=0;iz < mfactor*ppc.z(); iz++){
+
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpr*idx;
+              if (!b2.contains(p)){
+                throw InternalError("Particle created outside of patch?",
+                                     __FILE__, __LINE__);
+              }
+              if (piece->inside(p,true)){ 
+                Vector p1(p(0),p(1),p(2));
+                p1=affineTrans_A*p1+affineTrans_b;
+                p(0)=p1[0];
+                p(1)=p1[1];
+                p(2)=p1[2];
+                bool overlap = false;
+                for(int ip = 0; ip < numPIC; ip++){
+                  Point PIC  = pointsInCell[ip];
+                  Vector DXPip = DXP[ip];
+                  if((p.x() >= PIC.x()-.5*DXPip.x()  && 
+                      p.x() <= PIC.x()+.5*DXPip.x()) &&
+                     (p.y() >= PIC.y()-.5*DXPip.y()  && 
+                      p.y() <= PIC.y()+.5*DXPip.y()) &&
+                     (p.z() >= PIC.z()-.5*DXPip.z()  && 
+                      p.z() <= PIC.z()+.5*DXPip.z())) {
+                      overlap = true;
+                  }
+                }
+                if(!overlap){
+                   pointsInCell.push_back(p);
+                   DXP.push_back(dxpr);
+                   pvolume.push_back(rvol);
+                   psize.push_back(dfactor*stdSize);
+                   numInCell++;
+                }
+              }
+            }  // z
+          }  // y
+        }  // x
+      }  // for ... rr
+
+      for(int ifc = 0; ifc<numInCell; ifc++){
+        vars.d_object_points[obj].push_back(pointsInCell[ifc]);
+        vars.d_object_vols[obj].push_back(pvolume[ifc]);
+        vars.d_object_size[obj].push_back(psize[ifc]);
+      }
+    }  // do recursive particle filling
   }  // CellIterator
 
 /*
@@ -921,10 +1073,9 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // class to do the counting
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
-    Vector dX = patch->dCell();
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
-    sgp->setCellSize(dX);
+    sgp->setCellSize(patch->dCell());
     if(fgp){
       fgp->setCpti(d_useCPTI);
       fgp->readPoints(patch->getID());
@@ -1256,8 +1407,9 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
 {
 
   //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
+  //  in.  If any of those points are not also inside the object
   //  the current point is on the surface
+  
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
