@@ -645,6 +645,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
+  Vector dxcc = patch->dCell();
   Vector dcorner = dxpp*0.5;
   int numLevelsParticleFilling =
                             obj->getInitialData_int("numLevelsParticleFilling");
@@ -712,8 +713,17 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
               p(1)=p1[1];
               p(2)=p1[2];
               vars.d_object_points[obj].push_back(p);
-              vars.d_object_vols[obj].push_back(vol);
-              vars.d_object_size[obj].push_back(stdSize);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                vars.d_object_vols[obj].push_back(AS_vol);
+              } else{
+                vars.d_object_vols[obj].push_back(vol);
+              }
+              vars.d_object_size[obj].push_back(AS_size);
             }
           }  // z
         }  // y
@@ -751,8 +761,17 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
               p(2)=p1[2];
               pointsInCell.push_back(p);
               DXP.push_back(dxpp);
-              pvolume.push_back(vol);
-              psize.push_back(stdSize);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                pvolume.push_back(AS_vol);
+              } else{
+                pvolume.push_back(vol);
+              }
+              psize.push_back(AS_size);
               numInCell++;
             }
           }  // z
@@ -832,11 +851,20 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                   }
                 }
                 if(!overlap){
-                   pointsInCell.push_back(p);
-                   DXP.push_back(dxpr);
-                   pvolume.push_back(rvol);
-                   psize.push_back(dfactor*stdSize);
-                   numInCell++;
+                  pointsInCell.push_back(p);
+                  DXP.push_back(dxpr);
+                  Matrix3 AS_size = affineTrans_A*stdSize;
+                  if(d_flags->d_axisymmetric){
+                    // assume unit radian extent in  circumferential direction
+                    double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                           AS_size(0,1)*AS_size(1,0))*
+                                           dxcc.x()*dxcc.y();
+                    pvolume.push_back(dfactor*dfactor*AS_vol);
+                  } else{
+                    pvolume.push_back(rvol);
+                  }
+                  psize.push_back(dfactor*AS_size);
+                  numInCell++;
                 }
               }
             }  // z
