@@ -492,6 +492,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
+  Vector dxcc = patch->dCell();
   Vector dcorner = dxpp*0.5;
   int numLevelsParticleFilling =
                             obj->getInitialData_int("numLevelsParticleFilling");
@@ -559,8 +560,17 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
               p(1)=p1[1];
               p(2)=p1[2];
               vars.d_object_points[obj].push_back(p);
-              vars.d_object_vols[obj].push_back(vol);
-              vars.d_object_size[obj].push_back(stdSize);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                vars.d_object_vols[obj].push_back(AS_vol);
+              } else{
+                vars.d_object_vols[obj].push_back(vol);
+              }
+              vars.d_object_size[obj].push_back(AS_size);
             }
           }  // z
         }  // y
@@ -598,8 +608,17 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
               p(2)=p1[2];
               pointsInCell.push_back(p);
               DXP.push_back(dxpp);
-              pvolume.push_back(vol);
-              psize.push_back(stdSize);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                pvolume.push_back(AS_vol);
+              } else{
+                pvolume.push_back(vol);
+              }
+              psize.push_back(AS_size);
               numInCell++;
             }
           }  // z
@@ -612,21 +631,21 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
         int numPIC = pointsInCell.size();
         if(numLevelsParticleFilling < 0){  
-         // Remove particles that have a corner that lies outside the surface.  
-         // Fill them in below.
+          // Remove particles if a smaller particle within it would lie
+          // outside the surface.  Fill them in below.
           vector<int> toRemove;
           toRemove.clear();
           for(int ip = 0; ip < numPIC; ip++){
              Point PIC  = pointsInCell[ip];
              Point corner[8];
-             corner[0] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
-             corner[1] = PIC + 0.5*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
-             corner[2] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
-             corner[3] = PIC + 0.5*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
-             corner[4] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
-             corner[5] = PIC + 0.5*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
-             corner[6] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
-             corner[7] = PIC + 0.5*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[0] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[1] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[2] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[3] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[4] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[5] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[6] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[7] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
              for(int ic = 0; ic < 8; ic++){
                if(!piece->inside(corner[ic],true)){
                  toRemove.push_back(ip);
@@ -679,11 +698,20 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                   }
                 }
                 if(!overlap){
-                   pointsInCell.push_back(p);
-                   DXP.push_back(dxpr);
-                   pvolume.push_back(rvol);
-                   psize.push_back(dfactor*stdSize);
-                   numInCell++;
+                  pointsInCell.push_back(p);
+                  DXP.push_back(dxpr);
+                  Matrix3 AS_size = affineTrans_A*stdSize;
+                  if(d_flags->d_axisymmetric){
+                    // assume unit radian extent in  circumferential direction
+                    double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                           AS_size(0,1)*AS_size(1,0))*
+                                           dxcc.x()*dxcc.y();
+                    pvolume.push_back(dfactor*dfactor*AS_vol);
+                  } else{
+                    pvolume.push_back(rvol);
+                  }
+                  psize.push_back(dfactor*AS_size);
+                  numInCell++;
                 }
               }
             }  // z
