@@ -670,11 +670,11 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
-//  int fullCell = ppc.x()*ppc.y()*ppc.z();
+
   Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
                   0.,1./((double) ppc.y()),0.,
                   0.,0.,1./((double) ppc.z()));
-  double vol = dxpp.x()*dxpp.y()*dxpp.z();
+  double c_vol = dxcc.x()*dxcc.y()*dxcc.z();
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
@@ -721,7 +721,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                                        dxcc.x()*dxcc.y();
                 vars.d_object_vols[obj].push_back(AS_vol);
               } else{
-                vars.d_object_vols[obj].push_back(vol);
+                vars.d_object_vols[obj].push_back(AS_size.Determinant()*c_vol);
               }
               vars.d_object_size[obj].push_back(AS_size);
             }
@@ -769,7 +769,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                                        dxcc.x()*dxcc.y();
                 pvolume.push_back(AS_vol);
               } else{
-                pvolume.push_back(vol);
+                pvolume.push_back(AS_size.Determinant()*c_vol);
               }
               psize.push_back(AS_size);
               numInCell++;
@@ -819,7 +819,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
         Vector dcornerr = dxpr*0.5;
         mfactor*=2.;
         dfactor*=0.5;
-        double rvol = dfactor*dfactor*dfactor*vol;
+        double dfCubed = dfactor*dfactor*dfactor;
         lower = patch->nodePosition(*iter) + dcornerr;
         for(int ix=0;ix < mfactor*ppc.x(); ix++){
           for(int iy=0;iy < mfactor*ppc.y(); iy++){
@@ -861,7 +861,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                                            dxcc.x()*dxcc.y();
                     pvolume.push_back(dfactor*dfactor*AS_vol);
                   } else{
-                    pvolume.push_back(rvol);
+                    pvolume.push_back(AS_size.Determinant()*dfCubed*c_vol);
                   }
                   psize.push_back(dfactor*AS_size);
                   numInCell++;
