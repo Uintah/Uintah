@@ -86,8 +86,7 @@ class Parallel {
       };
 
       enum Kokkos_Policy {
-            Kokkos_Default_Policy
-  , Kokkos_Team_Policy
+            Kokkos_Team_Policy
           , Kokkos_Range_Policy
           , Kokkos_MDRange_Policy
           , Kokkos_MDRange_Reverse_Policy

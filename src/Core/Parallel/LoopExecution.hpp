@@ -565,15 +565,14 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
                            });
     }
   }
-  // Default and Team Policy
-  else if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-          kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Assumption - there is only one block for OpenMP
-    const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const unsigned int thread_range_size = numItems;
+    const int threads_per_block = execObj.getCudaThreadsPerBlock();
+    const int thread_range_size = numItems;
 
-    const unsigned int actualThreads =
+    const int actualThreads =
       threads_per_block < thread_range_size ?
       threads_per_block : thread_range_size;
 
@@ -637,9 +636,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 
   Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
 
-  // Default and Team Policy
-  if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-     kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Team policy approach (reuses CUDA threads)
 
@@ -659,10 +657,10 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     if(std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
       // Assumption - there is only one block for OpenMP
-      const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int thread_range_size = numItems;
+      const int threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int thread_range_size = numItems;
 
-      const unsigned int actualThreads =
+      const int actualThreads =
         threads_per_block < thread_range_size ?
                             threads_per_block : thread_range_size;
 
@@ -687,13 +685,13 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     }
     else
     {
-      const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 
 #ifdef USE_KOKKOS_INSTANCE
-      const unsigned int nPartitions = execObj.getNumInstances();
+      const int nPartitions = execObj.getNumInstances();
 #else
-      const unsigned int nPartitions = execObj.getNumStreams();
+      const int nPartitions = execObj.getNumStreams();
 #endif
 
       // The requested range of data may not have enough work for the
@@ -924,7 +922,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
 
   // Range Policy
-  if(kokkos_policy == Parallel::Kokkos_Default_Policy)
+  if(kokkos_policy == Parallel::Kokkos_Range_Policy)
   {
     Kokkos::RangePolicy<ExecSpace, int> rangePolicy(0, numItems);
 
@@ -999,15 +997,14 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                               }, red);
     }
   }
-  // Default and Team Policy
-  else if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-          kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Assumption - there is only one block for the OpenMP
-    const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const unsigned int thread_range_size = numItems;
+    const int threads_per_block = execObj.getCudaThreadsPerBlock();
+    const int thread_range_size = numItems;
 
-    const unsigned int actualThreads =
+    const int actualThreads =
       threads_per_block < thread_range_size ?
       threads_per_block : thread_range_size;
 
@@ -1080,9 +1077,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
   Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
 
-  // Default and Team Policy
-  if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-     kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Team policy approach (reuses CUDA threads)
 
@@ -1102,10 +1098,10 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     if (std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
       // Assumption - there is only one block for the OpenMP
-      const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int thread_range_size = numItems;
+      const int threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int thread_range_size = numItems;
 
-      const unsigned int actualThreads =
+      const int actualThreads =
         threads_per_block < thread_range_size ?
                             threads_per_block : thread_range_size;
 
@@ -1133,12 +1129,12 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     }
     else
     {
-      const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 #ifdef USE_KOKKOS_INSTANCE
-      const unsigned int nPartitions = execObj.getNumInstances();
+      const int nPartitions = execObj.getNumInstances();
 #else
-      const unsigned int nPartitions = execObj.getNumStreams();
+      const int nPartitions = execObj.getNumStreams();
 #endif
 
     // The requested range of data may not have enough work for the
@@ -1384,7 +1380,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
 
   // Range Policy
-  if(kokkos_policy == Parallel::Kokkos_Default_Policy)
+  if(kokkos_policy == Parallel::Kokkos_Range_Policy)
   {
     Kokkos::RangePolicy<ExecSpace, int> rangePolicy(0, numItems);
 
@@ -1464,15 +1460,14 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                               }, Kokkos::Min<ReductionType>(red));
     }
   }
-  // Default and Team Policy
-  else if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-          kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Assumption - there is only one block for OpenMP
-    const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const unsigned int thread_range_size = numItems;
+    const int threads_per_block = execObj.getCudaThreadsPerBlock();
+    const int thread_range_size = numItems;
 
-    const unsigned int actualThreads =
+    const int actualThreads =
       threads_per_block < thread_range_size ?
       threads_per_block : thread_range_size;
 
@@ -1542,9 +1537,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   Parallel::Kokkos_Policy kokkos_policy = Parallel::getKokkosPolicy();
 
-  // Default and Team Policy
-  if(kokkos_policy == Parallel::Kokkos_Default_Policy ||
-     kokkos_policy == Parallel::Kokkos_Team_Policy)
+  // Team Policy
+  if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
     // Team policy approach (reuses CUDA threads)
 
@@ -1564,10 +1558,10 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if (std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
       // Assumption - there is only one block for OpenMP
-      const unsigned int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int thread_range_size = numItems;
+      const int threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int thread_range_size = numItems;
 
-      const unsigned int actualThreads =
+      const int actualThreads =
         threads_per_block < thread_range_size ?
                             threads_per_block : thread_range_size;
 
@@ -1596,12 +1590,12 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const unsigned int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
+      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 #ifdef USE_KOKKOS_INSTANCE
-      const unsigned int nPartitions = execObj.getNumInstances();
+      const int nPartitions = execObj.getNumInstances();
 #else
-      const unsigned int nPartitions = execObj.getNumStreams();
+      const int nPartitions = execObj.getNumStreams();
 #endif
 
       // The requested range of data may not have enough work for the
@@ -2008,10 +2002,10 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
 
   /*
-  unsigned int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
-  unsigned int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
+  const int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
+  const int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
 
-  const unsigned int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
+  const int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
 
   ExecSpace instanceObject = getInstance(execObj);
 
@@ -2186,10 +2180,10 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
     n_cells += KKV3[j].m_view.size();
   }
 
-  unsigned int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
-  unsigned int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
+  const int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
+  const int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
 
-  const unsigned int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
+  const int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
 
   ExecSpace instanceObject = getInstance(execObj);
 

@@ -64,7 +64,7 @@ int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
 
 Parallel::Kokkos_Policy Parallel::s_kokkos_policy =
-  Parallel::Kokkos_Default_Policy;
+  Parallel::Kokkos_Team_Policy;
 int              Parallel::s_kokkos_chunk_size       = -1;
 int              Parallel::s_kokkos_tile_i_size      = -1;
 int              Parallel::s_kokkos_tile_j_size      = -1;
