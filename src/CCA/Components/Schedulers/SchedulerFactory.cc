@@ -144,58 +144,54 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   proc0cout << "Kokkos DEVICE Memory Space: \t"
             << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
 
-#if defined(KOKKOS_USING_GPU)
-    if ( Parallel::usingDevice() ) {
-      std::cout << "Kokkos Execution Policy: \t";
-      switch ( Parallel::getKokkosPolicy() )
-      {
-      case Parallel::Kokkos_Team_Policy:
-        std::cout << "Team" << std::endl;
-        if ( Parallel::getKokkosChunkSize() > 0 ) {
-          std::cout << "Kokkos Chunk Size: \t\t"
-                    << Parallel::getKokkosChunkSize() << std::endl;
-        }
-        break;
-      case Parallel::Kokkos_Range_Policy:
-        std::cout << "Range" << std::endl;
-        if ( Parallel::getKokkosChunkSize() > 0 ) {
-          std::cout << "Kokkos Chunk Size: \t\t"
-                    << Parallel::getKokkosChunkSize() << std::endl;
-        }
-        break;
-      case Parallel::Kokkos_MDRange_Policy:
-        std::cout << "MDRange" << std::endl;
-        {
-          int i, j, k;
-          Parallel::getKokkosTileSize(i,j,k);
-          if ( i > 0 || j > 0 || k > 0 )
-            std::cout << "Kokkos tile Size: \t\t"
-                      << i << " " << j << " " << k << std::endl;
-          else
-            std::cout << "Kokkos tile Size: \t\t"
-                      << "Default" << std::endl;
-        }
-        break;
-      case Parallel::Kokkos_MDRange_Reverse_Policy:
-        std::cout << "MDRange reversed" << std::endl;
-        {
-          int i, j, k;
-          Parallel::getKokkosTileSize(i,j,k);
-          if ( i > 0 || j > 0 || k > 0 )
-            std::cout << "Kokkos tile Size \t\t"
-                      << i << " " << j << " " << k << std::endl;
-          else
-            std::cout << "Kokkos tile Size: \t\t"
-                      << "Default" << std::endl;
-        }
-        break;
-      default:
-        std::cout << "Default" << std::endl;
-        break;
-      }
+  if ( Parallel::usingDevice() ) {
+    std::cout << "Kokkos Execution Policy: \t";
+    switch ( Parallel::getKokkosPolicy() )
+    {
+    case Parallel::Kokkos_Team_Policy:
+      std::cout << "Team" << std::endl
+                << "Kokkos Chunk Size: \t\t";
+      break;
+    case Parallel::Kokkos_Range_Policy:
+      std::cout << "Range" << std::endl
+                << "Kokkos Chunk Size: \t\t";
+      break;
+    case Parallel::Kokkos_MDRange_Policy:
+      std::cout << "MDRange" << std::endl
+                << "Kokkos tile Size: \t\t";
+      break;
+    case Parallel::Kokkos_MDRange_Reverse_Policy:
+      std::cout << "MDRange reversed" << std::endl
+                << "Kokkos tile Size: \t\t";
+      break;
+    default:
+      std::cout << "Unknown" << std::endl;
+      break;
     }
-#endif
-#endif
+
+    switch ( Parallel::getKokkosPolicy() )
+    {
+    case Parallel::Kokkos_Team_Policy:
+    case Parallel::Kokkos_Range_Policy:
+      if ( Parallel::getKokkosChunkSize() > 0 )
+        std::cout << Parallel::getKokkosChunkSize() << std::endl;
+      else
+        std::cout << "Default" << std::endl;
+      break;
+    case Parallel::Kokkos_MDRange_Policy:
+    case Parallel::Kokkos_MDRange_Reverse_Policy:
+      {
+        int i, j, k;
+        Parallel::getKokkosTileSize(i,j,k);
+        if ( i > 0 || j > 0 || k > 0 )
+          std::cout << i << " " << j << " " << k << std::endl;
+        else
+          std::cout << "Default" << std::endl;
+      }
+      break;
+    }
+  }
+#endif  // #if defined(HAVE_KOKKOS)
 
   return sch;
 
