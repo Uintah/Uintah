@@ -1038,12 +1038,12 @@ DetailedTask::deleteTemporaryTaskVars()
 //
 void
 DetailedTask::prepareGpuDependencies( DependencyBatch       * batch
-                                       , const VarLabel        * pos_var
-                                       , OnDemandDataWarehouse * dw
-                                       , OnDemandDataWarehouse * old_dw
-                                       , const DetailedDep     * dep
-                                       , DeviceVarDest           dest
-                                       )
+                                    , const VarLabel        * pos_var
+                                    , OnDemandDataWarehouse * dw
+                                    , OnDemandDataWarehouse * old_dw
+                                    , const DetailedDep     * dep
+                                    , DeviceVarDest           dest
+                                    )
 {
 
   // This should handle the following scenarios:
