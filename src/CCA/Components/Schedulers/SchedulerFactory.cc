@@ -151,6 +151,10 @@ SchedulerFactory::create( const ProblemSpecP   & ps
       {
       case Parallel::Kokkos_Team_Policy:
         std::cout << "Team" << std::endl;
+        if ( Parallel::getKokkosChunkSize() > 0 ) {
+          std::cout << "Kokkos Chunk Size: \t\t"
+                    << Parallel::getKokkosChunkSize() << std::endl;
+        }
         break;
       case Parallel::Kokkos_Range_Policy:
         std::cout << "Range" << std::endl;
@@ -164,22 +168,29 @@ SchedulerFactory::create( const ProblemSpecP   & ps
         {
           int i, j, k;
           Parallel::getKokkosTileSize(i,j,k);
-          if ( i > 0 || j > 0 || k > 0 ) {
+          if ( i > 0 || j > 0 || k > 0 )
             std::cout << "Kokkos tile Size: \t\t"
                       << i << " " << j << " " << k << std::endl;
-          }
+          else
+            std::cout << "Kokkos tile Size: \t\t"
+                      << "Default" << std::endl;
         }
         break;
-      case Parallel::Kokkos_MDRange_Policy_Reverse:
+      case Parallel::Kokkos_MDRange_Reverse_Policy:
         std::cout << "MDRange reversed" << std::endl;
         {
           int i, j, k;
           Parallel::getKokkosTileSize(i,j,k);
-          if ( i > 0 || j > 0 || k > 0 ) {
+          if ( i > 0 || j > 0 || k > 0 )
             std::cout << "Kokkos tile Size \t\t"
                       << i << " " << j << " " << k << std::endl;
-          }
+          else
+            std::cout << "Kokkos tile Size: \t\t"
+                      << "Default" << std::endl;
         }
+        break;
+      default:
+        std::cout << "Default" << std::endl;
         break;
       }
     }
