@@ -86,10 +86,11 @@ class Parallel {
       };
 
       enum Kokkos_Policy {
-            Kokkos_Team_Policy
+            Kokkos_Default_Policy
+  , Kokkos_Team_Policy
           , Kokkos_Range_Policy
           , Kokkos_MDRange_Policy
-          , Kokkos_MDRange_Policy_Reverse
+          , Kokkos_MDRange_Reverse_Policy
       };
 
       //////////
@@ -211,19 +212,18 @@ class Parallel {
       static Kokkos_Policy getKokkosPolicy();
 
   //////////
-      // Sets the Kokkos chuck size for Kokkos::RangePolicy
+      // Sets the Kokkos chuck size for Kokkos::RangePolicy & Kokkos::TeamPolicy
       static void setKokkosChunkSize( int size );
       static int  getKokkosChunkSize();
 
       //////////
-      // Sets the Kokkos chuck size for Kokkos::RangePolicy
+      // Sets the Kokkos chuck size for Kokkos::MDRangePolicy
       static void setKokkosTileSize( int isize, int jsize, int ksize );
       static void getKokkosTileSize( int &isize, int &jsize, int &ksize );
 
       //////////
       // Passes the specified exit code to std::exit()
       static void exitAll( int code );
-
 
    private:
 

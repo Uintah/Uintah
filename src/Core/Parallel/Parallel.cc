@@ -31,10 +31,6 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#ifdef HAVE_KOKKOS
-  #include <Kokkos_Macros.hpp>
-#endif
-
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -51,13 +47,14 @@ using namespace Uintah;
 #endif
 
 // Default to pthreads unless specified otherwise.
-Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment = Parallel::CpuThreadEnvironment::PTHREADS;
+Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment =
+  Parallel::CpuThreadEnvironment::PTHREADS;
 
 bool             Parallel::s_initialized             = false;
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_cuda_threads_per_block  = -1;
 int              Parallel::s_cuda_blocks_per_loop    = -1;
-int              Parallel::s_cuda_streams_per_task   = 1;
+int              Parallel::s_cuda_streams_per_task   =  1;
 std::string      Parallel::s_task_name_to_time       = "";
 int              Parallel::s_amount_task_name_expected_to_run = -1;
 int              Parallel::s_num_threads             = -1;
@@ -66,23 +63,24 @@ int              Parallel::s_threads_per_partition   = -1;
 int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
 
-Parallel::Kokkos_Policy    Parallel::s_kokkos_policy           = Parallel::Kokkos_Team_Policy;
+Parallel::Kokkos_Policy Parallel::s_kokkos_policy =
+  Parallel::Kokkos_Default_Policy;
 int              Parallel::s_kokkos_chunk_size       = -1;
 int              Parallel::s_kokkos_tile_i_size      = -1;
 int              Parallel::s_kokkos_tile_j_size      = -1;
 int              Parallel::s_kokkos_tile_k_size      = -1;
 
-std::thread::id  Parallel::s_main_thread_id          = std::this_thread::get_id();
-ProcessorGroup*  Parallel::s_root_context            = nullptr;
+std::thread::id  Parallel::s_main_thread_id = std::this_thread::get_id();
+ProcessorGroup*  Parallel::s_root_context   = nullptr;
 
 
 namespace Uintah {
 
-  // While worldComm_ should be declared in Parallel.h, I would need to
-  // #include mpi.h, which then makes about everything in Uintah
-  // depend on mpi.h, so I'm just going to create it here.
+  // While worldComm_ should be declared in Parallel.h, but it would
+  // require #include mpi.h, which then makes most everything in
+  // Uintah depend on mpi.h, so create it here.
 
-  static MPI_Comm   worldComm_ = MPI_Comm(-1);
+  static MPI_Comm worldComm_ = MPI_Comm(-1);
 
 }  // namespace Uintah
 
@@ -124,8 +122,11 @@ Parallel::getCpuThreadEnvironment()
 bool
 Parallel::usingMPI()
 {
-  // TODO: Remove this method once all prior usage of Parallel::usingMPI() is gone - APH 09/17/16
-  //         We now assume this to be an invariant for Uintah, and hence this is always true.
+  // TODO: Remove this method once all prior usage of
+  // Parallel::usingMPI() is gone - APH 09/17/16
+
+  // We now assume this to be an invariant for Uintah, and hence this
+  // is always true.
   return true;
 }
 
@@ -158,7 +159,9 @@ Parallel::setCudaThreadsPerBlock( unsigned int num )
 void
 Parallel::setCudaBlocksPerLoop( unsigned int num )
 {
+#if defined(KOKKOS_USING_GPU)
   s_cuda_blocks_per_loop = num;
+#endif
 }
 
 //_____________________________________________________________________________
@@ -296,7 +299,7 @@ Parallel::getKokkosPolicy()
 }
 
 //_____________________________________________________________________________
-//  Sets/gets the Kokkos chuck size for Kokkos::RangePolicy
+//  Sets/gets the Kokkos chuck size for Kokkos::TeamPolicy & Kokkos::RangePolicy
 void
 Parallel::setKokkosChunkSize( int size )
 {
@@ -306,11 +309,24 @@ Parallel::setKokkosChunkSize( int size )
 int
 Parallel::getKokkosChunkSize()
 {
+#if defined(KOKKOS_USING_GPU)
+  if(s_kokkos_chunk_size < 0)
+  {
+    // Get the default chunk size using a dummy policy.
+    if(s_kokkos_policy == Parallel::Kokkos_Team_Policy)
+       s_kokkos_chunk_size =
+         Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace>(128, 512).chunk_size();
+    else if(s_kokkos_policy == Parallel::Kokkos_Range_Policy)
+       s_kokkos_chunk_size =
+         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace, int>(0, 512).chunk_size();
+  }
+#endif
+
   return s_kokkos_chunk_size;
 }
 
 //_____________________________________________________________________________
-//  Sets/gets the Kokkos chuck size for Kokkos::RangePolicy
+//  Sets/gets the Kokkos tile size for Kokkos::MDRangePolicy
 void Parallel::setKokkosTileSize( int isize, int jsize, int ksize )
 {
   s_kokkos_tile_i_size = isize;
@@ -320,6 +336,22 @@ void Parallel::setKokkosTileSize( int isize, int jsize, int ksize )
 
 void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
 {
+#if defined(KOKKOS_USING_GPU)
+  if(s_kokkos_tile_i_size < 0 ||
+     s_kokkos_tile_j_size < 0 ||
+     s_kokkos_tile_k_size < 0)
+  {
+    // Use the Kokkos::MDRangePolicy default tile size.
+    Kokkos::DefaultExecutionSpace execSpace;
+    int tileSize =
+      Kokkos::Impl::get_tile_size_properties(execSpace).default_tile_size;
+
+    s_kokkos_tile_i_size = tileSize;
+    s_kokkos_tile_j_size = tileSize;
+    s_kokkos_tile_k_size = tileSize;
+  }
+#endif
+
   isize = s_kokkos_tile_i_size;
   jsize = s_kokkos_tile_j_size;
   ksize = s_kokkos_tile_k_size;
@@ -343,15 +375,15 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   if (s_world_rank != -1) {  // IF ALREADY INITIALIZED, JUST RETURN...
     return;
-    // If s_world_rank is not -1, then we have already been initialized..
+    // If s_world_rank is not -1, then already been initialized..
     // This only happens (I think) if usage() is called (due to bad
-    // input parameters (to sus)) and usage() needs to init MPI so that
-    // it only displays the usage to the root process.
+    // input parameters (to sus)) and usage() needs to init MPI so
+    // that it only displays the usage to the root process.
   }
 
   // TODO: Set sensible defaults after deprecating use of
   // Kokkos::OpenMP with the Unified Scheduler
-#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
   if ( s_num_partitions <= 0 ) {
     s_num_partitions = 1;
   }
@@ -360,9 +392,18 @@ Parallel::initializeManager( int& argc , char**& argv )
   }
 #endif
 
-  // Set CUDA parameters (NOTE: This could be autotuned if we grab
-  // knowledge of how many patches are assigned to this MPI rank and
-  // how many SMs are on this particular machine.)
+#if defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_USING_GPU)
+  if ( s_cuda_threads_per_block <= 0 ) {
+    s_cuda_threads_per_block = 16;
+  }
+  if ( s_cuda_blocks_per_loop <= 0 ) {
+    s_cuda_blocks_per_loop = 1;
+  }
+#endif
+
+  // Set GPU parameters (NOTE: This could be autotuned if knowledge of
+  // how many patches are assigned to this MPI rank and how many SMs
+  // are on this particular machine.)
 
   // TODO, only display if gpu mode is turned on and if these values
   // weren't set.
@@ -403,8 +444,11 @@ Parallel::initializeManager( int& argc , char**& argv )
 
 #ifdef THREADED_MPI_AVAILABLE
   if (provided < required) {
-    std::cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
-              << "To use multi-threaded scheduler, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)"
+    std::cerr << "Provided MPI parallel support of " << provided
+              << " is not enough for the required level of " << required << "\n"
+              << "To use multi-threaded scheduler, "
+              << "your MPI implementation needs to support "
+              << "MPI_THREAD_MULTIPLE (level-3)"
               << std::endl;
     throw InternalError("Bad MPI level", __FILE__, __LINE__);
   }
@@ -432,23 +476,40 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   if (s_root_context->myRank() == 0) {
     std::string plural = (s_root_context->nRanks() > 1) ? "processes" : "process";
-    std::cout << "Parallel: " << s_root_context->nRanks() << " MPI " << plural << " (using MPI)\n";
+    std::cout << "Parallel: " << s_root_context->nRanks()
+              << " MPI " << plural << " (using MPI)\n";
 
 #ifdef THREADED_MPI_AVAILABLE
 
-#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
     if ( s_num_partitions > 0 ) {
       std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
-      std::cout << "Parallel: " << s_num_partitions << " OpenMP thread " << plural << " per MPI process\n";
+      std::cout << "Parallel: " << s_num_partitions
+                << " OpenMP thread " << plural << " per MPI process\n";
     }
     if ( s_threads_per_partition > 0 ) {
       std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_threads_per_partition << " OpenMP " << plural << " per partition\n";
+      std::cout << "Parallel: " << s_threads_per_partition
+                << " OpenMP " << plural << " per partition\n";
     }
 #else
     if (s_num_threads > 0) {
       std::string plural = (s_num_threads > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_num_threads << " std::" << plural << " per MPI process\n";
+      std::cout << "Parallel: " << s_num_threads
+                << " std::" << plural << " per MPI process\n";
+    }
+#endif
+
+#if defined(KOKKOS_ENABLE_OPENMP) && !defined(UINTAH_USING_GPU)
+      if ( s_cuda_blocks_per_loop > 0 ) {
+        std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
+        std::cout << "Parallel: " << s_cuda_blocks_per_loop
+                  << " OpenMP " << plural << " per loop\n";
+      }
+    if ( s_cuda_threads_per_block > 0 ) {
+      std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
+      std::cout << "Parallel: " << s_cuda_threads_per_block
+                << " OpenMP " << plural << " per block\n";
     }
 #endif
 
@@ -456,16 +517,19 @@ Parallel::initializeManager( int& argc , char**& argv )
     if ( s_using_device ) {
       if ( s_cuda_blocks_per_loop > 0 ) {
         std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
-        std::cout << "Parallel GPU: " << s_cuda_blocks_per_loop << " CUDA " << plural << " per loop\n";
+        std::cout << "Parallel GPU: " << s_cuda_blocks_per_loop
+                  << " GPU " << plural << " per loop\n";
       }
       if ( s_cuda_threads_per_block > 0 ) {
         std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
-        std::cout << "Parallel GPU: " << s_cuda_threads_per_block << " CUDA " << plural << " per block\n";
+        std::cout << "Parallel GPU: " << s_cuda_threads_per_block
+                  << " GPU " << plural << " per block\n";
       }
     }
 #endif
 
-    std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
+    std::cout << "Parallel: MPI Level Required: " << required
+              << ", provided: " << provided << "\n";
 #endif
   }
 //    Uintah::MPI::Errhandler_set(Uintah::worldComm_, MPI_ERRORS_RETURN);
@@ -521,13 +585,16 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
 
   // Only finalize if MPI was initialized.
   if (s_initialized == false) {
-    throw InternalError("Trying to finalize without having MPI initialized", __FILE__, __LINE__);
+    throw InternalError("Trying to finalize without having MPI initialized",
+                        __FILE__, __LINE__);
   }
 
   if (circumstances == Abort) {
     int errorcode = 1;
     if (s_world_rank == 0) {
-      std::cout << "FinalizeManager() called... Calling Uintah::MPI::Abort on rank " << s_world_rank << ".\n";
+      std::cout << "FinalizeManager() called... "
+                << "Calling Uintah::MPI::Abort on rank "
+                << s_world_rank << ".\n";
     }
     std::cerr.flush();
     std::cout.flush();
