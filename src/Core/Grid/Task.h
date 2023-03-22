@@ -2824,7 +2824,7 @@ doKokkosMemcpyPeerAsync( intptr_t dTask,
                        const void* src, int  srcDevice,
                        size_t count )
 {
-  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+  // ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
   // ARS - FIXME
   // CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
   //                                    count, *stream));
