@@ -332,6 +332,29 @@ void Parallel::setKokkosTileSize( int isize, int jsize, int ksize )
   s_kokkos_tile_i_size = isize;
   s_kokkos_tile_j_size = jsize;
   s_kokkos_tile_k_size = ksize;
+
+  // Can not be used as Kokkos is not yet initialized.
+// #if defined(KOKKOS_USING_GPU)
+//   // Use the Kokkos::MDRangePolicy default tile size.
+//   Kokkos::DefaultExecutionSpace execSpace;
+
+//   int max_threads =
+//     Kokkos::Impl::get_tile_size_properties(execSpace).max_threads;
+
+//   if(isize * jsize * ksize > max_threads)
+//   {
+//     std::cerr << "The product of tile dimensions ("
+// 	      << isize << "x" << jsize << "x" << ksize << ") "
+// 	      << isize * jsize * ksize << " "      
+// 	      << "exceed maximum number of threads per block: " << max_threads
+//               << std::endl;
+
+//     throw InternalError("ExecSpace Error: "
+// 			"MDRange tile dims exceed maximum number "
+// 			"of threads per block - reduce the tile dims",
+// 			__FILE__, __LINE__);
+//   }
+// #endif
 }
 
 void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
@@ -343,8 +366,17 @@ void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
   {
     // Use the Kokkos::MDRangePolicy default tile size.
     Kokkos::DefaultExecutionSpace execSpace;
+
+    // Get the cube root of the max_threads
     int tileSize =
-      Kokkos::Impl::get_tile_size_properties(execSpace).default_tile_size;
+      std::cbrt(Kokkos::Impl::get_tile_size_properties(execSpace).max_threads);
+
+    // Find the largest exponent so the tile size is a power of two.
+    unsigned int exp = 0;
+    while (tileSize >>= 1)
+      exp++;
+
+    tileSize = pow(2, exp);
 
     s_kokkos_tile_i_size = tileSize;
     s_kokkos_tile_j_size = tileSize;
