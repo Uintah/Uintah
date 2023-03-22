@@ -122,6 +122,7 @@
                 <velocity>[-3.0,-3.0,0]</velocity>
                 <temperature>12</temperature>
                 <color>             0               </color>
+                <numLevelsParticleFilling>   -2     </numLevelsParticleFilling>
                </geom_object>
               <geom_object>
                 <box label="gp3"/>
