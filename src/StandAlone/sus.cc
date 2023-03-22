@@ -171,7 +171,7 @@ static void usage( const std::string& message,
 #endif
 #if defined(KOKKOS_USING_GPU)
     std::cerr << "-kokkos_policy <policy>     : Kokkos Execution Policy - team, range, mdrange, or mdrange_rev\n";
-    std::cerr << "-kokkos_chunk_size <#>      : Kokkos RangePolicy chunk size\n";
+    std::cerr << "-kokkos_chunk_size <#>      : Kokkos TeamPolicy and RangePolicy chunk size\n";
     std::cerr << "-kokkos_tile_size <# # #>   : Kokkos MDRangePolicy tile size\n";
 #endif
     std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with GPU support and there is a GPU available. \n";
