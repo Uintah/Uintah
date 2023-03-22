@@ -2065,7 +2065,7 @@ public:
   // Get the key via an index.
   virtual KEY getKey( const unsigned int index )
   {
-    if( index < 0 || m_mapInfoMapper.size() <= index ) {
+    if( int(index) < 0 || m_mapInfoMapper.size() <= index ) {
       std::stringstream msg;
       msg << "Requesting an undefined key index (" << index << ") ";
       throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
