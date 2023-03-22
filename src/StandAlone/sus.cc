@@ -479,7 +479,7 @@ int main( int argc, char *argv[], char *env[] )
       else if( strcmp(argv[i], "mdrange") == 0 )
         kokkos_policy = Parallel::Kokkos_MDRange_Policy;
       else if( strcmp(argv[i], "mdrange_rev") == 0 )
-        kokkos_policy = Parallel::Kokkos_MDRange_Policy_Reverse;
+        kokkos_policy = Parallel::Kokkos_MDRange_Reverse_Policy;
       else
       {
         usage("Unknown Kokkos policy", arg, argv[0]);
@@ -547,7 +547,7 @@ int main( int argc, char *argv[], char *env[] )
       }
 
       if(Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy &&
-         Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy_Reverse)
+         Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Reverse_Policy)
         Parallel::setKokkosPolicy(Parallel::Kokkos_MDRange_Policy);
 
       Parallel::setKokkosTileSize(kokkos_tile_isize,
