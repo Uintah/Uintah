@@ -289,6 +289,8 @@ void Ray::rayTraceDataOnionGPU( const PatchSubset* finePatches,
     // levelParams levelP[maxLevels];
     levelParams * levelP = new levelParams[maxLevels];
     cudaHostRegister(levelP, sizeof(levelParams) * maxLevels, cudaHostRegisterPortable);
+
+    // THIS CALL CREATES A MEMORY LEAK!!!!!!
     dtask->addTempHostMemoryToBeFreedOnCompletion(levelP);
 
     for (int l = 0; l < maxLevels; ++l) {

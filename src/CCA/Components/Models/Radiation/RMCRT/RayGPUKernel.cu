@@ -1811,6 +1811,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
   // Making sure we have kernel/mem copy overlapping
   double* h_debugRandNums = new double[nRandNums];
   cudaHostRegister(h_debugRandNums, randNumsByteSize, cudaHostRegisterPortable);
+  // THIS CALL CREATES A MEMORY LEAK!!!!!!
   dtask->addTempHostMemoryToBeFreedOnCompletion(h_debugRandNums);
 
   // Perform computations here on h_debugRandNums
@@ -1878,7 +1879,9 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   int3 * myHi = new int3[d_MAXLEVELS];
   cudaHostRegister(myLo, sizeof(int3) * d_MAXLEVELS, cudaHostRegisterPortable);
   cudaHostRegister(myHi, sizeof(int3) * d_MAXLEVELS, cudaHostRegisterPortable);
+  // THIS CALL CREATES A MEMORY LEAK!!!!!!
   dtask->addTempHostMemoryToBeFreedOnCompletion(myLo);
+  // THIS CALL CREATES A MEMORY LEAK!!!!!!
   dtask->addTempHostMemoryToBeFreedOnCompletion(myHi);
 
   for (int l = 0; l < maxLevels; ++l) {
