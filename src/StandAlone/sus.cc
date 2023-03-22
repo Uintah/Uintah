@@ -505,7 +505,8 @@ int main( int argc, char *argv[], char *env[] )
         Parallel::exitAll(2);
       }
 
-      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
+      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy &&
+	 Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
         Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
       Parallel::setKokkosChunkSize(kokkos_chunk_size);
 #else
