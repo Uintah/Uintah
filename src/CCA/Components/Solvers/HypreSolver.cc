@@ -90,7 +90,8 @@ using namespace Uintah;
 // ARS - For backwards compatipility check USE_KOKKOS_VIEW and
 // USE_KOKKOS_INSTANCE but going forward HAVE_KOKKOS could be used.
 #if (defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)) && \
-    (defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE))
+    (defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_MALLOC) || \
+     defined(USE_KOKKOS_INSTANCE))
   #define HYPRE_SOLVER_GPU
 
 #elif (defined(HYPRE_USING_CUDA)   && defined(HAVE_CUDA)) || \
