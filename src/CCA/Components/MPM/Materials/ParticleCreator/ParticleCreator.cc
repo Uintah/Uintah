@@ -350,21 +350,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-//      if (volumes) {
-//        if (!volumes->empty()) {
+      if (volumes) {
+        if (!volumes->empty()) {
           pvars.pvolume[pidx] = *voliter;
           pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           ++voliter;
-//        }
-//      }
+        }
+      }
 
-//      if (psizes) {
+      if (psizes) {
         // Read psize from file or get from a smooth geometry piece
-//        if (!psizes->empty()) {
+        if (!psizes->empty()) {
           pvars.psize[pidx] = *sizeiter;
           ++sizeiter;
-//        }
-//      }
+        }
+      }
 
       // JBH -- pareas is defined by default for the particles, which seems
       //   okay.  However, we don't actually need it unless we're doing
