@@ -350,20 +350,31 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (volumes) {
+      FileGeometryPiece *fgp =dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+      SmoothGeomPiece   *sgp =dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
+      if(fgp || sgp){
+       if (volumes) {
         if (!volumes->empty()) {
           pvars.pvolume[pidx] = *voliter;
           pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           ++voliter;
         }
-      }
+       }
 
-      if (psizes) {
+       if (psizes) {
         // Read psize from file or get from a smooth geometry piece
         if (!psizes->empty()) {
           pvars.psize[pidx] = *sizeiter;
           ++sizeiter;
         }
+       }
+      } else {
+          pvars.pvolume[pidx] = *voliter;
+          pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
+          ++voliter;
+
+          pvars.psize[pidx] = *sizeiter;
+          ++sizeiter;
       }
 
       // JBH -- pareas is defined by default for the particles, which seems
@@ -371,7 +382,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       //   scalar diffusion, so the memory doesn't get allocated unless
       //   d_doScalarDiffusion is true.  Therefore, we need a logical and here
       //   otherwise we reference memory that's not allocated.
-      if (pareas) {// && d_doScalarDiffusion) {
+      if (pareas) {
         // Read parea from file or get from a smooth geometry piece
         if (!pareas->empty()) {
           pvars.parea[pidx] = *areaiter;
