@@ -52,7 +52,7 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
 // Not needed
 #endif
 
-#ifdef USE_KOKKOS_INSTANCE
+#if defined(USE_KOKKOS_INSTANCE)
   // Not needed instances are managed by DetailedTask/Task.
 #elif defined(HAVE_CUDA) // CUDA only when using streams
 std::map <unsigned int, std::queue<cudaStream_t*> > Uintah::GPUMemoryPool::s_idle_streams;//  =
@@ -176,13 +176,13 @@ GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id, size_t memSize
 #if defined(USE_KOKKOS_MALLOC)
 // Not needed
 #else // if defined(USE_KOKKOS_VIEW)
-      // ARS - FIX ME Keep a copy of the view so the view reference
-      // count is incremented which prevents the memory from being
-      // de-allocated.
+      // Keep a copy of the view so the view reference count is
+      // incremented which prevents the memory from being de-allocated.
       gpuMemoryPoolDeviceViewItem insertView(device_id, deviceView);
       gpuMemoryPoolViewInUse.insert(std::pair<gpuMemoryPoolDeviceViewItem,
                                               gpuMemoryPoolDevicePtrValue>(insertView, insertValue));
 #endif
+#else
 // Not needed
 #endif
     }
@@ -236,7 +236,7 @@ void GPUMemoryPool::freeCudaMemoryFromPool()
   for(const auto &item: *gpuMemoryPoolInUse)
   {
     void * addr = item.first.ptr;
-    Kokkos::kokkos_free(addr);
+    cudaFree(addr);
   }
   
   gpuMemoryPoolInUse->clear();
