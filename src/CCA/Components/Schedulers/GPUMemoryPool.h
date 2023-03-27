@@ -112,7 +112,10 @@ public:
     }
   };
 
-#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_MALLOC)
+// Not needed
+#else // if defined(USE_KOKKOS_VIEW)
   struct gpuMemoryPoolDeviceViewItem {
 
     unsigned int  device_id;
@@ -136,6 +139,10 @@ public:
     }
   };
 #endif
+#else
+// Not needed
+#endif
+
 
   static void* allocateCudaMemoryFromPool(unsigned int device_id, size_t memSize);
 
@@ -143,12 +150,12 @@ public:
 
 #if defined(USE_KOKKOS_INSTANCE)
 #if defined(USE_KOKKOS_MALLOC)
-  static void freeCudaMemoryFromPool();  
+  static void freeCudaMemoryFromPool();
 #else // if defined(USE_KOKKOS_VIEW)
   static void freeViewsFromPool();
 #endif
 #else
-  static void freeCudaMemoryFromPool();  
+  static void freeCudaMemoryFromPool();
 #endif
 
   // Streams
