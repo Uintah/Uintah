@@ -97,8 +97,8 @@
         <!-- coarse Level -->
         <lower>      [0,0,0]     </lower>
         <upper>      [1, 1, 1]   </upper>
-        <resolution> [384,576,768]  </resolution>
-        <patches>    [4,6,8]     </patches>
+        <resolution> [384,576,576]  </resolution>
+        <patches>    [4,6,6]     </patches>
         <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
@@ -107,8 +107,8 @@
         <!-- fine Level -->
         <lower>      [0,0,0]     </lower>
         <upper>      [1, 1, 1]   </upper>
-        <resolution> [1536,2304,3072]  </resolution>
-        <patches>    [8,12,16]     </patches>
+        <resolution> [1536,2304,2304]  </resolution>
+        <patches>    [8,12,12]     </patches>
         <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
