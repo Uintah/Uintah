@@ -145,27 +145,27 @@ SchedulerFactory::create( const ProblemSpecP   & ps
             << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
 
   if ( Parallel::usingDevice() ) {
-    std::cout << "Kokkos Execution Policy: \t";
+    proc0cout << "Kokkos Execution Policy: \t";
     switch ( Parallel::getKokkosPolicy() )
     {
     case Parallel::Kokkos_Team_Policy:
-      std::cout << "Team" << std::endl
+      proc0cout << "Team" << std::endl
                 << "Kokkos Chunk Size: \t\t";
       break;
     case Parallel::Kokkos_Range_Policy:
-      std::cout << "Range" << std::endl
+      proc0cout << "Range" << std::endl
                 << "Kokkos Chunk Size: \t\t";
       break;
     case Parallel::Kokkos_MDRange_Policy:
-      std::cout << "MDRange" << std::endl
+      proc0cout << "MDRange" << std::endl
                 << "Kokkos tile Size: \t\t";
       break;
     case Parallel::Kokkos_MDRange_Reverse_Policy:
-      std::cout << "MDRange reversed" << std::endl
+      proc0cout << "MDRange reversed" << std::endl
                 << "Kokkos tile Size: \t\t";
       break;
     default:
-      std::cout << "Unknown" << std::endl;
+      proc0cout << "Unknown" << std::endl;
       break;
     }
 
@@ -174,9 +174,9 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     case Parallel::Kokkos_Team_Policy:
     case Parallel::Kokkos_Range_Policy:
       if ( Parallel::getKokkosChunkSize() > 0 )
-        std::cout << Parallel::getKokkosChunkSize() << std::endl;
+        proc0cout << Parallel::getKokkosChunkSize() << std::endl;
       else
-        std::cout << "Default" << std::endl;
+        proc0cout << "Default" << std::endl;
       break;
     case Parallel::Kokkos_MDRange_Policy:
     case Parallel::Kokkos_MDRange_Reverse_Policy:
@@ -184,9 +184,9 @@ SchedulerFactory::create( const ProblemSpecP   & ps
         int i, j, k;
         Parallel::getKokkosTileSize(i,j,k);
         if ( i > 0 || j > 0 || k > 0 )
-          std::cout << i << " " << j << " " << k << std::endl;
+          proc0cout << i << " " << j << " " << k << std::endl;
         else
-          std::cout << "Default" << std::endl;
+          proc0cout << "Default" << std::endl;
       }
       break;
     }
