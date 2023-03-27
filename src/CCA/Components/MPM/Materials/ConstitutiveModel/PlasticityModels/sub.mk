@@ -37,8 +37,9 @@ SRCS   += \
 	$(SRCDIR)/JohnsonCookDamage.cc \
 	$(SRCDIR)/HancockMacKenzieDamage.cc \
 	$(SRCDIR)/ThresholdDamage.cc \
+	$(SRCDIR)/ThresholdDamageVar.cc \
 	$(SRCDIR)/BrittleDamage.cc \
-       $(SRCDIR)/ErosionModel.cc \
+        $(SRCDIR)/ErosionModel.cc \
 	$(SRCDIR)/MPMEquationOfState.cc \
 	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \

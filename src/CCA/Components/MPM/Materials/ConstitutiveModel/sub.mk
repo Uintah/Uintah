@@ -58,6 +58,7 @@ SRCS   += \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
+        $(SRCDIR)/UCNHVar.cc                    \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/ClayCurveFit.cc               \
         $(SRCDIR)/SoilFoam.cc                   \
