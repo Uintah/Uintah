@@ -145,24 +145,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps
             << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
 
   if ( Parallel::usingDevice() ) {
-    proc0cout << "Kokkos Execution Policy: \t";
+    proc0cout << "Kokkos DEVICE Execution Policy: ";
     switch ( Parallel::getKokkosPolicy() )
     {
     case Parallel::Kokkos_Team_Policy:
-      proc0cout << "Team" << std::endl
-                << "Kokkos Chunk Size: \t\t";
+      proc0cout << "Team" << std::endl;
       break;
     case Parallel::Kokkos_Range_Policy:
-      proc0cout << "Range" << std::endl
-                << "Kokkos Chunk Size: \t\t";
+      proc0cout << "Range" << std::endl;
       break;
     case Parallel::Kokkos_MDRange_Policy:
-      proc0cout << "MDRange" << std::endl
-                << "Kokkos tile Size: \t\t";
+      proc0cout << "MDRange" << std::endl;
       break;
     case Parallel::Kokkos_MDRange_Reverse_Policy:
-      proc0cout << "MDRange reversed" << std::endl
-                << "Kokkos tile Size: \t\t";
+      proc0cout << "MDRange reversed" << std::endl;
       break;
     default:
       proc0cout << "Unknown" << std::endl;
@@ -173,6 +169,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     {
     case Parallel::Kokkos_Team_Policy:
     case Parallel::Kokkos_Range_Policy:
+      proc0cout << "Kokkos DEVICE Chunk Size: \t";
       if ( Parallel::getKokkosChunkSize() > 0 )
         proc0cout << Parallel::getKokkosChunkSize() << std::endl;
       else
@@ -182,6 +179,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     case Parallel::Kokkos_MDRange_Reverse_Policy:
       {
         int i, j, k;
+
+        proc0cout << "Kokkos DEVICE tile Size: \t";
         Parallel::getKokkosTileSize(i,j,k);
         if ( i > 0 || j > 0 || k > 0 )
           proc0cout << i << " " << j << " " << k << std::endl;
