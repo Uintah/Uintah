@@ -63,8 +63,6 @@ namespace Uintah {
                                           const Patch*,DataWarehouse* new_dw,
                                           std::vector<GeometryObject*>&);
 
-
-
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     std::vector<const VarLabel* > returnParticleState();
@@ -143,8 +141,6 @@ namespace Uintah {
 
     void createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars);
 
-
-
     virtual void initializeParticle(const Patch* patch,
                                     std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
@@ -187,14 +183,11 @@ namespace Uintah {
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
     bool d_useCPTI;
-    bool d_withGaussSolver;
     bool d_coupledflow;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     
   };
-
-
 
 } // End of namespace Uintah
 

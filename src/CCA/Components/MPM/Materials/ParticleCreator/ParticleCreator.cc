@@ -123,7 +123,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
   d_doScalarDiffusion = flags->d_doScalarDiffusion;
-  d_withGaussSolver = flags->d_withGaussSolver;
   d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
@@ -205,12 +204,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         concentrations  = sgp->getConcentration();
         pareas          = sgp->getArea();
 
-      }
-
-      if(d_withGaussSolver){
-        poscharges = sgp->getPosCharge();
-        negcharges = sgp->getNegCharge();
-        permittivities = sgp->getPermittivity();
       }
     } // if smooth geometry piece
 
@@ -627,18 +620,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
           subset);
   }
 
-  if(d_withGaussSolver){
-     new_dw->allocateAndPut(pvars.pPosCharge,
-                                          d_Al->pPosChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pNegCharge,
-                                          d_Al->pNegChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_Al->pPosChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_Al->pNegChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pPermittivity,
-                                          d_Al->pPermittivityLabel, subset);
-  }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
   }
@@ -1050,15 +1031,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pExternalScalarFlux[i] = 0.0;
     pvars.parea[i]      = area;
   }
-  if(d_withGaussSolver){
-    pvars.pPosCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("pos_charge_density");
-    pvars.pNegCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("neg_charge_density");
-    pvars.pPosChargeGrad[i]  = Vector(0.0);
-    pvars.pNegChargeGrad[i]  = Vector(0.0);
-    pvars.pPermittivity[i] = (*obj)->getInitialData_double("permittivity");
-  }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
   }
@@ -1316,23 +1288,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
           particle_state.push_back(d_Hlb->pFluidVelocityLabel);
           particle_state_preReloc.push_back(d_Hlb->pFluidVelocityLabel_preReloc);
       }
-  }
-
-  if(d_withGaussSolver){
-    particle_state.push_back(d_Al->pPosChargeLabel);
-    particle_state_preReloc.push_back(d_Al->pPosChargeLabel_preReloc);
-
-    particle_state.push_back(d_Al->pNegChargeLabel);
-    particle_state_preReloc.push_back(d_Al->pNegChargeLabel_preReloc);
-
-    particle_state.push_back(d_Al->pPosChargeGradLabel);
-    particle_state_preReloc.push_back(d_Al->pPosChargeGradLabel_preReloc);
-
-    particle_state.push_back(d_Al->pNegChargeGradLabel);
-    particle_state_preReloc.push_back(d_Al->pNegChargeGradLabel_preReloc);
-
-    particle_state.push_back(d_Al->pPermittivityLabel);
-    particle_state_preReloc.push_back(d_Al->pPermittivityLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
