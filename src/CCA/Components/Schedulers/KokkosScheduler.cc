@@ -42,13 +42,6 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
-  #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-  #include <Core/Grid/Variables/GPUGridVariable.h>
-  #include <Core/Grid/Variables/GPUStencil7.h>
-//  #include <Core/Util/DebugStream.h>
-#endif
-
 #include <atomic>
 #include <cstring>
 #include <iomanip>
@@ -99,9 +92,9 @@ namespace {
 extern Uintah::MasterLock cerrLock;
 
 namespace {
-
+#if defined(HAVE_CUDA_NOT_NEEDED)
   Dout g_gpu_ids( "Kokkos_GPU_IDs", "KokkosScheduler", "detailed information to uniquely identify GPUs on a node", false );
-
+#endif
 }
 #endif
 
@@ -195,12 +188,15 @@ KokkosScheduler::~KokkosScheduler()
 {
 #if defined(USE_KOKKOS_INSTANCE)
 #if defined(USE_KOKKOS_MALLOC)
-  GPUMemoryPool::freeCudaMemoryFromPool();  
+  // The data warehouses have not been cleared so Kokkos pointers are
+  // still valid as they are reference counted.
+  // GPUMemoryPool::freeCudaMemoryFromPool();
 #else // if defined(USE_KOKKOS_VIEW)
   GPUMemoryPool::freeViewsFromPool();
 #endif
-#else  
-  GPUMemoryPool::freeCudaMemoryFromPool();  
+#else
+  // The data warehouses have not been cleared.
+  // GPUMemoryPool::freeCudaMemoryFromPool();
 #endif
 }
 
@@ -614,41 +610,82 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   static int totaltasks;
 
   //---------------------------------------------------------------------------
-
-  // Run configuration paramaters to pass Kokkos::OpenMP::partition_master
+#if defined( KOKKOS_ENABLE_OPENMP )
   int num_partitions        = Uintah::Parallel::getNumPartitions();
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
-
-  while ( m_num_tasks_done < m_num_tasks ) {
-#if defined( KOKKOS_ENABLE_OPENMP )
-
-#if defined(USE_KOKKOS_INSTANCE_OPENMP)
-    // Use the Kokkos Open MP instances
-    SCI_THROW(InternalError("Use the Kokkos Open MP instances - "
-                            "not implemented", __FILE__, __LINE__));
-#else
-    auto task_runner = [&] ( int partition_id, int num_partitions ) {
-
-      // Each partition created executes this block of code
-      // A task_runner can run either a serial task (e.g., m_threads_per_partition == 1)
-      //       or a Kokkos-based data parallel task (e.g., m_threads_per_partition > 1)
-
-      this->runTasks( partition_id );
-
-    }; // end task_worker
-
-    // Executes task_workers
-    Kokkos::OpenMP::partition_master( task_runner
-                                    , num_partitions
-                                    , threads_per_partition
-                                    );
 #endif
 
-#else // !KOKKOS_ENABLE_OPENMP
+  while ( m_num_tasks_done < m_num_tasks )
+  {
+#if defined( KOKKOS_ENABLE_OPENMP )
+    if(
+#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
+       // num_partitions not used
+#else
+       num_partitions > 1 ||
+#endif
+       threads_per_partition > 1)
+    {
+      // Task runner functor.
+      auto task_runner = [&] ( int thread_id, int num_threads = 0 ) {
 
-    this->runTasks( 0 );
+        // Each partition created executes this block of code
+        // A task_runner can run a serial task (threads_per_partition == 1) or
+        //   a Kokkos-based data parallel task (threads_per_partition > 1)
+        this->runTasks( thread_id );
+      };
 
+#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
+      // Paralel_for assumes one partition but multiple threads.
+      // The parallelization is over threads
+      Kokkos::RangePolicy<Kokkos::OpenMP>
+        rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
+      Kokkos::parallel_for(rangePolicy, task_runner);
+
+#elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
+      if(num_partitions == 1)
+      {
+	// Paralel_for assumes one partition but multiple threads.
+	// The parallelization is over threads
+        Kokkos::RangePolicy<Kokkos::OpenMP>
+          rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
+        Kokkos::parallel_for(rangePolicy, task_runner);
+      }
+      else
+      {
+	// Partition_spaces assumes multiple partiions each with
+	// multiple threads. The parallelization is over threads.
+
+        // Resource allocation for each instance, equally weighted.
+        std::vector<int> weights(num_partitions, 1);
+
+        auto instances =
+          Kokkos::Experimental::partition_space(Kokkos::OpenMP(), weights);
+
+        for(int i=0; i<num_partitions; ++i)
+        {
+          Kokkos::RangePolicy<Kokkos::OpenMP>
+            rangePolicy(instances[i], 0, threads_per_partition);
+          Kokkos::parallel_for(rangePolicy, task_runner);
+        }
+      }
+
+      // Fencing should not be needed.
+      // for(int i=0; i<num_partitions; ++i)
+      //   instances[i].fence();
+#else
+      // OpenMP Partition Master is deprecated in Kokkos. The
+      // parallelization is over the paritions.
+      Kokkos::OpenMP::partition_master( task_runner,
+                                        num_partitions,
+                                        threads_per_partition );
+#endif
+    }
+    else
 #endif // KOKKOS_ENABLE_OPENMP
+    {
+      this->runTasks( 0 );
+    }
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
