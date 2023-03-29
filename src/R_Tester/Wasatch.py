@@ -151,6 +151,8 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -430,6 +432,10 @@ PARTICLETESTS=[
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
+
+#__________________________________
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________
 # The following list is parsed by the local RT script
