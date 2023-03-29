@@ -89,7 +89,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
     m_overhead_values[i]  = 0;
     m_overhead_weights[i] = 8.0 - x*x*x;
   }
-  
+
   m_grid_ps = m_ups->findBlock( "Grid" );
 
   ProblemSpecP simController_ps = m_ups->findBlock( "SimulationController" );
@@ -184,7 +184,7 @@ SimulationController::~SimulationController()
   delete m_visitSimData;
 #endif
 }
-  
+
 //______________________________________________________________________
 //
 void
@@ -239,7 +239,7 @@ SimulationController::releaseComponents( void )
   releasePort( "output" );
   releasePort( "regridder" );
   releasePort( "scheduler" );
- 
+
   m_application  = nullptr;
   m_loadBalancer = nullptr;
   m_output       = nullptr;
@@ -333,7 +333,7 @@ SimulationController::restartArchiveSetup( void )
 //
 void
 SimulationController::outputSetup( void )
-{  
+{
   // Set up the output - needs to be done before the application is setup.
   m_output->setRuntimeStats( &m_runtime_stats );
 
@@ -441,9 +441,9 @@ SimulationController::loadBalancerSetup( void )
   m_current_gridP->getLevel(0)->findCellIndexRange(low, high);
 
   size = high - low - m_current_gridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
-  
+
   m_loadBalancer->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
- 
+
   // In addition, do this step after regridding setup as the minimum
   // patch size that the regridder will create will be known.
   m_loadBalancer->problemSetup( m_ups, m_current_gridP, m_application->getMaterialManagerP() );
@@ -477,7 +477,7 @@ SimulationController::timeStateSetup()
   if( m_restarting ) {
 
     double simTime;
-    
+
     m_restart_archive->restartInitialize( m_restart_index,
                                           m_current_gridP,
                                           m_scheduler->get_dw(1),
@@ -563,7 +563,7 @@ void
 SimulationController::ScheduleReportStats( bool header )
 {
   Task* task = scinew Task("SimulationController::ReportStats", this, &SimulationController::ReportStats, header);
-  
+
   task->setType(Task::OncePerProc);
 
   // Require delta T so that the task gets scheduled
@@ -616,7 +616,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       reportStats = m_application->isLastTimeStep(walltime);
     }
   }
-  
+
   // Get and reduce the performance runtime stats
   getMemoryStats();
 
@@ -625,7 +625,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 #else
   bool reduce = false;
 #endif
-  
+
   // Reductions are only need if these are true.
   if ((m_regridder && m_regridder->useDynamicDilation()) || g_sim_stats_mem || g_comp_stats || g_comp_node_stats || reduce) {
 
@@ -648,7 +648,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     m_application->reduceApplicationStats(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
   }
-  
+
   // Update the moving average and get the wall time for this time step.
   // Timers::nanoseconds timeStepTime =
     m_wall_timers.updateExpMovingAverage();
@@ -674,17 +674,37 @@ SimulationController::ReportStats(const ProcessorGroup*,
 //          << "Net Wall Time=" << std::setw(10) << timeStepTime.seconds()
             << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
 
+    // Additional stats when using GPUs
+    if(Uintah::Parallel::usingDevice())
+    {
+      unsigned long totalCells = 0;
+      unsigned long totalPatches = 0;
+
+      for( int i = 0; i < m_current_gridP->numLevels(); i++ ) {
+        LevelP l = m_current_gridP->getLevel(i);
+
+        totalPatches += l->numPatches();
+        totalCells += l->totalCells();
+      }
+
+      message << "EMA/patch=" << std::setw(12)
+              << m_wall_timers.ExpMovingAverage().seconds() / totalPatches;
+
+      message << "EMA/cell=" << std::setw(12)
+              << m_wall_timers.ExpMovingAverage().seconds() / totalCells;
+    }
+
     // Report on the memory used.
     if (g_sim_stats_mem) {
       // With the sum reduces, use double, since with memory it is possible that it will overflow
       double        avg_memused      = m_runtime_stats.getRankAverage(    SCIMemoryUsed );
       unsigned long max_memused      = m_runtime_stats.getRankMaximum(    SCIMemoryUsed );
       int           max_memused_rank = m_runtime_stats.getRankForMaximum( SCIMemoryUsed );
-      
+
       double        avg_highwater      = m_runtime_stats.getRankAverage(    SCIMemoryHighwater );
       unsigned long max_highwater      = m_runtime_stats.getRankMaximum(    SCIMemoryHighwater );
       int           max_highwater_rank = m_runtime_stats.getRankForMaximum( SCIMemoryHighwater );
-      
+
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
         message << "Memory Use=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
@@ -713,7 +733,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     else {
       double  memused   = m_runtime_stats[SCIMemoryUsed];
       double  highwater = m_runtime_stats[SCIMemoryHighwater];
-      
+
       message << "Memory Use=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) memused );
 
@@ -731,7 +751,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
   // Variable for calculating the percentage of time spent in overhead.
   double percent_overhead = 0;
-  
+
   if ((m_regridder && m_regridder->useDynamicDilation()) || g_comp_stats) {
 
     // Sum up the average time for overhead related components.
@@ -741,7 +761,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
        m_runtime_stats.getRankAverage(RegriddingCompilationTime) +
        m_runtime_stats.getRankAverage(RegriddingCopyDataTime)    +
        m_runtime_stats.getRankAverage(LoadBalancerTime));
-    
+
     // Sum up the average times for simulation components.
     double total_time =
       (overhead_time +
@@ -750,11 +770,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
        m_runtime_stats.getRankAverage(TaskWaitCommTime)   +
        m_runtime_stats.getRankAverage(TaskReduceCommTime) +
        m_runtime_stats.getRankAverage(TaskWaitThreadTime));
-    
+
     // Calculate percentage of time spent in overhead.
     percent_overhead = overhead_time / total_time;
   }
-  
+
   double overheadAverage = 0;
 
   // Set the overhead percentage. Ignore the first sample as that is
@@ -818,9 +838,9 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
         //   if( oType == Write_Append )
         //     fout.open(filename, std::ofstream::out | std::ofstream::app);
-        //   else 
+        //   else
         //     fout.open(filename, std::ofstream::out);
-            
+
         //   fout << message.str() << std::endl;
         //   fout.close();
         // }
@@ -839,7 +859,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                               BaseInfoMapper::Dout,
                                               true );
     }
-    
+
     // Infrastructure per proc runtime performance stats
     if (g_comp_indv_stats) {
       m_runtime_stats.reportIndividualStats( "Runtime", "",
@@ -851,7 +871,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
 
     // Application proc runtime performance stats.
-    if (g_app_stats && d_myworld->myRank() == 0) {      
+    if (g_app_stats && d_myworld->myRank() == 0) {
       m_application->getApplicationStats().
         reportRankSummaryStats( "Application Summary", "",
                                 d_myworld->myRank(),
@@ -973,7 +993,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
 
     Task* task = scinew Task("SimulationController::CheckInSitu",
                              this, &SimulationController::CheckInSitu, first);
-    
+
     task->setType(Task::OncePerProc);
 
     // Require delta T so that the task gets scheduled
@@ -985,7 +1005,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
                          m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                          m_application->getMaterialManagerP()->allMaterials() );
   }
-#endif      
+#endif
 }
 
 //______________________________________________________________________
@@ -995,7 +1015,7 @@ SimulationController::CheckInSitu( const ProcessorGroup *
                                  , const PatchSubset    *
                                  , const MaterialSubset *
                                  ,       DataWarehouse  *
-                                 ,       DataWarehouse  * new_dw 
+                                 ,       DataWarehouse  * new_dw
                                  ,       bool first
                                  )
 {
@@ -1012,12 +1032,12 @@ SimulationController::CheckInSitu( const ProcessorGroup *
 
     // Get the wall time if it is needed, otherwise ignore it.
     double walltime;
-    
+
     if( m_application->getWallTimeMax() > 0 )
       walltime = m_wall_timers.GetWallTime();
     else
       walltime = 0;
-    
+
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( m_visitSimData, m_current_gridP,
                          first, m_application->isLastTimeStep(walltime) );
@@ -1030,7 +1050,7 @@ SimulationController::CheckInSitu( const ProcessorGroup *
         m_application->activateReductionVariable( endSimulation_name, true );
         m_application->setReductionVariable( new_dw, endSimulation_name, true );
       }
-      
+
       // Set the max wall time to the current wall time which will
       // cause the simulation to terminate because the next wall time
       // check will be greater.
@@ -1043,7 +1063,7 @@ SimulationController::CheckInSitu( const ProcessorGroup *
 
     // This function is no longer used as last is now used in the
     // UpdateSimData which in turn will flip the state.
-      
+
     // Check to see if at the last iteration. If so stop so the
     // user can have once last chance see the data.
     // if( m_visitSimData->stopAtLastTimeStep && last )
