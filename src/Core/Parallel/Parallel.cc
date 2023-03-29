@@ -70,6 +70,9 @@ int              Parallel::s_kokkos_tile_i_size      = -1;
 int              Parallel::s_kokkos_tile_j_size      = -1;
 int              Parallel::s_kokkos_tile_k_size      = -1;
 
+int              Parallel::s_provided      = -1;
+int              Parallel::s_required      = -1;
+
 std::thread::id  Parallel::s_main_thread_id = std::this_thread::get_id();
 ProcessorGroup*  Parallel::s_root_context   = nullptr;
 
@@ -344,15 +347,15 @@ void Parallel::setKokkosTileSize( int isize, int jsize, int ksize )
 //   if(isize * jsize * ksize > max_threads)
 //   {
 //     std::cerr << "The product of tile dimensions ("
-// 	      << isize << "x" << jsize << "x" << ksize << ") "
-// 	      << isize * jsize * ksize << " "      
-// 	      << "exceed maximum number of threads per block: " << max_threads
+//            << isize << "x" << jsize << "x" << ksize << ") "
+//            << isize * jsize * ksize << " "
+//            << "exceed maximum number of threads per block: " << max_threads
 //               << std::endl;
 
 //     throw InternalError("ExecSpace Error: "
-// 			"MDRange tile dims exceed maximum number "
-// 			"of threads per block - reduce the tile dims",
-// 			__FILE__, __LINE__);
+//                      "MDRange tile dims exceed maximum number "
+//                      "of threads per block - reduce the tile dims",
+//                      __FILE__, __LINE__);
 //   }
 // #endif
 }
@@ -450,6 +453,10 @@ Parallel::initializeManager( int& argc , char**& argv )
   }
 #endif
 
+#if ( !defined( DISABLE_SCI_MALLOC ) )
+  const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
+#endif
+
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
@@ -459,22 +466,14 @@ Parallel::initializeManager( int& argc , char**& argv )
   else {
     required = MPI_THREAD_SINGLE;
   }
-#endif
 
-  int status;
-
-#if ( !defined( DISABLE_SCI_MALLOC ) )
-  const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
-#endif
-#ifdef THREADED_MPI_AVAILABLE
-  if ((status = Uintah::MPI::Init_thread(&argc, &argv, required, &provided)) != MPI_SUCCESS) {
-#else
-    if( ( status = Uintah::MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
-#endif
+  int status = Uintah::MPI::Init_thread(&argc, &argv, required, &provided);
+  if(status != MPI_SUCCESS)
     MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
-  }
 
-#ifdef THREADED_MPI_AVAILABLE
+  s_required = required;
+  s_provided = provided;
+
   if (provided < required) {
     std::cerr << "Provided MPI parallel support of " << provided
               << " is not enough for the required level of " << required << "\n"
@@ -484,16 +483,21 @@ Parallel::initializeManager( int& argc , char**& argv )
               << std::endl;
     throw InternalError("Bad MPI level", __FILE__, __LINE__);
   }
+#else
+  int status = Uintah::MPI::Init(&argc, &argv);
+  if(status != MPI_SUCCESS)
+    MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
 #endif
 
   Uintah::worldComm_ = MPI_COMM_WORLD;
-  if ((status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size)) != MPI_SUCCESS) {
-    MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
-  }
 
-  if ((status = Uintah::MPI::Comm_rank(Uintah::worldComm_, &s_world_rank)) != MPI_SUCCESS) {
+  status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size);
+  if (status != MPI_SUCCESS)
+    MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
+
+  status = Uintah::MPI::Comm_rank(Uintah::worldComm_, &s_world_rank);
+  if (status != MPI_SUCCESS)
     MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
-  }
 
 #if ( !defined( DISABLE_SCI_MALLOC ) )
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
@@ -501,67 +505,74 @@ Parallel::initializeManager( int& argc , char**& argv )
 #endif
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-    s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
+  s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
 #else
-    s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
+  s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
 #endif
+}
 
+//_____________________________________________________________________________
+//
+void
+Parallel::printManager()
+{
   if (s_root_context->myRank() == 0) {
-    std::string plural = (s_root_context->nRanks() > 1) ? "processes" : "process";
-    std::cout << "Parallel: " << s_root_context->nRanks()
-              << " MPI " << plural << " (using MPI)\n";
+    std::string plural = (s_root_context->nRanks() > 1) ? "es" : "";
+    proc0cout << "Parallel CPU MPI process" << plural
+              << " (using MPI): \t" << s_root_context->nRanks() << std::endl;
+
+  proc0cout << "Parallel CPU MPI Level Required: " << s_required
+            << ", Provided: " << s_provided << std::endl;
 
 #ifdef THREADED_MPI_AVAILABLE
 
 #if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
-    if ( s_num_partitions > 0 ) {
-      std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
-      std::cout << "Parallel: " << s_num_partitions
-                << " OpenMP thread " << plural << " per MPI process\n";
-    }
-    if ( s_threads_per_partition > 0 ) {
-      std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_threads_per_partition
-                << " OpenMP " << plural << " per partition\n";
+
+    proc0cout << "Parallel CPU Kokkos::OpenMP execution: \t";
+#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
+    proc0cout << "Kokkos::parallel_for" << std::endl;
+#elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
+    if(s_num_partitions == 1) {
+      proc0cout << "Kokkos::parallel_for" << std::endl;
+    } else {
+      proc0cout << "Kokkos::partition_space" << std::endl;
     }
 #else
-    if (s_num_threads > 0) {
-      std::string plural = (s_num_threads > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_num_threads
-                << " std::" << plural << " per MPI process\n";
+    proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
+#endif
+    if(s_num_partitions > 0) {
+      std::string plural = s_num_partitions > 1 ? "s" : "";
+      proc0cout << "Parallel CPU Kokkos::OpenMP thread partition" << plural
+                << " per MPI process: \t" << s_num_partitions << std::endl;
+    }
+
+    if(s_threads_per_partition > 0) {
+      std::string plural = s_threads_per_partition > 1 ? "s" : "";
+      proc0cout << "Parallel CPU Kokkos::OpenMP thread" << plural
+                << " per partition: \t\t" << s_threads_per_partition << std::endl;
+    }
+#else
+    if(s_num_threads > 0) {
+      std::string plural = s_num_threads > 1 ? "s" : "";
+      proc0cout << "Parallel CPU std::thread" << plural
+                << " per MPI process: \t" << s_num_threads <<std::endl;
     }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP) && !defined(UINTAH_USING_GPU)
-      if ( s_cuda_blocks_per_loop > 0 ) {
-        std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
-        std::cout << "Parallel: " << s_cuda_blocks_per_loop
-                  << " OpenMP " << plural << " per loop\n";
-      }
-    if ( s_cuda_threads_per_block > 0 ) {
-      std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_cuda_threads_per_block
-                << " OpenMP " << plural << " per block\n";
+    if(s_cuda_blocks_per_loop > 0) {
+      std::string plural = s_cuda_blocks_per_loop > 1 ? "s" : "";
+      proc0cout << "Parallel CPU OpenMP block" << plural
+                << " per loop: \t" << s_cuda_blocks_per_loop <<std::endl;
+    }
+
+    if(s_cuda_threads_per_block > 0) {
+      std::string plural = s_cuda_threads_per_block > 1 ? "s" : "";
+      proc0cout << "Parallel CPU OpenMP thread" << plural
+                << " per block: \t" << s_cuda_threads_per_block
     }
 #endif
 
-#if defined(UINTAH_USING_GPU)
-    if ( s_using_device ) {
-      if ( s_cuda_blocks_per_loop > 0 ) {
-        std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
-        std::cout << "Parallel GPU: " << s_cuda_blocks_per_loop
-                  << " GPU " << plural << " per loop\n";
-      }
-      if ( s_cuda_threads_per_block > 0 ) {
-        std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
-        std::cout << "Parallel GPU: " << s_cuda_threads_per_block
-                  << " GPU " << plural << " per block\n";
-      }
-    }
-#endif
-
-    std::cout << "Parallel: MPI Level Required: " << required
-              << ", provided: " << provided << "\n";
 #endif
   }
 //    Uintah::MPI::Errhandler_set(Uintah::worldComm_, MPI_ERRORS_RETURN);

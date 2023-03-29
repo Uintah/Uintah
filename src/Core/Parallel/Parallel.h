@@ -97,6 +97,10 @@ class Parallel {
       static void initializeManager( int& argc, char**& arg );
 
       //////////
+      // Print the manager settings.
+      static void printManager();
+
+      //////////
       // Check to see whether initializeManager has been called
       static bool isInitialized();
 
@@ -257,6 +261,9 @@ class Parallel {
       static int s_kokkos_tile_i_size;
       static int s_kokkos_tile_j_size;
       static int s_kokkos_tile_k_size;
+
+      static int s_provided;
+      static int s_required;
 };
 
 } // End namespace Uintah

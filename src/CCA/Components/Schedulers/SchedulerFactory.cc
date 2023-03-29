@@ -1,4 +1,4 @@
-/*
+ /*
  * The MIT License
  *
  * Copyright (c) 1997-2020 The University of Utah
@@ -59,7 +59,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
-    if ((Uintah::Parallel::getNumPartitions() > 0) && (Uintah::Parallel::getThreadsPerPartition() > 0)) {
+    if ((Uintah::Parallel::getNumPartitions() > 0) &&
+        (Uintah::Parallel::getThreadsPerPartition() > 0)) {
       if (Uintah::Parallel::usingDevice()) {
         scheduler = "Kokkos";       // User passed '-npartitions <#> -nthreadsperpartition <#> -gpu'
       }
@@ -115,23 +116,34 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
-    throw ProblemSetupException("\nERROR<Scheduler>: Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
+    std::string error = "\nERROR<Scheduler>: "
+      "Unified Scheduler needed for '-nthreads <n>' option.\n";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
   // "-gpu" provided at command line, but not using "Unified"
-  if ((scheduler != "Unified") && (scheduler != "Kokkos") && Uintah::Parallel::usingDevice()) {
-    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Kokkos Scheduler or Unified Scheduler.  Add  '-npartitions <n> -nthreadsperpartition <n>' or '-nthreads <n>' to the sus command line.\n";
+  if ((scheduler != "Unified") &&
+      (scheduler != "Kokkos" ) && Uintah::Parallel::usingDevice()) {
+    std::string error = "\nERROR<Scheduler>: "
+      "To use '-gpu' option you must invoke the Kokkos Scheduler or "
+      "Unified Scheduler.  Add '-npartitions <n> -nthreadsperpartition <n>' "
+      "or '-nthreads <n>' to the sus command line.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
   // "Unified" specified in UPS file, but "-nthreads" not given at command line
   if ((scheduler == "Unified") && !(Uintah::Parallel::getNumThreads() > 0)) {
-    std::string error = "\nERROR<Scheduler>: Add '-nthreads <n>' to the sus command line if you are specifying Unified in your input file.\n";
+    std::string error = "\nERROR<Scheduler>: "
+      "Add '-nthreads <n>' to the sus command line if 'Unified' is specified "
+      "in the input file.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;
+
+  // The parallel class is tied closely to the scheduler so print it here.
+  Parallel::printManager();
 
 #if defined(HAVE_KOKKOS)
   // Output Execution Space and Memory Space that will be used with Kokkos builds
@@ -189,9 +201,26 @@ SchedulerFactory::create( const ProblemSpecP   & ps
       }
       break;
     }
+
+    if( Parallel::getKokkosPolicy() == Parallel::Kokkos_Team_Policy)
+    {
+      int blocksPerLoop = Parallel::getCudaBlocksPerLoop();
+      if( blocksPerLoop > 0) {
+        std::string plural = blocksPerLoop > 1 ? "s" : "";
+        proc0cout << "Kokkos Team Block" << plural
+                  << " per loop: \t" << blocksPerLoop <<std::endl;
+      }
+
+      int threadsPerBlock = Parallel::getCudaThreadsPerBlock();
+      if(threadsPerBlock > 0) {
+        std::string plural = threadsPerBlock > 1 ? "s" : "";
+        proc0cout << "Kokkos Team Thread" << plural
+                  << " per block: \t" << threadsPerBlock << std::endl;
+      }
+    }
   }
+
 #endif  // #if defined(HAVE_KOKKOS)
 
   return sch;
-
 }
