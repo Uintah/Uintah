@@ -45,7 +45,7 @@ NIGHTLYTESTS = [
                   ("frictionVar",                         "frictionVar.ups",                     4,  "ALL", ["exactComparison"] ),
                   ("disk_UCNHVar",                        "disk_UCNHVar.ups",                    4,  "ALL", ["exactComparison"] ),
                   ("FTRM",                                "FTRMTest.ups",                        2,  "ALL", ["exactComparison"] ),
-                  git ("cpti_disks",                          "cpti_disks.ups",                      1,  "All", ["exactComparison", "preProcessCmd=pfs"] ),
+                  ("cpti_disks",                          "cpti_disks.ups",                      1,  "All", ["exactComparison", "preProcessCmd=pfs"] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                 1,  "ALL", [] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                 1,  "ALL", [] ),
 #                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",             8,  "All", ["no_dbg","exactComparison"] ),
