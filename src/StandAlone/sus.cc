@@ -506,7 +506,7 @@ int main( int argc, char *argv[], char *env[] )
       }
 
       if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy &&
-	 Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
+         Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
         Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
       Parallel::setKokkosChunkSize(kokkos_chunk_size);
 #else
@@ -746,14 +746,18 @@ int main( int argc, char *argv[], char *env[] )
       char name[256];
       gethostname(name, 256);
 
+      std::cout << "Running: ";
+      for(int i=1; i<argc; ++i)
+        std::cout << argv[i] << " ";
+      std::cout << std::endl;
       std::cout << "Date:    " << time_string;  // has its own newline
-      std::cout << "Machine: " << name << "\n";
-      std::cout << "SVN: " << SVN_REVISION << "\n";
-      std::cout << "SVN: " << SVN_DATE << "\n";
-      std::cout << "SVN: " << SVN_URL << "\n";
-      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
-      std::cout << "CFLAGS: " << CFLAGS << "\n";
-      std::cout << "CXXFLAGS: " << CXXFLAGS << "\n";
+      std::cout << "Machine: " << name << std::endl;
+      std::cout << "SVN: " << SVN_REVISION << std::endl;
+      std::cout << "SVN: " << SVN_DATE << std::endl;
+      std::cout << "SVN: " << SVN_URL << std::endl;
+      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << std::endl;
+      std::cout << "CFLAGS: " << CFLAGS << std::endl;
+      std::cout << "CXXFLAGS: " << CXXFLAGS << std::endl;
 
       // Run git commands Uintah
       if ( do_gitDiff || do_gitStatus ) {
@@ -788,7 +792,8 @@ int main( int argc, char *argv[], char *env[] )
         std::cout << "SLEEPING FOR " << sleepTime
              << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
       }
-      std::cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
+      std::cout << "PID for rank " << Uintah::Parallel::getMPIRank()
+                << " (" << name << ") is " << getpid() << std::endl;
       std::cout.flush();
 
       struct timespec ts;
@@ -805,26 +810,31 @@ int main( int argc, char *argv[], char *env[] )
       ups = ProblemSpecReader().readInputFile( filename, validateUps );
     }
     catch( ProblemSetupException& err ) {
-      proc0cout << "\nERROR caught while parsing UPS file: " << filename << "\nDetails follow.\n"
-                << err.message() << "\n";
+      proc0cout << std::endl << "ERROR caught while parsing UPS file: "
+                << filename << std::endl
+                << "\nDetails follow." << std::endl
+                << err.message() << std::endl;
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
     }
     catch( ... ) {
-      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
-      // instead of a UPS file.
-      proc0cout   << "\n";
-      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+      // Bulletproofing.  Catches the case where a user accidentally
+      // specifies a UDA directory instead of a UPS file.
+      proc0cout << std::endl << "ERROR - Failed to parse UPS file: "
+                << filename << std::endl;
       if( validDir( filename ) ) {
-        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+        proc0cout << "ERROR - Note: '" << filename << "' is a directory! "
+                  << "Did you mistakenly specify a UDA instead of an UPS file?"
+                  << std::endl;
       }
-      proc0cout   << "\n";
+
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
     }
 
     if( onlyValidateUps ) {
-      std::cout << "\nValidation of .ups File finished... good bye.\n\n";
+      std::cout << std::endl << "Validation of .ups File finished... good bye."
+                << std::endl;
       ups = nullptr; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
