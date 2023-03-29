@@ -39,12 +39,12 @@
     #define TASK_MANAGES_EXECSPACE
     #define USE_KOKKOS_PARALLEL_FOR
     #define USE_KOKKOS_DEEPCOPY
-    #define USE_KOKKOS_VIEW
-//    #define USE_KOKKOS_MALLOC
+    #define USE_KOKKOS_MALLOC
+    // #define USE_KOKKOS_VIEW // Use Kokkos malloc
     #define USE_KOKKOS_INSTANCE
     #define USE_KOKKOS_FENCE
-//    #define USE_KOKKOS_INSTANCE_OPENMP
-    #define USE_KOKKOS_TEAM_POLICY
+    // #define USE_KOKKOS_OPENMP_PARALLEL_FOR
+    // #define USE_KOKKOS_OPENMP_PARTITION_SPACE
   #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
