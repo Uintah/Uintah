@@ -79,7 +79,7 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include <svn_info.h>
+#include <git_info.h>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -752,35 +752,40 @@ int main( int argc, char *argv[], char *env[] )
       std::cout << std::endl;
       std::cout << "Date:    " << time_string;  // has its own newline
       std::cout << "Machine: " << name << std::endl;
-      std::cout << "SVN: " << SVN_REVISION << std::endl;
-      std::cout << "SVN: " << SVN_DATE << std::endl;
-      std::cout << "SVN: " << SVN_URL << std::endl;
-      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << std::endl;
-      std::cout << "CFLAGS: " << CFLAGS << std::endl;
-      std::cout << "CXXFLAGS: " << CXXFLAGS << std::endl;
+      std::cout << "Git Commit: " << GIT_COMMIT << std::endl;
+      std::cout << "Git Date  : " << GIT_DATE << std::endl;
+      std::cout << "Git URL   : " << GIT_URL << std::endl;
+      std::cout << "Git Branch: " << GIT_BRANCH << std::endl;
 
       // Run git commands Uintah
       if ( do_gitDiff || do_gitStatus ) {
-        std::cout << "____GIT_____________________________________________________________\n";
-        std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
+        std::string cmd, sdir = GIT_SRCDIR;
 
-        if (do_gitDiff) {
-          std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
-          std::cout << "\n__________________________________git diff\n";
-          std::system(cmd.c_str());
-        }
+        std::cout << "___ GIT _______________________________________________\n";
 
         if (do_gitStatus) {
-          std::string cmd = "cd " + sdir + "; git status  --branch --short";
-          std::cout << "\n__________________________________git status --branch --short\n";
+          cmd = "cd " + sdir + "; git status --branch --short";
+          std::cout << "\n____ git status --branch --short __________________\n";
           std::system(cmd.c_str());
 
-          cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\"";
-          std::cout << "\n__________________________________git log -1\n";
+          cmd = "cd " + sdir + "; git log -1 --format='%ad %an %H'";
+          std::cout << "\n____ git log -1 ___________________________________\n";
           std::system(cmd.c_str());
         }
-        std::cout << "____GIT_______________________________________________________________\n";
+
+        if (do_gitDiff) {
+          cmd = "cd " + sdir + "; git --no-pager diff -w --no-color --minimal";
+          std::cout << "\n____ git diff -w __________________________________\n";
+          std::system(cmd.c_str());
+        }
+
+        std::cout << "___ GIT________________________________________________\n";
       }
+
+      std::cout << "CFLAGS: " << CFLAGS << std::endl;
+      std::cout << "CXXFLAGS: " << CXXFLAGS << std::endl;
+      std::cout << "LDFLAGS: " << LDFLAGS << std::endl;
+      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << std::endl;
     }
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );
