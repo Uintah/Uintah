@@ -80,32 +80,33 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
   string mms_type = flags->d_mms_type;
   if(mms_type == "GeneralizedVortex"){
     double t = 0.0;
-      double A = 1.0;
-     double R = sqrt(p.x()*p.x() + p.y()*p.y());
-      double alfap = M_PI*(1. - 32.*pow((R-1),2.) + 256.*pow((R-1),4.));
-      double alpha = A*sin(M_PI*t)*(1. - 32.*pow((R-1),2.) + 256.*pow((R-1),4.));
-      double u = alfap*(-sin(alpha)*p.x() - cos(alpha)*p.y());
-      double v = alfap*(cos(alpha)*p.x() - sin(alpha)*p.y());
-      double w = 0.0;
-                double rho0 = 1000.0;
-      position[i] = p;
-      if(flags->d_axisymmetric){
+    double A = 1.0;
+    double R = sqrt(p.x()*p.x() + p.y()*p.y());
+    double alfap = M_PI*(1. - 32.*pow((R-1),2.) + 256.*pow((R-1),4.));
+    double alpha = A*sin(M_PI*t)*(1. - 32.*pow((R-1),2.) + 256.*pow((R-1),4.));
+    double u = alfap*(-sin(alpha)*p.x() - cos(alpha)*p.y());
+    double v = alfap*(cos(alpha)*p.x() - sin(alpha)*p.y());
+    double w = 0.0;
+    double rho0 = 1000.0;
+    position[i] = p;
+    if(flags->d_axisymmetric){
         // assume unit radian extent in the circumferential direction
-        pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
-      } else {
+        pvolume[i]  = p.x()*(size(0,0)*size(1,1) -
+                             size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
+    } else {
         // standard voxel volume
         pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
-      }
-      pvelocity[i]    = Vector(u,v,w);
-      psize[i]        = size;
-      pmass[i]        = rho0*pvolume[i];
-      pdisp[i]        = Vector(0.,0.,0.);
-    } 
-          else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L"){
+    }
+    pvelocity[i]    = Vector(u,v,w);
+    psize[i]        = size;
+    pmass[i]        = rho0*pvolume[i];
+    pdisp[i]        = Vector(0.,0.,0.);
+  }
+  else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L"){
 /*                Vector dx = patch->dCell();             // you need to normalize the variable A by the 
       double normalization = dx.length();    // cell spacing so the Linear interpolation will work
       double A=1e-2 * normalization; */
-        double A=0.05;
+      double A=0.05;
       double mu = 3846.15;
       double bulk = 8333.33;
       double E = 9.*bulk*mu/(3.*bulk+mu);
@@ -124,29 +125,29 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
 
       Vector disp(U,V,W);
 
-    position[i] = p+disp;
+      position[i] = p+disp;
       if(flags->d_axisymmetric){
           // assume unit radian extent in the circumferential direction
-          pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
+          pvolume[i]  = p.x()*(size(0,0)*size(1,1) -
+                               size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
       } else {
           // standard voxel volume
           pvolume[i]  = J*size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
       }
 
-    psize[i] = Matrix3(size(0,0)*Fxx,0.,0.,
-                       0.,size(1,1)*Fyy,0.,
-                       0.,0.,size(2,2)*Fzz);
+      psize[i] = Matrix3(size(0,0)*Fxx,0.,0.,
+                         0.,size(1,1)*Fyy,0.,
+                         0.,0.,size(2,2)*Fzz);
 
       pvelocity[i]    = Vector(u,v,w);
       pmass[i]        = rho0*pvolume[i]/J;
       pdisp[i]        = disp;
-                    }  else if (mms_type == "ExpandingRing") {
-//        cout << "Entered the ER loop " << endl;
-     double A = 0.1;
+  }  else if (mms_type == "ExpandingRing") {
+      double A = 0.1;
       double E = 1e7;
       double rho = 1000;;
       double C = sqrt(E/rho);
-     double ri = 0.4;
+      double ri = 0.4;
       double ro = 0.6;
       double c1 = (-6.*ri)/(ro*(ro - 3.*ri));
       double c2 = (3.*(ro + ri))/(pow(ro,2)*(ro - 3.*ri));
@@ -157,9 +158,10 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
       double v = A*C*M_PI*(c3*pow(R,2.) + c2*R + c1)*p.y();
       double w = 0.0;
       position[i] = p;
-     if(flags->d_axisymmetric){
+      if(flags->d_axisymmetric){
         // assume unit radian extent in the circumferential direction
-        pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
+        pvolume[i]  = p.x()*(size(0,0)*size(1,1) -
+                             size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
       } else {
         // standard voxel volume
         pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
@@ -170,7 +172,6 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
       pdisp[i]        = Vector(0.,0.,0.);
   }
 }
-
 
 void
 MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
@@ -188,8 +189,7 @@ MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
     old_dw->get(pdisp,          lb->pDispLabel,          pset);
     old_dw->get(pmass,          lb->pMassLabel,          pset);
     string mms_type = flags->d_mms_type;
-    if(mms_type == "GeneralizedVortex")
-     {
+    if(mms_type == "GeneralizedVortex") {
 //        cout << "Entered the GV loop " << endl;
         double mu = 384.615;
         double E = 1000.0;
@@ -217,8 +217,8 @@ MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
           double by = sin(beta)*br + cos(beta)*bt;
 
           ExternalForce[idx] = (pmass[idx]*Vector(bx,by,bz));
-  }
-      } else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L"){
+        }
+    } else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L"){
 //        cout << "Entered the AA loop " << endl;
           double mu = 3846.15;
           double bulk = 8333.33;
@@ -251,19 +251,18 @@ MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
 
           ExternalForce[idx] = pmass[idx]*Vector(bx,by,bz);
         }
-         } else if (mms_type == "ExpandingRing"){
-          double A = 0.1;
-          double E = 1e7;
-    double mu = E/2.0;
-        double rho  = 1000.0;
+    } else if (mms_type == "ExpandingRing"){
+      double A = 0.1;
+      double E = 1e7;
+      double mu = E/2.0;
+      double rho  = 1000.0;
       double C = sqrt(E/rho);
       double ri = 0.4;
-     double ro = 0.6;
-          double rb = (ri + ro)/2;
+      double ro = 0.6;
+      double rb = (ri + ro)/2;
       double c1 = (-6.*ri)/(ro*(ro - 3.*ri));
       double c2 = (3.*(ro + ri))/(pow(ro,2)*(ro - 3.*ri));
       double c3 = -2./(pow(ro,2)*(ro - 3.*ri)); 
-
 
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){
@@ -279,5 +278,5 @@ MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
           double bz = 0.0;
           ExternalForce[idx] = pmass[idx]*Vector(bx,by,bz);
     }
-  }   
+  }
  }

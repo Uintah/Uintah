@@ -68,7 +68,6 @@ namespace Uintah {
     std::vector<const VarLabel* > returnParticleState();
     std::vector<const VarLabel* > returnParticleStatePreReloc();
 
-    
     typedef std::map<GeometryObject*,std::vector<Point> > geompoints;
     typedef std::map<GeometryObject*,std::vector<double> > geomvols;
     typedef std::map<GeometryObject*,std::vector<Vector> > geomvecs;
@@ -160,12 +159,6 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     void printPhysicalBCs();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! Calculate the external force to be applied to a particle */
-    //////////////////////////////////////////////////////////////////////////
-    virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
-                              const double& pMass,  Vector& pExtForce);
-    
     int checkForSurface(const GeometryPieceP piece, const Point p,
                         const Vector dxpp);
 
@@ -173,7 +166,7 @@ namespace Uintah {
                             const Vector dxpp);
 
     MPMLabel* d_lb;
-    AMRMPMLabel* d_Al;
+//    AMRMPMLabel* d_Al;
     HydroMPMLabel* d_Hlb;
     MPMFlags* d_flags;
 

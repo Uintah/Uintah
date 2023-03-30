@@ -58,8 +58,7 @@
 
 First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
 turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
-(MPMMaterial calls the ParticleCreatorFactory::create, which is kind of stupid
-since every material will use the same type ParticleCreator. Whatever..)
+MPMMaterial calls the ParticleCreatorFactory::create
 
 Next,  createParticles, below, first loops over all of the geom_objects and
 calls countAndCreateParticles.  countAndCreateParticles returns the number of
@@ -113,10 +112,9 @@ using namespace Uintah;
 using namespace std;
 
 TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl, 
-                                 MPMFlags* flags)
-                              :  ParticleCreator(matl,flags)
+                                                 MPMFlags* flags)
+                                              :  ParticleCreator(matl,flags)
 {
-
   d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
@@ -130,13 +128,11 @@ TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl,
   // Hydro-mechanical coupling MPM
   d_coupledflow = flags->d_coupledflow;
 
-  registerPermanentParticleState(matl);
+//  registerPermanentParticleState(matl);
 }
 
 TriangleParticleCreator::~TriangleParticleCreator()
 {
-  delete d_Hlb;
-  delete d_lb;
 }
 
 particleIndex 
@@ -212,159 +208,6 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
     start += count;
   }
   return numParticles;
-}
-
-// Get the LoadCurveID applicable for this material point
-// WARNING : Should be called only once per particle during a simulation 
-// because it updates the number of particles to which a BC is applied.
-IntVector TriangleParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps, int dwi)
-{
-  IntVector ret(0,0,0);
-  int k=0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-        
-    //cerr << " BC Type = " << bcs_type << endl;
-    if (bcs_type == "Pressure") {
-      PressureBC* pbc = 
-        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)
-       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
-         ret(k) = pbc->loadCurveID();
-         k++;
-      }
-    }
-    else if (bcs_type == "Torque") {
-      TorqueBC* tbc =
-        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (tbc->flagMaterialPoint(pp, dxpp)
-       && (tbc->loadCurveMatl()==dwi || tbc->loadCurveMatl()==-99)) {
-         ret(k) = tbc->loadCurveID();
-         k++;
-      }
-    }
-    else if (bcs_type == "ScalarFlux") {
-      ScalarFluxBC* pbc = 
-        dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp, areacomps)) {
-         ret(k) = pbc->loadCurveID(); 
-         k++;
-      }
-    }
-    else if (bcs_type == "HeatFlux") {      
-      HeatFluxBC* hfbc = 
-        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = hfbc->loadCurveID(); 
-         k++;
-      }
-    }
-    else if (bcs_type == "ArchesHeatFlux") {      
-      ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = hfbc->loadCurveID(); 
-         k++;
-      }
-    }
-  }
-  return ret;
-}
-
-// Print MPM physical boundary condition information
-void TriangleParticleCreator::printPhysicalBCs()
-{
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
-      PressureBC* pbc =
-        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *pbc << endl;
-    }
-    if (bcs_type == "Torque") {
-      TorqueBC* pbc =
-        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *pbc << endl;
-    }
-    if (bcs_type == "HeatFlux") {
-      HeatFluxBC* hfbc = 
-        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *hfbc << endl;
-    }
-    if (bcs_type == "ArchesHeatFlux") {
-      ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *hfbc << endl;
-    }
-  }
-}
-
-ParticleSubset* 
-TriangleParticleCreator::allocateVariables(particleIndex numParticles, 
-                                   int dwi, const Patch* patch,
-                                   DataWarehouse* new_dw,
-                                   ParticleVars& pvars)
-{
-  ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
-                                                        patch);
-  new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
-  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
-  new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
-  new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
-  new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
-  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
-  new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
-  new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
-  new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
-  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
-  new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
-  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
-  new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
-  new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
-  new_dw->allocateAndPut(pvars.psurfgrad,     d_lb->pSurfGradLabel,     subset);
-
-  if(d_flags->d_integrator_type=="explicit"){
-    new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
-  }
-  new_dw->allocateAndPut(pvars.pTempGrad,   d_lb->pTemperatureGradientLabel,
-                                                                        subset);
-  if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
-  }
-  if(d_with_color){
-     new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
-  }
-  if(d_doScalarDiffusion){
-     new_dw->allocateAndPut(pvars.parea,  d_lb->diffusion->pArea,       subset);
-
-     new_dw->allocateAndPut(pvars.pConcentration,
-                                      d_lb->diffusion->pConcentration,  subset);
-     new_dw->allocateAndPut(pvars.pConcPrevious,
-                                      d_lb->diffusion->pConcPrevious,   subset);
-     new_dw->allocateAndPut(pvars.pConcGrad,
-                                 d_lb->diffusion->pGradConcentration,   subset);
-     new_dw->allocateAndPut(pvars.pExternalScalarFlux,
-                                  d_lb->diffusion->pExternalScalarFlux, subset);
-  }
-
-  if (d_coupledflow) {  // Harmless that rigid allocates and put, as long as
-                        // nothing it put
-      new_dw->allocateAndPut(pvars.pSolidMass, d_Hlb->pSolidMassLabel, subset);
-      new_dw->allocateAndPut(pvars.pFluidMass, d_Hlb->pFluidMassLabel, subset);
-      new_dw->allocateAndPut(pvars.pPorosity, d_Hlb->pPorosityLabel, subset);
-      new_dw->allocateAndPut(pvars.pPorePressure, d_Hlb->pPorePressureLabel,
-          subset);
-      new_dw->allocateAndPut(pvars.pPrescribedPorePressure,
-          d_Hlb->pPrescribedPorePressureLabel, subset);
-      new_dw->allocateAndPut(pvars.pFluidVelocity, d_Hlb->pFluidVelocityLabel,
-          subset);
-  }
-
-  if(d_artificial_viscosity){
-     new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
-  }
-  return subset;
 }
 
 void TriangleParticleCreator::createPoints(const Patch* patch, 
@@ -822,201 +665,4 @@ TriangleParticleCreator::countAndCreateParticles(const Patch* patch,
   createPoints(patch,obj,vars);
   
   return (particleIndex) vars.d_object_points[obj].size();
-}
-
-vector<const VarLabel* > TriangleParticleCreator::returnParticleState()
-{
-  return particle_state;
-}
-
-
-vector<const VarLabel* > TriangleParticleCreator::returnParticleStatePreReloc()
-{
-  return particle_state_preReloc;
-}
-
-void TriangleParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
-{
-  particle_state.push_back(d_lb->pDispLabel);
-  particle_state_preReloc.push_back(d_lb->pDispLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVelocityLabel);
-  particle_state_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
-
-  particle_state.push_back(d_lb->pExternalForceLabel);
-  particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
-
-  particle_state.push_back(d_lb->pMassLabel);
-  particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVolumeLabel);
-  particle_state_preReloc.push_back(d_lb->pVolumeLabel_preReloc);
-
-  particle_state.push_back(d_lb->pTemperatureLabel);
-  particle_state_preReloc.push_back(d_lb->pTemperatureLabel_preReloc);
-
-  // for thermal stress
-  particle_state.push_back(d_lb->pTempPreviousLabel);
-  particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
-
-  particle_state.push_back(d_lb->pParticleIDLabel);
-  particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-
-  if (d_with_color){
-    particle_state.push_back(d_lb->pColorLabel);
-    particle_state_preReloc.push_back(d_lb->pColorLabel_preReloc);
-  }
-
-  if (d_doScalarDiffusion){
-    particle_state.push_back(d_lb->diffusion->pConcentration);
-    particle_state_preReloc.push_back(d_lb->diffusion->pConcentration_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pConcPrevious);
-    particle_state_preReloc.push_back(d_lb->diffusion->pConcPrevious_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pGradConcentration);
-    particle_state_preReloc.push_back(d_lb->diffusion->pGradConcentration_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pExternalScalarFlux);
-    particle_state_preReloc.push_back(d_lb->diffusion->pExternalScalarFlux_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pArea);
-    particle_state_preReloc.push_back(d_lb->diffusion->pArea_preReloc);
-
-    matl->getScalarDiffusionModel()->addParticleState(particle_state,
-                                                      particle_state_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pSizeLabel);
-  particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
-
-  if (d_useLoadCurves) {
-    particle_state.push_back(d_lb->pLoadCurveIDLabel);
-    particle_state_preReloc.push_back(d_lb->pLoadCurveIDLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pDeformationMeasureLabel);
-  particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVelGradLabel);
-  particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
-
-  if(!d_flags->d_AMR){
-    particle_state.push_back(d_lb->pTemperatureGradientLabel);
-    particle_state_preReloc.push_back(d_lb->pTemperatureGradientLabel_preReloc);
-  }
-
-  if (d_flags->d_refineParticles) {
-    particle_state.push_back(d_lb->pRefinedLabel);
-    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pStressLabel);
-  particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
-
-  particle_state.push_back(d_lb->pLocalizedMPMLabel);
-  particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
-
-  if(d_flags->d_useLogisticRegression || d_flags->d_SingleFieldMPM){
-    particle_state.push_back(d_lb->pSurfLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
-  }
-
-  if(d_flags->d_SingleFieldMPM){
-    particle_state.push_back(d_lb->pSurfGradLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfGradLabel_preReloc);
-  }
-
-  if (d_artificial_viscosity) {
-    particle_state.push_back(d_lb->p_qLabel);
-    particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
-  }
-
-  if (d_computeScaleFactor) {
-    particle_state.push_back(d_lb->pScaleFactorLabel);
-    particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
-  }
-
-  matl->getConstitutiveModel()->addParticleState(particle_state,
-                                                 particle_state_preReloc);
-                                                 
-  matl->getDamageModel()->addParticleState( particle_state, particle_state_preReloc );
-  
-  matl->getErosionModel()->addParticleState( particle_state, particle_state_preReloc );
-}
-
-int
-TriangleParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
-{
-
-  //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
-  //  the current point is on the surface
-  
-  int ss = 0;
-  // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  if (d_flags->d_ndim==3) {
-    // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-      ss++;
-    // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-      ss++;
-  }
-
-  if(ss>0){
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
-double
-TriangleParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
-{
-
-  //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
-  //  the current point is on the surface
-  int ss = 0;
-  // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  if (d_flags->d_ndim==3) {
-    // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-      ss++;
-    // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-      ss++;
-  }
-
-  if(ss>0){
-    return 1.0;
-  } else {
-    return 0.0;
-  }
 }

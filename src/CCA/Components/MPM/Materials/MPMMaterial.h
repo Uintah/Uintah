@@ -197,6 +197,7 @@ WARNING
    double d_thermalConductivity;
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
    bool   d_allTriGeometry = false;
+   bool   d_allFileGeometry = false;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
