@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "Examples" ADDTL_PATH)
+  result = runSusTests(argv, TESTS, "Examples", ADDTL_PATH)
 
   # cleanup modified files
   command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
