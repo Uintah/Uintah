@@ -15,12 +15,13 @@ import socket
 import resource
 import subprocess # needed to accurately get return codes
 
-from os                       import system
+from os                       import system,environ,pathsep,path
 from optparse                 import OptionParser
 from sys                      import argv, exit
 from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags, cmdline, isValid_inputFile
+from helpers.runSusTests_git  import runPreProcessCmd, parse_addtlpath
 from helpers.modUPS           import modUPS
-
+from helpers.utilities        import writeDividerLine
 ####################################################################################
 
 sus           = ""   # full path to sus executable
@@ -289,6 +290,7 @@ def generateGS() :
         os.mkdir( component )
         os.chdir( component )
 
+        #__________________________________
         # Create a symbolic link to the 'inputs' directory so some .ups files will be able
         # to find what they need...
         if not os.path.islink( "inputs" ) :
@@ -297,10 +299,22 @@ def generateGS() :
         # find the list of tests (local/nightly/debug/......)
         tests = THE_COMPONENT.getTestList( componentTests[counter] )
 
+        #__________________________________
+        # update path for preProcessing cmds
+        susdir    = path.dirname(sus)
+        addtlPath = THE_COMPONENT.ADDTL_PATH
+        addtlPath = parse_addtlpath( addtlPath, susdir )
+
+        environ['PATH']  =  addtlPath + pathsep + environ['PATH']
+        print ( "path: %s" % environ['PATH'])
+
         if options.verbose :
             print( "" )
             print( "______________________________________________________________________" )
             print( "About to run tests for component: " + component )
+
+        #__________________________________
+        #     Loop over tcomponent tests
 
         nTestsFinished = 0
         for test in tests :
@@ -317,6 +331,8 @@ def generateGS() :
             #__________________________________
             # parse user flags for the gpu and sus_options
             # override defaults if the flags have been specified
+            print( "__________________" )
+
             if len(test) == 5:
               flags = getTestFlags(test)
               print( "User Flags:" )
@@ -332,7 +348,11 @@ def generateGS() :
                 tmp = flags[i].rsplit('=')
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
-                  print( "\n sus_option: %s \n"%(sus_options) )
+                  print( "sus_option: %s \n"%(sus_options) )
+
+                if tmp[0] == "preProcessCmd":
+                  preProcess_cmd = tmp[1]
+                  print( "preProcess_cmd: %s \n"%(preProcess_cmd) )
 
             #__________________________________
             # check if code/machine is gpu enabled
@@ -383,6 +403,14 @@ def generateGS() :
             #GIT_FLAGS = "" # When debugging, if you don't want to spend time waiting for git, uncomment this line.
 
             #__________________________________
+            #  run preprocess command on ups file
+            sus_log_msg = '\tSee sus.log.txt for details'
+            rc=runPreProcessCmd( preProcess_cmd, upsFile, 'sus_log.txt', sus_log_msg )
+            if rc==1:
+                os.chdir( ".." )
+                continue;
+
+            #__________________________________
             # adjustments for openmpi and mvapich
             # openmpi
             rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
@@ -399,7 +427,7 @@ def generateGS() :
             np = int( getMPISize( test ) )
             my_mpirun = "%s -n %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " > sus_log.txt 2>&1 "
+            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " >> sus_log.txt 2>&1 "
 
             print( "Running command: " + command )
 

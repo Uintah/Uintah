@@ -27,6 +27,8 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -35,31 +37,32 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 
 NIGHTLYTESTS = [
                   #----------  All Tests ---------  #
-                  ("disks_complex",                       "disks_complex.ups",                       6,  "ALL", ["exactComparison"] ),
-                  ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["exactComparison"] ),
+                  ("disks_complex",                       "disks_complex.ups",                   6,  "ALL", ["exactComparison"] ),
+                  ("heatcond2mat",                        "heatcond2mat.ups",                    1,  "ALL", ["exactComparison"] ),
                   ("NairnFrictionTest",                   "NairnFrictionTest.ups",               1,  "ALL", ["exactComparison"] ),
-                  ("ColPlate_AffineTrans",                "ColPlate_AffineTrans.ups",                1,  "ALL", ["exactComparison"] ),
-                  ("extrudeRT",                           "extrudeRT.ups",                           5,  "ALL", ["exactComparison"] ),
-                  ("frictionVar",                           "frictionVar.ups",                           4,  "ALL", ["exactComparison"] ),
-                  ("disk_UCNHVar",                           "disk_UCNHVar.ups",                           4,  "ALL", ["exactComparison"] ),
-                  ("FTRM",                                "FTRMTest.ups",                           2,  "ALL", ["exactComparison"] ),
-#                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
-#                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
-#                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "All", ["no_dbg","exactComparison"] ),
-#                  ("const_test_hypo",                     "const_test_hypo.ups",                     1,  "ALL", ["exactComparison"] ),
-#                  ("const_test_cmr",                      "const_test_cmr.ups",                      1,  "ALL", ["exactComparison"] ),
-                  ("const_test_nhp",                      "const_test_nhp.ups",                      1,  "ALL", ["exactComparison"] ),
-                  ("const_test_vs",                       "const_test_vs.ups",                       1,  "ALL", ["exactComparison"] ),
-                  ("adiCuJC4000s696K",                    "adiCuJC4000s696K.ups",                    1,  "ALL", ["exactComparison"] ),
-#                  ("adiCuMTS4000s696K",                   "adiCuMTS4000s696K.ups",                   1,  "All", ["exactComparison"] ),
-#                  ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "All", ["exactComparison"] ),
-#                  ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "All", ["exactComparison"] ),
-#                  ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "All", ["exactComparison"] ),
-                  ("test_cyl_pene_no_ero_axi_sym",                "test_cyl_pene_no_ero_axi_sym.ups",                4,  "ALL", ["exactComparison"] ),
-                  ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "ALL", ["exactComparison"] ),
-                  ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups",       1,  "ALL", ["exactComparison"] ),
-                    ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "ALL", ["no_dbg","exactComparison"] ),
-#                  ("foam_crush",                          "foam_crush.ups",                          4,  "ALL", ["exactComparison"] ),
+                  ("ColPlate_AffineTrans",                "ColPlate_AffineTrans.ups",            1,  "ALL", ["exactComparison"] ),
+                  ("extrudeRT",                           "extrudeRT.ups",                       5,  "ALL", ["exactComparison"] ),
+                  ("frictionVar",                         "frictionVar.ups",                     4,  "ALL", ["exactComparison"] ),
+                  ("disk_UCNHVar",                        "disk_UCNHVar.ups",                    4,  "ALL", ["exactComparison"] ),
+                  ("FTRM",                                "FTRMTest.ups",                        2,  "ALL", ["exactComparison"] ),
+                  ("cpti_disks",                          "cpti_disks.ups",                      1,  "All", ["exactComparison", "preProcessCmd=pfs"] ),
+#                  ("periodic_disks",                      "periodic_disks.ups",                 1,  "ALL", [] ),
+#                  ("periodic_disks",                      "periodic_disks.ups",                 1,  "ALL", [] ),
+#                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",             8,  "All", ["no_dbg","exactComparison"] ),
+#                  ("const_test_hypo",                     "const_test_hypo.ups",                1,  "ALL", ["exactComparison"] ),
+#                  ("const_test_cmr",                      "const_test_cmr.ups",                 1,  "ALL", ["exactComparison"] ),
+                  ("const_test_nhp",                      "const_test_nhp.ups",                  1,  "ALL", ["exactComparison"] ),
+                  ("const_test_vs",                       "const_test_vs.ups",                   1,  "ALL", ["exactComparison"] ),
+                  ("adiCuJC4000s696K",                    "adiCuJC4000s696K.ups",                1,  "ALL", ["exactComparison"] ),
+#                  ("adiCuMTS4000s696K",                   "adiCuMTS4000s696K.ups",              1,  "All", ["exactComparison"] ),
+#                  ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",              1,  "All", ["exactComparison"] ),
+#                  ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",              1,  "All", ["exactComparison"] ),
+#                  ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",               1,  "All", ["exactComparison"] ),
+                  ("test_cyl_pene_no_ero_axi_sym",         "test_cyl_pene_no_ero_axi_sym.ups",   4,  "ALL", ["exactComparison"] ),
+                  ("test_gurson_beckerdrucker_mts",        "test_gurson_beckerdrucker_mts.ups",  1,  "ALL", ["exactComparison"] ),
+                  ("test_hypoviscoelastic_radial_return",  "test_hypoviscoelastic_rad_ret.ups",  1,  "ALL", ["exactComparison"] ),
+                  ("NanoPillar",                           "ARL/NanoPillar2D_FBC_Sym.ups",       1,  "ALL", ["no_dbg","exactComparison"] ),
+#                  ("foam_crush",                          "foam_crush.ups",                     4,  "ALL", ["exactComparison"] ),
                   #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "All", ["exactComparison"] ),
                   #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "All", ["exactComparison"] ),
                   #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "All", ["exactComparison"] ),
@@ -121,9 +124,13 @@ THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", 
 NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS + PERFORMANCETESTS
 
 LOCALTESTS = NIGHTLYTESTS
-DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All", ["exactComparison"] ),
-             ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "All", ["exactComparison"] ),
+DEBUGTESTS =[("cpti_disks",            "cpti_disks.ups",              1,  "All", ["exactComparison", "preProcessCmd=pfs"] ),
+            # ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "All", ["exactComparison"] ),
             ]
+#__________________________________
+
+ADDTL_PATH=[ ("relativePath=tools/pfs")]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                                                   # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________
 # The following list is parsed by the local RT script
@@ -159,6 +166,6 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "MPM")
+  result = runSusTests(argv, TESTS, "MPM", ADDTL_PATH)
   exit( result )
 

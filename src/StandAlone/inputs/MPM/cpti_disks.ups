@@ -73,7 +73,7 @@
               <specific_heat>5</specific_heat>
               <geom_object>
                 <file>
-                  <name>cpti_disks_mat1.pts</name>
+                  <name>inputs/MPM/cpti_disks_mat1.pts</name>
                   <var>p.rvec1</var>
                   <var>p.rvec2</var>
                   <var>p.rvec3</var>
@@ -95,7 +95,7 @@
               <specific_heat>5</specific_heat>
               <geom_object>
                 <file>
-                  <name>cpti_disks_mat2.pts</name>
+                  <name>inputs/MPM/cpti_disks_mat2.pts</name>
                   <var>p.rvec1</var>
                   <var>p.rvec2</var>
                   <var>p.rvec3</var>

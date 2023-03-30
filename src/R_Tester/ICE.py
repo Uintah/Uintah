@@ -68,6 +68,8 @@ chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -87,7 +89,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
                    ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"]),  # dat file comparsion not working on restart
                    ("stagnationPoint",    "stagnationPoint.ups",     8, "All", ["exactComparison"]),
-                   ("naturalConvection",  "naturalConvectionCavity_dx.ups",     
+                   ("naturalConvection",  "naturalConvectionCavity_dx.ups",
                                                                      9, "All", ["exactComparison"])
               ]
 
@@ -116,11 +118,13 @@ INITIALIZE =  [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
                   ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
               ]
 
-DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart"]),
-                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
+DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo2 junk junkw"]),
+                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo junk junkw"])
               ]
 #__________________________________
 
+ADDTL_PATH=["absolutePat=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                                                                   # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________
 # The following line is parsed by the local RT script
@@ -158,7 +162,7 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "ICE")
+  result = runSusTests(argv, TESTS, "ICE", ADDTL_PATH)
 
   # cleanup modified input files
   command = "/bin/rm -rf %s/tmp  " % (the_dir)
