@@ -640,7 +640,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
       // The parallelization is over threads
       Kokkos::RangePolicy<Kokkos::OpenMP>
         rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
-      Kokkos::parallel_for(rangePolicy, task_runner);
+      Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
 
 #elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
       if(num_partitions == 1)
@@ -649,7 +649,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 	// The parallelization is over threads
         Kokkos::RangePolicy<Kokkos::OpenMP>
           rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
-        Kokkos::parallel_for(rangePolicy, task_runner);
+        Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
       }
       else
       {
@@ -666,7 +666,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
         {
           Kokkos::RangePolicy<Kokkos::OpenMP>
             rangePolicy(instances[i], 0, threads_per_partition);
-          Kokkos::parallel_for(rangePolicy, task_runner);
+          Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
         }
       }
 

@@ -473,8 +473,12 @@ parallel_for(BlockRange const & r, const Functor & functor)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
-parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor)
+parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
+             BlockRange const & r, const Functor & functor)
 {
+  int status;
+  char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
+
   const unsigned int i_size = r.end(0) - r.begin(0);
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
@@ -502,7 +506,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     if(size > 0)
       rangePolicy.set_chunk_size(size);
 
-    Kokkos::parallel_for(rangePolicy,
+    Kokkos::parallel_for(name, rangePolicy,
                          KOKKOS_LAMBDA(int n) {
                            const int k = n / (j_size * i_size) + rbegin2;
                            const int j = (n / i_size) % j_size + rbegin1;
@@ -524,7 +528,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
-      Kokkos::parallel_for(mdRangePolicy, functor);
+      Kokkos::parallel_for(name, mdRangePolicy, functor);
     }
     else
     {
@@ -533,7 +537,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
-      Kokkos::parallel_for(mdRangePolicy, functor);
+      Kokkos::parallel_for(name, mdRangePolicy, functor);
       }
   }
   // MDRange Policy - Reverse index
@@ -549,7 +553,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
-        Kokkos::parallel_for(mdRangePolicy,
+        Kokkos::parallel_for(name, mdRangePolicy,
                              KOKKOS_LAMBDA(int k, int j, int i) {
                                functor(i, j, k);
                              });
@@ -561,7 +565,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
-      Kokkos::parallel_for(mdRangePolicy,
+      Kokkos::parallel_for(name, mdRangePolicy,
                            KOKKOS_LAMBDA(int k, int j, int i) {
                              functor(i, j, k);
                            });
@@ -585,7 +589,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     if(size > 0)
       teamPolicy.set_chunk_size(size);
 
-    Kokkos::parallel_for(teamPolicy,
+    Kokkos::parallel_for(name, teamPolicy,
                          KOKKOS_LAMBDA(typename policy_type::member_type thread) {
       // printf("i is %d\n", thread.team_rank());
       Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
@@ -906,11 +910,16 @@ parallel_reduce_sum(BlockRange const & r, const Functor & functor, ReductionType
 }
 
 // OpenMP parallel_reduce_sum
-#if defined(KOKKOS_ENABLE_OPENMP__COMMENT_OUT)
+#if defined(KOKKOS_ENABLE_OPENMP__COMMENTED_OUT)
+
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
-parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red)
+parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
+                    BlockRange const & r, const Functor & functor, ReductionType & red)
 {
+  int status;
+  char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
+
   const unsigned int i_size = r.end(0) - r.begin(0);
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
@@ -938,7 +947,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     if(size > 0)
       rangePolicy.set_chunk_size(size);
 
-    Kokkos::parallel_reduce(rangePolicy,
+    Kokkos::parallel_reduce(name, rangePolicy,
                             KOKKOS_LAMBDA(const int& n, ReductionType & tmp) {
                               const int k = n / (j_size * i_size) + rbegin2;
                               const int j = (n / i_size) % j_size + rbegin1;
@@ -960,7 +969,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
-      Kokkos::parallel_reduce(mdRangePolicy, functor, red);
+      Kokkos::parallel_reduce(name, mdRangePolicy, functor, red);
     }
     else
     {
@@ -969,7 +978,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
-      Kokkos::parallel_reduce(mdRangePolicy, functor, red);
+      Kokkos::parallel_reduce(name, mdRangePolicy, functor, red);
     }
   }
   // MDRange Policy - Reverse index
@@ -985,7 +994,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
-      Kokkos::parallel_reduce(mdRangePolicy,
+      Kokkos::parallel_reduce(name, mdRangePolicy,
                               KOKKOS_LAMBDA(int k, int j, int i,
                                             ReductionType & tmp) {
                                 functor(i, j, k, tmp);
@@ -998,7 +1007,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
-      Kokkos::parallel_reduce(mdRangePolicy,
+      Kokkos::parallel_reduce(name, mdRangePolicy,
                               KOKKOS_LAMBDA(int k, int j, int i,
                                             ReductionType& tmp) {
                                 functor(i, j, k, tmp);
@@ -1023,7 +1032,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     if(size > 0)
       teamPolicy.set_chunk_size(size);
 
-    Kokkos::parallel_reduce(teamPolicy,
+    Kokkos::parallel_reduce(name, teamPolicy,
                             KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_sum) {
       // printf("i is %d\n", thread.team_rank());
       Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
@@ -1369,13 +1378,16 @@ parallel_reduce_min(BlockRange const & r, const Functor & functor, ReductionType
 }
 
 // OpenMP parallel_reduce_min
-#if defined(KOKKOS_ENABLE_OPENMP__COMMENT_OUT)
+#if defined(KOKKOS_ENABLE_OPENMP__COMMENTED_OUT)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                     BlockRange const & r, const Functor & functor, ReductionType & red)
 {
+  int status;
+  char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
+
   const unsigned int i_size = r.end(0) - r.begin(0);
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
@@ -1403,7 +1415,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(size > 0)
       rangePolicy.set_chunk_size(size);
 
-    Kokkos::parallel_reduce(rangePolicy,
+    Kokkos::parallel_reduce(name, rangePolicy,
                             KOKKOS_LAMBDA(int n, ReductionType & tmp) {
 
                               const int k = n / (j_size * i_size) + rbegin2;
@@ -1428,7 +1440,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
-      Kokkos::parallel_reduce(mdRangePolicy, functor,
+      Kokkos::parallel_reduce(name, mdRangePolicy, functor,
                               Kokkos::Min<ReductionType>(red));
     }
     else
@@ -1438,7 +1450,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
-      Kokkos::parallel_reduce(mdRangePolicy, functor,
+      Kokkos::parallel_reduce(name, mdRangePolicy, functor,
                               Kokkos::Min<ReductionType>(red));
     }
   }
@@ -1455,7 +1467,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
-      Kokkos::parallel_reduce(mdRangePolicy,
+      Kokkos::parallel_reduce(name, mdRangePolicy,
                               KOKKOS_LAMBDA(int k, int j, int i,
                                             ReductionType& tmp) {
                                 functor(i, j, k, tmp);
@@ -1468,7 +1480,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
-      Kokkos::parallel_reduce(mdRangePolicy,
+      Kokkos::parallel_reduce(name, mdRangePolicy,
                               KOKKOS_LAMBDA(int k, int j, int i,
                                             ReductionType& tmp) {
                                 functor(i, j, k, tmp);
@@ -1493,7 +1505,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(size > 0)
       teamPolicy.set_chunk_size(size);
 
-    Kokkos::parallel_reduce(teamPolicy,
+    Kokkos::parallel_reduce(name, teamPolicy,
                             KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_min) {
       // printf("i is %d\n", thread.team_rank());
       Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
@@ -1830,6 +1842,9 @@ template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
+  int status;
+  char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
+
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
@@ -1897,7 +1912,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
     if(size > 0)
       rangePolicy.set_chunk_size(size);
 
-    Kokkos::parallel_for(rangePolicy, KOKKOS_LAMBDA(int iblock) {
+    Kokkos::parallel_for(name, rangePolicy, KOKKOS_LAMBDA(int iblock) {
       const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
       const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
       const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
@@ -1921,7 +1936,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
           }
         }
       }
-    }); // end Kokkos::parallel_for
+    });
   } // end for (int iphase = 0; iphase < nphase; iphase++)
 }
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
@@ -1987,13 +2002,17 @@ inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, v
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor)
 {
+  // int status;
+  // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
+
   Kokkos::RangePolicy<ExecSpace, int> rangePolicy(0, list_size);
 
   int size = Parallel::getKokkosChunkSize();
   if(size > 0)
     rangePolicy.set_chunk_size(size);
 
-  Kokkos::parallel_for(rangePolicy, [=](const unsigned int & iblock) {
+  Kokkos::parallel_for("OpenMP Unstructured", rangePolicy,
+                       [=](const unsigned int & iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
   });
 }
@@ -2008,8 +2027,9 @@ typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<IntVector*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace, const unsigned int list_size, const Functor & functor)
 {
-  // This GPU version is mostly a copy of the original GPU version.
-  // TODO: Make streamable.
+  // int status;
+  // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
+
   ExecSpace instanceObject = getInstance(execObj);
 
   Kokkos::RangePolicy< ExecSpace > rangePolicy(instanceObject, 0, list_size);
@@ -2018,7 +2038,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   if(size > 0)
     rangePolicy.set_chunk_size(size);
 
-  Kokkos::parallel_for(rangePolicy, KOKKOS_LAMBDA(const unsigned int& iblock) {
+  Kokkos::parallel_for("GPU Unstructured", rangePolicy,
+                       KOKKOS_LAMBDA(const unsigned int& iblock) {
       functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
     });
 
@@ -2033,7 +2054,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, cudaBlocksPerLoop, actualThreads);
   typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
-  Kokkos::parallel_for(teamPolicy,
+  Kokkos::parallel_for("GPU Unstructured", teamPolicy,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
 
     const unsigned int currentBlock = thread.league_rank();
@@ -2073,7 +2094,7 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
   typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
   Kokkos::TeamPolicy<ExecSpace> teamPolicy(cuda_blocks_per_loop, actualThreads);
 
-  Kokkos::parallel_for(teamPolicy,
+  Kokkos::parallel_for("GPU Initialized", teamPolicy,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, num_cells),
                            [=](const int& i) {
@@ -2103,6 +2124,9 @@ inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, v
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
                             const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val) {
 
+  // int status;
+  // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
+
   // TODO: This should probably be serialized and not use a
   // Kokkos::parallel_for?
 
@@ -2117,7 +2141,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   if(size > 0)
     rangePolicy.set_chunk_size(size);
 
-  Kokkos::parallel_for(rangePolicy, KOKKOS_LAMBDA(unsigned int i_tot) {
+  Kokkos::parallel_for("OpenMP Initialize Grouped", rangePolicy,
+                       KOKKOS_LAMBDA(unsigned int i_tot) {
       // TODO: Find a more efficient way of doing this.
       int i = i_tot;
       int j = 0;
@@ -2139,7 +2164,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // if(size > 0)
   //   rangePolicy.set_chunk_size(size);
 
-//    Kokkos::parallel_for(rangePolicy, KOKKOS_LAMBDA(int i) {
+//    Kokkos::parallel_for("OpenMP Initialize Grouped", rangePolicy,
+//                         KOKKOS_LAMBDA(int i) {
 //        KKV3(j)(i) = init_val;
 //      });
 //  }
@@ -2166,6 +2192,9 @@ typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
     const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val) {
 
+  // int status;
+  // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
+
   // n_cells is the max of cells total to process among
   // collection of vars (the view of Kokkos views).  For
   // example, if this were being used to if one var had 4096
@@ -2180,7 +2209,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   Kokkos::RangePolicy< ExecSpace > rangePolicy(instanceObject, 0, n_cells);
 
-  Kokkos::parallel_for(rangePolicy, KOKKOS_LAMBDA(int i) {
+  Kokkos::parallel_for("GPU Initialize Grouped", rangePolicy,
+                       KOKKOS_LAMBDA(int i) {
       for(int j=0; j<KKV3.runTime_size; j++){
         if(i<KKV3[j].m_view.size())
           KKV3[j](i) = init_val;
@@ -2212,7 +2242,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, cudaBlocksPerLoop, actualThreads);
   typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
-  Kokkos::parallel_for(teamPolicy,
+  Kokkos::parallel_for("GPU Initialize Grouped", teamPolicy,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
 
       // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
