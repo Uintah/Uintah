@@ -1912,7 +1912,8 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
     if(size > 0)
       rangePolicy.set_chunk_size(size);
 
-    Kokkos::parallel_for(name, rangePolicy, KOKKOS_LAMBDA(int iblock) {
+    Kokkos::parallel_for(name, rangePolicy,
+			 KOKKOS_LAMBDA(int iblock) {
       const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
       const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
       const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
@@ -2058,7 +2059,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
 
     const unsigned int currentBlock = thread.league_rank();
-    Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, list_size), [&,iterSpace] (const unsigned int& iblock) {
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, list_size),
+                        [&,iterSpace] (const unsigned int& iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
       });
     });
@@ -2250,7 +2252,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
       // then they all advanced forward by actualThreads.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for (Kokkos::TeamThreadRange(thread, actualThreads), [&, n_cells, actualThreads, KKV3] (const unsigned int& i_tot) {
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, actualThreads),
+                         [&, n_cells, actualThreads, KKV3] (const unsigned int& i_tot) {
       const unsigned int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
       unsigned int  j = 0;
       unsigned int old_i = 0;
