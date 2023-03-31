@@ -37,17 +37,6 @@
 #include <map>
 
 namespace Uintah {
-//  typedef int particleIndex;
-//  typedef int particleId;
-
-//  class GeometryObject;
-//  class Patch;
-//  class DataWarehouse;
-//  class MPMFlags;
-//  class MPMMaterial;
-//  class MPMLabel;
-//  class ParticleSubset;
-//  class VarLabel;
 
   class TriangleParticleCreator : public ParticleCreator {
   public:

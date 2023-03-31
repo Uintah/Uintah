@@ -54,7 +54,12 @@
 
 #include <iostream>
 
-/*  This code is a bit tough to follow.  Here's the basic order of operations.
+/*  This code is specialized for filling triangulated surfaces based on
+a method developed by Duan Zhang, et al., at Sandia.  It is faster and
+less memory intensive than the original method which uses the "inside" operators
+in the TriGeometryPiece code.
+
+This code is a bit tough to follow.  Here's the basic order of operations.
 
 First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
 turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
@@ -64,8 +69,7 @@ Next,  createParticles, below, first loops over all of the geom_objects and
 calls countAndCreateParticles.  countAndCreateParticles returns the number of
 particles on a given patch associated with each geom_object and accumulates
 that into a variable called num_particles.  countAndCreateParticles gets
-the number of particles by either querying the functions for smooth geometry 
-piece types, or by calling createPoints, also below.  When createPoints is
+the number of particles by calling createPoints, below.  When createPoints is
 called, as each particle is determined to be inside of the object, it is pushed
 back into the object_points entry of the ObjectVars struct.  ObjectVars
 consists of several maps which are indexed on the GeometryObject and a vector
@@ -74,13 +78,14 @@ because even after particles are created, their initial data is still tied
 back to the GeometryObject.  These might include velocity, temperature, color,
 etc.
 
-createPoints, for the non-smooth geometry, essentially visits each cell,
-and then depending on how many points are prescribed in the <res> tag in the
-input file, loops over each of the candidate locations in that cell, and
-determines if that point is inside or outside of the cell.  Points that are
-inside the object are pushed back into the struct, as described above.  The
-actual particle count comes from an operation in countAndCreateParticles
-to determine the size of the object_points entry in the ObjectVars struct.
+createPoints stacks the triangles in a single direction, so that the first check
+is to see if a point in the other two directions is even in a cell that has
+triangles.  If it does, then all of the candidate locations in that single
+direction are checked to see how many triangles they pass through.  Even means
+the point is outside the object, odd means it is inside.  Because of
+(apparently) round-off error, it is necessary to do this in each of the three
+directions independently, and if a point is determined to be inside in at least
+two of those, it is kept.
 
 Now that we know how many particles we have for this material on this patch,
 we are ready to allocateVariables, which calls allocateAndPut for all of the
@@ -88,13 +93,9 @@ variables needed in SerialMPM or AMRMPM.  At this point, storage for the
 particles has been created, but the arrays allocated are still empty.
 
 Now back in createParticles, the next step is to loop over all of the 
-GeometryObjects.  If the GeometryObject is a SmoothGeometryPiece, those
-type of objects MAY have their own methods for populating the data within the
-if(sgp) conditional.  Either way, loop over all of the particles in
+GeometryObjects. Either way, loop over all of the particles in
 object points and initialize the remaining particle data.  This is done for
-non-Smooth/File pieces by calling initializeParticle.  For the Smooth/File
-pieces, if arrays exist that contain other data, use that data to populate the
-other entries.
+by calling initializeParticle.  
 
 initializeParticle, which is what is usually used, populates the particle data
 based on either what is specified in the <geometry_object> section of the
@@ -115,20 +116,6 @@ TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl,
                                                  MPMFlags* flags)
                                               :  ParticleCreator(matl,flags)
 {
-  d_Hlb = scinew HydroMPMLabel();
-  d_lb = scinew MPMLabel();
-  d_useLoadCurves = flags->d_useLoadCurves;
-  d_with_color = flags->d_with_color;
-  d_artificial_viscosity = flags->d_artificial_viscosity;
-  d_computeScaleFactor = flags->d_computeScaleFactor;
-  d_doScalarDiffusion = flags->d_doScalarDiffusion;
-
-  d_flags = flags;
-
-  // Hydro-mechanical coupling MPM
-  d_coupledflow = flags->d_coupledflow;
-
-//  registerPermanentParticleState(matl);
 }
 
 TriangleParticleCreator::~TriangleParticleCreator()

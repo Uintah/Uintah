@@ -44,10 +44,8 @@
 
 #include <CCA/Ports/DataWarehouse.h>
 
-//#include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Patch.h>
@@ -58,15 +56,12 @@
 
 First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
 turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
-(MPMMaterial calls the ParticleCreatorFactory::create, which is kind of stupid
-since every material will use the same type ParticleCreator. Whatever..)
 
 Next,  createParticles, below, first loops over all of the geom_objects and
 calls countAndCreateParticles.  countAndCreateParticles returns the number of
 particles on a given patch associated with each geom_object and accumulates
 that into a variable called num_particles.  countAndCreateParticles gets
-the number of particles by either querying the functions for smooth geometry 
-piece types, or by calling createPoints, also below.  When createPoints is
+the number of particles by calling createPoints, below.  When createPoints is
 called, as each particle is determined to be inside of the object, it is pushed
 back into the object_points entry of the ObjectVars struct.  ObjectVars
 consists of several maps which are indexed on the GeometryObject and a vector
@@ -74,8 +69,11 @@ containing whatever data that entry is responsible for carrying.  A map is used
 because even after particles are created, their initial data is still tied
 back to the GeometryObject.  These might include velocity, temperature, color,
 etc.
+**** New in March 2023: With the addition of "recursive particle filling",
+createPoints also computes particle volume and size, since those will change
+with different levels of particle refinement.  **** 
 
-createPoints, for the non-smooth geometry, essentially visits each cell,
+createPoints visits each cell,
 and then depending on how many points are prescribed in the <res> tag in the
 input file, loops over each of the candidate locations in that cell, and
 determines if that point is inside or outside of the cell.  Points that are
@@ -89,20 +87,15 @@ variables needed in SerialMPM or AMRMPM.  At this point, storage for the
 particles has been created, but the arrays allocated are still empty.
 
 Now back in createParticles, the next step is to loop over all of the 
-GeometryObjects.  If the GeometryObject is a SmoothGeometryPiece, those
-type of objects MAY have their own methods for populating the data within the
-if(sgp) conditional.  Either way, loop over all of the particles in
-object points and initialize the remaining particle data.  This is done for
-non-Smooth/File pieces by calling initializeParticle.  For the Smooth/File
-pieces, if arrays exist that contain other data, use that data to populate the
-other entries.
+GeometryObjects.  Either way, loop over all of the particles in
+object points and initialize the remaining particle data.  This is done 
+for by calling initializeParticle.
 
 initializeParticle, which is what is usually used, populates the particle data
-based on either what is specified in the <geometry_object> section of the
-input file, or by geometric considerations (such as size, from which we get
-volume, from which we get mass (volume*density).  There is also an option to
+based on what is specified in the <geometry_object> section of the
+input file.  There is also an option to
 call initializeParticlesForMMS, which is needed for running Method of
-Manufactured Solutions, where special particle initialization is needed.)
+Manufactured Solutions, where special particle initialization is needed.
 
 At that point, other than assigning particles to loadCurves, if called for,
 we are done!
@@ -117,7 +110,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 {
   d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
-//  d_Al = scinew AMRMPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -137,7 +129,6 @@ ParticleCreator::~ParticleCreator()
 {
   delete d_Hlb;
   delete d_lb;
-//  delete d_Al;
 }
 
 particleIndex 
