@@ -147,9 +147,9 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
 #if defined(HAVE_KOKKOS)
   proc0cout << "Kokkos Version: "
-            << KOKKOS_VERSION_MAJOR << "."
-            << KOKKOS_VERSION_MINOR << "."
-            << KOKKOS_VERSION_PATCH << std::endl;
+            << KOKKOS_VERSION / 10000 << "."       // KOKKOS_VERSION_MAJOR
+            << KOKKOS_VERSION / 100 % 100 << "."   // KOKKOS_VERSION_MINOR
+            << KOKKOS_VERSION % 100 << std::endl;  // KOKKOS_VERSION_PATCH
 
   // Output Execution Space and Memory Space that will be used with Kokkos builds
   proc0cout << "Kokkos HOST Execution Space: \t"
