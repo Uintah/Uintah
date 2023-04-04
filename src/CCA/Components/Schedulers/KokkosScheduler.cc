@@ -143,13 +143,6 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
     // ARS - This call resets each device  - not needed???
     // gpuInitialize();
 
-    // we need one of these for each GPU, as each device will have
-    // it's own CUDA context
-    //for (int i = 0; i < m_num_devices; i++) {
-    //  GPUMemoryPool::getCudaStreamFromPool(i);
-    //}
-
-
     // ARS - Here is a basic check to make sure only GPUs on the same
     // NUMA can be seen.
     // KOKKOS equivalent - not needed??
@@ -360,6 +353,8 @@ KokkosScheduler::runTask( DetailedTask  * dtask
                         , CallBackEvent   event
                         )
 {
+  Kokkos::Profiling::pushRegion(dtask->getName());
+
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
 
@@ -513,6 +508,8 @@ KokkosScheduler::runTask( DetailedTask  * dtask
       m_mpi_info.reset(0);
     }
   }
+
+  Kokkos::Profiling::popRegion();
 }  // end runTask()
 
 //______________________________________________________________________
@@ -627,7 +624,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
        threads_per_partition > 1)
     {
       // Task runner functor.
-      auto task_runner = [&] ( int thread_id, int num_threads = 0 ) {
+      auto task_runner = [&] (int thread_id, int num_threads = 0) {
 
         // Each partition created executes this block of code
         // A task_runner can run a serial task (threads_per_partition == 1) or
@@ -1337,7 +1334,7 @@ KokkosScheduler::runTasks( int thread_id )
             if (readyTask->allHostVarsProcessingReady(m_dws)) {
               m_detailed_tasks->addHostReadyToExecute(readyTask);
               //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-              //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+              //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
             } else {
               m_detailed_tasks->addHostCheckIfExecutable(readyTask);
             }
@@ -1352,7 +1349,7 @@ KokkosScheduler::runTasks( int thread_id )
           if (readyTask->allHostVarsProcessingReady(m_dws)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           } else {
             m_detailed_tasks->addHostCheckIfExecutable(readyTask);
           }
@@ -1360,7 +1357,7 @@ KokkosScheduler::runTasks( int thread_id )
           if (readyTask->allHostVarsProcessingReady(m_dws)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           }  else {
             // Some vars aren't valid and ready, We must be waiting on
             // another task to finish copying in some of the variables
