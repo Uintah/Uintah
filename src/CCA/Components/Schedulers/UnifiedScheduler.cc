@@ -260,11 +260,6 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
   if ( Uintah::Parallel::usingDevice() ) {
     gpuInitialize();
 
-    // we need one of these for each GPU, as each device will have it's own CUDA context
-    //for (int i = 0; i < m_num_devices; i++) {
-    //  GPUMemoryPool::getCudaStreamFromPool(i);
-    //}
-
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
     // precluding memory blocks being defined across multiple patches.
@@ -1327,7 +1322,7 @@ UnifiedScheduler::runTasks( int thread_id )
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
 
         // recycle this task's stream
-        // GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+        // GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
         readyTask->reclaimCudaStreamsIntoPool();
       }
 #endif
@@ -1373,7 +1368,7 @@ UnifiedScheduler::runTasks( int thread_id )
             if (allHostVarsProcessingReady(readyTask)) {
               m_detailed_tasks->addHostReadyToExecute(readyTask);
               //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-              //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+              //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
             } else {
               m_detailed_tasks->addHostCheckIfExecutable(readyTask);
             }
@@ -1388,7 +1383,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           } else {
             m_detailed_tasks->addHostCheckIfExecutable(readyTask);
           }
@@ -1396,7 +1391,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
             //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           }  else {
             // Some vars aren't valid and ready,  We must be waiting on another task to finish
             // copying in some of the variables we need.
@@ -1416,7 +1411,7 @@ UnifiedScheduler::runTasks( int thread_id )
 
           //See note above near cpuInitReady.  Some CPU tasks may internally interact
           //with GPUs without modifying the structure of the data warehouse.
-          //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+          //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
         }
 #endif
       }
@@ -5131,10 +5126,10 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
 #ifdef USE_KOKKOS_INSTANCE
           cudaStream_t* stream = nullptr;
 #else
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), i);
+          cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(dtask->getTask(), i);
 #endif
 #else
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, i);
+          cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(dtask, i);
 #endif
           dtask->setCudaStreamForThisTask(i, stream);
           if (gpu_stats.active()) {
@@ -5179,7 +5174,7 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
         // See if this task doesn't yet have a stream for this GPU device.
         if (dtask->getCudaStreamForThisTask(index) == nullptr) {
           dtask->assignDevice(index);
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, index);
+          cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(dtask, index);
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -5218,10 +5213,10 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
 #ifdef USE_KOKKOS_INSTANCE
       cudaStream_t* stream = nullptr;
 #else
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), *iter);
+      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(dtask->getTask(), *iter);
 #endif
 #else
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
+      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(dtask, *iter);
 #endif
       dtask->setCudaStreamForThisTask(*iter, stream);
     }

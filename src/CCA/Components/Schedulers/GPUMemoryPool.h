@@ -114,7 +114,7 @@ public:
 
 #if defined(USE_KOKKOS_INSTANCE)
 #if defined(USE_KOKKOS_MALLOC)
-// Not needed
+// Not needed for Kokkos malloc
 #else // if defined(USE_KOKKOS_VIEW)
   struct gpuMemoryPoolDeviceViewItem {
 
@@ -140,11 +140,12 @@ public:
   };
 #endif
 #else
-// Not needed
+// Not needed for CUDA streams
 #endif
 
-
-  static void* allocateCudaMemoryFromPool(unsigned int device_id, size_t memSize);
+  static void* allocateCudaMemoryFromPool(unsigned int device_id,
+                                          size_t memSize,
+                                          const char *name = nullptr);
 
   static bool reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr);
 
@@ -156,21 +157,6 @@ public:
 #endif
 #else
   static void freeCudaMemoryFromPool();
-#endif
-
-  // Streams
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
-  // Not needed instances are managed by DetailedTask/Task.
-#elif defined(HAVE_CUDA) // CUDA only when using streams
-  static cudaStream_t* getCudaStreamFromPool(const Task * task, int device);
-  static void reclaimCudaStreamsIntoPool(intptr_t dTask, Task * task);
-  static void freeCudaStreamsFromPool();
-#endif
-#else
-  static cudaStream_t* getCudaStreamFromPool(const DetailedTask * task, int device);
-  static void reclaimCudaStreamsIntoPool(DetailedTask * task);
-  static void freeCudaStreamsFromPool();
 #endif
 
 private:
@@ -186,33 +172,14 @@ private:
 
 #if defined(USE_KOKKOS_INSTANCE)
 #if defined(USE_KOKKOS_MALLOC)
-// Not needed
+// Not needed for Kokkos malloc
 #else // if defined(USE_KOKKOS_VIEW)
   // For a given device and view, holds the timestep and size.
   static std::multimap<gpuMemoryPoolDeviceViewItem,
                        gpuMemoryPoolDevicePtrValue> gpuMemoryPoolViewInUse;
 #endif
 #else
-// Not needed
-#endif
-
-  // Streams
-
-  // Thread shared data, needs lock protection when accessed
-
-  // Operations within the same stream are ordered (FIFO) and cannot
-  // overlap.  Operations in different streams are unordered and can
-  // overlap. For this reason we let each task own a stream, as we
-  // want one task to be able to run if it is ready to do work even if
-  // another task is not yet ready.  It also enables us to easily
-  // determine when a computed variable is "valid" because when that
-  // task's stream completes, then we can infer the variable is ready
-  // to go.  More about how a task claims a stream can be found in
-  // DetailedTasks.cc
-#ifdef USE_KOKKOS_INSTANCE
-  static std::map <unsigned int, std::queue<Kokkos::DefaultExecutionSpace> > s_idle_instances;
-#elif defined(HAVE_CUDA) // CUDA only when using streams
-  static std::map <unsigned int, std::queue<cudaStream_t*> > s_idle_streams;
+// Not needed for CUDA streams
 #endif
 };
 

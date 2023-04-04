@@ -33,6 +33,7 @@
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+  #include <CCA/Components/Schedulers/GPUStreamPool.h>
 #endif
 
 #include <map>

@@ -51,7 +51,8 @@ SRCS += \
 ifeq ($(UINTAH_USING_GPU),yes)
   SRCS += $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
-          $(SRCDIR)/GPUMemoryPool.cc
+          $(SRCDIR)/GPUMemoryPool.cc          \
+          $(SRCDIR)/GPUStreamPool.cc
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu

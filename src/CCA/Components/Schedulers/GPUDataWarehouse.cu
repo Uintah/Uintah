@@ -947,7 +947,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
+    addr =
+      GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize, label);
 
     // Also update the var object itself
     var.setArray3(offset, size, addr);
@@ -1506,7 +1507,12 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
 //______________________________________________________________________
 //
 __host__ void
-GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType)
+GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var,
+                                 char const* label,
+                                 int patchID,
+                                 int matlIndx,
+                                 int levelIndx,
+                                 size_t sizeOfDataType)
 {
   // Allocate space on the GPU and declare a variable onto the GPU.
   // This method does NOT stage everything in a big array.
@@ -1611,7 +1617,8 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
+    addr =
+      GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize, label);
 
     // Also update the var object itself.
     var.setData(addr);
@@ -1629,7 +1636,12 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
 //______________________________________________________________________
 //
 __host__ void
-GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType)
+GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var,
+                                 char const* label,
+                                 int patchID,
+                                 int matlIndx,
+                                 int levelIndx,
+                                 size_t sizeOfDataType)
 {
   // Allocate space on the GPU and declare a variable onto the GPU.
   // This method does NOT stage everything in a big array.
@@ -1736,7 +1748,8 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
       cerrLock.unlock();
     }
 
-    addr = GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize);
+    addr =
+      GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, memSize, label);
 
     // Also update the var object itself
     var.setData(addr);
@@ -1956,7 +1969,8 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   }
 
   void* addr =
-    GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, objectSizeInBytes);
+    GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, objectSizeInBytes,
+                                              "init_device");
 
   d_device_copy = (GPUDataWarehouse*) addr;
   // cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);

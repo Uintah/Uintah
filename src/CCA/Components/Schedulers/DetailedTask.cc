@@ -820,7 +820,7 @@ DetailedTask::reclaimCudaStreamsIntoPool() {
   m_task->reclaimCudaStreamsIntoPool(reinterpret_cast<intptr_t>(this));
 #else
   // Once streams are reclaimed, clearCudaStreamsForThisTask is called.
-  GPUMemoryPool::reclaimCudaStreamsIntoPool(this);
+  GPUStreamPool::reclaimCudaStreamsIntoPool(this);
 #endif
 }
 
@@ -4266,7 +4266,7 @@ DetailedTask::assignDevicesAndStreams()
       for (int i = 0; i < this->getTask()->maxStreamsPerTask(); i++) {
         if (this->getCudaStreamForThisTask(i) == nullptr) {
           this->assignDevice(0);
-          cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, i);
+          cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, i);
           this->setCudaStreamForThisTask(i, stream);
         }
       }
@@ -4303,7 +4303,7 @@ DetailedTask::assignDevicesAndStreamsFromGhostVars()
     // See if this task was already assigned a stream.
     if (this->getCudaStreamForThisTask(deviceNum) == nullptr) {
       this->assignDevice(deviceNum);
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, deviceNum);
+      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, deviceNum);
       this->setCudaStreamForThisTask(deviceNum, stream);
     }
 #endif

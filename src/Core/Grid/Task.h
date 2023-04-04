@@ -45,9 +45,13 @@
 #include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
-  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
   #ifdef TASK_MANAGES_EXECSPACE
     #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+  #endif
+
+#ifdef USE_KOKKOS_INSTANCE
+  #elif defined(HAVE_CUDA) // CUDA only when using streams
+    #include <CCA/Components/Schedulers/GPUStreamPool.h>
   #endif
 #endif
 
@@ -69,8 +73,8 @@ class ProcessorGroup;
 class Task;
 
 enum GPUMemcpyKind { GPUMemcpyUnknown      = 0,
-		     GPUMemcpyHostToDevice = 1,
-		     GPUMemcpyDeviceToHost = 2,
+                     GPUMemcpyHostToDevice = 1,
+                     GPUMemcpyDeviceToHost = 2,
 };
 
 /**************************************

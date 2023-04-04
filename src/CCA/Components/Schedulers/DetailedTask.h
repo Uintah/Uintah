@@ -37,6 +37,10 @@
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#ifdef USE_KOKKOS_INSTANCE
+#elif defined(HAVE_CUDA) // CUDA only when using streams
+  #include <CCA/Components/Schedulers/GPUStreamPool.h>
+#endif
 #endif
 
 #include <atomic>

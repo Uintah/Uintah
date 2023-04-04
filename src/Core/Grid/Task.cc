@@ -1710,7 +1710,7 @@ Task::setCudaStreamForThisTask( intptr_t dTask
     // As m_cudaStreams can be touched by multiple threads a mutext is needed.
     cudaStreams_mutex.lock();
     {
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, device_id);
+      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, device_id);
       m_cudaStreams[dTask][device_id] = stream;
     }
     cudaStreams_mutex.unlock();
@@ -1723,7 +1723,7 @@ void
 Task::reclaimCudaStreamsIntoPool(intptr_t dTask)
 {
   // Once streams are reclaimed, clearCudaStreamsForThisTask is called.
-  GPUMemoryPool::reclaimCudaStreamsIntoPool(dTask, this);
+  GPUStreamPool::reclaimCudaStreamsIntoPool(dTask, this);
 }
 
 //_____________________________________________________________________________
