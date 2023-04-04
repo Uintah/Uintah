@@ -308,7 +308,7 @@ namespace Uintah {
 #if defined(HYPRE_SOLVER_GPU)
           // Kokkos equivalent - KokkosView
           size_t buff_size = Nx*Ny*Nz;
-          Kokkos::View<double*, MemSpace> deviceView( "device", buff_size);
+          Kokkos::View<double*, MemSpace> deviceView( "HypreSolver createPopulateHypreVector", buff_size);
 
           // For compatibility use the raw Kokkos::View data pointer.
           double * d_buff = deviceView.data();
@@ -615,7 +615,7 @@ namespace Uintah {
 #if defined(HYPRE_SOLVER_GPU)
             // Kokkos equivalent - KokkosView
             size_t buff_size = Nx*Ny*Nz;
-            Kokkos::View<double*, MemSpace> deviceView( "device", buff_size);
+            Kokkos::View<double*, MemSpace> deviceView( "HypreSolver solve copy to buffer", buff_size);
 
             // For compatibility use the raw Kokkos::View data pointer.
             double * d_buff = deviceView.data();
@@ -974,7 +974,7 @@ namespace Uintah {
 #if defined(HYPRE_SOLVER_GPU)
           // Kokkos equivalent - KokkosView
           size_t buff_size = Nx*Ny*Nz;
-          Kokkos::View<double*, MemSpace> deviceView( "device", buff_size);
+          Kokkos::View<double*, MemSpace> deviceView( "HypreSolver solve copy from buffer", buff_size);
 
           // For compatibility use the raw Kokkos::View data pointer.
           double * d_buff = deviceView.data();
