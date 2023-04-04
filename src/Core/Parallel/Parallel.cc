@@ -528,28 +528,46 @@ Parallel::printManager()
 
 #if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
 
-    proc0cout << "Parallel CPU Kokkos::OpenMP execution: \t";
+    if(
 #if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
-    proc0cout << "Kokkos::parallel_for" << std::endl;
-#elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
-    if(s_num_partitions == 1) {
-      proc0cout << "Kokkos::parallel_for" << std::endl;
-    } else {
-      proc0cout << "Kokkos::partition_space" << std::endl;
-    }
+       // s_num_partitions not used
 #else
-    proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
+       s_num_partitions > 1 ||
 #endif
-    if(s_num_partitions > 0) {
-      std::string plural = s_num_partitions > 1 ? "s" : "";
-      proc0cout << "Parallel CPU Kokkos::OpenMP thread partition" << plural
-                << " per MPI process: \t" << s_num_partitions << std::endl;
-    }
+       s_threads_per_partition > 1)
+    {
+      proc0cout << "Parallel CPU Kokkos::OpenMP execution: \t";
 
-    if(s_threads_per_partition > 0) {
-      std::string plural = s_threads_per_partition > 1 ? "s" : "";
-      proc0cout << "Parallel CPU Kokkos::OpenMP thread" << plural
-                << " per partition: \t\t" << s_threads_per_partition << std::endl;
+#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
+      proc0cout << "Kokkos::parallel_for" << std::endl;
+#elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
+      if(s_num_partitions == 1) {
+        proc0cout << "Kokkos::parallel_for" << std::endl;
+      } else {
+        proc0cout << "Kokkos::partition_space" << std::endl;
+      }
+#else
+      proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
+#endif
+
+#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
+       // s_num_partitions not used
+#else
+      if(s_num_partitions > 0) {
+        std::string plural = s_num_partitions > 1 ? "s" : "";
+        proc0cout << "Parallel CPU Kokkos::OpenMP thread partition" << plural
+                  << " per MPI process: \t" << s_num_partitions << std::endl;
+      }
+#endif
+      if(s_threads_per_partition > 0) {
+        std::string plural = s_threads_per_partition > 1 ? "s" : "";
+        proc0cout << "Parallel CPU Kokkos::OpenMP thread" << plural
+                  << " per partition: \t\t" << s_threads_per_partition << std::endl;
+      }
+    }
+    else
+    {
+      proc0cout << "Serial CPU execution \t" << std::endl;
     }
 #else
     if(s_num_threads > 0) {
