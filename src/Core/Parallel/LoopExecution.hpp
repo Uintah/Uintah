@@ -1884,9 +1884,9 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
       tpp=concurrentBlocksArray[nphase-iphase-1];
     }
 
-    Kokkos::View<int*, Kokkos::HostSpace> xblock("xblock",tpp) ;
-    Kokkos::View<int*, Kokkos::HostSpace> yblock("yblock",tpp) ;
-    Kokkos::View<int*, Kokkos::HostSpace> zblock("zblock",tpp) ;
+    Kokkos::View<int*, Kokkos::HostSpace> xblock("xblock", tpp);
+    Kokkos::View<int*, Kokkos::HostSpace> yblock("yblock", tpp);
+    Kokkos::View<int*, Kokkos::HostSpace> zblock("zblock", tpp);
 
     int icount = 0 ;
     // Attempts to iterate over k j i , despite  spatial dependencies.
