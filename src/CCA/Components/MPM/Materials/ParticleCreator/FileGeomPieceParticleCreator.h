@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __TRIANGLE_PARTICLE_CREATOR_H__
-#define __TRIANGLE_PARTICLE_CREATOR_H__
+#ifndef __FILE_GEOM_PIECE_PARTICLE_CREATOR_H__
+#define __FILE_GEOM_PIECE_PARTICLE_CREATOR_H__
 
 #include "ParticleCreator.h"
 
@@ -38,13 +38,13 @@
 
 namespace Uintah {
 
-  class TriangleParticleCreator : public ParticleCreator {
+  class FileGeomPieceParticleCreator : public ParticleCreator {
   public:
     
-    TriangleParticleCreator(MPMMaterial* matl, MPMFlags* flags);
+    FileGeomPieceParticleCreator(MPMMaterial* matl, MPMFlags* flags);
 
 
-    virtual ~TriangleParticleCreator();
+    virtual ~FileGeomPieceParticleCreator();
 
 
     virtual particleIndex createParticles(MPMMaterial* matl,
@@ -60,8 +60,6 @@ namespace Uintah {
 
     void createPoints(const Patch* patch, GeometryObject* obj,ObjectVars& vars);
 
-
-
     virtual void initializeParticle(const Patch* patch,
                                     std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
@@ -73,4 +71,4 @@ namespace Uintah {
 
 } // End of namespace Uintah
 
-#endif // __TRIANGLE_PARTICLE_CREATOR_H__
+#endif // __FILE_GEOM_PIECE_PARTICLE_CREATOR_H__

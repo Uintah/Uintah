@@ -43,6 +43,7 @@
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <iostream>
@@ -66,7 +67,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MaterialManagerP& ss,MPMFlags* flags,
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps, this,
-                                                      flags, d_allTriGeometry);
+                                                      flags, d_allTriGeometry,
+                                                             d_allFileGeometry);
 }
 //______________________________________________________________________
 //
@@ -156,6 +158,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
   if(!isRestart){
     d_allTriGeometry=true;
+    d_allFileGeometry=true;
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -169,6 +172,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
                            dynamic_cast<TriGeometryPiece*>(pieces[i].get_rep());
        if (!tri_piece){
          d_allTriGeometry=false;
+       }
+
+       // FileGeometryPiece is inherited from SmoothGeomPiece, so this
+       // catches both
+       SmoothGeomPiece* smooth_piece =
+                         dynamic_cast<SmoothGeomPiece*>(pieces[i].get_rep());
+       if (!smooth_piece){
+         d_allFileGeometry=false;
        }
      }
 
@@ -273,7 +284,8 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags,
-                                                      d_allTriGeometry);
+                                                      d_allTriGeometry,
+                                                      d_allFileGeometry);
 }
 
 ConstitutiveModel* MPMMaterial::getConstitutiveModel() const

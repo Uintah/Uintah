@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ImplicitParticleCreator.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/TriangleParticleCreator.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -37,17 +38,20 @@ using namespace Uintah;
 ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps, 
                                                 MPMMaterial* mat,
                                                 MPMFlags* flags,
-                                                bool allTriGeom)
+                                                bool allTriGeom,
+                                                bool allFileGeom)
 {
   ProblemSpecP cm_ps = ps->findBlock("constitutive_model");
 
-  if (flags->d_integrator_type == "implicit") 
+  if (flags->d_integrator_type == "implicit"){
     return scinew ImplicitParticleCreator(mat,flags);
-
+  }
   else if (flags->d_integrator_type == "explicit" && allTriGeom==true){ 
     return scinew TriangleParticleCreator(mat,flags);
   }
-
+  else if (flags->d_integrator_type == "explicit" && allFileGeom==true){
+    return scinew FileGeomPieceParticleCreator(mat,flags);
+  }
   else 
     return scinew ParticleCreator(mat,flags);
 }

@@ -7346,8 +7346,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                  P.push_back(p);
                  color.push_back(Fcolor[ifile]);
                  double isurf=((double) pc->checkForSurface(newGeomPiece[ifile],
-                                                            p, dxpp,
-                                                            flags->d_ndim));
+                                                            p, dxpp));
                  surface.push_back(isurf);
                  numNewPartNeeded++;
               }

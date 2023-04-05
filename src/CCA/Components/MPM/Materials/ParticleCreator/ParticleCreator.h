@@ -51,31 +51,27 @@ namespace Uintah {
   public:
     
     ParticleCreator(MPMMaterial* matl, MPMFlags* flags);
+
     ParticleCreator();
 
-
     virtual ~ParticleCreator();
-
 
     virtual particleIndex createParticles(MPMMaterial* matl,
                                           CCVariable<int>& cellNAPID,
                                           const Patch*,DataWarehouse* new_dw,
                                           std::vector<GeometryObject*>&);
 
-
-
     virtual void registerPermanentParticleState(MPMMaterial* matl);
-
-    int checkForSurface(const GeometryPieceP piece, const Point p,
-                        const Vector dxpp, int ndim);
-
-    double checkForSurface2(const GeometryPieceP piece, const Point p,
-                            const Vector dxpp);
 
     std::vector<const VarLabel* > returnParticleState();
     std::vector<const VarLabel* > returnParticleStatePreReloc();
 
-    
+    int checkForSurface(const GeometryPieceP piece, const Point p,
+                        const Vector dxpp);
+
+    double checkForSurface2(const GeometryPieceP piece, const Point p,
+                            const Vector dxpp);
+
     typedef std::map<GeometryObject*,std::vector<Point> > geompoints;
     typedef std::map<GeometryObject*,std::vector<double> > geomvols;
     typedef std::map<GeometryObject*,std::vector<Vector> > geomvecs;
@@ -134,8 +130,6 @@ namespace Uintah {
 
     void createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars);
 
-
-
     virtual void initializeParticle(const Patch* patch,
                                     std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
@@ -155,12 +149,6 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     void printPhysicalBCs();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! Calculate the external force to be applied to a particle */
-    //////////////////////////////////////////////////////////////////////////
-    virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
-                              const double& pMass,  Vector& pExtForce);
-    
     MPMLabel* d_lb;
     MPMFlags* d_flags;
 

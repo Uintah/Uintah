@@ -28,6 +28,7 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
@@ -47,19 +48,22 @@
 
 #include <iostream>
 
-/*  This code is a bit tough to follow.  Here's the basic order of operations.
+/*  This code is specialized for filling triangulated surfaces based on
+a method developed by Duan Zhang, et al., at Sandia.  It is faster and
+less memory intensive than the original method which uses the "inside" operators
+in the TriGeometryPiece code.
+
+This code is a bit tough to follow.  Here's the basic order of operations.
 
 First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
 turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
-(MPMMaterial calls the ParticleCreatorFactory::create, which is kind of stupid
-since every material will use the same type ParticleCreator. Whatever..)
+MPMMaterial calls the ParticleCreatorFactory::create
 
 Next,  createParticles, below, first loops over all of the geom_objects and
 calls countAndCreateParticles.  countAndCreateParticles returns the number of
 particles on a given patch associated with each geom_object and accumulates
 that into a variable called num_particles.  countAndCreateParticles gets
-the number of particles by either querying the functions for smooth geometry 
-piece types, or by calling createPoints, also below.  When createPoints is
+the number of particles by calling createPoints, below.  When createPoints is
 called, as each particle is determined to be inside of the object, it is pushed
 back into the object_points entry of the ObjectVars struct.  ObjectVars
 consists of several maps which are indexed on the GeometryObject and a vector
@@ -68,13 +72,14 @@ because even after particles are created, their initial data is still tied
 back to the GeometryObject.  These might include velocity, temperature, color,
 etc.
 
-createPoints, for the non-smooth geometry, essentially visits each cell,
-and then depending on how many points are prescribed in the <res> tag in the
-input file, loops over each of the candidate locations in that cell, and
-determines if that point is inside or outside of the cell.  Points that are
-inside the object are pushed back into the struct, as described above.  The
-actual particle count comes from an operation in countAndCreateParticles
-to determine the size of the object_points entry in the ObjectVars struct.
+createPoints stacks the triangles in a single direction, so that the first check
+is to see if a point in the other two directions is even in a cell that has
+triangles.  If it does, then all of the candidate locations in that single
+direction are checked to see how many triangles they pass through.  Even means
+the point is outside the object, odd means it is inside.  Because of
+(apparently) round-off error, it is necessary to do this in each of the three
+directions independently, and if a point is determined to be inside in at least
+two of those, it is kept.
 
 Now that we know how many particles we have for this material on this patch,
 we are ready to allocateVariables, which calls allocateAndPut for all of the
@@ -82,13 +87,9 @@ variables needed in SerialMPM or AMRMPM.  At this point, storage for the
 particles has been created, but the arrays allocated are still empty.
 
 Now back in createParticles, the next step is to loop over all of the 
-GeometryObjects.  If the GeometryObject is a SmoothGeometryPiece, those
-type of objects MAY have their own methods for populating the data within the
-if(sgp) conditional.  Either way, loop over all of the particles in
+GeometryObjects. Either way, loop over all of the particles in
 object points and initialize the remaining particle data.  This is done for
-non-Smooth/File pieces by calling initializeParticle.  For the Smooth/File
-pieces, if arrays exist that contain other data, use that data to populate the
-other entries.
+by calling initializeParticle.  
 
 initializeParticle, which is what is usually used, populates the particle data
 based on either what is specified in the <geometry_object> section of the
@@ -106,24 +107,13 @@ using namespace Uintah;
 using namespace std;
 
 TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl, 
-                                 MPMFlags* flags)
-                              :  ParticleCreator(matl,flags)
+                                                 MPMFlags* flags)
+                                              :  ParticleCreator(matl,flags)
 {
-
-  d_lb = scinew MPMLabel();
-  d_useLoadCurves = flags->d_useLoadCurves;
-  d_with_color = flags->d_with_color;
-  d_artificial_viscosity = flags->d_artificial_viscosity;
-  d_computeScaleFactor = flags->d_computeScaleFactor;
-
-  d_flags = flags;
-
-  registerPermanentParticleState(matl);
 }
 
 TriangleParticleCreator::~TriangleParticleCreator()
 {
-  delete d_lb;
 }
 
 particleIndex 
@@ -191,100 +181,6 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
     start += count;
   }
   return numParticles;
-}
-
-// Get the LoadCurveID applicable for this material point
-// WARNING : Should be called only once per particle during a simulation 
-// because it updates the number of particles to which a BC is applied.
-IntVector TriangleParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps, int dwi)
-{
-  IntVector ret(0,0,0);
-  int k=0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-        
-    //cerr << " BC Type = " << bcs_type << endl;
-    if (bcs_type == "Pressure") {
-      PressureBC* pbc = 
-        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)
-       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
-         ret(k) = pbc->loadCurveID();
-         k++;
-      }
-    }
-    else if (bcs_type == "HeatFlux") {      
-      HeatFluxBC* hfbc = 
-        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = hfbc->loadCurveID(); 
-         k++;
-      }
-    }
-  }
-  return ret;
-}
-
-// Print MPM physical boundary condition information
-void TriangleParticleCreator::printPhysicalBCs()
-{
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
-      PressureBC* pbc =
-        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *pbc << endl;
-    }
-    if (bcs_type == "HeatFlux") {
-      HeatFluxBC* hfbc = 
-        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *hfbc << endl;
-    }
-  }
-}
-
-ParticleSubset* 
-TriangleParticleCreator::allocateVariables(particleIndex numParticles, 
-                                   int dwi, const Patch* patch,
-                                   DataWarehouse* new_dw,
-                                   ParticleVars& pvars)
-{
-  ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
-                                                        patch);
-  new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
-  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
-  new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
-  new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
-  new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
-  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
-  new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
-  new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
-  new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
-  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
-  new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
-  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
-  new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
-  new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
-  new_dw->allocateAndPut(pvars.pmodalID,      d_lb->pModalIDLabel,      subset);
-  new_dw->allocateAndPut(pvars.psurfgrad,     d_lb->pSurfGradLabel,     subset);
-
-  if(d_flags->d_integrator_type=="explicit"){
-    new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
-  }
-  new_dw->allocateAndPut(pvars.pTempGrad,   d_lb->pTemperatureGradientLabel,
-                                                                        subset);
-  if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
-  }
-  if(d_with_color){
-     new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
-  }
-
-  if(d_artificial_viscosity){
-     new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
-  }
-  return subset;
 }
 
 void TriangleParticleCreator::createPoints(const Patch* patch, 
@@ -695,7 +591,6 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   }
 
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  GeometryPieceP piece = (*obj)->getPiece();
   pvars.psurface[i] = 1.0; //checkForSurface2(piece,p,dxpp);
   pvars.pmodalID[i]  = matl->getModalID();
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
@@ -733,181 +628,4 @@ TriangleParticleCreator::countAndCreateParticles(const Patch* patch,
   createPoints(patch,obj,vars);
   
   return (particleIndex) vars.d_object_points[obj].size();
-}
-
-vector<const VarLabel* > TriangleParticleCreator::returnParticleState()
-{
-  return particle_state;
-}
-
-
-vector<const VarLabel* > TriangleParticleCreator::returnParticleStatePreReloc()
-{
-  return particle_state_preReloc;
-}
-
-void TriangleParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
-{
-  particle_state.push_back(d_lb->pDispLabel);
-  particle_state_preReloc.push_back(d_lb->pDispLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVelocityLabel);
-  particle_state_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
-
-  particle_state.push_back(d_lb->pExternalForceLabel);
-  particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
-
-  particle_state.push_back(d_lb->pMassLabel);
-  particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVolumeLabel);
-  particle_state_preReloc.push_back(d_lb->pVolumeLabel_preReloc);
-
-  particle_state.push_back(d_lb->pTemperatureLabel);
-  particle_state_preReloc.push_back(d_lb->pTemperatureLabel_preReloc);
-
-  // for thermal stress
-  particle_state.push_back(d_lb->pTempPreviousLabel);
-  particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
-
-  particle_state.push_back(d_lb->pParticleIDLabel);
-  particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-
-  if (d_with_color){
-    particle_state.push_back(d_lb->pColorLabel);
-    particle_state_preReloc.push_back(d_lb->pColorLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pSizeLabel);
-  particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
-
-  if (d_useLoadCurves) {
-    particle_state.push_back(d_lb->pLoadCurveIDLabel);
-    particle_state_preReloc.push_back(d_lb->pLoadCurveIDLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pDeformationMeasureLabel);
-  particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
-
-  particle_state.push_back(d_lb->pVelGradLabel);
-  particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
-
-  if (d_flags->d_refineParticles) {
-    particle_state.push_back(d_lb->pRefinedLabel);
-    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pStressLabel);
-  particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
-
-  particle_state.push_back(d_lb->pLocalizedMPMLabel);
-  particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
-
-  if(d_flags->d_useLogisticRegression || 
-       d_flags->d_SingleFieldMPM      ||
-       d_flags->d_doingDissolution){
-    particle_state.push_back(d_lb->pSurfLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
-  }
-
-  if(d_flags->d_SingleFieldMPM){
-    particle_state.push_back(d_lb->pSurfGradLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfGradLabel_preReloc);
-  }
-
-  if (d_artificial_viscosity) {
-    particle_state.push_back(d_lb->p_qLabel);
-    particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
-  }
-
-  if (d_computeScaleFactor) {
-    particle_state.push_back(d_lb->pScaleFactorLabel);
-    particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
-  }
-
-  particle_state.push_back(d_lb->pModalIDLabel);
-  particle_state_preReloc.push_back(d_lb->pModalIDLabel_preReloc);
-
-  matl->getConstitutiveModel()->addParticleState(particle_state,
-                                                 particle_state_preReloc);
-                                                 
-  matl->getDamageModel()->addParticleState( particle_state, particle_state_preReloc );
-  
-  matl->getErosionModel()->addParticleState( particle_state, particle_state_preReloc );
-}
-
-int
-TriangleParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
-{
-
-  //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
-  //  the current point is on the surface
-  
-  int ss = 0;
-  // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  if (d_flags->d_ndim==3) {
-    // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-      ss++;
-    // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-      ss++;
-  }
-
-  if(ss>0){
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
-double
-TriangleParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
-{
-
-  //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
-  //  the current point is on the surface
-  int ss = 0;
-  // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.),true))
-    ss++;
-  // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
-    ss++;
-  if (d_flags->d_ndim==3) {
-    // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-      ss++;
-    // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-      ss++;
-  }
-
-  if(ss>0){
-    return 1.0;
-  } else {
-    return 0.0;
-  }
 }
