@@ -591,11 +591,13 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   }
 
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  GeometryPieceP piece = (*obj)->getPiece();
   if(d_flags->d_useLogisticRegression || 
      d_flags->d_doingDissolution || 
      d_useLoadCurves){
+    GeometryPieceP piece = (*obj)->getPiece();
     pvars.psurface[i] = checkForSurface(piece,p,dxpp);
+  } else {
+    pvars.psurface[i] = 0.;
   }
   pvars.pmodalID[i]  = matl->getModalID();
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
