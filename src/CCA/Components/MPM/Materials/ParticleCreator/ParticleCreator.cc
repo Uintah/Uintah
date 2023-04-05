@@ -190,7 +190,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        if (checkForSurface(piece,*itr,dxpp)) {
+        if (pvars.psurface[pidx]==1) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
         } else {
@@ -668,7 +668,11 @@ ParticleCreator::initializeParticle(const Patch* patch,
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
   GeometryPieceP piece = (*obj)->getPiece();
-  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
+  if(d_flags->d_useLogisticRegression || 
+     d_flags->d_doingDissolution || 
+     d_useLoadCurves){
+    pvars.psurface[i] = checkForSurface(piece,p,dxpp);
+  }
   pvars.pmodalID[i]  = matl->getModalID();
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
@@ -830,6 +834,8 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   //  Check the candidate points which surround the point just passed
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
+
+  cout << "cFS" << endl;
   
   int ss = 0;
   // Check to the left (-x)
@@ -866,6 +872,7 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
                                   const Vector dxpp )
 {
 
+  cout << "cFS2" << endl;
   //  Check the candidate points which surround the point just passed
   //  in.  If any of those points are not also inside the object
   //  the current point is on the surface

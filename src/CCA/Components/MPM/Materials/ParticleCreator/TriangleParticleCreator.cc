@@ -168,8 +168,8 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        // DO WE NEED THIS, OR USE PSURFACE ALREADY COMPUTED?
-        if (checkForSurface(piece,*itr,dxpp)) {
+        // if it is a surface particle
+        if (pvars.psurface[pidx]==1) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
         } else {
@@ -591,7 +591,12 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   }
 
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  pvars.psurface[i] = 1.0; //checkForSurface2(piece,p,dxpp);
+  GeometryPieceP piece = (*obj)->getPiece();
+  if(d_flags->d_useLogisticRegression || 
+     d_flags->d_doingDissolution || 
+     d_useLoadCurves){
+    pvars.psurface[i] = checkForSurface(piece,p,dxpp);
+  }
   pvars.pmodalID[i]  = matl->getModalID();
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
