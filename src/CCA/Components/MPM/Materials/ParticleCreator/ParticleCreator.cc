@@ -198,7 +198,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        if (checkForSurface(piece,*itr,dxpp)) {
+        // if it is a surface particle
+        if (pvars.psurface[pidx]==1) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
           if (d_doScalarDiffusion) {
@@ -757,8 +758,13 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  GeometryPieceP piece = (*obj)->getPiece();
-  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
+  if(d_flags->d_useLogisticRegression ||
+     d_useLoadCurves){
+    GeometryPieceP piece = (*obj)->getPiece();
+    pvars.psurface[i] = checkForSurface(piece,p,dxpp);
+  } else {
+    pvars.psurface[i] = 0.;
+  }
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
   Vector pExtForce(0,0,0);
