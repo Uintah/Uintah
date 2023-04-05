@@ -71,7 +71,7 @@ back to the GeometryObject.  These might include velocity, temperature, color,
 etc.
 **** New in March 2023: With the addition of "recursive particle filling",
 createPoints also computes particle volume and size, since those will change
-with different levels of particle refinement.  **** 
+with different levels of particle refinement.  ****
 
 createPoints visits each cell,
 and then depending on how many points are prescribed in the <res> tag in the
@@ -524,8 +524,8 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
         int numPIC = pointsInCell.size();
         if(numLevelsParticleFilling < 0){  
-         // Remove particles if a smaller particle within it would lie
-         // outside the surface.  Fill them in below.
+          // Remove particles if a smaller particle within it would lie
+          // outside the surface.  Fill them in below.
           vector<int> toRemove;
           toRemove.clear();
           for(int ip = 0; ip < numPIC; ip++){
@@ -948,7 +948,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
 int
 ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
+                                  const Vector dxpp)
 {
 
   //  Check the candidate points which surround the point just passed

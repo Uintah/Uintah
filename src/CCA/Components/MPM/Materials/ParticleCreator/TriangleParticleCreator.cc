@@ -612,11 +612,7 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   }
 
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-//  if(fgp){
-    pvars.psurface[i] = 1.0;
-//  } else {
-//    pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
-//  }
+  pvars.psurface[i] = 1.0;
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
   Vector pExtForce(0,0,0);

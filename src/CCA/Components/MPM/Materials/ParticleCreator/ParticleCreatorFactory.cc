@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ImplicitParticleCreator.h>
-#include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/TriangleParticleCreator.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
@@ -44,13 +43,12 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
 {
   ProblemSpecP cm_ps = ps->findBlock("constitutive_model");
 
-  if (flags->d_integrator_type == "implicit") 
+  if (flags->d_integrator_type == "implicit"){
     return scinew ImplicitParticleCreator(mat,flags);
-
+  }
   else if (flags->d_integrator_type == "explicit" && allTriGeom==true){ 
     return scinew TriangleParticleCreator(mat,flags);
   }
-
   else if (flags->d_integrator_type == "explicit" && allFileGeom==true){ 
     return scinew FileGeomPieceParticleCreator(mat,flags);
   }
