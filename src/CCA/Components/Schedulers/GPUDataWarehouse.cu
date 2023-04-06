@@ -2034,8 +2034,8 @@ GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream)
     char * dstPtr = reinterpret_cast< char *>(d_device_copy);
 
     // Create an unmanage Kokkos view from the raw pointers.
-    Kokkos::View<char*, Kokkos::HostSpace            >   hostView( srcPtr, objectSizeInBytes);
-    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( dstPtr, objectSizeInBytes);
+    Kokkos::View<char*, Kokkos::HostSpace            >   hostView(srcPtr, objectSizeInBytes);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView(dstPtr, objectSizeInBytes);
     // Deep copy the host view to the device view.
     Kokkos::deep_copy(instance, deviceView, hostView);
 #else
