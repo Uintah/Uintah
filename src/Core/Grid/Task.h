@@ -2802,16 +2802,16 @@ doKokkosDeepCopy_impl(intptr_t dTask, unsigned int deviceNum,
   if(kind == GPUMemcpyHostToDevice)
   {
     // Create an unmanage Kokkos view from the raw pointers.
-    Kokkos::View<char*, Kokkos::HostSpace>   hostView( srcPtr, count);
-    Kokkos::View<char*, ExecSpace        > deviceView( dstPtr, count);
+    Kokkos::View<char*, Kokkos::HostSpace>   hostView(srcPtr, count);
+    Kokkos::View<char*, ExecSpace        > deviceView(dstPtr, count);
     // Deep copy the host view to the device view.
     Kokkos::deep_copy(instance, deviceView, hostView);
   }
   else if(kind == GPUMemcpyDeviceToHost)
   {
     // Create an unmanage Kokkos view from the raw pointers.
-    Kokkos::View<char*, Kokkos::HostSpace>   hostView( dstPtr, count);
-    Kokkos::View<char*, ExecSpace        > deviceView( srcPtr, count);
+    Kokkos::View<char*, Kokkos::HostSpace>   hostView(dstPtr, count);
+    Kokkos::View<char*, ExecSpace        > deviceView(srcPtr, count);
     // Deep copy the device view to the host view.
     Kokkos::deep_copy(instance, hostView, deviceView);
   }
