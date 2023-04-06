@@ -37,10 +37,6 @@ namespace Uintah {
 template <typename T>
 class Array3Data;
 
-template <typename T, typename MemSpace>
-using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-
-
 //For the default memory space
 template <typename T, typename MemSpace>
 class KokkosView3
