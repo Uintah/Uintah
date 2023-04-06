@@ -353,7 +353,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
                         , CallBackEvent   event
                         )
 {
-  Kokkos::Profiling::pushRegion(dtask->getName());
+  Kokkos::Profiling::pushRegion("thread " + std::to_string(thread_id) + ": " + dtask->getName());
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
@@ -615,16 +615,38 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   while ( m_num_tasks_done < m_num_tasks )
   {
 #if defined( KOKKOS_ENABLE_OPENMP )
-    if(
-#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
-       // num_partitions not used
+
+#if defined(USE_KOKKOS_OPENMP_PARALLEL)
+    if( num_partitions > 1 )
 #else
-       num_partitions > 1 ||
+    if( num_partitions > 1 || threads_per_partition > 1 )
 #endif
-       threads_per_partition > 1)
     {
+#if defined(USE_KOKKOS_OPENMP_PARALLEL)
+      Kokkos::Profiling::pushRegion("OpenMP Parallel");
+
+      if( omp_get_nested() )
+      {
+        #pragma omp parallel num_threads(num_partitions)
+        {
+          // threads_per_partition is not used so call runTasks directly
+          // omp_set_num_threads(threads_per_partition);
+          // task_runner(omp_get_thread_num(), omp_get_num_threads());
+
+          this->runTasks(omp_get_thread_num());
+        }
+      }
+      else
+      {
+        this->runTasks( 0 );
+      }
+
+      Kokkos::Profiling::popRegion();
+#else
+      Kokkos::Profiling::pushRegion("partition_master");
+
       // Task runner functor.
-      auto task_runner = [&] (int thread_id, int num_threads = 0) {
+      auto task_runner = [&] (int thread_id, int num_threads) {
 
         // Each partition created executes this block of code
         // A task_runner can run a serial task (threads_per_partition == 1) or
@@ -632,56 +654,23 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
         this->runTasks( thread_id );
       };
 
-#if defined(USE_KOKKOS_OPENMP_PARALLEL_FOR)
-      // Paralel_for assumes one partition but multiple threads.
-      // The parallelization is over threads
-      Kokkos::RangePolicy<Kokkos::OpenMP>
-        rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
-      Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
-
-#elif defined(USE_KOKKOS_OPENMP_PARTITION_SPACE)
-      if(num_partitions == 1)
-      {
-	// Paralel_for assumes one partition but multiple threads.
-	// The parallelization is over threads
-        Kokkos::RangePolicy<Kokkos::OpenMP>
-          rangePolicy(Kokkos::OpenMP(), 0, threads_per_partition);
-        Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
-      }
-      else
-      {
-	// Partition_spaces assumes multiple partiions each with
-	// multiple threads. The parallelization is over threads.
-
-        // Resource allocation for each instance, equally weighted.
-        std::vector<int> weights(num_partitions, 1);
-
-        auto instances =
-          Kokkos::Experimental::partition_space(Kokkos::OpenMP(), weights);
-
-        for(int i=0; i<num_partitions; ++i)
-        {
-          Kokkos::RangePolicy<Kokkos::OpenMP>
-            rangePolicy(instances[i], 0, threads_per_partition);
-          Kokkos::parallel_for("OpenMP Run Tasks", rangePolicy, task_runner);
-        }
-      }
-
-      // Fencing should not be needed.
-      // for(int i=0; i<num_partitions; ++i)
-      //   instances[i].fence();
-#else
       // OpenMP Partition Master is deprecated in Kokkos. The
       // parallelization is over the paritions.
       Kokkos::OpenMP::partition_master( task_runner,
                                         num_partitions,
                                         threads_per_partition );
+
+      Kokkos::Profiling::popRegion();
 #endif
     }
     else
 #endif // KOKKOS_ENABLE_OPENMP
     {
+      Kokkos::Profiling::pushRegion("runTasks");
+
       this->runTasks( 0 );
+
+      Kokkos::Profiling::popRegion();
     }
 
     if ( g_have_hypre_task ) {
@@ -803,6 +792,8 @@ KokkosScheduler::markTaskConsumed( int          & numTasksDone
 void
 KokkosScheduler::runTasks( int thread_id )
 {
+  Kokkos::Profiling::pushRegion("thread " + std::to_string(thread_id) + ": runTasks");
+
   while( m_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
@@ -840,6 +831,7 @@ KokkosScheduler::runTasks( int thread_id )
       *
       */
       if ( g_have_hypre_task ) {
+        Kokkos::Profiling::popRegion();
         return;
       }
 
@@ -1237,6 +1229,8 @@ KokkosScheduler::runTasks( int thread_id )
           g_hypre_task_event = CallBackEvent::GPU;
           g_HypreTask = readyTask;
           g_have_hypre_task = true;
+
+          Kokkos::Profiling::popRegion();
           return;
         }
 
@@ -1371,6 +1365,8 @@ KokkosScheduler::runTasks( int thread_id )
             g_hypre_task_event = CallBackEvent::CPU;
             g_HypreTask = readyTask;
             g_have_hypre_task = true;
+
+            Kokkos::Profiling::popRegion();
             return;
           }
 
@@ -1397,6 +1393,8 @@ KokkosScheduler::runTasks( int thread_id )
       }
     }
   }  // end while (numTasksDone < ntasks)
+
+  Kokkos::Profiling::popRegion();
 }  // end runTasks()
 
 //______________________________________________________________________
