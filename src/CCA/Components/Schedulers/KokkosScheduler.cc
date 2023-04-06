@@ -629,8 +629,9 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
       {
         #pragma omp parallel num_threads(num_partitions)
         {
-          // threads_per_partition is not used so call runTasks directly
-          // omp_set_num_threads(threads_per_partition);
+          omp_set_num_threads(threads_per_partition);
+
+          // omp_get_num_threads() is not used so call runTasks directly
           // task_runner(omp_get_thread_num(), omp_get_num_threads());
 
           this->runTasks(omp_get_thread_num());
