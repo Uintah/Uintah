@@ -43,8 +43,7 @@
     // #define USE_KOKKOS_VIEW // Use Kokkos malloc
     #define USE_KOKKOS_INSTANCE
     #define USE_KOKKOS_FENCE
-    // #define USE_KOKKOS_OPENMP_PARALLEL_FOR
-    // #define USE_KOKKOS_OPENMP_PARTITION_SPACE
+    #define USE_KOKKOS_OPENMP_PARALLEL
   #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
