@@ -48,6 +48,16 @@
 #include <thread>
 
 
+#if defined(HAVE_KOKKOS)
+#else
+  namespace Kokkos {
+    namespace Profiling {
+      void pushRegion(const std::string& kName) {};
+      void popRegion () {};
+    };
+};
+#endif
+
 /*______________________________________________________________________
   TO DO:
   - Add special handling for TaskType Hypre.
