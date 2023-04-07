@@ -832,13 +832,10 @@ int
 ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
                                   const Vector dxpp)
 {
-
   //  Check the candidate points which surround the point just passed
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
 
-  cout << "cFS" << endl;
-  
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))
@@ -873,8 +870,6 @@ double
 ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
                                   const Vector dxpp )
 {
-
-  cout << "cFS2" << endl;
   //  Check the candidate points which surround the point just passed
   //  in.  If any of those points are not also inside the object
   //  the current point is on the surface
