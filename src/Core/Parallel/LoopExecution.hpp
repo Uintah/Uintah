@@ -55,93 +55,10 @@
 
 #define ARRAY_SIZE 16
 
-#if defined(HAVE_KOKKOS)
-
-// ARS - FIX ME - I do not fully understand these defines.
-namespace Kokkos {
-  // Kokkos CUDA (NVIDIA GPU) is not included in this build.  Create
-  // some stub types so these types at least exist.
-#if !defined(KOKKOS_ENABLE_CUDA)
-    class Cuda {};
-    class CudaSpace {};
-#elif !defined( KOKKOS_ENABLE_HIP)
-    namespace Experimental {
-      class HIP {};
-      class HIPSpace {};
-    }
-#elif !defined(KOKKOS_ENABLE_SYCL)
-    namespace Experimental {
-      class SYCL {};
-      class SYCLDeviceUSMSpace {};
-    }
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
-    namespace Experimental {
-      class OpenMPTarget {};
-      class OpenMPTargetSpace {};
-    }
-#endif
-
-#if !defined(KOKKOS_ENABLE_OPENMP)
-  // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
-  // This logic may be temporary if all GPU functionality is merged
-  // into the Kokkos scheduler and the Unified Scheduler is no longer
-  // used for GPU logic.  Brad P Jun 2018
-    class OpenMP {};
-#endif
-}
-
-#else //#if defined(HAVE_KOKKOS)
-
-  // Kokkos not included in this build.  Create some stub types so
-  // these types at least exist.
-  namespace Kokkos {
-    class OpenMP {};
-    class HostSpace {};
-    class DefaultExecutionSpace {};
-
-//     namespace Experimental {
-//       class OpenMPTarget {};
-//       class OpenMPTargetSpace {};
-//     }
-// #if defined(KOKKOS_ENABLE_CUDA)
-//     class Cuda {};
-//     class CudaSpace {};
-// #elif defined(KOKKOS_ENABLE_HIP)
-//     namespace Experimental {
-//       class HIP {};
-//       class HIPSpace {};
-//     }
-// #elif defined(KOKKOS_ENABLE_SYCL)
-//     namespace Experimental {
-//       class SYCL {};
-//       class SYCLDeviceUSMSpace {};
-//     }
-// #endif
-  }
-
-#endif //if defined(HAVE_KOKKOS)
-
-// Create some data types for non-Kokkos CPU runs.
-namespace UintahSpaces{
-  class CPU {};          // These are used for legacy Uintah CPU tasks
-                         // (e.g. no Cuda or Kokkos)
-  class HostSpace {};    // And also to refer to any data in host
-                         // memory
-
-  class GPU {};          // These are used for legacy Uintah GPU (Cuda) tasks
-                         // (e.g. no Kokkos)
-  class DeviceSpace {};  // And also to refer to any data in device
-                         // memory
-
-#if defined(HAVE_OPENMPTARGET)
-  class OpenMPTarget {}; // To describe data in Kokkos OpenMPTarget Memory
-  class OpenMPTargetSpace {};
-#endif //if defined(HAVE_OPENMPTARGET)
-}
-
 enum TASKGRAPH {
   DEFAULT = -1
 };
+
 // Macros don't like passing in data types that contain commas in
 // them, such as two template arguments. This helps fix that.
 #define COMMA ,
@@ -1987,7 +1904,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             std::vector<IntVector> &iterSpace, const unsigned int list_siz e, const Functor & functor)
+             std::vector<IntVector> &iterSpace, const unsigned int list_size, const Functor & functor)
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
