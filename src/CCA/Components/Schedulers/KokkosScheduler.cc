@@ -625,7 +625,11 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 #if defined(USE_KOKKOS_OPENMP_PARALLEL)
       Kokkos::Profiling::pushRegion("OpenMP Parallel");
 
-      if( omp_get_nested() )
+#if _OPENMP >= 201511
+      if (omp_get_max_active_levels() > 1)
+#else
+      if (omp_get_nested())
+#endif
       {
         #pragma omp parallel num_threads(num_partitions)
         {
@@ -651,7 +655,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
         // Each partition created executes this block of code
         // A task_runner can run a serial task (threads_per_partition == 1) or
-        //   a Kokkos-based data parallel task (threads_per_partition > 1)
+        //   a Kokkos-based data parallel task (threads_per_partition  > 1)
         this->runTasks( thread_id );
       };
 
