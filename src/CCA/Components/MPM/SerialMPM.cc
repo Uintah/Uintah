@@ -4773,7 +4773,8 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     NAPID_new.copyData(NAPID);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
