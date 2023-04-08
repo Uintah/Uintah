@@ -234,7 +234,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls);
     std::vector<     NCVariable<Vector> > gvelocity(numMatls);
-    std::vector<     NCVariable<double> > frictionWork(numMatls);
+//    std::vector<     NCVariable<double> > frictionWork(numMatls);
     
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = 
@@ -242,7 +242,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],           lb->gMassLabel, dwi, patch,Ghost::None,0);
       new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,     dwi, patch);
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi, patch);
+//    new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi, patch);
     }
     
     // three ways to get velocity 
@@ -504,9 +504,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       }
 
       for(int  n = 0; n < numMatls; n++){
-        MPMMaterial* mpm_matl = 
-                        (MPMMaterial*) d_materialManager->getMaterial("MPM", n);
-        int dwi = mpm_matl->getDWIndex();
+       // MPMMaterial* mpm_matl = 
+       //               (MPMMaterial*) d_materialManager->getMaterial("MPM", n);
+        //int dwi = mpm_matl->getDWIndex();
         
         if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
 
@@ -527,7 +527,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
         if(!compare(gmass[d_material][c], 0.) &&
            (totalNodalVol/cell_vol) > d_vol_const){
-          Vector old_vel = gvelocity_star[n][c];
+          //Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
           reaction_force  -= ginternalForce[n][c];

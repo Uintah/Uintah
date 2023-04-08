@@ -529,14 +529,20 @@ protected:
                                     DataWarehouse* new_dw);
 
   //////////
-  //////////
-  // Add new particles to the simulation based on criteria TBD:
+  // Add new tracers to the simulation based on criteria 
   virtual void addTracers(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+  //////////
+  // Add new triangles to the simulation based on criteria 
+  virtual void refineTriangles(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
   // Used to compute the particles physical size
   // for use in deformed particle visualization
@@ -735,6 +741,10 @@ protected:
   virtual void scheduleAddTracers(SchedulerP&, 
                                   const PatchSet*,
                                   const MaterialSet*);
+
+  virtual void scheduleRefineTriangles(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSet*);
 
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&,
                                                   const PatchSet*,

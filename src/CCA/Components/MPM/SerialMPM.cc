@@ -971,6 +971,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
     scheduleAddParticles(                 sched, patches, matls);
   }
+  if(flags->d_RefineTriangles){
+    scheduleRefineTriangles(              sched, patches, triangle_matls);
+  }
 
 //scheduleManageChangeGrainMaterials(     level, sched);
   scheduleManageDoAuthigenesis(           level, sched);
@@ -6004,6 +6007,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       triMassDisp_new.copyData(triMassDisp);
       triNearbyMats_new.copyData(triNearbyMats);
       triCemThick_new.copyData(triCemThick);
+      tsize_new.copyData(tsize);  // This isn't really used
 
       double totalsurfarea = 0.;
 
@@ -6145,7 +6149,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                               r0.z()/dx.z(), r1.z()/dx.z(), r2.z()/dx.z());
         tsize_new[idx] = size;
 #endif
-        tsize_new[idx] = tsize[idx];
 
       } // Loop over triangles
       new_dw->deleteParticles(delset);
@@ -9758,4 +9761,251 @@ void SerialMPM::manageDoAuthigenesis(const ProcessorGroup* pg,
 double SerialMPM::recomputeDelT( const double delT )
 {
   return delT * 0.1;
+}
+
+void SerialMPM::scheduleRefineTriangles(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
+
+{
+  if( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), 
+                            getLevel(patches)->getGrid()->numLevels())){
+    return;
+  }
+
+  printSchedule( patches, cout_doing, "MPM::scheduleRefineTriangles" );
+
+  Task * t = scinew Task("MPM::refineTriangles", this,
+                   &SerialMPM::refineTriangles);
+
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+
+/*
+  MaterialSubset* zeroth_matl = scinew MaterialSubset();
+  zeroth_matl->add(0);
+  zeroth_matl->addReference();
+  t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
+  t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
+*/
+  t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
+  t->modifies(lb->pXLabel_preReloc);
+  t->modifies(lb->pSizeLabel_preReloc);
+  t->modifies(TriL->triangleIDLabel_preReloc);
+  t->modifies(TriL->triMidToN0VectorLabel_preReloc);
+  t->modifies(TriL->triMidToN1VectorLabel_preReloc);
+  t->modifies(TriL->triMidToN2VectorLabel_preReloc);
+  t->modifies(TriL->triUseInPenaltyLabel_preReloc);
+  t->modifies(TriL->triAreaLabel_preReloc);
+  t->modifies(TriL->triClayLabel_preReloc);
+  t->modifies(TriL->triNormalLabel_preReloc);
+  t->modifies(TriL->triAreaAtNodesLabel_preReloc);
+  t->modifies(TriL->triMassDispLabel_preReloc);
+  t->modifies(TriL->triNearbyMatsLabel_preReloc);
+  t->modifies(TriL->triMassDispLabel_preReloc);
+  t->modifies(TriL->triCementThicknessLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::refineTriangles(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+    double dxMinL = dx.minComponent();
+    double maxL2 = 4.*dxMinL*dxMinL; // max allowed tri edge length squared
+    printTask(patches, patch,cout_doing, "Doing MPM::refineTriangles");
+    unsigned int numTriMatls=m_materialManager->getNumMatls("Triangle");
+
+    for(unsigned int m = 0; m < numTriMatls; m++){
+      TriangleMaterial* tri_matl =
+              (TriangleMaterial*) m_materialManager->getMaterial("Triangle", m);
+      int dwi = tri_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      ParticleVariable<Point> px;
+      ParticleVariable<Matrix3> pSize, tNearbyMats;
+      ParticleVariable<long64> tids;
+      ParticleVariable<IntVector> tUseInPenalty;
+      ParticleVariable<Vector> tMTN0Vec,tMTN1Vec,tMTN2Vec,tAreaAtNodes,tNormal;
+      ParticleVariable<double> tArea, tClay, tMassDisp, tCemThick;
+      ParticleVariable<int> tRefine;
+
+      new_dw->getModifiable(px,        lb->pXLabel_preReloc,              pset);
+      new_dw->getModifiable(pSize,     lb->pSizeLabel_preReloc,           pset);
+      new_dw->getModifiable(tNearbyMats, 
+                                     TriL->triNearbyMatsLabel_preReloc,   pset);
+      new_dw->getModifiable(tids,    TriL->triangleIDLabel_preReloc,      pset);
+      new_dw->getModifiable(tUseInPenalty,
+                                     TriL->triUseInPenaltyLabel_preReloc, pset);
+      new_dw->getModifiable(tMTN0Vec,TriL->triMidToN0VectorLabel_preReloc,pset);
+      new_dw->getModifiable(tMTN1Vec,TriL->triMidToN1VectorLabel_preReloc,pset);
+      new_dw->getModifiable(tMTN2Vec,TriL->triMidToN2VectorLabel_preReloc,pset);
+      new_dw->getModifiable(tNormal, TriL->triNormalLabel_preReloc,       pset);
+      new_dw->getModifiable(tArea,   TriL->triAreaLabel_preReloc,         pset);
+      new_dw->getModifiable(tAreaAtNodes, 
+                                     TriL->triAreaAtNodesLabel_preReloc,  pset);
+      new_dw->getModifiable(tClay,   TriL->triClayLabel_preReloc,         pset);
+      new_dw->getModifiable(tMassDisp,
+                                     TriL->triMassDispLabel_preReloc,     pset);
+      new_dw->getModifiable(tCemThick,
+                                   TriL->triCementThicknessLabel_preReloc,pset);
+
+      new_dw->allocateTemporary(tRefine,       pset);
+
+      unsigned int numRef=0;
+      bool splitForAny=false;
+
+      // Loop over triangles to see if any meet the refinement criteria
+      const unsigned int origNTri = pset->addParticles(0);
+      for( unsigned int pp=0; pp<origNTri; ++pp ){
+        tRefine[pp]=0;
+        Point A = px[pp]+tMTN0Vec[pp];      
+        Point B = px[pp]+tMTN1Vec[pp];      
+        Point C = px[pp]+tMTN2Vec[pp];      
+        if((B-A).length2() > maxL2 ||
+           (C-A).length2() > maxL2 ||
+           (C-B).length2() > maxL2){
+          tRefine[pp]=1;
+          splitForAny=true;
+          numRef++;
+        }
+      } // Loop over original triangles
+
+      if(splitForAny){
+        numRef*=3;  // Divide triangle into 4, reuse original + 3 new
+        const unsigned int oldNumTri = pset->addParticles(numRef);
+
+        ParticleVariable<Point> pxtmp;
+        ParticleVariable<Matrix3> pSizetmp, tNearbyMatstmp;
+        ParticleVariable<long64> tidstmp;
+        ParticleVariable<IntVector> tUseInPenaltytmp;
+        ParticleVariable<Vector> tMTN0Vectmp,tMTN1Vectmp,tMTN2Vectmp;
+        ParticleVariable<Vector> tAreaAtNodestmp,tNormaltmp;
+        ParticleVariable<double> tAreatmp, tClaytmp, tMassDisptmp, tCemThicktmp;
+        ParticleVariable<int> tRefinetmp;
+
+        new_dw->allocateTemporary(pxtmp,            pset);
+        new_dw->allocateTemporary(pSizetmp,         pset);
+        new_dw->allocateTemporary(tNearbyMatstmp,   pset);
+        new_dw->allocateTemporary(tidstmp,          pset);
+        new_dw->allocateTemporary(tUseInPenaltytmp, pset);
+        new_dw->allocateTemporary(tMTN0Vectmp,      pset);
+        new_dw->allocateTemporary(tMTN1Vectmp,      pset);
+        new_dw->allocateTemporary(tMTN2Vectmp,      pset);
+        new_dw->allocateTemporary(tAreaAtNodestmp,  pset);
+        new_dw->allocateTemporary(tNormaltmp,       pset);
+        new_dw->allocateTemporary(tAreatmp,         pset);
+        new_dw->allocateTemporary(tClaytmp,         pset);
+        new_dw->allocateTemporary(tMassDisptmp,     pset);
+        new_dw->allocateTemporary(tCemThicktmp,     pset);
+
+        // copy data from old variables
+        for( unsigned int pp=0; pp<oldNumTri; ++pp ){
+           pxtmp[pp]=px[pp];
+           pSizetmp[pp]=pSize[pp];
+           tNearbyMatstmp[pp]=tNearbyMats[pp];
+           tidstmp[pp]=tids[pp];
+           tUseInPenaltytmp[pp]=tUseInPenalty[pp];
+           tMTN0Vectmp[pp]=tMTN0Vec[pp];
+           tMTN1Vectmp[pp]=tMTN1Vec[pp];
+           tMTN2Vectmp[pp]=tMTN2Vec[pp];
+           tAreaAtNodestmp[pp]=tAreaAtNodes[pp];
+           tNormaltmp[pp]=tNormal[pp];
+           tAreatmp[pp]=tArea[pp];
+           tClaytmp[pp]=tClay[pp];
+           tMassDisptmp[pp]=tMassDisp[pp];
+           tCemThicktmp[pp]=tCemThick[pp];
+        }
+        int numRefTri=0;
+          double oneThird = (1./3.);
+          for( unsigned int idx=0; idx<oldNumTri; ++idx ){
+            if(tRefine[idx]==1){
+              Point A = px[idx]+tMTN0Vec[idx];      
+              Point B = px[idx]+tMTN1Vec[idx];      
+              Point C = px[idx]+tMTN2Vec[idx];      
+
+              Point AB = 0.5*(A+B);
+              Point AC = 0.5*(A+C);
+              Point BC = 0.5*(B+C);
+
+              // Fix area of original triangle
+              tAreatmp[idx]=0.5*(Cross(BC-AB,AC-AB).length());
+              tMTN0Vectmp[idx] = AB - pxtmp[idx];
+              tMTN1Vectmp[idx] = AC - pxtmp[idx];
+              tMTN2Vectmp[idx] = BC - pxtmp[idx];
+              // Need to fix tAreaAtNodes for original triangle
+              // tAreaAtNodestmp[idx]=???;
+  
+              for(int i = 0;i<3;i++){
+                int new_index = oldNumTri + 3*numRefTri+i;
+                IntVector tUIP(0,0,0);
+                Vector tAAN(0.,0.,0.);
+                if(i==0){
+                  pxtmp[new_index]=oneThird*(A+AB+AC);
+                  tMTN0Vectmp[new_index] = A  - pxtmp[new_index];
+                  tMTN1Vectmp[new_index] = AB - pxtmp[new_index];
+                  tMTN2Vectmp[new_index] = AC - pxtmp[new_index];
+                  tAreatmp[new_index]=(0.5*(Cross(AB-A,AC-A)).length());
+                  tUIP = IntVector(tUseInPenalty[idx].x(),0,0);
+                  tAAN = Vector(tAreaAtNodes[idx].x(),0.,0.);
+                } else if(i==1){
+                  pxtmp[new_index]=oneThird*(B+AB+BC);
+                  tMTN0Vectmp[new_index] = B  - pxtmp[new_index];
+                  tMTN1Vectmp[new_index] = BC - pxtmp[new_index];
+                  tMTN2Vectmp[new_index] = AB - pxtmp[new_index];
+                  tAreatmp[new_index]=(0.5*(Cross(AB-B,BC-B)).length());
+                  tUIP = IntVector(tUseInPenalty[idx].y(),0,0);
+                  tAAN = Vector(tAreaAtNodes[idx].y(),0.,0.);
+                } else if(i==2){
+                  pxtmp[new_index]=oneThird*(C+AC+BC);
+                  tMTN0Vectmp[new_index] = C  - pxtmp[new_index];
+                  tMTN1Vectmp[new_index] = AC - pxtmp[new_index];
+                  tMTN2Vectmp[new_index] = BC - pxtmp[new_index];
+                  tAreatmp[new_index]=(0.5*(Cross(AC-C,BC-C)).length());
+                  tUIP = IntVector(tUseInPenalty[idx].z(),0,0);
+                  tAAN = Vector(tAreaAtNodes[idx].z(),0.,0.);
+                }
+                tAreaAtNodestmp[new_index]  = tAAN; // Fix these two lines
+                tAreaAtNodestmp[idx]        = Vector(0.,0.,0.);
+                tUseInPenaltytmp[new_index] = tUIP;
+                tUseInPenaltytmp[idx]       = IntVector(1,1,1);
+                pSizetmp[new_index]         = pSize[idx];  // not used?
+                tNearbyMatstmp[new_index]   = tNearbyMats[idx];
+                tNormaltmp[new_index]       = tNormal[idx];
+                tClaytmp[new_index]         = tClay[idx];
+                tMassDisptmp[new_index]     = tMassDisp[idx];
+                tCemThicktmp[new_index]     = tCemThick[idx];
+                tidstmp[new_index]          = -tids[idx]*pow(10,i);
+              }
+              numRefTri++;
+            } // This triangle needs to be refined
+          } // Loop over old particles
+
+        // Put temporary data in DW
+        new_dw->put(pxtmp,        lb->pXLabel_preReloc,                  true);
+        new_dw->put(pSizetmp,     lb->pSizeLabel_preReloc,               true);
+        new_dw->put(tNearbyMatstmp, 
+                                  TriL->triNearbyMatsLabel_preReloc,     true);
+        new_dw->put(tidstmp,      TriL->triangleIDLabel_preReloc,        true);
+        new_dw->put(tUseInPenaltytmp,
+                                  TriL->triUseInPenaltyLabel_preReloc,   true);
+        new_dw->put(tMTN0Vectmp,  TriL->triMidToN0VectorLabel_preReloc,  true);
+        new_dw->put(tMTN1Vectmp,  TriL->triMidToN1VectorLabel_preReloc,  true);
+        new_dw->put(tMTN2Vectmp,  TriL->triMidToN2VectorLabel_preReloc,  true);
+        new_dw->put(tNormaltmp,   TriL->triNormalLabel_preReloc,         true);
+        new_dw->put(tAreatmp,     TriL->triAreaLabel_preReloc,           true);
+        new_dw->put(tAreaAtNodestmp, 
+                                  TriL->triAreaAtNodesLabel_preReloc,    true);
+        new_dw->put(tClaytmp,     TriL->triClayLabel_preReloc,           true);
+        new_dw->put(tMassDisptmp, TriL->triMassDispLabel_preReloc,       true);
+        new_dw->put(tCemThicktmp, TriL->triCementThicknessLabel_preReloc,true);
+      } // Some triangle(s) needs to be refined
+    } // Loop over matls
+  } // Loop over patches
 }

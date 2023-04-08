@@ -49,6 +49,7 @@
       <use_tracers                        spec="OPTIONAL BOOLEAN" />
       <use_linesegments                   spec="OPTIONAL BOOLEAN" />
       <use_triangles                      spec="OPTIONAL BOOLEAN" />
+      <RefineTriangles                    spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />

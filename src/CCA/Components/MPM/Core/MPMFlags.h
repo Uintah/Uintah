@@ -91,6 +91,7 @@ class Output;
     bool        doMPMOnLevel(int level, int numLevels) const;
     bool        d_canAddParticles;                             // Needed to enable particle addition
     bool        d_refineParticles;                             // Needed to enable particle addition
+    bool        d_RefineTriangles;                             // Needed to enable triangle refinement
     bool        d_XPIC2;                                       // Use Nairn's XPIC2 algorithm
 
     double      d_artificialDampCoeff;
