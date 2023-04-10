@@ -52,6 +52,12 @@ TracerLabel::TracerLabel()
   tracerCemVecLabel_preReloc = VarLabel::create("t.CemVec+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  tracerChemDispLabel = VarLabel::create("t.ChemDisp",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  tracerChemDispLabel_preReloc = VarLabel::create("t.ChemDisp+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pCellNATracerIDLabel =
     VarLabel::create("cellNATracerID", 
                                    CCVariable<short int>::getTypeDescription());

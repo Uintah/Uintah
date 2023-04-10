@@ -5082,21 +5082,25 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       ParticleVariable<Point> tx_new;
       constParticleVariable<long64> tracer_ids;
       ParticleVariable<long64> tracer_ids_new;
-      constParticleVariable<Vector> tracerCemVec;
-      ParticleVariable<Vector> tracerCemVec_new;
+      constParticleVariable<Vector> tracerCemVec, tracerChemDisp;
+      ParticleVariable<Vector> tracerCemVec_new, tracerChemDisp_new;
 
       old_dw->get(tx,            lb->pXLabel,                         pset);
-      old_dw->get(tracer_ids,  TraL->tracerIDLabel,                   pset);
-      old_dw->get(tracerCemVec,TraL->tracerCemVecLabel,               pset);
+      old_dw->get(tracer_ids,    TraL->tracerIDLabel,                 pset);
+      old_dw->get(tracerCemVec,  TraL->tracerCemVecLabel,             pset);
+      old_dw->get(tracerChemDisp,TraL->tracerChemDispLabel,           pset);
 
       new_dw->allocateAndPut(tx_new,          lb->pXLabel_preReloc,       pset);
       new_dw->allocateAndPut(tracer_ids_new,TraL->tracerIDLabel_preReloc, pset);
       new_dw->allocateAndPut(tracerCemVec_new,
-                                        TraL->tracerCemVecLabel_preReloc, pset);
+                                      TraL->tracerCemVecLabel_preReloc,   pset);
+      new_dw->allocateAndPut(tracerChemDisp_new,
+                                      TraL->tracerChemDispLabel_preReloc, pset);
 
       tracer_ids_new.copyData(tracer_ids);
       tracerCemVec_new.copyData(tracerCemVec);
       tx_new.copyData(tx);
+      tracerChemDisp_new.copyData(tracerChemDisp);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -5123,7 +5127,9 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           // influencing a tracer has mass on it.
           vel/=sumSk;
           tx_new[idx] = tx[idx] + vel*delT;
-          tx_new[idx] += (surf/(gSN.length()+1.e-100))*delT;
+          Vector chemDisp = (surf/(gSN.length()+1.e-100))*delT;
+          tx_new[idx] += chemDisp;
+          tracerChemDisp_new[idx] = tracerChemDisp[idx] + chemDisp;
         } else {
           // This is the "just in case" instance that none of the nodes
           // influencing a vertex has mass on it.  In this case, use an
@@ -5147,7 +5153,9 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           if(sumSk > 1.e-90){
             vel/=sumSk;
             tx_new[idx] = tx[idx] + vel*delT;
-            tx_new[idx] += (surf/(gSN.length()+1.e-100))*delT;
+            Vector chemDisp = (surf/(gSN.length()+1.e-100))*delT;
+            tx_new[idx] += chemDisp;
+            tracerChemDisp_new[idx] = tracerChemDisp[idx] + chemDisp;
           } else {
             // This is the rare "just in case" instance that none of the nodes
             // influencing a tracer has mass on it.  In this case, use the

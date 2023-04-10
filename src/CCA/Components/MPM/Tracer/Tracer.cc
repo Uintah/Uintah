@@ -127,6 +127,7 @@ Tracer::createTracers(TracerMaterial* matl,
        particleIndex pidx = start;
        tracer_pos[pidx]   = pos;
        tracerID[pidx] = tid;
+       tracerChemDisp[pidx] = Vector(0.);
        if(haveCVT){
          tracerCemVec[pidx] = CVT[lineNum] - Point(pos);
        } else {
@@ -159,6 +160,7 @@ Tracer::allocateVariables(particleIndex numTracers,
   new_dw->allocateAndPut(tracer_pos,     d_lb->pXLabel,             subset);
   new_dw->allocateAndPut(tracerID,       d_TL->tracerIDLabel,       subset);
   new_dw->allocateAndPut(tracerCemVec,   d_TL->tracerCemVecLabel,   subset);
+  new_dw->allocateAndPut(tracerChemDisp, d_TL->tracerChemDispLabel, subset);
   
   return subset;
 }
@@ -221,8 +223,10 @@ void Tracer::registerPermanentTracerState(TracerMaterial* trmat)
 {
   d_tracer_state.push_back(d_TL->tracerIDLabel);
   d_tracer_state.push_back(d_TL->tracerCemVecLabel);
+  d_tracer_state.push_back(d_TL->tracerChemDispLabel);
   d_tracer_state_preReloc.push_back(d_TL->tracerIDLabel_preReloc);
   d_tracer_state_preReloc.push_back(d_TL->tracerCemVecLabel_preReloc);
+  d_tracer_state_preReloc.push_back(d_TL->tracerChemDispLabel_preReloc);
 }
 //__________________________________
 //
@@ -235,6 +239,7 @@ void Tracer::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->pXLabel);
   t->computes(d_TL->tracerIDLabel);
   t->computes(d_TL->tracerCemVecLabel);
+  t->computes(d_TL->tracerChemDispLabel);
   t->computes(d_TL->tracerCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));

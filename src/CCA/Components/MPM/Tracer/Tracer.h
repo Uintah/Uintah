@@ -87,6 +87,7 @@ namespace Uintah {
     ParticleVariable<Point>  tracer_pos;
     ParticleVariable<long64> tracerID;
     ParticleVariable<Vector> tracerCemVec;
+    ParticleVariable<Vector> tracerChemDisp;
 
     MPMLabel* d_lb;
     TracerLabel* d_TL;
