@@ -69,7 +69,8 @@ namespace Uintah {
 
     virtual void registerPermanentCohesiveZoneState(CZMaterial* czmat);
 
-    virtual particleIndex countCohesiveZones(const Patch*, const std::string fname);
+    virtual particleIndex countCohesiveZones(const Patch*, 
+                                             const std::string fname);
 
     void scheduleInitialize(const LevelP& level, SchedulerP& sched,
                             CZMaterial* czmat);

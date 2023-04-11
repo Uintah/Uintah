@@ -38,6 +38,9 @@ using namespace std;
 CZLabel::CZLabel()
 {
   // For Cohesive Zones
+  czCountLabel = VarLabel::create("czCount",
+                                   sumlong_vartype::getTypeDescription());
+
   czAreaLabel = VarLabel::create("cz.area",
                      ParticleVariable<double>::getTypeDescription());
   czAreaLabel_preReloc = VarLabel::create("cz.area+",
@@ -102,6 +105,7 @@ CZLabel::CZLabel()
 CZLabel::~CZLabel()
 {
   // For Cohesive Zones
+  VarLabel::destroy(czCountLabel);
   VarLabel::destroy(czAreaLabel);
   VarLabel::destroy(czAreaLabel_preReloc);
   VarLabel::destroy(czNormLabel);

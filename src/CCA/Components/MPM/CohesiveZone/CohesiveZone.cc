@@ -192,7 +192,6 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
     double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
     int mt,mb;
     while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mb >> mt){
-      //cout << f1 << " " << f2 << " " << f3 << endl;
       if(patch->containsPoint(Point(f1,f2,f3))){
         sum++;
       }
@@ -276,6 +275,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   t->computes(d_Cl->czBotMatLabel);
   t->computes(d_Cl->czFailedLabel);
   t->computes(d_Cl->czIDLabel);
+  t->computes(d_Cl->czCountLabel);
   t->computes(d_Cl->pCellNACZIDLabel,zeroth_matl);
 
   vector<int> m(1);
@@ -310,15 +310,13 @@ void CohesiveZone::initialize(const ProcessorGroup*,
     cellNACZID.initialize(0);
 
     for(int m=0;m<cz_matls->size();m++){
-      CZMaterial* cz_matl = (CZMaterial*) d_materialManager->getMaterial( "CZ",  m );
+      CZMaterial* cz_matl=(CZMaterial*) d_materialManager->getMaterial("CZ", m);
       string filename = cz_matl->getCohesiveFilename();
       particleIndex numCZs = countCohesiveZones(patch,filename);
       totalCZs+=numCZs;
 
-      cout << "Total CZs " << totalCZs << endl;
-
-      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw,filename);
+      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw, filename);
     }
+    new_dw->put(sumlong_vartype(totalCZs), d_Cl->czCountLabel);
   }
-
 }

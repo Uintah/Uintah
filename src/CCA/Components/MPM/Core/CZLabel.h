@@ -38,6 +38,7 @@ namespace Uintah {
       ~CZLabel();
 
       // For Cohesive Zones
+      const VarLabel* czCountLabel;
       const VarLabel* czAreaLabel; 
       const VarLabel* czAreaLabel_preReloc; 
       const VarLabel* czNormLabel; 
