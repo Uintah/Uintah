@@ -505,9 +505,6 @@ MPMLabel::MPMLabel()
   partCountLabel = VarLabel::create("particleCount",
                                    sumlong_vartype::getTypeDescription());
 
-  czCountLabel = VarLabel::create("czCount",
-                                   sumlong_vartype::getTypeDescription());
-
   lineSegmentCountLabel = VarLabel::create("lineSegmentCount",
                                    sumlong_vartype::getTypeDescription());
 
@@ -635,63 +632,6 @@ MPMLabel::MPMLabel()
   pLoadCurveIDLabel_preReloc = VarLabel::create("p.loadCurveID+",
                             ParticleVariable<IntVector>::getTypeDescription());
 
-  // For Cohesive Zones
-  czAreaLabel = VarLabel::create("cz.area",
-                     ParticleVariable<double>::getTypeDescription());
-  czAreaLabel_preReloc = VarLabel::create("cz.area+",
-                     ParticleVariable<double>::getTypeDescription());
-
-  czNormLabel = VarLabel::create("cz.norm",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czNormLabel_preReloc = VarLabel::create("cz.norm+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czTangLabel = VarLabel::create("cz.tang",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czTangLabel_preReloc = VarLabel::create("cz.tang+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czDispTopLabel = VarLabel::create("cz.disptop",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czDispTopLabel_preReloc = VarLabel::create("cz.disptop+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czDispBottomLabel = VarLabel::create("cz.dispbottom",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czDispBottomLabel_preReloc = VarLabel::create("cz.dispbottom+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czSeparationLabel = VarLabel::create("cz.separation",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czSeparationLabel_preReloc = VarLabel::create("cz.separation+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czForceLabel = VarLabel::create("cz.force",
-                     ParticleVariable<Vector>::getTypeDescription());
-  czForceLabel_preReloc = VarLabel::create("cz.force+",
-                     ParticleVariable<Vector>::getTypeDescription());
-
-  czTopMatLabel = VarLabel::create("cz.topmat",
-                     ParticleVariable<int>::getTypeDescription());
-  czTopMatLabel_preReloc = VarLabel::create("cz.topmat+",
-                     ParticleVariable<int>::getTypeDescription());
-
-  czBotMatLabel = VarLabel::create("cz.botmat",
-                     ParticleVariable<int>::getTypeDescription());
-  czBotMatLabel_preReloc = VarLabel::create("cz.botmat+",
-                     ParticleVariable<int>::getTypeDescription());
-
-  czFailedLabel = VarLabel::create("cz.failed",
-                     ParticleVariable<int>::getTypeDescription());
-  czFailedLabel_preReloc = VarLabel::create("cz.failed+",
-                     ParticleVariable<int>::getTypeDescription());
-
-  czIDLabel = VarLabel::create("cz.CZID",
-                        ParticleVariable<long64>::getTypeDescription() );
-
-  czIDLabel_preReloc = VarLabel::create("cz.CZID+",
-                        ParticleVariable<long64>::getTypeDescription() );
-
   linesegIDLabel = VarLabel::create("ls.linesegID",
 			ParticleVariable<long64>::getTypeDescription() );
 
@@ -787,8 +727,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pLastLevelLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
-  VarLabel::destroy(czIDLabel);
-  VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(linesegIDLabel);
   VarLabel::destroy(linesegIDLabel_preReloc);
   VarLabel::destroy(lsMidToEndVectorLabel);
@@ -892,7 +830,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNumNearParticlesLabel);
 
   VarLabel::destroy(partCountLabel);
-  VarLabel::destroy(czCountLabel);
   VarLabel::destroy(lineSegmentCountLabel);
   VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
@@ -949,27 +886,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pColorLabel);
   VarLabel::destroy(pColorLabel_preReloc);
 
-  // For Cohesive Zones
-  VarLabel::destroy(czAreaLabel);
-  VarLabel::destroy(czAreaLabel_preReloc);
-  VarLabel::destroy(czNormLabel);
-  VarLabel::destroy(czNormLabel_preReloc);
-  VarLabel::destroy(czTangLabel);
-  VarLabel::destroy(czTangLabel_preReloc);
-  VarLabel::destroy(czDispTopLabel);
-  VarLabel::destroy(czDispTopLabel_preReloc);
-  VarLabel::destroy(czDispBottomLabel);
-  VarLabel::destroy(czDispBottomLabel_preReloc);
-  VarLabel::destroy(czSeparationLabel);
-  VarLabel::destroy(czSeparationLabel_preReloc);
-  VarLabel::destroy(czForceLabel);
-  VarLabel::destroy(czForceLabel_preReloc);
-  VarLabel::destroy(czTopMatLabel);
-  VarLabel::destroy(czTopMatLabel_preReloc);
-  VarLabel::destroy(czBotMatLabel);
-  VarLabel::destroy(czBotMatLabel_preReloc);
-  VarLabel::destroy(czFailedLabel);
-  VarLabel::destroy(czFailedLabel_preReloc);
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
   VarLabel::destroy(pPlasticStrainLabel);

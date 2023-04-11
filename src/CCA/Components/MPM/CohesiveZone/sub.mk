@@ -33,6 +33,7 @@ SRCDIR := CCA/Components/MPM/CohesiveZone
 
 SRCS += \
 	$(SRCDIR)/CohesiveZone.cc \
+	$(SRCDIR)/CohesiveZoneTasks.cc \
 	$(SRCDIR)/CZMaterial.cc
 
 PSELIBS := \

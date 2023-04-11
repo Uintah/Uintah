@@ -38,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/MPMLabel.cc          \
 	$(SRCDIR)/TriangleLabel.cc     \
 	$(SRCDIR)/TracerLabel.cc       \
+	$(SRCDIR)/CZLabel.cc           \
 	$(SRCDIR)/ImpMPMFlags.cc
 
 PSELIBS := \

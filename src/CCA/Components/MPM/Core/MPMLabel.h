@@ -52,7 +52,6 @@ namespace Uintah {
       const VarLabel* doMechLabel;
 
       const VarLabel* partCountLabel;
-      const VarLabel* czCountLabel;
       const VarLabel* lineSegmentCountLabel;
       const VarLabel* TimeAveSpecificKELabel;
       
@@ -262,29 +261,6 @@ namespace Uintah {
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
 
-      // For Cohesive Zones
-      const VarLabel* czAreaLabel; 
-      const VarLabel* czAreaLabel_preReloc; 
-      const VarLabel* czNormLabel; 
-      const VarLabel* czNormLabel_preReloc; 
-      const VarLabel* czTangLabel; 
-      const VarLabel* czTangLabel_preReloc; 
-      const VarLabel* czDispTopLabel; 
-      const VarLabel* czDispTopLabel_preReloc; 
-      const VarLabel* czDispBottomLabel; 
-      const VarLabel* czDispBottomLabel_preReloc; 
-      const VarLabel* czSeparationLabel; 
-      const VarLabel* czSeparationLabel_preReloc; 
-      const VarLabel* czForceLabel; 
-      const VarLabel* czForceLabel_preReloc; 
-      const VarLabel* czTopMatLabel; 
-      const VarLabel* czTopMatLabel_preReloc; 
-      const VarLabel* czBotMatLabel; 
-      const VarLabel* czBotMatLabel_preReloc; 
-      const VarLabel* czFailedLabel; 
-      const VarLabel* czFailedLabel_preReloc; 
-      const VarLabel* czIDLabel; 
-      const VarLabel* czIDLabel_preReloc; 
       const VarLabel* linesegIDLabel; 
       const VarLabel* linesegIDLabel_preReloc; 
       const VarLabel* lsMidToEndVectorLabel; 
