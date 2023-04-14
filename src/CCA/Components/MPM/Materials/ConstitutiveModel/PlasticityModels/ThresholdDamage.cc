@@ -262,7 +262,7 @@ ThresholdDamage::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
-  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
+  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,
                                                               matls, gnone);
   task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
   
@@ -303,7 +303,7 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
   old_dw->get(pLocalized,               d_lb->pLocalizedMPMLabel,    pset);
   old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel, pset);
   old_dw->get(pParticleID,              d_lb->pParticleIDLabel,      pset);
-  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,           
+  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,
                                                                      pset);
   new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc, pset);
 
