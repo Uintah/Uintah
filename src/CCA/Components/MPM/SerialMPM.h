@@ -58,6 +58,7 @@ class LineSegmentLabel;
 class CZLabel;
 class CohesiveZoneTasks;
 class TracerTasks;
+class TriangleTasks;
 class LSTasks;
 
 /**************************************
@@ -182,6 +183,7 @@ protected:
   CZLabel* Cl;
   CohesiveZoneTasks* cohesiveZoneTasks;
   TracerTasks* tracerTasks;
+  TriangleTasks* triangleTasks;
   LSTasks* lsTasks;
 
   virtual void actuallyInitialize(const ProcessorGroup*,
@@ -283,12 +285,6 @@ protected:
                               const MaterialSubset  * ,
                                     DataWarehouse   * old_dw,
                                     DataWarehouse   * new_dw );
-
-  virtual void computeNormalsTri(const ProcessorGroup  *,
-                                 const PatchSubset     * patches,
-                                 const MaterialSubset  * ,
-                                       DataWarehouse   * old_dw,
-                                       DataWarehouse   * new_dw );
 
   virtual void computeLogisticRegression(const ProcessorGroup  *,
                                          const PatchSubset     * patches,
@@ -430,21 +426,6 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-  //////////
-  // Insert Documentation Here:
-  virtual void updateTriangles(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void computeTriangleForces(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -490,23 +471,9 @@ protected:
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
-  //////////
-  // Add new triangles to the simulation based on criteria 
-  virtual void refineTriangles(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
   // Used to compute the particles physical size
   // for use in deformed particle visualization
   virtual void computeParticleScaleFactor(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw);
-
-  virtual void computeTriangleScaleFactor(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
@@ -533,12 +500,6 @@ protected:
   virtual void scheduleComputeNormals(SchedulerP        & sched,
                                       const PatchSet    * patches,
                                       const MaterialSet * matls );
-
-  virtual void scheduleComputeNormalsTri(SchedulerP        & sched,
-                                         const PatchSet    * patches,
-                                         const MaterialSubset*,
-                                         const MaterialSubset*,
-                                         const MaterialSet * matls );
 
   virtual void scheduleComputeLogisticRegression(SchedulerP        & sched,
                                                  const PatchSet    * patches,
@@ -626,18 +587,6 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-  virtual void scheduleUpdateTriangles(SchedulerP&, 
-                                       const PatchSet*,
-                                       const MaterialSubset*,
-                                       const MaterialSubset*,
-                                       const MaterialSet*);
-
-  virtual void scheduleComputeTriangleForces(SchedulerP&, 
-                                             const PatchSet*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
-                                             const MaterialSet*);
-
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
@@ -650,15 +599,7 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*);
 
-  virtual void scheduleRefineTriangles(SchedulerP&, 
-                                       const PatchSet*,
-                                       const MaterialSet*);
-
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&,
-                                                  const PatchSet*,
-                                                  const MaterialSet*);
-
-  virtual void scheduleComputeTriangleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
 

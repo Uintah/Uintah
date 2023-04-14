@@ -33,6 +33,7 @@ SRCDIR := CCA/Components/MPM/Triangle
 
 SRCS += \
 	$(SRCDIR)/Triangle.cc \
+	$(SRCDIR)/TriangleTasks.cc \
 	$(SRCDIR)/TriangleMaterial.cc
 
 PSELIBS := \

@@ -56,9 +56,6 @@ namespace Uintah {
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
 
-    virtual void triangleProblemSetup(const ProblemSpecP& prob_spec,
-                                         MPMFlags* flags);
-
     virtual void dissolutionProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags);
 
@@ -74,9 +71,6 @@ namespace Uintah {
     // Particle state
     std::vector<std::vector<const VarLabel* > > d_particleState;
     std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
-    
-    std::vector<std::vector<const VarLabel* > > d_triangleState;
-    std::vector<std::vector<const VarLabel* > > d_triangleState_preReloc;
     
     inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
       particle_ghost_type = type;
