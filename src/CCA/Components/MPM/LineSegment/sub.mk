@@ -33,6 +33,7 @@ SRCDIR := CCA/Components/MPM/LineSegment
 
 SRCS += \
 	$(SRCDIR)/LineSegment.cc \
+	$(SRCDIR)/LSTasks.cc \
 	$(SRCDIR)/LineSegmentMaterial.cc
 
 PSELIBS := \

@@ -46,6 +46,7 @@ namespace Uintah {
   class MPMFlags;
   class LineSegmentMaterial;
   class MPMLabel;
+  class LineSegmentLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -91,6 +92,7 @@ namespace Uintah {
     ParticleVariable<Vector>  linesegMidToEnd;
 
     MPMLabel* d_lb;
+    LineSegmentLabel* d_Ll;
     MPMFlags* d_flags;
     MaterialManagerP d_materialManager;
 

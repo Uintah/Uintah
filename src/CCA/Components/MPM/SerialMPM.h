@@ -54,8 +54,11 @@ class HeatConduction;
 class AnalysisModule;
 class TriangleLabel;
 class TracerLabel;
+class LineSegmentLabel;
 class CZLabel;
 class CohesiveZoneTasks;
+class TracerTasks;
+class LSTasks;
 
 /**************************************
 
@@ -170,14 +173,16 @@ protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
-  friend class MPMArches;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   TriangleLabel* TriL;
   TracerLabel* TraL;
+  LineSegmentLabel* LSl;
   CZLabel* Cl;
   CohesiveZoneTasks* cohesiveZoneTasks;
+  TracerTasks* tracerTasks;
+  LSTasks* lsTasks;
 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -197,6 +202,12 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+  void printTracerCount(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
   void printTriangleCount(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -209,12 +220,6 @@ protected:
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
-  void printTracerCount(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
-                          
   void printCZCount(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -280,12 +285,6 @@ protected:
                                     DataWarehouse   * new_dw );
 
   virtual void computeNormalsTri(const ProcessorGroup  *,
-                                 const PatchSubset     * patches,
-                                 const MaterialSubset  * ,
-                                       DataWarehouse   * old_dw,
-                                       DataWarehouse   * new_dw );
-
-  virtual void computeGridCemVec(const ProcessorGroup  *,
                                  const PatchSubset     * patches,
                                  const MaterialSubset  * ,
                                        DataWarehouse   * old_dw,
@@ -431,31 +430,6 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void updateTracers(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void updateLineSegments(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void computeLineSegmentForces(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* matls,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw);
-
   //////////
   // Insert Documentation Here:
   virtual void updateTriangles(const ProcessorGroup*,
@@ -517,14 +491,6 @@ protected:
                                     DataWarehouse* new_dw);
 
   //////////
-  // Add new tracers to the simulation based on criteria 
-  virtual void addTracers(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
-
-  //////////
   // Add new triangles to the simulation based on criteria 
   virtual void refineTriangles(const ProcessorGroup*,
                                const PatchSubset* patches,
@@ -539,12 +505,6 @@ protected:
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
-
-  virtual void computeLineSegScaleFactor(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
 
   virtual void computeTriangleScaleFactor(const ProcessorGroup*,
                                           const PatchSubset* patches,
@@ -575,12 +535,6 @@ protected:
                                       const MaterialSet * matls );
 
   virtual void scheduleComputeNormalsTri(SchedulerP        & sched,
-                                         const PatchSet    * patches,
-                                         const MaterialSubset*,
-                                         const MaterialSubset*,
-                                         const MaterialSet * matls );
-
-  virtual void scheduleComputeGridCemVec(SchedulerP        & sched,
                                          const PatchSet    * patches,
                                          const MaterialSubset*,
                                          const MaterialSubset*,
@@ -672,24 +626,6 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-  virtual void scheduleUpdateTracers(SchedulerP&, 
-                                     const PatchSet*,
-                                     const MaterialSubset*,
-                                     const MaterialSubset*,
-                                     const MaterialSet*);
-
-  virtual void scheduleUpdateLineSegments(SchedulerP&, 
-                                          const PatchSet*,
-                                          const MaterialSubset*,
-                                          const MaterialSubset*,
-                                          const MaterialSet*);
-
-  virtual void scheduleComputeLineSegmentForces(SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSubset*,
-                                                const MaterialSubset*,
-                                                const MaterialSet*);
-
   virtual void scheduleUpdateTriangles(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSubset*,
@@ -714,10 +650,6 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*);
 
-  virtual void scheduleAddTracers(SchedulerP&, 
-                                  const PatchSet*,
-                                  const MaterialSet*);
-
   virtual void scheduleRefineTriangles(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSet*);
@@ -725,10 +657,6 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&,
                                                   const PatchSet*,
                                                   const MaterialSet*);
-
-  virtual void scheduleComputeLineSegScaleFactor(SchedulerP&,
-                                                 const PatchSet*,
-                                                 const MaterialSet*);
 
   virtual void scheduleComputeTriangleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,

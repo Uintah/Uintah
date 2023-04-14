@@ -28,7 +28,6 @@
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
-#include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
 #include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -98,101 +97,6 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     }
     else{
       m_materialManager->registerMaterial( "MPM", mat);
-    }
-  }
-}
-
-void MPMCommon::tracerProblemSetup(const ProblemSpecP& prob_spec, 
-                                   MPMFlags* flags)
-{
-  //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("tracer"); ps != nullptr;
-       ps = ps->findNextBlock("tracer") ) {
-
-    string index("");
-    ps->getAttribute("index",index);
-    stringstream id(index);
-    const int DEFAULT_VALUE = -1;
-    int index_val = DEFAULT_VALUE;
-
-    id >> index_val;
-
-    if( !id ) {
-      // stringstream parsing failed... on many (most) systems, the
-      // original value assigned to index_val would be left
-      // intact... but on some systems it inserts garbage,
-      // so we have to manually restore the value.
-      index_val = DEFAULT_VALUE;
-    }
-    // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
-
-    //Create and register as an Tracer material
-    TracerMaterial *mat = scinew TracerMaterial(ps, m_materialManager, flags);
-
-    mat->registerParticleState( d_tracerState,
-                                d_tracerState_preReloc );
-
-    // When doing restart, we need to make sure that we load the materials
-    // in the same order that they were initially created.  Restarts will
-    // ALWAYS have an index number as in <material index = "0">.
-    // Index_val = -1 means that we don't register the material by its 
-    // index number.
-    if (index_val > -1){
-      m_materialManager->registerMaterial("Tracer", mat,index_val);
-    }
-    else{
-      m_materialManager->registerMaterial("Tracer", mat);
-    }
-  }
-}
-
-void MPMCommon::lineSegmentProblemSetup(const ProblemSpecP& prob_spec, 
-                                        MPMFlags* flags)
-{
-  //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("LineSegment"); ps != nullptr;
-       ps = ps->findNextBlock("LineSegment") ) {
-
-    string index("");
-    ps->getAttribute("index",index);
-    stringstream id(index);
-    const int DEFAULT_VALUE = -1;
-    int index_val = DEFAULT_VALUE;
-
-    id >> index_val;
-
-    if( !id ) {
-      // stringstream parsing failed... on many (most) systems, the
-      // original value assigned to index_val would be left
-      // intact... but on some systems it inserts garbage,
-      // so we have to manually restore the value.
-      index_val = DEFAULT_VALUE;
-    }
-    // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
-
-    //Create and register as an LineSegment material
-    LineSegmentMaterial *mat = 
-                       scinew LineSegmentMaterial(ps, m_materialManager, flags);
-
-    mat->registerParticleState( d_linesegState,
-                                d_linesegState_preReloc );
-
-    // When doing restart, we need to make sure that we load the materials
-    // in the same order that they were initially created.  Restarts will
-    // ALWAYS have an index number as in <material index = "0">.
-    // Index_val = -1 means that we don't register the material by its 
-    // index number.
-    if (index_val > -1){
-      m_materialManager->registerMaterial("LineSegment", mat,index_val);
-    }
-    else{
-      m_materialManager->registerMaterial("LineSegment", mat);
     }
   }
 }

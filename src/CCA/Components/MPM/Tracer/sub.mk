@@ -33,6 +33,7 @@ SRCDIR := CCA/Components/MPM/Tracer
 
 SRCS += \
 	$(SRCDIR)/Tracer.cc \
+	$(SRCDIR)/TracerTasks.cc \
 	$(SRCDIR)/TracerMaterial.cc
 
 PSELIBS := \

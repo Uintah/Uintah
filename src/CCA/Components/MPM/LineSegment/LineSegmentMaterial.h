@@ -104,7 +104,6 @@ WARNING
 
  private:
 
-   MPMLabel* d_lb;
    LineSegment* d_linesegment;
 
    std::string d_lineseg_filename;

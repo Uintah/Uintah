@@ -56,12 +56,6 @@ namespace Uintah {
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
 
-    virtual void tracerProblemSetup(const ProblemSpecP& prob_spec,
-                                    MPMFlags* flags);
-
-    virtual void lineSegmentProblemSetup(const ProblemSpecP& prob_spec,
-                                         MPMFlags* flags);
-
     virtual void triangleProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags);
 
@@ -72,16 +66,6 @@ namespace Uintah {
 
     // Used by the switcher
     virtual void setupForSwitching() {
-  
-      //d_cohesiveZoneState.clear();
-      //d_cohesiveZoneState_preReloc.clear();
-
-      d_tracerState.clear();
-      d_tracerState_preReloc.clear();
-
-      d_linesegState.clear();
-      d_linesegState_preReloc.clear();
-
       d_particleState.clear();
       d_particleState_preReloc.clear();
     }
@@ -90,12 +74,6 @@ namespace Uintah {
     // Particle state
     std::vector<std::vector<const VarLabel* > > d_particleState;
     std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
-    
-    std::vector<std::vector<const VarLabel* > > d_tracerState;
-    std::vector<std::vector<const VarLabel* > > d_tracerState_preReloc;
-    
-    std::vector<std::vector<const VarLabel* > > d_linesegState;
-    std::vector<std::vector<const VarLabel* > > d_linesegState_preReloc;
     
     std::vector<std::vector<const VarLabel* > > d_triangleState;
     std::vector<std::vector<const VarLabel* > > d_triangleState_preReloc;

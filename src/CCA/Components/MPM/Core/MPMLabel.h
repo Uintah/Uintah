@@ -52,7 +52,6 @@ namespace Uintah {
       const VarLabel* doMechLabel;
 
       const VarLabel* partCountLabel;
-      const VarLabel* lineSegmentCountLabel;
       const VarLabel* TimeAveSpecificKELabel;
       
       // Heat flux from fire
@@ -261,10 +260,6 @@ namespace Uintah {
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
 
-      const VarLabel* linesegIDLabel; 
-      const VarLabel* linesegIDLabel_preReloc; 
-      const VarLabel* lsMidToEndVectorLabel; 
-      const VarLabel* lsMidToEndVectorLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
       const VarLabel* pModalIDLabel;
       const VarLabel* pModalIDLabel_preReloc;

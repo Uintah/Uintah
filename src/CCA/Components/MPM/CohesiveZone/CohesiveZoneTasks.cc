@@ -552,12 +552,11 @@ void CohesiveZoneTasks::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                                  MPMFlags* flags)
 {
   // Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
+  ProblemSpecP mat_ps = 
+                     prob_spec->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
   for( ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); 
                     ps != nullptr; ps = ps->findNextBlock("cohesive_zone") ) {
-
-    cout << "cZPS " << endl;
 
     string index("");
     ps->getAttribute("index",index);

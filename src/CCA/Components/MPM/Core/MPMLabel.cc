@@ -505,9 +505,6 @@ MPMLabel::MPMLabel()
   partCountLabel = VarLabel::create("particleCount",
                                    sumlong_vartype::getTypeDescription());
 
-  lineSegmentCountLabel = VarLabel::create("lineSegmentCount",
-                                   sumlong_vartype::getTypeDescription());
-
   TimeAveSpecificKELabel = VarLabel::create("TimeAveSpecificKE",
                                    max_vartype::getTypeDescription());
 
@@ -632,18 +629,6 @@ MPMLabel::MPMLabel()
   pLoadCurveIDLabel_preReloc = VarLabel::create("p.loadCurveID+",
                             ParticleVariable<IntVector>::getTypeDescription());
 
-  linesegIDLabel = VarLabel::create("ls.linesegID",
-			ParticleVariable<long64>::getTypeDescription() );
-
-  linesegIDLabel_preReloc = VarLabel::create("ls.linesegID+",
-			ParticleVariable<long64>::getTypeDescription() );
-
-  lsMidToEndVectorLabel = VarLabel::create("ls.MidToEndVector",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  lsMidToEndVectorLabel_preReloc = VarLabel::create("ls.MidToEndVector+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
   pModalIDLabel = VarLabel::create("p.modalID",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -727,10 +712,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pLastLevelLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
-  VarLabel::destroy(linesegIDLabel);
-  VarLabel::destroy(linesegIDLabel_preReloc);
-  VarLabel::destroy(lsMidToEndVectorLabel);
-  VarLabel::destroy(lsMidToEndVectorLabel_preReloc);
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
@@ -830,7 +811,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNumNearParticlesLabel);
 
   VarLabel::destroy(partCountLabel);
-  VarLabel::destroy(lineSegmentCountLabel);
   VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
 

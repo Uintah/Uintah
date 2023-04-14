@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/LineSegmentLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
@@ -39,6 +40,7 @@ LineSegment::LineSegment(LineSegmentMaterial* tm, MPMFlags* flags,
                            MaterialManagerP& ss)
 {
   d_lb = scinew MPMLabel();
+  d_Ll = scinew LineSegmentLabel();
 
   d_flags = flags;
 
@@ -50,6 +52,7 @@ LineSegment::LineSegment(LineSegmentMaterial* tm, MPMFlags* flags,
 LineSegment::~LineSegment()
 {
   delete d_lb;
+  delete d_Ll;
 }
 //______________________________________________________________________
 ParticleSubset* 
@@ -161,10 +164,10 @@ LineSegment::allocateVariables(particleIndex numLineSegments,
                     new_dw->createParticleSubset(numLineSegments,dwi,patch);
 
   new_dw->allocateAndPut(lineseg_pos,    d_lb->pXLabel,                 subset);
-  new_dw->allocateAndPut(linesegID,      d_lb->linesegIDLabel,          subset);
+  new_dw->allocateAndPut(linesegID,      d_Ll->linesegIDLabel,          subset);
   new_dw->allocateAndPut(linesegSize,    d_lb->pSizeLabel,              subset);
   new_dw->allocateAndPut(linesegDefGrad, d_lb->pDeformationMeasureLabel,subset);
-  new_dw->allocateAndPut(linesegMidToEnd,d_lb->lsMidToEndVectorLabel,   subset);
+  new_dw->allocateAndPut(linesegMidToEnd,d_Ll->lsMidToEndVectorLabel,   subset);
 
   return subset;
 }
@@ -257,16 +260,16 @@ vector<const VarLabel* > LineSegment::returnLineSegmentStatePreReloc()
 //
 void LineSegment::registerPermanentLineSegmentState(LineSegmentMaterial* lsmat)
 {
-  d_lineseg_state.push_back(d_lb->linesegIDLabel);
+  d_lineseg_state.push_back(d_Ll->linesegIDLabel);
   d_lineseg_state.push_back(d_lb->pSizeLabel);
   d_lineseg_state.push_back(d_lb->pDeformationMeasureLabel);
   d_lineseg_state.push_back(d_lb->pScaleFactorLabel);
-  d_lineseg_state.push_back(d_lb->lsMidToEndVectorLabel);
-  d_lineseg_state_preReloc.push_back(d_lb->linesegIDLabel_preReloc);
+  d_lineseg_state.push_back(d_Ll->lsMidToEndVectorLabel);
+  d_lineseg_state_preReloc.push_back(d_Ll->linesegIDLabel_preReloc);
   d_lineseg_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
   d_lineseg_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
   d_lineseg_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
-  d_lineseg_state_preReloc.push_back(d_lb->lsMidToEndVectorLabel_preReloc);
+  d_lineseg_state_preReloc.push_back(d_Ll->lsMidToEndVectorLabel_preReloc);
 }
 //__________________________________
 //
@@ -278,10 +281,10 @@ void LineSegment::scheduleInitialize(const LevelP& level,
 
   t->computes(d_lb->pXLabel);
   t->computes(d_lb->pSizeLabel);
-  t->computes(d_lb->linesegIDLabel);
-  t->computes(d_lb->lsMidToEndVectorLabel);
+  t->computes(d_Ll->linesegIDLabel);
+  t->computes(d_Ll->lsMidToEndVectorLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
-  t->computes(d_lb->lineSegmentCountLabel);
+  t->computes(d_Ll->lineSegmentCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("LineSegment"));
 }
@@ -310,7 +313,7 @@ void LineSegment::initialize(const ProcessorGroup*,
       createLineSegments(lineseg_matl, numLineSegments,
                     patch, new_dw, filename);
     }
-    new_dw->put(sumlong_vartype(totalLineSegments),d_lb->lineSegmentCountLabel);
+    new_dw->put(sumlong_vartype(totalLineSegments),d_Ll->lineSegmentCountLabel);
     //cout << "Total Line Segments " << totalLineSegments << endl;
   }
 }

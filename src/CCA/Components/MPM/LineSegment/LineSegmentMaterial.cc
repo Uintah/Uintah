@@ -26,7 +26,6 @@
 
 #include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
 #include <Core/Geometry/IntVector.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -40,7 +39,6 @@ LineSegmentMaterial::LineSegmentMaterial(ProblemSpecP& ps, MaterialManagerP& ss,
                                                            MPMFlags* flags)
   : Material(ps), d_linesegment(0)
 {
-  d_lb = scinew MPMLabel();
   // The standard set of initializations needed
   standardInitialization(ps,flags);
   
@@ -58,12 +56,10 @@ LineSegmentMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
 // Default constructor
 LineSegmentMaterial::LineSegmentMaterial() : d_linesegment(0)
 {
-  d_lb = scinew MPMLabel();
 }
 
 LineSegmentMaterial::~LineSegmentMaterial()
 {
-  delete d_lb;
   delete d_linesegment;
 }
 
