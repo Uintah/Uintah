@@ -85,7 +85,14 @@ VarLabel::create( const std::string     & name
     else {
       label = scinew VarLabel(name, td, boundaryLayer, vartype);
       g_all_labels[name]=label;
-      DOUT(g_varlabel_dbg, "Created VarLabel: " << label->m_name << " [address = " << label);
+      DOUT(g_varlabel_dbg, "Created VarLabel: "
+           << std::setw(24) << label->m_name << "  "
+           // << "address: " << std::setw(12) << label << "  "
+           << "Type description: "
+           << std::setw(30) << label->m_td->getName() << "  "
+           << "Var type: "
+           << std::setw(0) << (label->m_var_type ? "PositionVariable" :
+                                                   "Normal"));
     }
     label->addReference();
   }
@@ -138,10 +145,15 @@ VarLabel::VarLabel( const std::string             & name
 void
 VarLabel::printAll()
 {
-  auto iter = g_all_labels.begin();
-
-  for (; iter != g_all_labels.end(); iter++) {
-    std::cout << (*iter).second->m_name << std::endl;
+  for (auto & iter : g_all_labels) {
+    proc0cout << "VarLabel: "
+              << std::setw(24) << iter.second->m_name << "  "
+              << "Type description: "
+              << std::setw(30) << iter.second->m_td->getName() << "  "
+              << "Var type: "
+              << std::setw(0) << (iter.second->m_var_type ? "PositionVariable" :
+                                                            "Normal")
+              << std::endl;
   }
 }
 //______________________________________________________________________
