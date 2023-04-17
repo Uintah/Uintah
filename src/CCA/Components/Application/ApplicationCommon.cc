@@ -402,22 +402,33 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   for (int i = 0; i < grid->numLevels(); i++) {
     task->requires(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
   }
-  
+
   // These are the application reduction variables. An application may
   // also request that the time step be recomputed, aborted, and/or the
   // simulation end early.
 
   // Check for a task computing the reduction variable, if found add
   // in a requires and activate the variable it will be tested.
+  std::vector< std::string > inactive;
+
   for (auto & var : m_appReductionVars) {
     const VarLabel* label = var.second->getLabel();
-    
-    if( scheduler->getComputedVars().find( label ) != scheduler->getComputedVars().end() ) {
+
+    if( scheduler->getComputedVars().find( label ) !=
+        scheduler->getComputedVars().end() ) {
       activateReductionVariable(var.first, true);
-      
+
       task->requires(Task::NewDW, label);
       task->computes(label);
     }
+    else {
+      inactive.push_back(var.first);
+    }
+  }
+
+  // Remove the inactive reduction variables.
+  for (auto & name : inactive) {
+    removeReductionVariable(name);
   }
 
   // These two reduction vars may be set by the application via a
@@ -427,10 +438,14 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // subsequent test.
   if( m_outputIfInvalidNextDelTFlag ) {
     activateReductionVariable(outputTimeStep_name, true);
+  } else {
+    removeReductionVariable(outputTimeStep_name);
   }
 
   if( m_checkpointIfInvalidNextDelTFlag ) {
     activateReductionVariable(checkpointTimeStep_name, true);
+  } else {
+    removeReductionVariable(checkpointTimeStep_name);
   }
 
   // The above three tasks are on a per proc basis any rank can make
@@ -508,11 +523,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
 
   // If delta T has been changed and if requested, for that change
   // output or checkpoint. Must be done before the reduction call.
-  if (validDelT & m_outputIfInvalidNextDelTFlag) {
+  if (m_outputIfInvalidNextDelTFlag &&
+      validDelT & m_outputIfInvalidNextDelTFlag) {
     setReductionVariable(new_dw, outputTimeStep_name, true);
   }
 
-  if (validDelT & m_checkpointIfInvalidNextDelTFlag) {
+  if (m_checkpointIfInvalidNextDelTFlag &&
+      validDelT & m_checkpointIfInvalidNextDelTFlag) {
     setReductionVariable(new_dw, checkpointTimeStep_name, true);
   }
 
@@ -532,11 +549,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
   if (patches->size() != 0) {
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
-    if (!isBenignReductionVariable(outputTimeStep_name)) {
+    if (m_outputIfInvalidNextDelTFlag &&
+        !isBenignReductionVariable(outputTimeStep_name)) {
       m_output->setOutputTimeStep(true, grid);
     }
 
-    if (!isBenignReductionVariable(checkpointTimeStep_name)) {
+    if (m_checkpointIfInvalidNextDelTFlag &&
+        !isBenignReductionVariable(checkpointTimeStep_name)) {
       m_output->setCheckpointTimeStep(true, grid);
     }
   }
