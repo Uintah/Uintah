@@ -1219,9 +1219,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
   int3 offset=low;
   void* device_ptr=nullptr;
   var.setArray3(offset, size, device_ptr);
-  allocateLock->lock();
   contiguousArrayInfo *ca = &(contiguousArrays->at(indexID));
-  allocateLock->unlock();
   if ( (ca->allocatedDeviceMemory == nullptr
        || ca->sizeOfAllocatedMemory - ca->assignedOffset < var.getMemSize())
       && stageOnHost) {
@@ -1272,11 +1270,10 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
       memcpy(host_contiguousArrayPtr, gridVar->getBasePointer(), varMemSize);
 
     }
-    varLock->unlock();
-
     put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, None, 0, host_contiguousArrayPtr);
   }
 
+  varLock->unlock();
 #endif
 */
 }
@@ -1325,12 +1322,12 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //cudaHostRegister(h_ptr, size, cudaHostRegisterPortable);
 
   contiguousArrayInfo ca(d_ptr, h_ptr, size);
-  allocateLock->lock();
+  varLock->lock();
   contiguousArrays->insert( std::map<const char *, contiguousArrayInfo>::value_type( indexID, ca ) );
   //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
   //  printf("%s\n", it->first.c_str());
 
-  allocateLock->unlock();
+  varLock->unlock();
 #endif
 */
 }
@@ -1909,18 +1906,17 @@ __host__ void
 GPUDataWarehouse::init(int id, std::string internalName)
 {
   d_device_id = id;
-  //this->_internalName = new std::string(internalName);
+
   strncpy(_internalName, internalName.c_str(), sizeof(_internalName));
   objectSizeInBytes = 0;
   d_maxdVarDBItems = 0;
-  //this->placementNewBuffer = placementNewBuffer;
 
-  allocateLock     = new Uintah::MasterLock{};
+  placementNewBuffer = nullptr;
+
   varLock          = new Uintah::MasterLock{};
   varPointers      = new std::map<labelPatchMatlLevel, allVarPointersInfo>;
   // contiguousArrays = new std::map<std::string, contiguousArrayInfo>;
 
-  // other data members are initialized in the constructor
   d_numVarDBItems = 0;
   d_numMaterials = 0;
   d_debug = false;
@@ -1937,10 +1933,20 @@ GPUDataWarehouse::init(int id, std::string internalName)
 __host__ void
 GPUDataWarehouse::cleanup()
 {
-  delete allocateLock;
-  delete varLock;
-  delete varPointers;
-  // delete contiguousArrays;
+  if(varLock != nullptr) {
+    delete varLock;
+    varLock = nullptr;
+  }
+
+  if(varPointers != nullptr) {
+    delete varPointers;
+    varPointers = nullptr;
+  }
+
+  // if(contiguousArrays != nullptr) {
+  //   delete contiguousArrays;
+  //   contiguousArrays = nullptr;
+  // }
 }
 
 //______________________________________________________________________
@@ -1951,22 +1957,11 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   this->objectSizeInBytes = objectSizeInBytes;
   this->d_maxdVarDBItems = d_maxdVarDBItems;
 
+  if(d_device_copy != nullptr)
+    GPUMemoryPool::reclaimCudaMemoryIntoPool(d_device_id, d_device_copy);
+
   // Base call is commented out
   // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-
-  if (gpu_stats.active()) {
-    cerrLock.lock();
-    {
-     gpu_stats << UnifiedScheduler::myRankThread()
-               << " GPUDataWarehouse::init_device() -"
-               << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
-               << " for Task DW of size " << objectSizeInBytes
-               << " on device " << d_device_id
-               << " the host GPUDW is at " << this
-               << std::endl;
-    }
-    cerrLock.unlock();
-  }
 
   void* addr =
     GPUMemoryPool::allocateCudaMemoryFromPool(d_device_id, objectSizeInBytes,
@@ -1976,6 +1971,21 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   // cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
 
   d_dirty = true;
+
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << UnifiedScheduler::myRankThread()
+                << " GPUDataWarehouse::init_device() -"
+                << " calling GPUMemoryPool::allocateCudaMemoryFromPool"
+                << " for Task DW of size " << objectSizeInBytes
+                << " on device " << d_device_id
+                << " device copy address " << d_device_copy
+                << " the host GPUDW is " << this
+                << std::endl;
+    }
+    cerrLock.unlock();
+  }
 }
 
 //______________________________________________________________________
@@ -1993,7 +2003,7 @@ GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream)
     Kokkos::DefaultExecutionSpace instance(*stream);
 #endif
 #endif
-  if (!d_device_copy) {
+  if (d_device_copy == nullptr) {
     printf("ERROR: GPUDataWarehouse::syncto_device() - No device copy\n");
     exit(-1);
   }
@@ -2133,8 +2143,6 @@ GPUDataWarehouse::clear()
   varPointers->clear();
 
   varLock->unlock();
-
-  init(d_device_id, _internalName);
 }
 
 //______________________________________________________________________
@@ -2142,7 +2150,7 @@ GPUDataWarehouse::clear()
 __host__ void
 GPUDataWarehouse::deleteSelfOnDevice()
 {
-  if ( d_device_copy ) {
+  if( d_device_copy ) {
     // Base call is commented out
     // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     if (gpu_stats.active()) {
@@ -2158,6 +2166,8 @@ GPUDataWarehouse::deleteSelfOnDevice()
     }
 
     GPUMemoryPool::reclaimCudaMemoryIntoPool(d_device_id, d_device_copy);
+
+    d_device_copy = nullptr;
   }
 }
 

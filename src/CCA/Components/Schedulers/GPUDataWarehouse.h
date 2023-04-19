@@ -42,6 +42,8 @@
   #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 
+#include <cxxabi.h>
+
 #include <map> //for host code only.
 #include <string>
 #include <vector>
@@ -502,8 +504,19 @@ public:
   template <typename ExecSpace>
   __host__ void syncto_device(ExecSpace instance)
   {
-    printf("Error: GPUDataWarehouse::syncto_device not implemented for this execution space.\n");
-    SCI_THROW(InternalError("GPUDataWarehouse::syncto_device not implemented for this execution space: ", __FILE__, __LINE__) );
+    if (std::is_same<ExecSpace, UintahSpaces::CPU>::value)
+    {
+      return;
+    }
+
+    int status;
+    char *name = abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
+    printf("Error: GPUDataWarehouse::syncto_device not implemented for the execution space: %s.\n", name);
+
+    std::free(name);
+
+    SCI_THROW(InternalError("GPUDataWarehouse::syncto_device not implemented for this execution space", __FILE__, __LINE__) );
   };
   __host__ void clear();
   __host__ void deleteSelfOnDevice();
@@ -582,7 +595,13 @@ public:
   template <typename ExecSpace>
   __host__ void copyGpuGhostCellsToGpuVarsInvoker(ExecSpace instance)
   {
-    printf("Error: GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space.\n");
+    int status;
+    char *name = abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
+    printf("Error: GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for the execution space: %s.\n", name);
+
+    std::free(name);
+
     SCI_THROW(InternalError("GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space: ", __FILE__, __LINE__) );
   };
 
@@ -623,31 +642,30 @@ private:
   __device__ void printBlock();
 
 
-  std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
+  std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers {nullptr};
 
-  Uintah::MasterLock * allocateLock {nullptr};
   Uintah::MasterLock * varLock {nullptr};
 
   char _internalName[80];
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
   dataItem           d_levelDB[MAX_LEVELDB_ITEMS];
-  int                d_numVarDBItems;
-  int                d_numMaterials;
-  int                numGhostCellCopiesNeeded;
+  int                d_numVarDBItems {0};
+  int                d_numMaterials {0};
+  int                numGhostCellCopiesNeeded {0};
   // The pointer to the copy of this object in the GPU.
-  GPUDataWarehouse*  d_device_copy;
+  GPUDataWarehouse*  d_device_copy {nullptr};
   // If data warehouse is dirty, we have to recopy the GPUDW.
-  bool               d_dirty;
-  int                d_device_id;
-  bool               d_debug;
-  size_t             objectSizeInBytes;
+  bool               d_dirty  {true};
+  int                d_device_id {-1};
+  bool               d_debug {false};
+  size_t             objectSizeInBytes {0};
   // How many items we can add to d_varDB before we run out of capacity.
-  unsigned int       d_maxdVarDBItems;
+  unsigned int       d_maxdVarDBItems {0};
   // For task DWs, we want to seraliaze and size this object as small
   // as possible.  So we create a buffer, and keep track of the start
   // of that buffer here.
-  void *             placementNewBuffer;
+  void *             placementNewBuffer {nullptr};
 
   // These STL data structures being here do not pose a problem for
   // the CUDA compiler
@@ -748,7 +766,13 @@ GPUDataWarehouse::transferFrom<UintahSpaces::CPU>( UintahSpaces::CPU instance
                                                  , int matlIndx
                                                  , int levelIndx)
 {
-  // printf("Error: GPUDataWarehouse::transferFrom not implemented for this execution space.\n");
+  // int status;
+  // char *name = abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
+  // printf("Error: GPUDataWarehouse::transferFrom not implemented for the execution space: %s.\n", name);
+
+  // std::free(name);
+
   // SCI_THROW(InternalError("GPUDataWarehouse::transferFrom not implemented for this execution space: ", __FILE__, __LINE__) );
 
   return true;
