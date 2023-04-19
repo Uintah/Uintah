@@ -22,18 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-// The purpose of this file is to provide a single include for application developers to use
-// to access all needed tools for portability (the loops, macros, cell range objects,
-// execution objects containing architecture specific data members, etc.).
+// The purpose of this file is to provide a single include for
+// application developers to use to access all needed tools for
+// portability (the loops, macros, cell range objects, execution
+// objects containing architecture specific data members, etc.).
 
 #ifndef UINTAH_CORE_KOKKOS_TOOLS_H
 #define UINTAH_CORE_KOKKOS_TOOLS_H
 
-#include <Core/Parallel/MasterLock.h>
-
 #include <sci_defs/gpu_defs.h>
 
-#if defined( HAVE_KOKKOS ) 
+#if defined( HAVE_KOKKOS )
+
+#include <Core/Parallel/MasterLock.h>
 
 #include <memory>
 
@@ -45,17 +46,20 @@ namespace Uintah {
 
 //----------------------------Portable Random Number Generation-------------------------------------
 
-    // Note, these should be accessed after Kokkos::initialize and before Kokkos::finalize 
-    // We want Kokkos Random Number Generator objects to persist through the program.  This
-    // is especially important for CUDA asynchronous kernels.
-    // Note, I'd rather these random objects all stored in a single collection.  But I couldn't figure out
-    // a way in C++11 to do that.  The Type Erasure Idiom was close, but our need relied on templated return types
-    // and it couldn't mesh with Type Erasure Idiom's polymorphism.  std::variant seems like a decent idea, but that's C++17.
-    // For now, I'm hard coding the two options we use, Kokkos::OpenMP and Kokkos::DefaultExecutionSpace.  -- Brad P.
-    //
-    // Adding third option Kokkos::Experimental::OpenMPTarget. However, it would be better to compact them all 
-    // or at least OpenMP and OpenMPTarget whenever the later is operational. As of now, I think the functionality
-    // is missing. One day, all of them should use Kokkos::DefaultExecutionSpace to make this generic   -- M. Garcia
+// Note, these should be accessed after Kokkos::initialize and
+// before Kokkos::finalize We want Kokkos Random Number Generator
+// objects to persist through the program.  This is especially
+// important for GPU asynchronous kernels.
+
+// Note, I'd rather these random objects all stored in a single
+// collection.  But I couldn't figure out a way in C++11 to do
+// that.  The Type Erasure Idiom was close, but our need relied on
+// templated return types and it couldn't mesh with Type Erasure
+// Idiom's polymorphism.  std::variant seems like a decent idea,
+// but that's C++17.
+
+// For now, I'm hard coding the two options we use, Kokkos::OpenMP
+// and Kokkos::DefaultExecutionSpace.  -- Brad P.
 
 // Prototype declaration
 template <typename RandomGenerator>
@@ -65,13 +69,8 @@ class KokkosRandom;
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPRandomPool;
 #endif
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPTargetRandomPool;
-// MGM - std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Experimental::OpenMPTarget > > > openMPTargetRandomPool;
-#endif
-
 #if defined(KOKKOS_USING_GPU)
-    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace > > > cudaRandomPool;
+    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace > > > gpuRandomPool;
 #endif
 
 template < typename RandomGenerator>
@@ -91,8 +90,8 @@ public:
     m_rand_pool = std::make_shared< RandomGenerator >(ticks);
   }
 
-  RandomGenerator& getRandPool() { 
-    return *m_rand_pool; 
+  RandomGenerator& getRandPool() {
+    return *m_rand_pool;
   }
 
 private:
@@ -104,38 +103,35 @@ private:
 void cleanupKokkosTools() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
+
 #if defined(KOKKOS_ENABLE_OPENMP)
     if (openMPRandomPool) {
-      openMPRandomPool.release();
-    }
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-    if (openMPTargetRandomPool) {
-      openMPTargetRandomPool.release();
+      openMPRandomPool.reset();
     }
 #endif
 
 #if defined(KOKKOS_USING_GPU)
-    if (cudaRandomPool) {
-      cudaRandomPool.release();
+    if (gpuRandomPool) {
+      gpuRandomPool.reset();
     }
 #endif
   }
 }
 
-// Don't create any pool until a user first requests one.  Once one is requested, reuse it.
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+// Don't create a pool until requested. Once one is requested, reuse it.
+#if defined(KOKKOS_ENABLE_OPENMP)
 template <typename ExecSpace>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>::type
 GetKokkosRandom1024Pool() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
+
     if (!openMPRandomPool) {
       std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>(true) );
       openMPRandomPool = std::move(temp);
     }
   }
+
   return openMPRandomPool->getRandPool();
 }
 #endif
@@ -146,16 +142,18 @@ inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionS
 GetKokkosRandom1024Pool() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
-    if (!cudaRandomPool) {
+
+    if (!gpuRandomPool) {
       std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>(true) );
-      cudaRandomPool = std::move(temp);
+      gpuRandomPool = std::move(temp);
     }
   }
-  return cudaRandomPool->getRandPool();
+
+  return gpuRandomPool->getRandPool();
 }
 #endif
 
 } // end namespace Uintah
 
-#endif // HAVE_KOKKOS 
+#endif // HAVE_KOKKOS
 #endif // UINTAH_CORE_KOKKOS_TOOLS_H
