@@ -131,7 +131,7 @@ GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id,
 
 #if defined(USE_KOKKOS_MALLOC)
       addr =
-	Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
+        Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
 
 #else // if defined(USE_KOKKOS_VIEW)
       Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space>
@@ -244,6 +244,7 @@ void GPUMemoryPool::freeCudaMemoryFromPool()
 //
 bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr)
 {
+  if(addr != nullptr)
   {
     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
 
@@ -253,7 +254,7 @@ bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr
     std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>::iterator ret = gpuMemoryPoolInUse->find(item);
 
     if (ret != gpuMemoryPoolInUse->end()){
-      // Found this chuck of memory on this device.
+      // Found this chunk of memory on this device.
       memSize = ret->second.size;
 
       if (gpu_stats.active()) {
