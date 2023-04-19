@@ -106,6 +106,9 @@ DetailedTask::DetailedTask(       Task           * task
 //
 DetailedTask::~DetailedTask()
 {
+#if defined(UINTAH_USING_GPU)
+  delete varLock;
+#endif
   if (m_patches && m_patches->removeReference()) {
     delete m_patches;
   }
