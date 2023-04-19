@@ -155,10 +155,14 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
       // These gpuDWs should only live host side.  Ideally these don't
       // need to be created at all as a separate datawarehouse, but
       // could be contained within this datawarehouse
+      size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
+          - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS;
 
-      GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
+      GPUDataWarehouse* gpuDW = (GPUDataWarehouse*) malloc(objectSizeInBytes);
+      memset(gpuDW, 0, objectSizeInBytes);
+
       std::ostringstream out;
-      out << "Host-side GPU DW";
+      out << "Host GPU DW " << i;
 
       gpuDW->init(i, out.str());
       gpuDW->setDebug(gpudbg.active());
@@ -214,12 +218,13 @@ OnDemandDataWarehouse::clear()
 #if defined(UINTAH_USING_GPU)
 
   if (Uintah::Parallel::usingDevice()) {
-    //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
-    for (size_t i = 0; i < d_gpuDWs.size(); i++) {
-      d_gpuDWs[i]->clear();
-      d_gpuDWs[i]->cleanup();
-      free(d_gpuDWs[i]);
-      d_gpuDWs[i] = nullptr;
+    // Clear out the host side GPU data warehouses. This does NOT
+    // touch the task side GPU DWs.
+    for (auto & gpuDW : d_gpuDWs) {
+      gpuDW->clear();
+      gpuDW->cleanup();
+      free(gpuDW);
+      gpuDW = nullptr;
     }
   }
 
@@ -988,7 +993,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
                                 )
 {
   const MaterialSubset* matls;
-  if( !inmatls ) {
+  if( inmatls == nullptr ) {
     MaterialSubset* tmpmatls = scinew MaterialSubset();
     tmpmatls->add( -1 );
     matls = tmpmatls;
@@ -1085,7 +1090,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
     var->putMPIData( recvbuf, unpackindex );
   }
 
-  if( matls != inmatls ) {
+  if( inmatls == nullptr ) {
     delete matls;
   }
 }
