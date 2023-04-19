@@ -8719,41 +8719,6 @@ esac
 
 #########################################################################
 ##
-##  Add the -fopenmp flag
-##
-
-cat > conftest-openmp.cc <<EOF
-
-#include <iostream>
-
-int main()
-{
-  double a=1;
-  double b=.01;
-}
-EOF
-
-# Verify that the compiler accepts the -fopenmp flag:
-$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
-
-if test $? = 0; then
-   if test "$IS_OSX" = "no"; then
-      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-      CFLAGS="$CFLAGS -fopenmp"
-      CXXFLAGS="$CXXFLAGS -fopenmp"
-   else
-      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
-   fi
-else
-   rm -f conftest-openmp conftest-openmp.cc
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&5
-$as_echo "$as_me: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&2;}
-fi
-
-rm -f conftest-openmp conftest-openmp.cc
-
-#########################################################################
-##
 ## search for Zoltan
 ##
 if test "$with_zoltan" != NOT_SET; then
@@ -36405,6 +36370,10 @@ NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 #  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++14"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++17"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   elif test "$i" = "-maxrregcount"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
