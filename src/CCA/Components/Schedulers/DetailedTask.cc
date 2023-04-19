@@ -964,19 +964,21 @@ DetailedTask::getTaskGpuDataWarehouse( const unsigned int  whichDevice
 void
 DetailedTask::deleteTaskGpuDataWarehouses()
 {
-  for (auto iter = TaskGpuDWs.begin(); iter != TaskGpuDWs.end(); ++iter) {
+  for (auto & iter : TaskGpuDWs) {
+    auto &taskGpuDWs = iter.second.TaskGpuDW;
+
     for (int i = 0; i < 2; i++) {
-        if (iter->second.TaskGpuDW[i] != nullptr) {
+        if (taskGpuDWs[i] != nullptr) {
           // Note: Do not call the clear() method.  The Task GPU DWs
           // only contains a "snapshot" of the things in the GPU.  The
           // host side GPU DWs is responsible for deallocating all the
           // GPU resources.  The only thing we do want to clean up is
           // that this GPUDW lives on the GPU.
-          iter->second.TaskGpuDW[i]->deleteSelfOnDevice();
-          iter->second.TaskGpuDW[i]->cleanup();
+          taskGpuDWs[i]->deleteSelfOnDevice();
+          taskGpuDWs[i]->cleanup();
 
-          free(iter->second.TaskGpuDW[i]);
-          iter->second.TaskGpuDW[i] = nullptr;
+          free(taskGpuDWs[i]);
+          taskGpuDWs[i] = nullptr;
         }
       }
   }
@@ -1459,13 +1461,13 @@ DetailedTask::initiateH2DCopies(std::vector<OnDemandDataWarehouseP> & m_dws)
     }
   }
 
-  int device_id = -1;
   // The task runs on one device.  The first patch we see can be used to tell us
   // which device we should be on.
   std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   varIter = vars.begin();
   if (varIter != vars.end()) {
-    device_id = GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(this->getPatches())->get(0));
+    // int device_id =
+    //   GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(this->getPatches())->get(0));
     // Base call is commented out
     // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   }
@@ -4220,21 +4222,27 @@ DetailedTask::createTaskGpuDWs()
       this->setTaskGpuDataWarehouse(currentDevice, Task::OldDW, old_taskGpuDW);
     }
 
-    numItemsInDW = this->getTaskVars().getTotalVars(currentDevice, Task::NewDW) + this->getGhostVars().getNumGhostCellCopies(currentDevice, Task::NewDW);
-    if (numItemsInDW > 0) {
+    numItemsInDW = this->getTaskVars().getTotalVars(currentDevice, Task::NewDW) +
+      this->getGhostVars().getNumGhostCellCopies(currentDevice, Task::NewDW);
 
+    if (numItemsInDW > 0) {
       size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
           - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS
           + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
-      GPUDataWarehouse* new_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-      // cudaHostRegister(new_taskGpuDW, objectSizeInBytes, cudaHostRegisterDefault);
+
+      GPUDataWarehouse* new_taskGpuDW =
+        (GPUDataWarehouse *) malloc(objectSizeInBytes);
+
+      memset(new_taskGpuDW, 0, objectSizeInBytes);
+
+// cudaHostRegister(new_taskGpuDW, objectSizeInBytes, cudaHostRegisterDefault);
       std::ostringstream out;
-      out << "New task GPU DW"
+      out << "Task GPU DW"
           << " MPIRank: " << Uintah::Parallel::getMPIRank()
 //        << " Thread:" << Impl::t_tid // ARS - FIXME
           << " Task: " << this->getName();
+
       new_taskGpuDW->init(currentDevice, out.str());
-      new_taskGpuDW->setDebug(false);
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
 
       this->setTaskGpuDataWarehouse(currentDevice, Task::NewDW, new_taskGpuDW);
