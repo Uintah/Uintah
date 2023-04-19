@@ -327,14 +327,14 @@ template <typename ExecSpace, typename MemSpace>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, ExecSpace>::type
 getInstance(ExecutionObject<ExecSpace, MemSpace>& execObj, int index = 0)
 {
-#if defined(NO_STREAM)
-  ExecSpace instanceObject;
-  return instanceObject;
-#elif defined(USE_KOKKOS_INSTANCE)
+#if defined(USE_KOKKOS_INSTANCE)
   return execObj.getInstance(index);
-#else
+#elif defined(HAVE_CUDA)
   void* stream = execObj.getStream(index);
   ExecSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  return instanceObject;
+#else
+  ExecSpace instanceObject;
   return instanceObject;
 #endif
 }
@@ -618,10 +618,12 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
       const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
 
-#ifdef USE_KOKKOS_INSTANCE
+#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#else
+#elif defined(HAVE_CUDA)
       const int nPartitions = execObj.getNumStreams();
+#else
+      const int nPartitions = 1;
 #endif
 
       // The requested range of data may not have enough work for the
@@ -1076,20 +1078,23 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     {
       const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
       const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
-#ifdef USE_KOKKOS_INSTANCE
+
+#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#else
+#elif defined(HAVE_CUDA)
       const int nPartitions = execObj.getNumStreams();
+#else
+      const int nPartitions = 1;
 #endif
 
-    // The requested range of data may not have enough work for the
-    // requested command line arguments, so shrink them if necessary.
+      // The requested range of data may not have enough work for the
+      // requested command line arguments, so shrink them if necessary.
       int threads_per_loop = cuda_threads_per_block * cuda_blocks_per_loop;
       int thread_range_size = numItems / nPartitions;
 
       const unsigned int actual_threads =
         threads_per_loop < thread_range_size ?
-       threads_per_loop : thread_range_size;
+        threads_per_loop : thread_range_size;
 
       const unsigned int actual_threads_per_block =
         cuda_threads_per_block < thread_range_size ?
@@ -1551,10 +1556,13 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     {
       const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
       const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
-#ifdef USE_KOKKOS_INSTANCE
+
+#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#else
+#elif defined(HAVE_CUDA)
       const int nPartitions = execObj.getNumStreams();
+#else
+      const int nPartitions = 1;
 #endif
 
       // The requested range of data may not have enough work for the
