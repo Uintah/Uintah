@@ -579,7 +579,7 @@ Parallel::printManager()
     if(s_cuda_threads_per_block > 0) {
       std::string plural = s_cuda_threads_per_block > 1 ? "s" : "";
       proc0cout << "Parallel CPU OpenMP thread" << plural
-                << " per block: \t" << s_cuda_threads_per_block
+                << " per block: \t" << s_cuda_threads_per_block;
     }
 #endif
 
