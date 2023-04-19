@@ -519,6 +519,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
       });
     });
   }
+
+  std::free( name );
 }
 
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP)
@@ -773,6 +775,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       }
     }
   }
+
+  std::free( name );
 }
 #endif  // #if defined(KOKKOS_USING_GPU)
 
@@ -965,6 +969,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
       });
     }, red);
   }
+
+  std::free( name );
 }
 
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
@@ -1238,6 +1244,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       }
     }
   }
+
+  std::free( name );
 }
 #endif  // #if KOKKOS_USING_GPU)
 
@@ -1439,6 +1447,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       });
     }, Kokkos::Min<ReductionType>(red));
   }
+
+  std::free( name );
 }
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
 
@@ -1715,6 +1725,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       }
     }
   }
+
+  std::free( name );
 }
 
 #endif  // #if defined(KOKKOS_USING_GPU)
@@ -1830,7 +1842,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
       rangePolicy.set_chunk_size(size);
 
     Kokkos::parallel_for(name, rangePolicy,
-			 KOKKOS_LAMBDA(int iblock) {
+                         KOKKOS_LAMBDA(int iblock) {
       const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
       const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
       const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
@@ -1856,6 +1868,8 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
       }
     });
   } // end for (int iphase = 0; iphase < nphase; iphase++)
+
+  std::free( name );
 }
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
 
@@ -1933,6 +1947,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
                        [=](const unsigned int & iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
   });
+
+  // std::free( name );
 }
 
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP)
@@ -1986,6 +2002,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #if defined(NO_STREAM)
   cudaDeviceSynchronize();
 #endif
+
+  // std::free( name );
 }
 
 #endif  // #if defined(KOKKOS_USING_GPU)
@@ -2072,6 +2090,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
       KKV3[j](i) = init_val;
     });
+
+  // std::free( name );
 }
 
 // template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
@@ -2135,6 +2155,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
           KKV3[j](i) = init_val;
       }
     });
+
+  // std::free( name );
 }
 
 /*
