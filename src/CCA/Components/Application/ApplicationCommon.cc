@@ -503,7 +503,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
   }
 
   if (d_myworld->nRanks() > 1) {
-    new_dw->reduceMPI(m_delTLabel, 0, 0, -1);
+    new_dw->reduceMPI(m_delTLabel, nullptr, nullptr, -1);
   }
 
   // Get the reduced next delta T
