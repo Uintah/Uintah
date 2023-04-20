@@ -617,47 +617,25 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   static int totaltasks;
 
   //---------------------------------------------------------------------------
-#if defined( KOKKOS_ENABLE_OPENMP )
+  // A bit of mess here. Four options:
+  // 1. Not compiled with OpenMP - serial dispatch
+  // 2. Compiled with OpenMP but no Kokkos OpenMP front end.
+  // 3. Compiled with OpenMP and Kokkos OpenMP front end,   no depreciated code.
+  // 4. Compiled with OpenMP and Kokkos OpenMP front end, with depreciated code.
+
+  // If compiled with OpenMP posssiby a parallel dispatch so get the
+  // associated variables that determines the dispatching.
+#if defined(_OPENMP)
   int num_partitions        = Uintah::Parallel::getNumPartitions();
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 #endif
 
   while ( m_num_tasks_done < m_num_tasks )
   {
-#if defined( KOKKOS_ENABLE_OPENMP )
-
-#if defined(USE_KOKKOS_OPENMP_PARALLEL)
-    if( num_partitions > 1 )
-#else
+    // Check the associated variables for a parallel dispatch request.
+#if defined(USE_KOKKOS_PARTITION_MASTER)
     if( num_partitions > 1 || threads_per_partition > 1 )
-#endif
     {
-#if defined(USE_KOKKOS_OPENMP_PARALLEL)
-      Kokkos::Profiling::pushRegion("OpenMP Parallel");
-
-#if _OPENMP >= 201511
-      if (omp_get_max_active_levels() > 1)
-#else
-      if (omp_get_nested())
-#endif
-      {
-        #pragma omp parallel num_threads(num_partitions)
-        {
-          omp_set_num_threads(threads_per_partition);
-
-          // omp_get_num_threads() is not used so call runTasks directly
-          // task_runner(omp_get_thread_num(), omp_get_num_threads());
-
-          this->runTasks(omp_get_thread_num());
-        }
-      }
-      else
-      {
-        this->runTasks( 0 );
-      }
-
-      Kokkos::Profiling::popRegion();
-#else
       Kokkos::Profiling::pushRegion("partition_master");
 
       // Task runner functor.
@@ -674,19 +652,45 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
       Kokkos::OpenMP::partition_master( task_runner,
                                         num_partitions,
                                         threads_per_partition );
-
-      Kokkos::Profiling::popRegion();
-#endif
     }
     else
-#endif // KOKKOS_ENABLE_OPENMP
+#elif defined(_OPENMP)
+    if( num_partitions > 1 )
+    {
+#if _OPENMP >= 201511
+      if (omp_get_max_active_levels() > 1)
+#else
+      if (omp_get_nested())
+#endif
+      {
+        Kokkos::Profiling::pushRegion("OpenMP Parallel");
+
+        #pragma omp parallel num_threads(num_partitions)
+        {
+          omp_set_num_threads(threads_per_partition);
+
+          // omp_get_num_threads() is not used so call runTasks directly
+          // task_runner(omp_get_thread_num(), omp_get_num_threads());
+
+          this->runTasks(omp_get_thread_num());
+        }
+      }
+      else
+      {
+        Kokkos::Profiling::pushRegion("runTasks");
+
+        this->runTasks( 0 );
+      }
+    }
+    else
+#endif // _OPENMP
     {
       Kokkos::Profiling::pushRegion("runTasks");
 
       this->runTasks( 0 );
-
-      Kokkos::Profiling::popRegion();
     }
+
+    Kokkos::Profiling::popRegion();
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );

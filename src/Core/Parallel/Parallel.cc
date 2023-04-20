@@ -418,7 +418,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   // TODO: Set sensible defaults after deprecating use of
   // Kokkos::OpenMP with the Unified Scheduler
-#if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
+#if defined(_OPENMP)
   if ( s_num_partitions <= 0 ) {
     s_num_partitions = 1;
   }
@@ -504,7 +504,7 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
 
-#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if defined(_OPENMP)
   s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
 #else
   s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
@@ -526,40 +526,52 @@ Parallel::printManager()
 
 #ifdef THREADED_MPI_AVAILABLE
 
-#if defined(KOKKOS_ENABLE_OPENMP) // && defined( _OPENMP )
+#if defined(_OPENMP)
 
-#if defined(USE_KOKKOS_OPENMP_PARALLEL)
-    if( s_num_partitions > 1 )
-#else
+#if defined(USE_KOKKOS_PARTITION_MASTER)
     if( s_num_partitions > 1 || s_threads_per_partition > 1 )
+#else
+    if( s_num_partitions > 1 )
 #endif
     {
       proc0cout << "OpenMP execution: \t";
 
-#if defined(USE_KOKKOS_OPENMP_PARALLEL)
-      proc0cout << "OpenMP parallel" << std::endl;
-#else
-      proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
-#endif
+      bool printVals = true;
 
-      if(s_num_partitions > 0) {
-        std::string plural = s_num_partitions > 1 ? "s" : "";
-        proc0cout << "OpenMP thread partition" << plural
-                  << " per MPI process: \t" << s_num_partitions << std::endl;
-      }
-#if defined(USE_KOKKOS_OPENMP_PARALLEL)
-       // s_threads_per_partition not used
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+      proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
 #else
-      if(s_threads_per_partition > 0) {
-        std::string plural = s_threads_per_partition > 1 ? "s" : "";
-        proc0cout << "OpenMP thread" << plural
-                  << " per partition: \t\t" << s_threads_per_partition << std::endl;
+  #if _OPENMP >= 201511
+      if (omp_get_max_active_levels() > 1) {
+  #else
+      if (omp_get_nested()) {
+  #endif
+        proc0cout << "OpenMP parallel" << std::endl;
+      } else {
+	printVals = false;
+        proc0cout << "Serial CPU execution" << std::endl;
       }
 #endif
+      if(printVals) {
+	if(s_num_partitions > 0) {
+	  std::string plural = s_num_partitions > 1 ? "s" : "";
+	  proc0cout << "OpenMP thread partition" << plural
+		    << " per MPI process: \t" << s_num_partitions << std::endl;
+	}
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+	if(s_threads_per_partition > 0) {
+	  std::string plural = s_threads_per_partition > 1 ? "s" : "";
+	  proc0cout << "OpenMP thread" << plural
+		    << " per partition: \t\t" << s_threads_per_partition << std::endl;
+	}
+#else
+       // s_threads_per_partition not used
+#endif
+      }
     }
     else
     {
-      proc0cout << "Serial CPU execution \t" << std::endl;
+      proc0cout << "Serial CPU execution" << std::endl;
     }
 #else
     if(s_num_threads > 0) {
