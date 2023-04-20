@@ -521,8 +521,8 @@ Parallel::printManager()
     proc0cout << "Parallel CPU MPI process" << plural
               << " (using MPI): \t" << s_root_context->nRanks() << std::endl;
 
-  proc0cout << "Parallel CPU MPI Level Required: " << s_required
-            << ", Provided: " << s_provided << std::endl;
+    proc0cout << "Parallel CPU MPI Level Required: " << s_required
+              << ", Provided: " << s_provided << std::endl;
 
 #ifdef THREADED_MPI_AVAILABLE
 
@@ -565,7 +565,7 @@ Parallel::printManager()
     if(s_num_threads > 0) {
       std::string plural = s_num_threads > 1 ? "s" : "";
       proc0cout << "Parallel CPU std::thread" << plural
-                << " per MPI process: \t" << s_num_threads <<std::endl;
+                << " per MPI process: \t" << s_num_threads << std::endl;
     }
 #endif
 
@@ -573,13 +573,13 @@ Parallel::printManager()
     if(s_cuda_blocks_per_loop > 0) {
       std::string plural = s_cuda_blocks_per_loop > 1 ? "s" : "";
       proc0cout << "Parallel CPU OpenMP block" << plural
-                << " per loop: \t" << s_cuda_blocks_per_loop <<std::endl;
+                << " per loop: \t" << s_cuda_blocks_per_loop << std::endl;
     }
 
     if(s_cuda_threads_per_block > 0) {
       std::string plural = s_cuda_threads_per_block > 1 ? "s" : "";
       proc0cout << "Parallel CPU OpenMP thread" << plural
-                << " per block: \t" << s_cuda_threads_per_block;
+                << " per block: \t" << s_cuda_threads_per_block << std::endl;
     }
 #endif
 
