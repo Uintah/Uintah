@@ -729,7 +729,9 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
     }
     cerrLock.unlock();
   }
-  // This variable may not yet exist.  But we want to declare we're allocating it.  So ensure there is an entry.
+
+  // This variable may not yet exist.  But we want to declare we're
+  // allocating it.  So ensure there is an entry.
   putUnallocatedIfNotExists(label, patchID, matlIndx, levelIndx, staging, offset, size);
 
   varLock->lock();
@@ -1539,7 +1541,9 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var,
     }
     cerrLock.unlock();
   }
-  //This variable may not yet exist.  But we want to declare we're allocating it.  So ensure there is an entry.
+
+  // This variable may not yet exist.  But we want to declare we're
+  // allocating it.  So ensure there is an entry.
   putUnallocatedIfNotExists(label, patchID, matlIndx, levelIndx, false, offset, size);
 
   varLock->lock();
@@ -1683,7 +1687,6 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var,
   void* addr = nullptr;
 
   // Now see if we allocate the variable or use a previous existing allocation.
-
   // See if someone has stated they are allocating it
   allocationNeeded = compareAndSwapAllocating(it->second.var->atomicStatusInGpuMemory);
   if (!allocationNeeded) {
