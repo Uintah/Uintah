@@ -202,6 +202,8 @@ void GPUMemoryPool::freeCudaMemoryFromPool()
 
   gpuMemoryPoolUnused->clear();
 
+  // The data warehouses have not been cleared so Kokkos pointers are
+  // still valid as they are reference counted.
   for(const auto &item: *gpuMemoryPoolInUse)
   {
     void * addr = item.first.ptr;
@@ -229,11 +231,13 @@ void GPUMemoryPool::freeCudaMemoryFromPool()
 
   gpuMemoryPoolUnused->clear();
 
-  for(const auto &item: *gpuMemoryPoolInUse)
-  {
-    void * addr = item.first.ptr;
-    cudaFree(addr);
-  }
+  // The data warehouses have not been cleared so Kokkos pointers are
+  // still valid as they are reference counted.
+  // for(const auto &item: *gpuMemoryPoolInUse)
+  // {
+  //   void * addr = item.first.ptr;
+  //   cudaFree(addr);
+  // }
 
   gpuMemoryPoolInUse->clear();
 }
