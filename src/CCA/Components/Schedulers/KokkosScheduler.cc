@@ -193,13 +193,13 @@ KokkosScheduler::~KokkosScheduler()
 #if defined(USE_KOKKOS_MALLOC)
   // The data warehouses have not been cleared so Kokkos pointers are
   // still valid as they are reference counted.
-  // GPUMemoryPool::freeCudaMemoryFromPool();
+  GPUMemoryPool::freeCudaMemoryFromPool();
 #else // if defined(USE_KOKKOS_VIEW)
   GPUMemoryPool::freeViewsFromPool();
 #endif
 #else
   // The data warehouses have not been cleared.
-  // GPUMemoryPool::freeCudaMemoryFromPool();
+  GPUMemoryPool::freeCudaMemoryFromPool();
 #endif
 }
 
