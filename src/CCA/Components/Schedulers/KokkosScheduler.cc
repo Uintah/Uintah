@@ -197,7 +197,7 @@ KokkosScheduler::~KokkosScheduler()
 #else // if defined(USE_KOKKOS_VIEW)
   GPUMemoryPool::freeViewsFromPool();
 #endif
-#else
+#elif(HAVE_CUDA)
   // The data warehouses have not been cleared.
   GPUMemoryPool::freeCudaMemoryFromPool();
 #endif
