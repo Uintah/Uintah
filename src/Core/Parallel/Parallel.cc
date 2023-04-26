@@ -31,6 +31,10 @@
 
 #include <sci_defs/gpu_defs.h>
 
+#if defined(_OPENMP)
+  #include <omp.h>
+#endif
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -408,7 +412,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 {
   s_initialized = true;
 
-  if (s_world_rank != -1) {  // IF ALREADY INITIALIZED, JUST RETURN...
+  if(s_world_rank != -1) {  // IF ALREADY INITIALIZED, JUST RETURN...
     return;
     // If s_world_rank is not -1, then already been initialized..
     // This only happens (I think) if usage() is called (due to bad
@@ -419,19 +423,19 @@ Parallel::initializeManager( int& argc , char**& argv )
   // TODO: Set sensible defaults after deprecating use of
   // Kokkos::OpenMP with the Unified Scheduler
 #if defined(_OPENMP)
-  if ( s_num_partitions <= 0 ) {
+  if(s_num_partitions <= 0) {
     s_num_partitions = 1;
   }
-  if ( s_threads_per_partition <= 0 ) {
+  if(s_threads_per_partition <= 0) {
     s_threads_per_partition = 1;
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_USING_GPU)
-  if ( s_cuda_threads_per_block <= 0 ) {
+  if(s_cuda_threads_per_block <= 0) {
     s_cuda_threads_per_block = 16;
   }
-  if ( s_cuda_blocks_per_loop <= 0 ) {
+  if(s_cuda_blocks_per_loop <= 0) {
     s_cuda_blocks_per_loop = 1;
   }
 #endif
@@ -443,24 +447,24 @@ Parallel::initializeManager( int& argc , char**& argv )
   // TODO, only display if gpu mode is turned on and if these values
   // weren't set.
 #if defined(KOKKOS_USING_GPU)
-  if ( s_using_device ) {
-    if ( s_cuda_threads_per_block <= 0 ) {
+  if(s_using_device) {
+    if(s_cuda_threads_per_block <= 0) {
       s_cuda_threads_per_block = 256;
     }
-    if ( s_cuda_blocks_per_loop <= 0 ) {
+    if(s_cuda_blocks_per_loop <= 0) {
       s_cuda_blocks_per_loop = 1;
     }
   }
 #endif
 
-#if ( !defined( DISABLE_SCI_MALLOC ) )
+#if(!defined( DISABLE_SCI_MALLOC))
   const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
-  if ( s_num_threads > 0 || s_num_partitions > 0 ) {
+  if(s_num_threads > 0 || s_num_partitions > 0) {
     required = MPI_THREAD_MULTIPLE;
   }
   else {
@@ -474,7 +478,7 @@ Parallel::initializeManager( int& argc , char**& argv )
   s_required = required;
   s_provided = provided;
 
-  if (provided < required) {
+  if(provided < required) {
     std::cerr << "Provided MPI parallel support of " << provided
               << " is not enough for the required level of " << required << "\n"
               << "To use multi-threaded scheduler, "
@@ -492,14 +496,14 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::worldComm_ = MPI_COMM_WORLD;
 
   status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size);
-  if (status != MPI_SUCCESS)
+  if(status != MPI_SUCCESS)
     MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
 
   status = Uintah::MPI::Comm_rank(Uintah::worldComm_, &s_world_rank);
-  if (status != MPI_SUCCESS)
+  if(status != MPI_SUCCESS)
     MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
 
-#if ( !defined( DISABLE_SCI_MALLOC ) )
+#if(!defined( DISABLE_SCI_MALLOC))
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
@@ -516,7 +520,9 @@ Parallel::initializeManager( int& argc , char**& argv )
 void
 Parallel::printManager()
 {
-  if (s_root_context->myRank() == 0) {
+  std::string notUsedStr(" is set but will not be used!!!!!!!");
+
+  if(s_root_context->myRank() == 0) {
     std::string plural = (s_root_context->nRanks() > 1) ? "es" : "";
     proc0cout << "Parallel CPU MPI process" << plural
               << " (using MPI): \t" << s_root_context->nRanks() << std::endl;
@@ -524,78 +530,116 @@ Parallel::printManager()
     proc0cout << "Parallel CPU MPI Level Required: " << s_required
               << ", Provided: " << s_provided << std::endl;
 
-#ifdef THREADED_MPI_AVAILABLE
+#if defined(THREADED_MPI_AVAILABLE)
 
 #if defined(_OPENMP)
 
+    bool notUsed = false;
+
 #if defined(USE_KOKKOS_PARTITION_MASTER)
-    if( s_num_partitions > 1 || s_threads_per_partition > 1 )
+    if(s_num_partitions > 1 || s_threads_per_partition > 1)
 #else
-    if( s_num_partitions > 1 )
+    if(s_num_partitions > 1)
 #endif
     {
       proc0cout << "OpenMP execution: \t";
-
-      bool printVals = true;
 
 #if defined(USE_KOKKOS_PARTITION_MASTER)
       proc0cout << "Kokkos::OpenMP::partition_master" << std::endl;
 #else
   #if _OPENMP >= 201511
-      if (omp_get_max_active_levels() > 1) {
+      if(omp_get_max_active_levels() > 1) {
   #else
-      if (omp_get_nested()) {
+      if(omp_get_nested()) {
   #endif
         proc0cout << "OpenMP parallel" << std::endl;
       } else {
-	printVals = false;
-        proc0cout << "Serial CPU execution" << std::endl;
+        notUsed = true;
+        proc0cout << "Serial CPU execution (OpenMP active levels is one)"
+                  << std::endl;
       }
 #endif
-      if(printVals) {
-	if(s_num_partitions > 0) {
-	  std::string plural = s_num_partitions > 1 ? "s" : "";
-	  proc0cout << "OpenMP thread partition" << plural
-		    << " per MPI process: \t" << s_num_partitions << std::endl;
-	}
+      if(s_num_partitions > 1) {
+        proc0cout << "OpenMP thread partitions per MPI process: \t"
+                  << s_num_partitions
+                  << (notUsed ? notUsedStr : "") << std::endl;
+      }
+
+      if(s_threads_per_partition > 1) {
+        proc0cout << "OpenMP threads per thread partition: \t\t"
+                  << s_threads_per_partition
 #if defined(USE_KOKKOS_PARTITION_MASTER)
-	if(s_threads_per_partition > 0) {
-	  std::string plural = s_threads_per_partition > 1 ? "s" : "";
-	  proc0cout << "OpenMP thread" << plural
-		    << " per partition: \t\t" << s_threads_per_partition << std::endl;
-	}
+                  << std::endl;
 #else
-       // s_threads_per_partition not used
+                  << notUsedStr << std::endl;
 #endif
       }
     }
     else
     {
       proc0cout << "Serial CPU execution" << std::endl;
-    }
+
+#if defined(USE_KOKKOS_PARTITION_MASTER)
 #else
+      if(s_threads_per_partition > 1) {
+        proc0cout << "OpenMP threads per partition: \t\t"
+                  << s_threads_per_partition << notUsedStr << std::endl;
+      }
+#endif
+    }
+
     if(s_num_threads > 0) {
-      std::string plural = s_num_threads > 1 ? "s" : "";
-      proc0cout << "Parallel CPU std::thread" << plural
-                << " per MPI process: \t" << s_num_threads << std::endl;
+      proc0cout << "Parallel CPU std::threads per MPI process: \t"
+                << s_num_threads << notUsedStr << std::endl;
+    }
+
+#else  // defined(_OPENMP)
+    if(s_num_threads > 0) {
+      proc0cout << "Parallel CPU std::threads per MPI process: \t"
+                << s_num_threads << std::endl;
+    }
+
+    if(s_num_partitions > 0) {
+      proc0cout << "OpenMP thread partitions per MPI process: \t"
+                << s_num_partitions << notUsedStr << std::endl;
+    }
+
+    if(s_threads_per_partition > 0) {
+      proc0cout << "OpenMP threads per partition: \t\t"
+                << s_threads_per_partition << notUsedStr << std::endl;
     }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP) && !defined(UINTAH_USING_GPU)
     if(s_cuda_blocks_per_loop > 0) {
-      std::string plural = s_cuda_blocks_per_loop > 1 ? "s" : "";
-      proc0cout << "Parallel CPU OpenMP block" << plural
-                << " per loop: \t" << s_cuda_blocks_per_loop << std::endl;
+      proc0cout << "Parallel CPU OpenMP blocks per loop: \t"
+                << s_cuda_blocks_per_loop << std::endl;
     }
 
     if(s_cuda_threads_per_block > 0) {
-      std::string plural = s_cuda_threads_per_block > 1 ? "s" : "";
-      proc0cout << "Parallel CPU OpenMP thread" << plural
-                << " per block: \t" << s_cuda_threads_per_block << std::endl;
+      proc0cout << "Parallel CPU OpenMP threads per block: \t"
+                << s_cuda_threads_per_block << std::endl;
+    }
+#else
+
+#if defined(KOKKOS_USING_GPU)
+  if(s_using_device &&
+     Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy)
+#endif
+    {
+      if(s_cuda_blocks_per_loop > 0) {
+        proc0cout << "Parall blocks per loop: \t"
+                  << s_cuda_blocks_per_loop << notUsedStr << std::endl;
+      }
+
+      if(s_cuda_threads_per_block > 0) {
+        proc0cout << "Parallel threads per block: \t"
+                  << s_cuda_threads_per_block << notUsedStr << std::endl;
+      }
     }
 #endif
 
-#endif
+#endif  // defined(THREADED_MPI_AVAILABLE)
   }
 //    Uintah::MPI::Errhandler_set(Uintah::worldComm_, MPI_ERRORS_RETURN);
 }
@@ -605,7 +649,7 @@ Parallel::printManager()
 int
 Parallel::getMPIRank()
 {
-  if( s_world_rank == -1 ) {
+  if(s_world_rank == -1) {
     // Can't throw an exception here because it won't get trapped
     // properly because 'getMPIRank()' is called in the exception
     // handler...
@@ -632,7 +676,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
 {
   static bool finalized = false;
 
-  if (finalized) {
+  if(finalized) {
     // Due to convoluted logic, signal, and exception handling,
     // finalizeManager() can be easily/mistakenly called multiple
     // times.  This catches that case and returns harmlessly.
@@ -649,14 +693,14 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
   // some things need to know their rank...
 
   // Only finalize if MPI was initialized.
-  if (s_initialized == false) {
+  if(s_initialized == false) {
     throw InternalError("Trying to finalize without having MPI initialized",
                         __FILE__, __LINE__);
   }
 
-  if (circumstances == Abort) {
+  if(circumstances == Abort) {
     int errorcode = 1;
-    if (s_world_rank == 0) {
+    if(s_world_rank == 0) {
       std::cout << "FinalizeManager() called... "
                 << "Calling Uintah::MPI::Abort on rank "
                 << s_world_rank << ".\n";
@@ -676,12 +720,12 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
   }
   else {
     int status;
-    if ((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
+    if((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
       MpiError(const_cast<char*>("Uintah::MPI::Finalize"), status);
     }
   }
 
-  if (s_root_context != nullptr) {
+  if(s_root_context != nullptr) {
     delete s_root_context;
     s_root_context = nullptr;
   }
@@ -692,7 +736,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
 ProcessorGroup*
 Parallel::getRootProcessorGroup()
 {
-   if( s_root_context == nullptr ) {
+   if(s_root_context == nullptr) {
       throw InternalError("Parallel not initialized", __FILE__, __LINE__);
    }
 

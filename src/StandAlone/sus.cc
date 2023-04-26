@@ -746,12 +746,12 @@ int main( int argc, char *argv[], char *env[] )
       char name[256];
       gethostname(name, 256);
 
+      std::cout << "Date:    " << time_string;  // has its own newline
+      std::cout << "Machine: " << name << std::endl;
       std::cout << "Running: ";
       for(int i=1; i<argc; ++i)
         std::cout << argv[i] << " ";
       std::cout << std::endl;
-      std::cout << "Date:    " << time_string;  // has its own newline
-      std::cout << "Machine: " << name << std::endl;
       std::cout << "Git Commit: " << GIT_COMMIT << std::endl;
       std::cout << "Git Date  : " << GIT_DATE << std::endl;
       std::cout << "Git URL   : " << GIT_URL << std::endl;
