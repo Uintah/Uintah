@@ -5914,6 +5914,7 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
 
   t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,
@@ -5954,6 +5955,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
   unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
   std::vector<constNCVariable<double> >  gmass(numMPMMatls);
   std::vector<constParticleVariable<Point> > px(numMPMMatls);
+  std::vector<constParticleVariable<double> > pvolume(numMPMMatls);
 
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -6060,6 +6062,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 
       old_dw->get(px[m],                lb->pXLabel,               pset);
       new_dw->get(cursize,              lb->pCurSizeLabel,         pset);
+      old_dw->get(pvolume[m],           lb->pVolumeLabel,          pset);
 
       // Initialize the ParticleList
       for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
@@ -6328,7 +6331,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 #if 0
         // This version uses constant particle radius, here assuming 2 PPC
         // in each direction
-        double Rp = 0.25*dx.x();
+        double Rp = cbrt((.75/M_PI)*pvolume[m][idx]);
         for(int k = 0; k < NN; k++) {
           if (patch->containsNode(ni[k])){
             if(S[k] > 0. && NumParticlesOnNode[ni[k]] > 1){
