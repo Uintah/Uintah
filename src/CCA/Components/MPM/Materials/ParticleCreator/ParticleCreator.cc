@@ -263,7 +263,8 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     else if (bcs_type == "HeatFlux") {      
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
+      if (hfbc->flagMaterialPoint(pp, dxpp)
+       && (hfbc->loadCurveMatl()==dwi || hfbc->loadCurveMatl()==-99)) {
          ret(k) = hfbc->loadCurveID(); 
          k++;
       }
@@ -319,6 +320,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
   new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
   new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
+  new_dw->allocateAndPut(pvars.pexternalhtrte,d_lb->pExternalHeatRateLabel,
+                                                                        subset);
   new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
   new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
   new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
@@ -767,9 +770,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
-  Vector pExtForce(0,0,0);
-
-  pvars.pexternalforce[i] = pExtForce;
+  pvars.pexternalforce[i] = Vector(0.,0.,0.);
+  pvars.pexternalhtrte[i] = 0.;
   pvars.pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
 
   ASSERT(cell_idx.x() <= 0xffff && 
@@ -822,6 +824,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pExternalForceLabel);
   particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
+
+  particle_state.push_back(d_lb->pExternalHeatRateLabel);
+  particle_state_preReloc.push_back(d_lb->pExternalHeatRateLabel_preReloc);
 
   particle_state.push_back(d_lb->pMassLabel);
   particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);

@@ -39,6 +39,7 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
+#include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -420,6 +421,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pExternalHeatRateLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
@@ -682,7 +684,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure" || bcs_type == "Torque"){
+    if (bcs_type == "Pressure" || bcs_type == "Torque" || bcs_type=="HeatFlux"){
       d_loadCurveIndex->add(nofPressureBCs++);
     }
   }
@@ -708,6 +710,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalForceLabel);
+    t->modifies(lb->pExternalHeatRateLabel);
     if (flags->d_useCBDI) {
        t->requires(Task::NewDW, lb->pSizeLabel,                  Ghost::None);
        t->requires(Task::NewDW, lb->pDeformationMeasureLabel,    Ghost::None);
@@ -985,8 +988,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
        t->computes(             lb->pExternalForceCorner4Label);
     }
   }
-//  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
-  t->computes(             lb->pExtForceLabel_preReloc);
+  t->computes(lb->pExtForceLabel_preReloc);
+  t->computes(lb->pExternalHeatRateLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1017,6 +1020,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   }
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
+  t->requires(Task::NewDW, lb->pExternalHeatRateLabel_preReloc,
+                                                       gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
   if (flags->d_useCBDI) {
@@ -1930,6 +1935,7 @@ SerialMPM::scheduleRefine( const PatchSet   * patches,
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pExternalHeatRateLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
@@ -2099,7 +2105,7 @@ void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure" || bcs_type == "Torque") {
+    if (bcs_type == "Pressure" || bcs_type == "Torque" || bcs_type=="HeatFlux"){
       nofPressureBCs++;
 
       // Loop through the patches and count
@@ -2142,7 +2148,8 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  printTask(patches, patches->get(0),cout_doing,"Doing MPM::initializePressureBC");
+  printTask(patches, patches->get(0),cout_doing,
+                                            "Doing MPM::initializePressureBC");
   if (cout_dbg.active())
     cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
 
@@ -2151,7 +2158,8 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -2160,10 +2168,13 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<IntVector> pLoadCurveID;
       ParticleVariable<Vector> pExternalForce;
+      ParticleVariable<double> pExternalHeatRate;
 
       new_dw->get(px, lb->pXLabel, pset);
       new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
       new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+      new_dw->getModifiable(pExternalHeatRate, 
+                                            lb->pExternalHeatRateLabel, pset);
 
       ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                               pExternalForceCorner3, pExternalForceCorner4;
@@ -2259,6 +2270,36 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
             } // if pLoadCurveID...
            } // Loop over elements of the loadCurveID IntVector
           }  // loop over particles
+        } else if (bcs_type == "HeatFlux") {
+          // Get the material points per load curve
+          sumlong_vartype numPart = 0;
+          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                      0, nofPressureBCs++);
+
+          // Save the material points per load curve in the PressureBC object
+          HeatFluxBC* hfbc =
+            dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          hfbc->numMaterialPoints(numPart);
+
+          if (cout_dbg.active())
+          cout_dbg << "    Load Curve = "
+                   << nofPressureBCs << " Num Particles = " << numPart << endl;
+
+          // Calculate the flux per particle at t = 0.0
+          double heatFluxPerPart = hfbc->fluxPerParticle(time);
+
+          // Loop through the patches and calculate the flux at each particle
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalHeatRate[idx] = 0.;
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofPressureBCs) {
+               pExternalHeatRate[idx] += hfbc->getFlux(px[idx],heatFluxPerPart);
+            } // if pLoadCurveID...
+           } // Loop over elements of the loadCurveID IntVector
+          }  // loop over particles
         }  // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
@@ -2349,7 +2390,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
 
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       particleIndex numParticles = mpm_matl->createParticles(cellNAPID,
                                                              patch, new_dw);
 
@@ -2591,6 +2633,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature, pColor;
+      constParticleVariable<double> pexternalheatrate;
       constParticleVariable<Vector> pvelocity, pexternalforce;
       constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                                    pExternalForceCorner3, pExternalForceCorner4;
@@ -2629,7 +2672,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
 
-      new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc,         pset);
+      new_dw->get(pexternalheatrate, 
+                                  lb->pExternalHeatRateLabel_preReloc, pset);
       constParticleVariable<IntVector> pLoadCurveID;
       if (flags->d_useCBDI) {
         new_dw->get(pExternalForceCorner1,
@@ -2687,13 +2732,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double>  gConcentration, gConcentrationNoBC;
       NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
       if (flags->d_doScalarDiffusion) {
-        new_dw->allocateAndPut(gConcentration, lb->diffusion->gConcentration,
+        new_dw->allocateAndPut(gConcentration,lb->diffusion->gConcentration,
                                                dwi, patch);
-        new_dw->allocateAndPut(gConcentrationNoBC, lb->diffusion->gConcentrationNoBC,
+        new_dw->allocateAndPut(gConcentrationNoBC, 
+                                              lb->diffusion->gConcentrationNoBC,
                                                    dwi, patch);
-        new_dw->allocateAndPut(gHydrostaticStress, lb->diffusion->gHydrostaticStress,
+        new_dw->allocateAndPut(gHydrostaticStress, 
+                                              lb->diffusion->gHydrostaticStress,
                                                    dwi, patch);
-        new_dw->allocateAndPut(gExtScalarFlux, lb->diffusion->gExternalScalarFlux,
+        new_dw->allocateAndPut(gExtScalarFlux,
+                                              lb->diffusion->gExternalScalarFlux,
                                                dwi, patch);
         gConcentration.initialize(0);
         gConcentrationNoBC.initialize(0);
@@ -2745,7 +2793,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             }
             gTemperature[node]   += ptemp_ext * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol   * pmass[idx] * S[k];
-            //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+            gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
         if (flags->d_doScalarDiffusion) {
@@ -3887,8 +3935,10 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
   std::vector<double> torquePerPart;
+  std::vector<double> fluxPerPart;
   std::vector<PressureBC*> pbcP;
   std::vector<TorqueBC*> TBC;
+  std::vector<HeatFluxBC*> HFBC;
 
   if (flags->d_useLoadCurves) {
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -3909,6 +3959,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Calculate the force per particle at current time
         torquePerPart.push_back(tbc->torquePerParticle(time));
+      } else if (bcs_type == "HeatFlux") {
+
+        HeatFluxBC* hfbc =
+          dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        HFBC.push_back(hfbc);
+
+        // Calculate the force per particle at current time
+        fluxPerPart.push_back(hfbc->fluxPerParticle(time));
       }
     }
   }
@@ -3932,8 +3990,11 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector>       pExternalForce_new;
+      ParticleVariable<double>       pExternalHeatRate_new;
       new_dw->allocateAndPut(pExternalForce_new,
-                             lb->pExtForceLabel_preReloc,  pset);
+                             lb->pExtForceLabel_preReloc,          pset);
+      new_dw->allocateAndPut(pExternalHeatRate_new,
+                             lb->pExternalHeatRateLabel_preReloc,  pset);
 
       // pExternalForce is either:
       //  set to zero (default)
@@ -3944,14 +4005,17 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       for(;iter != pset->end(); iter++){
          particleIndex idx = *iter;
          pExternalForce_new[idx] = Vector(0.,0.,0.);
+         pExternalHeatRate_new[idx] = 0.;
       }
 
       string mms_type = flags->d_mms_type;
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
-        bool do_TorqueBCs=false;
+        bool do_TorqueBCs  =false;
+        bool do_HeatFluxBCs=false;
         int numPressureLCs = 0;
-        int numTorqueLCs = 0;
+        int numTorqueLCs   = 0;
+        int numHeatFluxLCs = 0;
         old_dw->get(px,    lb->pXLabel,    pset);
         for (int ii = 0;
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -3963,6 +4027,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           } else if (bcs_type == "Torque") {
             do_TorqueBCs=true;
             numTorqueLCs++;
+          } else if (bcs_type == "HeatFlux") {
+            do_HeatFluxBCs=true;
+            numHeatFluxLCs++;
           }
         }
 
@@ -4057,6 +4124,24 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            }  // loop over elements of the IntVector
           }
         }
+
+        // Get the load curve data
+        if(do_HeatFluxBCs){
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+           particleIndex idx = *iter;
+           for(int k=0;k<3;k++){
+            int loadCurveIndex = pLoadCurveID[idx](k)-1;
+            if (loadCurveIndex >= 0) {
+              HeatFluxBC* hfbc = HFBC[loadCurveIndex];
+              double flux = fluxPerPart[loadCurveIndex];
+
+              pExternalHeatRate_new[idx]+=hfbc->getFlux(px[idx], flux);
+            } // loadCurveID >=0
+           }  // loop over elements of the IntVector
+          }
+        }
       } else if(!mms_type.empty()) {
         // MMS
         MMS MMSObject;
@@ -4096,6 +4181,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     map<int,Vector> totalMom   = zeroV;
     map<int,Vector> CMX        = zeroV;
 
+//    double allMatls_angMom     = 0.0;
     double allMatls_kineticEng = 0.0;
     double allMatls_thermalEng = 0.0;
     Vector allMatls_totalMom(0.0,0.0,0.0);
@@ -4325,6 +4411,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector mom         = pvelnew[idx]*pmass[idx];
           allMatls_totalMom += mom;
           totalMom[dwi]     += mom;
+
+//          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
+//          allMatls_angMom += angular_mom.length();
         }
       } else {  // Not XPIC(2)
         // Loop over particles
@@ -4409,6 +4498,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector mom = pvelnew[idx]*pmass[idx];
           allMatls_totalMom += mom;
           totalMom[dwi]     += mom;
+
+          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
+//          allMatls_angMom += angular_mom.length();
         }
       } // use XPIC(2) or not
     }  // loop over materials
