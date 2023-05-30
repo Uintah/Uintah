@@ -266,7 +266,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 #endif
 
-  while ( m_num_tasks_done < m_num_tasks )
+  while ( g_num_tasks_done < m_num_tasks )
   {
     // Check the associated variables for a parallel dispatch request.
 #if defined(USE_KOKKOS_PARTITION_MASTER)
@@ -308,14 +308,14 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
           // omp_get_num_threads() is not used so call runTasks directly
           // task_runner(omp_get_thread_num(), omp_get_num_threads());
 
-          this->runTasks(omp_get_thread_num());
+          this->runTasks();
         }
       }
       else
       {
         Kokkos::Profiling::pushRegion("runTasks");
 
-        this->runTasks( 0 );
+        this->runTasks();
       }
     }
     else
@@ -323,7 +323,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     {
       Kokkos::Profiling::pushRegion("runTasks");
 
-      this->runTasks( 0 );
+      this->runTasks();
     }
 
     Kokkos::Profiling::popRegion();
@@ -336,7 +336,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   } // end while ( g_num_tasks_done < m_num_tasks )
 
-  ASSERT(m_num_tasks_done == m_num_tasks);
+  ASSERT(g_num_tasks_done == m_num_tasks);
 
 //---------------------------------------------------------------------------
 
