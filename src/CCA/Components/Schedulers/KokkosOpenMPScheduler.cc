@@ -252,40 +252,81 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+  //---------------------------------------------------------------------------
+  // A bit of mess here. Four options:
+  // 1. Not compiled with OpenMP - serial dispatch
+  // 2. Compiled with OpenMP but no Kokkos OpenMP front end.
+  // 3. Compiled with OpenMP and Kokkos OpenMP front end,   no depreciated code.
+  // 4. Compiled with OpenMP and Kokkos OpenMP front end, with depreciated code.
 
-//---------------------------------------------------------------------------
-
-  while ( g_num_tasks_done < m_num_tasks ) {
-#if defined( KOKKOS_ENABLE_OPENMP )
-
-#if defined(USE_KOKKOS_INSTANCE_OPENMP)
-    // Use the Kokkos Open MP instances
-    // Use the Kokkos Open MP instances
-    SCI_THROW(InternalError("Use the Kokkos Open MP instances - "
-			    "not implemented", __FILE__, __LINE__));
-#else
-    auto task_worker = [&] ( int partition_id, int num_partitions ) {
-
-      // Each partition created executes this block of code
-      // A task_worker can run either a serial task, (e.g. threads_per_partition == 1)
-      //       or a Kokkos-based data parallel task, (e.g. threads_per_partition > 1)
-
-      this->runTasks();
-
-    }; // end task_worker
-
-    // Executes task_workers
-    Kokkos::OpenMP::partition_master( task_worker
-                                    , m_num_partitions
-                                    , m_threads_per_partition
-                                    );
+  // If compiled with OpenMP posssiby a parallel dispatch so get the
+  // associated variables that determines the dispatching.
+#if defined(_OPENMP)
+  int num_partitions        = Uintah::Parallel::getNumPartitions();
+  int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 #endif
 
-#else // !KOKKOS_ENABLE_OPENMP
+  while ( m_num_tasks_done < m_num_tasks )
+  {
+    // Check the associated variables for a parallel dispatch request.
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+    if( num_partitions > 1 || threads_per_partition > 1 )
+    {
+      Kokkos::Profiling::pushRegion("partition_master");
 
-    this->runTasks();
+      // Task runner functor.
+      auto task_runner = [&] (int thread_id, int num_threads) {
 
-#endif // KOKKOS_ENABLE_OPENMP
+        // Each partition created executes this block of code
+        // A task_runner can run a serial task (threads_per_partition == 1) or
+        //   a Kokkos-based data parallel task (threads_per_partition  > 1)
+        this->runTasks( thread_id );
+      };
+
+      // OpenMP Partition Master is deprecated in Kokkos. The
+      // parallelization is over the paritions.
+      Kokkos::OpenMP::partition_master( task_runner,
+                                        num_partitions,
+                                        threads_per_partition );
+    }
+    else
+#elif defined(_OPENMP)
+    if( num_partitions > 1 )
+    {
+#if _OPENMP >= 201511
+      if (omp_get_max_active_levels() > 1)
+#else
+      if (omp_get_nested())
+#endif
+      {
+        Kokkos::Profiling::pushRegion("OpenMP Parallel");
+
+        #pragma omp parallel num_threads(num_partitions)
+        {
+          omp_set_num_threads(threads_per_partition);
+
+          // omp_get_num_threads() is not used so call runTasks directly
+          // task_runner(omp_get_thread_num(), omp_get_num_threads());
+
+          this->runTasks(omp_get_thread_num());
+        }
+      }
+      else
+      {
+        Kokkos::Profiling::pushRegion("runTasks");
+
+        this->runTasks( 0 );
+      }
+    }
+    else
+#endif // _OPENMP
+    {
+      Kokkos::Profiling::pushRegion("runTasks");
+
+      this->runTasks( 0 );
+    }
+
+    Kokkos::Profiling::popRegion();
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
@@ -294,6 +335,8 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     }
 
   } // end while ( g_num_tasks_done < m_num_tasks )
+
+  ASSERT(m_num_tasks_done == m_num_tasks);
 
 //---------------------------------------------------------------------------
 
