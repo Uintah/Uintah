@@ -36,10 +36,13 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
+#include <CCA/Components/Wasatch/Expressions/POUnet.h>
+#include <CCA/Components/Wasatch/Expressions/DensityFromZChi.h>
 
 #include <sci_defs/wasatch_defs.h>
 
 #ifdef HAVE_POKITT
+#include <pokitt/MixtureFractionExpr.h>
 #include <pokitt/CanteraObjects.h>
 #include <pokitt/thermo/Density.h>
 #include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
@@ -62,6 +65,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <fstream>
 #include <iterator>
@@ -684,6 +688,338 @@ namespace WasatchCore{
   }
 
   //====================================================================
+  
+  void parse_pounet( Uintah::ProblemSpecP& params,
+                     GraphHelper& gh,
+                     std::set<std::string>& persistentFields
+                   )
+  {
+    std::string folderName;
+    params->get("FolderName", folderName);
+
+    proc0cout << "Loading POUnet models from '" << folderName << "' ... \n" << std::flush;
+    
+    POUnetManager manager(folderName);
+    
+    //___________________________________________________________
+    // get information for the independent variables in the table
+   typedef std::map<std::string,Expr::Tag> VarNameMap;
+    VarNameMap ivarMap;
+
+    for( Uintah::ProblemSpecP ivarParams = params->findBlock("IndependentVariable");
+         ivarParams != nullptr;
+         ivarParams = ivarParams->findNextBlock("IndependentVariable") ){
+      std::string ivarTableName;
+      const Expr::Tag ivarTag = parse_nametag( ivarParams->findBlock("NameTag") );
+      ivarParams->get( "NameInTable", ivarTableName );
+      ivarMap[ivarTableName] = ivarTag;
+    }
+
+    //______________________________________________________________
+   // NOTE: the independent variable names must be specified in the
+    // exact order dictated by the model.  This order will determine
+    // the ordering for the arguments to the evaluator later on.
+    Expr::TagList ivarNames;
+    for(auto &nm: manager.get_indepvar_names()){
+     if( ivarMap.find(nm) == ivarMap.end() ){
+        std::ostringstream msg;
+        msg << "ERROR: model variable '" << nm << "' was not provided\n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      ivarNames.push_back( ivarMap[nm] );
+    }
+
+    //________________________________________________________________
+    // create an expression for each property
+    for( Uintah::ProblemSpecP dvarParams = params->findBlock("ExtractVariable");
+         dvarParams != nullptr;
+         dvarParams = dvarParams->findNextBlock("ExtractVariable") ){
+
+      const Expr::Tag dvarTag = parse_nametag(dvarParams->findBlock("NameTag"));
+
+      std::string dvarTableName;
+      dvarParams->get("NameInTable", dvarTableName);
+      if (!manager.has_depvar(dvarTableName)) {
+        std::ostringstream msg;
+        msg << "' Could not find dependent variable named '" << dvarTableName << "'" << std::endl;
+       throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
+      }
+
+      proc0cout << "Constructing property evaluator for '" << dvarTag << "'." << std::endl;
+
+      std::shared_ptr<const POUnet> model = manager.models_.at(dvarTableName);
+      assert(model != nullptr);
+
+      if (dvarTag.name()=="density" && dvarTag.context()==Expr::STATE_NP1){
+        proc0cout << "Found density expression...setting STATE_N." << std::endl;
+        persistentFields.insert( dvarTag.name() );
+
+        const Expr::Tag rhoOldTag( dvarTag.name(), Expr::STATE_N );
+
+        typedef Expr::PlaceHolder<SVolField>  PlcHolder;
+        gh.exprFactory->register_expression( new PlcHolder::Builder(rhoOldTag), true );
+      }
+      
+      if(dvarTag.name().find("SPC") != std::string::npos && dvarTag.context()==Expr::STATE_NP1){
+        proc0cout << "Found source term " << dvarTag.name() << "...setting STATE_N." << std::endl;
+        persistentFields.insert( dvarTag.name() );
+
+        const Expr::Tag OldTag( dvarTag.name(), Expr::STATE_N );
+
+        typedef Expr::PlaceHolder<SVolField>  PlcHolder;
+        gh.exprFactory->register_expression( new PlcHolder::Builder(OldTag), true );
+      }
+
+      //____________________________________________
+      // get the type of field that we will evaluate
+      std::string fieldType;
+      dvarParams->getWithDefault("Type", fieldType, "SVOL");
+
+      try {
+        switch (get_field_type(fieldType)) {
+          case SVOL: {
+            typedef POUnetEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, model, ivarNames));
+            break;
+          }
+          case XVOL: {
+            typedef POUnetEvaluator<SpatialOps::SSurfXField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, model, ivarNames));
+            break;
+          }
+          case YVOL: {
+            typedef POUnetEvaluator<SpatialOps::SSurfYField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, model, ivarNames));
+            break;
+          }
+          case ZVOL: {
+            typedef POUnetEvaluator<SpatialOps::SSurfZField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, model, ivarNames));
+            break;
+          }
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported field type named '" << fieldType << "'" << endl
+                << __FILE__ << " : " << __LINE__ << endl;
+            throw std::runtime_error(msg.str());
+        }
+      }
+      catch( std::exception& err ){
+        std::ostringstream msg;
+        msg << "\nERROR caught while registering evaluator for " << dvarTag << endl
+            << "\tRegistered expressions follow:" << endl;
+        gh.exprFactory->dump_expressions( msg );
+        msg << "\nMore information: " << err.what() << endl;
+      }
+    }
+
+  }
+
+     //====================================================================
+  
+  void parse_z( Uintah::ProblemSpecP& params,
+                GraphCategories& gc,
+                std::set<std::string>& persistentFields
+              )
+  {
+    if( !CanteraObjects::is_ready() ){
+      std::ostringstream msg;
+      msg << "Must specify species block for cantera input." << std::endl;
+     throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+    }
+
+    std::string zName;
+    params->findBlock("NameTag")->getAttribute( "name", zName );
+
+    const int nSpec = CanteraObjects::number_species();
+    std::vector<double> fuelY(nSpec,0.);
+    std::vector<double> oxidizerY(nSpec,0.);
+
+    for( Uintah::ProblemSpecP specParam=params->findBlock("Fuel");
+        specParam != nullptr;
+        specParam=specParam->findNextBlock("Fuel") )
+    {
+      std::string spnam;
+      specParam->getAttribute( "name", spnam );
+      specParam->getAttribute( "value", fuelY[CanteraObjects::species_index(spnam)] );
+    }
+
+    for( Uintah::ProblemSpecP specParam=params->findBlock("Oxidizer");
+        specParam != nullptr;
+        specParam=specParam->findNextBlock("Oxidizer") )
+    {
+      std::string spnam;
+      specParam->getAttribute( "name", spnam );
+      specParam->getAttribute( "value", oxidizerY[CanteraObjects::species_index(spnam)] );
+    }
+
+    Expr::TagList yiTags, yiICTags;
+    for( int i=0; i<nSpec; ++i ){
+      const std::string specName = CanteraObjects::species_name(i);
+      yiTags  .push_back( Expr::Tag(specName, Expr::STATE_NP1) );
+      yiICTags.push_back( Expr::Tag(specName, Expr::STATE_NONE  ) );
+    }
+
+    GraphHelper& igh = *gc[INITIALIZATION  ];
+    GraphHelper& gh  = *gc[ADVANCE_SOLUTION];
+    typedef pokitt::SpeciesToMixtureFraction<SVolField>::Builder ZBuilder;
+    Expr::Tag mftag(zName, Expr::STATE_NONE);
+    igh.exprFactory->
+    register_expression(new ZBuilder( mftag,
+                                      yiICTags,
+                                      fuelY,
+                                      oxidizerY ) );
+    gh.exprFactory->
+    register_expression(new ZBuilder( mftag,
+                                      yiTags,
+                                      fuelY,
+                                      oxidizerY ) );
+  }
+
+  //====================================================================
+
+  void parse_density_from_zchi( Uintah::ProblemSpecP& params,
+                                GraphCategories& gc,
+                                std::set<std::string>& persistentFields
+                              )
+  {
+    typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
+
+    std::string fileName;
+    params->get("FileNamePrefix",fileName);
+
+    proc0cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
+
+    StateTable table;
+    try{
+      table.read_table( fileName+".tbl" );
+    }
+    catch( std::exception& e ){
+      std::ostringstream msg;
+      msg << e.what() << std::endl << std::endl
+          << "Error reading TabProps file '" << fileName << ".tbl'" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    proc0cout << "done" << std::endl;
+
+    Expr::TagList ivar_N;
+    Expr::TagList ivar_NP1;
+
+    ///  f ///
+    Uintah::ProblemSpecP ivarparams = params->findBlock("MixtureFractionInput");
+    std::string fName;
+    ivarparams->findBlock("NameTag")->getAttribute( "name", fName );
+    std::string ivar1TableName;
+    ivarparams->get("NameInTable", ivar1TableName);
+
+    const Expr::Tag fNewTag( fName, Expr::STATE_NP1 );
+    ivar_NP1.push_back(fNewTag);
+    const Expr::Tag fOldTag( fName, Expr::STATE_N );
+    ivar_N.push_back(fOldTag);
+
+    ///  chimax ///
+    ivarparams = params->findBlock("ChiRefInput");
+
+    bool logscale = false;
+    ivarparams->getAttribute( "islog", logscale );
+
+    std::string chiName;
+    ivarparams->findBlock("NameTag")->getAttribute( "name", chiName );
+    std::string ivar2TableName;
+    ivarparams->get("NameInTable", ivar2TableName);
+
+    const Expr::Tag chimaxNewTag( chiName, Expr::STATE_NP1 );
+    ivar_NP1.push_back(chimaxNewTag);
+    persistentFields.insert( chiName );
+    const Expr::Tag chimaxOldTag( chiName, Expr::STATE_N );
+    ivar_N.push_back(chimaxOldTag);
+
+
+    typedef Expr::PlaceHolder<SVolField>  PlcHolder;
+
+    GraphHelper& gh  = *gc[ADVANCE_SOLUTION];
+
+    gh.exprFactory->register_expression( new PlcHolder::Builder(chimaxOldTag), true );
+
+    ///  rho ///
+    Uintah::ProblemSpecP dvarparams = params->findBlock("Density");
+    std::string rhoName;
+    dvarparams->findBlock("NameTag")->getAttribute( "name", rhoName );
+    std::string rhoTableName;
+    dvarparams->get("NameInTable", rhoTableName);
+    if (!table.has_depvar(rhoTableName)) {
+      std::ostringstream msg;
+      msg << "Table '" << fileName << "' has no dependent variable named '" << rhoTableName << "'" << std::endl;
+      throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+    const InterpT *const rhointerp = table.find_entry(rhoTableName);
+    assert(rhointerp != nullptr);
+
+    const Expr::Tag rhoNewTag( rhoName, Expr::STATE_NP1 );
+    persistentFields.insert( rhoName );
+    const Expr::Tag rhoOldTag( rhoName, Expr::STATE_N );
+
+    gh.exprFactory->register_expression( new PlcHolder::Builder(rhoOldTag), true );
+
+    ///  rho_f ///
+    dvarparams = params->findBlock("DensityWeightedMixtureFraction");
+    std::string rhofName;
+    dvarparams->findBlock("NameTag")->getAttribute( "name", rhofName );
+    const Expr::Tag rhoFTag( rhofName, Expr::STATE_NP1 );
+
+    ///  DiffusionCoefficient: D ///
+    dvarparams = params->findBlock("DiffusionCoefficient");
+    std::string DName;
+    dvarparams->findBlock("NameTag")->getAttribute( "name", DName );
+    std::string DTableName;
+    dvarparams->get("NameInTable", DTableName);
+    if (!table.has_depvar(DTableName)) {
+      std::ostringstream msg;
+      msg << "Table '" << fileName << "' has no dependent variable named '" << DTableName << "'" << std::endl;
+      throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+    const InterpT *const Dinterp = table.find_entry(DTableName);
+    assert(Dinterp != nullptr);
+
+    ///  expressions for transport ///
+
+    const Expr::Tag DTag( DName, Expr::STATE_NONE );
+
+    gh.exprFactory->register_expression(scinew PropEvaluator(DTag, *Dinterp, ivar_NP1));
+
+    const TagNames& tagNames =  TagNames::self();
+
+    const Expr::Tag dRhodFTag_transport = tagNames.derivative_tag(rhoNewTag,fNewTag);
+    gh.exprFactory->register_expression(scinew PropEvaluator(dRhodFTag_transport, *rhointerp, ivar_NP1, ivar_NP1[0]));
+
+    double rTol;    // residual tolerance
+    int    maxIter; // maximum number of iterations
+
+    params->get("tolerance"    , rTol   );
+    params->get("maxIterations", maxIter);
+
+    double sNewton; // percent of newton update applied
+    params->get("pctNewtonUpdate", sNewton);
+    std::cout << "Newton Update Pct: " << sNewton << std::endl;
+
+    ///  Newton update ... density and chimax (z updated through scalar transport) ///    
+    typedef DensityFromZChi<SVolField>::Builder DensCalculator;
+    
+    gh.exprFactory->register_expression( scinew DensCalculator( rhoNewTag,
+                                                                chimaxNewTag,
+                                                                fOldTag,
+                                                                chimaxOldTag,
+                                                                rhoFTag,
+                                                                *rhointerp,
+                                                                *Dinterp,
+                                                                rTol,
+                                                                maxIter,
+                                                                logscale,
+                                                                sNewton
+                                                                ));
+  }
+
+  //====================================================================
 
   void
   parse_twostream_mixing( Uintah::ProblemSpecP params,
@@ -793,6 +1129,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP tabPropsParams = wasatchSpec->findBlock("TabProps");
     Uintah::ProblemSpecP radPropsParams = wasatchSpec->findBlock("RadProps");
     Uintah::ProblemSpecP twoStreamParams= wasatchSpec->findBlock("TwoStreamMixing");
+    Uintah::ProblemSpecP POUnetParams = wasatchSpec->findBlock("POUnet");
 
     if( radPropsParams ){
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
@@ -830,6 +1167,15 @@ namespace WasatchCore{
       parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, persistentFields, weakForm );
     }
 
+    // POUnet
+    for( Uintah::ProblemSpecP POUnetParams = wasatchSpec->findBlock("POUnet");
+         POUnetParams != nullptr;
+         POUnetParams = POUnetParams->findNextBlock("POUnet") )
+    {
+      const Category cat = parse_tasklist( POUnetParams,false);
+      parse_pounet( POUnetParams, *gc[cat], persistentFields);
+    }
+
      const std::string blockName = "ModelBasedOnSpeciesAndEnthalpy";
      Uintah::ProblemSpecP igSolverSpec = wasatchSpec->findBlock(blockName);
      if(igSolverSpec){
@@ -849,6 +1195,25 @@ namespace WasatchCore{
        }
        parse_spcies_and_enthalpy_density_solver( wasatchSpec, igSolverSpec, gc, persistentFields );
      }
+
+    // ComputeMixtureFraction
+    for( Uintah::ProblemSpecP ZParams = wasatchSpec->findBlock("ComputeMixtureFraction");
+         ZParams != nullptr;
+         ZParams = ZParams->findNextBlock("ComputeMixtureFraction") )
+    {
+      parse_z( ZParams, gc, persistentFields);
+    }
+
+    // DensityFromMixtureFractionAndChi
+    for( Uintah::ProblemSpecP ZXParams = wasatchSpec->findBlock("DensityFromMixtureFractionAndChi");
+         ZXParams != nullptr;
+         ZXParams = ZXParams->findNextBlock("DensityFromMixtureFractionAndChi") )
+    {
+      auto nproc = Uintah::Parallel::getMPISize();
+      if (nproc>1){throw Uintah::ProblemSetupException("DensityFromMixtureFractionAndChi only runs with 1 processor.", __FILE__, __LINE__);}
+      parse_density_from_zchi( ZXParams, gc, persistentFields);
+    }
+
   }
 
   //====================================================================

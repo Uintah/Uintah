@@ -271,7 +271,7 @@
       
       <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
       <ExprAlgebra   spec="OPTIONAL NO_DATA"
-                     attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
+                     attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT, INVERSE'">
       <NameTag       spec="MULTIPLE" />
       </ExprAlgebra>
             
@@ -1277,8 +1277,85 @@
         <tolerance                    spec="REQUIRED DOUBLE" />
         <maxIterations                spec="REQUIRED INTEGER"/>
     </TestSpeciesEnthalpyDensitySolver>
-        
-        
+
+
+   <!--
+      ###########################################################
+                  POUnet property specification.
+      ###########################################################
+    -->
+    <POUnet         spec="MULTIPLE NO_DATA" >
+      <FolderName     spec="REQUIRED STRING" />
+      <TaskList       spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      
+      <IndependentVariable  spec="MULTIPLE NO_DATA" >
+        <NameInTable        spec="REQUIRED STRING" />
+        <NameTag            spec="REQUIRED" />
+      </IndependentVariable>
+
+      <ExtractVariable    spec="MULTIPLE NO_DATA">
+        <NameInTable      spec="REQUIRED STRING" />
+        <NameTag          spec="REQUIRED" />
+        <Type             spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
+      </ExtractVariable>
+    </POUnet>
+
+    <!--
+      ###########################################################
+                       ComputeMixtureFraction
+      ###########################################################
+    -->
+    <ComputeMixtureFraction         spec="MULTIPLE NO_DATA" >
+      <NameTag spec="REQUIRED" />
+
+      <Fuel spec="MULTIPLE NO_DATA" 
+            attribute1="name REQUIRED STRING"
+            attribute2="value REQUIRED DOUBLE" />
+
+      <Oxidizer spec="MULTIPLE NO_DATA" 
+            attribute1="name REQUIRED STRING"
+            attribute2="value REQUIRED DOUBLE" />
+    </ComputeMixtureFraction>
+
+    <!--
+      ###########################################################
+                    DensityFromMixtureFractionAndChi
+      ###########################################################
+    -->
+    <DensityFromMixtureFractionAndChi spec="MULTIPLE NO_DATA" >
+      <FileNamePrefix spec="REQUIRED STRING" />
+      
+      <MixtureFractionInput  spec="MULTIPLE NO_DATA" >
+        <NameInTable        spec="REQUIRED STRING" />
+        <NameTag            spec="REQUIRED" />
+      </MixtureFractionInput>
+
+     <ChiRefInput  spec="MULTIPLE NO_DATA" attribute1="islog OPTIONAL BOOLEAN" >
+        <NameInTable        spec="REQUIRED STRING" />
+        <NameTag            spec="REQUIRED" />
+      </ChiRefInput>
+
+      <Density  spec="MULTIPLE NO_DATA" >
+        <NameInTable        spec="REQUIRED STRING" />
+        <NameTag            spec="REQUIRED" />
+      </Density>
+
+      <DiffusionCoefficient  spec="MULTIPLE NO_DATA" >
+        <NameInTable        spec="REQUIRED STRING" />
+        <NameTag            spec="REQUIRED" />
+      </DiffusionCoefficient>
+
+      <DensityWeightedMixtureFraction  spec="MULTIPLE NO_DATA" >
+        <NameTag            spec="REQUIRED" />
+      </DensityWeightedMixtureFraction>
+
+      <tolerance                  spec="REQUIRED DOUBLE" />
+      <maxIterations              spec="REQUIRED INTEGER"/>
+      <pctNewtonUpdate            spec="REQUIRED DOUBLE" />
+      
+    </DensityFromMixtureFractionAndChi>
+
+
     <!--
         Tabular property specification.  Use this to specify property
         evaluation from a TabProps file.

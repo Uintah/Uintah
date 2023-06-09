@@ -303,6 +303,7 @@ namespace WasatchCore{
       if      (algebraicOperation == "SUM"       ) optype = AlgExpr::SUM;
       else if (algebraicOperation == "DIFFERENCE") optype = AlgExpr::DIFFERENCE;
       else if (algebraicOperation == "PRODUCT"   ) optype = AlgExpr::PRODUCT;
+      else if (algebraicOperation == "INVERSE"   ) optype = AlgExpr::INVERSE;
       else {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl

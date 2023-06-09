@@ -361,8 +361,19 @@ namespace WasatchCore{
       const Expr::Tag dRhoDfTag  = tagNames.derivative_tag( densityTag_, primVarTag_ );
 
       // todo: check whether or not 'srcTags' should be for ScalarEOSBuilder at initialization
-      solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , srcTags, densityNP1Tag_ , dRhoDfTag, isStrong_) );
-      initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, srcTags, densityInitTag_, dRhoDfTag, isStrong_) );
+      Expr::TagList srcTags_Init, srcTags_NP1;
+      for(const Expr::Tag& srcTag : srcTags ){
+        if (srcTag.context() == Expr::STATE_N){
+          srcTags_Init.push_back(Expr::Tag(srcTag.name(), Expr::STATE_NONE));
+          srcTags_NP1.push_back(Expr::Tag(srcTag.name(), Expr::STATE_NP1)); // todo: NP1 used everywhere here assumes FE integration
+        }
+        else{
+          srcTags_Init.push_back(Expr::Tag(srcTag.name(), Expr::STATE_NONE));
+          srcTags_NP1.push_back(Expr::Tag(srcTag.name(), Expr::STATE_NONE));
+        }
+      }
+      initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, srcTags_Init, densityInitTag_, dRhoDfTag, isStrong_) );
+      solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , srcTags_NP1, densityNP1Tag_ , dRhoDfTag, isStrong_) );
 
       // register an expression for divu. divu is just a constant expression to which we add the
       // necessary couplings from the scalars that represent the equation of state.

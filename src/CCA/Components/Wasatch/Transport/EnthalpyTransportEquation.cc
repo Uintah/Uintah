@@ -254,9 +254,12 @@ struct EnthalpyBoundaryTyper
 
     const Expr::Tag turbViscTag = enableTurbulence_ ? tags.turbulentviscosity : Expr::Tag();
     typedef EnthDiffCoeff::Builder DiffCoeff;
-    solnFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
     if(flowTreatment_ == LOWMACH ){
-      icFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
+      icFactory.register_expression(   scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityInitTag_, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
+      solnFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityNP1Tag_,  cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
+    }
+    else{
+      solnFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityTag_, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
     }
 
     setup();
@@ -375,6 +378,7 @@ struct EnthalpyBoundaryTyper
          * species enthalpies.
          */
         Uintah::ProblemSpecP mixAvgParams = diffFluxParams->findBlock("MixtureAveraged");
+        Uintah::ProblemSpecP lewisParams  = diffFluxParams->findBlock("LewisNumber");
 
         std::string direction;
         diffFluxParams->getAttribute("direction",direction);
@@ -382,42 +386,87 @@ struct EnthalpyBoundaryTyper
           const std::string dir(1,*it);
           if( dir == "X" ){
             doX = true;
-            const Expr::ExpressionID id =
-            factory.register_expression( scinew XFlux( xDiffFluxTag,
-                                                       temperatureTag_,
-                                                       thermCondTag,
-                                                       mixAvgParams ? specEnthTags  : emptyTagList,
-                                                       mixAvgParams ? xSpecFluxTags : emptyTagList ) );
+            if (lewisParams){
+              typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFluxL;
 
-            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+              const Expr::ExpressionID id =
+              factory.register_expression( new XFluxL( xDiffFluxTag,
+                                                       primVarTag,
+                                                       diffCoeffTag_,
+                                                       turbDiffTag_,
+                                                       densityTag ) );
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
 
-            info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
+              info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
+            }
+            else{
+              const Expr::ExpressionID id =
+              factory.register_expression( scinew XFlux( xDiffFluxTag,
+                                                        temperatureTag_,
+                                                        thermCondTag,
+                                                        mixAvgParams ? specEnthTags  : emptyTagList,
+                                                        mixAvgParams ? xSpecFluxTags : emptyTagList ) );
+
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+              info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
+            }
           }
           else if( dir == "Y" ){
             doY = true;
-            const Expr::ExpressionID id =
-            factory.register_expression( scinew YFlux( yDiffFluxTag,
-                                                       temperatureTag_,
-                                                       thermCondTag,
-                                                       mixAvgParams ? specEnthTags  : emptyTagList,
-                                                       mixAvgParams ? ySpecFluxTags : emptyTagList ) );
+            if (lewisParams){
+              typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFluxL;
 
-            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+              const Expr::ExpressionID id =
+              factory.register_expression( new YFluxL( yDiffFluxTag,
+                                                       primVarTag,
+                                                       diffCoeffTag_,
+                                                       turbDiffTag_,
+                                                       densityTag ) );
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
 
-            info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
+              info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
+            }
+            else{
+              const Expr::ExpressionID id =
+              factory.register_expression( scinew YFlux( yDiffFluxTag,
+                                                        temperatureTag_,
+                                                        thermCondTag,
+                                                        mixAvgParams ? specEnthTags  : emptyTagList,
+                                                        mixAvgParams ? ySpecFluxTags : emptyTagList ) );
+
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+              info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
+            }
           }
           else if( dir == "Z" ){
             doZ = true;
-            const Expr::ExpressionID id =
-            factory.register_expression( scinew ZFlux( zDiffFluxTag,
-                                                       temperatureTag_,
-                                                       thermCondTag,
-                                                       mixAvgParams ? specEnthTags  : emptyTagList,
-                                                       mixAvgParams ? zSpecFluxTags : emptyTagList ) );
+            if (lewisParams){
+              typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFluxL;
 
-            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+              const Expr::ExpressionID id =
+              factory.register_expression( new ZFluxL( zDiffFluxTag,
+                                                       primVarTag,
+                                                       diffCoeffTag_,
+                                                       turbDiffTag_,
+                                                       densityTag ) );
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
 
-            info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
+              info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
+            }
+            else{
+              const Expr::ExpressionID id =
+              factory.register_expression( scinew ZFlux( zDiffFluxTag,
+                                                        temperatureTag_,
+                                                        thermCondTag,
+                                                        mixAvgParams ? specEnthTags  : emptyTagList,
+                                                        mixAvgParams ? zSpecFluxTags : emptyTagList ) );
+
+              if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+              info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
+            }
           }
         }
       }

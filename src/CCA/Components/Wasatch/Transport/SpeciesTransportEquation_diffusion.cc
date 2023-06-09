@@ -199,15 +199,15 @@ register_diffusive_flux_expressions( const Category       cat,
         std::vector<double> lewisNumbers(nspec_,1.0);  // all species default to 1.0 unless otherwise specified
         for( Uintah::ProblemSpecP specParam=lewisParams->findBlock("Species");
             specParam != nullptr;
-            specParam=lewisParams->findNextBlock("Species") )
+            specParam=specParam->findNextBlock("Species") )
         {
           std::string spnam;
           specParam->getAttribute( "name", spnam );
           specParam->getAttribute( "value", lewisNumbers[CanteraObjects::species_index(spnam)] );
         }
 
-        const Expr::Tag thermCondTag = parse_nametag( lewisParams->findBlock("ThermalConductivity") );
-        const Expr::Tag cpTag        = parse_nametag( lewisParams->findBlock("HeatCapacity"       ) );
+        const Expr::Tag thermCondTag = parse_nametag( lewisParams->findBlock("ThermalConductivity" )->findBlock("NameTag") );
+        const Expr::Tag cpTag        = parse_nametag( lewisParams->findBlock("HeatCapacity"        )->findBlock("NameTag") );
 
         if( dir == "X" ){
           typedef LewisNumberDiffFluxes<XFaceT>::Builder DiffFlux;

@@ -71,6 +71,7 @@ evaluate()
       case SUM       : result <<= result + f;  break;
       case DIFFERENCE: result <<= result - f;  break;
       case PRODUCT   : result <<= result * f;  break;
+      case INVERSE   : result <<= 1./f;  break;
     }
   }
 }
@@ -103,10 +104,12 @@ sensitivity( const Expr::Tag& varTag )
   else{
     for( size_t i=0; i<srcFields_.size(); ++i ){
       const FieldT& dfdv = srcFields_[i]->sens_field_ref( varTag );
+      const FieldT& f = srcFields_[i]->field_ref();
       switch( algebraicOperation_ ){
         case SUM       : sens_result <<= sens_result + dfdv;  break;
         case DIFFERENCE: sens_result <<= sens_result - dfdv;  break;
         case PRODUCT   : break;
+        case INVERSE   : -dfdv/(f*f); break;
       }
     }
   }

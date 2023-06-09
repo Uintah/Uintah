@@ -47,7 +47,8 @@ public:
   enum OperationType{
     SUM,
     DIFFERENCE,
-    PRODUCT
+    PRODUCT,
+    INVERSE
   };
   
 public:
