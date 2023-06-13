@@ -1,0 +1,708 @@
+<Uintah_specification>
+  <Meta>
+    <title>Variable density flow with zv transport</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <TimeIntegrator>FE</TimeIntegrator>  
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+
+
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+
+
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/ZChi_h2burke_small_350Xmax_Zpc_pareto_npx8_npy8_linear_abs_513_init</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="XSVOL"/>
+        <NameInTable>Xc</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>PC1</NameInTable>
+        <NameTag name="PC1"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>PC2</NameInTable>
+        <NameTag name="PC2"/>
+      </ExtractVariable>
+    </TabProps>
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NONE"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NONE"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>rhoSPC2</NameInTable>
+        <NameTag name="rhoSPC2" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>D</NameInTable>
+        <NameTag name="D" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>mu</NameInTable>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="density" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_N"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_N"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>mu</NameInTable>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NP1"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NP1"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>rhoSPC2</NameInTable>
+        <NameTag name="rhoSPC2" state="STATE_NP1"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>D</NameInTable>
+        <NameTag name="D" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/density_model/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="rho_PC1" state="STATE_NP1"/>
+        <NameInTable>rho_PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="rho_PC2" state="STATE_NP1"/>
+        <NameInTable>rho_PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density_rhoPC</NameInTable>
+        <NameTag name="density" state="STATE_NP1"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>  
+      <ComputeMassResidual/>
+      <Pressure>
+        <Use3DLaplacian>true</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-8  </tolerance>
+            <maxiterations>  10000   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="delta"/>
+      <Constant>1.e-6</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="delta"/>
+      <Constant>1.e-6</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="negone"/>
+      <Constant>-1.</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="negone"/>
+      <Constant>-1.</Constant>
+    </BasicExpression> 
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="two"/>
+      <Constant>2.</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="two"/>
+      <Constant>2.</Constant>
+    </BasicExpression> 
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="neg_delta"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="delta"/>
+        <NameTag name="negone"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="neg_delta"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="delta"/>
+        <NameTag name="negone"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="two_delta"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="delta"/>
+        <NameTag name="two"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="two_delta"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="delta"/>
+        <NameTag name="two"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="inv_two_delta"/>
+      <ExprAlgebra algebraicOperation="INVERSE">
+        <NameTag name="two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="inv_two_delta"/>
+      <ExprAlgebra algebraicOperation="INVERSE">
+        <NameTag name="two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="PC1_plus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="delta"/>
+        <NameTag name="PC1" state="STATE_NONE"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="PC1_plus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="delta"/>
+        <NameTag name="PC1" state="STATE_NP1"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="PC1_minus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="neg_delta"/>
+        <NameTag name="PC1" state="STATE_NONE"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="PC1_minus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="neg_delta"/>
+        <NameTag name="PC1" state="STATE_NP1"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="PC2_plus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="delta"/>
+        <NameTag name="PC2" state="STATE_NONE"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="PC2_plus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="delta"/>
+        <NameTag name="PC2" state="STATE_NP1"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="PC2_minus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="neg_delta"/>
+        <NameTag name="PC2" state="STATE_NONE"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="PC2_minus"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="neg_delta"/>
+        <NameTag name="PC2" state="STATE_NP1"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1_plus"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NONE"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC1_plus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1_plus"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NP1"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC1_plus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1_minus"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NONE"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC1_minus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1_minus"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2" state="STATE_NP1"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC1_minus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NONE"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2_plus"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC2_plus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NP1"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2_plus"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC2_plus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NONE"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2_minus"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC2_minus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+    <POUnet>
+      <FolderName>inputs/Wasatch/poutxt_Zpc_pareto_npx8_npy8_linear_abs_513/</FolderName>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="PC1" state="STATE_NP1"/>
+        <NameInTable>PC1</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="PC2_minus"/>
+        <NameInTable>PC2</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="rho_PC2_minus" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </POUnet>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="neg_rho_PC1_minus"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="negone"/>
+        <NameTag name="rho_PC1_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="neg_rho_PC1_minus"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="negone"/>
+        <NameTag name="rho_PC1_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="neg_rho_PC2_minus"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="negone"/>
+        <NameTag name="rho_PC2_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="neg_rho_PC2_minus"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="negone"/>
+        <NameTag name="rho_PC2_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="diff_rho_PC1"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="rho_PC1_plus"/>
+        <NameTag name="neg_rho_PC1_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="diff_rho_PC1"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="rho_PC1_plus"/>
+        <NameTag name="neg_rho_PC1_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="diff_rho_PC2"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="rho_PC2_plus"/>
+        <NameTag name="neg_rho_PC2_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="diff_rho_PC2"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="rho_PC2_plus"/>
+        <NameTag name="neg_rho_PC2_minus"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="d_density_d_PC1"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="diff_rho_PC1"/>
+        <NameTag name="inv_two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="d_density_d_PC1"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="diff_rho_PC1"/>
+        <NameTag name="inv_two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="d_density_d_PC2"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="diff_rho_PC2"/>
+        <NameTag name="inv_two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="d_density_d_PC2"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="diff_rho_PC2"/>
+        <NameTag name="inv_two_delta"/>
+      </ExprAlgebra>
+    </BasicExpression>
+
+
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="d_density_d_PC1" state="STATE_NONE"/>
+    </ForceOnGraph>  
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="d_density_d_PC1" state="STATE_NONE"/>
+    </ForceOnGraph> 
+
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="d_density_d_PC2" state="STATE_NONE"/>
+    </ForceOnGraph>  
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="d_density_d_PC2" state="STATE_NONE"/>
+    </ForceOnGraph> 
+
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>rho_PC1</SolutionVariable>
+      <PrimitiveVariable>PC1</PrimitiveVariable>
+
+      <DiffusiveFlux direction="X">
+        <DiffusionCoefficient>
+         <NameTag name="D"/>
+        </DiffusionCoefficient>
+      </DiffusiveFlux>
+
+      <ConvectiveFlux direction="X" method="SMART">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>
+
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>rho_PC2</SolutionVariable>
+      <PrimitiveVariable>PC2</PrimitiveVariable>
+
+      <DiffusiveFlux direction="X">
+        <DiffusionCoefficient>
+         <NameTag name="D"/>
+        </DiffusionCoefficient>
+      </DiffusiveFlux>
+
+      <ConvectiveFlux direction="X" method="SMART">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+      <SourceTermExpression>
+        <NameTag name="rhoSPC2" state="STATE_N"/>
+      </SourceTermExpression>
+
+    </TransportEquation>
+
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="rhoSPC2"/>
+    </ForceOnGraph>  
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="rhoSPC2" state="STATE_NP1"/>
+    </ForceOnGraph>  
+
+  </Wasatch>
+
+
+
+ <Time>
+    <maxTime>3.e-3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min> 1.0e-8 </delt_min>
+    <delt_max> 1.0e-8 </delt_max>
+    <delt_init> 1.0e-16 </delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <initial_delt_range>10.e-16</initial_delt_range>
+    <max_Timesteps>1011</max_Timesteps>
+  </Time>
+
+  <DataArchiver>
+    <filebase>tanh-1D-SMART-highairT-Zpc_pareto_npx8_npy8_linear_abs_513-Xmax350.uda</filebase>
+    <checkpoint cycle="1" timestepInterval="5"/>
+    <outputInterval>2.e-6</outputInterval>
+    <outputInitTimestep/>
+    <save label="density"/>
+    <save label="u"/>
+    <save label="D"/>
+    <save label="PC1"/>
+    <save label="PC2"/>
+    <save label="rho_PC1"/>
+    <save label="rho_PC2"/>
+    <save label="rhoSPC2"/>
+    <save label="d_density_d_PC1"/>
+    <save label="d_density_d_PC2"/>
+  </DataArchiver> 
+
+  <Grid>
+    <BoundaryConditions>
+	  <DefaultMaterial>all</DefaultMaterial>
+
+      <Face side="x-" type="Outflow" name="Face_x-">
+        <BCType label="x_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+
+      <Face side="x+" type="Outflow" name="Face_x+">
+        <BCType label="x_momentum_rhs_partial" var="Neumann" value="0"/>
+     </Face>
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[-80.e-3,-35.e-3,-40.e-3]</lower>
+        <upper>[+80.e-3,+35.e-3,+40.e-3]</upper>
+        <resolution>[1024,1,1]</resolution>
+        <patches>[2,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

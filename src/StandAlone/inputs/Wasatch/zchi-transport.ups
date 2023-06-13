@@ -1,0 +1,237 @@
+<Uintah_specification>
+  <Meta>
+    <title>Variable density flow with zchi transport</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <TimeIntegrator>FE</TimeIntegrator>  
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+
+
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+
+
+
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/ZChi_h2burke_small_350Xmax_init</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="XSVOL"/>
+        <NameInTable>Xc</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>Z</NameInTable>
+        <NameTag name="Z"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Chimax</NameInTable>
+        <NameTag name="LogChimax"/>
+      </ExtractVariable>
+    </TabProps>
+
+
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/ZChi_h2burke_small</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="Z"/>
+        <NameInTable>mixture_fraction</NameInTable>
+      </IndependentVariable>
+
+      <IndependentVariable>
+        <NameTag name="LogChimax"/>
+        <NameInTable>max_dissipation_rate</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>mu</NameInTable>
+        <NameTag name="viscosity"/>
+      </ExtractVariable>
+
+      <ExtractVariable>
+        <NameInTable>density</NameInTable>
+        <NameTag name="density"/>
+      </ExtractVariable>
+
+      <ExtractVariable>
+        <NameInTable>D</NameInTable>
+        <NameTag name="D"/>
+      </ExtractVariable>
+    </TabProps>
+
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/ZChi_h2burke_small</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="Z" state="STATE_N"/>
+        <NameInTable>mixture_fraction</NameInTable>
+      </IndependentVariable>
+
+      <IndependentVariable>
+        <NameTag name="LogChimax" state="STATE_N"/>
+        <NameInTable>max_dissipation_rate</NameInTable>
+      </IndependentVariable>
+
+      <ExtractVariable>
+        <NameInTable>mu</NameInTable>
+        <NameTag name="viscosity"/>
+      </ExtractVariable>
+    </TabProps>
+
+
+    <DensityFromMixtureFractionAndChi>
+      <FileNamePrefix>inputs/Wasatch/ZChi_h2burke_small</FileNamePrefix>
+
+      <MixtureFractionInput>
+        <NameInTable>mixture_fraction</NameInTable>
+        <NameTag name="Z"/>
+      </MixtureFractionInput>
+      
+      <ChiRefInput islog="true">
+        <NameInTable>max_dissipation_rate</NameInTable>
+        <NameTag name="LogChimax"/>
+      </ChiRefInput>
+
+      <Density>
+        <NameInTable>density</NameInTable>
+        <NameTag name="density"/>
+      </Density>
+
+      <DiffusionCoefficient>
+        <NameInTable>D</NameInTable>
+        <NameTag name="D"/>
+      </DiffusionCoefficient>
+
+      <DensityWeightedMixtureFraction>
+        <NameTag name="rho_Z"/>
+      </DensityWeightedMixtureFraction>
+
+    	<maxIterations>100</maxIterations>
+    	<tolerance>1e-4</tolerance>
+    	<pctNewtonUpdate>0.01</pctNewtonUpdate>
+
+    </DensityFromMixtureFractionAndChi>
+    
+
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity> 
+      <ComputeMassResidual/>
+      <Pressure>
+        <Use3DLaplacian>true</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-8  </tolerance>
+            <maxiterations>  10000   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+    
+
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>rho_Z</SolutionVariable>
+      <PrimitiveVariable>Z</PrimitiveVariable>
+
+      <DiffusiveFlux direction="X">
+        <DiffusionCoefficient>
+         <NameTag name="D"/>
+        </DiffusionCoefficient>
+      </DiffusiveFlux>
+
+      <ConvectiveFlux direction="X" method="SMART">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0." max="1.">
+        <NameTag name="Z" state="STATE_NP1"/>        
+      </FieldExpression>           
+    </FieldClipping>
+
+  </Wasatch>
+
+
+ <Time>
+    <maxTime>3.e-3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min> 1.0e-8 </delt_min>
+    <delt_max> 1.0e-8 </delt_max>
+    <delt_init> 1.0e-16 </delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <initial_delt_range>10.e-16</initial_delt_range>
+    <max_Timesteps>211</max_Timesteps>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>tanh-1D-SMART-highairT-ZChi-Xmax350.uda</filebase>
+    <checkpoint cycle="1" timestepInterval="5"/>
+    <outputInterval>1.e-6</outputInterval>
+    <outputInitTimestep/>
+    <save label="ContinuityResidual"/>
+    <save label="density"/>
+    <save label="u"/>
+    <save label="pressure"/>
+    <save label="Z"/>
+    <save label="LogChimax"/>
+  </DataArchiver>
+
+  <Grid>
+    <BoundaryConditions>
+	  <DefaultMaterial>all</DefaultMaterial>
+
+      <Face side="x-" type="Outflow" name="Face_x-">
+        <BCType label="x_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+
+      <Face side="x+" type="Outflow" name="Face_x+">
+        <BCType label="x_momentum_rhs_partial" var="Neumann" value="0"/>
+     </Face>
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[-80.e-3,-35.e-3,-40.e-3]</lower>
+        <upper>[+80.e-3,+35.e-3,+40.e-3]</upper>
+        <resolution>[1024,1,1]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

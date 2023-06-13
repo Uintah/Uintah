@@ -291,6 +291,8 @@ VARDENTESTS=[
   ("varden-heat-loss-mixture-fraction-2d-xy","varden-heat-loss-mixture-fraction-2d-xy.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
   ("varden-heat-loss-mixture-fraction-2d-xz","varden-heat-loss-mixture-fraction-2d-xz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
   ("varden-heat-loss-mixture-fraction-2d-yz","varden-heat-loss-mixture-fraction-2d-yz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("pounet-zvtransport-1d","pounet-zvtransport-1d.ups", 2, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("zchi-transport","zchi-transport.ups", 1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 ]
 if HAVE_POKITT != "0":
   VARDENTESTS+=[
