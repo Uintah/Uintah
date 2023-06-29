@@ -121,8 +121,9 @@ THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", 
                 ]
                 
 LOADCURVETESTS = [
-                    ("loadCurve_pressure-torque", "loadCurve_press-torque.ups", 4,  "ALL", ["exactComparison"] ),
-                    ("loadCurve_heatFlux", "loadCurve_heatFlux.ups",            4,  "ALL", ["exactComparison"] )
+                    ("loadCurve_press-torque",     "loadCurve_press-torque.ups",     4,  "ALL", ["exactComparison"] ),
+                    ("loadCurve_press-torqueCBDI", "loadCurve_press-torqueCBDI.ups", 4,  "ALL", ["exactComparison"] ),
+                    ("loadCurve_heatFlux",         "loadCurve_heatFlux.ups",         4,  "ALL", ["exactComparison"] )
                  ]
 
 
