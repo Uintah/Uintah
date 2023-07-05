@@ -38,6 +38,7 @@
 using namespace Uintah;
 using namespace std;
 
+//______________________________________________________________________
 // Store the geometry object and the load curve
 ArchesHeatFluxBC::ArchesHeatFluxBC(ProblemSpecP& ps,const GridP& grid)
 {
@@ -104,6 +105,7 @@ ArchesHeatFluxBC::ArchesHeatFluxBC(ProblemSpecP& ps,const GridP& grid)
   }
 }
 
+//______________________________________________________________________
 // Destroy the heatflux BCs
 ArchesHeatFluxBC::~ArchesHeatFluxBC()
 {
@@ -112,6 +114,7 @@ ArchesHeatFluxBC::~ArchesHeatFluxBC()
   delete d_polyData;
 }
 
+//______________________________________________________________________
 // Get the type of this object for BC application
 std::string 
 ArchesHeatFluxBC::getType() const
@@ -119,6 +122,8 @@ ArchesHeatFluxBC::getType() const
   return "ArchesHeatFlux";
 }
 
+//______________________________________________________________________
+//
 void ArchesHeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP ahf_ps = ps->appendChild("arches_heat_flux");
@@ -129,6 +134,7 @@ void ArchesHeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
 
 }
 
+//______________________________________________________________________
 // Locate and flag the material points to which this heatflux BC is
 // to be applied. Assumes that the "checkForSurface" function in ParticleCreator.cc
 // has been used to identify this material point as being on the surface of the body.
@@ -193,6 +199,7 @@ ArchesHeatFluxBC::flagMaterialPoint(const Point& p,
   return flag;
 }
 
+//______________________________________________________________________
 // Calculate the area of the surface on which the heatflux BC
 // is applied
 double
@@ -218,6 +225,7 @@ ArchesHeatFluxBC::getSurfaceArea() const
   return area;
 }
 
+//______________________________________________________________________
 // Calculate the force per particle at a certain time
 double 
 ArchesHeatFluxBC::fluxPerParticle(double time) const
@@ -282,7 +290,8 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
   }
   return flux;
 }
-
+//______________________________________________________________________
+//
 namespace Uintah {
 // A method to print out the heatflux bcs
 ostream& operator<<(ostream& out, const ArchesHeatFluxBC& bc) 
