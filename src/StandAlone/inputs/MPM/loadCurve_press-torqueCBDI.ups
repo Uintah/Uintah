@@ -172,7 +172,7 @@
                 <lower>[-1.0,-1.0,-.6]</lower>
                 <upper>[ 1.0, 1.0,1.2]</upper>
                 <extraCells>[1,1,1]</extraCells>
-                <patches>[2,2,1]</patches>
+                <patches>[1,1,1]</patches>
                 <resolution>[20,20,18]</resolution>
             </Box>
         </Level>
