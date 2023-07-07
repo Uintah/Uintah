@@ -141,6 +141,8 @@ namespace Uintah {
       const VarLabel* gPositionF0Label;
       const VarLabel* gPositionF1Label;
       const VarLabel* gExternalForceLabel;
+      const VarLabel* gLSContactForceLabel;
+      const VarLabel* gInContactMatlLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
@@ -176,6 +178,7 @@ namespace Uintah {
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
+      const VarLabel* dLdtDissolutionLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
 

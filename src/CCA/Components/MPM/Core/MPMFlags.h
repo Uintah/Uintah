@@ -79,6 +79,7 @@ class Output;
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
+    bool        d_useTriangles;                                // Flag for using line segments
     bool        d_doThermalExpansion;                          // Decide whether to do thermExp or not
     bool        d_with_color;                                  // to turn on the color variable
     bool        d_fracture;                                    // to turn on fracture
@@ -87,6 +88,7 @@ class Output;
     int         d_maxGridLevel;                                // Only do MPM on this grid level
     bool        doMPMOnLevel(int level, int numLevels) const;
     bool        d_refineParticles;                             // Refine particles, step toward AMR
+    bool        d_RefineTriangles;                             // Needed to enable triangle refinement
     bool        d_XPIC2;                                       // Use Nairn's XPIC2 algorithm
 
     double      d_artificialDampCoeff;

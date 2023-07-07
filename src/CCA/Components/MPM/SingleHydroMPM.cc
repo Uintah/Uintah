@@ -828,6 +828,7 @@ SingleHydroMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
  d_mpm->scheduleParticleRelocation(           sched, level,  matls,  
+                                                             cz_matls,
                                                              cz_matls);
 
   //__________________________________
