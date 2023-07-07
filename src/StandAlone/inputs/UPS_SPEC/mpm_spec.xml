@@ -45,8 +45,6 @@
       <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
-      <use_triangles                      spec="OPTIONAL BOOLEAN" />
-      <RefineTriangles                    spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
@@ -168,7 +166,7 @@
         <colinear_norms                  spec="OPTIONAL BOOLEAN"/>
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
-        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, friction_LRVar, penalty, approach, specified_friction'" />
+        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, friction_LRVar, approach, specified_friction'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
@@ -276,11 +274,6 @@
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
-      <Triangle                         spec="MULTIPLE NO_DATA"
-                                           attribute1="name OPTIONAL STRING" >
-        <associated_material               spec="OPTIONAL INTEGER" />
-        <triangle_filename                  spec="REQUIRED STRING" />
-      </Triangle>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
       <include href="diffusion_interface.xml" />
     </MPM>

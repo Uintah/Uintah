@@ -28,7 +28,6 @@
 #include <CCA/Components/MPM/Materials/Contact/FrictionContactBard.h>
 #include <CCA/Components/MPM/Materials/Contact/FrictionContactLR.h>
 #include <CCA/Components/MPM/Materials/Contact/FrictionContactLRVar.h>
-#include <CCA/Components/MPM/Materials/Contact/PenaltyContact.h>
 #include <CCA/Components/MPM/Materials/Contact/NodalSVFContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyFrictionContact.h>
@@ -86,10 +85,6 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      else if (con_type == "friction_bard") {
        contact_list->add(scinew FrictionContactBard(myworld,child,ss,lb,flag));
        needNormals=true;
-     }
-     else if (con_type == "penalty") {
-       contact_list->add(scinew PenaltyContact(myworld,child,ss,lb,flag));
-       needNormals=false;
      }
      else if (con_type == "approach") {
        contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));

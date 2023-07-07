@@ -73,7 +73,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_maxGridLevel                  =  1000;
   d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
-  d_RefineTriangles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
   d_interpolator                  =  scinew LinearInterpolator();
@@ -105,8 +104,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_ice                           =  false;
   d_myworld                            =  myworld;
   
-  d_useTriangles                       =  false;
-
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass                = false;
   d_reductionVars->momentum            = false;
@@ -210,7 +207,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
   mpm_flag_ps->get("refine_particles",         d_refineParticles);
-  mpm_flag_ps->get("RefineTriangles",          d_RefineTriangles);
   mpm_flag_ps->get("XPIC2",                    d_XPIC2);
   if(d_artificial_viscosity){
     d_artificial_viscosity_heating=true;
@@ -261,9 +257,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-
-  mpm_flag_ps->get("use_triangles",     d_useTriangles);
-
 //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
   // Flag for CPTI interpolator
@@ -403,7 +396,6 @@ else{
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " RefineParticles             = " << d_refineParticles << endl;
-    dbg << " RefineTriangles             = " << d_RefineTriangles << endl;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Keep PressBC Normal         = " << d_keepPressBCNormalToSurface << endl;
@@ -411,7 +403,6 @@ else{
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
-    dbg << " Use Triangles               = " << d_useTriangles << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -435,7 +426,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff1",        d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2",        d_artificialViscCoeff2);
   ps->appendElement("refine_particles",                   d_refineParticles);
-  ps->appendElement("RefineTriangles",                    d_RefineTriangles);
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
@@ -483,7 +473,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
   ps->appendElement("d_ndim",                      d_ndim);
-  ps->appendElement("use_triangles",     d_useTriangles);
 }
 
 bool

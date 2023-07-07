@@ -43,7 +43,6 @@ SRCS += $(SRCDIR)/SerialMPM.cc    \
 
 PSELIBS := \
 	$(SRCDIR)/CohesiveZone   \
-	$(SRCDIR)/Triangle       \
 	$(SRCDIR)/Core           \
 	$(SRCDIR)/HeatConduction \
 	$(SRCDIR)/Materials      \
@@ -80,7 +79,6 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #### Handle subdirs that are their OWN SHARED LIBRARIES
 SUBDIRS := \
 	$(SRCDIR)/CohesiveZone      \
-	$(SRCDIR)/Triangle          \
 	$(SRCDIR)/Core              \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/Materials         \

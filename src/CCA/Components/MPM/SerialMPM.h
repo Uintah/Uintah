@@ -51,12 +51,10 @@ namespace Uintah {
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
-class TriangleLabel;
 class SDInterfaceModel;
 class FluxBCModel;
 class CZLabel;
 class CohesiveZoneTasks;
-class TriangleTasks;
 
 /**************************************
 
@@ -119,8 +117,6 @@ public:
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
 
-  void schedulePrintTriangleCount(const LevelP& level, SchedulerP& sched);
-
   void schedulePrintCZCount(const LevelP& level, SchedulerP& sched);
 
   void scheduleTotalParticleCount(SchedulerP& sched,
@@ -169,10 +165,8 @@ protected:
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   FluxBCModel*  d_fluxBC;
-  TriangleLabel* TriL;
   CZLabel* Cl;
   CohesiveZoneTasks* cohesiveZoneTasks;
-  TriangleTasks* triangleTasks;
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -184,8 +178,7 @@ protected:
   void scheduleParticleRelocation( SchedulerP        & sched,
                                    const LevelP      & level,
                                    const MaterialSet * matls,
-                                   const MaterialSet * cz_matls,
-                                   const MaterialSet * tri_matls);
+                                   const MaterialSet * cz_matls);
 
   void deleteGeometryObjects(const ProcessorGroup*,
                              const PatchSubset* patches,
@@ -194,12 +187,6 @@ protected:
                                    DataWarehouse* new_dw);
 
   void printParticleCount(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
-
-  void printTriangleCount(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
