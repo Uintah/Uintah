@@ -2165,9 +2165,8 @@ void Arenisca3::computePressEOSCM(double rho_cur,double& pressure,
 //T2D: Throw exception that this is not supported
 double Arenisca3::getCompressibility()
 {
-  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arenisca3"
-       << endl;
-  return 1.0;
+  // This is for contact modeling.
+  return 1.0/d_cm.B0;
 }
 
 // Initialize all labels of the particle variables associated with Arenisca3.
