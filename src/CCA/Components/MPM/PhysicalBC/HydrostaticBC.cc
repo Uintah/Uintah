@@ -40,6 +40,7 @@
 using namespace Uintah;
 using namespace std;
 
+//______________________________________________________________________
 // Store the geometry object and the load curve
 HydrostaticBC::HydrostaticBC(ProblemSpecP& ps, const GridP& grid,
                              const MPMFlags* flags) {
@@ -120,6 +121,7 @@ HydrostaticBC::HydrostaticBC(ProblemSpecP& ps, const GridP& grid,
   }
 }
 
+//______________________________________________________________________
 // Find average pore pressure on boundary cell
 double HydrostaticBC::getCellAveragePorePressure(const IntVector cellindex,
                                                  const Patch* patch) const {
@@ -130,6 +132,7 @@ double HydrostaticBC::getCellAveragePorePressure(const IntVector cellindex,
   return center_depth * rho_w * gravity;
 }
 
+//______________________________________________________________________
 // Destroy the pressure BCs
 HydrostaticBC::~HydrostaticBC() { delete d_surface; }
 
@@ -146,6 +149,7 @@ void HydrostaticBC::outputProblemSpec(ProblemSpecP& ps) {
   }
 }
 
+//______________________________________________________________________
 // Get the type of this object for BC application
 std::string HydrostaticBC::getType() const { return "Hydrostatic"; }
 
@@ -218,6 +222,7 @@ bool HydrostaticBC::flagMaterialPoint(const Point& p, const Vector& dxpp) {
   return flag;
 }
 
+//______________________________________________________________________
 // Calculate the area of the cell surface on which the pressure BC
 // is applied
 double HydrostaticBC::getCellSurfaceArea(const Patch* patch) const {
@@ -234,6 +239,7 @@ double HydrostaticBC::getCellSurfaceArea(const Patch* patch) const {
   return cellarea;
 }
 
+//______________________________________________________________________
 // Get surface normal
 Vector HydrostaticBC::getSurfaceNormal() const {
   Vector normal = Vector(0.0, 0.0, 0.0);
@@ -247,6 +253,7 @@ Vector HydrostaticBC::getSurfaceNormal() const {
   return normal;
 }
 
+//______________________________________________________________________
 // Calculate the area of the surface on which the pressure BC
 // is applied
 double HydrostaticBC::getSurfaceArea() const {
@@ -276,6 +283,8 @@ double HydrostaticBC::getSurfaceArea() const {
   return area;
 }
 
+//______________________________________________________________________
+//
 namespace Uintah {
 // A method to print out the pressure bcs
 ostream& operator<<(ostream& out, const HydrostaticBC& bc) {

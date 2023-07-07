@@ -1,0 +1,170 @@
+<Uintah_specification>
+    <Meta>
+        <title>two layer HE Compaction</title>
+        <info>  Stuff </info>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+    <Time>
+        <maxTime>0.02</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.25</timestep_multiplier>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <use_load_curves> true </use_load_curves>
+        <XPIC2>true</XPIC2>
+        <withColor>true</withColor>
+        <DoExplicitHeatConduction>true</DoExplicitHeatConduction>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
+    </MPM>
+    <DataArchiver>
+        <filebase>loadCurve_heatFlux.uda</filebase>
+        <outputInterval>0.002</outputInterval>
+        <save label="p.x"/>
+        <save label="p.mass"/>
+        <save label="p.color"/>
+        <save label="p.volume"/>
+        <save label="p.loadCurveID"/>
+        <save label="p.velocity"/>
+        <save label="p.temperature"/>
+        <save label="p.externalHeatRate"/>
+        <save label="p.scalefactor"/>
+        <save label="p.deformationMeasure"/>
+        <save label="p.displacement"/>
+        <save label="p.stress"/>
+        <save label="KineticEnergy"/>
+        <save label="g.velocity"/>
+        <save label="RigidReactionForce"/>
+        <save label="RigidReactionTorque"/>
+        <checkpoint interval="0.015" cycle="1"/>
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="Sample">
+                <density>1000.0</density>
+                <thermal_conductivity>1237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>300</temperature>
+                  <color>0</color>
+                  <cylinder label = "sample">
+                     <bottom>   [0.0,0.0,0.0]   </bottom>
+                     <top>      [0.0,0.0,1.0]   </top>
+                     <radius>   0.5             </radius>
+                   </cylinder>
+                </geom_object>
+            </material>
+
+            <material name="rigid">
+                <density>1000.0</density>
+                <thermal_conductivity>1237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <constitutive_model type="rigid">
+                  <bulk_modulus>1.e7</bulk_modulus>
+                  <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>300</temperature>
+                  <color>1</color>
+                  <box label = "stem">
+                     <min>   [-.5,-.5,-.5]   </min>
+                     <max>   [0.5,0.5,0.0]   </max>
+                   </box>
+                </geom_object>
+            </material>
+
+            <contact>
+              <type>specified</type>
+              <master_material> 1 </master_material>
+              <materials> [0,1] </materials>
+              <include_rotation> true </include_rotation>
+              <direction>[1,1,1]</direction>
+              <filename>inputs/MPM/zeroRotation.txt</filename>
+            </contact>
+        </MPM>
+    </MaterialProperties>
+
+    <PhysicalBC>
+      <MPM>
+        <!--  Apply a heat flux of ??? W/m^2 (??) to the top of block 1-->
+        <heat_flux>
+          <geom_object>
+            <box label="x-face">
+              <min>   [-.51,-.5,-.5]   </min>
+              <max>   [-.49,0.5,0.0]   </max>
+            </box>
+          </geom_object>
+          <load_curve>
+            <id>1</id>
+            <material>1</material>
+            <time_point>
+              <time> 0 </time>
+              <load>  1.e7 </load>
+            </time_point>
+            <time_point>
+              <time> 0.001   </time>
+              <load>  1.e7 </load>
+            </time_point>
+            <time_point>
+              <time> 0.01   </time>
+              <load>  1.2e7 </load>
+            </time_point>
+            <time_point>
+              <time> 0.015   </time>
+              <load>  1.5e7 </load>
+            </time_point>
+          </load_curve>
+        </heat_flux>
+
+      </MPM>
+    </PhysicalBC>
+
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-1.0,-1.0,-.6]</lower>
+                <upper>[ 1.0, 1.0,1.2]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[2,2,1]</patches>
+                <resolution>[20,20,18]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType var="symmetry" id="0" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="Dirichlet" id="all" label="Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

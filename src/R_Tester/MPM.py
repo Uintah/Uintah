@@ -119,9 +119,18 @@ DAMAGETESTS = [   ("const_test_brittle_damage", "const_test_brittle_damage.ups",
 
 THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", "sus_options=-nthreads 4"] ),
                 ]
+                
+LOADCURVETESTS = [
+                    ("loadCurve_press-torque",     "loadCurve_press-torque.ups",     4,  "ALL", ["exactComparison"] ),
+                    ("loadCurve_press-torqueCBDI", "loadCurve_press-torqueCBDI.ups", 1,  "ALL", ["exactComparison"] ),
+                    ("loadCurve_heatFlux",         "loadCurve_heatFlux.ups",         4,  "ALL", ["exactComparison"] )
+                 ]
+
+
+
 
 # Tests that are run during local regression testing
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS + PERFORMANCETESTS
+NIGHTLYTESTS = NIGHTLYTESTS + LOADCURVETESTS + AMRTESTS + THREADEDTESTS + PERFORMANCETESTS
 
 LOCALTESTS = NIGHTLYTESTS
 DEBUGTESTS =[("cpti_disks",            "cpti_disks.ups",              1,  "All", ["exactComparison", "preProcessCmd=pfs"] ),
@@ -135,7 +144,7 @@ ADDTL_PATH=[ ("relativePath=tools/pfs")]           # preprocessing cmd path.  It
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS PERFORMANCETESTS
+#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS LOADCURVETESTS AMRTESTS ARENATESTS BUILDBOTTESTS PERFORMANCETESTS
 #__________________________________
 
 # returns the list
@@ -146,6 +155,8 @@ def getTestList(me) :
     TESTS = DAMAGETESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
+  elif me == "LOADCURVETESTS":
+    TESTS = LOADCURVETESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
   elif me == "PERFORMANCETESTS":

@@ -322,11 +322,12 @@ def generateGS() :
                 continue
 
             #  Defaults
-            sus_options  = ""
-            do_restart   = 1
-            do_gpu       = 0    # run test if gpu is supported
-            testname     = getTestName( test )
-            upsFile      = inputs + "/" + component + "/" + getUpsFile( test )
+            sus_options    = ""
+            preProcess_cmd = ""
+            do_restart     = 1
+            do_gpu         = 0    # run test if gpu is supported
+            testname       = getTestName( test )
+            upsFile        = inputs + "/" + component + "/" + getUpsFile( test )
 
             #__________________________________
             # parse user flags for the gpu and sus_options

@@ -38,6 +38,7 @@
 using namespace Uintah;
 using namespace std;
 
+//______________________________________________________________________
 // Store the geometry object and the load curve
 ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
                        const MPMFlags* flags)
@@ -121,6 +122,7 @@ ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
   }
 }
 
+//______________________________________________________________________
 // Destroy the ScalarFlux BCs
 ScalarFluxBC::~ScalarFluxBC()
 {
@@ -141,6 +143,7 @@ void ScalarFluxBC::outputProblemSpec(ProblemSpecP& ps)
   }
 }
 
+//______________________________________________________________________
 // Get the type of this object for BC application
 std::string 
 ScalarFluxBC::getType() const
@@ -148,6 +151,7 @@ ScalarFluxBC::getType() const
   return "ScalarFlux";
 }
 
+//______________________________________________________________________
 // Locate and flag the material points to which this ScalarFlux BC is
 // to be applied. Assumes that the "checkForSurface" function in ParticleCreator.cc
 // has been used to identify this material point as being on the surface of the body.
@@ -238,6 +242,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
 }
 
 #if 0
+//______________________________________________________________________
 // Calculate the area of the surface on which the scalar flux BC
 // is applied
 double
@@ -271,6 +276,7 @@ ScalarFluxBC::getSurfaceArea() const
   return area;
 }
 
+//______________________________________________________________________
 // Calculate the flux per particle at a certain time
 double ScalarFluxBC::fluxPerParticle(double time) const
 {
@@ -300,6 +306,8 @@ double ScalarFluxBC::fluxPerParticle(double time, double area) const
   return flux*area;
 }
 
+//______________________________________________________________________
+//
 namespace Uintah {
 // A method to print out the scalar flux bcs
 ostream& operator<<(ostream& out, const ScalarFluxBC& bc) 
