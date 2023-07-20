@@ -103,21 +103,21 @@ WARNING
 //      std::string  name;
       bool computeRstess;
       int matl;
-      VarLabel* Q_Label;
-      VarLabel* Qsum_Label;
-      VarLabel* Qmean_Label;
+      const VarLabel* Q_Label;
+      const VarLabel* Qsum_Label;
+      const VarLabel* Qmean_Label;
 
-      VarLabel* Qsum2_Label;
-      VarLabel* Qmean2_Label;
-      VarLabel* Qvariance_Label;
+      const VarLabel* Qsum2_Label;
+      const VarLabel* Qmean2_Label;
+      const VarLabel* Qvariance_Label;
 
-      VarLabel* Qsum3_Label;
-      VarLabel* Qmean3_Label;
-      VarLabel* Qskewness_Label;
+      const VarLabel* Qsum3_Label;
+      const VarLabel* Qmean3_Label;
+      const VarLabel* Qskewness_Label;
 
-      VarLabel* Qsum4_Label;
-      VarLabel* Qmean4_Label;
-      VarLabel* Qkurtosis_Label;
+      const VarLabel* Qsum4_Label;
+      const VarLabel* Qmean4_Label;
+      const VarLabel* Qkurtosis_Label;
 
       std::map<ORDER,bool> isInitialized;
 
@@ -182,17 +182,15 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    template <class TConstGridVar, 
-              class TGridVar, 
-              class T>
+    template <class T>
     void computeStatsWrapper( DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
                               const PatchSubset* patches,
                               const Patch*   patch,
                               Qstats& Q);
-                              
-    template <class TConstGridVar, 
-              class TGridVar, 
+
+    template <class TConstGridVar,
+              class TGridVar,
               class T>
     void computeStats( DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
@@ -210,21 +208,22 @@ WARNING
                                 const Patch*    patch,
                                 Qstats& Q);
 
-    template <class TGridVar, 
-              class T>
-    void allocateAndZero( DataWarehouse* new_dw,
-                          const VarLabel* label,
-                          const int       matl,
-                          const Patch*    patch );
-                          
-    template <class TGridVar, 
-              class T>
+    template <class T>
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
+
+    void allocateAndZeroSums_wrap(DataWarehouse * new_dw,
+                                  const Patch   * patch,
+                                  Qstats        & Q );
+
+    template <class T>
     void allocateAndZeroSums( DataWarehouse* new_dw,
                               const Patch*   patch,
                               Qstats& Q);
 
-    template <class TGridVar, 
-              class T>
+    template <class T>
     void allocateAndZeroStats( DataWarehouse* new_dw,
                                const Patch*   patch,
                                const Qstats& Q);
@@ -247,28 +246,6 @@ WARNING
     const MaterialSubset * d_matSubSet  {nullptr};
 
     bool required;
-    
-    typedef CCVariable<double>     CC_D;
-    typedef CCVariable<Vector>     CC_V;
-    
-    typedef SFCXVariable<double>   SFCX_D;
-    typedef SFCYVariable<double>   SFCY_D;
-    typedef SFCZVariable<double>   SFCZ_D;
-    
-    typedef SFCXVariable<Vector>   SFCX_V;
-    typedef SFCYVariable<Vector>   SFCY_V;
-    typedef SFCZVariable<Vector>   SFCZ_V;
-
-    typedef constCCVariable<double>     constCC_D;
-    typedef constCCVariable<Vector>     constCC_V;
-    
-    typedef constSFCXVariable<double>   constSFCX_D;
-    typedef constSFCYVariable<double>   constSFCY_D;
-    typedef constSFCZVariable<double>   constSFCZ_D;
-    
-    typedef constSFCXVariable<Vector>   constSFCX_V;
-    typedef constSFCYVariable<Vector>   constSFCY_V;
-    typedef constSFCZVariable<Vector>   constSFCZ_V;
   };
 }
 
