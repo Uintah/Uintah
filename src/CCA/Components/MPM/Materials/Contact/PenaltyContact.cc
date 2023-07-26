@@ -54,7 +54,6 @@ PenaltyContact::PenaltyContact(const ProcessorGroup* myworld,
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
-  d_vol_const=0.;
   d_oneOrTwoStep = 1;
 
   ps->require("mu",d_mu);
