@@ -121,7 +121,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "\nLabels discovered in the original uda\n";
   for (unsigned int i = 0; i < varNames.size(); i++) {
     d_udaSavedLabels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
-    proc0cout << " *** Label: " << varNames[i] << endl;
+    proc0cout << " *** Label: " << varNames[i] << "    " << typeDescriptions[i]->getName() << endl;
   }
 
   proc0cout << "\n";
