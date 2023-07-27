@@ -76,6 +76,9 @@ WARNING
                  ProblemSpecP ps);
          virtual ~Contact();
 
+         Vector findValFromProfile(double t,
+                        std::vector< std::pair<double, Vector> > profile) const;
+
          virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
          // Basic contact methods
@@ -107,6 +110,11 @@ WARNING
          MPMLabel* lb;
          MPMFlags* flag;
          int    d_oneOrTwoStep;
+
+         // For use with Specified and PenaltyRigid contact
+         std::vector< std::pair<double, Vector> > d_vel_profile;
+         std::vector< std::pair<double, Vector> > d_rot_profile;
+         std::vector< std::pair<double, Vector> > d_ori_profile;
 
          ContactMaterialSpec d_matls;
       };

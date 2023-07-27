@@ -137,9 +137,6 @@ DESCRIPTION
     SpecifiedBodyContact(const SpecifiedBodyContact &con);
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
          
-    Vector findValFromProfile(double t, 
-                        std::vector< std::pair<double, Vector> > profile) const;
-    
     MaterialManagerP d_materialManager;
     double    d_stop_time;
     double    d_vol_const;
@@ -152,13 +149,10 @@ DESCRIPTION
     int       d_excludeMatl;
     std::string    d_filename;
     IntVector d_direction;
-    std::vector< std::pair<double, Vector> > d_vel_profile;
-    std::vector< std::pair<double, Vector> > d_rot_profile;
-    std::vector< std::pair<double, Vector> > d_ori_profile;
 
   protected:
     Output*                m_output      {nullptr};
-    
+
   public:
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
