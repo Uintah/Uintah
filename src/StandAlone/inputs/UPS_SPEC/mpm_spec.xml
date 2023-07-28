@@ -147,6 +147,19 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <torque                 spec="MULTIPLE NO_DATA" >
+          <geom_object />
+          <outward_normal         spec="OPTIONAL BOOLEAN" />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
+        </torque>
         <scalar_flux                 spec="MULTIPLE NO_DATA" >
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />
@@ -187,7 +200,7 @@
         <colinear_norms                  spec="OPTIONAL BOOLEAN"/>
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
-        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, penalty, approach'" />
+        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, penalty, penalty_rigid, approach'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
