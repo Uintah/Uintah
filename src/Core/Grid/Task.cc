@@ -1390,6 +1390,8 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
   //  return que.ext_oneapi_empty();
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 
+#elif defined(KOKKOS_ENABLE_OPENACC)
+
 #endif
 
   return true;

@@ -52,10 +52,10 @@ namespace UintahSpaces{
   class DeviceSpace {};  // And also to refer to any data in device
                          // memory
 
-#if defined(HAVE_OPENMPTARGET)
-  class OpenMPTarget {}; // To describe data in Kokkos OpenMPTarget Memory
-  class OpenMPTargetSpace {};
-#endif //if defined(HAVE_OPENMPTARGET)
+// #if defined(HAVE_OPENMPTARGET)
+//   class OpenMPTarget {}; // To describe data in Kokkos OpenMPTarget Memory
+//   class OpenMPTargetSpace {};
+// #endif //if defined(HAVE_OPENMPTARGET)
 }
 
 #if defined(HAVE_KOKKOS)
@@ -67,27 +67,6 @@ namespace UintahSpaces{
 namespace Kokkos {
   // Kokkos CUDA (NVIDIA GPU) is not included in this build.  Create
   // some stub types so these types at least exist.
-
-  // ARS - FIX ME - I do not fully understand these defines.
-// #if !defined(KOKKOS_ENABLE_CUDA)
-//     class Cuda {};
-//     class CudaSpace {};
-// #elif !defined( KOKKOS_ENABLE_HIP)
-//     namespace Experimental {
-//       class HIP {};
-//       class HIPSpace {};
-//     }
-// #elif !defined(KOKKOS_ENABLE_SYCL)
-//     namespace Experimental {
-//       class SYCL {};
-//       class SYCLDeviceUSMSpace {};
-//     }
-// #elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
-//     namespace Experimental {
-//       class OpenMPTarget {};
-//       class OpenMPTargetSpace {};
-//     }
-// #endif
 
 #if !defined(KOKKOS_ENABLE_OPENMP)
   // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
@@ -130,7 +109,9 @@ using cudaStream_t = void;
 // using cudaStream_t = void;
 // using int3 = sycl::int3;
 
-#elif defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif defined(KOKKOS_ENABLE_SYCL) || \
+      defined(KOKKOS_ENABLE_OPENMPTARGET) \
+      defined(KOKKOS_ENABLE_OPENACC)
 
 #define HOST_DEVICE
 
