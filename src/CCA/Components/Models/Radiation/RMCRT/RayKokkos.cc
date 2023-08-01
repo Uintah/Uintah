@@ -1085,7 +1085,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           "Ray::rayTrace_dataOnion",
                           //&Ray::rayTrace_dataOnion<2, double, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, double, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_DEVICE_TAG>,
+                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_DEFAULT_DEVICE_TAG>,
                           sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   } else {
@@ -1093,7 +1093,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           "Ray::rayTrace_dataOnion",
                           //&Ray::rayTrace_dataOnion<2, float, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, float, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_DEVICE_TAG>,
+                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_DEFAULT_DEVICE_TAG>,
                           sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
