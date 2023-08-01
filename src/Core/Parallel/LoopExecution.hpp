@@ -93,58 +93,29 @@ enum TASKGRAPH {
 // space is Kokkos' default host execution space.
 
 #if defined(HAVE_KOKKOS)
-  #if defined(KOKKOS_USING_GPU)
-    #if defined(KOKKOS_ENABLE_OPENMP)
-      #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #else
-      #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-      #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-      #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+// Host side.
+  #if defined(KOKKOS_ENABLE_OPENMP)
+    #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+//  |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
+  #else
+    #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #endif
 
+// Device side
+  #if defined(KOKKOS_USING_GPU)
     #define KOKKOS_DEFAULT_DEVICE_TAG   Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
 
-    #if defined(KOKKOS_ENABLE_CUDA)
-      #define KOKKOS_DEVICE_TAG         Kokkos::Cuda COMMA Kokkos::CudaSpace
-    #elif defined(KOKKOS_ENABLE_HIP)
-     #define KOKKOS_DEVICE_TAG          Kokkos::Experimental::HIP COMMA Kokkos::Experimental::HIPSpace
-    #elif defined(KOKKOS_ENABLE_SYCL)
-      #define KOKKOS_DEVICE_TAG         Kokkos::Experimental::SYCL COMMA Kokkos::Experimental::SYCLDeviceUSMSpace
-    #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-      #define KOKKOS_DEVICE_TAG         Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
-    #else
-      #define KOKKOS_DEVICE_TAG         Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-    #endif
-
-  #else
+  #else // !defined(KOKKOS_USING_GPU)
     #if defined(KOKKOS_ENABLE_OPENMP)
-      #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-//    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
       #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
 //    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_DEVICE_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
-
-    #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-      #define UINTAH_CPU_TAG            Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-      #define KOKKOS_OPENMP_TAG         Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-//    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
-      #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-//    |- This should default into:      Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
-      #define KOKKOS_DEVICE_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
 
     #else
-      #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-      #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-      #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
       #define KOKKOS_DEFAULT_DEVICE_TAG UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-      #define KOKKOS_DEVICE_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-
     #endif
   #endif
 #else // !defined(HAVE_KOKKOS)
@@ -152,14 +123,12 @@ enum TASKGRAPH {
   #define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_DEFAULT_HOST_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_DEFAULT_DEVICE_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-  #define KOKKOS_DEVICE_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
 
 // #pragma message "The value of UINTAH_CPU_TAG: "            STRVX(UINTAH_CPU_TAG)
 // #pragma message "The value of KOKKOS_OPENMP_TAG: "         STRVX(KOKKOS_OPENMP_TAG)
 // #pragma message "The value of KOKKOS_DEFAULT_HOST_TAG: "   STRVX(KOKKOS_DEFAULT_HOST_TAG)
 // #pragma message "The value of KOKKOS_DEFAULT_DEVICE_TAG: " STRVX(KOKKOS_DEFAULT_DEVICE_TAG)
-// #pragma message "The value of KOKKOS_DEVICE_TAG: "         STRVX(KOKKOS_DEVICE_TAG)
 
 namespace Uintah {
 
