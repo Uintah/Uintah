@@ -20,7 +20,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskComputeBCsFunctionPointer
                                      , &ColdFlowProperties::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ColdFlowProperties::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -32,7 +32,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskInitializeFunctionPointer
                                      , &ColdFlowProperties::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ColdFlowProperties::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -44,7 +44,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
                                      , &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ColdFlowProperties::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ColdFlowProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -56,7 +56,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskTimestepInitFunctionPoint
                                      , &ColdFlowProperties::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ColdFlowProperties::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -66,7 +66,7 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskRestartInitFunctionPointe
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &ColdFlowProperties::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &ColdFlowProperties::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ColdFlowProperties::restart_initialize<KOKKOS_DEVICE_TAG>    // Task supports Kokkos builds
+                                     , &ColdFlowProperties::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

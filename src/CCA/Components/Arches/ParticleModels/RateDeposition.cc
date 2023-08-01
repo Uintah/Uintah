@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
                                      //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &RateDeposition::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &RateDeposition::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
                                      //, &RateDeposition::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &RateDeposition::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &RateDeposition::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -53,7 +53,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers(
                                      //, &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

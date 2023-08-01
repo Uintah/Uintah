@@ -162,7 +162,7 @@ namespace Uintah{
                                        //, &DragModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &DragModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &DragModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -175,7 +175,7 @@ namespace Uintah{
                                        //, &DragModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &DragModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &DragModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -188,7 +188,7 @@ namespace Uintah{
                                        //, &DragModel<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

@@ -19,7 +19,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskInitializeFunctionPointers()
                                      , &GridInfo::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GridInfo::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GridInfo::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GridInfo::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &GridInfo::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace GridInfo::loadTaskTimestepInitFunctionPointers()
                                      , &GridInfo::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GridInfo::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GridInfo::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GridInfo::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &GridInfo::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

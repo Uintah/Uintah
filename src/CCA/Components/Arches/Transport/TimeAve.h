@@ -150,7 +150,7 @@ private:
                                        , &TimeAve<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &TimeAve<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TimeAve<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TimeAve<T>::compute_bcs<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TimeAve<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -170,7 +170,7 @@ private:
                                        , &TimeAve<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &TimeAve<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TimeAve<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TimeAve<T>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TimeAve<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

@@ -18,7 +18,7 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskInitializeFunctionPointers()
                                      //, &CoalDensity::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &CoalDensity::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CoalDensity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &CoalDensity::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &CoalDensity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskEvalFunctionPointers()
                                      //, &CoalDensity::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &CoalDensity::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CoalDensity::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &CoalDensity::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &CoalDensity::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

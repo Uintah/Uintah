@@ -22,7 +22,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
                                      , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &sumRadiation::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &sumRadiation::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &sumRadiation::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -34,7 +34,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
                                      , &sumRadiation::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &sumRadiation::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &sumRadiation::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &sumRadiation::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

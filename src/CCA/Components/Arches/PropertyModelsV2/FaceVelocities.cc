@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskInitializeFunctionPointers()
                                      , &FaceVelocities::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &FaceVelocities::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &FaceVelocities::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &FaceVelocities::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &FaceVelocities::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -50,7 +50,7 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers()
                                      , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &FaceVelocities::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &FaceVelocities::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &FaceVelocities::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &FaceVelocities::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

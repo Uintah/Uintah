@@ -137,7 +137,7 @@ private:
                                        //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -150,7 +150,7 @@ private:
                                        //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

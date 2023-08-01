@@ -18,7 +18,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskInitializeFunctionPointers()
                                      //, &CoalTemperature::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CoalTemperature::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &CoalTemperature::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &CoalTemperature::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskEvalFunctionPointers()
                                      //, &CoalTemperature::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CoalTemperature::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &CoalTemperature::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &CoalTemperature::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -42,7 +42,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskTimestepInitFunctionPointers
                                      //, &CoalTemperature::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CoalTemperature::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &CoalTemperature::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &CoalTemperature::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

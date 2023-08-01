@@ -42,7 +42,7 @@ namespace Uintah{
                                        //, &SGSforTransport::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &SGSforTransport::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &SGSforTransport::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -54,7 +54,7 @@ namespace Uintah{
                                        //, &SGSforTransport::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &SGSforTransport::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &SGSforTransport::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -66,7 +66,7 @@ namespace Uintah{
                                        //, &SGSforTransport::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &SGSforTransport::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

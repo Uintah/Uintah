@@ -16,7 +16,7 @@ TaskAssignedExecutionSpace RandParticleLoc::loadTaskInitializeFunctionPointers()
                                      //, &RandParticleLoc::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &RandParticleLoc::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &RandParticleLoc::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &RandParticleLoc::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &RandParticleLoc::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

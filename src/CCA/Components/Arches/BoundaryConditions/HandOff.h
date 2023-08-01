@@ -104,7 +104,7 @@ private:
                                        //, &HandOff<T>::compute_bcs<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -117,7 +117,7 @@ private:
                                        //, &HandOff<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &HandOff<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &HandOff<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &HandOff<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -137,7 +137,7 @@ private:
                                        //, &HandOff<T>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

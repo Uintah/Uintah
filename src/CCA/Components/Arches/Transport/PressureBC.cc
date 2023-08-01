@@ -34,7 +34,7 @@ TaskAssignedExecutionSpace PressureBC::loadTaskEvalFunctionPointers()
                                      , &PressureBC::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &PressureBC::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PressureBC::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureBC::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &PressureBC::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

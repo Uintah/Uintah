@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskInitializeFunctionPointers(
                                      //, &gasRadProperties::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &gasRadProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &gasRadProperties::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &gasRadProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -50,7 +50,7 @@ TaskAssignedExecutionSpace gasRadProperties::loadTaskEvalFunctionPointers()
                                      //, &gasRadProperties::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &gasRadProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &gasRadProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &gasRadProperties::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &gasRadProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

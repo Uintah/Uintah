@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskInitializeFunctionPointers(
                                      , &DQMOMNoInversion::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &DQMOMNoInversion::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DQMOMNoInversion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &DQMOMNoInversion::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &DQMOMNoInversion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace DQMOMNoInversion::loadTaskEvalFunctionPointers()
                                      , &DQMOMNoInversion::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &DQMOMNoInversion::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DQMOMNoInversion::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &DQMOMNoInversion::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &DQMOMNoInversion::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

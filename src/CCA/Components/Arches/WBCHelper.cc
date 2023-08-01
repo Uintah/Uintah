@@ -919,7 +919,7 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
                           "WBCHelper::computeBCAreaHelper",
                           &WBCHelper::computeBCAreaHelper<UINTAH_CPU_TAG>,
                           &WBCHelper::computeBCAreaHelper<KOKKOS_OPENMP_TAG>,
-                          //&WBCHelper::computeBCAreaHelper<KOKKOS_DEVICE_TAG>,
+                          //&WBCHelper::computeBCAreaHelper<KOKKOS_DEFAULT_DEVICE_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT, lo, hi);
 }
 

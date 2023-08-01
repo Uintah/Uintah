@@ -121,7 +121,7 @@ private:
                                        //, &ConstantProperty<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &ConstantProperty<T>::initialize<KOKKOS_DEAFULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ConstantProperty<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &ConstantProperty<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -141,7 +141,7 @@ private:
                                        , &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &ConstantProperty<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &ConstantProperty<T>::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &ConstantProperty<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 
@@ -154,7 +154,7 @@ private:
                                        //, &ConstantProperty<T>::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &ConstantProperty<T>::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &ConstantProperty<T>::restart_initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &ConstantProperty<T>::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

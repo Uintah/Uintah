@@ -28,7 +28,7 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskInitializeFunctionPointer
                                      //, &DepositionVelocity::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &DepositionVelocity::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DepositionVelocity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionVelocity::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &DepositionVelocity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -40,7 +40,7 @@ TaskAssignedExecutionSpace DepositionVelocity::loadTaskEvalFunctionPointers()
                                      //, &DepositionVelocity::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &DepositionVelocity::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DepositionVelocity::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionVelocity::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &DepositionVelocity::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

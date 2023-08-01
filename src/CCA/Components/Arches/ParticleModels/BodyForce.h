@@ -145,7 +145,7 @@ namespace Uintah{
                                        //, &BodyForce<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &BodyForce<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &BodyForce<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &BodyForce<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -158,7 +158,7 @@ namespace Uintah{
                                        //, &BodyForce<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &BodyForce<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &BodyForce<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &BodyForce<IT, DT>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &BodyForce<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

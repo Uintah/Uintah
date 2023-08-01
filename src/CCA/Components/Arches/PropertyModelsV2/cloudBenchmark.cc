@@ -17,7 +17,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskInitializeFunctionPointers()
                                      //, &cloudBenchmark::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &cloudBenchmark::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers(
                                      //, &cloudBenchmark::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &cloudBenchmark::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -47,7 +47,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
                                      //, &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &cloudBenchmark::restart_initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

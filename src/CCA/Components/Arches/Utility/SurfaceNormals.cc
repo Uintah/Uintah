@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
                                      , &SurfaceNormals::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SurfaceNormals::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &SurfaceNormals::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &SurfaceNormals::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -47,7 +47,7 @@ TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers(
                                      , &SurfaceNormals::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &SurfaceNormals::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

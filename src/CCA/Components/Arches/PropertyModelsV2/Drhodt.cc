@@ -27,7 +27,7 @@ TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
                                      , &Drhodt::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Drhodt::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Drhodt::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Drhodt::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers()
                                      , &Drhodt::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Drhodt::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Drhodt::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Drhodt::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Drhodt::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

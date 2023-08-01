@@ -36,7 +36,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
                                      , &StressTensor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &StressTensor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &StressTensor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &StressTensor::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &StressTensor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -48,7 +48,7 @@ TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
                                      , &StressTensor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &StressTensor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &StressTensor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &StressTensor::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &StressTensor::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

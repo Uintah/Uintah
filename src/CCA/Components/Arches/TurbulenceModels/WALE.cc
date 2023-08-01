@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace WALE::loadTaskInitializeFunctionPointers()
                                      , &WALE::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &WALE::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &WALE::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &WALE::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &WALE::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace WALE::loadTaskEvalFunctionPointers()
                                      , &WALE::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &WALE::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &WALE::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &WALE::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &WALE::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

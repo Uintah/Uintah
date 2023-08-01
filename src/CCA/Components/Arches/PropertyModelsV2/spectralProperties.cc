@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace spectralProperties::loadTaskInitializeFunctionPointer
                                      //, &spectralProperties::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &spectralProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &spectralProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &spectralProperties::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &spectralProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -47,7 +47,7 @@ TaskAssignedExecutionSpace spectralProperties::loadTaskEvalFunctionPointers()
                                      //, &spectralProperties::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &spectralProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &spectralProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &spectralProperties::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &spectralProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

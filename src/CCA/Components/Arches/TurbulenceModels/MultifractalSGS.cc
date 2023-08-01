@@ -72,7 +72,7 @@ namespace Uintah{
                                        //, &MultifractalSGS::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &MultifractalSGS::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &MultifractalSGS::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &MultifractalSGS::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -84,7 +84,7 @@ namespace Uintah{
                                        //, &MultifractalSGS::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &MultifractalSGS::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &MultifractalSGS::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &MultifractalSGS::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &MultifractalSGS::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -96,7 +96,7 @@ namespace Uintah{
                                        //, &MultifractalSGS::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &MultifractalSGS::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &MultifractalSGS::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &MultifractalSGS::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &MultifractalSGS::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

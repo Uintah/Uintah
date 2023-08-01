@@ -19,7 +19,7 @@ TaskAssignedExecutionSpace Burnout::loadTaskInitializeFunctionPointers()
                                      //, &Burnout::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Burnout::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Burnout::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Burnout::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &Burnout::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -31,7 +31,7 @@ TaskAssignedExecutionSpace Burnout::loadTaskEvalFunctionPointers()
                                      //, &Burnout::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Burnout::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Burnout::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Burnout::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &Burnout::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -43,7 +43,7 @@ TaskAssignedExecutionSpace Burnout::loadTaskTimestepInitFunctionPointers()
                                      //, &Burnout::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Burnout::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Burnout::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Burnout::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &Burnout::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

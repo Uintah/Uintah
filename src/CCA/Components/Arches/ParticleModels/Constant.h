@@ -137,7 +137,7 @@ namespace Uintah{
                                        , &Constant<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &Constant<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &Constant<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &Constant<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &Constant<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 
@@ -157,7 +157,7 @@ namespace Uintah{
                                        , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &Constant<T>::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &Constant<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 

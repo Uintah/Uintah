@@ -14,7 +14,7 @@ TaskAssignedExecutionSpace Poisson1::loadTaskComputeBCsFunctionPointers(){
                                      , &Poisson1::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Poisson1::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Poisson1::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Poisson1::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Poisson1::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -24,7 +24,7 @@ TaskAssignedExecutionSpace Poisson1::loadTaskInitializeFunctionPointers(){
                                      , &Poisson1::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Poisson1::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Poisson1::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Poisson1::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Poisson1::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -34,7 +34,7 @@ TaskAssignedExecutionSpace Poisson1::loadTaskEvalFunctionPointers(){
                                      , &Poisson1::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Poisson1::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Poisson1::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Poisson1::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Poisson1::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -44,7 +44,7 @@ TaskAssignedExecutionSpace Poisson1::loadTaskTimestepInitFunctionPointers(){
                                      , &Poisson1::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &Poisson1::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Poisson1::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &Poisson1::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &Poisson1::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
  );
 }
 

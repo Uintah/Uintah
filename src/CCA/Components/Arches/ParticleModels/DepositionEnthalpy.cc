@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointer
                                      //, &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
                                      //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &DepositionEnthalpy::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

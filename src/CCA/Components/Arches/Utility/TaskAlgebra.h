@@ -172,7 +172,7 @@ private:
                                        //, &TaskAlgebra<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &TaskAlgebra<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TaskAlgebra<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TaskAlgebra<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TaskAlgebra<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -185,7 +185,7 @@ private:
                                        //, &TaskAlgebra<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &TaskAlgebra<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TaskAlgebra<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TaskAlgebra<T>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TaskAlgebra<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -198,7 +198,7 @@ private:
                                        //, &TaskAlgebra<T>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &TaskAlgebra<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TaskAlgebra<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TaskAlgebra<T>::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TaskAlgebra<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

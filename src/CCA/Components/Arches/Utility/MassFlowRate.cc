@@ -65,7 +65,7 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskInitializeFunctionPointers()
                                      //, &MassFlowRate::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &MassFlowRate::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &MassFlowRate::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MassFlowRate::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -77,7 +77,7 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
                                      //, &MassFlowRate::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &MassFlowRate::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &MassFlowRate::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MassFlowRate::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

@@ -271,7 +271,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
                                        , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 
@@ -284,7 +284,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
                                        , &KScalarRHS<T, PT>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KScalarRHS<T, PT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KScalarRHS<T, PT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 
@@ -297,7 +297,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
                                        , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KScalarRHS<T, PT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KScalarRHS<T, PT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KScalarRHS<T, PT>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                       , &KScalarRHS<T, PT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                        );
   }
 

@@ -123,7 +123,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskInitializeFunctionPointers(
                                      //, &MMS_mom_csmag<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom_csmag<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &MMS_mom_csmag<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_mom_csmag<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &MMS_mom_csmag<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -136,7 +136,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskEvalFunctionPointers()
                                      //, &MMS_mom_csmag<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom_csmag<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &MMS_mom_csmag<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &MMS_mom_csmag<T>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &MMS_mom_csmag<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

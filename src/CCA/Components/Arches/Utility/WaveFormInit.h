@@ -118,7 +118,7 @@ private:
                                        //, &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

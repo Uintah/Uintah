@@ -115,7 +115,7 @@ private:
                                        //, &TaylorGreen3D<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &TaylorGreen3D<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TaylorGreen3D<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TaylorGreen3D<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &TaylorGreen3D<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

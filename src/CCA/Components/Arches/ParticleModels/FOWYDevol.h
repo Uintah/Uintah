@@ -159,7 +159,7 @@ namespace Uintah{
                                        //, &FOWYDevol<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -172,7 +172,7 @@ namespace Uintah{
                                        //, &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FOWYDevol<T>::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

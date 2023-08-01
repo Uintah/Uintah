@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace UFromRhoU::loadTaskInitializeFunctionPointers()
                                      //, &UFromRhoU::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UFromRhoU::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &UFromRhoU::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &UFromRhoU::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace UFromRhoU::loadTaskEvalFunctionPointers()
                                      //, &UFromRhoU::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UFromRhoU::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &UFromRhoU::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &UFromRhoU::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -49,7 +49,7 @@ TaskAssignedExecutionSpace UFromRhoU::loadTaskTimestepInitFunctionPointers()
                                      //, &UFromRhoU::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &UFromRhoU::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UFromRhoU::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &UFromRhoU::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
+                                     //, &UFromRhoU::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

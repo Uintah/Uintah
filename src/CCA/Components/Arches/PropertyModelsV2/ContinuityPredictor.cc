@@ -26,7 +26,7 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskInitializeFunctionPointe
                                      , &ContinuityPredictor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ContinuityPredictor::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ContinuityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers()
                                      , &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ContinuityPredictor::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ContinuityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

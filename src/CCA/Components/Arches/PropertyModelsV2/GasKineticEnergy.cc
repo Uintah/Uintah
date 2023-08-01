@@ -26,7 +26,7 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskInitializeFunctionPointers(
                                      , &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GasKineticEnergy::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &GasKineticEnergy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskEvalFunctionPointers()
                                      , &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GasKineticEnergy::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &GasKineticEnergy::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

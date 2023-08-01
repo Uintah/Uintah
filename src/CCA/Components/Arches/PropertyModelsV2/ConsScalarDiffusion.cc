@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskInitializeFunctionPointe
                                      , &ConsScalarDiffusion::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ConsScalarDiffusion::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers()
                                      , &ConsScalarDiffusion::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &ConsScalarDiffusion::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
+                                     , &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
