@@ -81,11 +81,11 @@ void PortableDependencyTest1::scheduleTimeAdvance( const LevelP  & level, Schedu
 		char exespace = exespaces[i];
 
 			 if(task == 'c' && exespace=='c') scheduleComputeTask<UINTAH_CPU_TAG>(level, sched);
-		else if(task == 'c' && exespace=='g') scheduleComputeTask<KOKKOS_DEVICE_TAG>(level, sched);
+		else if(task == 'c' && exespace=='g') scheduleComputeTask<KOKKOS_DEFAULT_DEVICE_TAG>(level, sched);
 		else if(task == 'm' && exespace=='c') scheduleModifyTask<UINTAH_CPU_TAG>(level, sched);
-		else if(task == 'm' && exespace=='g') scheduleModifyTask<KOKKOS_DEVICE_TAG>(level, sched);
+		else if(task == 'm' && exespace=='g') scheduleModifyTask<KOKKOS_DEFAULT_DEVICE_TAG>(level, sched);
 		else if(task == 'r' && exespace=='c') scheduleRequireTask<UINTAH_CPU_TAG>(level, sched);
-		else if(task == 'r' && exespace=='g') scheduleRequireTask<KOKKOS_DEVICE_TAG>(level, sched);
+		else if(task == 'r' && exespace=='g') scheduleRequireTask<KOKKOS_DEFAULT_DEVICE_TAG>(level, sched);
 		else {
 			printf("wrong combination of tasks and exe spaces\n");
 			exit(1);
