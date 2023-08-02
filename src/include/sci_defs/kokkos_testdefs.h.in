@@ -110,7 +110,7 @@ using cudaStream_t = void;
 // using int3 = sycl::int3;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || \
-      defined(KOKKOS_ENABLE_OPENMPTARGET) \
+      defined(KOKKOS_ENABLE_OPENMPTARGET) || \
       defined(KOKKOS_ENABLE_OPENACC)
 
 #define HOST_DEVICE
