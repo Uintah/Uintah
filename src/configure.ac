@@ -170,6 +170,8 @@ SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 ##
 # enable_option_checking=fatal
 
+m4_pattern_forbid([AX_CHECK_COMPILE_FLAG])dnl
+
 AC_CANONICAL_HOST
 
 ## find the machine's pwd, and don't use the sh built-in pwd.
@@ -1749,8 +1751,8 @@ case $host in
       CFLAGS=$CFLAGS
       CXXFLAGS=$CXXFLAGS
     else
-      CFLAGS="$CFLAGS -Wall"
-      CXXFLAGS="$CXXFLAGS -Wall"
+      AX_CHECK_COMPILE_FLAG(-Wall, CFLAGS="$CFLAGS -Wall")
+      AX_CHECK_COMPILE_FLAG(-Wall, CXXFLAGS="$CXXFLAGS -Wall")
     fi
 
     ######################################

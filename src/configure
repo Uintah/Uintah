@@ -34,6 +34,8 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
+#
+## 
 ## IMPORTANT!!!  Configure developers, PLEASE READ:
 ##
 ## The following BULLET PROOFING needs to be placed manually into
@@ -47,7 +49,8 @@
 ## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
 ## (just after the MIT license), and uncomment the following line:
 ##
-#
+enable_option_checking=fatal
+
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -3020,6 +3023,7 @@ fi
 ## (just after the MIT license), and uncomment the following line:
 ##
 # enable_option_checking=fatal
+
 
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -9031,8 +9035,76 @@ $as_echo "$as_me: WARNING: Don't know which type of compiler you are using so ca
       CFLAGS=$CFLAGS
       CXXFLAGS=$CXXFLAGS
     else
-      CFLAGS="$CFLAGS -Wall"
-      CXXFLAGS="$CXXFLAGS -Wall"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wall" >&5
+$as_echo_n "checking whether C compiler accepts -Wall... " >&6; }
+if ${ax_cv_check_cflags___Wall+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -Wall"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___Wall=yes
+else
+  ax_cv_check_cflags___Wall=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___Wall" >&5
+$as_echo "$ax_cv_check_cflags___Wall" >&6; }
+if test "x$ax_cv_check_cflags___Wall" = xyes; then :
+  CFLAGS="$CFLAGS -Wall"
+else
+  :
+fi
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wall" >&5
+$as_echo_n "checking whether C compiler accepts -Wall... " >&6; }
+if ${ax_cv_check_cflags___Wall+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -Wall"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___Wall=yes
+else
+  ax_cv_check_cflags___Wall=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___Wall" >&5
+$as_echo "$ax_cv_check_cflags___Wall" >&6; }
+if test "x$ax_cv_check_cflags___Wall" = xyes; then :
+  CXXFLAGS="$CXXFLAGS -Wall"
+else
+  :
+fi
+
     fi
 
     ######################################
@@ -36367,7 +36439,7 @@ fi
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
-#  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
+#  NOTE: -std=c++17 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
