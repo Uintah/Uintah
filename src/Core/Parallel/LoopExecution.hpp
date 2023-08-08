@@ -80,12 +80,13 @@ enum TASKGRAPH {
 //
 // 1. Kokkos::Cuda                            Kokkos::CudaSpace
 // 2. Kokkos::Experimental::OpenMPTarget      Kokkos::Experimental::OpenMPTargetSpace
-// 3. Kokkos::Experimental::HIP               Kokkos::Experimental::HIPSpace
-// 4. Kokkos::Experimental::SYCL              Kokkos::Experimental::SYCLDeviceUSMSpace
-// 5. Kokkos::OpenMP                          Kokkos::HostSpace
-// 6. Kokkos::Threads                         Kokkos::HostSpace
-// 7. Kokkos::Experimental::HPX               Kokkos::HostSpace
-// 8. Kokkos::Serial                          Kokkos::HostSpace
+// 3. Kokkos::Experimental::OpenACC           Kokkos::Experimental::OpenACC
+// 4. Kokkos::Experimental::HIP               Kokkos::Experimental::HIPSpace
+// 5. Kokkos::Experimental::SYCL              Kokkos::Experimental::SYCLDeviceUSMSpace
+// 6. Kokkos::OpenMP                          Kokkos::HostSpace
+// 7. Kokkos::Threads                         Kokkos::HostSpace
+// 8. Kokkos::Experimental::HPX               Kokkos::HostSpace
+// 9. Kokkos::Serial                          Kokkos::HostSpace
 //
 
 // The highest execution space in the list which is enabled is Kokkos'
