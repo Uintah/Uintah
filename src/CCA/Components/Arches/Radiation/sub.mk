@@ -37,8 +37,8 @@ else
   SRCS += $(SRCDIR)/FakeRadPetscSolver.cc
 endif
 
-# Notes to avoid linking errors in CUDA, HIP, SYCL, OpenMPTarget, DORadiationModel needs to be defined
-# without HYPRE.
+# Notes to avoid linking errors in CUDA, HIP, SYCL, OpenMPTarget, OpenACC
+# DORadiationModel needs to be defined without HYPRE.
 ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/DORadiationModel.cc \
           $(SRCDIR)/RadHypreSolver.cc   
