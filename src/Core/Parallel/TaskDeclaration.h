@@ -139,7 +139,6 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       //TODO: Consolidate these
       task->usesDevice(true);
-      task->usesKokkosCuda(true);
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
@@ -269,7 +268,6 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       //TODO: Consolidate these
       task->usesDevice(true);
-      task->usesKokkosCuda(true);
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
@@ -381,7 +379,6 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       //TODO: Consolidate these
       task->usesDevice(true);
-      task->usesKokkosCuda(true);
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
@@ -475,7 +472,6 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       //TODO: Consolidate these
       task->usesDevice(true);
-      task->usesKokkosCuda(true);
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
@@ -549,7 +545,6 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       //TODO: Consolidate these
       task->usesDevice(true);
-      task->usesKokkosCuda(true);
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );

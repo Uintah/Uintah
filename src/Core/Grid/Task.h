@@ -1908,15 +1908,6 @@ public: // class Task
          void usesSimVarPreloading(bool state);
   inline bool usesSimVarPreloading() const { return m_preload_sim_vars; }
 
-         void usesKokkosOpenMP(bool state);
-  inline bool usesKokkosOpenMP() const { return m_uses_kokkos_openmp; }
-
-         void usesKokkosOpenMPTarget(bool state);
-  inline bool usesKokkosOpenMPTarget() const { return m_uses_kokkos_openmptarget; }
-
-         void usesKokkosCuda(bool state);
-  inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
-
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
     , OutOfDomain   // <- Require things from all material
@@ -2502,9 +2493,9 @@ protected: // class Task
   TaskAssignedMemorySpace    m_memory_space{};
   bool m_uses_device{false};
   bool m_preload_sim_vars{false};
-  bool m_uses_kokkos_openmp{false};
-  bool m_uses_kokkos_openmptarget{false};
-  bool m_uses_kokkos_cuda{false};
+  // bool m_uses_kokkos_openmp{false};
+  // bool m_uses_kokkos_openmptarget{false};
+  // bool m_uses_kokkos_cuda{false};
   int  m_max_streams_per_task{0};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
