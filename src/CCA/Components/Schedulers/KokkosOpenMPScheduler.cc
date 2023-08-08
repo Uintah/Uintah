@@ -299,8 +299,9 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
       if (omp_get_nested())
 #endif
       {
+#if defined(HAVE_KOKKOS)
         Kokkos::Profiling::pushRegion("OpenMP Parallel");
-
+#endif
         #pragma omp parallel num_threads(num_partitions)
         {
           omp_set_num_threads(threads_per_partition);
@@ -313,7 +314,9 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
       }
       else
       {
+#if defined(HAVE_KOKKOS)
         Kokkos::Profiling::pushRegion("runTasks");
+#endif
 
         this->runTasks();
       }
@@ -321,12 +324,16 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     else
 #endif // _OPENMP
     {
+#if defined(HAVE_KOKKOS)
       Kokkos::Profiling::pushRegion("runTasks");
+#endif
 
       this->runTasks();
     }
 
+#if defined(HAVE_KOKKOS)
     Kokkos::Profiling::popRegion();
+#endif
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
