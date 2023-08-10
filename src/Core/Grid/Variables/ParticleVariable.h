@@ -620,7 +620,7 @@ template<class T>
 
 } // End namespace Uintah
 
-#ifdef __PGI
+#ifdef __PGI_COMMENT_OUT
 #include <Core/Grid/Variables/ParticleVariable_special.cc>
 #endif
 

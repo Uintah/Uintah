@@ -105,7 +105,7 @@ const TypeDescription* fun_getTypeDescription(long64*)
 }
 
 
-#if !defined( OSX_SNOW_LEOPARD_OR_LATER ) &&  !defined( SCI_32BITS )
+#if !defined( OSX_SNOW_LEOPARD_OR_LATER ) && !defined( SCI_32BITS )
 const TypeDescription* fun_getTypeDescription(long long*)
 {
   static TypeDescription* td;
@@ -188,7 +188,7 @@ const TypeDescription* fun_getTypeDescription(IntVector*)
   return td;
 }
 
-#if !defined( SCI_32BITS ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
+#if !defined( OSX_SNOW_LEOPARD_OR_LATER ) && !defined( SCI_32BITS )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
 #endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }
