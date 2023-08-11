@@ -48,9 +48,9 @@ using namespace std;
 
 namespace Uintah {
 
-// Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
-//
-#if defined(OSX_SNOW_LEOPARD_OR_LATER) || defined(__PGI_COMMENT_OUT) || ( !defined(SCI_64BITS) )
+// Need these min/max functions for Matrix3 in order for the templated
+// findMinMax functions to work.
+#if defined(__PGI_COMMNET_OUT) || defined(OSX_SNOW_LEOPARD_OR_LATER) || defined(SCI_32BITS)
   long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
   long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
 #endif
@@ -65,7 +65,8 @@ namespace Uintah {
 }
 
 // Operator < defined by smaller Norm.  This is done so that I can use
-// the templated findMinMax() without having to specialize the function for Matrix3.
+// the templated findMinMax() without having to specialize the
+// function for Matrix3.
 bool operator < (const Matrix3 & l, const Matrix3 & r) { return l.Norm() < r.Norm(); }
 bool operator > (const Matrix3 & l, const Matrix3 & r) { return l.Norm() > r.Norm(); }
 
