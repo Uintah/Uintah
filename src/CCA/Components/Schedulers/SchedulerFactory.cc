@@ -59,6 +59,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
+#if defined(HAVE_KOKKOS)
     if ((Uintah::Parallel::getNumPartitions() > 0) &&
         (Uintah::Parallel::getThreadsPerPartition() > 0)) {
       if (Uintah::Parallel::usingDevice()) {
@@ -68,7 +69,9 @@ SchedulerFactory::create( const ProblemSpecP   & ps
         scheduler = "KokkosOpenMP"; // User passed '-npartitions <#> -nthreadsperpartition <#>'
       }
     }
-    else if (Uintah::Parallel::getNumThreads() > 0) {
+    else
+#endif
+    if (Uintah::Parallel::getNumThreads() > 0) {
       scheduler = "Unified";        // User passed '-nthreads <#>'
     }
     else {
