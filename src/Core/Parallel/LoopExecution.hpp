@@ -332,9 +332,9 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   const unsigned int rend1 = r.end(1);
   const unsigned int rend2 = r.end(2);
 
-  for (int k=rbegin2; k<rend2; ++k) {
-    for (int j=rbegin1; j<rend1; ++j) {
-      for (int i=rbegin0; i<rend0; ++i) {
+  for (unsigned int k=rbegin2; k<rend2; ++k) {
+    for (unsigned int j=rbegin1; j<rend1; ++j) {
+      for (unsigned int i=rbegin0; i<rend0; ++i) {
         functor(i, j, k);
       }
     }
@@ -774,9 +774,9 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   const unsigned int rend1 = r.end(1);
   const unsigned int rend2 = r.end(2);
 
-  for (int k=rbegin2; k<rend2; ++k) {
-    for (int j=rbegin1; j<rend1; ++j) {
-      for (int i=rbegin0; i<rend0; ++i) {
+  for (unsigned int k=rbegin2; k<rend2; ++k) {
+    for (unsigned int j=rbegin1; j<rend1; ++j) {
+      for (unsigned int i=rbegin0; i<rend0; ++i) {
 
         ReductionType tmp = 0;
         functor(i, j, k, tmp);
@@ -1250,9 +1250,9 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   ReductionType tmp = red;
 
-  for (int k=rbegin2; k<rend2; ++k) {
-    for (int j=rbegin1; j<rend1; ++j) {
-      for (int i=rbegin0; i<rend0; ++i) {
+  for (unsigned int k=rbegin2; k<rend2; ++k) {
+    for (unsigned int j=rbegin1; j<rend1; ++j) {
+      for (unsigned int i=rbegin0; i<rend0; ++i) {
         functor(i, j, k, tmp);
 
         if(red > tmp)
