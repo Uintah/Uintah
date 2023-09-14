@@ -671,11 +671,7 @@ public:
                )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>(
- label->getName().c_str(),
- patch->getID(),
-  matlIndex,
- patch->getLevel()->getID() );
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
@@ -789,7 +785,7 @@ public:
                )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
@@ -911,7 +907,8 @@ public:
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
-    return KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace>();
+    return var.getKokkosView();
+    // return KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace>();
   }
 #endif
 
@@ -934,7 +931,8 @@ public:
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
-    return KokkosView3<T, Kokkos::Experimental::OpenACCSpace>();
+    return var.getKokkosView();
+    // return KokkosView3<T, Kokkos::Experimental::OpenACCSpace>();
   }
 #endif
 
@@ -1005,7 +1003,8 @@ public:
     if ( matlIndex != -999 ) {
         this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
-    return KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace>();
+    return constVar.getKokkosView();
+    // return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>();
   }
 #endif
 
@@ -1023,7 +1022,8 @@ public:
     if ( matlIndex != -999 ) {
         this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
-    return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>();
+    return constVar.getKokkosView();
+    // return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>();
   }
 #endif
 
