@@ -907,7 +907,12 @@ public:
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
-    return var.getKokkosView();
+
+    KokkosView3<const T, Kokkos::HostSpace> view = var.getKokkosView();
+    return KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace>(
+                                                   view.m_view,
+                                                   view.m_i, view.m_j, view.m_k,
+                                                   view.m_A3Data);
     // return KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace>();
   }
 #endif
@@ -931,7 +936,11 @@ public:
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
-    return var.getKokkosView();
+    KokkosView3<const T, Kokkos::HostSpace> view = var.getKokkosView();
+    return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>(
+                                                   view.m_view,
+                                                   view.m_i, view.m_j, view.m_k,
+                                                   view.m_A3Data);
     // return KokkosView3<T, Kokkos::Experimental::OpenACCSpace>();
   }
 #endif
@@ -985,6 +994,7 @@ public:
     if ( matlIndex != -999 ) {
       this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
+
     return constVar.getKokkosView();
   }
 #endif
@@ -1003,8 +1013,13 @@ public:
     if ( matlIndex != -999 ) {
         this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
-    return constVar.getKokkosView();
-    // return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>();
+
+    KokkosView3<const T, Kokkos::HostSpace> view = constVar.getKokkosView();
+    return KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace>(
+                                                   view.m_view,
+                                                   view.m_i, view.m_j, view.m_k,
+                                                   view.m_A3Data);
+    // return KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace>();
   }
 #endif
 
@@ -1022,7 +1037,11 @@ public:
     if ( matlIndex != -999 ) {
         this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
-    return constVar.getKokkosView();
+    KokkosView3<const T, Kokkos::HostSpace> view = constVar.getKokkosView();
+    return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>(
+                                                   view.m_view,
+                                                   view.m_i, view.m_j, view.m_k,
+                                                   view.m_A3Data);
     // return KokkosView3<const T, Kokkos::Experimental::OpenACCSpace>();
   }
 #endif
