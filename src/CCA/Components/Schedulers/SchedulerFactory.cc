@@ -60,12 +60,18 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
 #if defined(HAVE_KOKKOS)
+    // If built with OpenMP these will be defaulted to 1.
     if ((Uintah::Parallel::getNumPartitions() > 0) &&
         (Uintah::Parallel::getThreadsPerPartition() > 0)) {
       if (Uintah::Parallel::usingDevice()) {
         scheduler = "Kokkos";       // User passed '-npartitions <#> -nthreadsperpartition <#> -gpu'
       }
       else {
+        std::string error = "\nERROR<Scheduler>: "
+          "The KokkosOpenMP Scheduler is not operational at this time. "
+           "For CPU runs with OpenMP build Uintah without Kokkos "
+           "while specifying '-nthreads <#>' on the command line.\n";
+        throw ProblemSetupException(error, __FILE__, __LINE__);
         scheduler = "KokkosOpenMP"; // User passed '-npartitions <#> -nthreadsperpartition <#>'
       }
     }
