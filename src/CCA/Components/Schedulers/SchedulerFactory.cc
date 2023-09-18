@@ -60,7 +60,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
 #if defined(HAVE_KOKKOS)
-    // If built with OpenMP these will be defaulted to 1.
+    // If Kokkos was built with OpenMP these two values will be defaulted to 1.
     if ((Uintah::Parallel::getNumPartitions() > 0) &&
         (Uintah::Parallel::getThreadsPerPartition() > 0)) {
       if (Uintah::Parallel::usingDevice()) {

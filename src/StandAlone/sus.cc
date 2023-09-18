@@ -162,23 +162,33 @@ static void usage( const std::string& message,
     std::cerr << "Valid options are:\n";
     std::cerr << "-h[elp]                     : This usage information\n";
     std::cerr << "-d[ebug]                    : List the debug streams\n";
+
+    std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with GPU support and there is a GPU available. \n";
+    std::cerr << "                            : Returns 2 if sus was not compiled with GPU support or there are no GPUs available. \n";
+
 #if defined(UINTAH_USING_GPU)
     std::cerr << "-gpu                        : Use available GPU devices, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-cuda_streams_per_task <#>  : Number of CUDA streams per task \n";
+#endif
+
+#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
     std::cerr << "-cuda_threads_per_block <#> : Number of threads per CUDA block\n";
     std::cerr << "-cuda_blocks_per_loop <#>   : Number of CUDA blocks per loop \n";
-    std::cerr << "-cuda_streams_per_task <#>  : Number of CUDA streams per task \n";
-
 #endif
+
 #if defined(KOKKOS_USING_GPU)
     std::cerr << "-kokkos_policy <policy>     : Kokkos Execution Policy - team, range, mdrange, or mdrange_rev\n";
     std::cerr << "-kokkos_chunk_size <#>      : Kokkos TeamPolicy and RangePolicy chunk size\n";
     std::cerr << "-kokkos_tile_size <# # #>   : Kokkos MDRangePolicy tile size\n";
 #endif
-    std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with GPU support and there is a GPU available. \n";
-    std::cerr << "                            : Returns 2 if sus was not compiled with GPU support or there are no GPUs available. \n";
-    std::cerr << "-nthreads <#>               : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+
+#if defined(HAVE_KOKKOS) && defined(_OPENMP)
     std::cerr << "-npartitions <#>            : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler\n";
     std::cerr << "-nthreadsperpartition <#>   : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler\n";
+#endif
+
+    std::cerr << "-nthreads <#>               : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+
     std::cerr << "-layout NxMxO               : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem           : If using MPI, use this flag if each node has a local disk.\n";
     std::cerr << "-emit_taskgraphs            : Output taskgraph information\n";
@@ -322,6 +332,7 @@ int main( int argc, char *argv[], char *env[] )
       Uintah::Parallel::setNumThreads( numThreads );
     }
     else if (arg == "-npartitions") {
+#if defined(HAVE_KOKKOS) && defined(_OPENMP)
       if (++i == argc) {
         usage("You must provide a number of thread partitions for -npartitions", arg, argv[0]);
       }
@@ -334,8 +345,12 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumPartitions( numPartitions );
+#endif
+      std::cout << "Not compiled for Kokkos OpenMP support" << std::endl;
+      Parallel::exitAll(2);
     }
     else if (arg == "-nthreadsperpartition") {
+#if defined(HAVE_KOKKOS) && defined(_OPENMP)
       if (++i == argc) {
         usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
       }
@@ -343,12 +358,13 @@ int main( int argc, char *argv[], char *env[] )
       if( threadsPerPartition < 1 ) {
         usage("Number of threads per partition is too small", arg, argv[0]);
       }
-#ifdef _OPENMP
       if( threadsPerPartition > omp_get_max_threads() ) {
         usage("Number of threads per partition must be <= omp_get_max_threads()", arg, argv[0]);
       }
-#endif
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
+#endif
+      std::cout << "Not compiled for Kokkos OpenMP support" << std::endl;
+      Parallel::exitAll(2);
     }
     else if (arg == "-solver") {
       if (++i == argc) {
@@ -414,7 +430,7 @@ int main( int argc, char *argv[], char *env[] )
 #endif
     }
     else if (arg == "-cuda_threads_per_block") {
-#if defined(UINTAH_USING_GPU)
+#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
       int cuda_threads_per_block = 0;
       if (++i == argc) {
         usage("You must provide a number of threads per streaming multiprocessor (SM) for -cuda_threads_per_block", arg, argv[0]);
