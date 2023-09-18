@@ -345,9 +345,10 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumPartitions( numPartitions );
-#endif
+#else
       std::cout << "Not compiled for Kokkos OpenMP support" << std::endl;
       Parallel::exitAll(2);
+#endif
     }
     else if (arg == "-nthreadsperpartition") {
 #if defined(HAVE_KOKKOS) && defined(_OPENMP)
@@ -362,9 +363,10 @@ int main( int argc, char *argv[], char *env[] )
         usage("Number of threads per partition must be <= omp_get_max_threads()", arg, argv[0]);
       }
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
-#endif
+#else
       std::cout << "Not compiled for Kokkos OpenMP support" << std::endl;
       Parallel::exitAll(2);
+#endif
     }
     else if (arg == "-solver") {
       if (++i == argc) {
@@ -417,9 +419,10 @@ int main( int argc, char *argv[], char *env[] )
         std::cout << "No GPU detected!" << std::endl;
       }
       Parallel::exitAll(retVal);
-#endif
+#else
       std::cout << "Not compiled for GPU support" << std::endl;
       Parallel::exitAll(2);
+#endif
     }
     else if(arg == "-gpu") {
 #if defined(UINTAH_USING_GPU)
