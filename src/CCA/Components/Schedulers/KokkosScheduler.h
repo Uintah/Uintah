@@ -27,7 +27,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
-#include <map>
+
 #include <string>
 #include <vector>
 
@@ -77,17 +77,13 @@ class KokkosScheduler : public MPIScheduler  {
 
   public:
 
-  KokkosScheduler( const ProcessorGroup * myworld,
-      KokkosScheduler * parentScheduler = nullptr );
+    KokkosScheduler( const ProcessorGroup * myworld,
+                     KokkosScheduler * parentScheduler = nullptr );
 
     virtual ~KokkosScheduler();
 
-    static int verifyAnyGpuActive();  // used only to check if this
-                                      // Uintah build can communicate
-                                      // with a GPU.  This function
-                                      // exits the program
-
-    virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & materialManager );
+    virtual void problemSetup( const ProblemSpecP & prob_spec,
+                               const MaterialManagerP & materialManager );
 
     virtual SchedulerP createSubScheduler();
 
@@ -95,20 +91,14 @@ class KokkosScheduler : public MPIScheduler  {
 
     virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
 
-    void runTask( DetailedTask * dtask , int iteration , int thread_id , CallBackEvent event );
-
     void runTasks( int thread_id );
 
-    // 32 threads can write floats out in one coalesced access.  (32 *
-    // 4 bytes = 128 bytes).
-
-    // TODO: Ideally, this number should be determined from the CUDA
-    // arch during the CMAKE/configure step so that future programmers
-    // don't have to manually remember to update this value if it ever
-    // changes.
-    static const int bufferPadding = 128;
-
     static std::string myRankThread();
+
+    static int verifyAnyGpuActive();  // used only to check if this
+                                      // Uintah build can communicate
+                                      // with a GPU.  This function
+                                      // exits the program
 
   private:
 
@@ -120,6 +110,8 @@ class KokkosScheduler : public MPIScheduler  {
 
     void markTaskConsumed( int & numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
 
+    void runTask( DetailedTask * dtask , int iteration , int thread_id , CallBackEvent event );
+
     // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
     std::vector<int>             m_phase_tasks_done;
@@ -128,13 +120,15 @@ class KokkosScheduler : public MPIScheduler  {
     DetailedTasks              * m_detailed_tasks{nullptr};
 
     QueueAlg m_task_queue_alg{MostMessages};
+
     int      m_curr_iteration{0};
+
     int      m_num_tasks_done{0};
     int      m_num_tasks{0};
     int      m_curr_phase{0};
     int      m_num_phases{0};
-    bool     m_abort{false};
     int      m_abort_point{0};
+    bool     m_abort{false};
 };
 
 } // namespace Uintah

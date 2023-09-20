@@ -119,7 +119,7 @@ thread_local  int  t_tid = 0;   // unique ID assigned in thread_driver()
 
 }
 
-}} // namespace Uintah::Impl
+} } // namespace Uintah::Impl
 
 #  define CUDA_RT_SAFE_CALL( call ) {                                          \
     cudaError err = call;                                                      \
@@ -357,174 +357,6 @@ KokkosScheduler::createSubScheduler()
 //______________________________________________________________________
 //
 void
-KokkosScheduler::runTask( DetailedTask  * dtask
-                        , int             iteration
-                        , int             thread_id /* = 0 */
-                        , CallBackEvent   event
-                        )
-{
-  Kokkos::Profiling::pushRegion("thread " + std::to_string(thread_id) + ": " + dtask->getName());
-
-  // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
-  if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
-
-    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
-      printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
-    }
-
-    std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
-    for (int i = 0; i < static_cast<int>(m_dws.size()); i++) {
-      plain_old_dws[i] = m_dws[i].get_rep();
-    }
-
-    DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
-
-#if defined(UINTAH_USING_GPU)
-    // DS: 10312019: If GPU task is going to modify any variable, mark
-    // that variable as invalid on CPU.
-    if (event == CallBackEvent::GPU) {
-      dtask->markHostAsInvalid(m_dws);
-    }
-#endif
-
-    dtask->doit(d_myworld, m_dws, plain_old_dws, event);
-
-    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
-      printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
-    }
-  }
-
-  // For CPU and postGPU task runs, post MPI sends and call task->done;
-  if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
-
-#if defined(UINTAH_USING_GPU)
-    if (Uintah::Parallel::usingDevice()) {
-
-      //DS: 10312019: If CPU task is going to modify any variable,
-      //mark that variable as invalid on GPU.
-      if (event == CallBackEvent::CPU) {
-        dtask->markHostComputesDataAsValid(m_dws);
-        dtask->markDeviceAsInvalidHostAsValid(m_dws);
-      }
-
-      //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
-      if (event == CallBackEvent::postGPU) {
-        dtask->markHostAsInvalid(m_dws);
-      }
-
-      // TODO: Don't make every task run through this
-      // TODO: Verify that it only looks for data that's valid in the
-      // GPU, and not assuming it's valid.
-      // Load up the prepareDeviceVars by preparing ghost cell regions
-      // to copy out.
-      dtask->findIntAndExtGpuDependencies(m_dws, m_no_copy_data_vars,
-                                          m_reloc_new_pos_label,
-                                          m_parent_scheduler ? m_parent_scheduler->m_reloc_new_pos_label : nullptr,
-                                          iteration, thread_id);
-
-      // The ghost cell destinations indicate which devices we're using,
-      // and which ones we'll need streams for.
-      dtask->assignDevicesAndStreamsFromGhostVars();
-      dtask->createTaskGpuDWs();
-
-      // place everything in the GPU data warehouses
-      dtask->prepareDeviceVars(m_dws);
-      dtask->prepareTaskVarsIntoTaskDW(m_dws);
-      dtask->prepareGhostCellsIntoTaskDW();
-      dtask->syncTaskGpuDWs();
-
-      // Get these ghost cells to contiguous arrays so they can be
-      // copied to host.
-      dtask->performInternalGhostCellCopies();  //TODO: Fix for multiple GPUs
-
-      // Now that we've done internal ghost cell copies, we can mark
-      // the staging vars as being valid.
-
-      // TODO: Sync required?  We shouldn't mark data as valid until
-      // it has copied.
-      dtask->markDeviceRequiresAndModifiesDataAsValid(m_dws);
-
-      dtask->copyAllGpuToGpuDependences(m_dws);
-      // TODO: Mark destination staging vars as valid.
-
-      // copy all dependencies to arrays
-      dtask->copyAllExtGpuDependenciesToHost(m_dws);
-
-      // In order to help copy values to another on-node GPU or
-      // another MPI rank, ghost cell data was placed in a var in the
-      // patch it is *going to*.  It helps reuse gpu dw engine code
-      // this way.  But soon, after this task is done, we are likely
-      // going to receive a different region of that patch from a
-      // neighboring on-node GPU or neighboring MPI rank.  So we need
-      // to remove this foreign variable now so it can be used again.
-      // clearForeignGpuVars(deviceVars);
-    }
-#endif
-
-  MPIScheduler::postMPISends(dtask, iteration);
-
-#if defined(UINTAH_USING_GPU)
-    if (Uintah::Parallel::usingDevice()) {
-      dtask->deleteTaskGpuDataWarehouses();
-    }
-#endif
-
-    dtask->done(m_dws);
-
-    g_lb_mutex.lock();
-    {
-      // Do the global and local per task monitoring
-      sumTaskMonitoringValues( dtask );
-
-      double total_task_time = dtask->task_exec_time();
-      if (g_exec_out) {
-        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
-      }
-
-      // if I do not have a sub scheduler
-      if (!dtask->getTask()->getHasSubScheduler()) {
-        //add my task time to the total time
-        m_mpi_info[TotalTask] += total_task_time;
-        if (!m_is_copy_data_timestep &&
-            dtask->getTask()->getType() != Task::Output) {
-          //add contribution for patchlist
-          m_loadBalancer->addContribution(dtask, total_task_time);
-        }
-      }
-    }
-    g_lb_mutex.unlock();
-
-    //---------------------------------------------------------------------------
-    // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
-    //---------------------------------------------------------------------------
-    // test a pending request
-    auto ready_request = [](CommRequest const& r)->bool {return r.test();};
-    CommRequestPool::handle find_handle;
-    CommRequestPool::iterator comm_sends_iter = m_sends.find_any(find_handle, ready_request);
-    if (comm_sends_iter) {
-      MPI_Status status;
-      comm_sends_iter->finishedCommunication(d_myworld, status);
-      find_handle = comm_sends_iter;
-      m_sends.erase(comm_sends_iter);
-    }
-    //---------------------------------------------------------------------------
-
-
-    // Add subscheduler timings to the parent scheduler and reset subscheduler timings
-    if (m_parent_scheduler != nullptr) {
-      for (size_t i = 0; i < m_mpi_info.size(); ++i) {
-        m_parent_scheduler->m_mpi_info[i] += m_mpi_info[i];
-      }
-      m_mpi_info.reset(0);
-    }
-  }
-
-  Kokkos::Profiling::popRegion();
-}  // end runTask()
-
-//______________________________________________________________________
-//
-void
 KokkosScheduler::execute( int tgnum       /* = 0 */
                         , int iteration   /* = 0 */
                         )
@@ -710,7 +542,6 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   //---------------------------------------------------------------------------
 
 
-
   //---------------------------------------------------------------------------
   // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
   //---------------------------------------------------------------------------
@@ -779,7 +610,7 @@ KokkosScheduler::markTaskConsumed( int          & numTasksDone
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
 
-  // task ordering debug info - please keep this here, APH 05/30/18
+  // Task ordering debug info - please keep this here, APH 05/30/18
   if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
     std::ostringstream task_name;
     task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
@@ -805,6 +636,176 @@ KokkosScheduler::markTaskConsumed( int          & numTasksDone
                                     << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
+
+
+//______________________________________________________________________
+//
+void
+KokkosScheduler::runTask( DetailedTask  * dtask
+                        , int             iteration
+                        , int             thread_id /* = 0 */
+                        , CallBackEvent   event
+                        )
+{
+  Kokkos::Profiling::pushRegion("thread " + std::to_string(thread_id) + ": " + dtask->getName());
+
+  // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
+  if ( event == CallBackEvent::CPU || event == CallBackEvent::GPU) {
+
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
+      printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
+    }
+
+    std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
+    for (int i = 0; i < static_cast<int>(m_dws.size()); i++) {
+      plain_old_dws[i] = m_dws[i].get_rep();
+    }
+
+    DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
+
+#if defined(UINTAH_USING_GPU)
+    // DS: 10312019: If GPU task is going to modify any variable, mark
+    // that variable as invalid on CPU.
+    if (event == CallBackEvent::GPU) {
+      dtask->markHostAsInvalid(m_dws);
+    }
+#endif
+
+    dtask->doit(d_myworld, m_dws, plain_old_dws, event);
+
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
+      printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
+    }
+  }
+
+  // For CPU and postGPU task runs, post MPI sends and call task->done;
+  if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
+
+#if defined(UINTAH_USING_GPU)
+    if (Uintah::Parallel::usingDevice()) {
+
+      //DS: 10312019: If CPU task is going to modify any variable,
+      //mark that variable as invalid on GPU.
+      if (event == CallBackEvent::CPU) {
+        dtask->markHostComputesDataAsValid(m_dws);
+        dtask->markDeviceAsInvalidHostAsValid(m_dws);
+      }
+
+      //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+      if (event == CallBackEvent::postGPU) {
+        dtask->markHostAsInvalid(m_dws);
+      }
+
+      // TODO: Don't make every task run through this
+      // TODO: Verify that it only looks for data that's valid in the
+      // GPU, and not assuming it's valid.
+      // Load up the prepareDeviceVars by preparing ghost cell regions
+      // to copy out.
+      dtask->findIntAndExtGpuDependencies(m_dws, m_no_copy_data_vars,
+                                          m_reloc_new_pos_label,
+                                          m_parent_scheduler ? m_parent_scheduler->m_reloc_new_pos_label : nullptr,
+                                          iteration, thread_id);
+
+      // The ghost cell destinations indicate which devices we're using,
+      // and which ones we'll need streams for.
+      dtask->assignDevicesAndStreamsFromGhostVars();
+      dtask->createTaskGpuDWs();
+
+      // place everything in the GPU data warehouses
+      dtask->prepareDeviceVars(m_dws);
+      dtask->prepareTaskVarsIntoTaskDW(m_dws);
+      dtask->prepareGhostCellsIntoTaskDW();
+      dtask->syncTaskGpuDWs();
+
+      // Get these ghost cells to contiguous arrays so they can be
+      // copied to host.
+      dtask->performInternalGhostCellCopies();  //TODO: Fix for multiple GPUs
+
+      // Now that we've done internal ghost cell copies, we can mark
+      // the staging vars as being valid.
+
+      // TODO: Sync required?  We shouldn't mark data as valid until
+      // it has copied.
+      dtask->markDeviceRequiresAndModifiesDataAsValid(m_dws);
+
+      dtask->copyAllGpuToGpuDependences(m_dws);
+      // TODO: Mark destination staging vars as valid.
+
+      // copy all dependencies to arrays
+      dtask->copyAllExtGpuDependenciesToHost(m_dws);
+
+      // In order to help copy values to another on-node GPU or
+      // another MPI rank, ghost cell data was placed in a var in the
+      // patch it is *going to*.  It helps reuse gpu dw engine code
+      // this way.  But soon, after this task is done, we are likely
+      // going to receive a different region of that patch from a
+      // neighboring on-node GPU or neighboring MPI rank.  So we need
+      // to remove this foreign variable now so it can be used again.
+      // clearForeignGpuVars(deviceVars);
+    }
+#endif
+
+  MPIScheduler::postMPISends(dtask, iteration);
+
+#if defined(UINTAH_USING_GPU)
+    if (Uintah::Parallel::usingDevice()) {
+      dtask->deleteTaskGpuDataWarehouses();
+    }
+#endif
+
+    dtask->done(m_dws);
+
+    g_lb_mutex.lock();
+    {
+      // Do the global and local per task monitoring
+      sumTaskMonitoringValues( dtask );
+
+      double total_task_time = dtask->task_exec_time();
+      if (g_exec_out) {
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
+      }
+
+      // if I do not have a sub scheduler
+      if (!dtask->getTask()->getHasSubScheduler()) {
+        //add my task time to the total time
+        m_mpi_info[TotalTask] += total_task_time;
+        if (!m_is_copy_data_timestep &&
+            dtask->getTask()->getType() != Task::Output) {
+          //add contribution for patchlist
+          m_loadBalancer->addContribution(dtask, total_task_time);
+        }
+      }
+    }
+    g_lb_mutex.unlock();
+
+    //---------------------------------------------------------------------------
+    // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
+    //---------------------------------------------------------------------------
+    // test a pending request
+    auto ready_request = [](CommRequest const& r)->bool {return r.test();};
+    CommRequestPool::handle find_handle;
+    CommRequestPool::iterator comm_sends_iter = m_sends.find_any(find_handle, ready_request);
+    if (comm_sends_iter) {
+      MPI_Status status;
+      comm_sends_iter->finishedCommunication(d_myworld, status);
+      find_handle = comm_sends_iter;
+      m_sends.erase(comm_sends_iter);
+    }
+    //---------------------------------------------------------------------------
+
+
+    // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+    if (m_parent_scheduler != nullptr) {
+      for (size_t i = 0; i < m_mpi_info.size(); ++i) {
+        m_parent_scheduler->m_mpi_info[i] += m_mpi_info[i];
+      }
+      m_mpi_info.reset(0);
+    }
+  }
+
+  Kokkos::Profiling::popRegion();
+}  // end runTask()
+
 
 //______________________________________________________________________
 //
@@ -951,7 +952,7 @@ KokkosScheduler::runTasks( int thread_id )
         else {
           havework = true;
           break;
-         }
+        }
       }
 
 #if defined(UINTAH_USING_GPU)
