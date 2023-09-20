@@ -170,9 +170,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   proc0cout << "Kokkos DEVICE Memory Space: \t"
             << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
 
-  if(Parallel::usingDevice()) {
-    proc0cout << "Kokkos DEVICE Execution Policy: ";
-    switch(Parallel::getKokkosPolicy())
+  proc0cout << "Kokkos Execution Policy: \t";
+  switch(Parallel::getKokkosPolicy())
     {
     case Parallel::Kokkos_Team_Policy:
       proc0cout << "Team" << std::endl;
@@ -191,14 +190,14 @@ SchedulerFactory::create( const ProblemSpecP   & ps
       break;
     }
 
-    std::string notUsed(" is set but will not be used!!!!!!!");
+  std::string notUsed(" is set but will not be used!!!!!!!");
 
-    switch(Parallel::getKokkosPolicy())
+  switch(Parallel::getKokkosPolicy())
     {
     case Parallel::Kokkos_Team_Policy:
     case Parallel::Kokkos_Range_Policy:
       {
-        proc0cout << "Kokkos DEVICE Chunk Size: \t";
+        proc0cout << "Kokkos Chunk Size: \t\t";
         if(Parallel::getKokkosChunkSize() > 0)
           proc0cout << Parallel::getKokkosChunkSize() << std::endl;
         else
@@ -208,7 +207,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
         Parallel::getKokkosTileSize(i,j,k);
         if(i > 0 || j > 0 || k > 0)
-          proc0cout << "Kokkos DEVICE tile Size: \t"
+          proc0cout << "Kokkos tile Size: \t\t"
                     << i << " " << j << " " << k << notUsed << std::endl;
       }
       break;
@@ -216,12 +215,12 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     case Parallel::Kokkos_MDRange_Reverse_Policy:
       {
         if(Parallel::getKokkosChunkSize() > 0)
-          proc0cout << "Kokkos DEVICE Chunk Size: \t"
+          proc0cout << "Kokkos Chunk Size: \t\t"
                     << Parallel::getKokkosChunkSize() << notUsed << std::endl;
 
         int i, j, k;
 
-        proc0cout << "Kokkos DEVICE tile Size: \t";
+        proc0cout << "Kokkos tile Size: \t\t";
         Parallel::getKokkosTileSize(i,j,k);
         if(i > 0 || j > 0 || k > 0)
           proc0cout << i << " " << j << " " << k << std::endl;
@@ -231,23 +230,22 @@ SchedulerFactory::create( const ProblemSpecP   & ps
       break;
     }
 
-    int blocksPerLoop = Parallel::getCudaBlocksPerLoop();
-    if(blocksPerLoop > 0) {
-      std::string plural = blocksPerLoop > 1 ? "s" : "";
-      proc0cout << "Kokkos Team Block" << plural
-                << " per loop: \t" << blocksPerLoop
-                << (Parallel::getKokkosPolicy() ==
-                    Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
-    }
+  int blocksPerLoop = Parallel::getCudaBlocksPerLoop();
+  if(blocksPerLoop > 0) {
+    std::string plural = blocksPerLoop > 1 ? "s" : "";
+    proc0cout << "Kokkos Team Block" << plural
+              << " per loop: \t" << blocksPerLoop
+              << (Parallel::getKokkosPolicy() ==
+                  Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
+  }
 
-    int threadsPerBlock = Parallel::getCudaThreadsPerBlock();
-    if(threadsPerBlock > 0) {
-      std::string plural = threadsPerBlock > 1 ? "s" : "";
-      proc0cout << "Kokkos Team Thread" << plural
-                << " per block: \t" << threadsPerBlock
-                << (Parallel::getKokkosPolicy() ==
-                    Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
-    }
+  int threadsPerBlock = Parallel::getCudaThreadsPerBlock();
+  if(threadsPerBlock > 0) {
+    std::string plural = threadsPerBlock > 1 ? "s" : "";
+    proc0cout << "Kokkos Team Thread" << plural
+              << " per block: \t" << threadsPerBlock
+              << (Parallel::getKokkosPolicy() ==
+                  Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
   }
 
 #endif  // #if defined(HAVE_KOKKOS)
