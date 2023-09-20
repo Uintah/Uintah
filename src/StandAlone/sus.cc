@@ -283,8 +283,10 @@ int main( int argc, char *argv[], char *env[] )
   int    restartCheckpointIndex     = -1;
   int    udaSuffix           = -1;
   int    numThreads          =  0;
+#if defined(HAVE_KOKKOS) && defined(_OPENMP)
   int    numPartitions       =  0;
   int    threadsPerPartition =  0;
+#endif
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
@@ -432,8 +434,8 @@ int main( int argc, char *argv[], char *env[] )
 #if defined(HAVE_KOKKOS)
       Uintah::Parallel::setUsingCPU( true );
 #else
-      std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
+      std::cout << "Ignoring '-cpu' flag as it is true by default." << std::endl;
+      // Parallel::exitAll(2);
 #endif
     }
     else if(arg == "-gpu") {
