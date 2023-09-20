@@ -50,8 +50,8 @@
 #else
   namespace Kokkos {
     namespace Profiling {
-      void pushRegion(const std::string& kName) {};
-      void popRegion () {};
+      void pushRegion(const std::string& kName);
+      void popRegion ();
     };
 };
 #endif
