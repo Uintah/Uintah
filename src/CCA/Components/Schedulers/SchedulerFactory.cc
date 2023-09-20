@@ -59,29 +59,29 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
+
 #if defined(HAVE_KOKKOS)
-    // If Kokkos was built with OpenMP these two values will be defaulted to 1.
-    if ((Uintah::Parallel::getNumPartitions() > 0) &&
-        (Uintah::Parallel::getThreadsPerPartition() > 0)) {
+    // If built with Kokkos it is possible to still use the CPU schedulers.
+    if (Uintah::Parallel::usingCPU() == false &&
+        // If Kokkos was built with OpenMP these two values will be
+        // defaulted to 1.
+        Uintah::Parallel::getNumPartitions() > 0 &&
+        Uintah::Parallel::getThreadsPerPartition() > 0)
+    {
       if (Uintah::Parallel::usingDevice()) {
-        scheduler = "Kokkos";       // User passed '-npartitions <#> -nthreadsperpartition <#> -gpu'
+        scheduler = "Kokkos"; // User passed -gpu'
       }
       else {
-        std::string error = "\nERROR<Scheduler>: "
-          "The KokkosOpenMP Scheduler is not operational at this time. "
-           "For CPU runs with OpenMP build Uintah without Kokkos "
-           "while specifying '-nthreads <#>' on the command line.\n";
-        throw ProblemSetupException(error, __FILE__, __LINE__);
-        scheduler = "KokkosOpenMP"; // User passed '-npartitions <#> -nthreadsperpartition <#>'
+        scheduler = "KokkosOpenMP";
       }
     }
     else
 #endif
     if (Uintah::Parallel::getNumThreads() > 0) {
-      scheduler = "Unified";        // User passed '-nthreads <#>'
+      scheduler = "Unified";  // User passed '-nthreads <#>'
     }
     else {
-      scheduler = "MPI";            // User passed no scheduler-specific run-time parameters
+      scheduler = "MPI";      // User passed no runtime scheduler parameters
     }
   }
 
