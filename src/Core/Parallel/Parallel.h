@@ -134,6 +134,14 @@ class Parallel {
       static bool usingMPI();
 
       //////////
+      // Returns true if explicitly set to use CPU schedulers overridding all other defaults, false otherwise
+      static bool usingCPU();
+
+      //////////
+      // Sets whether or not to explicitly use CPU schedulers overridding all other defaults.
+      static void setUsingCPU( bool state );
+
+      //////////
       // Returns true if this process is to use an accelerator or co-processor (e.g. GPU, MIC, etc), false otherwise
       static bool usingDevice();
 
@@ -242,6 +250,7 @@ class Parallel {
       static CpuThreadEnvironment s_cpu_thread_environment;
 
       static bool              s_initialized;
+      static bool              s_using_cpu;
       static bool              s_using_device;
       static int               s_cuda_threads_per_block;
       static int               s_cuda_blocks_per_loop;

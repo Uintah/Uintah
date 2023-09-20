@@ -324,6 +324,9 @@ template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor)
 {
+  int status;
+  char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
+
   const unsigned int rbegin0 = r.begin(0);
   const unsigned int rbegin1 = r.begin(1);
   const unsigned int rbegin2 = r.begin(2);
@@ -339,6 +342,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       }
     }
   }
+
+  std::free( name );
 }
 
 // CPU - parallel_for - For legacy loops where no execution space was
@@ -612,7 +617,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       const unsigned int actual_blocks_per_loop =
         (actual_threads - 1) / cuda_threads_per_block + 1;
 
-      for (unsigned int p = 0; p < nPartitions; p++) {
+      for (int p = 0; p < nPartitions; p++) {
 
         ExecSpace instanceObject = getInstance(execObj, p);
 
@@ -1073,7 +1078,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       const unsigned int actual_blocks_per_loop =
         (actual_threads - 1) / cuda_threads_per_block + 1;
 
-      for (unsigned int p = 0; p < nPartitions; p++) {
+      for (int p = 0; p < nPartitions; p++) {
         ReductionType tmp0 = 0;
 
         ExecSpace instanceObject = getInstance(execObj, p);
@@ -1551,7 +1556,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       const unsigned int actual_blocks_per_loop =
         (actual_threads - 1) / cuda_threads_per_block + 1;
 
-      for (unsigned int p = 0; p < nPartitions; p++) {
+      for (int p = 0; p < nPartitions; p++) {
         ReductionType tmp0 = 0;
 
         ExecSpace instanceObject = getInstance(execObj, p);

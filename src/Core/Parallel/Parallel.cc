@@ -55,6 +55,11 @@ Parallel::CpuThreadEnvironment Parallel::s_cpu_thread_environment =
   Parallel::CpuThreadEnvironment::PTHREADS;
 
 bool             Parallel::s_initialized             = false;
+#if defined(HAVE_KOKKOS)
+bool             Parallel::s_using_cpu               = false;
+#else
+bool             Parallel::s_using_cpu               = true;
+#endif
 bool             Parallel::s_using_device            = false;
 int              Parallel::s_cuda_threads_per_block  = -1;
 int              Parallel::s_cuda_blocks_per_loop    = -1;
@@ -68,7 +73,7 @@ int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
 
 Parallel::Kokkos_Policy Parallel::s_kokkos_policy =
-  Parallel::Kokkos_Team_Policy;
+  Parallel::Kokkos_MDRange_Policy;
 int              Parallel::s_kokkos_chunk_size       = -1;
 int              Parallel::s_kokkos_tile_i_size      = -1;
 int              Parallel::s_kokkos_tile_j_size      = -1;
@@ -135,6 +140,22 @@ Parallel::usingMPI()
   // We now assume this to be an invariant for Uintah, and hence this
   // is always true.
   return true;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setUsingCPU( bool state )
+{
+  s_using_cpu = state;
+}
+
+//_____________________________________________________________________________
+//
+bool
+Parallel::usingCPU()
+{
+  return s_using_cpu;
 }
 
 //_____________________________________________________________________________
@@ -448,7 +469,8 @@ Parallel::initializeManager( int& argc , char**& argv )
       s_cuda_blocks_per_loop = 1;
     }
   }
-#elif defined(KOKKOS_ENABLE_OPENMP)
+#endif
+#if defined(KOKKOS_ENABLE_OPENMP)
   if(s_cuda_threads_per_block <= 0) {
     s_cuda_threads_per_block = 16;
   }
