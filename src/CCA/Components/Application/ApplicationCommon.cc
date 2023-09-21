@@ -427,9 +427,9 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   }
 
   // Remove the inactive reduction variables.
-  for (auto & name : inactive) {
-    removeReductionVariable(name);
-  }
+  // for (auto & name : inactive) {
+  //   removeReductionVariable(name);
+  // }
 
   // These two reduction vars may be set by the application via a
   // compute in which case a requires is needed (done above). Or if
