@@ -822,6 +822,7 @@ namespace WasatchCore{
                 std::set<std::string>& persistentFields
               )
   {
+#   ifdef HAVE_POKITT
     if( !CanteraObjects::is_ready() ){
       std::ostringstream msg;
       msg << "Must specify species block for cantera input." << std::endl;
@@ -874,6 +875,12 @@ namespace WasatchCore{
                                       yiTags,
                                       fuelY,
                                       oxidizerY ) );
+#   else
+    std::ostringstream msg;
+    msg << "Must compile with PoKiTT support" << std::endl;
+    throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+
+#   endif
   }
 
   //====================================================================
