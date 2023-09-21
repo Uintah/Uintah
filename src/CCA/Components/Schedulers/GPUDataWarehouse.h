@@ -463,17 +463,17 @@ public:
 
 
   HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable( GPUGridVariableBase&  var, char const* label, const int patchID, const int8_t matlIndx) {
+  HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
   HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable( GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
   HOST_DEVICE void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable( GPUPerPatchBase&  var, char const* label, const int patchID, const int8_t matlIndx) {
+  HOST_DEVICE void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
