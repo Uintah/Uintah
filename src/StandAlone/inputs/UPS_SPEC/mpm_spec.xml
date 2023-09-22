@@ -14,6 +14,7 @@
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
+      <DoGranularMPM                      spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
       <restartOnLargeNodalVelocity        spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
