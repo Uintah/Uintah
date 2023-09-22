@@ -1607,53 +1607,6 @@ namespace Uintah {
     default:
       throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
-
-    //__________________________________
-    //  Computes and requires
-
-    // Matrix A
-    task->requires(which_A_dw, A_label, Ghost::None, 0);
-
-    // Solution X
-    if(modifies_X){
-      task->modifies( x_label );
-    } else {
-      task->computes( x_label );
-    }
-
-    // Initial Guess
-    if(guess_label){
-      task->requires(which_guess_dw, guess_label, Ghost::None, 0);
-    }
-
-    // RHS  B
-    task->requires(which_b_dw, b_label, Ghost::None, 0);
-
-    // timestep
-    // it could come from old_dw or parentOldDw
-    Task::WhichDW old_dw = m_params->getWhichOldDW();
-    task->requires( old_dw, m_timeStepLabel );
-
-    // solve struct
-    if (isFirstSolve) {
-      task->requires( Task::OldDW, hypre_solver_label);
-      task->computes( hypre_solver_label);
-    }  else {
-      task->requires( Task::NewDW, hypre_solver_label);
-    }
-
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
-
-    task->setType(Task::Hypre);
-
-    if( m_params->getRecomputeTimeStepOnFailure() ){
-      task->computes( VarLabel::find(abortTimeStep_name) );
-      task->computes( VarLabel::find(recomputeTimeStep_name) );
-    }
-
-    LoadBalancer * lb = sched->getLoadBalancer();
-
-    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
   //---------------------------------------------------------------------------------------------
