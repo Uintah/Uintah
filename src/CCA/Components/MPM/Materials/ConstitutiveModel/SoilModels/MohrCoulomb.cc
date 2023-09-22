@@ -639,9 +639,18 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
 	  strain23 += e23 * dt;
 	  strain13 += e13 * dt;
 
-	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + pow((strain11 - strain33), 2.0) + pow((strain22 - strain33), 2.0)) + 3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
+//	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + 
+//                                                 pow((strain11 - strain33), 2.0) + 
+//                                                 pow((strain22 - strain33), 2.0)) +
+//                                            3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
+          shear_strain_local = 0.5*sqrt(2.0*((strain11 - strain22)*(strain11 - strain22) + 
+                                             (strain11 - strain33)*(strain11 - strain33) + 
+                                             (strain22 - strain33)*(strain22 - strain33)) +
+                                        3.0*(strain12*strain12 + strain13*strain13 + strain23*strain23));
 
-	  shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));  
+//        shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));  
+          shear_strain_rate = 0.5*sqrt(2.0*(((e11 - e22)*(e11 - e22)) + (e11 - e33)*(e11 - e33) + (e22 - e33)*(e22 - e33)) +
+                                       3.0*(e12*e12 + e13*e13 + e23*e23));
 
 	  svarg[28] = strain11;
 	  svarg[29] = strain22;

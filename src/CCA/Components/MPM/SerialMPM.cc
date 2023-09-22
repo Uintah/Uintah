@@ -1619,6 +1619,7 @@ void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
@@ -4652,7 +4653,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> psize, pSizeOrig;
       constParticleVariable<double> pVolumeOld,pmass,pmassNew;
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pFOld;
@@ -4668,6 +4669,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
       old_dw->get(px,           lb->pXLabel,                         pset);
       new_dw->get(psize,        lb->pCurSizeLabel,                   pset);
+      old_dw->get(pSizeOrig,    lb->pSizeLabel,                      pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
@@ -4774,6 +4776,16 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
         double JOld=pFOld[idx].Determinant();
         pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
         partvoldef += pvolume[idx];
+        if(flags->d_doGranularMPM){ //MJ
+          double r1=dx.x()*pSizeOrig[idx](0,0);
+          double r2=dx.y()*pSizeOrig[idx](1,1);
+          double r3=dx.z()*pSizeOrig[idx](2,2);
+          const double Vcri = (1.1*r1 * 1.1*r2 * 1.1*r3);
+          if (pvolume[idx]> (Vcri + 1.0e-12)){
+            pFNew[idx] = pFOld[idx];
+            pvolume[idx] = pVolumeOld[idx];
+          }
+        } // end if Granular MPM
       }
 
       // The following is used only for pressure stabilization
@@ -4830,7 +4842,11 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
        // MJ: Granular MPM condition
 
           if(flags->d_doGranularMPM){ //MJ
-            if (pvolume[idx]> ( (0.055 * 0.055 * 0.055)) +1.0e-12   ){
+            double r1=dx.x()*pSizeOrig[idx](0,0);
+            double r2=dx.y()*pSizeOrig[idx](1,1);
+            double r3=dx.z()*pSizeOrig[idx](2,2);
+            const double Vcri = (1.1*r1 * 1.1*r2 * 1.1*r3);
+            if (pvolume[idx]> (Vcri + 1.0e-12)){
               pFNew[idx] = pFOld[idx];
               pvolume[idx] = pVolumeOld[idx];
             }
@@ -4851,7 +4867,6 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
     delete interpolator;
   }
-
 }
 
 void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
@@ -6684,15 +6699,16 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
 {
     //---------------------Preparing data for task 1--------------------------//
 
-    //1- Finding the number of material points in all materials
-    int PsetNumbParticles = 0;  //Counter for finding number of particles in a particles set
-    int NumbParticles = 0;      //Counter for finding number of particles in all materials
+  //1- Finding the number of material points in all materials
+  int PsetNumbParticles = 0;  //Counter for finding number of particles in a particles set
+  int NumbParticles = 0;      //Counter for finding number of particles in all materials
 
   //moving on the patches. The whole Granular MPM is written to repeat itself for each patch once. 
   for (int p = 0; p < patches->size(); p++) {   
     const Patch* patch = patches->get(p);
     printTask(patches, patch, cout_doing, "Doing MPM::GranularMPM");
     unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+    Vector dx = patch->dCell();
 
     //  cout << "Patch size = " << patches->size() << endl;
     for (unsigned int m = 0; m < numMatls; m++) {   
@@ -6704,168 +6720,180 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
         NumbParticles = NumbParticles + PsetNumbParticles;           
     }       
 
-        //2- creating vector to carry particle data from all materials and filling them.
-        vector<int> MaterialIndex(NumbParticles);     //a vector for recording original material. The number kept in this vector show the index of original materil. This vector helps in finding the original data of particle.
-        vector<int> ParticleIndex(NumbParticles);     //a vector for recording original particle index. The number kept in this vector show the index of materal point in its original material. This vector helps in finding the original data of particle.
-        vector<double> px1(NumbParticles);            //a vector for the material point cordinate in x-direction
-        vector<double> px2(NumbParticles);            //a vector for the material point cordinate in y-direction
-        vector<double> px3(NumbParticles);            //a vector for the material point cordinate in z-direction
-        const  double r1 = 0.05/2.0;                  //initial domain of material point in x direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-        const  double r2 = 0.05/2.0;                  //initial domain of material point in y direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-        const  double r3 = 0.05/2.0;                  //initial domain of material point in z direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-        const  double Vcri = (0.055 * 0.055 * 0.055); //Critical volume of material point. Ideally this is parameter define by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-        vector<double> DI1(NumbParticles);            //declaring a vector for x values of domain of interaction
-        vector<double> DI2(NumbParticles);            //declaring a vector for y values of domain of interaction 
-        vector<double> DI3(NumbParticles);            //declaring a vector for z values of domain of interaction 
-        int pcounter = 0;
+    //2- creating vector to carry particle data from all materials and filling them.
+    vector<int> MaterialIndex(NumbParticles);     //a vector for recording original material. The number kept in this vector show the index of original materil. This vector helps in finding the original data of particle.
+    vector<int> ParticleIndex(NumbParticles);     //a vector for recording original particle index. The number kept in this vector show the index of materal point in its original material. This vector helps in finding the original data of particle.
+    vector<double> px1(NumbParticles);            //a vector for the material point cordinate in x-direction
+    vector<double> px2(NumbParticles);            //a vector for the material point cordinate in y-direction
+    vector<double> px3(NumbParticles);            //a vector for the material point cordinate in z-direction
+//    const  double r1 = 0.05/2.0;                  //initial domain of material point in x direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+//    const  double r2 = 0.05/2.0;                  //initial domain of material point in y direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+//    const  double r3 = 0.05/2.0;                  //initial domain of material point in z direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+    vector<double> DI1(NumbParticles);            //declaring a vector for x values of domain of interaction
+    vector<double> DI2(NumbParticles);            //declaring a vector for y values of domain of interaction 
+    vector<double> DI3(NumbParticles);            //declaring a vector for z values of domain of interaction 
+    int pcounter = 0;
 
-        //moving on the materials in each pataches
-        for (unsigned int m = 0; m < numMatls; m++) {
-            MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
-            int dwi = mpm_matl->getDWIndex();
-            ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-            //creating particle arrays
-            ParticleVariable<Point> px;
-            ParticleVariable<Matrix3>  pSize;
-            ParticleVariable<double> pvolume;
-              //putting the data in the arrays
-              new_dw->getModifiable(px, lb->pXLabel_preReloc, pset);
-              new_dw->getModifiable(pSize, lb->pSizeLabel_preReloc, pset);
-              new_dw->getModifiable(pvolume, lb->pVolumeLabel_preReloc, pset);
+    //moving on the materials in each pataches
+    for (unsigned int m = 0; m < numMatls; m++) {
+      MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      //creating particle arrays
+      ParticleVariable<Point> px;
+      ParticleVariable<Matrix3>  pSize;
+      ParticleVariable<double> pvolume;
+      //putting the data in the arrays
+      new_dw->getModifiable(px, lb->pXLabel_preReloc, pset);
+      new_dw->getModifiable(pSize, lb->pSizeLabel_preReloc, pset);
+      new_dw->getModifiable(pvolume, lb->pVolumeLabel_preReloc, pset);
 
-                  //moving on the particles in each materaial and each pataches
-                  for (ParticleSubset::iterator iter1 = pset->begin();     
-                     iter1 != pset->end();
-                     iter1++) {
-                     particleIndex idx0 = *iter1;
-                     MaterialIndex[pcounter] = dwi;                  
-                     ParticleIndex[pcounter] = idx0;
-                     px1[pcounter] = px[idx0](0);                      
-                     px2[pcounter] = px[idx0](1);                    
-                     px3[pcounter] = px[idx0](2);
+      //moving on the particles in each materaial and each pataches
+      for (ParticleSubset::iterator iter1 = pset->begin();     
+         iter1 != pset->end();
+         iter1++) {
+         particleIndex idx0 = *iter1;
+         MaterialIndex[pcounter] = dwi;                  
+         ParticleIndex[pcounter] = idx0;
+         px1[pcounter] = px[idx0](0);                      
+         px2[pcounter] = px[idx0](1);                    
+         px3[pcounter] = px[idx0](2);
+         double r1=dx.x()*pSize[idx0](0,0);
+         double r2=dx.y()*pSize[idx0](1,1);
+         double r3=dx.z()*pSize[idx0](2,2);
+//         const  double Vcri = (0.055 * 0.055 * 0.055); //Critical volume of material point. Ideally this is parameter define by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+         const  double Vcri = (1.1*r1 * 1.1*r2 * 1.1*r3); //Critical volume of material point. Ideally this is parameter define by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
 
-                     DI1[pcounter] = pow(    ( 0.125*(r1*r1/r2/r3) * Vcri ) , (1.0/3.0)    );     //domain of interaction in x direction.
-                     DI2[pcounter] = pow(    ( 0.125*(r2*r2/r1/r3) * Vcri ) , (1.0/3.0)    );     //domain of interaction in y direction.
-                     DI3[pcounter] = pow(    ( 0.125*(r3*r3/r1/r2) * Vcri ) , (1.0/3.0)    );     //domain of interaction in z direction.
-                     pcounter = pcounter + 1;
-                  }                  
-        }
+         //domain of interaction in x, y and z directions, respectively.
+         DI1[pcounter] = cbrt(( 0.125*(r1*r1/r2/r3) * Vcri ));
+         DI2[pcounter] = cbrt(( 0.125*(r2*r2/r1/r3) * Vcri ));
+         DI3[pcounter] = cbrt(( 0.125*(r3*r3/r1/r2) * Vcri ));
+         pcounter = pcounter + 1;
+      }                  
+    }
 
-        //Creating matrixes for Granular MPM. 
-        //We need 3 matrixes in the whole Granular MPM. As the matrix creation requires some steps, I am making all here so prevent repeating. 
-        //I write detailed comment here for each matrix and the task the matrix will be used in. 
+    //Creating matrixes for Granular MPM. 
+    //We need 3 matrixes in the whole Granular MPM. As the matrix creation requires some steps, I am making all here so prevent repeating. 
+    //I write detailed comment here for each matrix and the task the matrix will be used in. 
 
-        //First matrix:  Interaction     ---------> This matrix will be used in Task 1. It is a matrix for recording indexes of interacting material point. 
-        //                                          each row of Interaction has indexes of material points connected with the row number material point through grid.
-        vector<vector<int> > Interaction(NumbParticles);  
+    //First matrix:  Interaction     ---------> This matrix will be used in Task 1. It is a matrix for recording indexes of interacting material point. 
+    //                                          each row of Interaction has indexes of material points connected with the row number material point through grid.
+    vector<vector<int> > Interaction(NumbParticles);  
 
-        //Second matrix: Grids           ---------> This matrix will be use in Task 2. It is a matrix for recording indexes of interacting material points and shows the parallel grid in the next step.
-        //                                          each row of Grids has indexes of material points belonging to one grid of the next step.
-        vector<vector<int> > Grids(NumbParticles);  
-        
-        //Third matrix: CurrentGrids     ---------> This matrix will be use in Task 3. It is a matrix for indicating that a material point should be removed from its current material.
-        //                                          each row of Grids has -1 and 1 only. -1 signals that a material point exist here and should be removed. 1 signals that the material point is Ok to stay or that there is no material point in this position.
-        vector<vector<int> > CurrentGrids(NumbParticles);
-
-
-        for (int i = 0; i < NumbParticles; i++) {
-            Interaction[i].resize(NumbParticles);
-            Grids[i].resize(NumbParticles);
-            CurrentGrids[i].resize(NumbParticles);
-           
-            for (int j = 0; j < NumbParticles; j++) {
-                Interaction[i][j] = {-1};             //-1 is a mere place holder for Interaction matrix. This allows controling the results
-                Grids[i][j] = {-1};                   //-1 is a mere place holder for Grids matrix. This allows controling the results
-                CurrentGrids[i][j] = {1};             //Initially, we assume that all the material points are Ok to stay or that there is no material point in this position. The material that should be moved will be marked with -1 in task 3
-            }
-        }
+    //Second matrix: Grids           ---------> This matrix will be use in Task 2. It is a matrix for recording indexes of interacting material points and shows the parallel grid in the next step.
+    //                                          each row of Grids has indexes of material points belonging to one grid of the next step.
+    vector<vector<int> > Grids(NumbParticles);  
+    
+    //Third matrix: CurrentGrids     ---------> This matrix will be use in Task 3. It is a matrix for indicating that a material point should be removed from its current material.
+    //                                          each row of Grids has -1 and 1 only. -1 signals that a material point exist here and should be removed. 1 signals that the material point is Ok to stay or that there is no material point in this position.
+    vector<vector<int> > CurrentGrids(NumbParticles);
 
 
-       //check for creating vecros with the material points data & cordinates
-       /*
-                            for (int i = 0; i < NumbParticles; i++)
-                             {                                                       
-                               cerr << " MaterialIndex[" << i << "]= " << MaterialIndex[i] << endl;
-                               cerr << " ParticleIndex[" << i << "]= " << ParticleIndex[i] << endl;
-                               cerr << " px1[" << i << "]= " << px1[i] << endl;
-                               cerr << " px2[" << i << "]= " << px2[i] << endl;
-                               cerr << " px3[" << i << "]= " << px3[i] << endl;
-                               cerr << " DI1[" << i << "]= " << DI1[i] << endl;
-                               cerr << " DI2[" << i << "]= " << DI2[i] << endl;
-                               cerr << " DI3[" << i << "]= " << DI3[i] << endl;
+    for (int i = 0; i < NumbParticles; i++) {
+      Interaction[i].resize(NumbParticles);
+      Grids[i].resize(NumbParticles);
+      CurrentGrids[i].resize(NumbParticles);
+     
+      for (int j = 0; j < NumbParticles; j++) {
+          Interaction[i][j] = {-1};             //-1 is a mere place holder for Interaction matrix. This allows controling the results
+          Grids[i][j] = {-1};                   //-1 is a mere place holder for Grids matrix. This allows controling the results
+          CurrentGrids[i][j] = {1};             //Initially, we assume that all the material points are Ok to stay or that there is no material point in this position. The material that should be moved will be marked with -1 in task 3
+      }
+    }
 
-                            } 
-       */
+    //check for creating vecros with the material points data & cordinates
+    /*
+        for (int i = 0; i < NumbParticles; i++) {                                                       
+           cerr << " MaterialIndex[" << i << "]= " << MaterialIndex[i] << endl;
+           cerr << " ParticleIndex[" << i << "]= " << ParticleIndex[i] << endl;
+           cerr << " px1[" << i << "]= " << px1[i] << endl;
+           cerr << " px2[" << i << "]= " << px2[i] << endl;
+           cerr << " px3[" << i << "]= " << px3[i] << endl;
+           cerr << " DI1[" << i << "]= " << DI1[i] << endl;
+           cerr << " DI2[" << i << "]= " << DI2[i] << endl;
+           cerr << " DI3[" << i << "]= " << DI3[i] << endl;
+
+        } 
+    */
                
-       //-------------------------------------------------------Task 1------------------------------------------------------//             
-       //Creating a vector for recording interaction size for each particle. 
-         int InteractionSize[NumbParticles];               // a vector for recording a materail point size of interaction     
-         for (int i = 0; i < NumbParticles; i++) { 
-           InteractionSize[i] = { 0 };
-         }
+    //----------------------------Task 1----------------------------//
+    //Creating a vector for recording interaction size for each particle. 
+    int InteractionSize[NumbParticles];               // a vector for recording a materail point size of interaction     
+    for (int i = 0; i < NumbParticles; i++) { 
+      InteractionSize[i] = { 0 };
+    }
 
-        //loop over all particles in the patch to find the Interaction for each material point:           
-          for (int idx1 = 0; idx1 < NumbParticles; idx1++) {    
-                //finding min and max of DI for material point one.
-                double ximax = px1[idx1] + DI1[idx1];
-                double ximin = px1[idx1] - DI1[idx1];
-                double yimax = px2[idx1] + DI2[idx1];
-                double yimin = px2[idx1] - DI2[idx1];
-                double zimax = px3[idx1] + DI3[idx1];
-                double zimin = px3[idx1] - DI3[idx1];
+    //loop over all particles in the patch to find the Interaction for each material point:           
+    for (int idx1 = 0; idx1 < NumbParticles; idx1++) {
+      //finding min and max of DI for material point one.
+      double ximax = px1[idx1] + DI1[idx1];
+      double ximin = px1[idx1] - DI1[idx1];
+      double yimax = px2[idx1] + DI2[idx1];
+      double yimin = px2[idx1] - DI2[idx1];
+      double zimax = px3[idx1] + DI3[idx1];
+      double zimin = px3[idx1] - DI3[idx1];
 
-               
-                for (int idx2 = 0; idx2 < NumbParticles; idx2++) {      
-                    //finding min and max of DI for material point two.
-                    double xjmax = px1[idx2] + DI1[idx2];
-                    double xjmin = px1[idx2] - DI1[idx2];
-                    double yjmax = px2[idx2] + DI2[idx2];
-                    double yjmin = px2[idx2] - DI2[idx2];
-                    double zjmax = px3[idx2] + DI3[idx2];
-                    double zjmin = px3[idx2] - DI3[idx2];
+      for (int idx2 = 0; idx2 < NumbParticles; idx2++) {
+        //finding min and max of DI for material point two.
+        double xjmax = px1[idx2] + DI1[idx2];
+        double xjmin = px1[idx2] - DI1[idx2];
+        double yjmax = px2[idx2] + DI2[idx2];
+        double yjmin = px2[idx2] - DI2[idx2];
+        double zjmax = px3[idx2] + DI3[idx2];
+        double zjmin = px3[idx2] - DI3[idx2];
 
-                    // if domains of interaction intersect, then the material point index should be added to interaction.
-                    if ((ximax > xjmin) && (ximin < xjmax) && (yimax > yjmin) && (yimin < yjmax) && (zimax > zjmin) && (zimin < zjmax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((ximax > xjmin) && (ximin < xjmax) && (yimax > yjmin) && (yimin < yjmax) && (zjmax > zimin) && (zjmin < zimax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((ximax > xjmin) && (ximin < xjmax) && (yjmax > yimin) && (yjmin < yimax) && (zimax > zjmin) && (zimin < zjmax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((ximax > xjmin) && (ximin < xjmax) && (yjmax > yimin) && (yjmin < yimax) && (zjmax > zimin) && (zjmin < zimax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((xjmax > ximin) && (xjmin < ximax) && (yimax > yjmin) && (yimin < yjmax) && (zimax > zjmin) && (zimin < zjmax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((xjmax > ximin) && (xjmin < ximax) && (yimax > yjmin) && (yimin < yjmax) && (zjmax > zimin) && (zjmin < zimax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((xjmax > ximin) && (xjmin < ximax) && (yjmax > yimin) && (yjmin < yimax) && (zimax > zjmin) && (zimin < zjmax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-
-                    else if ((xjmax > ximin) && (xjmin < ximax) && (yjmax > yimin) && (yjmin < yimax) && (zjmax > zimin) && (zjmin < zimax)) {
-                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
-                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
-                    }
-                }
-          }
+        // if domains of interaction intersect, then the material 
+        //point index should be added to interaction.
+        if ((ximax > xjmin) && (ximin < xjmax) && 
+            (yimax > yjmin) && (yimin < yjmax) && 
+            (zimax > zjmin) && (zimin < zjmax)){
+            Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+            InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((ximax > xjmin) && (ximin < xjmax) && 
+                 (yimax > yjmin) && (yimin < yjmax) && 
+                 (zjmax > zimin) && (zjmin < zimax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((ximax > xjmin) && (ximin < xjmax) && 
+                 (yjmax > yimin) && (yjmin < yimax) && 
+                 (zimax > zjmin) && (zimin < zjmax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((ximax > xjmin) && (ximin < xjmax) && 
+                 (yjmax > yimin) && (yjmin < yimax) && 
+                 (zjmax > zimin) && (zjmin < zimax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((xjmax > ximin) && (xjmin < ximax) && 
+                 (yimax > yjmin) && (yimin < yjmax) && 
+                 (zimax > zjmin) && (zimin < zjmax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((xjmax > ximin) && (xjmin < ximax) && 
+                 (yimax > yjmin) && (yimin < yjmax) && 
+                 (zjmax > zimin) && (zjmin < zimax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((xjmax > ximin) && (xjmin < ximax) && 
+                 (yjmax > yimin) && (yjmin < yimax) && 
+                 (zimax > zjmin) && (zimin < zjmax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+        else if ((xjmax > ximin) && (xjmin < ximax) && 
+                 (yjmax > yimin) && (yjmin < yimax) && 
+                 (zjmax > zimin) && (zjmin < zimax)) {
+          Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+          InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+        }
+      } // end for idx2
+    } // end for idx1
 
             //Task 1 check 
             /*
@@ -6879,7 +6907,6 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
             }
             */
             //---------------------------------------------------End of Task 1-------------------------------------------//
-
 
             //------------------------------------------------------Task 2----------------------------------------------//
             // Initiating the necessary vectors and counters            
