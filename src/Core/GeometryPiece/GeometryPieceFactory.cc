@@ -353,6 +353,7 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
     else if ( go_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConvexPolyhedronGeometryPiece(child);
     }
+#endif
     else if (go_type == "res"         || //go_type == "velocity" ||
              go_type == "temperature" || go_type == "comment"  ||
              go_type == "density"     || go_type == "pressure" ||
