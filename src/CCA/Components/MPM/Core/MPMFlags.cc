@@ -95,6 +95,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doTransientImplicitHeatConduction  =  true;
   d_prescribeDeformation               =  false;
   d_prescribedDeformationFile          =  "time_defgrad_rotation";
+  d_doGranularMPM                      =  false;
   d_exactDeformation                   =  false;
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
@@ -253,6 +254,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("minimum_subcycles_for_F",           d_min_subcycles_for_F);
   mpm_flag_ps->get("minimum_mass_for_acc",              d_min_mass_for_acceleration);
   mpm_flag_ps->get("UsePrescribedDeformation",          d_prescribeDeformation);
+  mpm_flag_ps->get("DoGranularMPM",                     d_doGranularMPM);
 
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
@@ -457,6 +459,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
+  ps->appendElement("DoGranularMPM",d_doGranularMPM);
 //MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);

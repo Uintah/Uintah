@@ -834,6 +834,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
+
+  if(flags->d_doGranularMPM){ //MJ
+    scheduleGranularMPM(                    sched, patches, matls);
+  }
+
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                sched, patches, matls);
   if(flags->d_computeScaleFactor){
@@ -2042,6 +2047,83 @@ void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
     d_switchCriteria->scheduleSwitchTest(level,sched);
   }
 }
+
+//MJ: This function schedul GranularMPM and should take place before FinalParticleUpdate
+void SerialMPM::scheduleGranularMPM(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+    if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+        getLevel(patches)->getGrid()->numLevels()))
+        return;
+
+    printSchedule(patches, cout_doing, "MPM::scheduleGranularMPM");
+
+    Task* t = scinew Task("MPM::GranularMPM", this, &SerialMPM::GranularMPM);
+  
+
+//    MaterialSubset* zeroth_matl = scinew MaterialSubset();
+//    zeroth_matl->add(0);
+//    zeroth_matl->addReference();
+
+    t->modifies(lb->pParticleIDLabel_preReloc);
+    t->modifies(lb->pXLabel_preReloc);
+    t->modifies(lb->pVolumeLabel_preReloc);
+    t->modifies(lb->pVelocityLabel_preReloc);
+    t->modifies(lb->pMassLabel_preReloc);
+    t->modifies(lb->pSizeLabel_preReloc);
+    t->modifies(lb->pDispLabel_preReloc);
+    t->modifies(lb->pStressLabel_preReloc);
+    t->modifies(lb->pdTdtLabel);
+
+    if (flags->d_with_color) {
+        t->modifies(lb->pColorLabel_preReloc);
+    }
+    if (flags->d_useLoadCurves) {
+        t->modifies(lb->pLoadCurveIDLabel_preReloc);
+    }
+
+    // JBH -- Add code for these variables -- FIXME TODO
+    if (flags->d_doScalarDiffusion) {
+        t->modifies(lb->diffusion->pConcentration_preReloc);
+        t->modifies(lb->diffusion->pConcPrevious_preReloc);
+        t->modifies(lb->diffusion->pGradConcentration_preReloc);
+        t->modifies(lb->diffusion->pExternalScalarFlux_preReloc);
+        t->modifies(lb->diffusion->pArea_preReloc);
+        t->modifies(lb->diffusion->pDiffusivity_preReloc);
+    }
+    t->modifies(lb->pLocalizedMPMLabel_preReloc);
+    t->modifies(lb->pExtForceLabel_preReloc);
+    t->modifies(lb->pTemperatureLabel_preReloc);
+    t->modifies(lb->pTemperatureGradientLabel_preReloc);
+    t->modifies(lb->pTempPreviousLabel_preReloc);
+    t->modifies(lb->pDeformationMeasureLabel_preReloc);
+    //t->modifies(lb->pRefinedLabel_preReloc);
+    if (flags->d_computeScaleFactor) {
+        t->modifies(lb->pScaleFactorLabel_preReloc);
+    }
+    t->modifies(lb->pVelGradLabel_preReloc);
+
+    //t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
+    //t->computes(lb->pCellNAPIDLabel, zeroth_matl);
+
+    // Need to figure out if this is needed, and if not, why not?
+#if 0
+    unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+    for (unsigned int m = 0; m < numMatls; m++) {
+        MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+        ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+        cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
+        if (flags->d_doScalarDiffusion) {
+            ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+            sdm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
+        }
+    }
+#endif
+
+    sched->addTask(t, patches, matls);
+}
+
 //______________________________________________________________________
 //
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
@@ -4499,7 +4581,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           allMatls_totalMom += mom;
           totalMom[dwi]     += mom;
 
-          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
+//          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
 //          allMatls_angMom += angular_mom.length();
         }
       } // use XPIC(2) or not
@@ -4744,6 +4826,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
           double JOld=pFOld[idx].Determinant();
           pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
+
+       // MJ: Granular MPM condition
+
+          if(flags->d_doGranularMPM){ //MJ
+            if (pvolume[idx]> ( (0.055 * 0.055 * 0.055)) +1.0e-12   ){
+              pFNew[idx] = pFOld[idx];
+              pvolume[idx] = pVolumeOld[idx];
+            }
+          } // end if Granular MPM
         }
       } //end of pressureStabilization loop  at the patch level
 
@@ -6577,4 +6668,744 @@ void SerialMPM::scheduleDiffusionInterfaceDiv(       SchedulerP  & sched
 double SerialMPM::recomputeDelT( const double delT )
 {
   return delT * 0.1;
+}
+
+//MJ
+//---------------------Granular MPM--------------------------------------------------------------------
+
+// This function will check the material points position and if necessary
+// move them to other velocity fields. This function should take place
+// before FinalParticleUpdate.
+void SerialMPM::GranularMPM(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw)
+{
+    //---------------------Preparing data for task 1--------------------------//
+
+    //1- Finding the number of material points in all materials
+    int PsetNumbParticles = 0;  //Counter for finding number of particles in a particles set
+    int NumbParticles = 0;      //Counter for finding number of particles in all materials
+
+  //moving on the patches. The whole Granular MPM is written to repeat itself for each patch once. 
+  for (int p = 0; p < patches->size(); p++) {   
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, cout_doing, "Doing MPM::GranularMPM");
+    unsigned int numMatls = m_materialManager->getNumMatls("MPM");
+
+    //  cout << "Patch size = " << patches->size() << endl;
+    for (unsigned int m = 0; m < numMatls; m++) {   
+        MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+        int dwi = mpm_matl->getDWIndex();
+        ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+        PsetNumbParticles = pset->addParticles(0);   //Finding the number of particles
+       // cerr << " PsetNumbParticles=  "  << PsetNumbParticles << endl;
+        NumbParticles = NumbParticles + PsetNumbParticles;           
+    }       
+
+        //2- creating vector to carry particle data from all materials and filling them.
+        vector<int> MaterialIndex(NumbParticles);     //a vector for recording original material. The number kept in this vector show the index of original materil. This vector helps in finding the original data of particle.
+        vector<int> ParticleIndex(NumbParticles);     //a vector for recording original particle index. The number kept in this vector show the index of materal point in its original material. This vector helps in finding the original data of particle.
+        vector<double> px1(NumbParticles);            //a vector for the material point cordinate in x-direction
+        vector<double> px2(NumbParticles);            //a vector for the material point cordinate in y-direction
+        vector<double> px3(NumbParticles);            //a vector for the material point cordinate in z-direction
+        const  double r1 = 0.05/2.0;                  //initial domain of material point in x direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+        const  double r2 = 0.05/2.0;                  //initial domain of material point in y direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+        const  double r3 = 0.05/2.0;                  //initial domain of material point in z direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+        const  double Vcri = (0.055 * 0.055 * 0.055); //Critical volume of material point. Ideally this is parameter define by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+        vector<double> DI1(NumbParticles);            //declaring a vector for x values of domain of interaction
+        vector<double> DI2(NumbParticles);            //declaring a vector for y values of domain of interaction 
+        vector<double> DI3(NumbParticles);            //declaring a vector for z values of domain of interaction 
+        int pcounter = 0;
+
+        //moving on the materials in each pataches
+        for (unsigned int m = 0; m < numMatls; m++) {
+            MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+            int dwi = mpm_matl->getDWIndex();
+            ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+            //creating particle arrays
+            ParticleVariable<Point> px;
+            ParticleVariable<Matrix3>  pSize;
+            ParticleVariable<double> pvolume;
+              //putting the data in the arrays
+              new_dw->getModifiable(px, lb->pXLabel_preReloc, pset);
+              new_dw->getModifiable(pSize, lb->pSizeLabel_preReloc, pset);
+              new_dw->getModifiable(pvolume, lb->pVolumeLabel_preReloc, pset);
+
+                  //moving on the particles in each materaial and each pataches
+                  for (ParticleSubset::iterator iter1 = pset->begin();     
+                     iter1 != pset->end();
+                     iter1++) {
+                     particleIndex idx0 = *iter1;
+                     MaterialIndex[pcounter] = dwi;                  
+                     ParticleIndex[pcounter] = idx0;
+                     px1[pcounter] = px[idx0](0);                      
+                     px2[pcounter] = px[idx0](1);                    
+                     px3[pcounter] = px[idx0](2);
+
+                     DI1[pcounter] = pow(    ( 0.125*(r1*r1/r2/r3) * Vcri ) , (1.0/3.0)    );     //domain of interaction in x direction.
+                     DI2[pcounter] = pow(    ( 0.125*(r2*r2/r1/r3) * Vcri ) , (1.0/3.0)    );     //domain of interaction in y direction.
+                     DI3[pcounter] = pow(    ( 0.125*(r3*r3/r1/r2) * Vcri ) , (1.0/3.0)    );     //domain of interaction in z direction.
+                     pcounter = pcounter + 1;
+                  }                  
+        }
+
+        //Creating matrixes for Granular MPM. 
+        //We need 3 matrixes in the whole Granular MPM. As the matrix creation requires some steps, I am making all here so prevent repeating. 
+        //I write detailed comment here for each matrix and the task the matrix will be used in. 
+
+        //First matrix:  Interaction     ---------> This matrix will be used in Task 1. It is a matrix for recording indexes of interacting material point. 
+        //                                          each row of Interaction has indexes of material points connected with the row number material point through grid.
+        vector<vector<int> > Interaction(NumbParticles);  
+
+        //Second matrix: Grids           ---------> This matrix will be use in Task 2. It is a matrix for recording indexes of interacting material points and shows the parallel grid in the next step.
+        //                                          each row of Grids has indexes of material points belonging to one grid of the next step.
+        vector<vector<int> > Grids(NumbParticles);  
+        
+        //Third matrix: CurrentGrids     ---------> This matrix will be use in Task 3. It is a matrix for indicating that a material point should be removed from its current material.
+        //                                          each row of Grids has -1 and 1 only. -1 signals that a material point exist here and should be removed. 1 signals that the material point is Ok to stay or that there is no material point in this position.
+        vector<vector<int> > CurrentGrids(NumbParticles);
+
+
+        for (int i = 0; i < NumbParticles; i++) {
+            Interaction[i].resize(NumbParticles);
+            Grids[i].resize(NumbParticles);
+            CurrentGrids[i].resize(NumbParticles);
+           
+            for (int j = 0; j < NumbParticles; j++) {
+                Interaction[i][j] = {-1};             //-1 is a mere place holder for Interaction matrix. This allows controling the results
+                Grids[i][j] = {-1};                   //-1 is a mere place holder for Grids matrix. This allows controling the results
+                CurrentGrids[i][j] = {1};             //Initially, we assume that all the material points are Ok to stay or that there is no material point in this position. The material that should be moved will be marked with -1 in task 3
+            }
+        }
+
+
+       //check for creating vecros with the material points data & cordinates
+       /*
+                            for (int i = 0; i < NumbParticles; i++)
+                             {                                                       
+                               cerr << " MaterialIndex[" << i << "]= " << MaterialIndex[i] << endl;
+                               cerr << " ParticleIndex[" << i << "]= " << ParticleIndex[i] << endl;
+                               cerr << " px1[" << i << "]= " << px1[i] << endl;
+                               cerr << " px2[" << i << "]= " << px2[i] << endl;
+                               cerr << " px3[" << i << "]= " << px3[i] << endl;
+                               cerr << " DI1[" << i << "]= " << DI1[i] << endl;
+                               cerr << " DI2[" << i << "]= " << DI2[i] << endl;
+                               cerr << " DI3[" << i << "]= " << DI3[i] << endl;
+
+                            } 
+       */
+               
+       //-------------------------------------------------------Task 1------------------------------------------------------//             
+       //Creating a vector for recording interaction size for each particle. 
+         int InteractionSize[NumbParticles];               // a vector for recording a materail point size of interaction     
+         for (int i = 0; i < NumbParticles; i++) { 
+           InteractionSize[i] = { 0 };
+         }
+
+        //loop over all particles in the patch to find the Interaction for each material point:           
+          for (int idx1 = 0; idx1 < NumbParticles; idx1++) {    
+                //finding min and max of DI for material point one.
+                double ximax = px1[idx1] + DI1[idx1];
+                double ximin = px1[idx1] - DI1[idx1];
+                double yimax = px2[idx1] + DI2[idx1];
+                double yimin = px2[idx1] - DI2[idx1];
+                double zimax = px3[idx1] + DI3[idx1];
+                double zimin = px3[idx1] - DI3[idx1];
+
+               
+                for (int idx2 = 0; idx2 < NumbParticles; idx2++) {      
+                    //finding min and max of DI for material point two.
+                    double xjmax = px1[idx2] + DI1[idx2];
+                    double xjmin = px1[idx2] - DI1[idx2];
+                    double yjmax = px2[idx2] + DI2[idx2];
+                    double yjmin = px2[idx2] - DI2[idx2];
+                    double zjmax = px3[idx2] + DI3[idx2];
+                    double zjmin = px3[idx2] - DI3[idx2];
+
+                    // if domains of interaction intersect, then the material point index should be added to interaction.
+                    if ((ximax > xjmin) && (ximin < xjmax) && (yimax > yjmin) && (yimin < yjmax) && (zimax > zjmin) && (zimin < zjmax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((ximax > xjmin) && (ximin < xjmax) && (yimax > yjmin) && (yimin < yjmax) && (zjmax > zimin) && (zjmin < zimax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((ximax > xjmin) && (ximin < xjmax) && (yjmax > yimin) && (yjmin < yimax) && (zimax > zjmin) && (zimin < zjmax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((ximax > xjmin) && (ximin < xjmax) && (yjmax > yimin) && (yjmin < yimax) && (zjmax > zimin) && (zjmin < zimax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((xjmax > ximin) && (xjmin < ximax) && (yimax > yjmin) && (yimin < yjmax) && (zimax > zjmin) && (zimin < zjmax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((xjmax > ximin) && (xjmin < ximax) && (yimax > yjmin) && (yimin < yjmax) && (zjmax > zimin) && (zjmin < zimax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((xjmax > ximin) && (xjmin < ximax) && (yjmax > yimin) && (yjmin < yimax) && (zimax > zjmin) && (zimin < zjmax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+
+                    else if ((xjmax > ximin) && (xjmin < ximax) && (yjmax > yimin) && (yjmin < yimax) && (zjmax > zimin) && (zjmin < zimax)) {
+                        Interaction[idx1][(InteractionSize[idx1])] = { idx2 };
+                        InteractionSize[idx1] = { InteractionSize[idx1] + 1 };
+                    }
+                }
+          }
+
+            //Task 1 check 
+            /*
+
+            cout << "NumbParticles = " << NumbParticles << endl;
+            for (int i = 0; i < NumbParticles; i++)            {
+              cerr << " InteractionSize[" << i << "]= " << InteractionSize[i]<< endl;
+                for (int j = 0; j < NumbParticles; j++) {                            
+                cerr << " Interaction[" << i << "]" << "[" << j << "]= " << Interaction[i][j] << endl;
+                } 
+            }
+            */
+            //---------------------------------------------------End of Task 1-------------------------------------------//
+
+
+            //------------------------------------------------------Task 2----------------------------------------------//
+            // Initiating the necessary vectors and counters            
+            int GridsSize[NumbParticles];              //initiating a vector for saving size of each Grid
+            int Assigned[NumbParticles];               //initiating a vector for marking Assigned material points.
+            int UnAssigned[NumbParticles];             //initiating a vector for keeping index of UnAssigned material points. 
+            int GridCount = 0;                         //Counter for the number of Grids. Initially non of material points are Assigned.
+            int UnAssignCount = NumbParticles;         //Counter for the number of UnAssigned material ponts. Initially all the material points are UnAssigned.
+            int RepeatCounter = 0;                     //Counter for repeated material points in a grid. This counter helps to prevent repetation in a grid.
+
+            // Putting initial value in the matrix and vectors
+            for (int i = 0; i < NumbParticles; i++) {
+                GridsSize[i] = { 0 };      //Initially there is no grid and thus the size of all grid is 0
+                Assigned[i] = { -1 };      //-1 signals that it is not.     1 signals that it is.   Initially non of material points are Assigned.
+                UnAssigned[i] = { i };     //Initially all material points are UnAssigned. Therefore, UnAssigned carries all material points indexs just here before the assiging process begins. Later, it won't carry all the material points indexes as they get assigned to a grid.
+                //There is a differece between what Assigned and UnAssigned vectors carry. The Assigned carries a signal while UnAssigned carries index of UnAssigned material points.               
+            }
+
+            // The first while loop. This loop ensures that every material point is assigned to a grid
+            while (UnAssignCount > 0) {
+                GridCount = GridCount + 1;
+                // Assigning the first unassigned material point to a new grid.
+                for (int i = 0; i < InteractionSize[UnAssigned[0]]; i++) {
+                    Grids[GridCount - 1][i] = Interaction[UnAssigned[0]][i];
+                    GridsSize[GridCount - 1] = GridsSize[GridCount - 1] + 1;
+                }
+                // Marking this material point as Assigned now
+                Assigned[UnAssigned[0]] = 1;
+
+                // Variable for stopping the second while loop
+                int stop = 0;
+                // Counter for the second while loop
+                int stopCounter = 0;
+
+                //Second while loop that assigns material points in the current grid if not already assigned                
+                while (stop < 1) {
+                    //moving on the existing material points in the grid
+                    for (int j = 0; j < GridsSize[GridCount - 1]; j++) {      
+                        //checking if the material point is assigned or not. If it is not Assigned, the next lines will assign it. 
+                        if (Assigned[Grids[GridCount - 1][j]] == -1) {        
+                            //moving on the Interaction line of the unassigned material point. Every material points in this line should be added to the current grid unless it is already there. 
+                            for (int k = 0; k < InteractionSize[Grids[GridCount - 1][j]]; k++) {    
+                                //making sure that the material point on interaction is not already there and then adding it to the current grid
+                                RepeatCounter = 0;                                                                   //reseting the counter which prevent repetation in a grid.
+                                //moving on the current material points of grid.
+                                for (int m = 0; m < GridsSize[GridCount - 1]; m++) {                                
+                                    //If the material points on Interaction is already on the current grid
+                                    if (Interaction[Grids[GridCount - 1][j]][k] == Grids[GridCount - 1][m]) {       
+                                        RepeatCounter = RepeatCounter + 1;                                           //then increase the RepeatCounter
+                                    }
+                                }
+                                //If the RepeatCounter is still 0, the material point on interaction is not on the current grid and should be added to it
+                                if (RepeatCounter < 1) {                                                                                
+                                    GridsSize[GridCount - 1] = GridsSize[GridCount - 1] + 1;                                           //Increasing the size of grid
+                                    Grids[GridCount - 1][GridsSize[GridCount - 1] - 1] = Interaction[Grids[GridCount - 1][j]][k];      //Adding the material point to the current grid
+                                }
+                            }
+                            //now this material point is Assigned and should be marked as Assigned
+                            Assigned[Grids[GridCount - 1][j]] = 1;                   
+                        }
+                    }
+
+                    //controlling second while loop. This loop stops when the size remain unchange
+                    if (stopCounter == GridsSize[GridCount - 1]) {
+                        stop = 1;
+                    }
+                    else {
+                        stopCounter = GridsSize[GridCount - 1];
+                    }
+                } // end while(stop < 1)
+
+                //Findding UnAssigned material points. 
+                UnAssignCount = 0;          //resetting the counter for for the number of UnAssigned material ponts.
+                for (int i = 0; i < NumbParticles; i++) {
+                    UnAssigned[i] = -1;     //-1 signals that the material point is not UnAssigned (it is assugned).        In this for loop, we assume that all material points are alrready assigned unless the next if condition find otherwise.
+                    if (Assigned[i] == -1) {
+                        UnAssignCount = UnAssignCount + 1;
+                        UnAssigned[UnAssignCount - 1] = i;
+                    }
+                }
+            } // end while (UnAssignCount > 0)
+
+            //Task 2 check 
+            //cerr << " GridCount " << GridCount << endl;
+            
+            /*                        
+                for (int i = 0; i < NumbParticles; i++) {
+                  cerr << " GridsSize[" << i << "]= " << GridsSize[i]<< endl;
+                  for (int j = 0; j < NumbParticles; j++) {                           
+                      cerr << " Grids[" << i << "]" << "[" << j << "]= " << Grids[i][j] << endl;
+                  }
+                }
+            */
+            //---------------------------------------------------End of Task 2-------------------------------------------//        
+
+
+            //------------------------------------------------------Task 3----------------------------------------------//
+            // This task check the particles to make sure they are on the correct materials. If a particle is not on the correct material, the task will move that particle to the correct material, copies its variables and remove the particle from its current material.             
+            // moving on the rows of Grids. This for loop make sure that all the different grids are controlled one by one.
+
+                for (int i = 0; i < GridCount; i++) {
+
+                    // Initiating the necessary vectors and counters                      
+                    int ContactCheck = int((numMatls - 1) / 2);   //an intger for checking if contact is necessary for a grid or not. 
+                                                                  //This value is determined once per each grid and helps to move particles into matrials with or without contact.
+                                                                  // int ( numMatls /2) for this value signals that there is no need for contact. 0 for this value signals the need for contact.
+                                                                  // initially we assume that there is no need for contact (thus we set the value to int ( numMatls /2). In 1, we check that and if there is a need the value will be changed to 0.
+                    //1- Checking if the contact is necessary for this grid or not.                    
+
+                    for (int j = 0; j < GridsSize[i]; j++) {
+                       if (MaterialIndex[Grids[i][j]]==1)    //if MaterialIndex of even one material point is 1, then contact is necessary because there is an elastic/rigid material there.
+                        {  
+                          ContactCheck = 0;                   // so we change the value of ContactCheck to 0.
+                        }
+                    }
+                                     
+                    //2-moving on the particles of a grid. This for check make sure that all the different grids are controlled one by one.  
+                    for (int j = 0; j < GridsSize[i]; j++) {
+                        //the check to see if a particle is not on the correct material. 
+                        //If it goes in, this means that the particle on "Grids[i][j]" needs to move from "MaterialIndex[Grids[i][j]]" to "i" material. This will take care of it.                                                                      
+
+                        if (MaterialIndex[Grids[i][j]]!=0 && MaterialIndex[Grids[i][j]]!=1 && MaterialIndex[Grids[i][j]]!=(i+2+ContactCheck)) {                                                                                                            
+                           //-------------------Creating necessary vector and putting old date in them---------------------------//
+                            //cerr << " We are here1 " << endl;
+                          
+
+                            //1-getting the origin material and Creating necessary vectors 
+                            MPMMaterial* mpm_matl1 = (MPMMaterial*)m_materialManager->getMaterial("MPM", MaterialIndex[Grids[i][j]]);
+                            int dwi1 = mpm_matl1->getDWIndex();
+                            ParticleSubset* pset1 = old_dw->getParticleSubset(dwi1, patch);
+                            ConstitutiveModel* cm1 = mpm_matl1->getConstitutiveModel();
+
+                            ParticleVariable<Point> px1;
+                            ParticleVariable<Matrix3> pF1, pSize1, pstress1, pvelgrad1, pscalefac1;
+                            ParticleVariable<long64> pids1;
+                            ParticleVariable<double> pvolume1, pmass1, ptemp1, ptempP1, pcolor1;
+                            ParticleVariable<double> pESF1;
+                            ParticleVariable<Vector> pvelocity1, pextforce1, pdisp1, ptempgrad1;
+                            ParticleVariable<int> pref1, ploc1, prefOld1, pSplitR1R2R31;
+                            ParticleVariable<IntVector> pLoadCID1;
+                          
+
+                            //2- putting origin data in the created vectors                            
+                            new_dw->getModifiable(px1,    lb->pXLabel_preReloc, pset1);
+                            new_dw->getModifiable(pids1,  lb->pParticleIDLabel_preReloc, pset1);
+                            new_dw->getModifiable(pmass1, lb->pMassLabel_preReloc, pset1);
+                            new_dw->getModifiable(pSize1, lb->pSizeLabel_preReloc, pset1);
+                            new_dw->getModifiable(pdisp1, lb->pDispLabel_preReloc, pset1);
+                            new_dw->getModifiable(pstress1, lb->pStressLabel_preReloc, pset1);
+                            new_dw->getModifiable(pvolume1, lb->pVolumeLabel_preReloc, pset1);
+                            new_dw->getModifiable(pvelocity1, lb->pVelocityLabel_preReloc, pset1);
+                            if (flags->d_computeScaleFactor) {
+                                new_dw->getModifiable(pscalefac1, lb->pScaleFactorLabel_preReloc, pset1);
+                            }
+                            new_dw->getModifiable(pextforce1, lb->pExtForceLabel_preReloc, pset1);
+                            new_dw->getModifiable(ptemp1, lb->pTemperatureLabel_preReloc, pset1);
+                            new_dw->getModifiable(ptempgrad1, lb->pTemperatureGradientLabel_preReloc,
+                                pset1);
+                            new_dw->getModifiable(ptempP1, lb->pTempPreviousLabel_preReloc, pset1);
+                            //new_dw->getModifiable(pref1, lb->pRefinedLabel_preReloc, pset1);
+                            new_dw->getModifiable(ploc1, lb->pLocalizedMPMLabel_preReloc, pset1);
+                            new_dw->getModifiable(pvelgrad1, lb->pVelGradLabel_preReloc, pset1);
+                            new_dw->getModifiable(pF1, lb->pDeformationMeasureLabel_preReloc, pset1);
+                            if (flags->d_with_color) {
+                                new_dw->getModifiable(pcolor1, lb->pColorLabel_preReloc, pset1);
+                            }
+                                         // JBH -- Scalard diffusion variables
+                            ParticleVariable<double> pConc1, pConcPrev1, pD1, pESFlux1;
+                            ParticleVariable<Vector> pGradConc1, pArea1;
+                            if (flags->d_doScalarDiffusion) {
+                                new_dw->getModifiable(pConc1, lb->diffusion->pConcentration_preReloc, pset1);
+                                new_dw->getModifiable(pConcPrev1, lb->diffusion->pConcPrevious_preReloc, pset1);
+                                new_dw->getModifiable(pGradConc1, lb->diffusion->pGradConcentration_preReloc, pset1);
+                                new_dw->getModifiable(pESFlux1, lb->diffusion->pExternalScalarFlux_preReloc, pset1);
+                                new_dw->getModifiable(pArea1, lb->diffusion->pArea_preReloc, pset1);
+                                new_dw->getModifiable(pD1, lb->diffusion->pDiffusivity_preReloc, pset1);
+                            }
+                            if (flags->d_useLoadCurves) {
+                                new_dw->getModifiable(pLoadCID1, lb->pLoadCurveIDLabel_preReloc, pset1);
+                            }
+
+                            new_dw->allocateTemporary(prefOld1, pset1);
+                            new_dw->allocateTemporary(pSplitR1R2R31, pset1);
+
+                            //2- check                            
+            /*
+                            int jj = pset1->addParticles(0);
+                            cout << "NumbParticles = " << jj << endl;                                                         
+                            for (int ii = 0; ii < jj; ii++){                              
+                                cerr << " pmass1[" << ii << "]= " << pmass1[ii]<< endl;
+                                cerr << " pvolume1[" << ii << "]= " << pvolume1[ii] << endl;
+                                cerr << " px1[" << ii << ", 0 "<< "]= " << px1[ii](0)<< endl;
+                                cerr << " px1[" << ii << ", 1 "<< "]= " << px1[ii](1)<< endl;
+                                cerr << " px1[" << ii << ", 2 "<< "]= " << px1[ii](2)<< endl;                           
+                            } 
+           */
+
+                            //3-getting the destination material,  Creating necessary vectors  and putting its data in the created vectors
+                            MPMMaterial* mpm_matl2 = (MPMMaterial*)m_materialManager->getMaterial("MPM", (i+2+ContactCheck));
+                            int dwi2 = mpm_matl2->getDWIndex();
+                            ParticleSubset* pset2 = old_dw->getParticleSubset(dwi2, patch);
+                            ConstitutiveModel* cm2 = mpm_matl2->getConstitutiveModel();
+
+                            ParticleVariable<Point>  px2;
+                            ParticleVariable<Matrix3>  pF2, pSize2, pstress2, pvelgrad2, pscalefac2;
+                            ParticleVariable<long64>  pids2;
+                            ParticleVariable<double>  pvolume2, pmass2, ptemp2, ptempP2, pcolor2;
+                            ParticleVariable<double>  pESF2;
+                            ParticleVariable<Vector>  pvelocity2, pextforce2, pdisp2, ptempgrad2;
+                            ParticleVariable<int>  pref2, ploc2, prefOld2, pSplitR1R2R32;
+                            ParticleVariable<IntVector> pLoadCID2;
+
+                            new_dw->getModifiable(px2,        lb->pXLabel_preReloc, pset2);
+                            new_dw->getModifiable(pids2,      lb->pParticleIDLabel_preReloc, pset2);
+                            new_dw->getModifiable(pmass2,     lb->pMassLabel_preReloc, pset2);
+                            new_dw->getModifiable(pSize2,     lb->pSizeLabel_preReloc, pset2);
+                            new_dw->getModifiable(pdisp2,     lb->pDispLabel_preReloc, pset2);
+                            new_dw->getModifiable(pstress2,   lb->pStressLabel_preReloc, pset2);
+                            new_dw->getModifiable(pvolume2,   lb->pVolumeLabel_preReloc, pset2);
+                            new_dw->getModifiable(pvelocity2, lb->pVelocityLabel_preReloc, pset2);
+                            if (flags->d_computeScaleFactor) {
+                                new_dw->getModifiable(pscalefac2, lb->pScaleFactorLabel_preReloc, pset2);
+                            }
+                            new_dw->getModifiable(pextforce2, lb->pExtForceLabel_preReloc, pset2);
+                            new_dw->getModifiable(ptemp2,     lb->pTemperatureLabel_preReloc, pset2);
+                            new_dw->getModifiable(ptempgrad2, lb->pTemperatureGradientLabel_preReloc,
+                                pset2);
+                            new_dw->getModifiable(ptempP2, lb->pTempPreviousLabel_preReloc, pset2);
+                            //new_dw->getModifiable(pref2, lb->pRefinedLabel_preReloc, pset2);
+                            new_dw->getModifiable(ploc2, lb->pLocalizedMPMLabel_preReloc, pset2);
+                            new_dw->getModifiable(pvelgrad2, lb->pVelGradLabel_preReloc, pset2);
+                            new_dw->getModifiable(pF2, lb->pDeformationMeasureLabel_preReloc, pset2);
+                            if (flags->d_with_color) {
+                                new_dw->getModifiable(pcolor2, lb->pColorLabel_preReloc, pset2);
+                            }
+                                         // JBH -- Scalard diffusion variables
+                            ParticleVariable<double> pConc2, pConcPrev2, pD2, pESFlux2;
+                            ParticleVariable<Vector> pGradConc2, pArea2;
+                            if (flags->d_doScalarDiffusion) {
+                                new_dw->getModifiable(pConc2, lb->diffusion->pConcentration_preReloc, pset2);
+                                new_dw->getModifiable(pConcPrev2, lb->diffusion->pConcPrevious_preReloc, pset2);
+                                new_dw->getModifiable(pGradConc2, lb->diffusion->pGradConcentration_preReloc, pset2);
+                                new_dw->getModifiable(pESFlux2, lb->diffusion->pExternalScalarFlux_preReloc, pset2);
+                                new_dw->getModifiable(pArea2, lb->diffusion->pArea_preReloc, pset2);
+                                new_dw->getModifiable(pD2, lb->diffusion->pDiffusivity_preReloc, pset2);
+                            }
+                            if (flags->d_useLoadCurves) {
+                                new_dw->getModifiable(pLoadCID2, lb->pLoadCurveIDLabel_preReloc, pset2);
+                            }
+
+                            new_dw->allocateTemporary(prefOld2, pset2);
+                            new_dw->allocateTemporary(pSplitR1R2R32, pset2);
+
+                           //3- check 
+                           /*
+                             int jj = pset2->addParticles(0);
+                             cout << "NumbParticles = " << jj << endl;
+                            for (int ii = 0; ii < jj; ii++){                              
+                                cerr << " pmass2[" << ii << "]= " << pmass2[ii] << endl;
+                                cerr << " pvolume2[" << ii << "]= " << pvolume2[ii] << endl;
+                                cerr << " px2[" << ii << ", 0 " << "]= " << px2[ii](0) << endl;
+                                cerr << " px2[" << ii << ", 1 " << "]= " << px2[ii](1) << endl;
+                                cerr << " px2[" << ii << ", 2 " << "]= " << px2[ii](2) << endl;
+                            } 
+                           */
+
+                            //4-Increasing the size of destnation material so the new particle can be added
+                            const unsigned int oldNumPar = pset2->addParticles(1);
+                            // cout << "oldNumPar = " << oldNumPar << endl;
+                            const unsigned int newNumPar = pset2->addParticles(0);
+                            // cout << "newNumPar = " << newNumPar << endl;
+
+                            //4- check 
+                           /*
+                               int jj = pset2->addParticles(0);
+                             cout << "NumbParticles = " << jj << endl;
+                             
+                            for (int ii = 0; ii < jj; ii++){
+                                cerr << " pids2[" << ii << "]= " << pids2[ii] << endl;
+                                cerr << " px2[" << ii << ", 0 "<< "]= " << px2[ii](0)<< endl;
+                                cerr << " px2[" << ii << ", 1 "<< "]= " << px2[ii](1)<< endl;
+                                cerr << " px2[" << ii << ", 2 "<< "]= " << px2[ii](2)<< endl;
+                            }
+                            */
+           
+           
+                            //5-Creating temporary vectors for the new destnation material
+                            ParticleVariable<Point> pxtmp;
+                            ParticleVariable<Matrix3> pFtmp, psizetmp, pstrstmp, pvgradtmp, pSFtmp;
+                            ParticleVariable<long64> pidstmp;
+                            ParticleVariable<double> pvoltmp, pmasstmp, ptemptmp, ptempPtmp, pcolortmp, pTempNewtmp;
+                            ParticleVariable<Vector> pveltmp, pextFtmp, pdisptmp, ptempgtmp;
+                            ParticleVariable<int> preftmp, ploctmp;
+                            ParticleVariable<IntVector> pLoadCIDtmp;
+                            ParticleVariable<double> pConcTmp, pConcPrevTmp, pESFluxTmp, pDTmp;
+                            ParticleVariable<Vector> pGradConcTmp, pAreaTmp;
+                           
+                            //6-temporary allocation of destination material to created temporary vectors
+                            new_dw->allocateTemporary(pidstmp, pset2);
+                            new_dw->allocateTemporary(pxtmp, pset2);
+                            new_dw->allocateTemporary(pvoltmp, pset2);
+                            new_dw->allocateTemporary(pveltmp, pset2);
+                            if (flags->d_computeScaleFactor) {
+                                new_dw->allocateTemporary(pSFtmp, pset2);
+                            }
+                            new_dw->allocateTemporary(pextFtmp,  pset2);
+                            new_dw->allocateTemporary(ptemptmp,  pset2);
+                            new_dw->allocateTemporary(ptempgtmp, pset2);
+                            new_dw->allocateTemporary(ptempPtmp, pset2);
+                            new_dw->allocateTemporary(pFtmp,     pset2);
+                            new_dw->allocateTemporary(psizetmp,  pset2);
+                            new_dw->allocateTemporary(pdisptmp,  pset2);
+                            new_dw->allocateTemporary(pstrstmp,  pset2);
+                            new_dw->allocateTemporary(pmasstmp,  pset2);
+                            new_dw->allocateTemporary(preftmp,   pset2);
+                            new_dw->allocateTemporary(ploctmp,   pset2);
+                            new_dw->allocateTemporary(pvgradtmp, pset2);
+                            if (flags->d_with_color) {
+                                new_dw->allocateTemporary(pcolortmp, pset2);
+                            }
+
+                            // JBH - Scalar Diffusion Variables
+
+                            if (flags->d_doScalarDiffusion) {
+                                new_dw->allocateTemporary(pConcTmp, pset2);
+                                new_dw->allocateTemporary(pConcPrevTmp, pset2);
+                                new_dw->allocateTemporary(pGradConcTmp, pset2);
+                                new_dw->allocateTemporary(pESFluxTmp, pset2);
+                                new_dw->allocateTemporary(pDTmp, pset2);
+                                new_dw->allocateTemporary(pAreaTmp, pset2);
+                            }
+
+                            if (flags->d_useLoadCurves) {
+                                new_dw->allocateTemporary(pLoadCIDtmp, pset2);
+                            }
+
+                            //6- check 
+                            /*
+                            int jj = pset2->addParticles(0);
+                             cout << "NumbParticles = " << jj << endl;
+                            for (int ii = 0; ii < jj; ii++){
+                                cerr << " pidstmp[" << ii << "]= " << pidstmp[ii] << endl;
+                                cerr << " pxtmp[" << ii << ", 0 "<< "]= " << pxtmp[ii](0)<< endl;
+                                cerr << " pxtmp[" << ii << ", 1 "<< "]= " << pxtmp[ii](1)<< endl;
+                                cerr << " pxtmp[" << ii << ", 2 "<< "]= " << pxtmp[ii](2)<< endl;
+                            }
+                           */
+                           
+
+                            //7-copying data from variables of destnation to temporary particles
+                            for (unsigned int pp = 0; pp < oldNumPar; ++pp) {
+                                pidstmp[pp] = pids2[pp];
+                                pxtmp[pp] = px2[pp];
+                                pvoltmp[pp] = pvolume2[pp];
+                                pveltmp[pp] = pvelocity2[pp];
+                                pextFtmp[pp] = pextforce2[pp];
+                                ptemptmp[pp] = ptemp2[pp];
+                                ptempgtmp[pp] = ptempgrad2[pp];
+                                ptempPtmp[pp] = ptempP2[pp];
+                                pFtmp[pp] = pF2[pp];
+                                psizetmp[pp] = pSize2[pp];
+                                pdisptmp[pp] = pdisp2[pp];
+                                pstrstmp[pp] = pstress2[pp];
+                                if (flags->d_computeScaleFactor) {
+                                    pSFtmp[pp] = pscalefac2[pp];
+                                }
+                                if (flags->d_with_color) {
+                                    pcolortmp[pp] = pcolor2[pp];
+                                }
+                                if (flags->d_useLoadCurves) {
+                                    pLoadCIDtmp[pp] = pLoadCID2[pp];
+                                }
+                                pmasstmp[pp] = pmass2[pp];
+                                //preftmp[pp] = pref2[pp];
+                                ploctmp[pp] = ploc2[pp];
+                                pvgradtmp[pp] = pvelgrad2[pp];
+                            }
+
+                            if (flags->d_doScalarDiffusion) {
+                                for (unsigned int pp = 0; pp < oldNumPar; ++pp) {
+                                    pConcTmp[pp] = pConc2[pp];
+                                    pConcPrevTmp[pp] = pConcPrev2[pp];
+                                    pGradConcTmp[pp] = pGradConc2[pp];
+                                    pESFluxTmp[pp] = pESFlux2[pp];
+                                    pAreaTmp[pp] = pArea2[pp];
+                                    pDTmp[pp] = pD2[pp];
+                                }
+                            }   
+
+                            //7- check 
+                            /*
+                             int jj = pset2->addParticles(0);
+                             cout << "NumbParticles = " << jj << endl;
+                            for (int ii = 0; ii < jj; ii++){
+                                cerr << " pidstmp[" << ii << "]= " << pidstmp[ii] << endl;
+                                cerr << " pxtmp[" << ii << ", 0 "<< "]= " << pxtmp[ii](0)<< endl;
+                                cerr << " pxtmp[" << ii << ", 1 "<< "]= " << pxtmp[ii](1)<< endl;
+                                cerr << " pxtmp[" << ii << ", 2 "<< "]= " << pxtmp[ii](2)<< endl;
+                            }
+                           */
+
+                            // 8-copying data from variables of origin and removing it from origin
+                            // Currently, I am adding just one particle. so no loop is nedded. 
+                            // Later, i will do it more efficently.                               
+
+                            pidstmp[newNumPar - 1] = pids1[ParticleIndex[Grids[i][j]]];
+                            pxtmp[newNumPar-1] = px1[ParticleIndex[Grids[i][j]]];
+                            pvoltmp[newNumPar-1] = pvolume1[ParticleIndex[Grids[i][j]]];
+                            pveltmp[newNumPar-1] = pvelocity1[ParticleIndex[Grids[i][j]]];
+                            pextFtmp[newNumPar-1] = pextforce1[ParticleIndex[Grids[i][j]]];
+                            ptemptmp[newNumPar-1] = ptemp1[ParticleIndex[Grids[i][j]]];
+                            ptempgtmp[newNumPar-1] = ptempgrad1[ParticleIndex[Grids[i][j]]];
+                            ptempPtmp[newNumPar-1] = ptempP1[ParticleIndex[Grids[i][j]]];
+                            pFtmp[newNumPar-1] = pF1[ParticleIndex[Grids[i][j]]];
+                            psizetmp[newNumPar-1] = pSize1[ParticleIndex[Grids[i][j]]];
+                            pdisptmp[newNumPar-1] = pdisp1[ParticleIndex[Grids[i][j]]];
+                            pstrstmp[newNumPar-1] = pstress1[ParticleIndex[Grids[i][j]]];
+                            if (flags->d_computeScaleFactor) {
+                                pSFtmp[newNumPar-1] = pscalefac1[ParticleIndex[Grids[i][j]]];
+                            }
+                            if (flags->d_with_color) {
+                                pcolortmp[newNumPar-1] = pcolor1[ParticleIndex[Grids[i][j]]];
+                            }
+                            if (flags->d_useLoadCurves) {
+                                pLoadCIDtmp[newNumPar-1] = pLoadCID1[ParticleIndex[Grids[i][j]]];
+                            }
+                            pmasstmp[newNumPar-1] = pmass1[ParticleIndex[Grids[i][j]]];
+                            //preftmp[newNumPar-1] = pref1[ParticleIndex[Grids[i][j]]];
+                            ploctmp[newNumPar-1] = ploc1[ParticleIndex[Grids[i][j]]];
+                            pvgradtmp[newNumPar-1] = pvelgrad1[ParticleIndex[Grids[i][j]]];
+                            
+                            //Now that the data are copied we should sign the material point to be removed from the origin. 
+                            CurrentGrids[MaterialIndex[Grids[i][j]]][ParticleIndex[Grids[i][j]]] = { -1 };   // The -1 signals that this material point should be removed                            
+
+                            //ParticleSubset* delset = scinew ParticleSubset(0, dwi1, patch);
+                            
+                            //delset->addParticle(ParticleIndex[Grids[i][j]]);  
+                            //new_dw->deleteParticles(delset);
+
+                            //8- check 
+                            /*
+                             int jj = pset2->addParticles(0);
+                            cout << "NumbParticles = " << jj << endl;
+                            for (int ii = 0; ii < jj; ii++){
+                                cerr << " pidstmp[" << ii << "]= " << pidstmp[ii] << endl;
+                                cerr << " pxtmp[" << ii << ", 0 "<< "]= " << pxtmp[ii](0)<< endl;
+                                cerr << " pxtmp[" << ii << ", 1 "<< "]= " << pxtmp[ii](1)<< endl;
+                                cerr << " pxtmp[" << ii << ", 2 "<< "]= " << pxtmp[ii](2)<< endl;
+                            }
+                           */
+
+                                       
+                            //9-putting back temporary data
+                            new_dw->put(pidstmp, lb->pParticleIDLabel_preReloc, true);
+                            new_dw->put(pxtmp,   lb->pXLabel_preReloc, true);
+                            new_dw->put(pvoltmp, lb->pVolumeLabel_preReloc, true);
+                            new_dw->put(pveltmp, lb->pVelocityLabel_preReloc, true);
+                            if (flags->d_computeScaleFactor) {
+                                new_dw->put(pSFtmp, lb->pScaleFactorLabel_preReloc, true);
+                            }
+                            new_dw->put(pextFtmp,  lb->pExtForceLabel_preReloc, true);
+                            new_dw->put(pmasstmp,  lb->pMassLabel_preReloc, true);
+                            new_dw->put(ptemptmp,  lb->pTemperatureLabel_preReloc, true);
+                            new_dw->put(ptempgtmp, lb->pTemperatureGradientLabel_preReloc, true);
+                            new_dw->put(ptempPtmp, lb->pTempPreviousLabel_preReloc, true);
+                            new_dw->put(psizetmp,  lb->pSizeLabel_preReloc, true);
+                            new_dw->put(pdisptmp,  lb->pDispLabel_preReloc, true);
+                            new_dw->put(pstrstmp,  lb->pStressLabel_preReloc, true);
+                            if (flags->d_with_color) {
+                                new_dw->put(pcolortmp, lb->pColorLabel_preReloc, true);
+                            }
+                            if (flags->d_doScalarDiffusion) {
+                                new_dw->put(pConcTmp, lb->diffusion->pConcentration_preReloc, true);
+                                new_dw->put(pConcPrevTmp, lb->diffusion->pConcPrevious_preReloc, true);
+                                new_dw->put(pGradConcTmp, lb->diffusion->pGradConcentration_preReloc, true);
+                                new_dw->put(pESFluxTmp,   lb->diffusion->pExternalScalarFlux_preReloc, true);
+                                new_dw->put(pAreaTmp,     lb->diffusion->pArea_preReloc, true);
+                                new_dw->put(pDTmp,        lb->diffusion->pDiffusivity_preReloc, true);
+                            }
+
+                            if (flags->d_useLoadCurves) {
+                                new_dw->put(pLoadCIDtmp, lb->pLoadCurveIDLabel_preReloc, true);
+                            }
+                            new_dw->put(pFtmp, lb->pDeformationMeasureLabel_preReloc, true);
+                            //new_dw->put(preftmp, lb->pRefinedLabel_preReloc, true);
+                            new_dw->put(ploctmp, lb->pLocalizedMPMLabel_preReloc, true);
+                            new_dw->put(pvgradtmp, lb->pVelGradLabel_preReloc, true);
+
+                            //9- check 
+
+                            /*
+                                 int jj = pset2->addParticles(0);
+                             // cout << "NumbParticles = " << jj << endl;
+
+                            for (int ii = 0; ii < jj; ii++){
+                             //   cerr << " pidstmp[" << ii << "]= " << pidstmp[ii] << endl;
+                             //   cerr << " pveltmp[" << ii << "]= " << pveltmp[ii] << endl;
+                                cerr << " pstrstmp[" << ii << ", 0 "<< "]= " << pstrstmp[ii](<< endl;
+                             //   cerr << " pxtmp[" << ii << ", 1 "<< "]= " << pxtmp[ii](1)<< endl;
+                             //   cerr << " pxtmp[" << ii << ", 2 "<< "]= " << pxtmp[ii](2)<< endl;                                
+                            }
+                           */
+
+                        } //end of the check to see if a particle is not on the correct material.                            
+                    } //end of moving on the particles of a grid.
+                } //end of moving on the rows of Grids.
+
+               //10-removing the material points from origin material
+               unsigned int numMPMMatls = m_materialManager->getNumMatls("MPM");
+               for (unsigned int m = 1; m < numMPMMatls; m++) {
+                     MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
+                     int dwi = mpm_matl->getDWIndex();
+                     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+                     ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+                    
+                     for (ParticleSubset::iterator iter = pset->begin();
+                         iter != pset->end(); iter++) {                                     
+                         particleIndex idx = *iter;                                                                             
+                         if (CurrentGrids[dwi][idx] ==  -1 ) {
+                             delset->addParticle(idx);                                                   
+                         }
+                     } // particles   
+
+                     new_dw->deleteParticles(delset);                                    
+               } // materials  
+
+  //---------------------------------End of Task 3-------------------------// 
+  }  // loop over patches
 }

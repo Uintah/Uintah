@@ -115,6 +115,7 @@ class Output;
     double      d_min_mass_for_acceleration;                   // Minimum mass to allow division by in computing acceleration
     bool        d_prescribeDeformation;                        // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile;                   // File containing prescribed deformations
+    bool        d_doGranularMPM;                               // Apply Wojtek Solowski's Granular MPM methodology
     bool        d_exactDeformation;                            // Set steps exactly to match times in prescribed deformation file
     bool        d_insertParticles;                             // Activate particles according to color
     std::string d_insertParticlesFile;                         // File containing activation plan
