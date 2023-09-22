@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ThresholdDamage.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ThresholdDamageVar.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/BrittleDamage.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -43,36 +44,51 @@ using namespace Uintah;
 DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
                                         MPMFlags        * flags,
                                         MaterialManager * materialManager)
-{   
+{
   ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
     //proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage() );
   }
-  
+
   string dam_type = "none";
   if(!child->getAttribute( "type", dam_type )){
     throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
   }
-  
+
   //__________________________________
   //  bulletproofing
   string cm_type = "none";
 
-  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
+  if ( matl_ps->getNodeName() != "constitutive_model" ) {
     ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
     cm_ps->getAttribute("type", cm_type);
   }
-  
+
   if (dam_type == "hancock_mackenzie" || dam_type == "johnson_cook" ) {
+
+    proc0cout << "__________________________________";
+    proc0cout << " WARNING:  The damage model "<< dam_type << " is depricated and ";
+    proc0cout << "           does not influence the stress state on the particles.";
+    proc0cout << "__________________________________";
+
     if( cm_type != "elastic_plastic_hp" && cm_type != "elastic_plastic"  ){
-      string txt="MPM:  The only constitute model that works with the johnson_cook and hancock_mackenzie damage models is elastic_plastic/elastic_plastic_hp";
-      txt = txt + " (CM: " + cm_type + " DM: " + dam_type + ")"; 
+      string txt="MPM:  The only constitute model that works with the johnson_cook";
+      txt = txt + "and hancock_mackenzie damage models is elastic_plastic/elastic_plastic_hp";
+      txt = txt + " (CM: " + cm_type + " DM: " + dam_type + ")";
       throw ProblemSetupException(txt, __FILE__, __LINE__);
     }
-  }  
-  
-  
+  }
+
+  if (dam_type == "Threshold" || dam_type == "ThresholdVar" || dam_type == "Brittle"){
+    ProblemSpecP er_ps = matl_ps->findBlock("erosion");
+    if( !er_ps ) {
+      string msg = "An erosion model must be specified when a ";
+      msg = msg +  "damage model is used.  Constitutive Model: " + cm_type;
+      throw ProblemSetupException( msg, __FILE__, __LINE__);
+    }
+  }
+
   //__________________________________
   //
   if (dam_type == "johnson_cook"){
@@ -83,6 +99,9 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
   }
   else if (dam_type == "Threshold") {
     return( scinew ThresholdDamage( child, flags, materialManager ) );
+  }
+  else if (dam_type == "ThresholdVar") {
+    return( scinew ThresholdDamageVar( child, flags, materialManager ) );
   }
   else if (dam_type == "Brittle") {
     return( scinew BrittleDamage( child ) );

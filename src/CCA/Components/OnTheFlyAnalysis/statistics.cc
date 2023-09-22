@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,16 +24,10 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 
-#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
-
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_defs/visit_defs.h>
@@ -43,25 +37,20 @@
 #include <iomanip>
 
 //______________________________________________________________________
-//    TO DO:
-//   Each variable needs to keep track of the timestep.  The user can add
-//   a variable in a checkpoint.
-//______________________________________________________________________
-//
+
 
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_doing("STATISTICS_DOING_COUT", false);
-static DebugStream cout_dbg("STATISTICS_DBG_COUT", false);
+Dout dout_OTF_stats("statistics",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+Dout dbg_OTF_stats("statistics_dbg",  "OnTheFlyAnalysis", "Displays detailed debugging info.", false);
 
 //______________________________________________________________________
-statistics::statistics( const ProcessorGroup* myworld,
+statistics::statistics( const ProcessorGroup*  myworld,
                         const MaterialManagerP materialManager,
-                        const ProblemSpecP& module_spec )
+                        const ProblemSpecP&    module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
   d_monitorCell = IntVector(0,0,0);
   d_doHigherOrderStats = false;
@@ -76,7 +65,8 @@ statistics::statistics( const ProcessorGroup* myworld,
 //__________________________________
 statistics::~statistics()
 {
-  cout_doing << " Doing: destorying statistics " << endl;
+  DOUTR(dout_OTF_stats, "Doing destructor statistics");
+
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
@@ -93,8 +83,11 @@ statistics::~statistics()
     if( d_doHigherOrderStats ){
       VarLabel::destroy( Q.Qsum3_Label );
       VarLabel::destroy( Q.Qmean3_Label );
+      VarLabel::destroy( Q.Qskewness_Label );
+
       VarLabel::destroy( Q.Qsum4_Label );
       VarLabel::destroy( Q.Qmean4_Label );
+      VarLabel::destroy( Q.Qkurtosis_Label );
     }
   }
 
@@ -113,7 +106,7 @@ void statistics::problemSetup(const ProblemSpecP &,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tstatistics" << endl;
+  DOUTR(dout_OTF_stats, "Doing statistics::problemSetup");
 
   int numMatls  = m_materialManager->getNumMatls();
 
@@ -121,43 +114,33 @@ void statistics::problemSetup(const ProblemSpecP &,
   //  Read in timing information
   m_module_spec->require("timeStart",  d_startTime);
   m_module_spec->require("timeStop",   d_stopTime);
-  
+
   // Start time < stop time
   if(d_startTime > d_stopTime ){
     throw ProblemSetupException("\n ERROR:statistics: startTime > stopTime. \n", __FILE__, __LINE__);
   }
-  
+
   // debugging
   m_module_spec->get("monitorCell",    d_monitorCell);
 
-
   //__________________________________
-  //  read in when each variable started 
+  //  read in when each variable started
   string comment = "__________________________________\n"
                    "\tIf you want to overide the value of\n \t  startTimeTimestep\n \t  startTimeTimestepReynoldsStress\n"
                    "\tsee checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
 
-  
-  //__________________________________
-  // find the material to extract data from.  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
 
+  //__________________________________
+  // find the material to extract data from.
   Material* matl = nullptr;
 
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } 
-  else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    matl = m_materialManager->getMaterial(indx);
-  } 
+  }
   else {
-    matl = m_materialManager->getMaterial(0);
+    throw ProblemSetupException("ERROR:AnalysisModule:statistics: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -165,12 +148,14 @@ void statistics::problemSetup(const ProblemSpecP &,
   vector<int> m;
   m.push_back( defaultMatl );
 
+  //__________________________________
+  //
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
   m_module_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
 
     proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
-  } 
+  }
   else {
     proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
   }
@@ -201,22 +186,32 @@ void statistics::problemSetup(const ProblemSpecP &,
     }
     m.push_back(matl);
 
-
     // What is the label name and does it exist?
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("statistics label not found: " + name , __FILE__, __LINE__);
-    }
+    VarLabel* label = VarLabel::find( name, "ERROR statistics::problemSetup <analyze>");
 
     //__________________________________
-    // Only CCVariable Doubles and Vectors for now
+    // Only CC, SFCX, SFCY, SFCZ doubles and Vectors for now
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
 
-    if( td->getType() != TypeDescription::CCVariable  ||
-        ( subtype->getType() != TypeDescription::double_type &&
-          subtype->getType() != TypeDescription::Vector ) ) {
+    bool throwException = false;
+
+    if(td->getType() != TypeDescription::CCVariable   &&
+       td->getType() != TypeDescription::SFCXVariable &&
+       td->getType() != TypeDescription::SFCYVariable &&
+       td->getType() != TypeDescription::SFCZVariable ){
+       throwException = true;
+    }
+
+    // only doubles and Vectors
+    if(subtype->getType() != TypeDescription::double_type &&
+       subtype->getType() != TypeDescription::float_type  &&
+       subtype->getType() != TypeDescription::Vector ){
+      throwException = true;
+    }
+
+    if(throwException){
       ostringstream warn;
       warn << "ERROR:AnalysisModule:statisticst: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -227,6 +222,7 @@ void statistics::problemSetup(const ProblemSpecP &,
     Qstats Q;
     Q.matl    = matl;
     Q.Q_Label = label;
+    Q.td      = td;
     Q.subtype = subtype;
     Q.computeRstess = false;
     Q.initializeTimestep();          // initialize the start timestep = 0;
@@ -303,36 +299,45 @@ void statistics::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   //  On restart read the starttimestep for each variable from checkpoing/t***/timestep.xml
-  if(restart_prob_spec){ 
+  if(restart_prob_spec){
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
-    
+
+    // bulletproofing
+    if (!da_rs_ps){
+      string msg = "ERROR DataAnalysis:Statistics  The xml section below is missing from checkpoints/t*****/timestep.xml: \n\n \
+      <DataAnalysisRestart>           \n \
+        <Module name=\"statistics\">  \n \
+          <StartTimestep>             \n \
+            <scalar-v>XX</scalar-v>   \n \
+            <scalar-f>XX</scalar-f>   \n \
+          </StartTimestep>            \n \
+        </Module>                     \n \
+      </DataAnalysisRestart>";
+
+      throw ProblemSetupException(msg, __FILE__, __LINE__);
+    }
+
     ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "statistics");
     ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
-    
+
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
       int timestep;
       st_ps->require( Q.Q_Label->getName().c_str(), timestep  );
       Q.setStart(timestep);
-      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;                   
-      
+      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;
+
     }
   }
 
   //__________________________________
   //  create the matl set
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
   d_matlSet = scinew MaterialSet();
-  d_matlSet->addAll(m);
+  d_matlSet->addAll_unique(m);
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
@@ -348,7 +353,7 @@ void statistics::problemSetup(const ProblemSpecP &,
 void statistics::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
-  printSchedule( level,cout_doing,"statistics::scheduleInitialize" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleInitialize" );
 
   Task* t = scinew Task("statistics::initialize",
                    this,&statistics::initialize);
@@ -384,30 +389,17 @@ void statistics::initialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing statistics::initialize");
+    printTask(patches, patch, dout_OTF_stats, "Doing statistics::initialize");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+      Qstats Q = d_Qstats[i];
 
-      switch(Q.subtype->getType()) {
-
-        case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
-          break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
-          break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
-      }
+      allocateAndZeroSums_wrap( new_dw, patch, Q);
     }  // loop over Qstat
 
     //__________________________________
     //
-    if( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
+    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
       proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
       allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
     }
@@ -421,7 +413,7 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level)
 {
 
-  printSchedule( level,cout_doing,"statistics::scheduleRestartInitialize" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleRestartInitialize" );
 
   DataWarehouse* new_dw = sched->getLastDW();
 
@@ -432,8 +424,8 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   const PatchSubset* myPatches = ps->getSubset(rank);
   const Patch* firstPatch = myPatches->get(0);
 
-  Task* t = scinew Task("statistics::restartInitialize",
-                   this,&statistics::restartInitialize);
+  Task* t = scinew Task("statistics::initialize",
+                   this,&statistics::initialize);
 
   bool addTask = false;
 
@@ -478,7 +470,8 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   if(d_computeReynoldsStress ){
     if (new_dw->exists( d_velSum_Label, d_RS_matl, firstPatch) ){
       d_isReynoldsStressInitialized = true;
-    } else {
+    }
+    else {
       t->computes ( d_velSum_Label );
       addTask = true;
       proc0cout << "    Statistics: Adding computes for Reynolds Stress (u'v', u'w', w'u') terms "  << endl;
@@ -489,55 +482,11 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), d_matlSet);
   }
+  else{
+    delete t;        // to prevent a memory leak
+  }
 }
 
-
-//______________________________________________________________________
-//
-void statistics::restartInitialize(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*,
-                                   DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing statistics::restartInitialize");
-
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
-      switch(Q.subtype->getType()) {
-
-        case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
-          break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
-          break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
-      }
-    }  // loop over Qstat
-
-    //__________________________________
-    //
-    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    Statistics: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
-
-  }  // pathes
-}
-
-//______________________________________________________________________
-//
-void
-statistics::restartInitialize()
-{
-}
 
 //______________________________________________________________________
 //  output the starting timestep for each variable
@@ -565,16 +514,16 @@ statistics::outputProblemSpec( ProblemSpecP& root_ps)
 void statistics::scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level)
 {
-  printSchedule( level,cout_doing,"statistics::scheduleDoAnalysis" );
+  printSchedule( level, dout_OTF_stats, "statistics::scheduleDoAnalysis" );
 
   Task* t = scinew Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
   t->requires(Task::OldDW, m_timeStepLabel);
   t->requires(Task::OldDW, m_simulationTimeLabel);
-  
+
   Ghost::GhostType  gn  = Ghost::None;
-  
+
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
 
@@ -597,7 +546,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
       t->requires( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
     }
 #endif
-    
+
     t->computes ( Q.Qsum_Label,       matSubSet );
     t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
@@ -673,27 +622,44 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_doing,"Doing statistics::doAnalysis");
+    printTask(patches, patch, dout_OTF_stats, "Doing statistics::doAnalysis");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
 
-      switch(Q.subtype->getType()) {
+      switch(Q.td->getType()){
+        case TypeDescription::SFCXVariable:      // SFCX
+        case TypeDescription::SFCYVariable:      // SFCY
+        case TypeDescription::SFCZVariable:      // SFCZ
+        case TypeDescription::CCVariable:        // CC Variables
+          switch( Q.subtype->getType() ) {
 
-        case TypeDescription::double_type:{         // double
-          computeStatsWrapper< double >(old_dw, new_dw, patches, patch, Q);
+            case TypeDescription::double_type:          // double
+              computeStatsWrapper< double >(old_dw, new_dw, patches, patch, Q);
+              break;
+
+            case TypeDescription::float_type:           // float
+              computeStatsWrapper< float >(old_dw, new_dw, patches, patch, Q);
+              break;
+
+            case TypeDescription::Vector: {             // Vector
+              computeStatsWrapper< Vector > (old_dw, new_dw, patches,  patch, Q);
+
+              computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
+
+              break;
+            }
+            default: {
+              throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+            }
+          }
           break;
-        }
-        case TypeDescription::Vector: {             // Vector
-          computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
+        default:
+          ostringstream warn;
+          warn << "ERROR:AnalysisModule:statistics: ("<<Q.Q_Label->getName() << " "
+               << Q.td->getName() << " ) has not been implemented\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
 
-          computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
-
-          break;
-        }
-        default: {
-          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
-        }
       }
     }  // qstats loop
   }  // patches
@@ -724,15 +690,41 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
   else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
-    computeStats< T >(old_dw, new_dw, patch, Q);
+    switch( Q.td->getType() ){
+      case TypeDescription::CCVariable:       // CC Variables
+        computeStats< constCCVariable<T>,   CCVariable<T>,  T >(old_dw, new_dw, patch, Q);
+        break;
+
+      case TypeDescription::SFCXVariable:      //SFCX
+
+        computeStats< constSFCXVariable<T>, SFCXVariable<T>, T >(old_dw, new_dw, patch, Q);
+        break;
+
+      case TypeDescription::SFCYVariable:      //SFCY
+        computeStats< constSFCYVariable<T>, SFCYVariable<T>, T >(old_dw, new_dw, patch, Q);
+        break;
+
+      case TypeDescription::SFCZVariable:      //SFCZ
+        computeStats< constSFCZVariable<T>, SFCZVariable<T>, T >(old_dw, new_dw, patch, Q);
+        break;
+
+      default:
+        ostringstream warn;
+        warn << "ERROR:AnalysisModule:statistics:computeStatsWrapper "
+             << Q.td->getName() << " ) has not been implemented\n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+
+    //computeStats< TConstGridVar, TGridVar, T >(old_dw, new_dw, patch, Q);
   }
 }
 
 
-
 //______________________________________________________________________
 //
-template <class T>
+template <class TConstGridVar,
+          class TGridVar,
+          class T>
 void statistics::computeStats( DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
                                const Patch*    patch,
@@ -740,20 +732,20 @@ void statistics::computeStats( DataWarehouse* old_dw,
 {
   const int matl = Q.matl;
 
-  constCCVariable<T> Qvar;
-  constCCVariable<T> Qsum_old;
-  constCCVariable<T> Qsum2_old;
+  TConstGridVar Qvar;
+  TConstGridVar Qsum_old;
+  TConstGridVar Qsum2_old;
 
   Ghost::GhostType  gn  = Ghost::None;
   new_dw->get ( Qvar,      Q.Q_Label,      matl, patch, gn, 0 );
   old_dw->get ( Qsum_old,  Q.Qsum_Label,   matl, patch, gn, 0 );
   old_dw->get ( Qsum2_old, Q.Qsum2_Label,  matl, patch, gn, 0 );
 
-  CCVariable< T > Qsum;
-  CCVariable< T > Qsum2;
-  CCVariable< T > Qmean;
-  CCVariable< T > Qmean2;
-  CCVariable< T > Qvariance;
+  TGridVar Qsum;
+  TGridVar Qsum2;
+  TGridVar Qmean;
+  TGridVar Qmean2;
+  TGridVar Qvariance;
 
   new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
   new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
@@ -761,7 +753,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  timeStep_vartype timeStep_var;      
+  timeStep_vartype timeStep_var;
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
 
@@ -804,19 +796,19 @@ void statistics::computeStats( DataWarehouse* old_dw,
   //  Higher order stats  3rd and 4th
   if( d_doHigherOrderStats ){
 
-    constCCVariable<T> Qsum3_old;
-    constCCVariable<T> Qsum4_old;
+    TConstGridVar Qsum3_old;
+    TConstGridVar Qsum4_old;
 
     old_dw->get ( Qsum3_old, Q.Qsum3_Label, matl, patch, gn, 0 );
     old_dw->get ( Qsum4_old, Q.Qsum4_Label, matl, patch, gn, 0 );
 
-    CCVariable< T > Qsum3;
-    CCVariable< T > Qsum4;
-    CCVariable< T > Qmean3;
-    CCVariable< T > Qmean4;
+    TGridVar Qsum3;
+    TGridVar Qsum4;
+    TGridVar Qmean3;
+    TGridVar Qmean4;
 
-    CCVariable< T > Qskewness;
-    CCVariable< T > Qkurtosis;
+    TGridVar Qskewness;
+    TGridVar Qkurtosis;
     new_dw->allocateAndPut( Qsum3,     Q.Qsum3_Label,     matl, patch );
     new_dw->allocateAndPut( Qsum4,     Q.Qsum4_Label,     matl, patch );
     new_dw->allocateAndPut( Qmean3,    Q.Qmean3_Label,    matl, patch );
@@ -858,6 +850,10 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                const Patch*    patch,
                                                Qstats& Q)
 {
+  if( !Q.computeRstess ){
+    return;
+  }
+
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
@@ -877,7 +873,8 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
-  }else {
+  }
+  else {
 //    proc0cout << " Computing------------statistics::computeReynoldsStress" << endl;
     computeReynoldsStress( old_dw, new_dw,patch, Q);
   }
@@ -911,8 +908,8 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
-  
-  timeStep_vartype timeStep_var;      
+
+  timeStep_vartype timeStep_var;
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
 
@@ -970,6 +967,32 @@ void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
 }
 
 //______________________________________________________________________
+//
+void statistics::allocateAndZeroSums_wrap(DataWarehouse * new_dw,
+                                          const Patch   * patch,
+                                          Qstats        & Q )
+{
+  switch( Q.subtype->getType() ) {
+
+    case TypeDescription::double_type:{         // double
+      allocateAndZeroSums<double>( new_dw, patch, Q);
+      break;
+    }
+    case TypeDescription::float_type:{         // float
+      allocateAndZeroSums<float>( new_dw, patch, Q);
+      break;
+    }
+    case TypeDescription::Vector: {             // Vector
+      allocateAndZeroSums<Vector> ( new_dw, patch, Q);
+      break;
+    }
+    default: {
+      throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+    }
+  }
+}
+
+//______________________________________________________________________
 //  allocateAndZero  summation variables
 template <class T>
 void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
@@ -993,15 +1016,30 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
 //______________________________________________________________________
 //  allocateAndZero
 template <class T>
-void statistics::allocateAndZero( DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  const int       matl,
-                                  const Patch*    patch )
+void statistics::allocateAndZero( DataWarehouse  * new_dw,
+                                  const VarLabel * label,
+                                  const int        matl,
+                                  const Patch    * patch )
 {
-  CCVariable<T> Q;
-  new_dw->allocateAndPut( Q, label, matl, patch );
+  const Uintah::TypeDescription* td = label->typeDescription();
+  Variable* var = td->createInstance();
+
+  ASSERT( var != nullptr );
+
+  GridVariableBase* gridVarBase = dynamic_cast<GridVariableBase*>( var );
+  GridVariable<T>* gridVar      = dynamic_cast<GridVariable<T>* >( gridVarBase );
+
+  IntVector lowIndex;
+  IntVector highIndex;
+
+  patch->computeVariableExtents(  td->getType() ,label->getBoundaryLayer(), Ghost::None, 0,  lowIndex, highIndex);
+  gridVar->allocate( lowIndex, highIndex );
+
   T zero(0.0);
-  Q.initialize( zero );
+  gridVar->initialize(zero);
+  new_dw->put( gridVar, label, matl, patch );
+
+  delete  var;
 }
 
 

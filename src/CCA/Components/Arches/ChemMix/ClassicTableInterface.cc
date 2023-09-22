@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -390,8 +390,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
-    CCVariable<double> mpmarches_denmicro;
-
 
     struct1DArray<CCVariable<double> , MAX_NUM_DEP_VARS> CCVar_vec_lookup (d_dvVarMap.size()); // needs to be expanded newTable
     struct1DArray<int, MAX_NUM_DEP_VARS > depVarIndexes(d_nDepVars);

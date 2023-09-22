@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,18 +42,21 @@
 
 using namespace Uintah;
 
+//______________________________________________________________________
+//
 FluidsBasedModel::FluidsBasedModel(const ProcessorGroup* myworld,
                                    const MaterialManagerP materialManager)
   : ModelInterface(myworld, materialManager)
 {
 }
-
+//______________________________________________________________________
+//
 FluidsBasedModel::~FluidsBasedModel()
 {
   // delete transported Lagrangian variables
   std::vector<TransportedVariable*>::iterator t_iter;
-  for(t_iter  = d_trans_vars.begin();
-      t_iter != d_trans_vars.end(); t_iter++){
+  
+  for(t_iter  = d_transVars.begin(); t_iter != d_transVars.end(); t_iter++){
     TransportedVariable* tvar = *t_iter;
           
     VarLabel::destroy(tvar->var_Lagrangian);
@@ -62,19 +65,21 @@ FluidsBasedModel::~FluidsBasedModel()
   }
 
   std::vector<AMRRefluxVariable*>::iterator r_iter;
-  for( r_iter  = d_reflux_vars.begin();
-       r_iter != d_reflux_vars.end(); r_iter++){
+  for( r_iter  = d_refluxVars.begin();
+       r_iter != d_refluxVars.end(); r_iter++){
     AMRRefluxVariable* rvar = *r_iter;
           
-    VarLabel::destroy(rvar->var_X_FC_flux);
-    VarLabel::destroy(rvar->var_Y_FC_flux);
-    VarLabel::destroy(rvar->var_Z_FC_flux);
-    VarLabel::destroy(rvar->var_X_FC_corr);
-    VarLabel::destroy(rvar->var_Y_FC_corr);
-    VarLabel::destroy(rvar->var_Z_FC_corr);
+    VarLabel::destroy( rvar->var_X_FC_flux );
+    VarLabel::destroy( rvar->var_Y_FC_flux );
+    VarLabel::destroy( rvar->var_Z_FC_flux );
+    VarLabel::destroy( rvar->var_X_FC_corr );
+    VarLabel::destroy( rvar->var_Y_FC_corr );
+    VarLabel::destroy( rvar->var_Z_FC_corr );
   } 
 }
 
+//______________________________________________________________________
+//
 void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
                                                    const VarLabel* var,
                                                    const VarLabel* src)
@@ -84,17 +89,18 @@ void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
   t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
-  t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
-  t->var_adv        = VarLabel::create(var->getName()+"_adv", var->typeDescription());
-  d_trans_vars.push_back(t);
+  t->var_Lagrangian = VarLabel::create( var->getName()+"_L",   var->typeDescription());
+  t->var_adv        = VarLabel::create( var->getName()+"_adv", var->typeDescription());
+  d_transVars.push_back(t);
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 //  Register scalar flux variables needed
 //  by the AMR refluxing task.  We're actually
 //  creating the varLabels and putting them is a vector
 void FluidsBasedModel::registerAMRRefluxVariable(const MaterialSet* matlSet,
-                                            const VarLabel* var)
+                                                 const VarLabel* var)
 {
   AMRRefluxVariable* t = scinew AMRRefluxVariable;
   
@@ -114,17 +120,21 @@ void FluidsBasedModel::registerAMRRefluxVariable(const MaterialSet* matlSet,
   
   t->var_X_FC_flux = VarLabel::create(var->getName()+"_X_FC_flux", 
                                 SFCXVariable<double>::getTypeDescription());
+                                
   t->var_Y_FC_flux = VarLabel::create(var->getName()+"_Y_FC_flux", 
                                 SFCYVariable<double>::getTypeDescription());
+                                
   t->var_Z_FC_flux = VarLabel::create(var->getName()+"_Z_FC_flux", 
                                 SFCZVariable<double>::getTypeDescription());
                                 
   t->var_X_FC_corr = VarLabel::create(var->getName()+"_X_FC_corr", 
                                 SFCXVariable<double>::getTypeDescription());
+                                
   t->var_Y_FC_corr = VarLabel::create(var->getName()+"_Y_FC_corr", 
                                 SFCYVariable<double>::getTypeDescription());
+                                
   t->var_Z_FC_corr = VarLabel::create(var->getName()+"_Z_FC_corr", 
                                 SFCZVariable<double>::getTypeDescription());
 
-  d_reflux_vars.push_back(t);
+  d_refluxVars.push_back(t);
 }

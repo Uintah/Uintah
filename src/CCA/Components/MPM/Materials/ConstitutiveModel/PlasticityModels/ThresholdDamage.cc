@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -88,6 +88,8 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
     }
   }
   ps->get("failure_seed",    d_epsf.seed);        // Seed for RN generator
+  d_epsf.localizeOrNot=true;
+  ps->get("LocalizeParticles", d_epsf.localizeOrNot);
 
 
   //__________________________________
@@ -127,6 +129,7 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("scaling",          d_epsf.scaling);
   dam_ps->appendElement("exponent",         d_epsf.exponent);
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
+  dam_ps->appendElement("LocalizeParticles",d_epsf.localizeOrNot);
 
   if(d_failure_criteria=="MohrColoumb"){
     dam_ps->appendElement("friction_angle", d_friction_angle);
@@ -259,7 +262,7 @@ ThresholdDamage::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
-  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
+  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,
                                                               matls, gnone);
   task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
   
@@ -300,7 +303,7 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
   old_dw->get(pLocalized,               d_lb->pLocalizedMPMLabel,    pset);
   old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel, pset);
   old_dw->get(pParticleID,              d_lb->pParticleIDLabel,      pset);
-  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,           
+  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,
                                                                      pset);
   new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc, pset);
 
@@ -327,79 +330,84 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
   // Copy failure strains to new dw
   pFailureStrain_new.copyData(pFailureStrain);
 
-  //__________________________________
-  //
-  ParticleSubset::iterator iter = pset->begin();
-  for(; iter != pset->end(); iter++){
-    particleIndex idx = *iter;
+  if(!d_epsf.localizeOrNot){
+    pLocalized_new.copyData(pLocalized);
+  } else {
 
-    defGrad = pDefGrad_new[idx];
-    Matrix3 Identity, zero(0.0); Identity.Identity();
+    //__________________________________
+    //
+    ParticleSubset::iterator iter = pset->begin();
+    for(; iter != pset->end(); iter++){
+      particleIndex idx = *iter;
 
-    // Find if the particle has failed
-    if(pLocalized_new[idx]==0){
-      pLocalized_new[idx] = pLocalized[idx];
-    }
+      defGrad = pDefGrad_new[idx];
+      Matrix3 Identity, zero(0.0); Identity.Identity();
 
-    if (pLocalized[idx] == 0 && pLocalized_new[idx] != -999){
-      if(d_failure_criteria=="MaximumPrincipalStress"){
-
-        double maxEigen=0., medEigen=0., minEigen=0.;
-        pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
-
-        //The first eigenvalue returned by "eigen" is always the largest
-        if ( maxEigen > pFailureStrain[idx] ){
-          pLocalized_new[idx] = 1;
-        }
-        if ( pLocalized[idx] != pLocalized_new[idx]) {
-          cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
-               << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
-        }
+      // Find if the particle has failed
+      if(pLocalized_new[idx]==0){
+        pLocalized_new[idx] = pLocalized[idx];
       }
-      else if( d_failure_criteria=="MaximumPrincipalStrain" ){
-        // Compute Finger tensor (left Cauchy-Green)
-        Matrix3 bb = defGrad * defGrad.Transpose();
 
-        // Compute Eulerian strain tensor
-        Matrix3 ee = (Identity - bb.Inverse())*0.5;
-
-        double maxEigen=0., medEigen=0., minEigen=0.;
-        ee.getEigenValues(maxEigen,medEigen,minEigen);
-
-        if ( maxEigen > pFailureStrain[idx] ){
-          pLocalized_new[idx] = 1;
+      if (pLocalized[idx] == 0 && pLocalized_new[idx] != -999){
+        if(d_failure_criteria=="MaximumPrincipalStress"){
+  
+          double maxEigen=0., medEigen=0., minEigen=0.;
+          pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
+  
+          //The first eigenvalue returned by "eigen" is always the largest
+          if ( maxEigen > pFailureStrain[idx] ){
+            pLocalized_new[idx] = 1;
+          }
+          if ( pLocalized[idx] != pLocalized_new[idx]) {
+            cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
+                 << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
+          }
         }
-        if ( pLocalized[idx] != pLocalized_new[idx]) {
-          cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
-               << " eps_f = " << pFailureStrain[idx] << endl;
+        else if( d_failure_criteria=="MaximumPrincipalStrain" ){
+          // Compute Finger tensor (left Cauchy-Green)
+          Matrix3 bb = defGrad * defGrad.Transpose();
+  
+          // Compute Eulerian strain tensor
+          Matrix3 ee = (Identity - bb.Inverse())*0.5;
+  
+          double maxEigen=0., medEigen=0., minEigen=0.;
+          ee.getEigenValues(maxEigen,medEigen,minEigen);
+  
+          if ( maxEigen > pFailureStrain[idx] ){
+            pLocalized_new[idx] = 1;
+          }
+          if ( pLocalized[idx] != pLocalized_new[idx]) {
+            cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
+                 << " eps_f = " << pFailureStrain[idx] << endl;
+          }
         }
-      }
-      else if( d_failure_criteria=="MohrColoumb" ){
-        double maxEigen=0., medEigen=0., minEigen=0.;
-        pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
+        else if( d_failure_criteria=="MohrColoumb" ){
+          double maxEigen=0., medEigen=0., minEigen=0.;
+          pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
+  
+          double cohesion = pFailureStrain[idx];
+  
+          double epsMax=0.;
+          // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
+          if (maxEigen > d_tensile_cutoff * cohesion){
+            pLocalized_new[idx] = 1;
+            epsMax = maxEigen;
+          }
 
-        double cohesion = pFailureStrain[idx];
+          //  Shear failure criteria (max shear > cohesion + friction)
+          double friction_angle = d_friction_angle*(M_PI/180.);
 
-        double epsMax=0.;
-        // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
-        if (maxEigen > d_tensile_cutoff * cohesion){
-          pLocalized_new[idx] = 1;
-          epsMax = maxEigen;
-        }
-
-        //  Shear failure criteria (max shear > cohesion + friction)
-        double friction_angle = d_friction_angle*(M_PI/180.);
-
-        if ( (maxEigen - minEigen)/2.0 > cohesion * cos(friction_angle)
-             - (maxEigen + minEigen)*sin(friction_angle)/2.0){
-          pLocalized_new[idx] = 2;
-          epsMax = (maxEigen - minEigen)/2.0;
-        }
-        if (pLocalized[idx] != pLocalized_new[idx]) {
-          cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
-               << epsMax << " cohesion = " << cohesion << endl;
-        }
-      } // Mohr-Coloumb
-    } // pLocalized==0
-  }  // pset loop
+          if ( (maxEigen - minEigen)/2.0 > cohesion * cos(friction_angle)
+               - (maxEigen + minEigen)*sin(friction_angle)/2.0){
+            pLocalized_new[idx] = 2;
+            epsMax = (maxEigen - minEigen)/2.0;
+          }
+          if (pLocalized[idx] != pLocalized_new[idx]) {
+            cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
+                 << epsMax << " cohesion = " << cohesion << endl;
+          }
+        } // Mohr-Coloumb
+      } // pLocalized==0
+    }  // pset loop
+  } // Do Localization
 }

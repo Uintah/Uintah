@@ -1,0 +1,10 @@
+These are input examples for the SingleField MPM code, based on Homel's DFG method.
+
+These assume the #define RIGID near the top of the SingleFieldMPM.cc is turned on.
+
+Near line 3281 in that file is code that sets the velocity for material 0, which
+behaves as a rigid material in those cases.  There are options for a foam compression test, a Brazil test and a two disk plate problem, as well as other examples.
+
+Also, near the very end is an "#ifdef RIGID".  If you want material 0 to push
+through other materials, that code is needed.  If you want material 0 to have
+more of a frictional contact interaction, then comment out the code therein.

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -32,27 +32,31 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/MPM/PhysicalBC
 
 SRCS     += \
-	$(SRCDIR)/MPMPhysicalBCFactory.cc  \
-	$(SRCDIR)/FluxBCModelFactory.cc    \
-	$(SRCDIR)/ForceBC.cc               \
-	$(SRCDIR)/PressureBC.cc            \
-	$(SRCDIR)/ScalarFluxBC.cc          \
-	$(SRCDIR)/HeatFluxBC.cc            \
-	$(SRCDIR)/FluxBCModel.cc           \
-	$(SRCDIR)/AutoCycleFluxBC.cc       \
-	$(SRCDIR)/ArchesHeatFluxBC.cc	   \
-	$(SRCDIR)/PolynomialData.cc		
+        $(SRCDIR)/ArchesHeatFluxBC.cc      \
+        $(SRCDIR)/AutoCycleFluxBC.cc       \
+        $(SRCDIR)/FluxBCModel.cc           \
+        $(SRCDIR)/FluxBCModelFactory.cc    \
+        $(SRCDIR)/ForceBC.cc               \
+        $(SRCDIR)/HeatFluxBC.cc            \
+        $(SRCDIR)/HydrostaticBC.cc         \
+        $(SRCDIR)/LoadCurve.cc             \
+        $(SRCDIR)/MPMPhysicalBCFactory.cc  \
+        $(SRCDIR)/PolynomialData.cc        \
+        $(SRCDIR)/PressureBC.cc            \
+        $(SRCDIR)/ScalarFluxBC.cc          \
+        $(SRCDIR)/TorqueBC.cc
+
 
 PSELIBS := \
-	CCA/Components/MPM/Core \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
-	Core/Util           
+        CCA/Components/MPM/Core \
+        Core/Disclosure     \
+        Core/Exceptions     \
+        Core/Geometry       \
+        Core/GeometryPiece  \
+        Core/Grid           \
+        Core/Math           \
+        Core/Parallel       \
+        Core/ProblemSpec    \
+        Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

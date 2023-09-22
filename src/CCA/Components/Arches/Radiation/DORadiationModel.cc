@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,6 @@
 #include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
@@ -84,7 +83,6 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 // Default constructor for DORadiationModel
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
-                                   const MPMArchesLabel* MAlab,
                                    const ProcessorGroup* myworld,
                                    bool sweepMethod ):
                                    d_myworld(myworld),

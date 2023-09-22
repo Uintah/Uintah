@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -36,9 +36,6 @@ SRCS += \
         $(SRCDIR)/cellg.F \
         $(SRCDIR)/fixval.F \
         $(SRCDIR)/fixval_trans.F \
-        $(SRCDIR)/mm_computevel.F\
-        $(SRCDIR)/mm_explicit_vel.F\
-        $(SRCDIR)/mmbcvelocity.F \
         $(SRCDIR)/prescoef_var.F \
         $(SRCDIR)/pressrcpred.F \
         $(SRCDIR)/pressrcpred_var.F \
@@ -74,11 +71,6 @@ $(SRCDIR)/bcuvel.$(OBJEXT): $(SRCDIR)/bcuvel_fort.h
 $(SRCDIR)/bcvvel.$(OBJEXT): $(SRCDIR)/bcvvel_fort.h
 $(SRCDIR)/bcwvel.$(OBJEXT): $(SRCDIR)/bcwvel_fort.h
 $(SRCDIR)/cellg.$(OBJEXT): $(SRCDIR)/cellg_fort.h
-$(SRCDIR)/mm_computevel.$(OBJEXT): $(SRCDIR)/mm_computevel_fort.h
-$(SRCDIR)/mm_explicit.$(OBJEXT): $(SRCDIR)/mm_explicit_fort.h
-$(SRCDIR)/mm_explicit_oldvalue.$(OBJEXT): $(SRCDIR)/mm_explicit_oldvalue_fort.h
-$(SRCDIR)/mm_explicit_vel.$(OBJEXT): $(SRCDIR)/mm_explicit_vel_fort.h
-$(SRCDIR)/mmbcvelocity.$(OBJEXT): $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/prescoef_var.$(OBJEXT): $(SRCDIR)/prescoef_var_fort.h
 $(SRCDIR)/pressrcpred.$(OBJEXT): $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.$(OBJEXT): $(SRCDIR)/pressrcpred_var_fort.h

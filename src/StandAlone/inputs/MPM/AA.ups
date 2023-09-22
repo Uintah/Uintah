@@ -29,6 +29,7 @@
         <save label="p.x"></save>
         <save label="p.volume"></save>
         <save label="p.displacement"></save>
+        <save label="p.particleID"></save>
         <save label="g.mass"></save>
         <!--<checkpoint cycle = "2" timestepInterval = "2"/>-->
     </DataArchiver>

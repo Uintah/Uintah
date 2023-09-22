@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 
 #include <expression/Expression.h>
 #include <expression/ManagerTypes.h>
+#include <expression/matrix-assembly/MapUtilities.h>
 
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/OperatorDatabase.h>
@@ -46,7 +47,10 @@ namespace WasatchCore{
    * Base class which provides basic structure for expressions that calculate density at time level 
    * \f$n+1\f$  (\f$\rho^{n+1}\f$)  from scalars transported in strong form (\f$(\rho\phi)_i^{n+1}\f$), 
    * and a set of variables at time level \f$n\f$ (\f$\beta_j^{n}\f$) where primitive scalars \f$\phi_i\f$ 
-   * are functions of variables \f$\beta_j\f$, \emph{i.e.} \f$\phi_i = \phi_i(\beta_j) \f$.
+   * are functions of variables \f$\beta_j\f$, \emph{i.e.} \f$\phi_i = \phi_i(\beta_1, ..., beta_m) \f$.
+   * where \f$m = \mathrm{length}(\beta) = \mathrm{length}(\phi) \f$.
+   * 
+   * Note that in many (probably most) cases, \f$\beta_i = \phi_i\f$ for most  \f$i\f$ in \f$[1,...,m]\f$.
    * 
    * The procedure for calculating the density is as follows:
    * \begin{enumerate}
@@ -55,10 +59,10 @@ namespace WasatchCore{
    *  \item compute residual Jacobian matrix elements \f$[J]_{ij} = \frac{\partial r_i}{\partial \beta_j}\f$
    *  \item solve the linearized system \f$[J] \vec{\Delta} = \vec{r}\f$
    *  \item update guesses for varialbles \f$\beta_j = \beta_j -\Delta_j\f$
+   *  \item update \f$\phi_j =  \phi_i(\beta_1, ..., beta_m) \f$ for each \f$\phi_j \not\in [\beta_1, ..., \beta_m]\f$
    * \end{enumerate}
    * 
-   * This procedure ia repeated until the resiudals are below a specified tolerance. Note, in some cases, 
-   *  \f$\phi_i = \beta_i\f$, which somewhat simplifies the above procedure.
+   * This procedure ia repeated until the resiudals are below a specified tolerance. 
    *  
    */
 
@@ -70,7 +74,7 @@ namespace WasatchCore{
        *  @brief Base class for expressions that compute density for Wasatch's low-Mach NSE solver
        *  @param densityTag tag to the density, \f$\rho = \rho(\beta_j)\f$ which will be calculated 
        *  @param phiTags tags to primitive transported scalars \f$\phi_i = \phi_i(\beta_j) \f$
-       *  @param phiTags tags to primitive transported scalars \f$\phi_i = \phi_i(\beta_j) \f$
+       *  @param betaTags tags to thermodynamic quantities which wiill be  \f$\phi_i = \phi_i(\beta_j) \f$
        *  @param rTol relative tolerance
        *  @param maxIter maximum number of iterations for Newton solve used to compute density
        */
@@ -93,6 +97,7 @@ namespace WasatchCore{
         residualTags_ (tags_with_prefix(phiTags     , "solver_residual") ),
         dRhodPhiTags_ (density_derivative_tags_with_prefix(phiTags)      ),
         dRhodBetaTags_(density_derivative_tags_with_prefix(betaTags)     ),
+        jacobianTags_ (jacobian_tags(phiTags, betaTags)                  ),
         rTol_   ( rTol    ),
         maxIter_( maxIter )
         {
@@ -111,7 +116,7 @@ namespace WasatchCore{
       const double          delta_; // prevents relative error numerator from becoming zero
       const Expr::Tag       densityOldTag_, densityNewTag_;
       const Expr::TagList   rhoPhiTags_, phiOldTags_, phiNewTags_, betaOldTags_, betaNewTags_,
-                            residualTags_, dRhodPhiTags_, dRhodBetaTags_;
+                            residualTags_, dRhodPhiTags_, dRhodBetaTags_, jacobianTags_;
       const double          rTol_;
       const unsigned        maxIter_;
       NestedGraphHelper     helper_;
@@ -128,6 +133,7 @@ namespace WasatchCore{
       }
 
       //-------------------------------------------------------------------
+      
 
       void setup()
       {
@@ -218,13 +224,16 @@ namespace WasatchCore{
           }
           
           for(const unsigned& i : phiUpdateIndecices_){
-            FieldT&       phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
+            FieldT& phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
             phiOld <<= fieldTManager.field_ref( this->phiNewTags_[i] );
           }
 
           // update variables for next iteration and check if error is below tolerance
           FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
           rhoOld <<= fieldTManager.field_ref( this->densityNewTag_ );
+
+          // update other fields if needed
+          update_other_fields(fieldTManager);
         }
 
         if(!converged){
@@ -233,7 +242,8 @@ namespace WasatchCore{
         }
         #ifndef NDEBUG
         else{
-          std::cout << "\tSolve for density completed (max error = " << maxError << ") after " << numIter << " iterations.\n";
+          std::cout << "\tSolve for density completed (max error = " << maxError << " field: "<< badTag.name() << ") after " 
+                    << numIter << " iterations.\n";
         }
         #endif
 
@@ -289,9 +299,39 @@ namespace WasatchCore{
         return newTags;
       }
 
+      //-------------------------------------------------------------------
+      
+      // \brief returns an Expr::TagList for jacobian element tags 
+      static Expr::TagList jacobian_tags( const Expr::TagList& phiTags, 
+                                          const Expr::TagList& betaTags)
+      {
+        const int n  = phiTags.size();
+        assert(n == betaTags.size());
+
+        const std::string jacRowPrefix = "densitySolverJacobian_";
+
+        std::vector<std::string> jacRowNames(n, "");
+        std::vector<std::string> jacColNames(n, "");
+
+        for(int i=0; i<n; ++i)
+        {
+          jacRowNames[i] = jacRowPrefix + phiTags[i].name();
+          jacColNames[i] = betaTags[i].name();
+        }
+
+        return Expr::matrix::matrix_tags( jacRowNames,"_",jacColNames);;
+      }
+     
      //-------------------------------------------------------------------
 
-     virtual double get_normalization_factor(const unsigned i) const =0;
+     virtual double get_normalization_factor(const unsigned i) const = 0;
+
+    //-------------------------------------------------------------------
+    
+    // \brief updates fields that are not explicitly updated in the 'newton_solve' routine.
+    //        default behavior is to do nothing.
+     virtual void update_other_fields(Expr::UintahFieldManager<FieldT>& fieldTManager)
+     {};
 
     private:
       // These are indecies of transported scalars that are computed from betaValues

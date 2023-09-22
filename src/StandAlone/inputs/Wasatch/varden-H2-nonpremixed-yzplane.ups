@@ -1,0 +1,304 @@
+<Uintah_specification>
+  <Meta>
+    <title>Variable density flow with species transport</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <ModelBasedOnSpeciesAndEnthalpy>
+    	<maxIterations>100</maxIterations>
+    	<tolerance>1e-8</tolerance>
+    </ModelBasedOnSpeciesAndEnthalpy>
+            
+    <TimeIntegrator>FE</TimeIntegrator>  
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="background_pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for velocity components -->    
+   <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for velocity components -->    
+   <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+ 
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="sinz"/>
+      <SineFunction amplitude="60e-4" frequency="500" offset="-2e-3">
+         <NameTag name="ZSVOL"/>
+       </SineFunction>
+    </BasicExpression>
+    
+       <!-- Set the initial condition on H2 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="gx"/>
+      <GaussianFunction amplitude="1" deviation="8e-3" mean="0" baseline="0.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="gaussSinz"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="sinz"/>
+        <NameTag name="gx"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="yPlusSinz"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <NameTag name="gaussSinz"/>
+        <NameTag name="YSVOL"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <!-- Set the initial condition on H2 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="H2"/>
+      <GaussianFunction amplitude="1.0" deviation="1e-3" mean="0.0" baseline="0.0">
+        <NameTag name="yPlusSinz"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <FieldClipping tasklist="initialization">
+      <FieldExpression type="SVOL" min="0.0" max="0.1">
+        <NameTag name="H2"/>        
+      </FieldExpression>
+    </FieldClipping>
+
+               
+   <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="O2"/>
+      <LinearFunction slope="-2" intercept="0.2">
+          <NameTag name="H2"/>
+      </LinearFunction>   
+    </BasicExpression>
+
+    
+    <FieldClipping tasklist="initialization">
+      <FieldExpression type="SVOL" min="0.0" max="0.2">
+        <NameTag name="O2"/>        
+      </FieldExpression>
+    </FieldClipping>
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="0.2">
+        <NameTag name="O2" state="STATE_NP1"/>        
+      </FieldExpression>
+    </FieldClipping>
+    
+        <!-- Set the initial condition on H2 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Tz"/>
+      <GaussianFunction amplitude="1" deviation="1e-3" mean="0.0" baseline="0.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+       <!-- Set the initial condition on H2 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Ty"/>
+      <GaussianFunction amplitude="1" deviation="1e-3" mean="8e-4" baseline="0.0">
+        <NameTag name="YSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Txz"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="Tz"/>
+        <NameTag name="Ty"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    
+   <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <LinearFunction slope="700" intercept="500">
+      <NameTag name="Txz"/>
+      </LinearFunction>   
+    </BasicExpression>
+        
+        <!-- Build an equation for the enthalpy -->
+    <TransportEquation equation="enthalpy">
+      <SolutionVariable>rho_enthalpy</SolutionVariable>
+      <PrimitiveVariable>enthalpy</PrimitiveVariable>
+      <PropertiesFromPoKiTT/>
+       <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+       <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </TransportEquation>
+    
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="enthalpy" state="STATE_NP1"/>
+    </ForceOnGraph>   
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+         
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+        <FromPoKiTT/>       
+      </Viscosity>  
+      <ComputeMassResidual/>
+      <Pressure>
+        <Use3DLaplacian>true</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-8  </tolerance>
+            <maxiterations>  10000   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+    
+        <SpeciesTransportEquations>
+      <CanteraInputFile>inputs/Wasatch/h2.xml</CanteraInputFile>
+      <CanteraGroup>gas</CanteraGroup>
+      <DiffusiveFlux direction="Z">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <DiffusiveFlux direction="Y">
+        <MixtureAveraged/>
+      </DiffusiveFlux>
+      <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DetailedKinetics/>
+    </SpeciesTransportEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.01</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-7</delt_min>
+    <delt_max>1e-7</delt_max>
+    <max_Timesteps>2</max_Timesteps>
+    <timestep_multiplier>1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-nonpremixed-yzplane.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" timestepInterval="1"/>
+    <save label="z-mom"/>
+    <save label="y-mom"/>
+    <save label="density"/>
+    <save label="w"/>
+    <save label="v"/>
+    <save label="viscosity"/>    
+    <save label="ContinuityResidual"/>
+    <save label="H2"/>
+    <save label="H2O"/>
+    <save label="HO2"/>
+    <save label="O2"/>
+    <save label="H"/>
+    <save label="OH"/>
+    <save label="H2O2"/>
+    <save label="N2"/>
+    <save label="enthalpy"/>
+          
+    <save label="pressure"/>
+    <save label="thermodynamic_pressure"/>
+    <save label="thermodynamic_pressure_rhs"/>
+    <save label="divu_pressure_drift_correction"/>
+    <save label="pressure_src"/>
+    <save label="Temperature"/> 
+    
+    <save label="Mixture_MW"/>
+
+    <save label="divu"/>
+    
+  </DataArchiver> 
+
+  <Grid>
+    <BoundaryConditions>
+	  <DefaultMaterial>all</DefaultMaterial>
+	  <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+	   
+      <Face side="z-" type="Outflow" name="Face_z-">
+        <BCType label="z_momentum_rhs_partial" var="Neumann" value="0"/>
+        <BCType label="y_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+      <Face side="z+" type="Outflow" name="Face_z+">
+        <BCType label="z_momentum_rhs_partial" var="Neumann" value="0"/>
+        <BCType label="y_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+      <Face side="y-" type="Outflow" name="Face_y-">
+        <BCType label="z_momentum_rhs_partial" var="Neumann" value="0"/>
+        <BCType label="y_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+      <Face side="y+" type="Outflow" name="Face_y+">
+        <BCType label="z_momentum_rhs_partial" var="Neumann" value="0"/>
+        <BCType label="y_momentum_rhs_partial" var="Neumann" value="0"/>
+      </Face>
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[-20.e-3,-20.e-3,-20.e-3]</lower>
+        <upper>[+20.e-3,+20.e-3,+20.e-3]</upper>
+        <resolution>[1,64,64]</resolution>
+        <patches>[1,2,4]</patches>
+      </Box>
+      <periodic>[1,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

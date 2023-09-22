@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,6 @@
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
@@ -50,6 +49,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -76,27 +76,23 @@
 using namespace std;
 using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
-#include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
-#include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
-                                     const MPMArchesLabel* MAlb,
                                      PhysicalConstants* phys_const,
                                      Properties* props,
-                                     TableLookup* table_lookup ) :
-  d_lab(label), d_MAlab(MAlb),
+                                     TableLookup* table_lookup,
+                                     Output* output ) :
+  d_lab(label),
   d_physicalConsts(phys_const),
   d_props(props),
-  d_table_lookup(table_lookup)
+  d_table_lookup(table_lookup),
+  d_output(output)
 {
 
-  MM_CUTOFF_VOID_FRAC = 0.5;
   _using_new_intrusion  = false;
-  d_calcEnergyExchange  = false;
 
   // x-direction
   index_map[0][0] = 0;
@@ -174,9 +170,10 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
     if ( db->findBlock("intrusions") ) {
 
       for ( int i = 0; i < grid->numLevels(); i++ ){
-        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props,
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_props,
                                                                   d_table_lookup,
-                                                                  BoundaryCondition::INTRUSION )));
+                                                                  BoundaryCondition::INTRUSION,
+                                                                  d_output )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
         if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.
                                             //  In the future, we may want to create intrusions on all levels,
@@ -410,39 +407,8 @@ BoundaryCondition::pressureBC(const Patch* patch,
 
 }
 
-void
-BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
-                                       constCCVariable<int>& cellType,
-                                       constCCVariable<double> solidTemp,
-                                       CCVariable<double>& temperature,
-                                       bool d_energyEx)
-{
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX++) {
-
-        IntVector currCell = IntVector(colX, colY, colZ);
-
-        if (cellType[currCell]==d_mmWallID) {
-
-          if (d_energyEx) {
-            if (d_fixTemp) {
-              temperature[currCell] = 298.0;
-            }else{
-              temperature[currCell] = solidTemp[currCell];
-            }
-          }else{
-            temperature[currCell] = 298.0;
-          } //d_energyEx
-        } // wall
-      } // x
-    } // y
-  } // z
-}
-
+//______________________________________________________________________
+//
 void
 BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const LevelP& level,
@@ -453,7 +419,8 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
     _intrusionBC[ilvl]->sched_setIntrusionT( sched, level, matls );
   }
 }
-
+//______________________________________________________________________
+//
 void
 BoundaryCondition::sched_computeAlphaG( SchedulerP& sched,
                                         const LevelP& level,
@@ -465,236 +432,6 @@ BoundaryCondition::sched_computeAlphaG( SchedulerP& sched,
     //if carry_forward = true, we are simply moving the computed value forward in time. 
     _intrusionBC[ilvl]->sched_setAlphaG( sched, level, matls, carry_forward );
   }
-}
-
-//______________________________________________________________________
-// compute multimaterial wall bc
-void
-BoundaryCondition::wallVelocityBC(const Patch* patch,
-                                  CellInformation*,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars)
-{
-
-  //__________________________________
-  //    X dir
-  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
-
-  int boundary_type = BoundaryCondition::INTRUSION;
-
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->uVelocityCoeff[Arches::AE],
-                    vars->uVelocityCoeff[Arches::AW],
-                    vars->uVelocityCoeff[Arches::AN],
-                    vars->uVelocityCoeff[Arches::AS],
-                    vars->uVelocityCoeff[Arches::AT],
-                    vars->uVelocityCoeff[Arches::AB],
-                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Y dir
-  idxLoU = patch->getSFCYFORTLowIndex__Old();
-  idxHiU = patch->getSFCYFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 1;
-  koff = 0;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->vVelocityCoeff[Arches::AN],
-                    vars->vVelocityCoeff[Arches::AS],
-                    vars->vVelocityCoeff[Arches::AT],
-                    vars->vVelocityCoeff[Arches::AB],
-                    vars->vVelocityCoeff[Arches::AE],
-                    vars->vVelocityCoeff[Arches::AW],
-                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Z dir
-  idxLoU = patch->getSFCZFORTLowIndex__Old();
-  idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 0;
-  koff = 1;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->wVelocityCoeff[Arches::AT],
-                    vars->wVelocityCoeff[Arches::AB],
-                    vars->wVelocityCoeff[Arches::AE],
-                    vars->wVelocityCoeff[Arches::AW],
-                    vars->wVelocityCoeff[Arches::AN],
-                    vars->wVelocityCoeff[Arches::AS],
-                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    X dir
-  ioff = 1;
-  joff = 0;
-  koff = 0;
-
-  idxLoU = patch->getSFCXFORTLowIndex__Old();
-  idxHiU = patch->getSFCXFORTHighIndex__Old();
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->uVelocityConvectCoeff[Arches::AE],
-                    vars->uVelocityConvectCoeff[Arches::AW],
-                    vars->uVelocityConvectCoeff[Arches::AN],
-                    vars->uVelocityConvectCoeff[Arches::AS],
-                    vars->uVelocityConvectCoeff[Arches::AT],
-                    vars->uVelocityConvectCoeff[Arches::AB],
-                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Y dir
-  idxLoU = patch->getSFCYFORTLowIndex__Old();
-  idxHiU = patch->getSFCYFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 1;
-  koff = 0;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->vVelocityConvectCoeff[Arches::AN],
-                    vars->vVelocityConvectCoeff[Arches::AS],
-                    vars->vVelocityConvectCoeff[Arches::AT],
-                    vars->vVelocityConvectCoeff[Arches::AB],
-                    vars->vVelocityConvectCoeff[Arches::AE],
-                    vars->vVelocityConvectCoeff[Arches::AW],
-                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Z dir
-  idxLoU = patch->getSFCZFORTLowIndex__Old();
-  idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 0;
-  koff = 1;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->wVelocityConvectCoeff[Arches::AT],
-                    vars->wVelocityConvectCoeff[Arches::AB],
-                    vars->wVelocityConvectCoeff[Arches::AE],
-                    vars->wVelocityConvectCoeff[Arches::AW],
-                    vars->wVelocityConvectCoeff[Arches::AN],
-                    vars->wVelocityConvectCoeff[Arches::AS],
-                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  boundary_type = BoundaryCondition::WALL;
-
-  //__________________________________
-  //    X dir
-  idxLoU = patch->getSFCXFORTLowIndex__Old();
-  idxHiU = patch->getSFCXFORTHighIndex__Old();
-  ioff = 1;
-  joff = 0;
-  koff = 0;
-
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->uVelocityCoeff[Arches::AE],
-                    vars->uVelocityCoeff[Arches::AW],
-                    vars->uVelocityCoeff[Arches::AN],
-                    vars->uVelocityCoeff[Arches::AS],
-                    vars->uVelocityCoeff[Arches::AT],
-                    vars->uVelocityCoeff[Arches::AB],
-                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Y dir
-  idxLoU = patch->getSFCYFORTLowIndex__Old();
-  idxHiU = patch->getSFCYFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 1;
-  koff = 0;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->vVelocityCoeff[Arches::AN],
-                    vars->vVelocityCoeff[Arches::AS],
-                    vars->vVelocityCoeff[Arches::AT],
-                    vars->vVelocityCoeff[Arches::AB],
-                    vars->vVelocityCoeff[Arches::AE],
-                    vars->vVelocityCoeff[Arches::AW],
-                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Z dir
-  idxLoU = patch->getSFCZFORTLowIndex__Old();
-  idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 0;
-  koff = 1;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->wVelocityCoeff[Arches::AT],
-                    vars->wVelocityCoeff[Arches::AB],
-                    vars->wVelocityCoeff[Arches::AE],
-                    vars->wVelocityCoeff[Arches::AW],
-                    vars->wVelocityCoeff[Arches::AN],
-                    vars->wVelocityCoeff[Arches::AS],
-                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    X dir
-  ioff = 1;
-  joff = 0;
-  koff = 0;
-
-  idxLoU = patch->getSFCXFORTLowIndex__Old();
-  idxHiU = patch->getSFCXFORTHighIndex__Old();
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->uVelocityConvectCoeff[Arches::AE],
-                    vars->uVelocityConvectCoeff[Arches::AW],
-                    vars->uVelocityConvectCoeff[Arches::AN],
-                    vars->uVelocityConvectCoeff[Arches::AS],
-                    vars->uVelocityConvectCoeff[Arches::AT],
-                    vars->uVelocityConvectCoeff[Arches::AB],
-                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Y dir
-  idxLoU = patch->getSFCYFORTLowIndex__Old();
-  idxHiU = patch->getSFCYFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 1;
-  koff = 0;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->vVelocityConvectCoeff[Arches::AN],
-                    vars->vVelocityConvectCoeff[Arches::AS],
-                    vars->vVelocityConvectCoeff[Arches::AT],
-                    vars->vVelocityConvectCoeff[Arches::AB],
-                    vars->vVelocityConvectCoeff[Arches::AE],
-                    vars->vVelocityConvectCoeff[Arches::AW],
-                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
-
-  //__________________________________
-  //    Z dir
-  idxLoU = patch->getSFCZFORTLowIndex__Old();
-  idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-  ioff = 0;
-  joff = 0;
-  koff = 1;
-  fort_mmbcvelocity(idxLoU, idxHiU,
-                    vars->wVelocityConvectCoeff[Arches::AT],
-                    vars->wVelocityConvectCoeff[Arches::AB],
-                    vars->wVelocityConvectCoeff[Arches::AE],
-                    vars->wVelocityConvectCoeff[Arches::AW],
-                    vars->wVelocityConvectCoeff[Arches::AN],
-                    vars->wVelocityConvectCoeff[Arches::AS],
-                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                    constvars->cellType, boundary_type, ioff, joff, koff);
 }
 
 //______________________________________________________________________
@@ -743,153 +480,6 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
   }
 }
 
-//______________________________________________________________________
-//
-void
-BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
-                                            double delta_t,
-                                            CellInformation* cellinfo,
-                                            ArchesVariables* vars,
-                                            ArchesConstVariables* constvars)
-{
-  int ioff, joff, koff;
-  IntVector idxLoU;
-  IntVector idxHiU;
-
-  //__________________________________
-  idxLoU = patch->getSFCXFORTLowIndex__Old();
-  idxHiU = patch->getSFCXFORTHighIndex__Old();
-  ioff = 1; joff = 0; koff = 0;
-
-  fort_mm_computevel(
-          vars->uVelRhoHat,
-          constvars->pressure,
-          constvars->density,
-          constvars->voidFraction,
-          cellinfo->dxpw,
-          delta_t,
-          ioff, joff, koff,
-          constvars->cellType,
-          idxLoU, idxHiU,
-          d_mmWallID);
-
-  //__________________________________
-  idxLoU = patch->getSFCYFORTLowIndex__Old();
-  idxHiU = patch->getSFCYFORTHighIndex__Old();
-  ioff = 0; joff = 1; koff = 0;
-
-  fort_mm_computevel(
-          vars->vVelRhoHat,
-          constvars->pressure,
-          constvars->density,
-          constvars->voidFraction,
-          cellinfo->dyps,
-          delta_t,
-          ioff, joff, koff,
-          constvars->cellType,
-          idxLoU, idxHiU,
-          d_mmWallID);
-
-  //__________________________________
-  idxLoU = patch->getSFCZFORTLowIndex__Old();
-  idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-  ioff = 0; joff = 0; koff = 1;
-  fort_mm_computevel(
-          vars->wVelRhoHat,
-          constvars->pressure,
-          constvars->density,
-          constvars->voidFraction,
-          cellinfo->dzpb,
-          delta_t,
-          ioff, joff, koff,
-          constvars->cellType,
-          idxLoU, idxHiU,
-          d_mmWallID);
-}
-//______________________________________________________________________
-//
-void
-BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
-                                         double delta_t,
-                                         CellInformation* cellinfo,
-                                         ArchesVariables* vars,
-                                         ArchesConstVariables* constvars)
-{
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo;
-  IntVector idxHi;
-  // for explicit solver
-  int ioff, joff, koff;
-  //__________________________________
-  //    X dir
-  idxLo = patch->getSFCXFORTLowIndex__Old();
-  idxHi = patch->getSFCXFORTHighIndex__Old();
-  ioff = 1; joff = 0; koff = 0;
-
-  fort_mm_explicit_vel(idxLo, idxHi,
-                       vars->uVelRhoHat,
-                       constvars->uVelocity,
-                       vars->uVelocityCoeff[Arches::AE],
-                       vars->uVelocityCoeff[Arches::AW],
-                       vars->uVelocityCoeff[Arches::AN],
-                       vars->uVelocityCoeff[Arches::AS],
-                       vars->uVelocityCoeff[Arches::AT],
-                       vars->uVelocityCoeff[Arches::AB],
-                       vars->uVelocityCoeff[Arches::AP],
-                       vars->uVelNonlinearSrc,
-                       constvars->new_density,
-                       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-                       delta_t, ioff, joff, koff,
-                       constvars->cellType,
-                       d_mmWallID);
-
-  //__________________________________
-  //    Y dir
-  idxLo = patch->getSFCYFORTLowIndex__Old();
-  idxHi = patch->getSFCYFORTHighIndex__Old();
-  ioff = 0; joff = 1; koff = 0;
-
-  fort_mm_explicit_vel(idxLo, idxHi,
-                       vars->vVelRhoHat,
-                       constvars->vVelocity,
-                       vars->vVelocityCoeff[Arches::AE],
-                       vars->vVelocityCoeff[Arches::AW],
-                       vars->vVelocityCoeff[Arches::AN],
-                       vars->vVelocityCoeff[Arches::AS],
-                       vars->vVelocityCoeff[Arches::AT],
-                       vars->vVelocityCoeff[Arches::AB],
-                       vars->vVelocityCoeff[Arches::AP],
-                       vars->vVelNonlinearSrc,
-                       constvars->new_density,
-                       cellinfo->sew, cellinfo->snsv, cellinfo->stb,
-                       delta_t, ioff, joff, koff,
-                       constvars->cellType,
-                       d_mmWallID);
-
-  //__________________________________
-  //     Z dir
-  idxLo = patch->getSFCZFORTLowIndex__Old();
-  idxHi = patch->getSFCZFORTHighIndex__Old();
-  ioff = 0; joff = 0; koff = 1;
-
-  fort_mm_explicit_vel(idxLo, idxHi,
-                       vars->wVelRhoHat,
-                       constvars->wVelocity,
-                       vars->wVelocityCoeff[Arches::AE],
-                       vars->wVelocityCoeff[Arches::AW],
-                       vars->wVelocityCoeff[Arches::AN],
-                       vars->wVelocityCoeff[Arches::AS],
-                       vars->wVelocityCoeff[Arches::AT],
-                       vars->wVelocityCoeff[Arches::AB],
-                       vars->wVelocityCoeff[Arches::AP],
-                       vars->wVelNonlinearSrc,
-                       constvars->new_density,
-                       cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                       delta_t, ioff, joff, koff,
-                       constvars->cellType,
-                       d_mmWallID);
-}
 
 //****************************************************************************
 // Set the inlet rho hat velocity BC
@@ -1937,9 +1527,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       vector<int> wall_type;
 
-      if (d_MAlab)
-        wall_type.push_back( d_mmWallID );
-
       wall_type.push_back( WALL );
       wall_type.push_back( MMWALL );
       wall_type.push_back( INTRUSION );
@@ -2293,7 +1880,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               for (int qn=0; qn< qn_total; qn++){
                 // get weight BC
                 double weightScalingConstant = ArchesCore::get_scaling_constant(db_BCType,"weight",qn);
-                double weight;
+                double weight = std::numeric_limits<double>::infinity();
                 for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);

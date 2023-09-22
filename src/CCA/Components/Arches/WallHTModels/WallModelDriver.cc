@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
   is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,7 +62,7 @@ _materialManager( materialManager )
   // delta t
   VarLabel* nonconstDelT =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-  nonconstDelT->allowMultipleComputes();
+  nonconstDelT->schedReductionTask(false);
   _delTLabel = nonconstDelT;
 }
 

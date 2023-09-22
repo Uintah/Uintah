@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,8 +82,6 @@ DESCRIPTION
 
     virtual void scheduleRestartInitialize(SchedulerP   & sched,
                                            const LevelP & level);
-
-    virtual void restartInitialize(){};
 
     virtual void scheduleDoAnalysis(SchedulerP   & sched,
                                     const LevelP & level);
@@ -169,7 +167,6 @@ DESCRIPTION
         std::map<std::string, VarLabel*> Q_labels;
 
         // labels for each CV
-
         std::vector<VarLabel*>     totalQ_CV;
         std::vector<VarLabel*>     net_Q_faceFluxes;
         std::vector<FaceLabelsMap> Q_faceFluxes;
@@ -182,11 +179,9 @@ DESCRIPTION
 
     //__________________________________
     // global constants
-    const MaterialSubset * m_zeroMatl;
-    MaterialSet          * m_zeroMatlSet;
-    PatchSet             * m_zeroPatch;
-    const MaterialSubset * m_matl;
-    MaterialSet          * m_matlSet;
+    PatchSet             * m_zeroPatch {nullptr};
+    const MaterialSubset * m_matl      {nullptr};
+    MaterialSet          * m_matlSet   {nullptr};
 
     int m_col_width = 18;    //  column width used in output formatting
     int m_precision = 12;    // number of significant digits in output

@@ -1,5 +1,27 @@
 #!/usr/bin/env perl
-
+#
+# The MIT License
+#
+# Copyright (c) 1997-2023 The University of Utah
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+#
 
 #______________________________________________________________________
 #  run_tests.pl
@@ -26,13 +48,14 @@
 #______________________________________________________________________
 use strict;
 use warnings;
+use diagnostics;
 use XML::LibXML;
 use Data::Dumper;
 use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr modify_batchScript read_file write_file );
+use Utilities qw( cleanStr setPath modify_xml_file modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -41,11 +64,11 @@ my $tstFile           = $ARGV[0];
 my $config_files_path = $ARGV[1];
 
 # read XML file into a dom tree
-my $doc = XML::LibXML->load_xml(location => $tstFile);
+my $tst_dom = XML::LibXML->load_xml(location => $tstFile);
 
 #__________________________________
 # copy gnuplot script   OPTIONAL
-my $gpFile = cleanStr( $doc->findvalue( '/start/gnuplot/script' ) );
+my $gpFile = cleanStr( $tst_dom->findvalue( '/start/gnuplot/script' ) );
 
 if( length $gpFile > 0 ){
   $gpFile    = $config_files_path."/".$gpFile;
@@ -56,42 +79,42 @@ if( length $gpFile > 0 ){
 #__________________________________
 # copy batch script and modify the template  OPTIONAL
 
-my $batchCmd    = cleanStr( $doc->findvalue( '/start/batchScheduler/submissionCmd' ) );
-my $batchScript = cleanStr( $doc->findvalue( '/start/batchScheduler/template' ) );
+my $batchCmd    = cleanStr( $tst_dom->findvalue( '/start/batchScheduler/submissionCmd' ) );
+my $batchScript = cleanStr( $tst_dom->findvalue( '/start/batchScheduler/template' ) );
 
 if( length $batchScript > 0 ){
-  my $cmd = "cp -f $config_files_path"."/"."$batchScript" . " . > /dev/null 2>&1";
-  system( $cmd );
-  print "  Batch script template used to submit jobs ($batchScript)\n";
 
-  my @nodes = $doc->findnodes('/start/batchScheduler/batchReplace');
-  modify_batchScript( $batchScript, @nodes );
-  print "\n";
+  $batchScript = setPath( $batchScript, $config_files_path ) ;
+
+  my $cmd = "cp -f $batchScript" . " . > /dev/null 2>&1";
+  system( $cmd );
+  
+  print "  Batch script template used to submit jobs ($batchScript)\n";
 }
 
 
 #__________________________________
 # set exitOnCrash flag    OPTIONAL
 my $exitOnCrash = "true";
-if( $doc->exists( '/start/exitOnCrash' ) ){
-  $exitOnCrash = cleanStr( $doc->findvalue( '/start/exitOnCrash' ) );
+if( $tst_dom->exists( '/start/exitOnCrash' ) ){
+  $exitOnCrash = cleanStr( $tst_dom->findvalue( '/start/exitOnCrash' ) );
 }
 $exitOnCrash = trim(uc($exitOnCrash));
-print "  Exit on crash or timeout ($exitOnCrash)\n";
+print "\tExit on crash or timeout ($exitOnCrash)\n";
 
 
 #__________________________________
 # set sus timeout value    OPTIONAL
 my $timeout = 24*60*60;
-if( $doc->exists( '/start/susTimeout_minutes' ) ){
-  $timeout = cleanStr( $doc->findvalue( '/start/susTimeout_minutes' ) );
+if( $tst_dom->exists( '/start/susTimeout_minutes' ) ){
+  $timeout = cleanStr( $tst_dom->findvalue( '/start/susTimeout_minutes' ) );
 }
-print "  Simulation timeout: $timeout minutes\n";
+print "\tSimulation timeout: $timeout minutes\n";
 
 
 #__________________________________
 # determine the ups basename
-my $upsFile      = cleanStr( $doc->findvalue( '/start/upsFile' ) );
+my $upsFile      = cleanStr( $tst_dom->findvalue( '/start/upsFile' ) );
 $upsFile         = basename( $upsFile );
 my $ups_basename = basename( $upsFile, ".ups" );        # Removing the extension .ups so that we can use this to build our uda file names
 
@@ -101,39 +124,35 @@ if ( ! -e $upsFile ){
   exit
 }
 
-#__________________________________
+#______________________________________________________________________
 # Globally, replace lines & values in the main ups file before loop over tests.
-print "  \nReplacing lines and values in base ups file\n";
+print "\n\tReplacing lines and values in base ups file\n";
 
-foreach my $rp ( $doc->findnodes('/start/AllTests/replace_lines/*') ){
-  system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
-  print "\treplace_XML_line $rp\n";
-}
+my @allTests_nodes = $tst_dom->findnodes('/start/AllTests');
 
-foreach my $X ($doc->findnodes('/start/AllTests/replace_values/entry')) {
-  my $xmlPath = $X->{path};
-  my $value   = $X->{value};
-  print "\treplace_XML_value $xmlPath $value\n";
-  system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
-}
+modify_xml_file( $upsFile, @allTests_nodes );
+
+runPreProcessCmd( $upsFile, "null", @allTests_nodes); 
 
 
-#__________________________________
+
+#______________________________________________________________________
 #     loop over tests
+
 my $statsFile;
 open( $statsFile,">out.stat");
 
 my $nTest = 0;
-foreach my $test_dom ($doc->findnodes('/start/Test')) {
+foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
 
-  my $test_title  = cleanStr( $test_dom->findvalue('Title') );
-  my $test_ups    = $ups_basename."_$test_title".".ups";
+  my $test_title  = cleanStr( $test_node->findvalue('Title') );
+  my $test_ups    = $test_title.".ups";
   my $test_output = "out.".$test_title;
-  my $uda         = $ups_basename."_$test_title".".uda";
+  my $uda         = $test_title.".uda";
 
   #__________________________________
   # change the uda filename in each ups file
-  print "\n-------------------------------------------------- $test_title\n";
+  print "\n-------------------------------------------------- TEST: $test_title\n";
   print "Now modifying $test_ups\n";
 
   system(" cp $upsFile $test_ups");
@@ -141,41 +160,28 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
   print "\treplace_XML_line $fn\n";
 
-  #__________________________________
-  # replace lines in test_ups
-  foreach my $rpl ( $test_dom->findnodes('replace_lines/*') ) {
-    print "\treplace_XML_line $rpl\n";
-    system("replace_XML_line", "$rpl", "$test_ups")==0 ||  die("Error replacing_XML_line $rpl in file $test_ups \n $@");
-  }
-
-  #__________________________________
-  # replace any values in the ups files
-  foreach my $X ( $test_dom->findnodes('replace_values/entry') ) {
-    my $xmlPath = $X->{path};
-    my $value   = $X->{value};
-
-    print "\treplace_XML_value $xmlPath $value\n";
-    system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
-  }
-
+  modify_xml_file( $test_ups, $test_node );
+  
+  runPreProcessCmd(  "null", "$test_ups", $test_node);
+  
   #__________________________________
   #  replace any batch script values per test
   my $test_batch = undef;
 
   if( length $batchScript > 0 ){
+  
     my ($basename, $parentdir, $ext) = fileparse($batchScript, qr/\.[^.]*$/);
     $test_batch = "batch_$test_title$ext";
     system(" cp $batchScript $test_batch" );
 
-    modify_batchScript( $test_batch, $test_dom->findnodes('batchReplace') );
+    my @nodes = $tst_dom->findnodes('/start/batchScheduler/batchReplace');
+    modify_batchScript( $test_batch, @nodes );
+    modify_batchScript( $test_batch, $test_node->findnodes('batchReplace') );
   }
-
-  #bulletproofing
-  system("xmlstarlet val --err $test_ups") == 0 ||  die("\nERROR: $upsFile, contains errors.\n");
 
   #__________________________________
   # print meta data and run sus command
-  my $sus_cmd_0 = $test_dom->findnodes('sus_cmd');
+  my $sus_cmd_0 = $test_node->findnodes('sus_cmd');
 
   print $statsFile "Test Name :     "."$test_title"."\n";
   print $statsFile "(ups) :         "."$test_ups"."\n";
@@ -188,7 +194,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
   my $rc = 0;
   if( length $batchScript > 0 ){
-    submitBatchScript( $test_title, $batchCmd, $test_batch, $statsFile, @sus_cmd );
+    submitBatchScript( 0, $test_title, $batchCmd, $test_batch, $statsFile, @sus_cmd );
   }else{
     $rc = runSusCmd( $timeout, $exitOnCrash, $statsFile, @sus_cmd );
   }
@@ -199,7 +205,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   #__________________________________
   #  execute post process command
   my $postProc_cmd = undef;
-  $postProc_cmd = $test_dom->findvalue('postProcess_cmd');
+  $postProc_cmd = $test_node->findvalue('postProcess_cmd');
 
   if( $rc == 0 && length $postProc_cmd != 0){
 
@@ -219,86 +225,3 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
 close($statsFile);
 
 
-#______________________________________________________________________
-#   subroutines
-#______________________________________________________________________
-  #
-sub runSusCmd {
-  my( $timeout, $exitOnCrash, $statsFile, @sus_cmd ) = @_;
-
-  print "\tLaunching: (@sus_cmd)\n";
-  my @cmd = (" timeout --preserve-status $timeout @sus_cmd ");
-
-  my $rc = -9;
-  if ( $exitOnCrash eq "TRUE" ) {
-
-    $rc = system("@cmd");
-
-    if ( $rc != 0 && $rc != 36608 ){
-      die("ERROR(run_tests.pl): \t\tFailed running: (@sus_cmd)\n");
-      return 1;
-    }
-
-  }else{
-    $rc = system("@cmd");
-  }
-
-  #__________________________________
-  #  Warn user if sus didn't run successfully
-  if( $rc == 36608 ) {
-    print "\t\tERROR the simulation has timed out.\n";
-    print $statsFile "\t\tERROR the simulation has timed out.\n";
-  }
-  elsif ($rc != 0 ){
-    print "\t\tERROR the simulation crashed. (rc = $rc)\n";
-    print $statsFile "\t\tERROR the simulation crashed. (rc = $rc)\n";
-  }
-
-  return $rc;
-
-};
-
-
-#______________________________________________________________________
-
-sub submitBatchScript{
-  my( $test_title, $batchCmd, $test_batch, $statsFile, @sus_cmd ) = @_;
-
-  #__________________________________
-  # concatenate sus cmd to batch script
-  open(my $fh, '>>', $test_batch) or die "Could not open file '$test_batch' $!";
-  print $fh "\n ", @sus_cmd, "\n";
-  close $fh;
-
-  #__________________________________
-  # edit batch script
-  my $data  = read_file($test_batch);
-
-  #  change job name
-  my $tag   = "\\[jobName\\]";
-  my $value = $test_title;
-  $data     =~ s/$tag/"$value"/g;
-
-  # change the job output name
-  $tag      = "\\[output\\]";
-  $value    = "job-". $test_title . ".out";
-  $data     =~ s/$tag/"$value"/g;
-
-  # remove white spaces before and after "="
-  # Slurm doesn't like white spaces
-  $data     =~ s{\s+=}{=}g;
-  $data     =~ s{=\s+}{=}g;
-
-  #print "$data";
-  write_file($test_batch, $data);
-
-  #__________________________________
-  # concatenate postProcess cmd to batch script  TODO
-
-  #__________________________________
-  # submit batch script
-
-  print "\t Submitting batch script: ", $batchCmd, " " , $test_batch, "\n";
-  my @cmd = ( "$batchCmd", "$test_batch" );
-  system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
-};

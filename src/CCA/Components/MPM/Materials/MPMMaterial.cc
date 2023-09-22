@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,6 +44,9 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/NullGeometryPiece.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/GeometryPiece/SmoothCylGeomPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <iostream>
@@ -66,7 +69,9 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MaterialManagerP& ss,MPMFlags* flags,
   d_cm->setMaterialManager(ss.get_rep());
 
   // Check to see which ParticleCreator object we need
-  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
+  d_particle_creator = ParticleCreatorFactory::create(ps, this,
+                                                      flags, d_allTriGeometry,
+                                                             d_allFileGeometry);
 }
 //______________________________________________________________________
 //
@@ -113,13 +118,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
   // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
+  d_sdm = nullptr;
   if(flags->d_doScalarDiffusion){
-    d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
-  }else{
-    d_sdm = nullptr;
+    d_sdm = ScalarDiffusionModelFactory::create(ps, ss, flags);
   }
-  
-  
 
   // Step 4 -- get the general material properties
 
@@ -127,6 +129,21 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
   
+  // Also use for Darcy momentum exchange model
+  ps->get("permeability", d_permeability);
+
+  // For MPM hydro-mechanical coupling
+  if (flags->d_coupledflow) {
+      // Rigid material does not require porosity and permeability
+      if (!ps->findBlockWithAttributeValue("constitutive_model", "type", "rigid")) {
+          ps->require("water_density", d_waterdensity);
+          ps->require("porosity", d_porosity);
+          //ps->require("permeability", d_permeability);
+          d_initial_porepressure = 0.0;
+          ps->get("initial_pore_pressure", d_initial_porepressure);
+      }
+  }
+
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
 
@@ -138,10 +155,23 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->get("room_temp", d_troom);
   ps->get("melt_temp", d_tmelt);
 
-  // This is currently only used in the implicit code, but should
-  // be put to use in the explicit code as well.
+  // Material is rigid (velocity prescribed)
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
+
+  // Material is force transmitting (moves according to sum of forces)
+  d_is_force_transmitting_material=false;
+  ps->get("is_force_transmitting_material", d_is_force_transmitting_material);
+  flags->d_reductionVars->sumTransmittedForce = true;
+
+  // Enable ability to activate materials when needed to save computation time
+  d_is_active=true;
+  ps->get("is_active", d_is_active);
+  d_activation_time=0.0;
+  ps->get("activation_time", d_activation_time);
+
+  d_possible_alpha = true;
+  ps->get("possible_alpha_material", d_possible_alpha);
 
   // This is used for the autocycleflux boundary conditions
   d_do_conc_reduction = false;
@@ -153,6 +183,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",            GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",               GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("numLevelsParticleFilling",GeometryObject::Integer));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A0",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A1",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A2",GeometryObject::Vector));
@@ -167,20 +198,31 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
   }
 
-  if(flags->d_withGaussSolver){
-    std::cout << "************With Gauss Solver***********" << std::endl;
-    geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density", GeometryObject::Double));
-    geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density", GeometryObject::Double));
-    geom_obj_data.push_back(GeometryObject::DataItem("permittivity", GeometryObject::Double));
-  }
-
   if(!isRestart){
+    d_allTriGeometry=true;
+    d_allFileGeometry=true;
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
      vector<GeometryPieceP> pieces;
      GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+     for(unsigned int i = 0; i< pieces.size(); i++){
+       TriGeometryPiece* tri_piece = 
+                           dynamic_cast<TriGeometryPiece*>(pieces[i].get_rep());
+       if (!tri_piece){
+         d_allTriGeometry=false;
+       }
+
+       // FileGeometryPiece is inherited from SmoothGeomPiece, so this
+       // catches both
+       SmoothGeomPiece* smooth_piece = 
+                         dynamic_cast<SmoothGeomPiece*>(pieces[i].get_rep());
+       if (!smooth_piece){
+         d_allFileGeometry=false;
+       }
+     }
 
      GeometryPieceP mainpiece;
      if(pieces.size() == 0){
@@ -194,7 +236,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
        mainpiece = pieces[0];
      }
 
-     GeometryObject* obj = scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data);
+     GeometryObject* obj = scinew GeometryObject(mainpiece, 
+                                                 geom_obj_ps, geom_obj_data);
+
+     int numLevelsParticleFilling =
+                            obj->getInitialData_int("numLevelsParticleFilling");
+     if(abs(numLevelsParticleFilling) > 1){
+       d_allTriGeometry=false;
+     }
 
      d_geom_objs.push_back( obj );
     }
@@ -214,12 +263,10 @@ MPMMaterial::~MPMMaterial()
   delete d_damageModel;
   delete d_erosionModel;
   delete d_particle_creator;
+  delete d_sdm;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
-  }
-  if(d_sdm){
-    delete d_sdm;
   }
 }
 
@@ -248,6 +295,11 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("is_force_transmitting_material",
+                       d_is_force_transmitting_material);
+  mpm_ps->appendElement("is_active",d_is_active);
+  mpm_ps->appendElement("possible_alpha", d_possible_alpha);
+  mpm_ps->appendElement("activation_time",d_activation_time);
 
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
@@ -278,9 +330,15 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
+  d_is_force_transmitting_material = mat->d_is_force_transmitting_material;
+  d_is_active = mat->d_is_active;
+  d_possible_alpha = mat->d_possible_alpha;
+  d_activation_time = mat->d_activation_time;
 
   // Check to see which ParticleCreator object we need
-  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
+  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags,
+                                                      d_allTriGeometry,
+                                                      d_allFileGeometry);
 }
 
 ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
@@ -370,9 +428,49 @@ int MPMMaterial::nullGeomObject() const
   return -1;
 }
 
+void MPMMaterial::setIsRigid(const bool is_rigid)
+{
+  d_is_rigid=is_rigid;
+}
+
 bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;
+}
+
+void MPMMaterial::setIsFTM(const bool is_FTM)
+{
+  d_is_force_transmitting_material=is_FTM;
+}
+
+bool MPMMaterial::getIsFTM() const
+{
+  return d_is_force_transmitting_material;
+}
+
+void MPMMaterial::setPossibleAlphaMaterial(const bool possible_alpha)
+{
+  d_possible_alpha=possible_alpha;
+}
+
+bool MPMMaterial::getPossibleAlphaMaterial() const
+{
+  return d_possible_alpha;
+}
+
+void MPMMaterial::setIsActive(const bool is_active)
+{
+  d_is_active=is_active;
+}
+
+bool MPMMaterial::getIsActive() const
+{
+  return d_is_active;
+}
+
+double MPMMaterial::getActivationTime() const
+{
+  return d_activation_time;
 }
 
 double MPMMaterial::getSpecificHeat() const
@@ -384,6 +482,29 @@ double MPMMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
 }
+
+// MPM Hydro-mechanical coupling
+double MPMMaterial::getWaterDensity() const
+{
+    return d_waterdensity;
+}
+
+double MPMMaterial::getPorosity() const
+{
+    return d_porosity;
+}
+
+double MPMMaterial::getPermeability() const
+{
+    return d_permeability;
+}
+
+double MPMMaterial::getInitialPorepressure() const
+{
+    return d_initial_porepressure;
+}
+
+// End MPM Hydro-mechanical coupling
 
 
 /* --------------------------------------------------------------------- 

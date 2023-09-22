@@ -9,7 +9,7 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #
 #  OS:  Linux, Darwin, or ALL
 #
-#  flags: 
+#  flags:
 #       gpu:                        - run test if machine is gpu enabled
 #       no_uda_comparison:          - skip the uda comparisons
 #       no_memoryTest:              - skip all memory checks
@@ -27,28 +27,34 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
-#  Notes: 
+#  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
-               
-               
-# Tests that are run during local regression testing               
+
+
+# Tests that are run during local regression testing
 LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "All",  ["exactComparison"])
     	        ]
-               
+
 DEBUGTESTS   =[]
+#__________________________________
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
 #LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 
-# returns the list  
+# returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
@@ -68,5 +74,5 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "Models")
+  result = runSusTests(argv, TESTS, "Models", ADDTL_PATH)
   exit( result )

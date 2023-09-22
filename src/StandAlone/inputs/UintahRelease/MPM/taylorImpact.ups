@@ -166,11 +166,12 @@
 
           <stability_check type = "none">
           </stability_check>
-
+<!--
           <damage_model type = "hancock_mackenzie">
             <D0> 0.0001 </D0>
             <Dc> 0.7    </Dc>
           </damage_model>
+-->
           
         </constitutive_model>
         <geom_object>

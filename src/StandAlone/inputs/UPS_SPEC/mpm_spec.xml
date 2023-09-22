@@ -21,6 +21,7 @@
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DeleteGeometryObjects              spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
+      <DoCapDensity                       spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
@@ -37,11 +38,11 @@
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_subcycles_for_F            spec="OPTIONAL INTEGER"/>
-      <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
@@ -62,13 +63,20 @@
       <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" />  <!-- default value is true -->
       <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
       <delT_increase_factor               spec="OPTIONAL DOUBLE" />
-      <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
+      <RunMMSProblem                      spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
       <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />
       <auto_cycle_use_minmax              spec="OPTIONAL BOOLEAN" />
       <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
       <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
+
+      <!-- Hydro mechanical coupling -->
+      <coupled_flow_analysis              spec="OPTIONAL BOOLEAN" />
+      <water_damping_coef                 spec="OPTIONAL DOUBLE" />
+      <solid_damping_coef                 spec="OPTIONAL DOUBLE" />
+      <PorePressureFilter                 spec="OPTIONAL BOOLEAN" />
+                
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -82,7 +90,7 @@
             </time_point>
           </load_curve>
           <polynomial_data        spec="REQUIRED NO_DATA" >
-            <file                 spec="MULTIPLE STRING" />
+            <filename             spec="MULTIPLE STRING" />
           </polynomial_data>
         </arches_heat_flux>
         <force                    spec="MULTIPLE NO_DATA" >
@@ -95,6 +103,7 @@
           <outward_normal         spec="OPTIONAL BOOLEAN" />
           <load_curve             spec="REQUIRED NO_DATA" >
             <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />
@@ -102,6 +111,19 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <torque                 spec="MULTIPLE NO_DATA" >
+          <geom_object />
+          <outward_normal         spec="OPTIONAL BOOLEAN" />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
+        </torque>
         <scalar_flux                 spec="MULTIPLE NO_DATA" >
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />
@@ -119,6 +141,7 @@
           <geom_object />
           <load_curve             spec="REQUIRED NO_DATA" >
             <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />
@@ -139,37 +162,66 @@
         <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" />
         <separation_factor               spec="OPTIONAL DOUBLE 'positive'" />
         <OneOrTwoStep                    spec="OPTIONAL INTEGER 'positive'" />
+        <ExcludeMaterial                 spec="OPTIONAL INTEGER 'positive'" />
         <colinear_norms                  spec="OPTIONAL BOOLEAN"/>
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
-        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, approach'" />
+        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, friction_LRVar, approach, specified_friction'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
         <master_material                 spec="OPTIONAL INTEGER" />
+        <rigid_material                  spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
+        <include_rotation                spec="OPTIONAL BOOLEAN" />
+        <!-- Variable friction -->
+        <variable_friction       spec="OPTIONAL NO_DATA" >
+            <entry                 spec="MULTIPLE NO_DATA" >
+              <color               spec="REQUIRED DOUBLE" />
+              <mu                  spec="REQUIRED DOUBLE" />
+            </entry>
+        </variable_friction>
       </contact>
       
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
+        <is_active                       spec="OPTIONAL BOOLEAN" />
+        <activation_time                 spec="OPTIONAL DOUBLE" />
 
+                  <!--Hydro mechanical coupling-->s
+                  <water_density spec="OPTIONAL DOUBLE 'positive'"/>
+                  <porosity spec="OPTIONAL DOUBLE 'positive'"/>
+                  <permeability spec="OPTIONAL DOUBLE 'positive'"/>
+                  <initial_pore_pressure spec="OPTIONAL DOUBLE"/>
+                  
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
         <!-- Damage models -->
         <damage_model                  spec="OPTIONAL NO_DATA"
-                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, hancock_mackenzie, johnson_cook, none'" >
+                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, ThresholdVar, hancock_mackenzie, johnson_cook, none'" >
 
                <!-- Threshold     -->      
           <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
           <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_seed          spec="OPTIONAL DOUBLE"               need_applies_to="type Threshold"/>
           <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
                                                                       need_applies_to="type Threshold"/>
           <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
                                                                       need_applies_to="type Threshold"/> 
           <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+          <LocalizeParticles    spec="OPTIONAL BOOLEAN"               need_applies_to="type Threshold"/>
           <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
                                                                       need_applies_to="type Threshold"/> 
+
+        <!-- Variable property Threshold -->
+        <variable_properties       spec="OPTIONAL NO_DATA" >
+            <entry                 spec="MULTIPLE NO_DATA" >
+              <color               spec="REQUIRED DOUBLE" />
+              <mean                spec="REQUIRED DOUBLE" />
+              <std                 spec="REQUIRED DOUBLE" />
+            </entry>
+        </variable_properties>
 
                <!-- Brittle       -->
           <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
@@ -202,6 +254,8 @@
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />
+        <is_force_transmitting_material  spec="OPTIONAL BOOLEAN" />
+        <possible_alpha_material         spec="OPTIONAL BOOLEAN" />
         <C_p                             spec="OPTIONAL DOUBLE" />
         <melt_temp                       spec="OPTIONAL DOUBLE" /> <!--295.0 -->
         <room_temp                       spec="OPTIONAL DOUBLE" /> <!--294.0 -->

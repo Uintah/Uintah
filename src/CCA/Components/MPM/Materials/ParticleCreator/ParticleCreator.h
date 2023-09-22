@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,6 +44,7 @@ namespace Uintah {
   class MPMFlags;
   class MPMMaterial;
   class MPMLabel;
+  class HydroMPMLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -55,20 +56,16 @@ namespace Uintah {
 
     virtual ~ParticleCreator();
 
-
     virtual particleIndex createParticles(MPMMaterial* matl,
                                           CCVariable<int>& cellNAPID,
                                           const Patch*,DataWarehouse* new_dw,
                                           std::vector<GeometryObject*>&);
-
-
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     std::vector<const VarLabel* > returnParticleState();
     std::vector<const VarLabel* > returnParticleStatePreReloc();
 
-    
     typedef std::map<GeometryObject*,std::vector<Point> > geompoints;
     typedef std::map<GeometryObject*,std::vector<double> > geomvols;
     typedef std::map<GeometryObject*,std::vector<Vector> > geomvecs;
@@ -96,7 +93,7 @@ namespace Uintah {
     ParticleVariable<Matrix3> psize,pvelGrad;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
-    ParticleVariable<double> psurface;
+    ParticleVariable<double> psurface, pexternalhtrte;
     ParticleVariable<Vector> psurfgrad;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
@@ -121,6 +118,11 @@ namespace Uintah {
     ParticleVariable<Vector> pPosChargeGrad;
     ParticleVariable<Vector> pNegChargeGrad;
     ParticleVariable<double> pPermittivity;
+
+    // Hydro-mechanical coupling MPM
+    ParticleVariable<double> pFluidMass, pSolidMass, pPorePressure, pPorosity;
+    ParticleVariable<Vector> pFluidVelocity, pfluidacceleration;
+    ParticleVariable<Vector> pPrescribedPorePressure;
     } ParticleVars;
 
   protected:
@@ -136,8 +138,6 @@ namespace Uintah {
 
     void createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars);
 
-
-
     virtual void initializeParticle(const Patch* patch,
                                     std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
@@ -150,19 +150,13 @@ namespace Uintah {
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
     IntVector getLoadCurveID(const Point& pp, const Vector& dxpp, 
-                                                    Vector& areacomps);
+                             Vector& areacomps, int dwi);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Print MPM physical boundary condition information */
     //////////////////////////////////////////////////////////////////////////
     void printPhysicalBCs();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! Calculate the external force to be applied to a particle */
-    //////////////////////////////////////////////////////////////////////////
-    virtual void applyForceBC(const Vector& dxpp,  const Point& pp,
-                              const double& pMass,  Vector& pExtForce);
-    
     int checkForSurface(const GeometryPieceP piece, const Point p,
                         const Vector dxpp);
 
@@ -170,6 +164,7 @@ namespace Uintah {
                             const Vector dxpp);
 
     MPMLabel* d_lb;
+    HydroMPMLabel* d_Hlb;
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;
@@ -178,13 +173,11 @@ namespace Uintah {
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
     bool d_useCPTI;
-    bool d_withGaussSolver;
+    bool d_coupledflow;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     
   };
-
-
 
 } // End of namespace Uintah
 

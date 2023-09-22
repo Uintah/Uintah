@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,6 +46,7 @@ namespace Uintah {
   class MPMFlags;
   class CZMaterial;
   class MPMLabel;
+  class CZLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -68,7 +69,8 @@ namespace Uintah {
 
     virtual void registerPermanentCohesiveZoneState(CZMaterial* czmat);
 
-    virtual particleIndex countCohesiveZones(const Patch*, const std::string fname);
+    virtual particleIndex countCohesiveZones(const Patch*, 
+                                             const std::string fname);
 
     void scheduleInitialize(const LevelP& level, SchedulerP& sched,
                             CZMaterial* czmat);
@@ -93,6 +95,7 @@ namespace Uintah {
     ParticleVariable<int> czFailed;
 
     MPMLabel* d_lb;
+    CZLabel*  d_Cl;
     MPMFlags* d_flags;
     MaterialManagerP d_materialManager;
 

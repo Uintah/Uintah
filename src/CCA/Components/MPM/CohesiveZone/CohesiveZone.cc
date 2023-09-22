@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,6 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/CZLabel.h>
 #include <fstream>
 
 using namespace Uintah;
@@ -42,6 +43,7 @@ CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags,
                            MaterialManagerP& ss)
 {
   d_lb = scinew MPMLabel();
+  d_Cl = scinew CZLabel();
 
   d_flags = flags;
 
@@ -53,6 +55,7 @@ CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags,
 CohesiveZone::~CohesiveZone()
 {
   delete d_lb;
+  delete d_Cl;
 }
 //______________________________________________________________________
 ParticleSubset* 
@@ -155,17 +158,17 @@ CohesiveZone::allocateVariables(particleIndex numCZs,
   ParticleSubset* subset = new_dw->createParticleSubset(numCZs,dwi,patch);
 
   new_dw->allocateAndPut(czposition,     d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(czarea,         d_lb->czAreaLabel,         subset); 
-  new_dw->allocateAndPut(cznormal,       d_lb->czNormLabel,         subset);
-  new_dw->allocateAndPut(cztang,         d_lb->czTangLabel,         subset);
-  new_dw->allocateAndPut(czdisptop,      d_lb->czDispTopLabel,      subset);
-  new_dw->allocateAndPut(czdispbottom,   d_lb->czDispBottomLabel,   subset);
-  new_dw->allocateAndPut(czID,           d_lb->czIDLabel,           subset);
-  new_dw->allocateAndPut(czSeparation,   d_lb->czSeparationLabel,   subset);
-  new_dw->allocateAndPut(czForce,        d_lb->czForceLabel,        subset);
-  new_dw->allocateAndPut(czTopMat,       d_lb->czTopMatLabel,       subset);
-  new_dw->allocateAndPut(czBotMat,       d_lb->czBotMatLabel,       subset);
-  new_dw->allocateAndPut(czFailed,       d_lb->czFailedLabel,       subset);
+  new_dw->allocateAndPut(czarea,         d_Cl->czAreaLabel,         subset); 
+  new_dw->allocateAndPut(cznormal,       d_Cl->czNormLabel,         subset);
+  new_dw->allocateAndPut(cztang,         d_Cl->czTangLabel,         subset);
+  new_dw->allocateAndPut(czdisptop,      d_Cl->czDispTopLabel,      subset);
+  new_dw->allocateAndPut(czdispbottom,   d_Cl->czDispBottomLabel,   subset);
+  new_dw->allocateAndPut(czID,           d_Cl->czIDLabel,           subset);
+  new_dw->allocateAndPut(czSeparation,   d_Cl->czSeparationLabel,   subset);
+  new_dw->allocateAndPut(czForce,        d_Cl->czForceLabel,        subset);
+  new_dw->allocateAndPut(czTopMat,       d_Cl->czTopMatLabel,       subset);
+  new_dw->allocateAndPut(czBotMat,       d_Cl->czBotMatLabel,       subset);
+  new_dw->allocateAndPut(czFailed,       d_Cl->czFailedLabel,       subset);
   
   return subset;
 }
@@ -186,9 +189,9 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 
     // Field for position, normal, tangential and length.
     // Everything else is assumed to be zero.
-    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,mt,mb;
-    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mt >> mb){
-      //cout << f1 << " " << f2 << " " << f3 << endl;
+    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
+    int mt,mb;
+    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mb >> mt){
       if(patch->containsPoint(Point(f1,f2,f3))){
         sum++;
       }
@@ -214,38 +217,38 @@ vector<const VarLabel* > CohesiveZone::returnCohesiveZoneStatePreReloc()
 //
 void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 {
-  d_cz_state.push_back(d_lb->czAreaLabel);
-  d_cz_state_preReloc.push_back(d_lb->czAreaLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czAreaLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czAreaLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czNormLabel);
-  d_cz_state_preReloc.push_back(d_lb->czNormLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czNormLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czNormLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czTangLabel);
-  d_cz_state_preReloc.push_back(d_lb->czTangLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czTangLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czTangLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czDispTopLabel);
-  d_cz_state_preReloc.push_back(d_lb->czDispTopLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czDispTopLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czDispTopLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czDispBottomLabel);
-  d_cz_state_preReloc.push_back(d_lb->czDispBottomLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czDispBottomLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czDispBottomLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czSeparationLabel);
-  d_cz_state_preReloc.push_back(d_lb->czSeparationLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czSeparationLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czSeparationLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czForceLabel);
-  d_cz_state_preReloc.push_back(d_lb->czForceLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czForceLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czForceLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czTopMatLabel);
-  d_cz_state_preReloc.push_back(d_lb->czTopMatLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czTopMatLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czTopMatLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czBotMatLabel);
-  d_cz_state_preReloc.push_back(d_lb->czBotMatLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czBotMatLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czBotMatLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czFailedLabel);
-  d_cz_state_preReloc.push_back(d_lb->czFailedLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czFailedLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czFailedLabel_preReloc);
 
-  d_cz_state.push_back(d_lb->czIDLabel);
-  d_cz_state_preReloc.push_back(d_lb->czIDLabel_preReloc);
+  d_cz_state.push_back(d_Cl->czIDLabel);
+  d_cz_state_preReloc.push_back(d_Cl->czIDLabel_preReloc);
 }
 //__________________________________
 //
@@ -261,18 +264,19 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   zeroth_matl->addReference();
 
   t->computes(d_lb->pXLabel);
-  t->computes(d_lb->czAreaLabel);
-  t->computes(d_lb->czNormLabel);
-  t->computes(d_lb->czTangLabel);
-  t->computes(d_lb->czDispTopLabel);
-  t->computes(d_lb->czDispBottomLabel);
-  t->computes(d_lb->czSeparationLabel);
-  t->computes(d_lb->czForceLabel);
-  t->computes(d_lb->czTopMatLabel);
-  t->computes(d_lb->czBotMatLabel);
-  t->computes(d_lb->czFailedLabel);
-  t->computes(d_lb->czIDLabel);
-  t->computes(d_lb->pCellNACZIDLabel,zeroth_matl);
+  t->computes(d_Cl->czAreaLabel);
+  t->computes(d_Cl->czNormLabel);
+  t->computes(d_Cl->czTangLabel);
+  t->computes(d_Cl->czDispTopLabel);
+  t->computes(d_Cl->czDispBottomLabel);
+  t->computes(d_Cl->czSeparationLabel);
+  t->computes(d_Cl->czForceLabel);
+  t->computes(d_Cl->czTopMatLabel);
+  t->computes(d_Cl->czBotMatLabel);
+  t->computes(d_Cl->czFailedLabel);
+  t->computes(d_Cl->czIDLabel);
+  t->computes(d_Cl->czCountLabel);
+  t->computes(d_Cl->pCellNACZIDLabel,zeroth_matl);
 
   vector<int> m(1);
   m[0] = czmat->getDWIndex();
@@ -302,19 +306,17 @@ void CohesiveZone::initialize(const ProcessorGroup*,
 //  printTask(patches, patch,cout_doing,"Doing initialize for CohesiveZones\t");
 
     CCVariable<short int> cellNACZID;
-    new_dw->allocateAndPut(cellNACZID, d_lb->pCellNACZIDLabel, 0, patch);
+    new_dw->allocateAndPut(cellNACZID, d_Cl->pCellNACZIDLabel, 0, patch);
     cellNACZID.initialize(0);
 
     for(int m=0;m<cz_matls->size();m++){
-      CZMaterial* cz_matl = (CZMaterial*) d_materialManager->getMaterial( "CZ",  m );
+      CZMaterial* cz_matl=(CZMaterial*) d_materialManager->getMaterial("CZ", m);
       string filename = cz_matl->getCohesiveFilename();
       particleIndex numCZs = countCohesiveZones(patch,filename);
       totalCZs+=numCZs;
 
-      cout << "Total CZs " << totalCZs << endl;
-
-      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw,filename);
+      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw, filename);
     }
+    new_dw->put(sumlong_vartype(totalCZs), d_Cl->czCountLabel);
   }
-
 }

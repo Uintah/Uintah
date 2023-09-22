@@ -2,7 +2,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2018 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,7 @@ echo "generating $SRC"
 echo '/*' > $SRC
 echo ' * The MIT License' >> $SRC
 echo ' *' >> $SRC
-echo ' * Copyright (c) 1997-2018 The University of Utah' >> $SRC
+echo ' * Copyright (c) 1997-2023 The University of Utah' >> $SRC
 echo ' *' >> $SRC
 echo ' * Permission is hereby granted, free of charge, to any person obtaining a copy' >> $SRC
 echo ' * of this software and associated documentation files (the "Software"), to' >> $SRC

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,6 +60,7 @@ class Output;
     Ghost::GhostType d_particle_ghost_type{Ghost::None};
     int              d_particle_ghost_layer{0};
 
+    Output*     d_DA;
     Vector      d_gravity;
     int         d_8or27;                                       // Number of nodes a particle can interact with
     std::string d_interpolator_type;                           // Type of particle-grid interaction
@@ -74,6 +75,7 @@ class Output;
     bool        d_artificial_viscosity;                        // Turn artificial viscosity on/off
     bool        d_artificial_viscosity_heating;                // Include heating due to AV
     bool        d_useLoadCurves;                               // Flag for using load curves
+    bool        d_keepPressBCNormalToSurface;                  // Flag for using load curves
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
@@ -99,6 +101,7 @@ class Output;
     bool        d_doExplicitHeatConduction;
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
+    bool        d_doCapDensity;
     bool        d_computeNormals;
     bool        d_useLogisticRegression;
     bool        d_computeColinearNormals;
@@ -110,7 +113,6 @@ class Output;
     double      d_min_part_mass;                               // Minimum particle mass before deletion  
     int         d_min_subcycles_for_F;                         // Minimum number of subcycles to use in computing the deformation gradient
     double      d_min_mass_for_acceleration;                   // Minimum mass to allow division by in computing acceleration
-    double      d_max_vel;                                     // Maxmimum particle velocity before  deletion
     bool        d_prescribeDeformation;                        // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile;                   // File containing prescribed deformations
     bool        d_exactDeformation;                            // Set steps exactly to match times in prescribed deformation file
@@ -119,8 +121,14 @@ class Output;
     bool        d_GEVelProj;                                   // Use the velocity gradient in projecting particle velocity to grid
 
     bool        d_with_ice;
-    bool        d_with_arches;
     std::string d_mms_type;                                    // MMS Flag
+
+    //********** For Hydro mechanical coupling MPM *********************
+    bool        d_coupledflow;                                 // For coupled fluid-soil analysis
+    bool        d_coupledflow_contact;                         // Contact formulation for fluid
+    double      d_waterdampingCoeff;
+    double      d_soliddampingCoeff;
+    bool		d_PorePressureFilter;						 // Pore Water Pressure filter option
 
    //********** Start Reactive Flow Section *********************
     bool        d_doScalarDiffusion;
@@ -141,6 +149,7 @@ class Output;
      bool KE;
      bool volDeformed;
      bool centerOfMass;
+     bool sumTransmittedForce;
     };
     reductionVars* d_reductionVars;
     

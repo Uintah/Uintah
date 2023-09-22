@@ -22,7 +22,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-      <!-- <max_Timesteps>     100         </max_Timesteps>-->
+       <max_Timesteps>      50         </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -50,6 +50,9 @@
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
+        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -68,6 +71,9 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-q"      var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -90,6 +96,9 @@
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
+        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -108,6 +117,9 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -130,6 +142,9 @@
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
+        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -150,6 +165,9 @@
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
+        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
@@ -157,8 +175,8 @@
               <lower>        [-0.5,-0.5,-0.05]    </lower>
               <upper>        [0.5,  0.5, 0.05]    </upper>
               <extraCells>   [1,1,1]              </extraCells>
-              <patches>      [1,1,1]              </patches>
-              <resolution>    [100,100,1]          </resolution>
+              <patches>      [2,2,1]              </patches>
+              <resolution>   [100,100,1]          </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -175,6 +193,10 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
       <save label="scalar-f"/>
+      <save label="totalSum_scalar-f"/>
+      <save label="scalar-q"/>
+      <save label="totalSum_scalar-q"/>
+
       <checkpoint timestepInterval="3" cycle="2"/>
    </DataArchiver>
 
@@ -250,30 +272,34 @@
          </material>
       </ICE>       
     </MaterialProperties> 
+    
     <!--____________________________________________________________________-->
-    <!--  Use passiveScalar model to advect a scalar around                -->
+    <!--  Use passiveScalar model to transport two identical scalars        -->
     <Models>
       <Model type="PassiveScalar">
         <PassiveScalar>
           <material>BackgroundGas</material>
           <scalar name="f">
             <test_conservation>       true            </test_conservation>
+            
             <constants>
               <diffusivity>              0.0           </diffusivity>
             </constants>
+            
             <initialization>
               <geom_object>
                 <difference>
                   <box label="wholeDomain">             </box>
-                  <box label="scalarSlug">
+                  <box label="scalar_box">
                     <min>         [-0.1,-0.1,-0.1]       </min>
                     <max>         [ 0.1, 0.1, 0.1]       </max>
                   </box>
                 </difference>
                 <scalar>    0.00   </scalar>
               </geom_object>
+            
               <geom_object>
-                 <box label="scalarSlug">  </box>
+                 <box label="scalar_box"/>
                  <scalar>    1.00   </scalar>
               </geom_object>
             </initialization>
@@ -291,7 +317,49 @@
                     <radius>0.05 </radius>
                   </sphere>
                 </union>
-                <scalar>  2 </scalar>
+                <scalar>    2 </scalar>
+                <maxScalar> 2 </maxScalar>
+              </geom_object>
+            </interiorSources>
+
+          </scalar>
+        </PassiveScalar>
+      </Model>
+    <!--__________________________________-->
+
+      <Model type="PassiveScalar">
+        <PassiveScalar>
+          <material>BackgroundGas</material>
+          <scalar name="q">
+            <test_conservation>       true            </test_conservation>
+            
+            <constants>
+              <diffusivity>              0.0           </diffusivity>
+            </constants>
+            
+            <initialization>
+              <geom_object>
+                <difference>
+                  <box label="wholeDomain"/>
+                  <box label="scalar_box"/>
+                </difference>
+                <scalar>    0.00   </scalar>
+              </geom_object>
+            
+              <geom_object>
+                 <box label="scalar_box"/>
+                 <scalar>    1.00   </scalar>
+              </geom_object>
+            </initialization>
+
+            <interiorSources>
+              <geom_object>
+                <union>
+                  <sphere label = "1"/>
+                  <sphere label = "2"/>
+                </union>
+                <scalar>    2 </scalar>
+                <maxScalar> 2 </maxScalar>
               </geom_object>
             </interiorSources>
 

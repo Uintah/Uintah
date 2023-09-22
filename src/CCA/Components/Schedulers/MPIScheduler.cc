@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -140,6 +140,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   m_task_info.calculateMinimum( true );
   m_task_info.calculateMaximum( true );
   m_task_info.calculateStdDev( true );
+  m_num_schedulers +=1;
 }
 
 //______________________________________________________________________
@@ -172,6 +173,10 @@ MPIScheduler::createSubScheduler()
 
   newsched->setComponents( this );
   newsched->m_materialManager = m_materialManager;
+  
+  newsched->m_num_schedulers +=1;
+  m_num_schedulers +=1;
+  
   return newsched;
 }
 
@@ -246,15 +251,22 @@ void MPIScheduler::initiateTask( DetailedTask * dtask
 void
 MPIScheduler::initiateReduction( DetailedTask* dtask )
 {
-  DOUTR(g_reductions, " Running Reduction Task: " << dtask->getName());
+  bool ans = (g_reductions || g_task_run);
+  DOUTR( ans, " Running Reduction Task: " << dtask->getName());
 
   Timers::Simple timer;
 
   timer.start();
-  runReductionTask(dtask);
-  timer.stop();
 
+  runReductionTask(dtask);
+
+  timer.stop();
   m_mpi_info[TotalReduce] += timer().seconds();
+  
+  if (g_exec_out || do_task_exec_stats) {
+    m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += timer().seconds();
+    m_task_info[dtask->getTask()->getName()][TaskStatsEnum::WaitTime] = 0.0;
+  }
 }
 
 //______________________________________________________________________
@@ -285,6 +297,8 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   dtask->done(m_dws);
 
+  //__________________________________
+  //  timers
   g_lb_mutex.lock();
   {
     // Do the global and local per task monitoring
@@ -395,19 +409,22 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      // if an output or checkpoint time step or not. Not sure that is
      // desired but not sure of the effect of not calling it and doing
      // an out of sync output or checkpoint.
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output &&
-         !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
+         && !m_output->isOutputTimeStep() 
+         && !m_output->isCheckpointTimeStep()) {
        DOUTR(g_dbg, "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
 
       OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
 
-      DOUTR(g_dbg, " --> sending " << *req << ", ghost type: " << "\""
-               << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
-               << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
-               << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
-               << ", from dw " << dw->getID());
+      DOUTR(g_dbg, " --> sending " << *req );
+      DOUTR(g_dbg, "     From task: " << batch->m_from_task->getName() );
+      DOUTR(g_dbg, "     To task:   " << req->m_to_tasks.front()->getTask()->getName() << " and  rank " << to);  
+      DOUTR(g_dbg, "     ghost type: " << Ghost::getGhostTypeName(req->m_req->m_gtype)
+                   << ", num req ghost: " << req->m_req->m_num_ghost_cells
+                   << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
+                   << ", from dw " << dw->getID());
 
       // the load balancer is used to determine where data was in the
       // old DW on the prev timestep, so pass it in if the particle
@@ -416,7 +433,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       OnDemandDataWarehouse * posDW;
 
       if( !m_reloc_new_pos_label && m_parent_scheduler ) {
-        posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = m_parent_scheduler->m_reloc_new_pos_label;
       }
       else {
@@ -436,10 +453,14 @@ MPIScheduler::postMPISends( DetailedTask * dtask
         top = top->m_parent_scheduler;
       }
 
+
       dw->sendMPI( batch, posLabel, mpibuff, posDW, req, m_loadBalancer );
     }
 
+
+    //__________________________________
     // Post the send
+    
     if (mpibuff.count() > 0) {
       ASSERT(batch->m_message_tag > 0);
       void* buf = nullptr;
@@ -481,7 +502,6 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   }  // end for (DependencyBatch* batch = task->getComputes())
 
   send_timer.stop();
-
   {
     std::lock_guard<Uintah::MasterLock> send_time_lock(g_send_time_mutex);
     m_mpi_info[TotalSend] += send_timer().seconds();
@@ -522,6 +542,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   std::vector<DependencyBatch*> sorted_reqs;
   std::map<DependencyBatch*, DependencyBatch*>::const_iterator iter = dtask->getRequires().cbegin();
   for (; iter != dtask->getRequires().cend(); ++iter) {
+  //  std::cout << " counter " << std::endl;
     sorted_reqs.push_back(iter->first);
   }
 
@@ -597,16 +618,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         // if an output or checkpoint time step or not. Not sure that is
         // desired but not sure of the effect of not calling it and doing
         // an out of sync output or checkpoint.
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output 
+            && !m_output->isOutputTimeStep()
             && !m_output->isCheckpointTimeStep()) {
           DOUTR(g_dbg, "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
 
-        DOUTR(g_dbg,  " <-- receiving " << *req << ", ghost type: " << "\""
-                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
-                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
-                      << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) << ", into dw " << dw->getID());
+        DOUTR(g_dbg,  " <-- receiving "     << *req );
+        DOUTR(g_dbg, "     From task: "     << batch->m_from_task->getName() );
+        DOUTR(g_dbg, "     ghost type: "    << Ghost::getGhostTypeName(req->m_req->m_gtype) 
+                      << ", num req ghost " << req->m_req->m_num_ghost_cells
+                      << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) 
+                      << ", into dw "       << dw->getID());
 
         OnDemandDataWarehouse* posDW;
 
@@ -639,7 +663,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         }
       }
 
+      //__________________________________
       // Post the receive
+      
       if ( mpibuff.count() > 0 ) {
 
         ASSERT(batch->m_message_tag > 0);
@@ -688,7 +714,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
     recv_timer.stop();
 
-  }
+  }  // lock
 
 
   {
@@ -784,7 +810,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     m_task_info.reset(0);
   }
   
-  RuntimeStats::initialize_timestep(m_task_graphs);
+  // create the various timers
+  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
 
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
   TaskGraph* tg = m_task_graphs[tgnum];
@@ -842,6 +869,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     numTasksDone++;
 
+    //__________________________________
+    //  SCIDebug output
     if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
       std::ostringstream task_name;
       task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
@@ -856,6 +885,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                   << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
     }
 
+    //__________________________________
+    //
     DOUTR(g_task_dbg, " Initiating task:  " << *dtask);
 
     if ( dtask->getTask()->getType() == Task::Reduction ) {
@@ -995,34 +1026,13 @@ MPIScheduler::outputTimingStats( const char* label )
                  << m_application->getTimeStep()
                  << " ONLY";
       } else {
-        preamble << "Reported values are cumulative over "
+        preamble << "# Reported values are cumulative over "
                  << count << " timesteps ("
                  << m_application->getTimeStep()-(count-1)
                  << " through "
-                 << m_application->getTimeStep()
-                 << ")";
+                 << m_application->getTimeStep() << ")\n"
+                 << "# Tasks run inside a subscheduler are not included";
       }
-
-      // This code writes out the exec time only in the "old"
-      // style. It is being left in for now just in case there is a
-      // script that parses this output.
-      
-      // std::string filename = std::string("exectimes.") +
-      //   std::to_string( my_comm_size ) + "." + std::to_string(my_rank);
-
-      // std::ofstream fout;
-      // fout.open(filename);
-      // fout << preamble.str() << std::endl;
-      
-      // for( unsigned int i=0; i<m_task_info.size(); ++i ) {
-      //   std::string task = m_task_info.getKey(i);
-          
-      //   fout << std::fixed << "Rank-" << my_rank
-      //        << ": TaskExecTime(s): " << m_task_info[task][ExecTime]
-      //        << " Task:" << task << std::endl;
-      // }
-
-      // fout.close();
 
       // Report the stats for each task. Writing over any previous
       // files.

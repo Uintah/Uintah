@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -58,6 +58,7 @@ SRCS   += \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
+        $(SRCDIR)/UCNHVar.cc                   \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/SoilFoam.cc                   \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \
@@ -70,7 +71,6 @@ SRCS   += \
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
-       $(SRCDIR)/Diamm.cc                      \
        $(SRCDIR)/HypoElasticFortran.cc         \
        $(SRCDIR)/Kayenta.cc
 endif
@@ -80,8 +80,8 @@ SUBDIRS := \
         $(SRCDIR)/PortableTongeRamesh \
         $(SRCDIR)/ArenaSoilBanerjeeBrannon \
         $(SRCDIR)/ViscoElastic \
-	$(SRCDIR)/QuocAnh \
-#        $(SRCDIR)/Biswajit \
+	    $(SRCDIR)/SoilModels \
+#       $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
   SUBDIRS += $(SRCDIR)/fortran

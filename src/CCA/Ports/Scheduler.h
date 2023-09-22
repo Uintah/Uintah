@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -181,16 +181,6 @@ class Scheduler : public UintahParallelPort {
                                            , const VarLabelList & new_labels
                                            , const VarLabel     * particleIDLabel
                                            , const MaterialSet  * matls
-                                           ) = 0;
-
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * posLabel
-                                           , const VarLabelList & labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            w
                                            ) = 0;
 
     //////////

@@ -41,6 +41,7 @@ if ($status != 0) then
   echo " Could not find the xml tags"
   echo " <$xml_tag>.*</$xml_tag>"
   echo " now exiting"
+  /bin/rm $f.tmp
   exit 1
 endif
 

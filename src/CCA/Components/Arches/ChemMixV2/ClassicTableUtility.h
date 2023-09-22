@@ -1,7 +1,7 @@
 /*
  * The MIT Licbense
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -431,7 +431,7 @@ SCINEW_ClassicTable(std::string tableFileName, std::vector<std::string> requeste
       Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
-    table_contents = scinew char[table_size];
+    table_contents = scinew char[table_size+1];
   }
 
   Uintah::MPI::Bcast(table_contents, table_size, MPI_CHAR, 0,

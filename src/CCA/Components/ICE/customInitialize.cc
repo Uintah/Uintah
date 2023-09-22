@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -162,77 +162,62 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
 
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
-    // and variance. the x & y plane
+    //  in the x & y plane
     ProblemSpecP pL_ps= c_init_ps->findBlock("powerLawProfile");
     if(pL_ps) {
       cib->whichMethod.push_back( "powerLaw" );
       cib->powerLaw_vars = powerLaw();
 
-      // geometry: computational domain
+      int vDir = -9;
+      pL_ps->require( "U_infinity",  cib->powerLaw_vars.U_infinity );
+      pL_ps->require( "exponent",    cib->powerLaw_vars.exponent );
+      pL_ps->require( "verticalDir", vDir );
+      cib->common_vars.verticalDir = vDir;
+
+                  // geometry: computational domain
       BBox b;
       grid->getInteriorSpatialRange(b);
-      cib->powerLaw_vars.gridMin = b.min();
-      cib->powerLaw_vars.gridMax = b.max();
+      cib->common_vars.domain = b;
+                  // 
+      double profileHeight = b.max()(vDir);     
+      pL_ps->get( "profileHeight", profileHeight );
+      cib->powerLaw_vars.profileHeight = profileHeight;
 
-      int vDir = -9;
-      pL_ps->require( "U_infinity",        cib->powerLaw_vars.U_infinity );
-      pL_ps->require( "exponent",          cib->powerLaw_vars.exponent );
-      pL_ps->require( "verticalDirection", vDir );
-      cib->powerLaw_vars.verticalDir = vDir;
-
-      Vector tmp = b.max() - b.min();
-      double maxHeight = tmp[ vDir ];   // default value
-
-      pL_ps->get( "maxHeight",  maxHeight   );
-      Vector lo = b.min().asVector();
-      cib->powerLaw_vars.maxHeight = maxHeight - lo[ vDir ];
-
-      //__________________________________
-      //  Add variance to the velocity profile
-      cib->powerLaw_vars.addVariance = false;
-      ProblemSpecP var_ps = pL_ps->findBlock("variance");
-      if (var_ps) {
-        cib->powerLaw_vars.addVariance = true;
-        var_ps->get( "C_mu",        cib->powerLaw_vars.C_mu );
-        var_ps->get( "frictionVel", cib->powerLaw_vars.u_star );
-      }
     }  // powerLaw inputs
 
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
-    // and variance. the x & y plane
+    //  in the x & y plane
     ProblemSpecP pL2_ps= c_init_ps->findBlock("powerLawProfile2");
     if(pL2_ps) {
       cib->whichMethod.push_back( "powerLaw2" );
       cib->powerLaw2_vars = powerLaw2();
 
-      int vDir = -9;
-      int pDir = -9;
       double halfChannelHeight = -9;
+      int vDir = -9;
       pL2_ps->require( "Re_tau",       cib->powerLaw2_vars.Re_tau );
       pL2_ps->require( "verticalDir",  vDir );
-      pL2_ps->require( "principalDir", pDir );
+      pL2_ps->require( "principalDir", cib->common_vars.principalDir );
       pL2_ps->require( "halfChannelHeight", halfChannelHeight );
 
-      cib->powerLaw2_vars.verticalDir  = vDir;
-      cib->powerLaw2_vars.principalDir = pDir;
+      cib->common_vars.verticalDir = vDir;
       cib->powerLaw2_vars.halfChanHeight = halfChannelHeight;
-      
+
+
+      // initialization domain
+      BBox b;
+      grid->getInteriorSpatialRange(b);
+
       // determine the floor and ceiling of the channel
-      double floor   = DBL_MAX;
-      double ceiling = DBL_MAX;
-      pL2_ps->get( "channelFloor",   floor );
-      pL2_ps->get( "channelCeiling", ceiling );      
-   
+      Point floor   = b.min();
+      Point ceiling = b.max();
+      pL2_ps->get( "channelFloor",   floor(vDir)   );
+      pL2_ps->get( "channelCeiling", ceiling(vDir) );
+
       // use computational grid if floor & ceiling haven't been specified
-      if( floor == DBL_MAX || ceiling == DBL_MAX) {
-        BBox bb;
-        grid->getInteriorSpatialRange(bb);
-        floor   = bb.min()(vDir);
-        ceiling = bb.max()(vDir);
-      }
-      cib->powerLaw2_vars.floor   = floor;
-      cib->powerLaw2_vars.ceiling = ceiling;
+      BBox bb ( floor, ceiling );
+
+      cib->common_vars.domain = bb;
     }  // powerLaw2 inputs
 
     //_______________________________________________
@@ -243,15 +228,15 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->whichMethod.push_back( "DNS_Moser" );
 
       cib->DNS_Moser_vars = DNS_Moser();
+      cib->common_vars    = common();
 
-      // geometry: computational domain floor and ceiling
+      // initialization domain
       BBox b;
       grid->getInteriorSpatialRange(b);
-      cib->DNS_Moser_vars.gridFloor = b.min();
-      cib->DNS_Moser_vars.gridCeil  = b.max();
+      cib->common_vars.domain = b;
 
-      dns_ps -> require( "verticalDirection", cib->DNS_Moser_vars.verticalDir );
-      dns_ps -> require( "dpdx",              cib->DNS_Moser_vars.dpdx );
+      dns_ps -> require( "verticalDir", cib->common_vars.verticalDir );
+      dns_ps -> require( "dpdx",        cib->DNS_Moser_vars.dpdx );
     }
   }
 }
@@ -330,7 +315,7 @@ void customInitialization(const Patch* patch,
     //  Vortex Pairs
     if ( whichMethod == "vortexPairs" ){
       double vortexAmp = cib->vortexPairs_vars.strength;
-      double nPairs    = cib->vortexPairs_vars.nPairs; 
+      double nPairs    = cib->vortexPairs_vars.nPairs;
 
       // axis of vortex
       string axis = cib->vortexPairs_vars.axis;
@@ -516,95 +501,42 @@ void customInitialization(const Patch* patch,
     } // mms_3
 
     //_______________________________________________
-    //  power law velocity profile + variance
+    //  power law velocity profile
     // u = U_infinity * pow( h/height )^n
     if( whichMethod == "powerLaw" ){
-      int vDir          =  cib->powerLaw_vars.verticalDir;
-      double d          =  cib->powerLaw_vars.gridMin(vDir);
-      double gridHeight =  cib->powerLaw_vars.gridMax(vDir);
-      double height     =  cib->powerLaw_vars.maxHeight;
+      int vDir          =  cib->common_vars.verticalDir;
+      double yLow       =  cib->common_vars.domain.min()(vDir);
+      double yHigh      =  cib->common_vars.domain.max()(vDir);
+
+      double profileHeight  =  cib->powerLaw_vars.profileHeight;
       Vector U_infinity =  cib->powerLaw_vars.U_infinity;
       double n          =  cib->powerLaw_vars.exponent;
       const Level* level = patch->getLevel();
 
-      //std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity
+      //std::cout << "     profileHeight: " << profileHeight << " exponent: " << n << " U_infinity: " << U_infinity
       //     << " nDir: " << nDir << " vDir: " << vDir << endl;
 
 
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
 
-        Point here   = level->getCellPosition(c);
-        double h     = here.asVector()[vDir] ;
+        Point here = level->getCellPosition(c);
+        double y   = here(vDir);
 
-        vel_CC[c]    = U_infinity;             // set the components that are not normal to the face
-        double ratio = (h - d)/height;
+        double ratio = (y - yLow)/(profileHeight - yLow);
         ratio = Clamp(ratio,0.0,1.0);
 
-        if( h > d && h < height){
+        if( y > yLow && y < profileHeight){
           vel_CC[c] = U_infinity * pow(ratio, n);
-        }else{                                // if height < h < gridHeight
+        }else{
           vel_CC[c] = U_infinity;
         }
 
         // Clamp edge/corner values
-        if( h < d || h > gridHeight ){
+        if( y < yLow || y > yHigh ){
           vel_CC[c] = Vector(0,0,0);
         }
       }
-
-      //__________________________________
-      //  Addition of a 'kick' or variance to the mean velocity profile
-      //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
-      //   where:
-      //          C_mu:     empirical constant
-      //          u_star:  frictionVelocity
-      //          Z:       height above the ground
-      //          height:  Boundar layer height, assumed to be the domain height
-      //
-      //   TKE = 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2)
-      //    where sigma.x^2 = (1/N-1) * sum( u_mean - u)^2
-      //
-      //%  Reference: Castro, I, Apsley, D. "Flow and dispersion over topography;
-      //             A comparison between numerical and Laboratory Data for
-      //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
-      //             pp 839-850, 1997.
-
-      if (cib->powerLaw_vars.addVariance ){
-        MTRand mTwister;
-
-        double gridHeight =  cib->powerLaw_vars.gridMax(vDir);
-        double d          =  cib->powerLaw_vars.gridMin(vDir);
-        double inv_Cmu    = 1.0/cib->powerLaw_vars.C_mu;
-        double u_star2    = cib->powerLaw_vars.u_star * cib->powerLaw_vars.u_star;
-
-        for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-          IntVector c = *iter;
-
-          Point here = level->getCellPosition(c);
-          double z   = here.asVector()[vDir] ;
-
-          double ratio = (z - d)/gridHeight;
-
-          double TKE = inv_Cmu * u_star2 * pow( (1 - ratio),2 );
-
-          // Assume that the TKE is evenly distrubuted between all three components of velocity
-          // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
-
-          const double variance = sqrt(0.66666 * TKE);
-
-          //__________________________________
-          // from the random number compute the new velocity knowing the mean velcity and variance
-          vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
-          vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
-          vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
-
-          // Clamp edge/c orner values
-          if(z < d || z > gridHeight ){
-            vel_CC[c] = Vector(0,0,0);
-          }
-        }
-      }  // add variance
     }
 
     //_______________________________________________
@@ -612,10 +544,10 @@ void customInitialization(const Patch* patch,
     //  Ref:  Jeremy Gibbs
     if( whichMethod == "powerLaw2" ){
 
-      int vDir          =  cib->powerLaw2_vars.verticalDir;
-      int pDir          =  cib->powerLaw2_vars.principalDir;
-      double floor      =  cib->powerLaw2_vars.floor;
-      double ceiling    =  cib->powerLaw2_vars.ceiling;
+      int vDir         =  cib->common_vars.verticalDir;
+      int pDir         =  cib->common_vars.principalDir;
+      double yLow      =  cib->common_vars.domain.min()(vDir);
+      double yHigh     =  cib->common_vars.domain.max()(vDir);
       double halfChanHeight  =  cib->powerLaw2_vars.halfChanHeight;
       const Level* level = patch->getLevel();
 
@@ -624,35 +556,36 @@ void customInitialization(const Patch* patch,
       double Re_tau    = cib->powerLaw2_vars.Re_tau;
       double u_tau     = ( visc * Re_tau/(rho * halfChanHeight) ) ;
       double vonKarman = 0.4;
-      
-      //std::cout << "     halfChannelHeight: " << halfChanHeight << " vDir: " << vDir << " pDir: " << pDir 
+
+      //std::cout << "     halfChannelHeight: " << halfChanHeight << " vDir: " << vDir << " pDir: " << pDir
       //          << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
 
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
 
-        Point here   = level->getCellPosition(c);
-        double h     = here.asVector()[vDir] ;
-        
-         // Clamp cells outide of channel
-        if( h < floor || h > ceiling ){
+        Point here = level->getCellPosition(c);
+        double y   = here(vDir);
+
+         // Clamp cells outside of channel
+        if( y < yLow || y > yHigh ){
           vel_CC[c] = Vector(0,0,0);
           continue;
         }
-        
+
         double ratio = -9;
-        if ( h < halfChanHeight) {
-          ratio = (h - floor)/halfChanHeight;
-        } 
-        else {
-          ratio = 1 - (h - halfChanHeight)/halfChanHeight;
+        if ( y < halfChanHeight) {
+          ratio = (y - yLow)/halfChanHeight;
         }
-        
+        else {
+          ratio = 1 - (y - halfChanHeight)/halfChanHeight;
+        }
+
         ratio = Clamp(ratio,0.0,1.0);
-        
+
         vel_CC[c][pDir] = (u_tau/vonKarman) * std::log( ratio * Re_tau );
       }
     }
+
     //_______________________________________________
     //   DNS velocity profile
     //   Reference:
@@ -662,13 +595,14 @@ void customInitialization(const Patch* patch,
 
     if ( whichMethod == "DNS_Moser" ){
 
-      double visc       =  ice_matl->getViscosity();
-      double rho        =  ice_matl->getInitialDensity();
-      double nu         =  visc / rho;
-      int vDir          =  cib->DNS_Moser_vars.verticalDir;
-      double dpdx       =  cib->DNS_Moser_vars.dpdx;
-      double gridCeil   =  cib->DNS_Moser_vars.gridCeil(vDir);
-      double gridFloor  =  cib->DNS_Moser_vars.gridFloor(vDir);
+      double visc  =  ice_matl->getViscosity();
+      double rho   =  ice_matl->getInitialDensity();
+      double nu    =  visc / rho;
+
+      int vDir     =  cib->common_vars.verticalDir;
+      double yHigh =  cib->common_vars.domain.max()(vDir);
+      double yLow  =  cib->common_vars.domain.min()(vDir);
+      double dpdx  =  cib->DNS_Moser_vars.dpdx;
       const Level* level = patch->getLevel();
 
       if ( visc  == 0 || dpdx == 0 ){
@@ -682,14 +616,14 @@ void customInitialization(const Patch* patch,
         IntVector c = *iter;
 
         Point here = level->getCellPosition(c);
-        double y   = here.asVector()[vDir];
+        double y   = here(vDir);
 
         vel_CC[c] = Vector(0,0,0);
-        double u = 1./(2. * nu) * dpdx * ( y*y - gridCeil*y );
+        double u = 1./(2. * nu) * dpdx * ( y*y - yHigh*y );
         vel_CC[c].x( u );
 
         // Clamp for edge/corner cells
-        if( y < gridFloor || y > gridCeil ){
+        if( y < yLow || y > yHigh ){
           vel_CC[c] = Vector(0,0,0);
         }
       }

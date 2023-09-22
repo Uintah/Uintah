@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -159,6 +159,9 @@ public:
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
                                                  IntVector high = IntVector(0,0,0) ) = 0;
+  
+  virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
+  
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),

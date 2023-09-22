@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,13 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/AMRMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
@@ -41,10 +44,8 @@
 
 #include <CCA/Ports/DataWarehouse.h>
 
-#include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Patch.h>
@@ -55,15 +56,12 @@
 
 First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
 turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
-(MPMMaterial calls the ParticleCreatorFactory::create, which is kind of stupid
-since every material will use the same type ParticleCreator. Whatever..)
 
 Next,  createParticles, below, first loops over all of the geom_objects and
 calls countAndCreateParticles.  countAndCreateParticles returns the number of
 particles on a given patch associated with each geom_object and accumulates
 that into a variable called num_particles.  countAndCreateParticles gets
-the number of particles by either querying the functions for smooth geometry 
-piece types, or by calling createPoints, also below.  When createPoints is
+the number of particles by calling createPoints, below.  When createPoints is
 called, as each particle is determined to be inside of the object, it is pushed
 back into the object_points entry of the ObjectVars struct.  ObjectVars
 consists of several maps which are indexed on the GeometryObject and a vector
@@ -71,8 +69,11 @@ containing whatever data that entry is responsible for carrying.  A map is used
 because even after particles are created, their initial data is still tied
 back to the GeometryObject.  These might include velocity, temperature, color,
 etc.
+**** New in March 2023: With the addition of "recursive particle filling",
+createPoints also computes particle volume and size, since those will change
+with different levels of particle refinement.  ****
 
-createPoints, for the non-smooth geometry, essentially visits each cell,
+createPoints visits each cell,
 and then depending on how many points are prescribed in the <res> tag in the
 input file, loops over each of the candidate locations in that cell, and
 determines if that point is inside or outside of the cell.  Points that are
@@ -86,20 +87,15 @@ variables needed in SerialMPM or AMRMPM.  At this point, storage for the
 particles has been created, but the arrays allocated are still empty.
 
 Now back in createParticles, the next step is to loop over all of the 
-GeometryObjects.  If the GeometryObject is a SmoothGeometryPiece, those
-type of objects MAY have their own methods for populating the data within the
-if(sgp) conditional.  Either way, loop over all of the particles in
-object points and initialize the remaining particle data.  This is done for
-non-Smooth/File pieces by calling initializeParticle.  For the Smooth/File
-pieces, if arrays exist that contain other data, use that data to populate the
-other entries.
+GeometryObjects.  Either way, loop over all of the particles in
+object points and initialize the remaining particle data.  This is done 
+for by calling initializeParticle.
 
 initializeParticle, which is what is usually used, populates the particle data
-based on either what is specified in the <geometry_object> section of the
-input file, or by geometric considerations (such as size, from which we get
-volume, from which we get mass (volume*density).  There is also an option to
+based on what is specified in the <geometry_object> section of the
+input file.  There is also an option to
 call initializeParticlesForMMS, which is needed for running Method of
-Manufactured Solutions, where special particle initialization is needed.)
+Manufactured Solutions, where special particle initialization is needed.
 
 At that point, other than assigning particles to loadCurves, if called for,
 we are done!
@@ -112,22 +108,26 @@ using namespace std;
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)
 {
+  d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
   d_doScalarDiffusion = flags->d_doScalarDiffusion;
-  d_withGaussSolver = flags->d_withGaussSolver;
   d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
+
+  // Hydro-mechanical coupling MPM
+  d_coupledflow = flags->d_coupledflow;
 
   registerPermanentParticleState(matl);
 }
 
 ParticleCreator::~ParticleCreator()
 {
+  delete d_Hlb;
   delete d_lb;
 }
 
@@ -164,129 +164,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");    
 
-    // Special case exception for SmoothGeomPieces and FileGeometryPieces
-    SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
-    vector<double>* volumes        = 0;
-    vector<double>* temperatures   = 0;
-    vector<double>* colors         = 0;
-    vector<double>* concentrations = 0;
-    vector<double>* poscharges     = 0;
-    vector<double>* negcharges     = 0;
-    vector<double>* permittivities = 0;
-    vector<Vector>* pforces        = 0;
-    vector<Vector>* pfiberdirs     = 0;
-    vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
-    vector<Matrix3>* psizes        = 0;
-    vector<Vector>*  pareas        = 0;
-
-    if (sgp){
-      volumes      = sgp->getVolume();
-      temperatures = sgp->getTemperature();
-      pforces      = sgp->getForces();
-      pfiberdirs   = sgp->getFiberDirs();
-      pvelocities  = sgp->getVelocity();  // gcd adds and new change name
-      psizes       = sgp->getSize();
-
-      if(d_with_color){
-        colors      = sgp->getColors();
-      }
-
-      if(d_doScalarDiffusion){
-        concentrations  = sgp->getConcentration();
-        pareas          = sgp->getArea();
-
-      }
-
-      if(d_withGaussSolver){
-        poscharges = sgp->getPosCharge();
-        negcharges = sgp->getNegCharge();
-        permittivities = sgp->getPermittivity();
-      }
-    } // if smooth geometry piece
-
-    // The following is for FileGeometryPiece, I'm not sure why this
-    // isn't in a conditional.  JG
-
-    // For getting particle volumes (if they exist)
+    // For getting particle volumes
     vector<double>::const_iterator voliter;
-    if (volumes) {
-      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
-    }
+    voliter = vars.d_object_vols[*obj].begin();
 
-    // For getting particle temps (if they exist)
-    vector<double>::const_iterator tempiter;
-    if (temperatures) {
-      if (!temperatures->empty()) tempiter = vars.d_object_temps[*obj].begin();
-    }
-
-    // For getting particle external forces (if they exist)
-    vector<Vector>::const_iterator forceiter;
-    if (pforces) {
-      if (!pforces->empty()) forceiter = vars.d_object_forces[*obj].begin();
-    }
-
-    // For getting particle fiber directions (if they exist)
-    vector<Vector>::const_iterator fiberiter;
-    if (pfiberdirs) {
-      if (!pfiberdirs->empty()) fiberiter = vars.d_object_fibers[*obj].begin();
-    }
-    
-    // For getting particle velocities (if they exist)   // gcd adds
-    vector<Vector>::const_iterator velocityiter;
-    if (pvelocities) {                             // new change name
-      if (!pvelocities->empty()) velocityiter =
-              vars.d_object_velocity[*obj].begin();  // new change name
-    }                                                    // end gcd adds
-
-    // For getting particle sizes (if they exist)
+    // For getting particle sizes
     vector<Matrix3>::const_iterator sizeiter;
-    if (psizes) {
-      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
-      if (d_flags->d_AMR) {
-        cerr << "WARNING:  The particle size when using smooth or file\n"; 
-        cerr << "geom pieces needs some work when used with AMR" << endl;
-      }
-    }
-
-    // For getting particle areas (if they exist)
-    vector<Vector>::const_iterator areaiter;
-    if (pareas) {
-      if (!pareas->empty()) areaiter = vars.d_object_area[*obj].begin();
-    }
-
-    // For getting particles colors (if they exist)
-    vector<double>::const_iterator coloriter;
-    if (colors) {
-      if (!colors->empty()) coloriter = vars.d_object_colors[*obj].begin();
-    }
-
-    // For getting particles concentrations (if they exist)
-    vector<double>::const_iterator concentrationiter;
-    if (concentrations) {
-      if (!concentrations->empty()) concentrationiter =
-              vars.d_object_concentration[*obj].begin();
-    }
-
-    // For getting particles positive charges (if they exist)
-    vector<double>::const_iterator poschargeiter;
-    if (poscharges) {
-      if (!poscharges->empty()) poschargeiter =
-              vars.d_object_concentration[*obj].begin();
-    }
-
-    // For getting particles negative charges (if they exist)
-    vector<double>::const_iterator negchargeiter;
-    if (negcharges) {
-      if (!negcharges->empty()) negchargeiter =
-              vars.d_object_concentration[*obj].begin();
-    }
-
-    // For getting particles permittivities (if they exist)
-    vector<double>::const_iterator permittivityiter;
-    if (permittivities) {
-      if (!permittivities->empty()) permittivityiter =
-                  vars.d_object_concentration[*obj].begin();
-    }
+    sizeiter = vars.d_object_size[*obj].begin();
 
     // Loop over all of the particles whose positions we know from
     // countAndCreateParticles, initialize the remaining variables
@@ -300,114 +184,24 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       
       particleIndex pidx = start+count;      
 
-      // This initializes the particle values for objects that are not
-      // FileGeometry or SmoothGeometry
+      // Use the volume and size computed at initialization
+      pvars.pvolume[pidx] = *voliter;
+      ++voliter;
+
+      pvars.psize[pidx] = *sizeiter;
+      ++sizeiter;
+
+      // This initializes the remaining particle values
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
-
-      // Again, everything below exists for FileGeometryPiece only, where
-      // a user can describe the geometry as a series of points in a file.
-      // One can also describe any of the fields below in the file as well.
-      // See FileGeometryPiece for usage.
-
-      if (temperatures) {
-        if (!temperatures->empty()) {
-          pvars.ptemperature[pidx] = *tempiter;
-          ++tempiter;
-        }
-      }
-
-      if (pforces) {                           
-        if (!pforces->empty()) {
-          pvars.pexternalforce[pidx] = *forceiter;
-          ++forceiter;
-        }
-      }
-
-      if (pvelocities) {                           // gcd adds and change name 
-        if (!pvelocities->empty()) {               // and change name
-          pvars.pvelocity[pidx] = *velocityiter;
-          ++velocityiter;
-        }
-      }                                         // end gcd adds
-
-      if (pfiberdirs) {
-        if (!pfiberdirs->empty()) {
-          pvars.pfiberdir[pidx] = *fiberiter;
-          ++fiberiter;
-        }
-      }
-
-      if (volumes) {
-        if (!volumes->empty()) {
-          pvars.pvolume[pidx] = *voliter;
-          pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          ++voliter;
-        }
-      }
-
-      if (psizes) {
-        // Read psize from file or get from a smooth geometry piece
-        if (!psizes->empty()) {
-          pvars.psize[pidx] = *sizeiter;
-          ++sizeiter;
-        }
-      }
-
-      // JBH -- pareas is defined by default for the particles, which seems
-      //   okay.  However, we don't actually need it unless we're doing
-      //   scalar diffusion, so the memory doesn't get allocated unless
-      //   d_doScalarDiffusion is true.  Therefore, we need a logical and here
-      //   otherwise we reference memory that's not allocated.
-      if (pareas) {// && d_doScalarDiffusion) {
-        // Read parea from file or get from a smooth geometry piece
-        if (!pareas->empty()) {
-          pvars.parea[pidx] = *areaiter;
-          ++areaiter;
-        }
-      }
-
-      if (colors) {
-        if (!colors->empty()) {
-          pvars.pcolor[pidx] = *coloriter;
-          ++coloriter;
-        }
-      }
-
-      if (concentrations) {
-        if (!concentrations->empty()) {
-          pvars.pConcentration[pidx] = *concentrationiter;
-          ++concentrationiter;
-        }
-      }
-
-      if (poscharges) {
-        if (!poscharges->empty()) {
-          pvars.pPosCharge[pidx] = *poschargeiter;
-          ++poschargeiter;
-        }
-      }
-
-      if (negcharges) {
-        if (!negcharges->empty()) {
-          pvars.pNegCharge[pidx] = *negchargeiter;
-          ++negchargeiter;
-        }
-      }
-
-      if (permittivities) {
-        if (!negcharges->empty()) {
-          pvars.pPermittivity[pidx] = *permittivityiter;
-          ++permittivityiter;
-        }
-      }
 
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        if (checkForSurface(piece,*itr,dxpp)) {
+        // if it is a surface particle
+        if (pvars.psurface[pidx]==1) {
           Vector areacomps;
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
           if (d_doScalarDiffusion) {
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
                                      pvars.parea[pidx].y()*areacomps.y(),
@@ -432,7 +226,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
 IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps)
+                                          Vector& areacomps, int dwi)
 {
   IntVector ret(0,0,0);
   int k=0;
@@ -443,8 +237,18 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = pbc->loadCurveID(); 
+      if (pbc->flagMaterialPoint(pp, dxpp) 
+       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
+         ret(k) = pbc->loadCurveID();
+         k++;
+      }
+    }
+    else if (bcs_type == "Torque") {
+      TorqueBC* tbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (tbc->flagMaterialPoint(pp, dxpp)
+       && (tbc->loadCurveMatl()==dwi || tbc->loadCurveMatl()==-99)) {
+         ret(k) = tbc->loadCurveID();
          k++;
       }
     }
@@ -459,14 +263,15 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     else if (bcs_type == "HeatFlux") {      
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
+      if (hfbc->flagMaterialPoint(pp, dxpp)
+       && (hfbc->loadCurveMatl()==dwi || hfbc->loadCurveMatl()==-99)) {
          ret(k) = hfbc->loadCurveID(); 
          k++;
       }
     }
     else if (bcs_type == "ArchesHeatFlux") {      
       ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
          ret(k) = hfbc->loadCurveID(); 
          k++;
@@ -486,6 +291,11 @@ void ParticleCreator::printPhysicalBCs()
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *pbc << endl;
     }
+    if (bcs_type == "Torque") {
+      TorqueBC* pbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *pbc << endl;
+    }
     if (bcs_type == "HeatFlux") {
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
@@ -493,37 +303,9 @@ void ParticleCreator::printPhysicalBCs()
     }
     if (bcs_type == "ArchesHeatFlux") {
       ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *hfbc << endl;
     }
-  }
-}
-
-void 
-ParticleCreator::applyForceBC(const Vector& dxpp, 
-                              const Point& pp,
-                              const double& pMass, 
-                              Vector& pExtForce)
-{
-  for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
-        
-    //cerr << " BC Type = " << bcs_type << endl;
-    if (bcs_type == "Force") {
-      ForceBC* bc = dynamic_cast<ForceBC*>
-        (MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-
-      Box bcBox;
-      bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
-
-      //cerr << "BC Box = " << bcBox << " Point = " << pp << endl;
-      if(bcBox.contains(pp)) {
-        pExtForce = bc->getForceDensity() * pMass;
-        //cerr << "External Force on Particle = " << pExtForce 
-        //     << " Force Density = " << bc->getForceDensity() 
-        //     << " Particle Mass = " << pMass << endl;
-      }
-    } 
   }
 }
 
@@ -538,6 +320,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
   new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
   new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
+  new_dw->allocateAndPut(pvars.pexternalhtrte,d_lb->pExternalHeatRateLabel,
+                                                                        subset);
   new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
   new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
   new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
@@ -574,18 +358,20 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
                                   d_lb->diffusion->pExternalScalarFlux, subset);
   }
-  if(d_withGaussSolver){
-     new_dw->allocateAndPut(pvars.pPosCharge,
-                                          d_lb->pPosChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pNegCharge,
-                                          d_lb->pNegChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_lb->pPosChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_lb->pNegChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pPermittivity,
-                                          d_lb->pPermittivityLabel, subset);
+
+  if (d_coupledflow) {  // Harmless that rigid allocates and put, as long as
+                        // nothing it put
+      new_dw->allocateAndPut(pvars.pSolidMass, d_Hlb->pSolidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidMass, d_Hlb->pFluidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorosity, d_Hlb->pPorosityLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorePressure, d_Hlb->pPorePressureLabel,
+          subset);
+      new_dw->allocateAndPut(pvars.pPrescribedPorePressure,
+          d_Hlb->pPrescribedPorePressureLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidVelocity, d_Hlb->pFluidVelocityLabel,
+          subset);
   }
+
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
   }
@@ -603,7 +389,10 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
+  Vector dxcc = patch->dCell();
   Vector dcorner = dxpp*0.5;
+  int numLevelsParticleFilling =
+                            obj->getInitialData_int("numLevelsParticleFilling");
 
   // Affine transformation for making conforming particle distributions
   // to be used in the conforming CPDI simulations. The input vectors are
@@ -625,6 +414,12 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
+
+  Matrix3 stdSize(1./((double) ppc.x()),0.,0.,
+                  0.,1./((double) ppc.y()),0.,
+                  0.,0.,1./((double) ppc.z()));
+  double c_vol = dxcc.x()*dxcc.y()*dxcc.z();
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
@@ -639,27 +434,194 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       }
     }
 
-    for(int ix=0;ix < ppc.x(); ix++){
-      for(int iy=0;iy < ppc.y(); iy++){
-        for(int iz=0;iz < ppc.z(); iz++){
-        
-          IntVector idx(ix, iy, iz);
-          Point p = lower + dxpp*idx;
-          if (!b2.contains(p)){
-            throw InternalError("Particle created outside of patch?",
-                                 __FILE__, __LINE__);
+    // Added on 3-18-23:  Ability to recursively add smaller particles to
+    // fill in the gaps between a surface and the particles created using the
+    // standard resolution.
+    // The code immediately below does NOT fill recursively, it is essentially
+    // just the original particle filling code
+    if(abs(numLevelsParticleFilling)<=1){  // Original code
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              vars.d_object_points[obj].push_back(p);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                vars.d_object_vols[obj].push_back(AS_vol);
+              } else{
+                vars.d_object_vols[obj].push_back(AS_size.Determinant()*c_vol);
+              }
+              vars.d_object_size[obj].push_back(AS_size);
+            }
+          }  // z
+        }  // y
+      }  // x
+    } else {  // Do recursive particle filling
+      // This code does recursive particle filling.  If the 
+      // "numLevelsParticleFilling" variable, set in <geom_object>
+      // is positive, then successively smaller particles are used to fill
+      // in the empty space, but the originally created large particles may
+      // stick out of the suface.  These are left alone.
+      // If "numLevelsParticleFilling" is negative, then particles that
+      // have a corner that falls outside the original surface are deleted
+      // and replaced with sequentially smaller particles.
+
+      int numInCell = 0;
+      vector<Point> pointsInCell;
+      vector<Vector> DXP;
+      vector<double> pvolume;
+      vector<Matrix3> psize;
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if (!b2.contains(p)){
+              throw InternalError("Particle created outside of patch?",
+                                   __FILE__, __LINE__);
+            }
+            if (piece->inside(p,true)){
+              Vector p1(p(0),p(1),p(2));
+              p1=affineTrans_A*p1+affineTrans_b;
+              p(0)=p1[0];
+              p(1)=p1[1];
+              p(2)=p1[2];
+              pointsInCell.push_back(p);
+              DXP.push_back(dxpp);
+              Matrix3 AS_size = affineTrans_A*stdSize;
+              if(d_flags->d_axisymmetric){
+                // assume unit radian extent in the circumferential direction
+                double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                       AS_size(0,1)*AS_size(1,0))*
+                                       dxcc.x()*dxcc.y();
+                pvolume.push_back(AS_vol);
+              } else{
+                pvolume.push_back(AS_size.Determinant()*c_vol);
+              }
+              psize.push_back(AS_size);
+              numInCell++;
+            }
+          }  // z
+        }  // y
+      }  // x
+
+      Vector dxpr = dxpp;
+      double mfactor = 1.;
+      double dfactor = 1.;
+      for (int rr = 1; rr < abs(numLevelsParticleFilling); rr++){
+        int numPIC = pointsInCell.size();
+        if(numLevelsParticleFilling < 0){  
+          // Remove particles if a smaller particle within it would lie
+          // outside the surface.  Fill them in below.
+          vector<int> toRemove;
+          toRemove.clear();
+          for(int ip = 0; ip < numPIC; ip++){
+             Point PIC  = pointsInCell[ip];
+             Point corner[8];
+             corner[0] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[1] = PIC + 0.25*Vector(-dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[2] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[3] = PIC + 0.25*Vector(-dxpr.x(),+dxpr.y(),+ dxpr.z());
+             corner[4] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),- dxpr.z());
+             corner[5] = PIC + 0.25*Vector( dxpr.x(),-dxpr.y(),+ dxpr.z());
+             corner[6] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),- dxpr.z());
+             corner[7] = PIC + 0.25*Vector( dxpr.x(),+dxpr.y(),+ dxpr.z());
+             for(int ic = 0; ic < 8; ic++){
+               if(!piece->inside(corner[ic],true)){
+                 toRemove.push_back(ip);
+                 break;
+               }
+             }
           }
-          if (piece->inside(p,true)){ 
-            Vector p1(p(0),p(1),p(2));
-            p1=affineTrans_A*p1+affineTrans_b;
-            p(0)=p1[0];
-            p(1)=p1[1];
-            p(2)=p1[2];
-            vars.d_object_points[obj].push_back(p);
+          for(int ipo = toRemove.size()-1; ipo >= 0; ipo--){
+            pointsInCell.erase(pointsInCell.begin() + toRemove[ipo]);
+            DXP.erase(DXP.begin() + toRemove[ipo]);
+            pvolume.erase(pvolume.begin() + toRemove[ipo]);
+            psize.erase(psize.begin() + toRemove[ipo]);
+            numInCell--;
           }
-        }  // z
-      }  // y
-    }  // x
+        }  // if numLevelsParticleFilling < 0
+        numPIC = pointsInCell.size();
+        dxpr*=0.5;
+        Vector dcornerr = dxpr*0.5;
+        mfactor*=2.;
+        dfactor*=0.5;
+        double dfCubed = dfactor*dfactor*dfactor;
+        lower = patch->nodePosition(*iter) + dcornerr;
+        for(int ix=0;ix < mfactor*ppc.x(); ix++){
+          for(int iy=0;iy < mfactor*ppc.y(); iy++){
+            for(int iz=0;iz < mfactor*ppc.z(); iz++){
+
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpr*idx;
+              if (!b2.contains(p)){
+                throw InternalError("Particle created outside of patch?",
+                                     __FILE__, __LINE__);
+              }
+              if (piece->inside(p,true)){ 
+                Vector p1(p(0),p(1),p(2));
+                p1=affineTrans_A*p1+affineTrans_b;
+                p(0)=p1[0];
+                p(1)=p1[1];
+                p(2)=p1[2];
+                bool overlap = false;
+                for(int ip = 0; ip < numPIC; ip++){
+                  Point PIC  = pointsInCell[ip];
+                  Vector DXPip = DXP[ip];
+                  if((p.x() >= PIC.x()-.5*DXPip.x()  && 
+                      p.x() <= PIC.x()+.5*DXPip.x()) &&
+                     (p.y() >= PIC.y()-.5*DXPip.y()  && 
+                      p.y() <= PIC.y()+.5*DXPip.y()) &&
+                     (p.z() >= PIC.z()-.5*DXPip.z()  && 
+                      p.z() <= PIC.z()+.5*DXPip.z())) {
+                      overlap = true;
+                  }
+                }
+                if(!overlap){
+                  pointsInCell.push_back(p);
+                  DXP.push_back(dxpr);
+                  Matrix3 AS_size = affineTrans_A*stdSize;
+                  if(d_flags->d_axisymmetric){
+                    // assume unit radian extent in  circumferential direction
+                    double AS_vol = p.x()*(AS_size(0,0)*AS_size(1,1) -
+                                           AS_size(0,1)*AS_size(1,0))*
+                                           dxcc.x()*dxcc.y();
+                    pvolume.push_back(dfactor*dfactor*AS_vol);
+                  } else{
+                    pvolume.push_back(AS_size.Determinant()*dfCubed*c_vol);
+                  }
+                  psize.push_back(dfactor*AS_size);
+                  numInCell++;
+                }
+              }
+            }  // z
+          }  // y
+        }  // x
+      }  // for ... rr
+
+      for(int ifc = 0; ifc<numInCell; ifc++){
+        vars.d_object_points[obj].push_back(pointsInCell[ifc]);
+        vars.d_object_vols[obj].push_back(pvolume[ifc]);
+        vars.d_object_size[obj].push_back(psize[ifc]);
+      }
+    }  // do recursive particle filling
   }  // CellIterator
 
 /*
@@ -703,26 +665,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
   Vector dxcc = patch->dCell();
 
-  // Affine transformation for making conforming particle distributions
-  // to be used in the conforming CPDI simulations. The input vectors are
-  // optional and if you do not wish to use the affine transformation, just do
-  // not define them in the input file.
-
-  Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
-  Vector affineTrans_A1=(*obj)->getInitialData_Vector("affineTransformation_A1");
-  Vector affineTrans_A2=(*obj)->getInitialData_Vector("affineTransformation_A2");
-  Matrix3 affineTrans_A(
-          affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
-          affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
-          affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
-  // The size matrix is used for storing particle domain sizes (Rvectors for
-  // CPDI and CPTI) normalized by the grid spacing
-  Matrix3 size(1./((double) ppc.x()),0.,0.,
-               0.,1./((double) ppc.y()),0.,
-               0.,0.,1./((double) ppc.z()));
-  size=affineTrans_A*size;
   Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
-  area=affineTrans_A*area;
 
 /*
 // This part is associated with CBDI_CompressiveCylinder.ups input file.
@@ -745,12 +688,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
-#if 0
-//  if(p.z()>0.04 && p.z()<0.0444){
-  if(p.z()>0.0424 && p.z()<0.0468){
-    pvars.plocalized[i] = 1.0;
-  }
-#endif
 
   // For AMR
   const Level* curLevel = patch->getLevel();
@@ -760,42 +697,50 @@ ParticleCreator::initializeParticle(const Patch* patch,
   string mms_type = d_flags->d_mms_type;
   if(!mms_type.empty()) {
    MMS MMSObject;
+   Matrix3 size = pvars.psize[i];
    MMSObject.initializeParticleForMMS(pvars.position,pvars.pvelocity,
                                       pvars.psize,pvars.pdisp, pvars.pmass,
                                       pvars.pvolume,p,dxcc,size,patch,d_flags,i);
   } else {
     pvars.position[i] = p;
-    if(d_flags->d_axisymmetric){
-      // assume unit radian extent in the circumferential direction
-      pvars.pvolume[i] = p.x()*
-              (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
-    } else {
-      // standard voxel volume
-      pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
-    }
-
-    pvars.psize[i]      = size;  // Normalized by grid spacing
-
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
     pvars.pTempGrad[i] = Vector(0.0);
   
-    double vol_frac_CC = 1.0;
-    try {
-     if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
-      vol_frac_CC = 1.0;
-      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
-     } else {
-      vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
-      pvars.pmass[i]   = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
-     }
-    } catch (...) {
-      vol_frac_CC = 1.0;       
-      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
+    if (d_coupledflow &&
+        !matl->getIsRigid()) {  // mass is determined by incoming porosity
+        double rho_s = matl->getInitialDensity();
+        double rho_w = matl->getWaterDensity();
+        double n = matl->getPorosity();
+        pvars.pmass[i] = (n * rho_w + (1.0 - n) * rho_s) * pvars.pvolume[i];
+        pvars.pFluidMass[i] = rho_w * pvars.pvolume[i];
+        pvars.pSolidMass[i] = rho_s * pvars.pvolume[i];
+        pvars.pFluidVelocity[i] = pvars.pvelocity[i];
+        pvars.pPorosity[i] = n;
+        pvars.pPorePressure[i] = matl->getInitialPorepressure();
+        pvars.pPrescribedPorePressure[i] = Vector(0., 0., 0.);
+        pvars.pdisp[i] = Vector(0., 0., 0.);
     }
-    pvars.pdisp[i]        = Vector(0.,0.,0.);
+    else { // Using original line of MPM
+
+      double vol_frac_CC = 1.0;
+      try {
+       if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
+        vol_frac_CC = 1.0;
+        pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
+       } else {
+        vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
+        pvars.pmass[i] = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
+       }
+      } catch (...) {
+        vol_frac_CC = 1.0;       
+        pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
+      }
+      pvars.pdisp[i]        = Vector(0.,0.,0.);
+
+    } // end else
   }
   
   if(d_with_color){
@@ -808,15 +753,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pExternalScalarFlux[i] = 0.0;
     pvars.parea[i]      = area;
   }
-  if(d_withGaussSolver){
-    pvars.pPosCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("pos_charge_density");
-    pvars.pNegCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("neg_charge_density");
-    pvars.pPosChargeGrad[i]  = Vector(0.0);
-    pvars.pNegChargeGrad[i]  = Vector(0.0);
-    pvars.pPermittivity[i] = (*obj)->getInitialData_double("permittivity");
-  }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
   }
@@ -825,21 +761,17 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  GeometryPieceP piece = (*obj)->getPiece();
-  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
+  if(d_flags->d_useLogisticRegression ||
+     d_useLoadCurves){
+    GeometryPieceP piece = (*obj)->getPiece();
+    pvars.psurface[i] = checkForSurface(piece,p,dxpp);
+  } else {
+    pvars.psurface[i] = 0.;
+  }
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
-#if 0
-//  if(p.z()>0.0424 && p.z()<0.0468){
-  if(p.z()>0.0424 && p.z()<0.0474){
-    pvars.psurface[i] = 1.0;
-  }
-#endif
-
-  Vector pExtForce(0,0,0);
-  applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
-  
-  pvars.pexternalforce[i] = pExtForce;
+  pvars.pexternalforce[i] = Vector(0.,0.,0.);
+  pvars.pexternalhtrte[i] = 0.;
   pvars.pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
 
   ASSERT(cell_idx.x() <= 0xffff && 
@@ -867,130 +799,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   Box b = b1.intersect(b2);
   if(b.degenerate()) return 0;
   
-  // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
-  // SmoothCylGeomPiece) then use the particle creators in that 
-  // class to do the counting
-  SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
-  if (sgp) {
-    int numPts = 0;
-    FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
-    sgp->setCellSize(patch->dCell());
-    if(fgp){
-      fgp->setCpti(d_useCPTI);
-      fgp->readPoints(patch->getID());
-      numPts = fgp->returnPointCount();
-    } else {
-      // setParticleSpacing seems to only be used by GUVSphereShell
-      // which is commented out in the sub.mk and probably badly deprecated
-      // Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");
-      // double dx   = Min(Min(dxpp.x(), dxpp.y()), dxpp.z());
-      // sgp->setParticleSpacing(dx);
-      numPts = sgp->createPoints();
-    }
-    vector<Point>*    points          = sgp->getPoints();
-    vector<double>*   vols            = sgp->getVolume();
-    vector<double>*   temps           = sgp->getTemperature();
-    vector<double>*   colors          = sgp->getColors();
-    vector<double>*   poscharges      = sgp->getPosCharge();
-    vector<double>*   negcharges      = sgp->getNegCharge();
-    vector<double>*   permittivities  = sgp->getPermittivity();
-    vector<Vector>*   pforces         = sgp->getForces();
-    vector<Vector>*   pfiberdirs      = sgp->getFiberDirs();
-    vector<Vector>*   pvelocities     = sgp->getVelocity();
-    vector<Matrix3>*  psizes          = sgp->getSize();
-    vector<double>*   concentrations  = sgp->getConcentration();
-    vector<Vector>*   pareas          = sgp->getArea();
-
-    Point p;
-    IntVector cell_idx;
-
-    //__________________________________
-    // bulletproofing for smooth geometry pieces only
-    BBox compDomain;
-    GridP grid = patch->getLevel()->getGrid();
-    grid->getSpatialRange(compDomain);
-
-    Point min = compDomain.min();
-    Point max = compDomain.max();
-    for (int ii = 0; ii < numPts; ++ii) {
-      p = points->at(ii);
-      if(p.x() < min.x() || p.y() < min.y() || p.z() < min.z() ||
-         p.x() > max.x() || p.y() > max.y() || p.z() > max.z() ){
-        ostringstream warn;
-        warn << "\n ERROR:MPM:ParticleCreator:SmoothGeometry Piece: the point ["
-             << p << "] generated by this geometry piece "
-             << " lies outside of the computational domain. \n" << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
-    
-    //__________________________________
-    //
-    for (int ii = 0; ii < numPts; ++ii) {
-      p = points->at(ii);
-      if (patch->findCell(p,cell_idx)) {
-        if (patch->containsPoint(p)) {
-          vars.d_object_points[obj].push_back(p);
-          
-          if (!vols->empty()) {
-            double vol = vols->at(ii); 
-            vars.d_object_vols[obj].push_back(vol);
-          }
-          if (!temps->empty()) {
-            double temp = temps->at(ii); 
-            vars.d_object_temps[obj].push_back(temp);
-          }
-          if (!pforces->empty()) {
-            Vector pforce = pforces->at(ii); 
-            vars.d_object_forces[obj].push_back(pforce);
-          }
-          if (!pfiberdirs->empty()) {
-            Vector pfiber = pfiberdirs->at(ii); 
-            vars.d_object_fibers[obj].push_back(pfiber);
-          }
-          if (!pvelocities->empty()) {
-            Vector pvel = pvelocities->at(ii); 
-            vars.d_object_velocity[obj].push_back(pvel);
-          }
-          if (!psizes->empty()) {
-            Matrix3 psz = psizes->at(ii); 
-            vars.d_object_size[obj].push_back(psz);
-          }
-          // JBH -- Shouldn't have the scalar diffusion flag in here, but it
-          //    makes the right things happen.  Need to work on a more
-          //    elegant solution when there is time for elegance.  FIXME
-          if (!pareas->empty() && d_doScalarDiffusion) {
-            Vector psz = pareas->at(ii); 
-            vars.d_object_area[obj].push_back(psz);
-          }
-          if (!colors->empty()) {
-            double color = colors->at(ii); 
-            vars.d_object_colors[obj].push_back(color);
-          }
-          if (!concentrations->empty()) {
-            double concentration = concentrations->at(ii); 
-            vars.d_object_concentration[obj].push_back(concentration);
-          }
-          if (!poscharges->empty()) {
-            double poscharge = poscharges->at(ii);
-            vars.d_object_poscharge[obj].push_back(poscharge);
-          }
-          if (!negcharges->empty()) {
-            double negcharge = negcharges->at(ii);
-            vars.d_object_negcharge[obj].push_back(negcharge);
-          }
-          if (!permittivities->empty()) {
-            double permittivity = permittivities->at(ii);
-            vars.d_object_permittivity[obj].push_back(permittivity);
-          }
-        } 
-      }  // patch contains cell
-    }
-    //sgp->deletePoints();
-    //sgp->deleteVolume();
-  } else {
-    createPoints(patch,obj,vars);
-  }
+  createPoints(patch,obj,vars);
   
   return (particleIndex) vars.d_object_points[obj].size();
 }
@@ -999,7 +808,6 @@ vector<const VarLabel* > ParticleCreator::returnParticleState()
 {
   return particle_state;
 }
-
 
 vector<const VarLabel* > ParticleCreator::returnParticleStatePreReloc()
 {
@@ -1017,6 +825,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pExternalForceLabel);
   particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
 
+  if (d_flags->d_integrator_type == "explicit") {
+    particle_state.push_back(d_lb->pExternalHeatRateLabel);
+    particle_state_preReloc.push_back(d_lb->pExternalHeatRateLabel_preReloc);
+  }
+
   particle_state.push_back(d_lb->pMassLabel);
   particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);
 
@@ -1032,7 +845,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-  
 
   if (d_with_color){
     particle_state.push_back(d_lb->pColorLabel);
@@ -1059,21 +871,24 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
                                                       particle_state_preReloc);
   }
 
-  if(d_withGaussSolver){
-    particle_state.push_back(d_lb->pPosChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeLabel_preReloc);
+  if (d_coupledflow && !matl->getIsRigid()) {
+      //if (d_coupledflow ) {
+      particle_state.push_back(d_Hlb->pFluidMassLabel);
+      particle_state.push_back(d_Hlb->pSolidMassLabel);
+      particle_state.push_back(d_Hlb->pPorePressureLabel);
+      particle_state.push_back(d_Hlb->pPorosityLabel);
 
-    particle_state.push_back(d_lb->pNegChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
+      // Error Cannot find in relocateParticles ???
 
-    particle_state.push_back(d_lb->pPosChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeGradLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pFluidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pSolidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorePressureLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorosityLabel_preReloc);
 
-    particle_state.push_back(d_lb->pNegChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeGradLabel_preReloc);
-
-    particle_state.push_back(d_lb->pPermittivityLabel);
-    particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);
+      if (d_flags->d_integrator_type == "explicit") {
+        particle_state.push_back(d_Hlb->pFluidVelocityLabel);
+        particle_state_preReloc.push_back(d_Hlb->pFluidVelocityLabel_preReloc);
+      }
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
@@ -1108,7 +923,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
-  if(d_flags->d_useLogisticRegression){
+  if(d_flags->d_useLogisticRegression || d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
   }
@@ -1137,14 +952,16 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
                                                  
-  matl->getDamageModel()->addParticleState( particle_state, particle_state_preReloc );
+  matl->getDamageModel()->addParticleState( particle_state,
+                                            particle_state_preReloc );
   
-  matl->getErosionModel()->addParticleState( particle_state, particle_state_preReloc );
+  matl->getErosionModel()->addParticleState( particle_state,
+                                             particle_state_preReloc );
 }
 
 int
 ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
-                                  const Vector dxpp )
+                                  const Vector dxpp)
 {
 
   //  Check the candidate points which surround the point just passed
@@ -1187,7 +1004,7 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
 {
 
   //  Check the candidate points which surround the point just passed
-  //   in.  If any of those points are not also inside the object
+  //  in.  If any of those points are not also inside the object
   //  the current point is on the surface
   
   int ss = 0;

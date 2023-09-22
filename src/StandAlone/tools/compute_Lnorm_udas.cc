@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -85,6 +85,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cout << "Valid options are:\n";
   cout << "  -ignoreVariables [var1,var2....] (Skip these variables. Comma delimited list, no spaces.)\n";
   cout << "  -compareVariables[var1,var2....] (Only compare these variables. Comma delimited list, no spaces.)\n";
+  cout << "  -timeTolerance   [double]        (The allowable difference of abs(uda1:time - uda2:time) when comparing each timestep.  Default is 1e-5)\n";
   cout << "  -h[elp]\n";
   Parallel::exitAll(1);
 }
@@ -473,6 +474,7 @@ main(int argc, char** argv)
   vector<string> compareVars;
   string filebase1;
   string filebase2;
+  double timeTolerance = 1e-5;
 
   //__________________________________
   // Parse Args:
@@ -493,6 +495,14 @@ main(int argc, char** argv)
       }
       else{
         compareVars = parseVector( argv[i] );
+      }
+    }
+    else if(s == "-timeTolerance") {
+      if (++i == argc){
+        usage("-timeTolerance, no variable given", argv[0]);
+      }
+      else{
+        timeTolerance = std::stod( argv[i]) ;
       }
     }
     else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
@@ -701,7 +711,9 @@ main(int argc, char** argv)
 
     double time1 = times[tstep];
     double time2 = times2[tstep];
-    cout << "time = " << time1 << "\n";
+    double diffTime = abs(times[tstep] - times2[tstep]);
+
+    cout << "time = " << time1 << "     Difference in output time: abs(uda1:time - uda2:times) = "<< diffTime<< "\n";
     GridP grid1  = da1->queryGrid(tstep);
     GridP grid2  = da2->queryGrid(tstep);
 
@@ -723,9 +735,9 @@ main(int argc, char** argv)
       abort_uncomparable();
     }
 
-    if (abs(times[tstep] - times2[tstep]) > 1e-5) {
-      cerr << "Timestep at time " << times[tstep] << " in " << filebase1 << " does not match\n";
-      cerr << "timestep at time " << times2[tstep] << " in " << filebase2 << " within the allowable tolerance.\n";
+    if ( diffTime > timeTolerance) {
+      cerr << "Output time " << times[tstep] << " in " << filebase1 << " differs from the\n";
+      cerr << "output time " << times2[tstep] << " in " << filebase2 << " exceeding the allowable tolerance " << timeTolerance << "\n";
       abort_uncomparable();
     }
 

@@ -1,6 +1,6 @@
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -130,11 +130,6 @@ ifeq ($(BUILD_MPM),yes)
 #       $(MPM_DIR)/Crack
 endif
 
-# MPM-Arches
-ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
-  MPMARCHES_LIB = $(COMPONENTS)/MPMArches
-endif
-
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
   MPMFVM_LIB = $(COMPONENTS)/MPMFVM
@@ -208,7 +203,6 @@ ALL_PSE_LIBS =                              \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
-        $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
@@ -232,7 +226,6 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
-    $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \
@@ -329,43 +322,12 @@ ETAGS := @ETAGS@
 CTAGS := ctags
 
 ################################################################################
-# Place GIT code revision number into .../bin/include/git_info.h.  This target
-# will kick off every time you run make in order to determine if the GIT revision
-# number has changed.
+# Call a shell script that updates the git log information in include/git_info.h. 
+# This target will execute every time you run make.  The variables in git_info are
+# output by sus
 
 $(OBJTOP_ABS)/include/git_info.h : .FORCE
-	@IFS=' ';                                                                                \
-         cd $(SRCTOP_ABS);                                                                       \
-         tmp_git_srcdir=$(SRCTOP_ABS);                                                           \
-         tmp_git_commit=`git rev-parse HEAD 2> /dev/null`;                                       \
-         tmp_git_date=`git log -1 --format=%cd 2> /dev/null`;                                    \
-         tmp_git_url=`git config --get remote.origin.url 2> /dev/null`;                          \
-         tmp_git_branch=`git branch --show-current 2> /dev/null`;                                \
-	 cd $(OBJTOP_ABS);                                                                       \
-         sed -e "s%UNKNOWN_SRCDIR%`echo $$tmp_git_srcdir`%"                                      \
-             -e "s%UNKNOWN_COMMIT%`echo $$tmp_git_commit`%"                                      \
-             -e "s%UNKNOWN_DATE%`echo $$tmp_git_date`%"                                          \
-             -e "s%UNKNOWN_URL%`echo $$tmp_git_url`%"                                            \
-             -e "s%UNKNOWN_BRANCH%`echo $$tmp_git_branch`%"                                      \
-             $(SRCTOP_ABS)/include/git_info.h.template > $(OBJTOP_ABS)/include/git_info.h.new;   \
-         if test -z "$$tmp_git_srcdir"; then                                                     \
-            rm $(OBJTOP_ABS)/include/git_info.h.new;                                             \
-            if test -f $(OBJTOP_ABS)/include/git_info.h; then                                    \
-               echo "WARNING: git info failed... git_info.h will not contain revision number.";  \
-            else                                                                                 \
-               echo "Warning, git info failed... using generic .../<bin>/include/git_info.h";    \
-               cp $(SRCTOP_ABS)/include/git_info.h.template $(OBJTOP_ABS)/include/git_info.h;    \
-            fi                                                                                   \
-         else                                                                                    \
-            cmp -s  $(OBJTOP_ABS)/include/git_info.h.new $(OBJTOP_ABS)/include/git_info.h;       \
-            if test "$$?" -eq 0; then                                                            \
-               rm $(OBJTOP_ABS)/include/git_info.h.new;                                          \
-            else                                                                                 \
-               echo "Creating .../<bin>/include/git_info.h";                                     \
-               mv $(OBJTOP_ABS)/include/git_info.h.new $(OBJTOP_ABS)/include/git_info.h;         \
-            fi                                                                                   \
-         fi
-
+	$(SRCTOP_ABS)/include/git_info.sh $(SRCTOP_ABS) $(OBJTOP_ABS)
 # Dummy target to force above git_info target to kick off every time.
 .FORCE :
 
@@ -570,7 +532,7 @@ endif
 #########################################################################################################
 # Targets for regression testing...
 
-gold_standards :
+gold_standards goldStandards :
 	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                        \
          echo -n "Started at: "; date;                                                                           \
          cd $(OBJTOP_ABS)/TestData;                                                                              \

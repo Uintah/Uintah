@@ -31,7 +31,6 @@ endif
 echo ""
 echo "__________________________________"
 foreach uda ($udas[*])
-  echo "Passing $uda through bulletproofing section"
   
   # does each uda exist
   if (! -e $uda ) then
@@ -40,12 +39,11 @@ foreach uda ($udas[*])
     exit
   endif
 
-  echo "working on $uda"
-
   #__________________________________
   # find all *.dat files in the uda
   cd $uda
-  set these = (`find . -maxdepth 1 -name "*.dat"` )
+  set these = (`find * -maxdepth 1 -name "*.dat"` )
+  
   cd $here
 
   #__________________________________
@@ -53,8 +51,8 @@ foreach uda ($udas[*])
   foreach Y ( $these[*]:q )
 
     if( -e "$uda/$Y" ) then
-
-      echo " Now concatenating $uda/$Y"
+      
+      echo "   Now concatenating $uda/$Y to $master_uda/$Y"
 
       if (-e "$master_uda/$Y" ) then
         cp -fp "$master_uda/$Y" "$master_uda/$Y.tmp"
@@ -63,7 +61,7 @@ foreach uda ($udas[*])
       cat "$uda/$Y" >> "$master_uda/$Y.tmp"
 
       # remove the header from the temporary file  If one exists
-      sed -i /'[:digit:]'/d "$master_uda/$Y.tmp"
+      sed  -i -n '/[[:digit:]]/p' "$master_uda/$Y.tmp"
 
       # now reconstruct the file and remove duplicate lines
       # sort the file by time 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -163,12 +163,45 @@ public:
                   , const Level                 * level     = nullptr
                   ,       int                     matlIndex = -1
                   );
+                              // get a map filled with reductionVars
+                              // C++ doesn't allow templated Virtual method
+  template< class T>
+  std::map<int,T> get_sum_vartypeT( const VarLabel       * label
+                                  , const MaterialSubset * matls
+                                  );
+  virtual                     // double
+  std::map<int,double> get_sum_vartypeD( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       );
+                              // Vector
+  virtual
+  std::map<int,Vector> get_sum_vartypeV( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       );
 
   virtual void put( const ReductionVariableBase & var
                   , const VarLabel              * label
                   , const Level                 * level     = nullptr
                   ,       int                     matlIndex = -1
                   );
+
+                              // put a map filled with reductionVars
+                              // C++ doesn't allow templated Virtual methods
+  template< class T>
+  void put_sum_vartypeT( std::map<int, T>  reductionVars
+                       , const VarLabel       * label
+                       , const MaterialSubset * matls
+                       );
+                              // Vector
+  virtual void put_sum_vartype( std::map<int, Vector>  reductionVars
+                              , const VarLabel       * label
+                              , const MaterialSubset * matls
+                              );
+                              // double
+  virtual void put_sum_vartype( std::map<int, double>  reductionVars
+                              , const VarLabel       * label
+                              , const MaterialSubset * matls
+                              );
 
   virtual void override( const ReductionVariableBase & var
                        , const VarLabel              * label
@@ -216,6 +249,8 @@ public:
                                               ,       IntVector       low  = IntVector(0, 0, 0)
                                               ,       IntVector       high = IntVector(0, 0, 0)
                                               );
+
+  virtual void deleteParticleSubset(  ParticleSubset*   pset );
 
   virtual void saveParticleSubset(       ParticleSubset * psubset
                                  ,       int              matlIndex
@@ -1206,6 +1241,14 @@ private:
                              );
 
   void insertPSetRecord(       psetDBType     & subsetDB
+                       , const Patch          * patch
+                       ,       IntVector        low
+                       ,       IntVector        high
+                       ,       int              matlIndex
+                       ,       ParticleSubset * psubset
+                       );
+
+  void deletePSetRecord(       psetDBType     & subsetDB
                        , const Patch          * patch
                        ,       IntVector        low
                        ,       IntVector        high

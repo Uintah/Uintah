@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -196,7 +196,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
 
-  RuntimeStats::initialize_timestep(m_task_graphs);
+  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
   TaskGraph* tg = m_task_graphs[tgnum];

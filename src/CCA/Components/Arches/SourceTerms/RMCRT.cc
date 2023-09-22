@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,7 +46,6 @@ Dout dbg("RMCRT", "Arches", "RMCRT debug info", false);
 
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                                   ArchesLabel* labels,
-                                  MPMArchesLabel* MAlab,
                                   std::vector<std::string> req_label_names,
                                   const ProcessorGroup* my_world,
                                   std::string type )
@@ -54,7 +53,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                   labels->d_materialManager,
                   req_label_names, type ),
   m_labels( labels ),
-  m_MAlab(MAlab),
   m_my_world(my_world)
 {
 
@@ -95,12 +93,8 @@ RMCRT_Radiation::~RMCRT_Radiation()
   VarLabel::destroy( m_radFluxT_Label );
   VarLabel::destroy( m_radFluxB_Label );
   VarLabel::destroy( m_sumAbsk_Label );
-
-  if( m_matlSet ) {
-    m_matlSet->removeReference();
-    delete m_matlSet;
-  }
-
+  
+  // m_matlSet is deleted by MaterialManager::clearMaterials()
 }
 
 //---------------------------------------------------------------------------

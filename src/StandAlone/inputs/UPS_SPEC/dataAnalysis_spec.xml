@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <!--__________________________________-->
+
+  <DataAnalysis                         spec="OPTIONAL NO_DATA" >
+    <Module                             spec="MULTIPLE NO_DATA"
+                                          attribute1="name REQUIRED STRING 'controlVolFluxes  firstLawThermo, flatPlate_heatFlux,
+                                                                            lineExtract,      meanTurbFluxes, minMax,         momentumAnalysis,
+                                                                            particleExtract,  planeAverage,   planeExtract,
+                                                                            radiometer,       spatialAvg,     statistics,
+                                                                            turbulentFluxes, vorticity'" >
+
+      <!--  Common __________________________________-->
+      <material                         spec="OPTIONAL STRING"  />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, lineExtract,     planeExtract,
+                                                                                      particleExtract,  firstLawThermo,  minMax"/>
+
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract,
+                                                                                      minMax,           particleExtract, planeAverage,
+                                                                                      planeExtract,     spatialAvg,      statistics,
+                                                                                      turbulentFluxes"/>
+
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract,
+                                                                                      minMax,           particleExtract, planeAverage,
+                                                                                      planeExtract,     spatialAvg,      statistics
+                                                                                      turbulentFluxes"/>
+
+      <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
+
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract,    meanTurbFluxes,  minMax,     particleExtract
+                                                                                      planeAverage    planeExtract,    spatialAvg,
+                                                                                      statistics, turbulentFluxes">
+        <analyze                        spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING"
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING"
+                                          attribute4="computeReynoldsStress OPTIONAL STRING"
+                                          attribute5="fluidVelocityLabel    OPTIONAL STRING"
+                                          attribute6="weighting OPTIONAL STRING 'none, nCells, mass'" />
+      </Variables>
+
+      <!--  controlVolFluxes _____________________________-->
+      <controlVolumes                   spec="OPTIONAL NO_DATA" need_applies_to="name controlVolFluxes">
+        <box                            spec="MULTIPLE" />
+      </controlVolumes>
+
+
+
+      <!--  lineExtract __________________________________-->
+      <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">
+        <line                           spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" >
+          <startingPt                   spec="REQUIRED VECTOR" />
+          <endingPt                     spec="REQUIRED VECTOR" />
+          <stepSize                     spec="OPTIONAL DOUBLE 'positive'"/>
+        </line>
+      </lines>
+
+      <!--  meanTurbFluxes __________________________________-->
+      <monitorCell                      spec= "OPTIONAL VECTOR" />
+
+      <enableVerification               spec= "OPTIONAL NO_DATA" />
+
+      <velocity                         spec= "OPTIONAL NO_DATA" need_applies_to="name meanTurbFluxes"
+                                          attribute1="label REQUIRED STRING"
+                                          attribute2="weighting OPTIONAL STRING 'none, nCells, mass'" />
+
+      <!--  planeAverage __________________________________-->
+      <planeOrientation                 spec="REQUIRED STRING  'XY XZ YZ'" need_applies_to="name meanTurbFluxes, planeAverage"/>
+      <weight                           spec= "OPTIONAL NO_DATA" need_applies_to="name meanTurbFluxes, planeAverage"
+                                          attribute1="label REQUIRED STRING" />
+
+      <!--  planeExtract __________________________________-->
+      <planes                           spec="OPTIONAL NO_DATA" need_applies_to="name planeExtract">
+        <plane                          spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" >
+          <startingPt                   spec="REQUIRED VECTOR" />
+          <endingPt                     spec="REQUIRED VECTOR" />
+        </plane>
+      </planes>
+
+      <!--  flatPlate_heatFlux ____________________________-->
+      <plane                           spec="MULTIPLE NO_DATA" need_applies_to="name flatPlate_heatFlux">
+        <startingPt                    spec="REQUIRED VECTOR" />
+        <endingPt                      spec="REQUIRED VECTOR" />
+      </plane>
+
+      <!--1st lawThermo __________________________________-->
+      <engy_convt_factor                spec="OPTIONAL DOUBLE"  need_applies_to="name firstLawThermo"/>
+      <controlVolume                    spec="OPTIONAL NO_DATA" need_applies_to="name firstLawThermo momentumAnalysis">
+        <Face                           spec="MULTIPLE NO_DATA"
+                                          attribute1="side REQUIRED STRING 'x-, x+, y-, y+, z-, z+'"
+                                          attribute2="extents REQUIRED STRING 'entireFace, partialFace'">
+          <startPt                      spec="OPTIONAL VECTOR" />
+          <endPt                        spec="OPTIONAL VECTOR" />
+        </Face>
+      </controlVolume>
+
+      <!--momentumAnalysis__________________________________-->
+      <uvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <vvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <wvel_FC                          spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <vel_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+      <rho_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
+
+      <!--spatialAvg _____________________________-->
+      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"
+                                                               need_applies_to="name spatialAvg" />
+      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="name spatialAvg" />
+
+      <!--statistics ____________________________________-->
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="name statistics turbulentFluxes" />
+
+    </Module>
+  </DataAnalysis>
+</Uintah_Include>

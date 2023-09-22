@@ -1,16 +1,4 @@
-// This file will be updated via make and the real version placed in .../<bin>/include/git_info.h.
-
-// Current git src dir for code.
-#define GIT_SRCDIR "UNKNOWN_SRCDIR"
-
-// Current git commit for code.
-#define GIT_COMMIT "UNKNOWN_COMMIT"
-
-// the date of the git revision
-#define GIT_DATE "UNKNOWN_DATE"
-
-// the git URL:
-#define GIT_URL "UNKNOWN_URL"
-
-// the git BRANCH:
-#define GIT_BRANCH "UNKNOWN_BRANCH"
+// Current git hash, date and branch.
+#define GIT_BRANCH "unknown_branch"
+#define GIT_DATE   "unknown_date"
+#define GIT_HASH   "unknown_hash"

@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>none</title>
+   </Meta>
+
+    <Solver type="hypre"/>
+   <SimulationComponent type="ice" />
+   
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            30        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-5      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>      50         </max_Timesteps>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Neumann"> 
+                            <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [-0.5,-0.5,-0.0025]    </lower>
+              <upper>        [0.5,  0.5, 0.0025]    </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [3,3,1]              </patches>
+              <resolution>   [200,200,1]          </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>stagnationPoint.uda</filebase>
+      <!-- <outputInterval>0.1</outputInterval> -->
+      <outputTimestepInterval>10</outputTimestepInterval>
+      <save label="press_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/> 
+      <save label="temp_CC"/>
+      <save label="scalar-f"/>
+      <save label="scalar-f_src"/>
+
+      <save label="p.x"/>
+      <save label="p.displacement"/>
+      <save label="p.clone-scalar-f"/>
+      <save label="p.clone-press_CC"/>
+      <save label="p.particleID"/>
+      <save label="totalSum_scalar-f"/>
+
+      <checkpoint timestepInterval="5" cycle="2"/>
+   </DataArchiver>
+
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+      <ICE>
+        <advection type = "SecondOrder" />
+        
+        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.001        </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver> 
+      </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+         <material name = "atmosphere">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>   15.89e-6               </dynamic_viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <gamma>              1.4                     </gamma>
+           <geom_object>
+                <box label="wholeDomain">
+                    <min>       [ -1., -1., -1. ]       </min>
+                    <max>       [  1.,  1.,  1. ]       </max>
+                </box>
+               <res>                 [2,2,2]            </res>
+               <velocity>      [0.,0.,0.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties> 
+    
+<!--______________________________________________________________________-->
+    <Models>
+      <Model type="mass_momentum_energy_src">
+        <MassMomEng_src>
+          <material> atmosphere   </material>
+          
+          <sources>
+            <geom_object>
+              <cylinder label="fan_top">
+                <top>    [ 0.0, 0.42, 0.0]  </top>
+                <bottom> [ 0.0, 0.40, 0.0]  </bottom>
+                <radius>    0.05          </radius>
+              </cylinder>
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>    [0.0,-2.0,0.0]   </velocity_src>
+                <density_src>      0               </density_src>
+                <temperature_src>  0               </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_right">
+                <top>    [ 0.42, 0.0, 0.0]    </top>
+                <bottom> [ 0.40, 0.0, 0.0]    </bottom>
+                <radius>    0.05              </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>    [-2.0,0.0,0.0]   </velocity_src>
+                <density_src>      0               </density_src>
+                <temperature_src>  0               </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_bottom">
+                <top>    [ 0.0, -0.40, 0.0]     </top>
+                <bottom> [ 0.0, -0.42, 0.0]     </bottom>
+                <radius>    0.05                </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>   [0.0,2.0,0.0]    </velocity_src>
+                <density_src>      0              </density_src>
+                <temperature_src>  0              </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_left">
+                <top>    [ -0.40, 0.0, 0.0]   </top>
+                <bottom> [ -0.42, 0.0, 0.0]   </bottom>
+                <radius>    0.05                </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>   [2.0,0.0,0.0]    </velocity_src>
+                <density_src>      0              </density_src>
+                <temperature_src>  0              </temperature_src>
+              </algorithm>
+            </geom_object>
+          </sources>
+        
+        </MassMomEng_src>
+      </Model>
+
+       
+    <!--____________________________________________________________________-->
+    <!--  Use passiveScalar model to transport two identical scalars        -->
+      <Model type="PassiveScalar">
+        <PassiveScalar>
+          <material>atmosphere</material>
+          <scalar name="f">
+            <test_conservation>       true            </test_conservation>
+            
+            <constants>
+              <diffusivity>              0.0           </diffusivity>
+            </constants>
+            
+            <initialization>
+              <geom_object>
+                  <box label="wholeDomain">             </box>
+                <scalar>    0.00   </scalar>
+              </geom_object>
+            </initialization>
+
+            <interiorSources>
+              <geom_object>
+                <cylinder label = "fan_top"/>
+                <scalar>    1 </scalar>
+                <maxScalar> 1 </maxScalar>
+              </geom_object>
+              <geom_object>
+                <cylinder label = "fan_right"/>
+                <scalar>    2 </scalar>
+                <maxScalar> 2 </maxScalar>
+              </geom_object>
+              <geom_object>
+                <cylinder label = "fan_bottom"/>
+                <scalar>    3 </scalar>
+                <maxScalar> 3 </maxScalar>
+              </geom_object>
+              <geom_object>
+                <cylinder label = "fan_left"/>
+                <scalar>    4 </scalar>
+                <maxScalar> 4 </maxScalar>
+              </geom_object>
+            </interiorSources>
+
+          </scalar>
+        </PassiveScalar>
+      </Model>
+      
+      <!--____________________________________________________________________-->
+      <!--  Use tracer particles   -->    
+      <Model type="TracerParticles">
+        <TracerParticles>
+          <material>atmosphere</material>
+          
+          <cloneVariables>
+            <CCVarLabel label="scalar-f"/>
+            <CCVarLabel label="press_CC"/>
+          </cloneVariables>
+          
+          <tracer name="f">
+            <initialization>
+              <geom_object>
+                <cylinder label = "fan_top"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_right"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_bottom"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_left"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+            </initialization>
+
+            <interiorSources>
+              <geom_object>
+                <cylinder label = "fan_top"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            
+              <geom_object>
+                <cylinder label = "fan_right"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_bottom"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_left"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            </interiorSources>
+
+          </tracer>
+        </TracerParticles>
+      </Model>
+    </Models>      
+   
+</Uintah_specification>

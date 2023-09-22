@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -392,6 +392,7 @@ namespace Uintah {
 
       m_tMatVecSetup = hypre_InitializeTiming("Matrix + Vector setup");
       m_tSolveOnly   = hypre_InitializeTiming("Solve time");
+      m_tCopySolution = hypre_InitializeTiming("Copy Solution");
 
 
        //________________________________________________________
@@ -950,6 +951,8 @@ namespace Uintah {
 
         //__________________________________
         // Push the solution into Uintah data structure
+        hypre_BeginTiming( m_tCopySolution );
+
         for(int p=0;p<patches->size();p++) {
           const Patch* patch = patches->get(p);
           printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
@@ -999,6 +1002,8 @@ namespace Uintah {
           });
           //-----------------  end of hypre-gpu  -----------------
         }
+
+        hypre_EndTiming( m_tCopySolution );
         //__________________________________
         // clean up
          m_firstPassThrough  = false;
@@ -1014,6 +1019,7 @@ namespace Uintah {
         hypre_PrintTiming   ("Hypre Timings:", pg->getComm());
         hypre_FinalizeTiming( m_tMatVecSetup );
         hypre_FinalizeTiming( m_tSolveOnly );
+        hypre_FinalizeTiming( m_tCopySolution );
         hypre_FinalizeTiming( m_tHypreAll );
         hypre_ClearTiming();
 
@@ -1242,9 +1248,10 @@ namespace Uintah {
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these
     // hypre timings, #define HYPRE_TIMING in HypreSolver.h
-    int m_tHypreAll;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
-    int m_tSolveOnly;   // Tracks time taken by hypre to solve the system of equations
-    int m_tMatVecSetup; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    int m_tHypreAll;     // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int m_tSolveOnly;    // Tracks time taken by hypre to solve the system of equations.
+    int m_tMatVecSetup;  // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box values.
+    int m_tCopySolution; // Tracks the time spent pushing solution back to Uintah Array3
 
   }; // class HypreStencil7
 
@@ -1601,6 +1608,52 @@ namespace Uintah {
       throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
 
+    //__________________________________
+    //  Computes and requires
+
+    // Matrix A
+    task->requires(which_A_dw, A_label, Ghost::None, 0);
+
+    // Solution X
+    if(modifies_X){
+      task->modifies( x_label );
+    } else {
+      task->computes( x_label );
+    }
+
+    // Initial Guess
+    if(guess_label){
+      task->requires(which_guess_dw, guess_label, Ghost::None, 0);
+    }
+
+    // RHS  B
+    task->requires(which_b_dw, b_label, Ghost::None, 0);
+
+    // timestep
+    // it could come from old_dw or parentOldDw
+    Task::WhichDW old_dw = m_params->getWhichOldDW();
+    task->requires( old_dw, m_timeStepLabel );
+
+    // solve struct
+    if (isFirstSolve) {
+      task->requires( Task::OldDW, hypre_solver_label);
+      task->computes( hypre_solver_label);
+    }  else {
+      task->requires( Task::NewDW, hypre_solver_label);
+    }
+
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
+
+    task->setType(Task::Hypre);
+
+    if( m_params->getRecomputeTimeStepOnFailure() ){
+      task->computes( VarLabel::find(abortTimeStep_name) );
+      task->computes( VarLabel::find(recomputeTimeStep_name) );
+    }
+
+    LoadBalancer * lb = sched->getLoadBalancer();
+
+    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
   //---------------------------------------------------------------------------------------------

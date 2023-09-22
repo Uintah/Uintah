@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -285,8 +285,8 @@ private:
   Vector    m_dcell{};
 
   // The spatial range of the level.
-  BBox      m_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
-  BBox      m_int_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) };
+  BBox      m_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) };
+  BBox      m_int_spatial_range{ Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) };
 
   bool      m_isNonCubicDomain{false};                    // is level non cubic level
   void      setIsNonCubicLevel();

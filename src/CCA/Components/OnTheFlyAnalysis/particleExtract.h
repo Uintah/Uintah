@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,13 +39,13 @@
 #include <vector>
 
 namespace Uintah {
-  
+
 
 /**************************************
 
 CLASS
    particleExtract
-   
+
 GENERAL INFORMATION
 
    particleExtract.h
@@ -55,27 +55,27 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    particleExtract
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
   class particleExtract : public AnalysisModule {
   public:
     particleExtract(const ProcessorGroup* myworld,
                     const MaterialManagerP materialManager,
                     const ProblemSpecP& module_spec);
-    
+
     particleExtract();
-                    
+
     virtual ~particleExtract();
-   
+
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
@@ -83,48 +83,44 @@ WARNING
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
 
     virtual void outputProblemSpec(ProblemSpecP& ps){};
-    
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
-                                    
-    virtual void restartInitialize(){};
-                                    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
-    
+
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level);
-   
+
   private:
 
-    void initialize(const ProcessorGroup*, 
+    void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void doAnalysis_preReloc(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-    
+
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void createFile(std::string& filename, FILE*& fp);
-    
-    void createDirectory(std::string& lineName, std::string& levelIndex);
-    
+
     bool doMPMOnLevel(int level, int numLevels);
-                    
-    
+
+
     // general labels
     class particleExtractLabel {
     public:
@@ -132,19 +128,18 @@ WARNING
       VarLabel* filePointerLabel;
       VarLabel* filePointerLabel_preReloc;
     };
-    
-    particleExtractLabel* ps_lb;
+
+    particleExtractLabel* m_lb;
     MPMLabel* M_lb;
-       
+
     //__________________________________
     // global constants
     double d_colorThreshold;
     std::vector<VarLabel*> d_varLabels;
 
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
-    MaterialSubset* d_matl_subset;
-    std::set<std::string> d_isDirCreated;        
+    const Material* d_matl        {nullptr};
+    MaterialSet   * d_matl_set    {nullptr};
+    MaterialSubset* d_matl_subset {nullptr};
   };
 }
 

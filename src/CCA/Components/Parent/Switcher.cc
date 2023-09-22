@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -363,6 +363,7 @@ void Switcher::scheduleRestartInitialize(const LevelP     & level,
                                                SchedulerP & sched)
 {
   printSchedule(level,switcher_dbg,"Switcher::scheduleRestartInitialize");
+  d_restarting = true;
   d_app->scheduleRestartInitialize(level,sched);
 }
 //______________________________________________________________________
@@ -868,8 +869,6 @@ Switcher::needRecompile( const GridP & grid )
     
     setDelT( m_delTInitialMax );
 
-    // This is needed to get the "ICE surrounding matl"
-    d_app->restartInitialize();
     m_materialManager->finalizeMaterials();
 
     proc0cout << "__________________________________\n\n";
@@ -928,14 +927,6 @@ Switcher::readSwitcherState( const ProblemSpecP     & spec,
   }
 
   proc0cout << "  Switcher RESTART: component index = " << d_componentIndex << std::endl;
-}
-
-//______________________________________________________________________
-//
-void Switcher::restartInitialize()
-{
-  d_restarting = true;
-  d_app->restartInitialize();
 }
 
 //______________________________________________________________________

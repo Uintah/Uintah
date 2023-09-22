@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2019 The University of Utah
+ * Copyright (c) 2019-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,7 @@
 
 #include <expression/ExprLib.h>
 
-// forward decalrations -----
+// forward declarations -----
 struct AllocInfo;
 
 namespace Uintah{ class Patch; }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -352,7 +352,7 @@ AMRSimulationController::run()
     // from postProcessUda and needs to be done before
     // advanceDataWarehouse is called.
     if (m_post_process_uda) {
-      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid();
+      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid( m_current_gridP );
     }
 
     // After one step (either time step or initialization) and the
@@ -495,8 +495,6 @@ AMRSimulationController::doInitialTimeStep()
     m_application->scheduleInitializeSystemVars( m_current_gridP,
                                                  m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                                  m_scheduler );
-
-    m_application->restartInitialize();
 
     for (int i = m_current_gridP->numLevels() - 1; i >= 0; i--) {
       m_application->scheduleRestartInitialize( m_current_gridP->getLevel(i), m_scheduler );

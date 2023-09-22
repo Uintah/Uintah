@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,15 +23,12 @@
  */
 
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
-#include <CCA/Components/PostProcessUda/statistics.h>
-#include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <string>
 #include <iostream>
 
 using namespace Uintah;
-using namespace postProcess;
 
 ModuleFactory::ModuleFactory()
 {
@@ -49,43 +46,34 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
                       Output            * dataArchiver,
                       DataArchive       * dataArchive)
 {
- 
- 
-// scinew PostProcessCommon( materialManager, dataArchiver, dataArchive);
- 
+  
   std::string module("");
   
-  ProblemSpecP da_ps = prob_spec->findBlock("PostProcess");
+  ProblemSpecP PP_ps = prob_spec->findBlock("PostProcess");
+
+  if( !PP_ps ) {
+    throw ProblemSetupException( "\nERROR<PostProcess>: Could not find find <PostPocess> tag. \n", __FILE__, __LINE__ );
+  }
 
   std::vector<Module*> modules;
- 
-  if (da_ps) {
   
-    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
-                        
-      if( !module_ps ) {
-        throw ProblemSetupException( "\nERROR<PostProcess>: Could not find find <Module> tag. \n", __FILE__, __LINE__ );
-      }
-      
-      std::map<std::string, std::string> attributes;
-      module_ps->getAttributes(attributes);
-      module = attributes["type"];
+  for( ProblemSpecP module_ps = PP_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
 
-      if ( module == "statistics" ) {
-        modules.push_back ( scinew postProcess::statistics( module_ps, materialManager, dataArchiver, dataArchive) );
-      }
-      else if ( module == "spatioTemporalAvg" ) {
-        modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, materialManager, dataArchiver, dataArchive) );
-      }
-      else if ( module == "reduceUda" ) {
-        // do nothing
-      }      
-      else {
-        std::ostringstream msg;
-        msg << "\nERROR<PostProcess>: Unknown analysis module : " << module << ".\n";
-        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-      }
+    if( !module_ps ) {
+      throw ProblemSetupException( "\nERROR<PostProcess>: Could not find find <Module> tag. \n", __FILE__, __LINE__ );
+    }
+
+    std::map<std::string, std::string> attributes;
+    module_ps->getAttributes(attributes);
+    module = attributes["name"];
+
+#if 0     // Needs to be filled in.
+
+    if ( module == "reduceUda" ) {
+      // do nothing
     } 
-  }
+#endif
+  } 
+
   return modules;
 }

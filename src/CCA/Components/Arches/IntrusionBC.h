@@ -42,11 +42,11 @@ namespace Uintah{
 
   class VarLabel;
   class ArchesLabel;
-  class MPMArchesLabel;
   class ArchesVariables;
   class ArchesConstVariables;
   class Properties;
   class TableLookup;
+  class output;
 
   class IntrusionBC {
 
@@ -55,8 +55,12 @@ namespace Uintah{
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
       enum INLET_TYPE { FLAT, HANDOFF, MASSFLOW, TABULATED };
 
-      IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
-                   TableLookup* table_lookup, int WALL );
+      IntrusionBC( const ArchesLabel* lab,
+                    Properties* props,
+                    TableLookup* table_lookup,
+                    int WALL,
+                    Output * output );
+
       ~IntrusionBC();
 
       /** @brief Return true if there is a velocity type inlet **/
@@ -121,6 +125,12 @@ namespace Uintah{
                                             const MaterialSet* matls );
 
       void printIntrusionInformation( const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw );
+      /** writes intrusion to a file **/
+      void writeIntrusionInformation( const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
@@ -976,6 +986,19 @@ namespace Uintah{
         // ignore missing bc spec
         bool ignore_missing_bc;                            /// Don't throw an error when a bc spec is found.
 
+
+        std::ostream&
+        print(std::ostream & out){
+          out << std::left << std::setw(10);
+          out << ", name: (" << std::setw(10);
+          out << name
+              << "), type: " << type
+              << ", physical_area: " <<  physical_area
+              << ", alpha_g: " << alpha_g
+              << ", ignore_missing_bc: " << ignore_missing_bc
+              << ", has_been_initialized: " << has_been_initialized;
+          return out;
+        }
       };
 
       typedef std::map<std::string, Boundary> IntrusionMap;
@@ -1014,17 +1037,17 @@ namespace Uintah{
 
       std::vector<Boundary> _intrusions;
       bool _has_intrusion_inlets{false};
-      IntrusionMap _intrusion_map;
-      Uintah::PatchSet* localPatches_{nullptr};
+      IntrusionMap _intrusion_map;                        // map of intrusions after pruning
+      IntrusionMap _intrusion_map_org;                    // orginal map of intrusions
+
       const ArchesLabel* _lab;
-      const MPMArchesLabel* _mpmlab;
       const VarLabel* m_alpha_geom_label;                  ///< Geometry modification factor
       Properties* _props;
       TableLookup* _table_lookup;
       int _WALL;
       bool _intrusion_on;
       bool _do_energy_exchange;
-      bool _mpm_energy_exchange;
+      Output * _output {nullptr};
 
       Uintah::MasterLock _bc_face_iterator_lock{};
       Uintah::MasterLock _interior_cell_iterator_lock{};

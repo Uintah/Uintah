@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,7 +55,7 @@ namespace Uintah {
   //////////////////////////////////////////////////////////////////////////
   /*!
     \class ConstitutiveModel
-   
+
     \brief Base class for contitutive models.
 
     \author Steven G. Parker \n
@@ -69,7 +69,7 @@ namespace Uintah {
 
   class ConstitutiveModel {
   public:
-         
+
     ConstitutiveModel(MPMFlags* MFlag);
     //    ConstitutiveModel(const ConstitutiveModel* cm);
     virtual ~ConstitutiveModel();
@@ -77,13 +77,13 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,
                                    bool output_cm_tag = true) = 0;
 
-         
+
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-                                     
+
     virtual void computeStressTensorImplicit(const PatchSubset* patches,
                                              const MPMMaterial* matl,
                                              DataWarehouse* old_dw,
@@ -96,12 +96,33 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
+/*`==========TESTING==========*/
+    ///////////////////////////////////////////////////////////////////////
+    /*!  computes and requires if the model is reinitialize
+         This usually is called when a constitutive model is switched during a
+         restart */
+    ///////////////////////////////////////////////////////////////////////
+    virtual void addReinitializeComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patches) const;
+/*===========TESTING==========`*/
+
     ///////////////////////////////////////////////////////////////////////
     /*! Initialize the variables used in the CM */
     ///////////////////////////////////////////////////////////////////////
     virtual void initializeCMData(const Patch* patch,
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw) = 0;
+
+
+/*`==========TESTING==========*/
+    ///////////////////////////////////////////////////////////////////////
+    /*! reinitialize the variables used in the CM */
+    ///////////////////////////////////////////////////////////////////////
+    virtual void reinitializeCMData(const Patch* patch,
+                                    const MPMMaterial* matl,
+                                    DataWarehouse* new_dw);
+/*===========TESTING==========`*/
 
     ///////////////////////////////////////////////////////////////////////
     /*! Set up the computes and requires for the task that computes the
@@ -138,7 +159,7 @@ namespace Uintah {
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl, 
+                                   const MPMMaterial* matl,
                                    double temperature) = 0;
 
     virtual double getCompressibility() = 0;
@@ -147,19 +168,19 @@ namespace Uintah {
 
     double computeRhoMicro(double press,double gamma,
                            double cv, double Temp, double rho_guess);
-         
+
     void computePressEOS(double rhoM, double gamma,
                          double cv, double Temp,
                          double& press, double& dp_drho,
                          double& dp_de);
 
     //////////
-    // Convert J-integral into stress intensity for hypoelastic materials 
+    // Convert J-integral into stress intensity for hypoelastic materials
     // (for FRACTURE)
     virtual void ConvertJToK(const MPMMaterial* matl,const std::string& stressState,
                     const Vector& J,const double& C,const Vector& V,Vector& SIF);
 
-    //////////                       
+    //////////
     // Detect if crack propagates and the direction (for FRACTURE)
     virtual short CrackPropagates(const double& Vc,const double& KI,
                                   const double& KII,double& theta);
@@ -207,7 +228,7 @@ namespace Uintah {
                                            Vector dx,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp);
-                                                                                
+
     void computeDeformationGradientFromIncrementalDisplacement(
                                            constNCVariable<Vector> IncDisp,
                                            ParticleSubset* pset,
@@ -232,12 +253,16 @@ namespace Uintah {
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
+/*`==========TESTING==========*/
+    bool d_reinitializeCMData {false};    // if the user wants to reset the particles
+/*===========TESTING==========`*/
+
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
                                         std::vector<IntVector>& ni,
                                         std::vector<Vector>& d_S,
-                                        const double* oodx, 
+                                        const double* oodx,
                                         constNCVariable<Vector>& gVelocity)
       {
           for(int k = 0; k < flag->d_8or27; k++) {
@@ -246,7 +271,7 @@ namespace Uintah {
               double d_SXoodx = d_S[k][j]*oodx[j];
               for (int i = 0; i<3; i++) {
                 velGrad(i,j) += gvel[i] * d_SXoodx;
-                //std::cerr << "Grid vel = " << gvel << " dS = " << d_S[k][j] 
+                //std::cerr << "Grid vel = " << gvel << " dS = " << d_S[k][j]
                 //          << " oodx = " << oodx[j] << endl;
                 //std::cerr << " VelGrad(" << i << "," << j << ") = " << velGrad(i,j) << endl;
               }
@@ -279,7 +304,7 @@ namespace Uintah {
     inline void computeVelocityGradient(Matrix3& velGrad,
                                         std::vector<IntVector>& ni,
                                         std::vector<Vector>& d_S,
-                                        const double* oodx, 
+                                        const double* oodx,
                                         const short pgFld[],
                                         constNCVariable<Vector>& gVelocity,
                                         constNCVariable<Vector>& GVelocity)
@@ -296,12 +321,12 @@ namespace Uintah {
           }
         }
       };
-    
+
     /*! Calculate gradient of a vector field for 8 noded interpolation */
     inline void computeGrad(Matrix3& grad,
                             std::vector<IntVector>& ni,
                             std::vector<Vector>& d_S,
-                            const double* oodx, 
+                            const double* oodx,
                             constNCVariable<Vector>& gVec)
       {
         // Compute gradient matrix
@@ -322,7 +347,7 @@ namespace Uintah {
     inline void computeGradAndBmats(Matrix3& grad,
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
-                                    const double* oodx, 
+                                    const double* oodx,
                                     constNCVariable<Vector>& gVec,
                                     const Array3<int>& l2g,
                                     double B[6][24],
@@ -333,7 +358,7 @@ namespace Uintah {
       \brief Calculate the artificial bulk viscosity (q)
 
       \f[
-      q = \rho (A_1 | c D_{kk} dx | + A_2 D_{kk}^2 dx^2) 
+      q = \rho (A_1 | c D_{kk} dx | + A_2 D_{kk}^2 dx^2)
       ~~\text{if}~~ D_{kk} < 0
       \f]
       \f[
@@ -349,9 +374,9 @@ namespace Uintah {
     */
 
       int l2g_node_num = -1;
-      
+
       computeGrad(grad,ni,d_S,oodx,gVec);
-      
+
       for (int k = 0; k < 8; k++) {
         B[0][3*k] = d_S[k][0]*oodx[0];
         B[3][3*k] = d_S[k][1]*oodx[1];
@@ -359,21 +384,21 @@ namespace Uintah {
         B[1][3*k] = 0.;
         B[2][3*k] = 0.;
         B[4][3*k] = 0.;
-        
+
         B[1][3*k+1] = d_S[k][1]*oodx[1];
         B[3][3*k+1] = d_S[k][0]*oodx[0];
         B[4][3*k+1] = d_S[k][2]*oodx[2];
         B[0][3*k+1] = 0.;
         B[2][3*k+1] = 0.;
         B[5][3*k+1] = 0.;
-        
+
         B[2][3*k+2] = d_S[k][2]*oodx[2];
         B[4][3*k+2] = d_S[k][1]*oodx[1];
         B[5][3*k+2] = d_S[k][0]*oodx[0];
         B[0][3*k+2] = 0.;
         B[1][3*k+2] = 0.;
         B[3][3*k+2] = 0.;
-        
+
         Bnl[0][3*k] = d_S[k][0]*oodx[0];
         Bnl[1][3*k] = 0.;
         Bnl[2][3*k] = 0.;
@@ -383,7 +408,7 @@ namespace Uintah {
         Bnl[0][3*k+2] = 0.;
         Bnl[1][3*k+2] = 0.;
         Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
-        
+
         // Need to loop over the neighboring patches l2g to get the right
         // dof number.
         l2g_node_num = l2g[ni[k]];
@@ -425,7 +450,7 @@ namespace Uintah {
 
 
     /////////////////////////////////////////////////////////////////
-    /*! Carry forward the data common to all constitutive models 
+    /*! Carry forward the data common to all constitutive models
         when using RigidMPM.
         Called by carryForward */
     /////////////////////////////////////////////////////////////////
@@ -442,12 +467,12 @@ namespace Uintah {
 
     static const double LargeTimestep;
 
-    // don't store MaterialManagerP or it will add a reference 
+    // don't store MaterialManagerP or it will add a reference
     // that will never be removed
     MaterialManager* d_materialManager;
   };
 } // End namespace Uintah
-      
+
 
 
 #endif  // __CONSTITUTIVE_MODEL_H__

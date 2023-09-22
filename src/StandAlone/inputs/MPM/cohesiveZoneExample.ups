@@ -1,0 +1,184 @@
+<Uintah_specification>
+    <Meta>
+        <title>two layer HE Compaction</title>
+        <info>
+          This file demonstrates the use of cohesive zones.
+        </info>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+    <Time>
+        <maxTime>50.0</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e2</delt_max>
+        <timestep_multiplier>.25</timestep_multiplier>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <artificial_viscosity>true</artificial_viscosity>
+        <artificial_viscosity_coeff1>0.3</artificial_viscosity_coeff1>
+        <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
+        <use_cohesive_zones>true</use_cohesive_zones>
+        <minimum_mass_for_acc>1.e-4</minimum_mass_for_acc>
+        <withColor>    true  </withColor>
+    </MPM>
+    <DataArchiver>
+        <filebase>Homalite.uda</filebase>
+        <outputInterval>0.5</outputInterval>
+        <save label="BndyForce_zminus"></save>
+        <save label="p.x"></save>
+        <save label="p.velocity"></save>
+        <save label="p.stress"></save>
+        <save label="g.mass"></save>
+        <save label="g.velocity"></save>
+        <save label="g.externalforce"></save>
+        <save label="cz.failed"></save>
+        <save label="cz.area"></save>
+        <save label="cz.force"></save>
+        <save label="cz.norm"></save>
+        <save label="cz.disptop"></save>
+        <save label="cz.dispbottom"></save>
+        <save label="cz.separation"></save>
+<!--
+        <save label="p.mass"></save>
+        <save label="p.volume"></save>
+        <save label="p.deformationMeasure"></save>
+        <save label="g.velocity_star"></save>
+        <save label="g.acceleration"></save>
+        <save label="g.internalforce"></save>
+-->
+        <checkpoint interval="10.0" cycle="2"></checkpoint>
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="Piston">
+                <density>1246.e3</density> 
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>5.417e4</bulk_modulus>
+                    <shear_modulus>1.94e4</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,1]</res>
+                    <velocity>[1000.0e-6,0.0,0.0]</velocity>
+                    <temperature>0</temperature>
+                    <color>0</color>
+                    <box label="Piston">
+                        <min>[-.1, -5.0, 0.0]</min>
+                        <max>[0.0, -0.1, 0.1]</max>
+                    </box>
+                </geom_object>
+            </material>
+            <material name="top_plate">
+                <density>1246.e3</density> 
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>5.417e4</bulk_modulus>
+                    <shear_modulus>1.94e4</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,1]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                    <temperature>0</temperature>
+                    <color>1</color>
+                    <difference>
+                     <box>
+                      <min>[ 0.0,  0.0, 0.0]</min>
+                      <max>[12.5, 14.8, 0.1]</max>
+                     </box>
+                     <box label="Notch">
+                      <min>[0.0, -.1, 0.0]</min>
+                      <max>[2.5, 0.1, 0.1]</max>
+                     </box>
+                    </difference>
+                </geom_object>
+            </material>
+            <material name="bottom_plate">
+                <density>1246.e3</density> 
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>5.417e4</bulk_modulus>
+                    <shear_modulus>1.94e4</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,1]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                    <temperature>0</temperature>
+                    <color>2</color>
+                    <difference>
+                     <box>
+                      <min>[ 0.0,-14.8, 0.0]</min>
+                      <max>[12.5,  0.0, 0.1]</max>
+                     </box>
+                     <box label="Notch"/>
+                    </difference>
+                </geom_object>
+            </material>
+
+            <cohesive_zone>
+              <delta_n> 0.00004   </delta_n>
+              <delta_t> 0.0000933 </delta_t>
+              <sig_max> 240. </sig_max>
+              <tau_max> 240. </tau_max>
+              <cz_filename>HOM.txt.05</cz_filename>
+            </cohesive_zone>
+<!--
+-->
+            <contact>
+                <type>friction_LR</type>
+                <materials>[1,2]</materials>
+                <mu>0.1</mu>
+            </contact>
+            
+            <contact>
+                <type>specified</type>
+                <master_material>0</master_material>
+                <materials>[0,2]</materials>
+                <stop_time>15.0</stop_time>
+                <direction>[1, 1, 1]</direction>
+            </contact>
+
+        </MPM>
+    </MaterialProperties>
+    <Grid>
+        <Level>
+            <periodic>[0,0,0]</periodic>
+            <Box label="1">
+                <lower>[-1.0,-10.0,0.0]</lower>
+                <upper>[12.5, 10.0,0.1]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[1,2,1]</patches>
+                <resolution>[135,200,1]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

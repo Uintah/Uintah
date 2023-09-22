@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,6 +60,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #if defined(UINTAH_USING_GPU)
@@ -85,6 +86,7 @@ using namespace Uintah;
 namespace Uintah {
 
   extern Dout g_mpi_dbg;
+  extern Dout g_DA_dbg;
 
 #if defined(UINTAH_USING_GPU)
   extern DebugStream gpudbg;
@@ -333,12 +335,68 @@ OnDemandDataWarehouse::get(       ReductionVariableBase & var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
-    proc0cout << "get() failed in dw: " << this << ", level: " << level << "\n";
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(ReductionVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank() );
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
   m_level_DB.get( label, matlIndex, level, var );
+}
+
+//______________________________________________________________________
+//    get a std::map<int,T> of reduction variables from the DW
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+std::map<int,T> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel       * label
+                                                       , const MaterialSubset * matls
+                                                       )
+{
+  std::map<int,T>  reductionVars;
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+    sumVartype reductionVar;
+
+    get( reductionVar, label, nullptr, dwi);
+    reductionVars[dwi] = reductionVar;
+  }
+
+  return reductionVars;
+}
+//
+// Explicit template instantiations:
+template std::map<int,double> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+template std::map<int,Vector> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+
+//__________________________________
+//        double
+std::map<int,double>
+OnDemandDataWarehouse::get_sum_vartypeD( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+  return get_sum_vartypeT<double>( label,  matls );
+}
+
+//__________________________________
+//        Uintah::Vector
+std::map<int,Vector>
+OnDemandDataWarehouse::get_sum_vartypeV( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+  return get_sum_vartypeT<Vector>( label,  matls );
 }
 
 //______________________________________________________________________
@@ -352,7 +410,15 @@ OnDemandDataWarehouse::get(       SoleVariableBase& var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(SoleVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank());
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex, "on sole", __FILE__, __LINE__) );
   }
 
@@ -1014,6 +1080,12 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
 
     ReductionVariableBase* var;
 
+    // debugging info
+    int levelIndx = level ? level->getIndex() : -1;
+    DOUTR(g_mpi_dbg, " DW:reduceMPI label: " << label->getName() << " matlIndex " << matlIndex << " level: "
+          << levelIndx << " exists: " <<  m_level_DB.exists( label, matlIndex, level ) );
+
+
     if( m_level_DB.exists( label, matlIndex, level ) ) {
       var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     }
@@ -1022,7 +1094,6 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
       var = dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
       var->setBenignValue();
 
-      DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " reduceMPI: initializing (" <<label->getName() <<")" );
       m_level_DB.put( label, matlIndex, level, var, d_scheduler->copyTimestep(), true );
     }
 
@@ -1114,7 +1185,57 @@ OnDemandDataWarehouse::put( const ReductionVariableBase & var
   // Put it in the database
   bool init = (d_scheduler->copyTimestep()) || !(m_level_DB.exists( label, matlIndex, level ));
   m_level_DB.putReduce( label, matlIndex, level, var.clone(), init );
+
 }
+
+//______________________________________________________________________
+//
+//    Put a std::map of Sum<T> reduction variables
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+void
+OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, T>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls
+                                      )
+{
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+
+    put( sumVartype(reductionVars[dwi]),  label, nullptr, dwi);
+  }
+}
+
+//
+// Explicit template instantiations:
+
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, double> rv ,const VarLabel * l,const MaterialSubset * matls);
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, Vector> rv ,const VarLabel * l,const MaterialSubset * matls);
+
+//__________________________________
+//  Vector
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, Vector>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<Vector>( reductionVars, label, matls );
+}
+//__________________________________
+//    double
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, double>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<double>( reductionVars, label, matls );
+}
+
 
 //______________________________________________________________________
 //
@@ -1201,6 +1322,27 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex   numParticles
 
   return psubset;
 }
+//______________________________________________________________________
+//  Delete the particle subset from the
+void
+OnDemandDataWarehouse::deleteParticleSubset( ParticleSubset*  pset )
+{
+  IntVector low        = pset->getLow();
+  IntVector high       = pset->getHigh();
+  const Patch*  patch  = pset->getPatch();
+  int matlIndex        = pset->getMatlIndex();
+
+  if (g_dw_get_put_dbg.active()) {
+    std::stringstream mesg;
+    mesg << " DW ID " << getID() << " deleteParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+         << " (" << low << ", " << high << ") size: " << pset->numParticles() << "\n";
+    DOUTR(true, mesg.str());
+  }
+
+  ASSERT(!patch->isVirtual());
+
+  deletePSetRecord( m_pset_db, patch, low, high, matlIndex, pset );
+}
 
 //______________________________________________________________________
 //
@@ -1278,6 +1420,41 @@ OnDemandDataWarehouse::insertPSetRecord(       psetDBType     & subsetDB
     psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
     subsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, psubset));
     psubset->addReference();
+  }
+}
+//______________________________________________________________________
+//    Delete a particleSubset record from the data base
+void
+OnDemandDataWarehouse::deletePSetRecord(       psetDBType     & subsetDB
+                                       , const Patch          * patch
+                                       ,       IntVector        low
+                                       ,       IntVector        high
+                                       ,       int              matlIndex
+                                       ,       ParticleSubset * psubset
+                                       )
+{
+
+#if SCI_ASSERTION_LEVEL >= 1
+  ParticleSubset* subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
+  if (subset == nullptr) {
+    if (d_myworld->myRank() == 0) {
+      DOUTR( true, "  No particle set found: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high );
+      printParticleSubsets();
+    }
+    SCI_THROW(InternalError("Particle set was not found for deletiion", __FILE__, __LINE__));
+  }
+#endif
+
+  {
+    psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
+    psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+
+    subsetDB.erase(key);
+
+    if(psubset && psubset->removeReference()) {
+      delete psubset;
+    }
   }
 }
 //______________________________________________________________________
@@ -2782,6 +2959,15 @@ OnDemandDataWarehouse::print(       std::ostream & intout
     checkGetAccess( label, matlIndex, nullptr );
     ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     var->print( intout );
+
+    // Debugging output
+    if( g_DA_dbg.active() ){
+      std::ostringstream me;
+      var->print( me );
+
+      int levelIndx = level ? level->getIndex() : -1;
+      DOUTR(true, " OnDemandDataWarehouse::print " << label->getName() << " matl: "<< matlIndex << " "  << me.str() << " level: " << levelIndx );
+    }
   }
   catch( UnknownVariable& ) {
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on print ", __FILE__, __LINE__) );

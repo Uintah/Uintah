@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,8 +58,14 @@ GeometryObject::GeometryObject(GeometryPieceP   geom_piece,
         case Integer:
         {
           int val;
-          ps->require(it->name,val);
-          d_int_data[it->name] = val;
+          if(it->name == "numLevelsParticleFilling") {
+            ps->getWithDefault( it->name, val, 1);
+            d_int_data[it->name] = val;
+          } 
+          else {
+            ps->require(it->name,val);
+            d_int_data[it->name] = val;
+          }
           break;
         }
         case Vector:

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -138,10 +138,6 @@ void HypreDriverSStruct::cleanup(void)
     HYPRE_SStructGridDestroy(_grid);
     _exists[SStructGrid] = SStructDestroyed;
   }
-  if (_vars) {
-    delete _vars;
-    _vars = 0;
-  }
 }
 //______________________________________________________________________
 void
@@ -223,8 +219,8 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
 
   _exists[SStructGrid] = SStructCreated;
-  _vars = scinew HYPRE_SStructVariable[CC_NUM_VARS];
-  _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
+  
+  HYPRE_SStructVariable vars[1] = {HYPRE_SSTRUCT_VARIABLE_CELL};  // We use only cell centered var
 
   // if my processor doesn't have patches on a given level, then we need to create
   // some bogus (irrelevent inexpensive) data so hypre doesn't crash.
@@ -232,19 +228,16 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   for (int p = 0 ; p < _patches->size(); p++) {
     HyprePatch_CC hpatch(_patches->get(p),matl);
-    hpatch.addToGrid(_grid,_vars);
+    hpatch.addToGrid( _grid, vars );
     useBogusLevelData[_patches->get(p)->getLevel()->getIndex()] = false;
   }
   
   for (int l = 0; l < numLevels; l++) {
-    if (useBogusLevelData[l]) {
-      HyprePatch_CC hpatch(l, matl);
-      hpatch.addToGrid(_grid, _vars);
+    if ( useBogusLevelData[l] ) {
+      HyprePatch_CC hpatch( l, matl );
+      hpatch.addToGrid( _grid, vars );
     }
   }
-
-  delete _vars;
-  _vars = 0;
 
   HYPRE_SStructGridAssemble(_grid);
   _exists[SStructGrid] = SStructAssembled;

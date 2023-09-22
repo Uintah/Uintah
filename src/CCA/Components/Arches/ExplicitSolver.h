@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -85,6 +85,8 @@ class RadPropertyCalculator;
 class ExplicitTimeInt;
 class WBCHelper;
 class ArchesParticlesHelper;
+
+
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -95,14 +97,12 @@ public:
   public:
 
     Builder( MaterialManagerP& materialManager,
-             const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
              ApplicationCommon* arches ) :
              _materialManager(materialManager),
-             _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
              _particle_helper(particle_helper),
@@ -114,7 +114,6 @@ public:
 
     ExplicitSolver* build(){
       return scinew ExplicitSolver( _materialManager,
-                                    _MAlb,
                                     _physConst,
                                     _myworld,
                                     _particle_helper,
@@ -125,7 +124,6 @@ public:
   private:
 
     MaterialManagerP& _materialManager;
-    const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
@@ -134,7 +132,6 @@ public:
   };
 
   ExplicitSolver( MaterialManagerP& materialManager,
-                  const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
@@ -448,7 +445,6 @@ public:
   MomentumSolver* d_momSolver;             ///< Momentum solver
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
   MaterialManagerP& d_materialManager;
-  const MPMArchesLabel* d_MAlab;
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
   //NEW TASK INTERFACE STUFF:
@@ -510,6 +506,8 @@ public:
 
   EfficiencyCalculator* d_eff_calculator;
   RadPropertyCalculator* d_rad_prop_calc;
+
+  ApplicationCommon* d_arches;
 
   //Diagnostics
   bool d_printTotalKE;

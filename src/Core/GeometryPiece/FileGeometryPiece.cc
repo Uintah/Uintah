@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -241,7 +241,10 @@ FileGeometryPiece::read_bbox(std::istream & source, Point & min,
 bool
 FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
-  double x1,x2,x3;
+  double inf = std::numeric_limits<double>::infinity();
+  double x1=inf;
+  double x2=inf;
+  double x3=inf;
 
   // CPTI and CPDI can pass the size matrix columns containing rvec1, rvec2, rvec3
   // Other interpolators will default to grid spacing and default orientation
@@ -254,7 +257,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
   //__________________________________
   //  TEXT FILE
   if(d_file_format=="text") {
-    double v1,v2,v3;
+    double v1,v2,v3,vol;
     
     // line always starts with coordinates
     is >> x1 >> x2 >> x3;
@@ -267,9 +270,9 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
       if (*vit=="p.volume") {
-        if(is >> v1) {
-          cout << "v1 = " << v1 << endl;
-          d_volume.push_back(v1);
+        if(is >> vol) {
+          //cout << "v1 = " << v1 << endl;
+          d_volume.push_back(vol);
           file_has_volume=true;
         }
       } else if(*vit=="p.temperature") {
@@ -316,6 +319,29 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
         }
+      }
+
+      // If the volume is provided, but not the size, the particle
+      // size needs to be adjusted to be consistent with the volume
+      if(file_has_volume && !file_has_size){
+        double cbrtVol = cbrt(vol);
+        double s1,s2,s3;
+        s1=1.*cbrtVol; s2=0.; s3=0.;
+        d_rvec1.push_back(Vector(s1,s2,s3));
+        size(0,0)=s1;
+        size(1,0)=s2;
+        size(2,0)=s3;
+        s1=0.; s2=1.*cbrtVol; s3=0.;
+        d_rvec2.push_back(Vector(s1,s2,s3));
+        size(0,1)=s1;
+        size(1,1)=s2;
+        size(2,1)=s3;
+        s1=0.; s2=0.; s3=1.*cbrtVol;
+        d_rvec3.push_back(Vector(s1,s2,s3));
+        size(0,2)=s1;
+        size(1,2)=s2;
+        size(2,2)=s3;
+        file_has_size=true;
       }
 
       if(!is) {

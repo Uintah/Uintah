@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2018 The University of Utah
+ * Copyright (c) 2010-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -242,11 +242,6 @@ namespace WasatchCore{
      */
     void scheduleRestartInitialize( const Uintah::LevelP& level,
                                     Uintah::SchedulerP& sched );
-
-    /**
-     *  \brief Set up things that need to be done on a restart
-     */
-    void restartInitialize();
 
     /**
      *  \brief Set up the Uintah::Task that will calculate the timestep.

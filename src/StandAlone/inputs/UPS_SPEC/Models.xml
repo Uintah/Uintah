@@ -22,28 +22,28 @@
       <cellTypeCoarsenLogic   spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
 
-      <Radiometer             spec="MULTIPLE NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
-        <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>  
+      <Radiometer             spec="MULTIPLE NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">
+        <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>
         <!--IMPORTANT - When comparing directional data from discrete ordinates (DO) to Radiometer data,-->
         <!-- note that signs of the unit normal vector are opposite in the two models. For example, to compare-->
         <!--intensities arriving at the z+ wall from the z- direction, the Radiometer unit normal vector-->
         <!--is (0, 0, -1) while the corresponding direction cosines for DO intensity are (0, 0, 1)-->
-        <normalVector         spec="OPTIONAL VECTOR"/>      
-        <unitNormalVector     spec="OPTIONAL VECTOR"/>                                                   
-        <locationsMin         spec="REQUIRED VECTOR  'positive'"/>                                             
-        <locationsMax         spec="REQUIRED VECTOR  'positive'"/>                                             
-        <nRays                spec="REQUIRED INTEGER 'positive'"/>                                             
+        <normalVector         spec="OPTIONAL VECTOR"/>
+        <unitNormalVector     spec="OPTIONAL VECTOR"/>
+        <locationsMin         spec="REQUIRED VECTOR  'positive'"/>
+        <locationsMax         spec="REQUIRED VECTOR  'positive'"/>
+        <nRays                spec="REQUIRED INTEGER 'positive'"/>
       </Radiometer>
 
       <algorithm                spec="OPTIONAL NO_DATA"
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
 
         <coarsenExtraCells      spec="OPTIONAL BOOLEAN" need_applies_to="type RMCRT_coarseLevel, dataOnion" />
-                
+
         <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
         <haloCells              spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
         <haloLength             spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
-        
+
         <ROI_extents            spec="OPTIONAL NO_DATA"
                                   attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
 
@@ -62,20 +62,78 @@
     <!--__________________________________-->
     <!--  Models used by ICE & MPMICE     -->
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, IandG, JWL, JWLC, JWLpp, ZeroOrder, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar, flameSheet_rxn, DDT0, DDT1, SolidReactionModel, MesoBurn'" >
+                                attribute1="type REQUIRED STRING 'AdiabaticTable, DDT0, DDT1, flameSheet_rxn, Gruneisen, IandG, JWL, JWLC, JWLpp, LightTime, mass_momentum_energy_src, MesoBurn, PassiveScalar, Radiation, Simple_Burn, BinaryProperties, SolidReactionModel, Steady_Burn, Test,, TracerParticles, Unsteady_Burn, ZeroOrder'" >
 
       <!--__________________________________-->
       <!-- mass momentum and energy source model -->
       <MassMomEng_src         spec="OPTIONAL NO_DATA">
         <material             spec="REQUIRED STRING" />
-        <energy_src           spec="REQUIRED DOUBLE"/>
-        <mass_src             spec="REQUIRED DOUBLE"/>
-        <momentum_src         spec="REQUIRED VECTOR"/>
+        <sources              spec="REQUIRED NO_DATA" >
+          <geom_object        spec="MULTIPLE" >
 
-        <mme_src_t_start      spec="OPTIONAL DOUBLE"/>
-        <mme_src_t_final      spec="OPTIONAL DOUBLE"/>
-        <rate                 spec="OPTIONAL DOUBLE 'positive'"/>
+
+            <algorithm          spec="REQUIRED NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixedPrimitiveValues'">,
+              <velocity_src     spec="REQUIRED VECTOR" need_applies_to="type fixedPrimitiveValues"/>
+              <temperature_src  spec="REQUIRED DOUBLE" need_applies_to="type fixedPrimitiveValues"/>
+              <density_src      spec="REQUIRED DOUBLE" need_applies_to="type fixedPrimitiveValues"/>
+              <timeStart        spec="OPTIONAL DOUBLE" need_applies_to="type fixedPrimitiveValues"/>
+              <timeStop         spec="OPTIONAL DOUBLE" need_applies_to="type fixedPrimitiveValues"/>
+            </algorithm>
+
+          </geom_object>
+        </sources>
       </MassMomEng_src>
+
+      <!--__________________________________-->
+      <!--  TracerParticles -->
+      <TracerParticles        spec="OPTIONAL NO_DATA">
+        <modelPreviouslyInitialized
+                              spec="OPTIONAL BOOLEAN"/>
+        <reinitializeDomain
+                              spec="OPTIONAL BOOLEAN"/>
+
+        <material             spec="OPTIONAL STRING"/>
+
+        <timeStart            spec="OPTIONAL DOUBLE 'positive'"/>
+        <timeStop             spec="OPTIONAL DOUBLE 'positive'"/>
+
+        <cloneVariables         spec="OPTIONAL NO_DATA">
+          <CCVarLabel         spec="MULTIPLE NO_DATA" attribute1="label REQUIRED STRING" />
+        </cloneVariables>
+
+        <scalar               spec="OPTIONAL NO_DATA"
+                                attribute1="name REQUIRED STRING" >
+          <initialValue       spec="REQUIRED DOUBLE" />
+          <exponentialDecay   spec="OPTIONAL NO_DATA" >
+            <c1               spec="REQUIRED DOUBLE 'positive'" />
+            <c2               spec="REQUIRED NO_DATA"
+                                 attribute1="type REQUIRED STRING 'constant variable'" >
+              <value          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>
+              <filename       spec="REQUIRED STRING"            need_applies_to="type variable"/>
+            </c2>
+            <c3               spec="OPTIONAL DOUBLE"/>
+          </exponentialDecay>
+        </scalar>
+
+        <tracer               spec="OPTIONAL NO_DATA"
+                                attribute1="name REQUIRED STRING" >
+
+          <initialization       spec="REQUIRED NO_DATA" >
+            <geom_object        spec="MULTIPLE">
+              <particlesPerCell spec="REQUIRED DOUBLE"/>
+            </geom_object>
+          </initialization>
+
+          <interiorSources    spec="OPTIONAL NO_DATA" >
+            <geom_object      spec="MULTIPLE">
+              <particlesPerCellPerSecond
+                              spec="REQUIRED DOUBLE"/>
+            </geom_object>
+          </interiorSources>
+        </tracer>
+      </TracerParticles>
+
 
       <!--__________________________________-->
       <!-- Test -->
@@ -112,36 +170,35 @@
       </JWLpp>
 
       <!--__________________________________-->
-      <!--  SimpleRxn -->
-      <SimpleRxn              spec="OPTIONAL NO_DATA">
+      <!--  BinaryProperties -->
+      <BinaryProperties              spec="OPTIONAL NO_DATA">
         <material             spec="REQUIRED STRING"/>
         <scalar               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" >
-          <constants            spec="OPTIONAL NO_DATA">
-            <f_stoichometric    spec="REQUIRED DOUBLE '0,1'"/>
-            <diffusivity        spec="REQUIRED DOUBLE 'positive'"/>
-            <rho_air            spec="REQUIRED DOUBLE 'positive'"/>
-            <rho_fuel           spec="REQUIRED DOUBLE 'positive'"/>
-            <cv_air             spec="REQUIRED DOUBLE 'positive'"/>
-            <cv_fuel            spec="REQUIRED DOUBLE 'positive'"/>
-            <R_air              spec="REQUIRED DOUBLE 'positive'"/>
-            <R_fuel             spec="REQUIRED DOUBLE 'positive'"/>
-            <thermalCond_air    spec="REQUIRED DOUBLE 'positive'"/>
-            <thermalCond_fuel   spec="REQUIRED DOUBLE 'positive'"/>
-            <viscosity_air      spec="REQUIRED DOUBLE 'positive'"/>
-            <viscosity_fuel     spec="REQUIRED DOUBLE 'positive'"/>
+          <constants          spec="OPTIONAL NO_DATA">
+            <diffusivity      spec="REQUIRED DOUBLE 'positive'"/>
+            <rho_A            spec="REQUIRED DOUBLE 'positive'"/>
+            <rho_B            spec="REQUIRED DOUBLE 'positive'"/>
+            <cv_A             spec="REQUIRED DOUBLE 'positive'"/>
+            <cv_B             spec="REQUIRED DOUBLE 'positive'"/>
+            <R_A              spec="REQUIRED DOUBLE 'positive'"/>
+            <R_B              spec="REQUIRED DOUBLE 'positive'"/>
+            <thermalCond_A    spec="REQUIRED DOUBLE 'positive'"/>
+            <thermalCond_B    spec="REQUIRED DOUBLE 'positive'"/>
+            <dynamic_viscosity_A        spec="REQUIRED DOUBLE 'positive'"/>
+            <dynamic_viscosity_B        spec="REQUIRED DOUBLE 'positive'"/>
             <initialize_diffusion_knob  spec="REQUIRED DOUBLE 'positive'"/>
           </constants>
           <geom_object          spec="MULTIPLE" />
           <test_conservation    spec="OPTIONAL BOOLEAN"/>
         </scalar>
-      </SimpleRxn>
+      </BinaryProperties>
 
       <!--__________________________________-->
       <!--  flameSheet_rxn -->
-      <flameSheet_rxn             spec="OPTIONAL NO_DATA">                                      
-        <material                 spec="REQUIRED STRING"/>                                      
-        <scalar                   spec="OPTIONAL NO_DATA" attribute1="name REQUIRED STRING" >   
+      <flameSheet_rxn             spec="OPTIONAL NO_DATA">
+        <material                 spec="REQUIRED STRING"/>
+        <scalar                   spec="OPTIONAL NO_DATA" attribute1="name REQUIRED STRING" >
           <reaction_constants       spec="OPTIONAL NO_DATA">
             <f_stoichometric        spec="REQUIRED DOUBLE '0,1'"/>
             <delta_H_combustion     spec="REQUIRED DOUBLE 'positive'"/>
@@ -361,12 +418,24 @@
                                          attribute1="name REQUIRED STRING" >
 
           <test_conservation           spec="OPTIONAL BOOLEAN"/>
-          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+          <reinitializeDomain          spec="OPTIONAL BOOLEAN"/>
+
           <constants                   spec="OPTIONAL NO_DATA" >
             <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
             <diffusivity               spec="OPTIONAL DOUBLE" />
-            <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
+            <decayRate                 spec="OPTIONAL DOUBLE" />
           </constants>
+
+          <exponentialDecay            spec="OPTIONAL NO_DATA" >
+            <c1                        spec="REQUIRED DOUBLE 'positive'" />
+            <c2                        spec="REQUIRED NO_DATA"
+                                          attribute1="type REQUIRED STRING 'constant variable'" >
+              <value                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>
+              <filename                spec="REQUIRED STRING"            need_applies_to="type variable"/>
+            </c2>
+            <c3                        spec="OPTIONAL DOUBLE"/>
+          </exponentialDecay>
+
           <initialization              spec="REQUIRED NO_DATA" >
             <geom_object               spec="MULTIPLE" />
           </initialization>

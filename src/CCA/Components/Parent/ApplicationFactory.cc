@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,10 +84,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-#  include <CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/MPM/SingleHydroMPM.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -247,6 +244,13 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "sfmpm ";
   }
 
+  if (sim_comp == "shmpm" || sim_comp == "SHmpm" || sim_comp == "SHMPM") {
+      return scinew SingleHydroMPM(myworld, materialManager);
+  }
+  else {
+      turned_on_options += "shmpm ";
+
+  }
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(myworld, materialManager);
   }
@@ -259,17 +263,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "impm ";
-  }
-#endif
-
-  //----------------------------
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-  if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "mpmarches ";
   }
 #endif
 

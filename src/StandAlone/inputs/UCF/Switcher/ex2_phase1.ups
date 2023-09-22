@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
   <Meta>
        <title>JP8-Switch</title>
   </Meta>
-  
-  <SimulationComponent type="mpmice" /> 
+
+  <SimulationComponent type="mpmice" />
 
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -41,7 +41,7 @@
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
     <save label="vel_CC"/>
-      
+
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.mass"/>
@@ -54,10 +54,10 @@
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-       <cfl>0.15</cfl>  
+       <cfl>0.15</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-      </ICE>        
+      </ICE>
   </CFD>
 
    <MPM>
@@ -68,7 +68,7 @@
 
   <!--____________________________________________________________________-->
   <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-  <!--____________________________________________________________________-->   
+  <!--____________________________________________________________________-->
   <PhysicalConstants>
     <gravity>            [0,0,0]   </gravity>
     <reference_pressure> 101325.0  </reference_pressure>
@@ -82,18 +82,18 @@
         <material name="cylinder">
         <density>             8900.0           </density>
         <constitutive_model type = "comp_neo_hook">
-          <useModifiedEOS>     true          </useModifiedEOS>       
-          <bulk_modulus>      117.0e7        </bulk_modulus>         
-          <shear_modulus>      43.8e7        </shear_modulus>        
-          <yield_stress>       70.0e6        </yield_stress>         
-          <hardening_modulus>  43.8e5        </hardening_modulus>    
-          <alpha>               0.0          </alpha>                
-          <strain_limit>       3.05          </strain_limit>         
-          <reduction_factor>   1.0           </reduction_factor>     
+          <useModifiedEOS>     true          </useModifiedEOS>
+          <bulk_modulus>      117.0e7        </bulk_modulus>
+          <shear_modulus>      43.8e7        </shear_modulus>
+          <yield_stress>       70.0e6        </yield_stress>
+          <hardening_modulus>  43.8e5        </hardening_modulus>
+          <alpha>               0.0          </alpha>
+          <strain_limit>       3.05          </strain_limit>
+          <reduction_factor>   1.0           </reduction_factor>
         </constitutive_model>
         <thermal_conductivity>  400.0         </thermal_conductivity>
         <specific_heat>         386.0         </specific_heat>
- 
+
         <geom_object>
           <difference>
             <cylinder label = "outer cylinder">
@@ -122,13 +122,13 @@
     </MPM>
     <!--__________________________________-->
     <ICE>
-         <material name = "gas"> 
+         <material name = "gas">
            <EOS type = "ideal_gas"> </EOS>
            <isSurroundingMatl>          false           </isSurroundingMatl>
            <dynamic_viscosity>          0               </dynamic_viscosity>
            <thermal_conductivity>       0               </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
-           <gamma>                      1.4             </gamma>           
+           <gamma>                      1.4             </gamma>
            <geom_object>
               <union>
                  <difference>
@@ -138,7 +138,7 @@
                   </box>
                   <cylinder label = "outer cylinder"/>
                  </difference>
-                 
+
                  <cylinder label = "inner cylinder"/>
               </union>
             <res>                      [2,2,2]       </res>
@@ -150,20 +150,20 @@
          </material>
     </ICE>
 
-    <exchange_properties> 
+    <exchange_properties>
         <exchange_coefficients>
               <momentum>  [ 1e15 ]  </momentum>
               <heat>      [ 1e4]    </heat>
         </exchange_coefficients>
-    </exchange_properties> 
+    </exchange_properties>
   </MaterialProperties>
-  
+
     <!--__________________________________-->
     <!--  Apply heat flox to outside of container -->
     <!--__________________________________-->
     <PhysicalBC>
         <MPM>
-        <arches_heat_flux> 
+        <arches_heat_flux>
           <geom_object>
               <cylinder>
                 <bottom>    [0.0,0.0,-.06985] </bottom>
@@ -172,13 +172,13 @@
               </cylinder>
           </geom_object>
           <polynomial_data>
-            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_97.dat</file> 
-            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_98.dat</file> 
-            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_99.dat</file> 
-            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_100.dat</file> 
-            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_101.dat</file> 
-            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_102.dat</file> 
-            <file> inputs/IS/ArchesHeatUpExplosion/case3/endcap_averages.dat</file> 
+            <filename>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_97.dat</filename>
+            <filename>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_98.dat</filename>
+            <filename> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_99.dat</filename>
+            <filename> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_100.dat</filename>
+            <filename> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_101.dat</filename>
+            <filename> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_102.dat</filename>
+            <filename> inputs/IS/ArchesHeatUpExplosion/case3/endcap_averages.dat</filename>
           </polynomial_data>
 
           <!-- Only needed by to invoke the external heat flux machinery -->
@@ -190,7 +190,7 @@
               <load> 0</load>
             </time_point>
           </load_curve>
-        </arches_heat_flux> 
+        </arches_heat_flux>
         </MPM>
     </PhysicalBC>
 

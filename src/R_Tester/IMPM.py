@@ -27,6 +27,8 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -55,6 +57,11 @@ LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
     	       ]
 #	           ("billet.static",    "billet.static.ups",  2,   "ALL"), \
 DEBUGTESTS =[]
+
+#__________________________________
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
@@ -81,6 +88,6 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "IMPM")
+  result = runSusTests(argv, TESTS, "IMPM", ADDTL_PATH)
   exit( result )
 

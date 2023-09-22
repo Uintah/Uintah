@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #define RHSTerms_h
 
 #include <map>
+#include <vector>
 
 //-- ExprLib includes --//
 #include <expression/Tag.h>
@@ -55,6 +56,7 @@ enum FieldSelector{
  *       diffusive terms in energy equation.  Expand this
  *       capability.
  */
-typedef std::map< FieldSelector, Expr::Tag > FieldTagInfo; //< Defines a map to hold information on ExpressionIDs for the RHS.
+typedef std::map< FieldSelector, Expr::Tag     > FieldTagInfo;     //< Defines a map to hold information on ExpressionIDs for the RHS.
+typedef std::map< FieldSelector, Expr::TagList > FieldTagListInfo; //< Defines a map to hold information on ExpressionIDs for a list of RHSs.
 
 #endif // RHSTerms_h

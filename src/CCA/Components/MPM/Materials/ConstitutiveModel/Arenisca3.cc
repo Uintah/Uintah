@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -2165,9 +2165,8 @@ void Arenisca3::computePressEOSCM(double rho_cur,double& pressure,
 //T2D: Throw exception that this is not supported
 double Arenisca3::getCompressibility()
 {
-  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arenisca3"
-       << endl;
-  return 1.0;
+  // This is for contact modeling.
+  return 1.0/d_cm.B0;
 }
 
 // Initialize all labels of the particle variables associated with Arenisca3.

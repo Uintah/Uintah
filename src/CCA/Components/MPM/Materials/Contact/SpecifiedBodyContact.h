@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,7 @@
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h>
+#include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -42,6 +43,7 @@
 namespace Uintah {
 
   class VarLabel;
+  class Output;
 
   /**************************************
 
@@ -135,27 +137,39 @@ DESCRIPTION
     SpecifiedBodyContact(const SpecifiedBodyContact &con);
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
          
-    Vector findVelFromProfile(double t) const;
+    Vector findValFromProfile(double t, 
+                        std::vector< std::pair<double, Vector> > profile) const;
     
     MaterialManagerP d_materialManager;
     double    d_stop_time;
     double    d_vol_const;
     Vector    d_vel_after_stop;
-    int       d_material;
+    int       d_material = INT_MAX;
     int       NGP;
     int       NGN;
     bool      d_NormalOnly;
+    bool      d_includeRotation;
+    int       d_excludeMatl;
     std::string    d_filename;
     IntVector d_direction;
     std::vector< std::pair<double, Vector> > d_vel_profile;
+    std::vector< std::pair<double, Vector> > d_rot_profile;
+    std::vector< std::pair<double, Vector> > d_ori_profile;
+
+  protected:
+    Output*                m_output      {nullptr};
     
   public:
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
-                         ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,MPMFlags*flag);
+                         ProblemSpecP& ps, MaterialManagerP& d_sS,
+                         MPMLabel* lb, MPMFlags*flag);
          
     // Destructor
     virtual ~SpecifiedBodyContact();
+
+    // Currently, setting if any materials are rigid
+    virtual void setContactMaterialAttributes();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 

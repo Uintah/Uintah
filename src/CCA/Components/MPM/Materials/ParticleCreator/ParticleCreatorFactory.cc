@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,8 +24,9 @@
 
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ImplicitParticleCreator.h>
-//#include <CCA/Components/MPM/Materials/ParticleCreator/MembraneParticleCreator.h>
-//#include <CCA/Components/MPM/Materials/ParticleCreator/ShellParticleCreator.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/TriangleParticleCreator.h>
+#include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -36,25 +37,21 @@ using namespace Uintah;
 
 ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps, 
                                                 MPMMaterial* mat,
-                                                MPMFlags* flags)
+                                                MPMFlags* flags,
+                                                bool allTriGeom,
+                                                bool allFileGeom)
 {
-
   ProblemSpecP cm_ps = ps->findBlock("constitutive_model");
-  string mat_type;
-  cm_ps->getAttribute("type",mat_type);
 
-  if (flags->d_integrator_type == "implicit") 
+  if (flags->d_integrator_type == "implicit"){
     return scinew ImplicitParticleCreator(mat,flags);
-
-//  else if (mat_type == "membrane")
-//    return scinew MembraneParticleCreator(mat,flags);
-
-//  else if (mat_type == "shell_CNH")
-//    return scinew ShellParticleCreator(mat,flags);
-  
-  else
+  }
+  else if (flags->d_integrator_type == "explicit" && allTriGeom==true){ 
+    return scinew TriangleParticleCreator(mat,flags);
+  }
+  else if (flags->d_integrator_type == "explicit" && allFileGeom==true){ 
+    return scinew FileGeomPieceParticleCreator(mat,flags);
+  }
+  else 
     return scinew ParticleCreator(mat,flags);
-
 }
-
-

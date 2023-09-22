@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2018 The University of Utah
+#  Copyright (c) 2010-2023 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -41,6 +41,7 @@ CUDA_ENABLED_SRCS :=      \
      Dilatation           \
      ExprAlgebra          \
      FanModel             \
+     ActuatorDisk         \
      MomentumPartialRHS   \
      MomentumRHS          \
      MonolithicRHS        \
@@ -50,6 +51,7 @@ CUDA_ENABLED_SRCS :=      \
      PrimVar              \
      ScalabilityTestSrc   \
      ScalarEOSCoupling    \
+     ScalarEOSHelper      \
      ScalarRHS            \
      SimpleEmission       \
      SolnVarEst           \

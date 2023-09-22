@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2018 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -131,8 +131,14 @@ namespace WasatchCore{
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
                            GraphCategories& gc,
+                           std::set<std::string>& persistentFields,
                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                            bool computeKineticsJacobian );
+
+  EqnTimestepAdaptorBase*
+  parse_thermodynamic_pressure_equation( Uintah::ProblemSpecP wasatchSpec,
+                                         GraphCategories& gc,
+                                         std::set<std::string>& persistentFields );
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_tar_and_soot_equations( Uintah::ProblemSpecP params,

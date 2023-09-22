@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid,W_OK
-from os         import makedirs
-from time       import strftime,time,gmtime,asctime,localtime
-from sys        import argv,exit,stdout
-from modUPS     import modUPS
-from subprocess   import getoutput
-from subprocess import PIPE, Popen
-
+from os                 import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid,W_OK
+from os                 import makedirs
+from time               import strftime,time,gmtime,asctime,localtime
+from sys                import argv,exit,stdout
+from modUPS             import modUPS
+from subprocess         import getoutput
+from subprocess         import PIPE, Popen
+from helpers.utilities  import writeDividerLine, appendFile
 import shutil
 import socket
 import resource
@@ -31,7 +31,7 @@ else:
 
 def getTestName(test):
     return test[0]
-    
+
 def getUpsFile(test):
     return test[1]
 
@@ -42,13 +42,13 @@ def getTestOS(test):
     return test[3].upper()
 
 def setInputsDir( here ):
-    global inputpath 
+    global inputpath
     inputpath = here
 
 def getInputsDir():
     global inputpath
     return inputpath
-    
+
 def date ():
     return asctime(localtime(time()))
 
@@ -59,58 +59,122 @@ def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelis
     pass
 
 #______________________________________________________________________
+
+def parse_addtlpath( addtlpath, susdir ):
+    addtlpath_clean = ""
+
+    if addtlpath != None:
+
+      for elem in addtlpath:
+        tmp=re.split('=|\s',elem)                   # deliminter = " " or =
+
+        if tmp[0].upper() =='ABSOLUTEPATH':
+          addtlpath_clean = tmp[1] + pathsep  + addtlpath_clean
+
+        elif tmp[0].upper() == 'RELATIVEPATH':
+          p = path.normpath( path.join(susdir, tmp[1]) )
+          addtlpath_clean = p + pathsep  + addtlpath_clean
+
+        else:
+          print( "\t*** WARNING syntax error specifiying ADDTL_PATH (%s). Valid options" % elem)
+          print( "\t*** absolutePath=<path>  or  relativePath=<path>" )
+
+
+    #print ("new path: %s  oldpath: %s susdir: %s" % (addtlpath_clean, addtlpath, susdir))
+    return addtlpath_clean
+
+
+#______________________________________________________________________
+
+def runPreProcessCmd( preProcess_cmd, inputxml, logfile, log_msg):
+    if preProcess_cmd != "":
+
+      tmp  = preProcess_cmd.rsplit(' ')
+      cmd0 = tmp[0]
+      cmd  = shutil.which(cmd0)
+      options = tmp[1:]
+      options = ' '.join([str(elem) for elem in options])      # convert list to a string
+
+      if cmd == None:
+
+        msg = "\t*** ERROR: runSusTests: the preprocess cmd (%s %s %s) was not found\n" % (cmd0, options, inputxml)
+        msg += "\t*** Path: %s\n" % environ['PATH']
+        msg += "\t*** cwd: %s" % getcwd()
+
+        appendFile( logfile, msg)
+
+        print( msg )
+        print( log_msg )
+        return 1
+      else:
+        writeDividerLine( logfile )
+        msg = "Preprocess Command: %s %s %s\n" %( cmd, options, inputxml)
+        appendFile( logfile, msg )
+
+        rc = system( "%s %s %s >> %s 2>&1" % (cmd, options, inputxml, logfile) )
+        writeDividerLine( logfile )
+        return 0
+
+#______________________________________________________________________
 #  returns a list of tests, with performance tests filtered out
 def ignorePerformanceTests( TESTS ):
-  
+
   myTests=[]
   for test in TESTS:
-    
+
     if len(test) == 5:
       flags = getTestFlags( test )
-      
+
       if not "do_performance_test" in str( flags ):
         myTests.append( test )
   return myTests
-        
-    
-#______________________________________________________________________    
+
+
+#______________________________________________________________________
 # Function used for checking the input files
-# skip tests that contain 
+# skip tests that contain
 #    <outputInitTimestep/> AND  outputTimestepInterval > 1
 def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
-  
+  from xml.etree.ElementTree import ParseError
+
   # these options are OK
   if startFrom == "checkpoint" or startFrom == "postProcessUda" or do_restart == 0:
     return True
 
   # load index.xml into tree
-  ET     = ElementTree()
-  uintah = ET.parse(inputxml)
-  
+  ET = ElementTree()
+
+  try:
+    uintah = ET.parse(inputxml)
+  except ParseError:
+    print('    *** ERROR: The xml file {} is corrupt and cannot be parsed'.format(inputxml))
+    return False
+
+
   #  Note <outputInitTimestep/> + outputTimestepInterval > 1 the uda/index.xml != restartUda/index.xml
   #             ( initTS )              ( intrvl )
-  da     = uintah.find( 'DataArchiver' ) 
-  
+  da     = uintah.find( 'DataArchiver' )
+
   # find the timestepInterval
   intrvl = da.find( 'outputTimestepInterval' )
-  
+
   if intrvl is None:
     intrvl = int(-9)
   else:
     intrvl = int( intrvl.text )
-  
+
   # was outputInitTimestep set?
   initTS = da.find( 'outputInitTimestep' )
-   
+
   if ( initTS != None and intrvl > 1 ):
     print('     isValid_inputFile %s'% inputxml)
-    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
+    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.")
     return False
   else:
     return True
-    
-#__________________________________   
+
+#______________________________________________________________________
 # Use this if you need to capture stdout and the command's return code.  It also prevents the output from becoming scrambled.
 def cmdline(command):
     process = Popen(
@@ -118,12 +182,13 @@ def cmdline(command):
         stdout=PIPE,
         stderr=PIPE,
         shell=True,
-        universal_newlines=True     # needed to 
+        universal_newlines=True     # needed to
     )
     out, err = process.communicate()
     return (out, err, process.returncode)
-    
-#__________________________________
+
+#______________________________________________________________________
+
 # returns the path of either opt/dbg
 def build_root():
     opt_dbg = path.normpath(path.join(getcwd(), "../"))
@@ -132,12 +197,12 @@ def build_root():
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
 # all of the paramaters given to runSusTest
-def runSusTests(argv, TESTS, application, callback = nullCallback):
+def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallback):
 
   print("runSusTests: %s " % application)
 
-  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "unknown"] :
-    print( "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> <max_parallelsim> <test>" % argv[0] )
+  if len(argv) < 6 or len(argv) > 8 or not argv[4] in ["dbg", "opt", "unknown"] :
+    print( "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> <max_parallelsim> < addtl_path> <test>" % argv[0] )
     print( "    where <test> is optional" )
     exit(1)
   #__________________________________
@@ -151,6 +216,9 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
   global startpath
   startpath       = getcwd()
+
+  addtlpath       = parse_addtlpath( addtlpath, susdir )
+
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
 
@@ -158,7 +226,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   myHash = getoutput("cd ../src; git log -1 --pretty=format:%H:" )
   myDate = getoutput("cd ../src; git log -1 --pretty=format:%cd:" )
   git_revision = "%s %s" % (myHash, myDate)
-  
+
   #check sus for CUDA capabilities
   has_gpu  = 0
   print( "Running command to test if sus was compiled with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
@@ -172,7 +240,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
   #__________________________________
   # set environmental variables
-  environ['PATH']              = "%s%s%s%s%s" % (helperspath, pathsep, toolspath, pathsep, environ['PATH'])
+  environ['PATH']              =  helperspath + pathsep + toolspath + pathsep + addtlpath + pathsep + environ['PATH']
   environ['SCI_EXCEPTIONMODE'] = 'abort'
   environ['MPI_TYPE_MAX']      = '10000'
 
@@ -181,7 +249,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     solotest = argv[6]
 
   outputpath = startpath
-  
+
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build.  Also turn on plotting
   do_plots = 0
@@ -198,7 +266,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     stat( inputpath )
   except Exception:
     print(" ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % inputpath)
-    exit(1)  
+    exit(1)
   try:
     chdir( helperspath )
   except Exception:
@@ -224,7 +292,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   except Exception:
     # create the gold_standard component sub-directory
     chdir(gold_standard)
-    
+
     statinfo = stat(gold_standard)
     file_uid = statinfo.st_uid
     my_uid   = getuid()
@@ -232,7 +300,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     # only create component directory if the user is the owner
     if access(gold_standard, W_OK) and my_uid == file_uid:
       print( " The directory %s does not exist in the gold standards %s" % ( application, gold_standard) )
-      print( " Now creating it...." )    
+      print( " Now creating it...." )
       mkdir(application)
       system("chmod -R 775 %s" % application)
 
@@ -297,8 +365,9 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     sus_options     = ""
     compareUda_options = ""
     startFrom       = "inputFile"
+    preProcess_cmd  = ""
     create_gs0      = "no"           #create the gold standard
-    
+
 
     environ['SCI_DEBUG'] = ''   # reset it for each test
 
@@ -307,7 +376,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     if len(test) == 5:
       flags = getTestFlags(test)
       print( "User Flags:" )
-      
+
       #  parse the user flags
       for i in range(len(flags)):
         print( i,flags[i] )
@@ -349,6 +418,8 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
         #    rel_tolerance=<number>
         #    sus_option=" "
         tmp = flags[i].rsplit('=')
+        if tmp[0] == "preProcessCmd":
+          preProcess_cmd    = tmp[1]
         if tmp[0] == "sus_options":
            sus_options      = tmp[1]
         if tmp[0] == "compareUda_options":
@@ -398,7 +469,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
-    varBucket   = [sus_options, do_plots, compareUda_options]
+    varBucket   = [sus_options, do_plots, compareUda_options, preProcess_cmd]
 
     ran_any_tests = 1
 
@@ -406,7 +477,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     # bulletproofing
     # Does gold standard exists?
     # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
-    
+
     try:
       chdir(compare_root)
       chdir(testname)
@@ -438,7 +509,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     try:
       chdir(inputsdir)
     except Exception:
-      print( " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % (inputsdir) ) 
+      print( " ERROR: runSusTests: the path to the inputs directory (%s) is not valid" % (inputsdir) )
       exit(1)
 
     chdir(results_dir)
@@ -460,21 +531,22 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
     system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, getUpsFile( test ), inputxml))
     symlink(inputpath, "inputs")
-    
+
     #________________________________
     # is the input file valid
     if isValid_inputFile( inputxml, startFrom, do_restart ) == False:
+      failcode = 1
       print ("    Now skipping test %s " % testname)
+      system("echo '  :%s:  The ups file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.' >> %s/%s-short.log" % (testname,startpath,application))
       continue
-        
+
     #__________________________________
     # Run test and perform comparisons on the uda
 
     create_gs = "%s-%s" % (create_gs0, startFrom)
-    
+
     rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
-    system("rm inputs")
-      
+
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
       # Prepare for restart test
@@ -494,12 +566,11 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
         startFrom = "restart"
         create_gs = "%s-%s" % (create_gs0, startFrom)
-        
+
         rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
 
         if rc > 0:
           failcode = 1
-        system("rm inputs")
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
@@ -536,10 +607,10 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   #  copy component tests results to web page
   if  getenv( 'OUTPUT_HTML' ) == "yes":
     web_result_dir = "%s/%s/%s-results" % (environ['PUBLIC_HTML'], dbg_opt, application)
-    
+
     if path.exists( web_result_dir ) == False:
       makedirs( web_result_dir )
-    
+
     print( "__________________________________" )
     print( "\nNow copying %s results to: %s" % (application, web_result_dir))
 
@@ -548,7 +619,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     if rc != 0:
       print( "There was a problem copying the component results.  Error:" );
       print(stderr)
-    
+
   #__________________________________
   if solotest != "" and solotest_found == 0:
     print( "unknown test: %s" % solotest )
@@ -601,6 +672,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   sus_options             = varBucket[0]
   do_plots                = varBucket[1]
   compareUda_options      = varBucket[2]
+  preProcess_cmd          = varBucket[3]
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
@@ -650,7 +722,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       exit (1)
 
   MPIHEAD="%s -n" % MPIRUN       #default
-  
+
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
     MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
@@ -723,11 +795,11 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   #__________________________________
   #  define failure messages
   if getenv('OUTPUT_HTML') == "yes":
-  
+
     logpath     =  "%s/%s/%s-results/%s" % (environ['RT_URL'],  dbg_opt, application, testname )
     if startFrom == "restart":
       logpath   =  logpath + "/restart"
-    
+
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
     memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
@@ -738,13 +810,25 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
     perf_msg    = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
-  
+
+  #__________________________________
+  #  run preprocess command on ups file
+
+  rc=runPreProcessCmd( preProcess_cmd, inputxml, 'sus.log.txt', sus_log_msg )
+  if rc==1:
+    return 1;
+
   #__________________________________
   # actually run the test!
   short_cmd = command.replace(susdir+'/','')
 
   print( "Command Line: %s %s" % (short_cmd, susinput) )
-  rc = system("env > sus.log.txt; %s %s >> sus.log.txt 2>&1" % (command, susinput))
+
+  writeDividerLine( 'sus.log.txt' )
+  system("env >> sus.log.txt")
+  writeDividerLine( 'sus.log.txt' )
+
+  rc = system(" %s %s >> sus.log.txt 2>&1" % (command, susinput))
 
   # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
   # when source code line was that prints the exception is changed.)
@@ -763,7 +847,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     rc = -9
 
   (nTimeSteps,err,rc) = cmdline("grep -c 'Timestep [0-9]' sus.log.txt")
-  
+
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace this test's goldStandards run:\n\t    "
 
@@ -792,18 +876,18 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "\t\tMake sure the problem makes checkpoints before finishing" )
 
     print( sus_log_msg )
-    
+
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
-    
+
     return_code = 1
     return return_code
-    
-  elif int( nTimeSteps ) <= 1 :         
+
+  elif int( nTimeSteps ) <= 1 :
     print( "\t*** ERROR Test %s did not run a sufficient number of timeteps.\n" % (testname) )
     system("echo '  :%s: %s test did not run a sufficient number of timeteps.' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     return_code = 1
     return return_code
-  
+
   else:
     # Sus completed successfully - now run memory, compare_uda and performance tests
     # get the time from sus.log
@@ -836,10 +920,10 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
         print( "\tPerformance tests passed." )
         if short_message != "":
           print( "\t%s" % (short_message)     )
-      
+
       elif performance_RC == 5 * 256:
         print( "\t* Warning, no timestamp file created.  No performance test performed." )
-      
+
       elif performance_RC == 2*256:
         print( "\t*** Warning, test %s failed performance test." % (testname) )
         if short_message != "":
@@ -847,7 +931,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
         print( perf_msg )
         print( "%s" % replace_msg )
-      
+
       else:
         print( "\tPerformance tests passed. (Note: no previous performace stats)." )
 
@@ -868,26 +952,26 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
           print( "\tMemory leak tests passed." )
           if short_message != "":
             print( "\t%s" % (short_message) )
-            
+
       elif memory_RC == 5 * 256:
           print( "\t*** ERROR, missing malloc_stats files.  No memory tests performed." )
-      
+
       elif memory_RC == 256:
           print( "\t*** ERROR, test %s failed memory leak test." % (testname) )
           print( memory_msg )
           # check that all VarLabels were deleted
           rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
-      
+
       elif memory_RC == 2*256:
           print( "\t*** ERROR, test %s failed memory highwater test." % (testname) )
           if short_message != "":
             print( "\t%s" % (short_message) )
           print( memory_msg )
           print( "%s" % replace_msg )
-      
+
       else:
           print( "\tMemory leak tests passed. (Note: no previous memory usage stats)." )
-          
+
     #__________________________________
     # uda comparison
     if do_uda_comparison_test == 1:
@@ -899,23 +983,23 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
 
-      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s \"%s\"> compare_sus_runs.log.txt 2>&1" % 
+      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s \"%s\"> compare_sus_runs.log.txt 2>&1" %
                           (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs, compareUda_options))
-      
+
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:
           print( "\t*** Input file(s) differs from the goldstandard" )
 
         elif compUda_RC == 1 * 256:
-          print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
+          print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) )
           print(compare_msg)
-           
+
         elif compUda_RC == 5*256:
           print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) )
           print(compare_msg)
-        
+
           if startFrom != "restart":
-          
+
             (out,err,rc) = cmdline("tail -40 compare_sus_runs.log.txt | \
                                     sed --silent /ERROR/,/ERROR/p |     \
                                     sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section

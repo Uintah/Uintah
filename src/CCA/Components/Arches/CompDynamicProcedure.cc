@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -64,10 +64,9 @@ using namespace Uintah;
 // Default constructor for CompDynamicProcedure
 //****************************************************************************
 CompDynamicProcedure::CompDynamicProcedure(const ArchesLabel* label,
-    const MPMArchesLabel* MAlb,
     PhysicalConstants* phyConsts,
     BoundaryCondition* bndry_cond):
-  TurbulenceModel(label, MAlb),
+  TurbulenceModel(label),
   d_physicalConsts(phyConsts),
   d_boundaryCondition(bndry_cond)
 {

@@ -27,6 +27,8 @@ from helpers.modUPS import modUPS
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -45,7 +47,10 @@ LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.
              ]
 
-DEBUGTESTS =[]
+DEBUGTESTS =[("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )]
+
+#__________________________________
+ADDTL_PATH = []
 
 #__________________________________
 # The following list is parsed by the local RT script
@@ -74,6 +79,6 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "UCF")
+  result = runSusTests(argv, TESTS, "UCF", ADDTL_PATH)
   exit( result )
 

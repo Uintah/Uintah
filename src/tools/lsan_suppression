@@ -1,0 +1,22 @@
+#______________________________________________________________________
+#  This file contains "conditions" that will be suppressed from normal leak sanitizer output.
+#  These are the false positives.
+#
+#  To invoke the suppression rules below set the environmental variable
+#
+#    tcsh/csh   setenv LSAN_OPTIONS "suppressions=<path>/src/tools/lsan_suppression,fast_unwind_on_malloc=0"
+#
+#   where:
+#     fast_unwind_on_malloc=0:  this flag will give you a complete stack trace  It really slows down the code
+#
+#  Compile sus with the lsan options
+#
+#  CXXFLAGS='-fsanitize=address -fno-omit-frame-pointer
+#
+#  For details on the different suppression types see:
+#      https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer#suppressions
+#______________________________________________________________________
+
+#type  :  location
+leak:libcudart.so
+leak:getMPIType

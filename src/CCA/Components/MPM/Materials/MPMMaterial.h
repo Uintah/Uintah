@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -142,12 +142,28 @@ WARNING
    double getMeltTemperature() const;
 
    bool getIsRigid() const;
+   void setIsRigid(const bool is_rigid);
+
+   bool getIsFTM() const;
+   void setIsFTM(const bool is_ftm);
+
+   bool getIsActive() const;
+   void setIsActive(const bool is_active);
+   double getActivationTime() const;
+
+   bool getPossibleAlphaMaterial() const;
+   void setPossibleAlphaMaterial(const bool possible_alpha);
 
    double getSpecificHeat() const;
    double getThermalConductivity() const;
 
    int nullGeomObject() const;
 
+   // MPM Hydro-mechanical coupling
+   double getWaterDensity() const;
+   double getPorosity() const;
+   double getPermeability() const;
+   double getInitialPorepressure() const;
 
    // For MPMICE
    double getGamma() const;
@@ -180,7 +196,8 @@ WARNING
    double d_specificHeat;
    double d_thermalConductivity;
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
-
+   bool   d_allTriGeometry = false;
+   bool   d_allFileGeometry = false;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
@@ -190,8 +207,21 @@ WARNING
    double d_troom;
    double d_tmelt;
 
-   // for implicit rigid body contact
+   // for rigid body contact
    bool d_is_rigid;
+
+   // for frictionLR contact model
+   bool d_possible_alpha;
+
+   // for undeformable force transmission
+   bool d_is_force_transmitting_material;
+
+   // for insert particles
+   bool d_is_active;
+   double d_activation_time;
+
+   // Parameters related to MPM Hydro-mechanical coupling
+   double d_waterdensity, d_porosity, d_permeability, d_initial_porepressure;
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;

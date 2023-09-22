@@ -1,0 +1,210 @@
+<Uintah_specification>
+    <Meta>
+        <title>two layer HE Compaction</title>
+        <info>
+         This file demonstrates the use of multiple contact boundary conditions.
+
+         A sample (material 0) is compressed in place by a rigid clamp
+         (material 1).  Next, a sphere (material 3) is pressed into the 
+         sample using a second rigid material, a small block located in
+         the center of the sphere (material 2).  Three distinct contact
+         models are utilized, two are "specified", between material 0 and 1,
+         and between material 2 and 3, while the third is a frictional contact
+         model between materials 0 and 3.
+
+         For the specified contact model, velocity profiles are used to
+         prescribe the motion of materials 1 (prof0_1.txt) and 2 (prof2_3.txt). 
+         The columns in those files are time, and x, y and z velocity.
+        </info>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+    <Time>
+        <maxTime>1.2</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.25</timestep_multiplier>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <XPIC2>true</XPIC2>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
+    </MPM>
+    <DataArchiver>
+        <filebase>ContactExample1.uda</filebase>
+        <outputInterval>0.01</outputInterval>
+        <save label="p.x"></save>
+        <save label="p.mass"></save>
+        <save label="p.volume"></save>
+        <save label="p.velocity"></save>
+        <save label="p.scalefactor"></save>
+        <save label="p.deformationMeasure"></save>
+        <save label="p.stress"></save>
+        <save label="KineticEnergy"></save>
+        <save label="g.velocity"></save>
+        <save label="BndyForce_zminus"></save>
+        <save label="RigidReactionForce"/>
+        <checkpoint interval="5.0" cycle="2"></checkpoint>
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="Sample">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                    <yield_stress>2500.0</yield_stress>
+                    <hardening_modulus>10.8e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0.0]</velocity>
+                    <temperature>0</temperature>
+                    <box label="Sample">
+                        <min>[-1.0,-1.0,0.0] </min>
+                        <max>[ 1.0, 1.0,0.5] </max>
+                    </box>
+                </geom_object>
+            </material>
+            <material name="Clamp">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,-.5]</velocity>
+                    <temperature>0</temperature>
+                    <difference>
+                     <box>
+                        <min>[-1.2,-1.2,0.0] </min>
+                        <max>[ 1.2, 1.2,0.7] </max>
+                     </box>
+                     <union>
+                     <box>
+                        <min>[-0.9,-0.9,0.5] </min>
+                        <max>[ 0.9, 0.9,0.7] </max>
+                     </box>
+                       <box label="Sample"/>
+                     </union>
+                    </difference>
+                </geom_object>
+            </material>
+
+            <material name="ToolRigid">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                    <temperature>0</temperature>
+                     <box label="ToolRigid">
+                        <min>[-0.1,-0.1,0.8] </min>
+                        <max>[ 0.1, 0.1,1.0] </max>
+                     </box>
+                </geom_object>
+            </material>
+
+            <material name="Tool">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                    <temperature>0</temperature>
+                    <difference>
+                      <sphere label = "gp1">
+                       <origin>[0.0,0.0,0.9]</origin>
+                       <radius> .3 </radius>
+                      </sphere>
+                      <box label="ToolRigid"/>
+                    </difference>
+                </geom_object>
+            </material>
+
+
+            <contact>
+                <type>specified</type>
+                <filename>prof0_1.txt</filename>
+                <master_material>1</master_material>
+                <materials>[0,1]</materials>
+                <direction>[1, 1, 1]</direction>
+            </contact>
+
+            <contact>
+                <type>specified</type>
+                <filename>prof2_3.txt</filename>
+                <master_material>2</master_material>
+                <materials>[2,3]</materials>
+                <direction>[1, 1, 1]</direction>
+            </contact>
+
+            <contact>
+                <type>friction_LR</type>
+                <materials>[0,3]</materials>
+                <mu>0.1</mu>
+            </contact>
+
+        </MPM>
+    </MaterialProperties>
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-1.5,-1.5,0.0]</lower>
+                <upper>[ 1.5, 1.5,1.5]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[2,2,1]</patches>
+                <resolution>[30,30,15]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType var="Dirichlet" id="0" label="Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+                <BCType var="Neumann" id="1" label="Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="Dirichlet" id="all" label="Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>
+

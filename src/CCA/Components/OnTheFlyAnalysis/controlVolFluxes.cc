@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,19 +25,13 @@
 #include <CCA/Components/OnTheFlyAnalysis/controlVolFluxes.h>
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include <Core/OS/Dir.h> // for MKDIR
-#include <Core/Util/FileUtils.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <dirent.h>
@@ -55,7 +49,7 @@ using namespace std;
 //       each CV should keep track of output face fluxes
 //______________________________________________________________________
 
-Dout cout_OTF_CVF("controlVolFluxes",     "OnTheFlyAnalysis", "controlVolFluxes task exec", false);
+Dout dout_OTF_CVF("controlVolFluxes",     "OnTheFlyAnalysis", "controlVolFluxes task exec", false);
 Dout dbg_OTF_CVF("controlVolFluxes_dbg",  "OnTheFlyAnalysis", "controlVolFluxes debug info", false);
 
 controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
@@ -63,35 +57,28 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
                                     const ProblemSpecP    & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  m_zeroMatl     = 0;
-  m_zeroMatlSet  = 0;
   m_zeroPatch    = 0;
   m_matIdx       = -9;
-  m_matl         = nullptr;
-  m_matlSet      = nullptr;
 
   m_lb = scinew labels();
 
-  m_lb->lastCompTime      = VarLabel::create( "lastCompTime_CVF", max_vartype::getTypeDescription() );
-  m_lb->fileVarsStruct    = VarLabel::create( "FileInfo_CVF", PerPatch<FileInfoP>::getTypeDescription() );
+  m_lb->lastCompTime   = VarLabel::create( "lastCompTime_CVF", max_vartype::getTypeDescription() );
+  m_lb->fileVarsStruct = VarLabel::create( "FileInfo_CVF", PerPatch<FileInfoP>::getTypeDescription() );
 }
 
 //______________________________________________________________________
 //
 controlVolFluxes::~controlVolFluxes()
 {
-  DOUT(cout_OTF_CVF, " Doing: destorying fluxes " );
-  if( m_zeroMatlSet  && m_zeroMatlSet->removeReference() ) {
-    delete m_zeroMatlSet;
-  }
-  if( m_zeroMatl && m_zeroMatl->removeReference() ) {
-    delete m_zeroMatl;
-  }
+  DOUTR(dout_OTF_CVF, " Doing: destorying fluxes " );
+
+  // Don't delete m_zeroMatl and m_matl they are deleted when
+  // m_zeroMatlSet and m_matlSet are deleted.  If you do then
+  // you'll get AddressSanitizer: heap-use-after-free error
+
+
   if( m_zeroPatch && m_zeroPatch->removeReference() ) {
     delete m_zeroPatch;
-  }
-  if( m_matl && m_matl->removeReference() ) {
-    delete m_matl;
   }
   if( m_matlSet && m_matlSet->removeReference() ) {
     delete m_matlSet;
@@ -118,8 +105,6 @@ controlVolFluxes::~controlVolFluxes()
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     delete m_controlVols[i];
   }
-
-
 }
 
 //______________________________________________________________________
@@ -130,7 +115,7 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
                                     std::vector<std::vector<const VarLabel* > > &PState,
                                     std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  DOUT(cout_OTF_CVF, "Doing problemSetup \t\t\t\tfluxes" );
+  DOUTR(dout_OTF_CVF, "Doing controlVolFluxes::problemSetup" );
 
   if(grid->numLevels() > 1 ) {
     proc0cout << "______________________________________________________________________\n"
@@ -145,12 +130,6 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m_module_spec->require( "samplingFrequency", m_analysisFreq );
   m_module_spec->require( "timeStart",         d_startTime );
   m_module_spec->require( "timeStop",          d_stopTime );
-
-  m_zeroMatlSet = scinew MaterialSet();
-  m_zeroMatlSet->add(0);
-  m_zeroMatlSet->addReference();
-
-  m_zeroMatl = m_zeroMatlSet->getUnion();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
@@ -175,14 +154,8 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m.push_back(0);            // matl index for FileInfo label
   m.push_back( m_matIdx );
 
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
   m_matlSet = scinew MaterialSet();
-  m_matlSet->addAll(m);
+  m_matlSet->addAll_unique(m);
   m_matlSet->addReference();
 
   m_matl = m_matlSet->getUnion();
@@ -214,7 +187,7 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
 void controlVolFluxes::scheduleInitialize( SchedulerP   & sched,
                                            const LevelP & level )
 {
-  printSchedule(level,cout_OTF_CVF,"controlVolFluxes::scheduleInitialize");
+  printSchedule(level,dout_OTF_CVF,"controlVolFluxes::scheduleInitialize");
 
   Task* t = scinew Task("controlVolFluxes::initialize",
                   this, &controlVolFluxes::initialize);
@@ -272,7 +245,7 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_OTF_CVF,"Doing initialize");
+    printTask(patches, patch,dout_OTF_CVF,"Doing initialize");
 
     // last computational time
     double tminus = d_startTime - 1.0/m_analysisFreq;
@@ -324,7 +297,7 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   //__________________________________
   //  compute the total Q and net fluxes
-  printSchedule( level,cout_OTF_CVF,"controlVolFluxes::scheduleDoAnalysis" );
+  printSchedule( level,dout_OTF_CVF,"controlVolFluxes::scheduleDoAnalysis" );
 
   Task* t0 = scinew Task( "controlVolFluxes::integrate_Q_overCV",
                      this,&controlVolFluxes::integrate_Q_overCV );
@@ -404,8 +377,8 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_OTF_CVF,"Doing controlVolFluxes::integrate_Q_overCV");
-    DOUT(dbg_OTF_CVF, "     Patch: " << patch->getCellLowIndex() << " " << patch->getCellHighIndex() << "\n");
+    printTask(patches, patch,dout_OTF_CVF,"Doing controlVolFluxes::integrate_Q_overCV");
+    DOUTR(dbg_OTF_CVF, "     Patch: " << patch->getCellLowIndex() << " " << patch->getCellHighIndex() << "\n");
 
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
@@ -459,7 +432,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
         Vector norm     = contVol->getFaceNormal( face );
         IntVector axis  = contVol->getFaceAxes( face );
 
-        DOUT( dbg_OTF_CVF, std::setprecision(15) << std::left
+        DOUTR( dbg_OTF_CVF, std::setprecision(15) << std::left
                  << setw(7)    << contVol->getName()
                  << setw(7)   << "Face:"     << setw(7) << faceName
                  << setw(10)  << "faceType:" << setw(5) << face
@@ -493,7 +466,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
 
       //__________________________________
       // put in the dw
-      DOUT( dbg_OTF_CVF,  std::setprecision(15) << contVol->getName() << " Total CV : " << totalQ_CV << " Net face fluxes: " << net_Q_flux );
+      DOUTR( dbg_OTF_CVF,  std::setprecision(15) << contVol->getName() << " Total CV : " << totalQ_CV << " Net face fluxes: " << net_Q_flux );
 
       new_dw->put( sum_vartype( totalQ_CV ),     m_lb->totalQ_CV[cv] );
       new_dw->put( sumvec_vartype( net_Q_flux ), m_lb->net_Q_faceFluxes[cv] );
@@ -529,7 +502,7 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_OTF_CVF,"Doing doAnalysis");
+    printTask(patches, patch,dout_OTF_CVF,"Doing doAnalysis");
 
     //__________________________________
     // open the struct that contains the file pointer map.  We use FileInfoP types
@@ -639,7 +612,7 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
   //  get the iterator on this face
   CellIterator iter = cv->getFaceIterator(face, controlVolume::SFC_Cells, patch);
 
- DOUT( dbg_OTF_CVF, std::right << setw(10) <<  " faceIter: " << setw(10) << iter );
+ DOUTR( dbg_OTF_CVF, std::right << setw(10) <<  " faceIter: " << setw(10) << iter );
 
   for(; !iter.done(); iter++) {
     IntVector c = *iter;
@@ -661,7 +634,7 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
   }
   faceQ->Q_faceFluxes[face] = Q_flux;
 
-  DOUT( dbg_OTF_CVF, "     Face: " << cv->getFaceName(face) << "\t dir: " << pDir << " Q_Flux = " <<  Q_flux );
+  DOUTR( dbg_OTF_CVF, "     Face: " << cv->getFaceName(face) << "\t dir: " << pDir << " Q_Flux = " <<  Q_flux );
 }
 
 //______________________________________________________________________

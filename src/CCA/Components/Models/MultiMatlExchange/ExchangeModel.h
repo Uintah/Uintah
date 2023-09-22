@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,6 +53,9 @@ namespace Uintah {
     virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
     
     virtual void outputProblemSpec(ProblemSpecP & prob_spec ) = 0;
+
+    virtual void sched_initialize( SchedulerP&,
+                                   const LevelP& level) = 0;
   
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,     

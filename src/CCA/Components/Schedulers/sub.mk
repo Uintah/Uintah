@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,7 @@
 #
 #
 # Makefile fragment for this subdirectory
+#
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -65,6 +66,7 @@ endif
 
 PSELIBS := \
         CCA/Components/ProblemSpecification \
+        CCA/Components/DataArchiver \
         CCA/Ports        \
         Core/Containers  \
         Core/Disclosure  \

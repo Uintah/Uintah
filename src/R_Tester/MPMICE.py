@@ -35,6 +35,8 @@ advectSlipExchOn_ups = modUPS( inputs, \
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -52,9 +54,11 @@ AMRTESTS   = [
                   ("advect_HollowSphere_amr", "advect_HollowSphere_amr.ups", 8,  "ALL", ["no_dbg"])
              ]
 
-LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "ALL", ["exactComparison"]),
+LOCALTESTS = [   ("advect",                   "advect.ups",                8,  "ALL", ["exactComparison"]),
+                 ("advect3Mat",               "advect3mat.ups",            1,  "ALL", ["exactComparison"]),
+                 ("2d_diw",                   "2ddiw.ups",                 2,  "ALL", ["exactComparison"]),
                  ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
-                 ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison"]),
+                 ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison","no_restart"]),
                  ("advectSlipExch_On",        advectSlipExchOn_ups,        8,  "ALL", ["exactComparison"]),
                  ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
                  ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
@@ -70,6 +74,11 @@ LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "
                  ("PBX_Cylinder_Ext_Load",    "PBX_array/oneCylinder.ups", 4  ,"ALL", ["exactComparison","no_restart","no_dbg"])
     	       ]
 DEBUGTESTS =[]
+
+#__________________________________
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
@@ -99,5 +108,5 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "MPMICE")
+  result = runSusTests(argv, TESTS, "MPMICE",ADDTL_PATH)
   exit( result )

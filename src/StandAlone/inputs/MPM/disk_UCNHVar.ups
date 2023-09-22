@@ -1,0 +1,170 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+     <title>Colliding Disks, with 2 matls, 2 levels, damage and contact</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.30</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>disk_UCNHVar.uda</filebase>
+       <outputInterval>.01</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.x" levels = "-1"/>
+       <save label = "p.volume" levels = "-1"/>
+       <save label = "p.velocity" levels = "-1"/>
+       <save label = "p.color" levels = "-1"/>
+       <save label = "p.epsf" levels = "-1"/>
+       <save label = "p.localizedMPM"/>
+       <save label = "p.particleID" levels = "-1"/>
+       <save label = "p.plasticStrain" levels = "-1"/>
+       <save label = "p.scalefactor" levels = "-1"/>
+       <save label = "p.stress" levels = "-1"/>
+       <save label = "g.mass" levels = "-1"/>
+       <save label = "g.stressFS" levels = "-1"/>
+
+       <checkpoint cycle = "2" interval = "0.1"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit  </time_integrator>
+       <interpolator>   fast_cpdi      </interpolator>
+       <withColor>      true      </withColor>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+       <UseGradientEnhancedVelocityProjection>true
+                         </UseGradientEnhancedVelocityProjection>
+   </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="ucnhv">
+              <density>1000.0</density>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <constitutive_model type="UCNHVar">
+                <usePlasticity> true </usePlasticity>
+                <variable_properties>
+                  <entry>
+                    <color> 0.0   </color>
+                    <bulk_modulus>3.2e6</bulk_modulus>
+                    <shear_modulus>1.2e6</shear_modulus>
+                    <yield_stress>1.0e3</yield_stress>
+                    <hardening_modulus>1.0e3</hardening_modulus>
+                  </entry>
+                  <entry>
+                    <color> 1.0   </color>
+                    <bulk_modulus>6.4e6</bulk_modulus>
+                    <shear_modulus>2.4e6</shear_modulus>
+                    <yield_stress>2.0e3</yield_stress>
+                    <hardening_modulus>2.0e3</hardening_modulus>
+                  </entry>
+                </variable_properties>
+              </constitutive_model>
+              <erosion algorithm = "ZeroStress"/>
+              <damage_model type="ThresholdVar">
+                <variable_properties>
+                  <entry>
+                    <color> 0.0   </color>
+                    <mean>7.0e4</mean>
+                    <std>7.0e3</std>
+                  </entry>
+                  <entry>
+                    <color> 1.0   </color>
+                    <mean>7.0e3</mean>
+                    <std>7.0e2</std>
+                  </entry>
+                </variable_properties>
+                  <failure_distrib>gauss     </failure_distrib>
+                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              </damage_model>
+              <geom_object>
+                <difference>
+                  <cylinder label = "gp2">
+                     <bottom>[.75,.75,.05]</bottom>
+                     <top>[.75,.75,.1]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                  <box label="gp3">
+                     <min>[ 0.70, 0.70, 0.05 ]</min>
+                     <max>[ 0.80, 0.80, 0.10 ]</max>
+                  </box>
+                </difference>
+                <res>[2,2,1]</res>
+                <velocity>[1.0,0.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             0               </color>
+              </geom_object>
+              <geom_object>
+                <box label="gp3"/>
+                <res>[2,2,1]</res>
+                <velocity>[1.0,0.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             1               </color>
+               </geom_object>
+           </material>
+
+           <contact>
+              <type>null</type>
+              <materials>[]</materials>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>                  
+          <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                     <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.5,0.5,0.05]</lower>
+              <upper>[1.0,1.0,0.10]</upper>
+              <resolution>[40,20,1]</resolution>
+              <patches>[2,2,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>

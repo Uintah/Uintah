@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -94,7 +94,7 @@ namespace Uintah {
 
     const VarLabel* pDeformRateLabel;
     const VarLabel* pDeformRateLabel_preReloc;
-    
+
 
     // Plasticity Requirements //
     /////////////////////////////
@@ -163,6 +163,12 @@ namespace Uintah {
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
 
+/*`==========TESTING==========*/
+    virtual void reinitializeCMData(const Patch* patch,
+                                    const MPMMaterial* matl,
+                                    DataWarehouse* new_dw);
+/*===========TESTING==========`*/
+
 
     // Scheduling Functions //
     //////////////////////////
@@ -179,6 +185,10 @@ namespace Uintah {
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
+
+    virtual void addReinitializeComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patches) const;
 
 
     // Compute Functions //
@@ -241,7 +251,7 @@ namespace Uintah {
                                              DataWarehouse* new_dw);
 
   private:
-    
+
     void getYieldStressDistribution(ProblemSpecP& ps);
 
     void setYieldStressDistribution(const UCNH* cm);

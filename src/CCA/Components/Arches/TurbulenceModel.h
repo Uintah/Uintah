@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,7 +65,6 @@ WARNING
 namespace Uintah {
 class VarLabel;
 class ArchesLabel;
-class MPMArchesLabel;
 class TimeIntegratorLabel;
 class TurbulenceModel
 {
@@ -74,8 +73,7 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for TurbulenceModel.
-      TurbulenceModel(const ArchesLabel* label,
-                      const MPMArchesLabel* MAlb);
+      TurbulenceModel(const ArchesLabel* label);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -135,7 +133,6 @@ public:
  protected:
 
       const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
       const VarLabel* d_dissipationRateLabel;
 
 

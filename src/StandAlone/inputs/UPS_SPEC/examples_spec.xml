@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <!-- RMCRT_Test   component  -->
+  <include href="RMCRT_test.xml"/>
+
+  <!-- Burger         -->
+  <Burger                     spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </Burger>
+
+  <!--  DOSWeep  Component -->
+  <DOSweep                    spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+    <X_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Y_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Z_Laplacian              spec="OPTIONAL NO_DATA" />
+    <include href="solver_spec.xml" section="Solver/Parameters" />
+  </DOSweep>
+
+  <!-- Heat -->
+  <Heat                       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <alpha                    spec="REQUIRED DOUBLE" />
+    <R0                       spec="REQUIRED DOUBLE" />
+    <gamma                    spec="REQUIRED DOUBLE" />
+    <refine_threshold         spec="OPTIONAL DOUBLE" />
+  </Heat>
+
+  <!-- Poisson        -->
+  <Poisson                    spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </Poisson>
+
+  <PhaseField spec="OPTIONAL NO_DATA"
+        attribute1="type REQUIRED STRING 'pure_metal, heat, benchmark01, benchmark02, benchmark03, benchmark04'">
+    <delt                     spec="REQUIRED DOUBLE" />
+    <dim                      spec="OPTIONAL INTEGER '1,3'"/>
+    <var                      spec="OPTIONAL STRING 'cc, nc'"/>
+    <scheme                   spec="OPTIONAL STRING 'forward_euler, backward_euler, crank_nicolson'" />
+    <verbosity                spec="OPTIONAL INTEGER '0,4'"/>
+    <alpha                    spec="OPTIONAL DOUBLE" />
+    <R0                       spec="OPTIONAL DOUBLE" />
+    <Delta                    spec="OPTIONAL DOUBLE" />
+    <epsilon                  spec="OPTIONAL DOUBLE" />
+    <gamma_psi                spec="OPTIONAL DOUBLE" />
+    <gamma_u                  spec="OPTIONAL DOUBLE" />
+    <refine_threshold         spec="OPTIONAL DOUBLE" />
+    <test                     spec="OPTIONAL BOOLEAN" />
+  </PhaseField>
+
+  <UnifiedSchedulerTest       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </UnifiedSchedulerTest>
+
+  <!--  Particle Test Component -->
+  <ParticleTest1              spec="OPTIONAL NO_DATA" >
+    <doOutput                 spec="OPTIONAL INTEGER" />
+    <doGhostCells             spec="OPTIONAL INTEGER" />
+  </ParticleTest1>
+
+  <!--  Wave  Component -->
+  <Wave                       spec="OPTIONAL NO_DATA" >
+    <radius                   spec="OPTIONAL DOUBLE 'positive'" />
+    <initial_condition        spec="OPTIONAL STRING" />
+    <integration              spec="OPTIONAL STRING" />
+    <refine_threshold         spec="OPTIONAL INTEGER" />
+  </Wave>
+
+  <!--  Solver Test  Component -->
+  <SolverTest                 spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+    <X_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Y_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Z_Laplacian              spec="OPTIONAL NO_DATA" />
+
+    <include href="solver_spec.xml" section="Solver/Parameters" />
+
+  </SolverTest>
+
+</Uintah_Include>

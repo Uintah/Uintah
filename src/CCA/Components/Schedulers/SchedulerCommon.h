@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -225,17 +225,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                            , const MaterialSet  * matls
                                            );
 
-
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * old_posLabel
-                                           , const VarLabelList & old_labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            which
-                                           );
-
     virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
                                            , const VarLabel     * old_posLabel
                                            , const VarLabelList & old_labels
@@ -302,6 +291,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
+    
+    // number of schedulers and subschedulers
+    int m_num_schedulers {0};
 
     virtual void setMaxGhostCellsCollectionPhase(bool val) {m_max_ghost_cell_collection_phase = val;}
 
@@ -418,7 +410,6 @@ protected:
     std::ofstream*              m_mem_logfile{nullptr};
 
     Relocate                    m_relocate_1;
-    Relocate                    m_relocate_2;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -69,13 +69,6 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
 
       thermalContactTemperatureRate.initialize(0);
       NCVariable<double> GthermalContactTemperatureRate;
-      if (flag->d_fracture) {
-        new_dw->allocateAndPut(GthermalContactTemperatureRate,
-                               lb->GThermalContactTemperatureRateLabel, 
-                               dwindex, patch);
-        GthermalContactTemperatureRate.initialize(0);
-      }
-
     }
   }
 }
@@ -91,6 +84,4 @@ void NullThermalContact::addComputesAndRequires(Task* t,
                                             const MaterialSet*) const
 {
   t->computes(lb->gThermalContactTemperatureRateLabel);
-  if (flag->d_fracture)
-    t->computes(lb->GThermalContactTemperatureRateLabel); 
 }

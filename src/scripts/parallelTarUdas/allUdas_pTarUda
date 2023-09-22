@@ -1,0 +1,104 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+#  This script searches for udas with timesteps that have not been tarred up
+#  and creates tarballls if found in parallel.
+#______________________________________________________________________
+
+set nProcs = $argv
+if( $#nProcs == 0 || $#argv != 1 ) then
+  echo " allUdas_pTarUda < number of processors> "
+  echo " Now exitiing..."
+  exit
+endif
+
+set ptar   = `dirname $0`"/pTarUda"
+
+
+if ( ! -e $ptar ) then
+  echo "ERROR: the path to pTarUda ($ptar) is incorrect."
+  echo "Now existing...."
+  exit(1)
+endif
+
+
+set here = `pwd`
+
+#__________________________________
+# Split the udas found into individual files
+# You have to do this if you have a large number of udas (hundreds).
+
+mkdir .scratch >& /dev/null
+( find .  -type d -name "*.uda.[0-9]*" > .scratch/allUdas ) >& /dev/null   # This eliminates stderr messages from poluting 
+
+cd .scratch
+split --lines=20 --numeric-suffixes allUdas udas
+cd $here
+
+ls .scratch
+
+#__________________________________
+#  Loop over each file chunk
+foreach X ( .scratch/udas* )
+
+  set these = (`cat $X` )
+  echo "______________________________________________________________________"
+  echo "  $X"
+  
+  #__________________________________
+  # loop over udas
+  foreach Y ( $these[*]:q )
+    
+    # Does this uda have directories that have not been tarred?
+    echo "__________________________________"
+    cd $Y
+    echo "  Checking Uda $Y "
+    set dirs1 = ( `find .             -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files"` )
+    set dirs2 = ( `find .             -maxdepth 1 -type d  -name "t[0-9]*" -exec basename {} \;` )
+    set dirs3 = ( `find ./checkpoints             -type d  -name "t[0-9]*"` )
+
+    echo " number of untarred directores dir1: $#dirs1 dirs2: $#dirs2 dirs3: $#dirs3 "
+
+    if ( $#dirs1 == 0 && $#dirs2 == 0 && $#dirs3 == 0 ) then
+      printf '  \t %s\n' "uda has already been tarred."
+      cd $here
+      continue
+    endif
+
+    cd $here
+
+    echo "$ptar --np $nProcs --create --continueTarring --allTimesteps y -uda $Y"
+    
+    $ptar --np $nProcs --create --continueTarring --allTimesteps y -uda $Y
+
+    cd $Y
+
+    #__________________________________
+    # bulletproofing:  Have all the timesteps
+    # been tarred successfully?
+    /bin/rm ptar_started ptar_finished >&/dev/null
+    grep Working ptar_record           | cut -d ":" -f 2 |sort -n > & ptar_started
+    grep "Finished create" ptar_record | cut -d ":" -f 2 |sort -n > & ptar_finished
+    diff ptar_started ptar_finished
+    
+    set rc = $status
+
+    #__________________________________
+    # remove timestep dirs if they have
+    if ($rc == 0 ) then
+      find . -type f -name "*.gz" -print | sed s/.tar.gz//g |xargs /bin/rm -rf
+      /bin/rm ptar_started ptar_finished
+    else
+      echo "WARNING:  something went wrong tarring up the timesteps in uda $Y"
+      echo "  sdiff $Y/pTar_started  $Y/pTar_finished"
+    endif
+
+    cd $here
+  end
+  echo "______________________________________________________________________"
+  echo " successfully tarred "
+  
+end
+
+/bin/rm -rf .scratch
+exit

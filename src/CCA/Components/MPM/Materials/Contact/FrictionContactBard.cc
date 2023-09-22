@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -124,7 +124,9 @@ void FrictionContactBard::exMomInterpolated(const ProcessorGroup*,
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
     for(int m=0;m<numMatls;m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],        lb->gVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],      lb->gSurfNormLabel, dwi, patch, gnone, 0);
@@ -307,7 +309,9 @@ void FrictionContactBard::exMomIntegrated(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->get(normtraction[m],lb->gNormTractionLabel,dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);

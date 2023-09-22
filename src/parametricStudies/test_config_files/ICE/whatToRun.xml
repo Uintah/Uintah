@@ -1,17 +1,20 @@
 <config>
-<postProcessCmd_path></postProcessCmd_path>
+<postProcessCmd_path>/home/harman/UintahProjects/NaturalConvection_validation/</postProcessCmd_path>
 
 <symbolicLinks>
 </symbolicLinks>
 
+<test>
+  <name>naturalConvection</name>
+  <tst>naturalConvection_cavity_dx.tst</tst>
+</test>
 
-
+<!--
 <test>
   <name>DNS_ReTau180</name>
   <tst>delT_study.tst</tst>
 </test>
 
-<!--
 <test>
   <name>Couette-Poiseuille_XY</name>
   <tst>Couette-Poiseuille/XY.tst</tst>

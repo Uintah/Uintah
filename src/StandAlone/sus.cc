@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,6 +73,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
@@ -223,7 +224,56 @@ static void usage( const std::string& message,
   quit();
 }
 
+//______________________________________________________________________
+//
+void display_git_info( const bool show_gitDiff,
+                       const bool show_gitStatus )
+{
+  // Run git commands Uintah
+  std::cout << "git branch:"  << GIT_BRANCH << "\n";
+  std::cout << "git date:   " << GIT_DATE << "\n";
+  std::cout << "git hash:   " << GIT_HASH << "\n";
 
+  if ( show_gitDiff || show_gitStatus ) {
+    std::cout << "____GIT_____________________________________________________________\n";
+    std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
+
+    if (show_gitDiff) {
+      std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
+      std::cout << "\n__________________________________git diff\n";
+      std::system(cmd.c_str());
+    }
+
+    if (show_gitStatus) {
+      std::string cmd = "cd " + sdir + "; git status  --branch --short";
+      std::cout << "\n__________________________________git status --branch --short\n";
+      std::system(cmd.c_str());
+
+      cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\" | cat";
+      std::cout << "\n__________________________________git log -1\n";
+      std::system(cmd.c_str());
+    }
+    std::cout << "____GIT_______________________________________________________________\n";
+  }
+}
+
+//______________________________________________________________________
+//  Display the configure command
+
+void display_config_info(const bool show_configCmd)
+{
+  if ( show_configCmd ){
+
+    std::string odir = std::string(sci_getenv("SCIRUN_OBJDIR"));
+    std::string cmd = "cd " + odir + "; sed -n '7'p config.log ";
+    std::cout << "\n__________________________________Configure Command\n";
+    std::system(cmd.c_str());
+    std::cout << "\n__________________________________\n";
+
+  }
+}
+//______________________________________________________________________
+//
 void sanityChecks()
 {
 #if defined( DISABLE_SCI_MALLOC )
@@ -269,16 +319,19 @@ int main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
+
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
-  bool   restart             = false;
+  bool   onlyValidateUps     = false;
   bool   postProcessUda      = false;
-  bool   do_gitDiff          = false;
-  bool   do_gitStatus        = false;
+  bool   restart             = false;
   bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
+  bool   show_configCmd      = false;
+  bool   show_gitDiff        = false;
+  bool   show_gitStatus      = false;
+  bool   show_version        = false;
   bool   validateUps         = true;
-  bool   onlyValidateUps     = false;
 
   int    restartCheckpointIndex     = -1;
   int    udaSuffix           = -1;
@@ -287,7 +340,6 @@ int main( int argc, char *argv[], char *env[] )
   int    numPartitions       =  0;
   int    threadsPerPartition =  0;
 #endif
-
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
   std::string solverName = "";  // empty string defaults to CGSolver
@@ -305,6 +357,8 @@ int main( int argc, char *argv[], char *env[] )
    */
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
+    std::string ARG = string_toupper(arg);
+
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
     }
@@ -421,7 +475,8 @@ int main( int argc, char *argv[], char *env[] )
       int retVal = UnifiedScheduler::verifyAnyGpuActive();
       if (retVal == 1) {
         std::cout << "At least one GPU detected!" << std::endl;
-      } else {
+      }
+      else {
         std::cout << "No GPU detected!" << std::endl;
       }
       Parallel::exitAll(retVal);
@@ -622,11 +677,14 @@ int main( int argc, char *argv[], char *env[] )
       }
       layout = IntVector(ii, jj, kk);
     }
+    else if (arg == "-configCmd") {
+      show_configCmd = true;
+    }
     else if (arg == "-gitDiff") {
-      do_gitDiff = true;
+      show_gitDiff = true;
     }
     else if (arg == "-gitStatus") {
-      do_gitStatus = true;
+      show_gitStatus = true;
     }
     else if (arg == "-validate") {
       onlyValidateUps = true;
@@ -637,7 +695,13 @@ int main( int argc, char *argv[], char *env[] )
     else if (arg == "-postProcessUda" || arg == "-PostProcessUda") {
       postProcessUda = true;
     }
-    else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
+    else if (ARG == "-VERSION" || ARG == "-V") {
+      show_configCmd   = true;
+      show_gitStatus   = true;
+      show_gitDiff     = true;
+      show_version     = true;
+    }
+    else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
         || arg == "-mpmf" || arg == "-rmpm" || arg == "-smpm" || arg == "-amrmpm" || arg == "-smpmice" || arg == "-rmpmice") {
       usage(std::string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
@@ -649,8 +713,9 @@ int main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide file name for -visit", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_connect" ) {
       do_VisIt = VISIT_SIMMODE_STOPPED;
@@ -662,36 +727,41 @@ int main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide a string for -visit_comment", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_options" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_options", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_ui" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_ui", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
 #endif
     else {
@@ -713,7 +783,7 @@ int main( int argc, char *argv[], char *env[] )
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, nullptr, true );
 
-  if( filename == "" ) {
+  if( filename == "" && show_version == false) {
     usage("No input file specified", "", argv[0]);
   }
 
@@ -772,6 +842,8 @@ int main( int argc, char *argv[], char *env[] )
     //mallocTraceInfo.setTracingState( false );
 #endif
 
+    //__________________________________
+    //  output header
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
       time_t t = time(nullptr);
@@ -779,46 +851,19 @@ int main( int argc, char *argv[], char *env[] )
       char name[256];
       gethostname(name, 256);
 
-      std::cout << "Date:    " << time_string;  // has its own newline
-      std::cout << "Machine: " << name << std::endl;
-      std::cout << "Running: ";
-      for(int i=1; i<argc; ++i)
-        std::cout << argv[i] << " ";
-      std::cout << std::endl;
-      std::cout << "Git Commit: " << GIT_COMMIT << std::endl;
-      std::cout << "Git Date  : " << GIT_DATE << std::endl;
-      std::cout << "Git URL   : " << GIT_URL << std::endl;
-      std::cout << "Git Branch: " << GIT_BRANCH << std::endl;
+      std::cout << "Date:       " << time_string;  // has its own newline
+      std::cout << "Machine:    " << name << "\n";
+      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
+      std::cout << "CFLAGS:          " << CFLAGS << "\n";
+      std::cout << "CXXFLAGS:        " << CXXFLAGS << "\n";
 
-      // Run git commands Uintah
-      if ( do_gitDiff || do_gitStatus ) {
-        std::string cmd, sdir = GIT_SRCDIR;
+      display_git_info( show_gitDiff, show_gitStatus);
 
-        std::cout << "___ GIT _______________________________________________\n";
+      display_config_info( show_configCmd );
 
-        if (do_gitStatus) {
-          cmd = "cd " + sdir + "; git status --branch --short";
-          std::cout << "\n____ git status --branch --short __________________\n";
-          std::system(cmd.c_str());
-
-          cmd = "cd " + sdir + "; git log -1 --format='%ad %an %H'";
-          std::cout << "\n____ git log -1 ___________________________________\n";
-          std::system(cmd.c_str());
-        }
-
-        if (do_gitDiff) {
-          cmd = "cd " + sdir + "; git --no-pager diff -w --no-color --minimal";
-          std::cout << "\n____ git diff -w __________________________________\n";
-          std::system(cmd.c_str());
-        }
-
-        std::cout << "___ GIT________________________________________________\n";
+      if( show_version ){
+        quit();
       }
-
-      std::cout << "CFLAGS: " << CFLAGS << std::endl;
-      std::cout << "CXXFLAGS: " << CXXFLAGS << std::endl;
-      std::cout << "LDFLAGS: " << LDFLAGS << std::endl;
-      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << std::endl;
     }
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );
@@ -860,6 +905,7 @@ int main( int argc, char *argv[], char *env[] )
       // specifies a UDA directory instead of a UPS file.
       proc0cout << std::endl << "ERROR - Failed to parse UPS file: "
                 << filename << std::endl;
+
       if( validDir( filename ) ) {
         proc0cout << "ERROR - Note: '" << filename << "' is a directory! "
                   << "Did you mistakenly specify a UDA instead of an UPS file?"

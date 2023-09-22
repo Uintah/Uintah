@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,6 +67,8 @@ bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
 int         RMCRTCommon::d_whichAlgo{singleLevel};
+int         RMCRTCommon::d_destructorCount{0};
+
 std::string RMCRTCommon::d_abskgBC_tag;
 std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
@@ -130,20 +132,21 @@ RMCRTCommon::~RMCRTCommon()
   VarLabel::destroy( d_boundFluxLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
-  // when the radiometer class (float) is invoked d_abskgLabel is deleted twice.  This prevents that
- if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type && d_abskgLabel->getReferenceCount() == 1 ){
-    VarLabel::destroy( d_abskgLabel );
-  }
-  // For the RMCRT slim version
-  VarLabel::destroy( d_abskgSigmaT4CellTypeLabel );
+  // This prevents double deletion
+  if(d_destructorCount == 0 ){
+  
+    // only delete if the label was created in this class
+    // it could have been created upstream
+    if ( d_abskgLabel->equals( d_compAbskgLabel ) == false ){
+      VarLabel::destroy( d_abskgLabel );
+    }
 
-  // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
-  if( d_matlSet ) {
-    if ( d_matlSet->getReferenceCount() == 1 ){
-      d_matlSet->removeReference();
+    if( d_matlSet && d_matlSet->removeReference() ){ 
       delete d_matlSet;
     }
   }
+  
+  d_destructorCount ++;
 }
 
 //______________________________________________________________________

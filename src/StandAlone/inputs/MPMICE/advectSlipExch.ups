@@ -147,8 +147,7 @@
     <!--____________________________________________________________________-->
     <DataArchiver>
       <filebase>advect_slipExch.uda</filebase>
-      <outputInitTimestep/>
-      <outputTimestepInterval>10</outputTimestepInterval>
+      <outputTimestepInterval>5</outputTimestepInterval>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
       <save label="wvel_FC"/>
@@ -171,7 +170,7 @@
       <save label="p.volume"/>
       <save label="p.velocity"/>
       <save label="TotalMomentum"/>
-      <checkpoint timestepInterval="7" cycle="1"/>
+      <checkpoint timestepInterval="10" cycle="1"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -253,7 +252,7 @@
       </MPM>
       
       <ICE>
-        <material>
+        <material name = "air">
           <EOS type = "ideal_gas">       </EOS>
           <dynamic_viscosity>     0.0    </dynamic_viscosity>
           <thermal_conductivity>  0.0    </thermal_conductivity>
@@ -301,6 +300,7 @@
     <DataAnalysis>
 
       <Module name = "minMax">
+        <material> air </material>
         <samplingFrequency> 1e10 </samplingFrequency>
         <timeStart>          0   </timeStart>
         <timeStop>          100  </timeStop>

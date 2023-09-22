@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016-2018 The University of Utah
+ * Copyright (c) 2016-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,6 +57,7 @@ setup_species_equations( Uintah::ProblemSpecP params,
                          const Expr::TagList velTags,
                          const Expr::Tag temperatureTag,
                          GraphCategories& gc,
+                         std::set<std::string>& persistentFields,
                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                          const bool computeKineticsJacobian );
 
@@ -73,14 +74,25 @@ class SpeciesTransportEquation : public TransportEquation
   Uintah::ProblemSpecP wasatchSpec_;
   const TurbulenceParameters turbParams_;
   const int specNum_;
-  const Expr::Tag primVarTag_;
-  const Expr::Tag densityTag_, temperatureTag_, mmwTag_;
+  const Expr::Tag primVarTag_, primVarNP1Tag_, primVarInitTag_;
+  const Expr::Tag densityTag_, densityNP1Tag_, densityInitTag_;
+  const Expr::Tag temperatureTag_, mmwTag_;
   const Expr::TagList velTags_;
   const int nspec_;
-  Expr::TagList yiTags_;
+  bool isStrong_;
+  Expr::TagList yiTags_, yiNP1Tags_, yiInitTags_;
+  std::set<std::string>& persistentFields_;
   WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo_;
   boost::shared_ptr<pokitt::ChemicalSourceJacobian> jacobian_;
+  FieldTagInfo infoNP1_, infoInit_;  // needed to form predicted scalar quantities
 
+  void register_diffusive_flux_expressions( const Category       cat,
+                                            FieldTagInfo&        info,
+                                            const Expr::Tag&     densityTag,
+                                            const Expr::Tag&     primVarTag,
+                                            const Expr::TagList& yiTags,
+                                            const Expr::Context  context,
+                                            const std::string    suffix );
 
 public:
 
@@ -89,6 +101,7 @@ public:
                             const TurbulenceParameters& turbParams,
                             const int specNum,
                             GraphCategories& gc,
+                            std::set<std::string>& persistentFields,
                             const Expr::Tag densityTag,
                             const Expr::TagList velTags,
                             const Expr::Tag temperatureTag,

@@ -11,7 +11,7 @@
 #
 #  To check all MPMLabels:
 #  cd <to components>
-#  set files = ( MPM/SerialMPM.cc MPMICE/MPMICE.cc MPMArches/MPMArches.cc `find . -name "*.cc" | grep Constitutive` )
+#  set files = ( MPM/SerialMPM.cc MPMICE/MPMICE.cc `find . -name "*.cc" | grep Constitutive` )
 #  Uintah/src/Packages/Uintah/tools/checkForUnusedVarLabels MPM/MPMLabel.cc $files
 #
 #

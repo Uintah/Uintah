@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2020 The University of Utah
+#  Copyright (c) 1997-2023 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -32,7 +32,7 @@ SRCDIR   := CCA/Components/MPM/Materials/ParticleCreator
 
 SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
+	$(SRCDIR)/FileGeomPieceParticleCreator.cc	\
+	$(SRCDIR)/TriangleParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc
-#	$(SRCDIR)/MembraneParticleCreator.cc	\
-#	$(SRCDIR)/ShellParticleCreator.cc 

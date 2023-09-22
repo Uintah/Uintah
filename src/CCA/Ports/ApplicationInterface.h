@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -161,11 +161,6 @@ WARNING
     // Used by the switcher
     virtual void setupForSwitching() = 0;
     
-    // restartInitialize() is called once and only once if and when a
-    // simulation is restarted.  This allows the simulation component
-    // to handle initializations that are necessary when a simulation
-    // is restarted.
-    virtual void restartInitialize() = 0;
 
     // Get the task graph the application wants to execute. Returns an
     // index into the scheduler's list of task graphs.
@@ -272,6 +267,7 @@ WARNING
     virtual bool isRegridTimeStep() const = 0;
     virtual void setRegridTimeStep( bool val ) = 0;
     virtual int  getLastRegridTimeStep() = 0;
+    virtual bool wasRegridLastTimeStep() const = 0;
     
     // Some applications can set reduction variables
     virtual void addReductionVariable( std::string name,

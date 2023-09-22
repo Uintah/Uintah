@@ -34,6 +34,8 @@ BrownSoot_spectral_orthog_ups  = modUPS( the_dir, "Coal/BrownSoot_spectral.ups" 
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -207,7 +209,7 @@ NIGHTLYTESTS = [
 ]
 
 # Tests that are run during local regression testing
-LOCAL_TESTS = [
+LOCALTESTS = [
 ]
 
 # NO RMCRT due to the segfault on the MAC
@@ -218,16 +220,19 @@ NO_RMCRT = [
 DEBUG = [
 ]
 
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCAL_TESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
+#LIST: LOCALTESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
 #__________________________________
 
 
 # returns the list
 def getTestList(me) :
-  if me == "LOCAL_TESTS":
+  if me == "LOCALTESTS":
     TESTS = RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS
   elif me == "KOKKOS_TESTS":
     TESTS = KOKKOS_TESTS
@@ -258,7 +263,7 @@ if __name__ == "__main__":
 
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
-  result = runSusTests(argv, TESTS, "ARCHES")
+  result = runSusTests(argv, TESTS, "ARCHES", ADDTL_PATH)
 
   # cleanup modified files
   command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)

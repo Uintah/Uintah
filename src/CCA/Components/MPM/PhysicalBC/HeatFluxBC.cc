@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,6 +37,7 @@
 using namespace Uintah;
 using namespace std;
 
+//______________________________________________________________________
 // Store the geometry object and the load curve
 HeatFluxBC::HeatFluxBC(ProblemSpecP& ps,const GridP& grid)
 {
@@ -72,6 +73,7 @@ HeatFluxBC::HeatFluxBC(ProblemSpecP& ps,const GridP& grid)
 
   // Read and save the load curve information
   d_loadCurve = scinew LoadCurve<double>(ps); 
+
   //__________________________________
   //   Bulletproofing
   // user shouldn't specify a geometry object that is bigger than the domain
@@ -100,13 +102,15 @@ HeatFluxBC::HeatFluxBC(ProblemSpecP& ps,const GridP& grid)
   }
 }
 
+//______________________________________________________________________
 // Destroy the heatflux BCs
 HeatFluxBC::~HeatFluxBC()
 {
   delete d_surface;
   delete d_loadCurve;
 }
-
+//______________________________________________________________________
+//
 void HeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
 {
 
@@ -118,6 +122,7 @@ void HeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
 
 }
 
+//______________________________________________________________________
 // Get the type of this object for BC application
 std::string 
 HeatFluxBC::getType() const
@@ -125,6 +130,7 @@ HeatFluxBC::getType() const
   return "HeatFlux";
 }
 
+//______________________________________________________________________
 // Locate and flag the material points to which this heatflux BC is
 // to be applied. Assumes that the "checkForSurface" function in ParticleCreator.cc
 // has been used to identify this material point as being on the surface of the body.
@@ -192,6 +198,7 @@ HeatFluxBC::flagMaterialPoint(const Point& p,
   return flag;
 }
 
+//______________________________________________________________________
 // Calculate the area of the surface on which the heatflux BC
 // is applied
 double
@@ -217,6 +224,7 @@ HeatFluxBC::getSurfaceArea() const
   return area;
 }
 
+//______________________________________________________________________
 // Calculate the force per particle at a certain time
 double 
 HeatFluxBC::fluxPerParticle(double time) const
@@ -235,6 +243,7 @@ HeatFluxBC::fluxPerParticle(double time) const
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
 }
 
+//______________________________________________________________________
 // Calculate the flux vector to be applied to a particular
 // material point location
 double
@@ -267,6 +276,8 @@ HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
   return flux;
 }
 
+//______________________________________________________________________
+//
 namespace Uintah {
 // A method to print out the heatflux bcs
 ostream& operator<<(ostream& out, const HeatFluxBC& bc) 

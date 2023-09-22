@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2020 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -291,6 +291,7 @@ namespace Uintah{
 
       static bool d_isSeedRandom;                   // are seeds random
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons
+      static int  d_destructorCount;                // number of times through the destructor
 
       // These are initialized once in registerVarLabels().
       static int           d_matl;

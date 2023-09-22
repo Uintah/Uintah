@@ -5,7 +5,7 @@
     <FVM                   spec="OPTIONAL NO_DATA">
       <delt                spec="REQUIRED DOUBLE 'positive'" />
       <unit_charge         spec="OPTIONAL DOUBLE"/>
-      <include href="solver_spec.xml" section="Parameters" />
+      <include href="solver_spec.xml" section="Solver/Parameters" />
     </FVM>
     
     <ESMPM                  spec="OPTIONAL NO_DATA">

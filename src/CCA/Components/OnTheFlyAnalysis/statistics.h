@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,6 +30,9 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <vector>
@@ -63,9 +66,9 @@ WARNING
 ****************************************/
   class statistics : public AnalysisModule {
   public:
-    statistics(const ProcessorGroup* myworld,
+    statistics(const ProcessorGroup*  myworld,
                const MaterialManagerP materialManager,
-               const ProblemSpecP& module_spec);
+               const ProblemSpecP&    module_spec);
 
     statistics();
 
@@ -76,7 +79,7 @@ WARNING
                               GridP& grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
-                              
+
     virtual void outputProblemSpec( ProblemSpecP& ps);
 
     virtual void scheduleInitialize(SchedulerP& sched,
@@ -84,8 +87,6 @@ WARNING
 
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
-
-    virtual void restartInitialize();
 
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
@@ -102,42 +103,43 @@ WARNING
 //      std::string  name;
       bool computeRstess;
       int matl;
-      VarLabel* Q_Label;
-      VarLabel* Qsum_Label;
-      VarLabel* Qmean_Label;
+      const VarLabel* Q_Label;
+      const VarLabel* Qsum_Label;
+      const VarLabel* Qmean_Label;
 
-      VarLabel* Qsum2_Label;
-      VarLabel* Qmean2_Label;
-      VarLabel* Qvariance_Label;
+      const VarLabel* Qsum2_Label;
+      const VarLabel* Qmean2_Label;
+      const VarLabel* Qvariance_Label;
 
-      VarLabel* Qsum3_Label;
-      VarLabel* Qmean3_Label;
-      VarLabel* Qskewness_Label;
+      const VarLabel* Qsum3_Label;
+      const VarLabel* Qmean3_Label;
+      const VarLabel* Qskewness_Label;
 
-      VarLabel* Qsum4_Label;
-      VarLabel* Qmean4_Label;
-      VarLabel* Qkurtosis_Label;
+      const VarLabel* Qsum4_Label;
+      const VarLabel* Qmean4_Label;
+      const VarLabel* Qkurtosis_Label;
 
       std::map<ORDER,bool> isInitialized;
 
+      const Uintah::TypeDescription* td;
       const Uintah::TypeDescription* subtype;
 
       // Code for keeping track of which timestep
       int timestep;
       bool isSet;
-      
+
       void initializeTimestep(){
         timestep = 0;
         isSet    = false;
       }
-      
+
       int getStart(){
         return timestep;
       }
-      
+
       // only set the timestep once
       void setStart( const int me) {
-        
+
         if(isSet == false){
           timestep = me;
           isSet   = true;
@@ -149,9 +151,9 @@ WARNING
         const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
-      
+
     };
-    
+
     //__________________________________
     // For Reynolds Shear Stress computations
     bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
@@ -173,11 +175,6 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    void restartInitialize(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw);
 
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
@@ -191,7 +188,10 @@ WARNING
                               const PatchSubset* patches,
                               const Patch*   patch,
                               Qstats& Q);
-    template <class T>
+
+    template <class TConstGridVar,
+              class TGridVar,
+              class T>
     void computeStats( DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        const Patch*   patch,
@@ -209,10 +209,15 @@ WARNING
                                 Qstats& Q);
 
     template <class T>
-    void allocateAndZero( DataWarehouse* new_dw,
-                          const VarLabel* label,
-                          const int       matl,
-                          const Patch*    patch );
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
+
+    void allocateAndZeroSums_wrap(DataWarehouse * new_dw,
+                                  const Patch   * patch,
+                                  Qstats        & Q );
+
     template <class T>
     void allocateAndZeroSums( DataWarehouse* new_dw,
                               const Patch*   patch,
@@ -236,9 +241,9 @@ WARNING
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
-    const Material       * d_matl;
-    MaterialSet          * d_matlSet;
-    const MaterialSubset * d_matSubSet;
+    const Material       * d_matl       {nullptr};
+    MaterialSet          * d_matlSet    {nullptr};
+    const MaterialSubset * d_matSubSet  {nullptr};
 
     bool required;
   };

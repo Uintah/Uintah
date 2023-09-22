@@ -6,6 +6,19 @@ from subprocess import getoutput
 from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, build_root, getInputsDir
 from helpers.modUPS import modUPS
 
+print( " --------------------" )
+wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
+print( "WasatchDefs: %s " % wasatchDefs )
+wasatchDefsExists=path.isfile(wasatchDefs)
+pattern = "HAVE_POKITT"
+if (wasatchDefsExists):
+  cmd = "grep -c %s %s" % (pattern, wasatchDefs)
+  HAVE_POKITT = getoutput(cmd)
+  print( "Cmd: %s"      % cmd )
+  print( " --------------------" )
+else:
+  HAVE_POKITT="0"
+print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
 
 the_dir = "%s/%s" % ( getInputsDir(),"Wasatch" )
 
@@ -138,6 +151,8 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
 #       compareUda_options="string" - Additional command line options for compare_uda
+#       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
+#                                     The command's final argument is the ups filename
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -279,6 +294,17 @@ VARDENTESTS=[
   ("varden-heat-loss-mixture-fraction-2d-xz","varden-heat-loss-mixture-fraction-2d-xz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
   ("varden-heat-loss-mixture-fraction-2d-yz","varden-heat-loss-mixture-fraction-2d-yz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 ]
+if HAVE_POKITT != "0":
+  VARDENTESTS+=[
+    ("test-density-solver-simple-mech",   "test-density-solver-simple-mech.ups",  2, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("test-density-solver-gri30"      ,   "test-density-solver-gri30.ups"      ,  2, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-premixed-xdir"        ,   "varden-H2-premixed-xdir.ups"        ,  4, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-premixed-ydir"        ,   "varden-H2-premixed-ydir.ups"        ,  4, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-premixed-zdir"        ,   "varden-H2-premixed-zdir.ups"        ,  4, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-nonpremixed-xyplane"  ,   "varden-H2-nonpremixed-xyplane.ups"  ,  8, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-nonpremixed-xzplane"  ,   "varden-H2-nonpremixed-xzplane.ups"  ,  8, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+    ("varden-H2-nonpremixed-yzplane"  ,   "varden-H2-nonpremixed-yzplane.ups"  ,  8, "All", ["exactComparison","no_restart","no_memoryTest"] ),
+  ]
 
 MISCTESTS=[
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -337,7 +363,7 @@ POKITTTESTS=[
   ("MultispeciesBC-open-premixed-flame-zdir",   "MultispeciesBC-open-premixed-flame-zdir.ups",    1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xyplane",     "MultispeciesBC-premixed-flame-xyplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   ("MultispeciesBC-premixed-flame-xzplane",     "MultispeciesBC-premixed-flame-xzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
-  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] )
+  ("MultispeciesBC-premixed-flame-yzplane",     "MultispeciesBC-premixed-flame-yzplane.ups",      1, "All", ["exactComparison","no_restart","no_memoryTest"] ),
   # ("implicit-compressible-multispecies-x",      "implicit-compressible-multispecies-x.ups" ,      1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
@@ -407,20 +433,9 @@ PARTICLETESTS=[
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
 
-
-print( " --------------------" )
-wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
-print( "WasatchDefs: %s " % wasatchDefs )
-wasatchDefsExists=path.isfile(wasatchDefs)
-pattern = "HAVE_POKITT"
-if (wasatchDefsExists):
-  cmd = "grep -c %s %s" % (pattern, wasatchDefs)
-  HAVE_POKITT = getoutput(cmd)
-  print( "Cmd: %s"      % cmd )
-  print( " --------------------" )
-else:
-  HAVE_POKITT="0"
-print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
+#__________________________________
+ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+                        # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________
 # The following list is parsed by the local RT script
