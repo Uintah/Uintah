@@ -497,11 +497,6 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
 
 #if defined(UINTAH_USING_GPU)
 
-// void
-// OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
-//   CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
-// }
-
 int
 OnDemandDataWarehouse::getNumDevices() {
   int numDevices = 0;

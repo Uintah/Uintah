@@ -333,7 +333,7 @@ public:
     SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
   };
 #endif
-#else
+#else - CUDA - streams 
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
 
@@ -392,7 +392,7 @@ public:
 
   void addTempHostMemoryToBeFreedOnCompletion( void * ptr );
 
-  void addTempCudaMemoryToBeFreedOnCompletion( unsigned int device_ptr, void * ptr );
+  void addTempDeviceMemoryToBeFreedOnCompletion( unsigned int device_ptr, void * ptr );
 
   void deleteTemporaryTaskVars();
 
@@ -462,9 +462,6 @@ private:
 //-----------------------------------------------------------------------------
 #if defined(UINTAH_USING_GPU)
 private:
-//  bool         m_deviceExternallyReady{false};
-//  bool         m_completed{false};
-//  unsigned int m_deviceNum{0};
 
 #ifdef TASK_MANAGES_EXECSPACE
   // Defined in Task.h
@@ -537,8 +534,8 @@ private:
     }
   };
 
-  std::vector<gpuMemoryPoolDevicePtrItem> taskCudaMemoryPoolItems;
-  std::queue<void*>                       taskHostMemoryPoolItems;
+  std::vector<gpuMemoryPoolDevicePtrItem> m_taskDeviceMemoryPoolItems;
+  std::queue<void*>                       m_taskHostMemoryPoolItems;
 
   std::vector<labelPatchMatlLevelDw> varsNeededOnHost;
   std::vector<delayedCopyingInfo> delayedCopyingVars;
@@ -634,44 +631,6 @@ public:
     bool allHostVarsProcessingReady(std::vector<OnDemandDataWarehouseP> & m_dws);
 
     bool allGPUVarsProcessingReady(std::vector<OnDemandDataWarehouseP> & m_dws);
-
-    // struct GPUGridVariableInfo {
-
-    //   GPUGridVariableInfo( DetailedTask * dtask
-    //                      , double       * ptr
-    //                      , IntVector      size
-    //                      , int            device
-    //                      )
-    //     : m_dtask{dtask}
-    //     , m_ptr{ptr}
-    //     , m_size{size}
-    //     , m_device{device}
-    //   {}
-
-    //   DetailedTask * m_dtask;
-    //   double       * m_ptr;
-    //   IntVector      m_size;
-    //   int            m_device;
-    // };
-
-    // std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_device_requires_ptrs;
-    // std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_device_computes_ptrs;
-    // std::map<std::string, GPUGridVariableInfo>          m_device_computes_temp_ptrs;
-    // std::vector<VarLabel*>                              m_tmp_var_labels;
-
-    // std::vector<GPUGridVariableInfo>                    m_device_requires_allocation_ptrs;
-    // std::vector<GPUGridVariableInfo>                    m_device_computes_allocation_ptrs;
-    // std::vector<double*>                                m_host_computes_allocation_ptrs;
-
-    // std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_host_requires_ptrs;
-    // std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_host_computes_ptrs;
-    // std::vector<std::queue<cudaEvent_t*> >              m_idle_events;
-
-    // int  m_num_devices;
-    // int  m_current_device;
-
-    // ARS - 18/11/22 - Not used and specific to ICE??
-    // std::vector< std::string > m_material_names;
 
     struct labelPatchMatlDependency {
 

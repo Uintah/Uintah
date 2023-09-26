@@ -193,7 +193,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   std::string notUsed(" is set but will not be used!!!!!!!");
 
   switch(Parallel::getKokkosPolicy())
-    {
+  {
     case Parallel::Kokkos_Team_Policy:
     case Parallel::Kokkos_Range_Policy:
       {
@@ -207,7 +207,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
         Parallel::getKokkosTileSize(i,j,k);
         if(i > 0 || j > 0 || k > 0)
-          proc0cout << "Kokkos tile Size: \t\t"
+          proc0cout << "Kokkos Tile Size: \t\t"
                     << i << " " << j << " " << k << notUsed << std::endl;
       }
       break;
@@ -220,7 +220,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
         int i, j, k;
 
-        proc0cout << "Kokkos tile Size: \t\t";
+        proc0cout << "Kokkos Tile Size: \t\t";
         Parallel::getKokkosTileSize(i,j,k);
         if(i > 0 || j > 0 || k > 0)
           proc0cout << i << " " << j << " " << k << std::endl;
@@ -228,22 +228,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps
           proc0cout << "Default" << std::endl;
       }
       break;
-    }
+  }
 
-  int blocksPerLoop = Parallel::getCudaBlocksPerLoop();
-  if(blocksPerLoop > 0) {
-    std::string plural = blocksPerLoop > 1 ? "s" : "";
-    proc0cout << "Kokkos Team Block" << plural
-              << " per loop: \t" << blocksPerLoop
+  int leaguesPerLoop = Parallel::getKokkosLeaguesPerLoop();
+  if(leaguesPerLoop > 0) {
+    std::string plural = leaguesPerLoop > 1 ? "s" : "";
+    proc0cout << "Kokkos Leagues per Loop: \t" << leaguesPerLoop
               << (Parallel::getKokkosPolicy() ==
                   Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
   }
 
-  int threadsPerBlock = Parallel::getCudaThreadsPerBlock();
-  if(threadsPerBlock > 0) {
-    std::string plural = threadsPerBlock > 1 ? "s" : "";
-    proc0cout << "Kokkos Team Thread" << plural
-              << " per block: \t" << threadsPerBlock
+  int teamsPerLeague = Parallel::getKokkosTeamsPerLeague();
+  if(teamsPerLeague > 0) {
+    std::string plural = teamsPerLeague > 1 ? "s" : "";
+    proc0cout << "Kokkos Teams per League: \t" << teamsPerLeague
               << (Parallel::getKokkosPolicy() ==
                   Parallel::Kokkos_Team_Policy ? "" : notUsed) << std::endl;
   }

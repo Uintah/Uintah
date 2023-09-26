@@ -46,6 +46,11 @@
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Util/DebugStream.h>
+
+  #ifdef USE_KOKKOS_INSTANCE
+  #elif defined(HAVE_CUDA) // CUDA only when using streams
+    #include <CCA/Components/Schedulers/GPUStreamPool.h>
+  #endif
 #endif
 
 #include <atomic>
@@ -1322,7 +1327,6 @@ UnifiedScheduler::runTasks( int thread_id )
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
 
         // recycle this task's stream
-        // GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
         readyTask->reclaimCudaStreamsIntoPool();
       }
 #endif
@@ -1367,8 +1371,6 @@ UnifiedScheduler::runTasks( int thread_id )
           if (readyTask->getVarsBeingCopiedByTask().getMap().empty()) {
             if (allHostVarsProcessingReady(readyTask)) {
               m_detailed_tasks->addHostReadyToExecute(readyTask);
-              //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-              //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
             } else {
               m_detailed_tasks->addHostCheckIfExecutable(readyTask);
             }
@@ -1382,16 +1384,12 @@ UnifiedScheduler::runTasks( int thread_id )
           markHostRequiresAndModifiesDataAsValid(readyTask);
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
-            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           } else {
             m_detailed_tasks->addHostCheckIfExecutable(readyTask);
           }
         } else if (cpuCheckIfExecutable) {
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
-            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           }  else {
             // Some vars aren't valid and ready,  We must be waiting on another task to finish
             // copying in some of the variables we need.
@@ -1408,10 +1406,6 @@ UnifiedScheduler::runTasks( int thread_id )
             message << "  Running CPU Task: " << *readyTask;
             DOUT(true, message.str());
           }
-
-          //See note above near cpuInitReady.  Some CPU tasks may internally interact
-          //with GPUs without modifying the structure of the data warehouse.
-          //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
         }
 #endif
       }

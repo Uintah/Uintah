@@ -191,13 +191,12 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     //for (deviceNumSetIter deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
     // const unsigned int currentDevice = *deviceNums_it;
       int currentDevice = 0;
-      // Base call is commented out
-      // OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
       GPUDataWarehouse* device_oldtaskdw = nullptr;
       if (host_oldtaskdw) {
         device_oldtaskdw = host_oldtaskdw->getdevice_ptr();
       }
+
       GPUDataWarehouse* host_newtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::NewDW);
       GPUDataWarehouse* device_newtaskdw = nullptr;
       if (host_newtaskdw) {
@@ -212,7 +211,8 @@ DetailedTask::doit( const ProcessorGroup                      * pg
       m_task->doit( m_patches, m_matls, dws, uintahParams );
    //}
 #else
-    SCI_THROW(InternalError("A task was marked as GPU enabled, but Uintah was not compiled for CUDA support", __FILE__, __LINE__));
+    SCI_THROW(InternalError("A task was marked as GPU enabled, "
+			    "but Uintah was not compiled for GPU support", __FILE__, __LINE__));
 #endif
 
   } else {
@@ -1016,18 +1016,18 @@ DetailedTask::clearPreparationCollections()
 void
 DetailedTask::addTempHostMemoryToBeFreedOnCompletion( void * ptr )
 {
-  taskHostMemoryPoolItems.push(ptr);
+  m_taskHostMemoryPoolItems.push(ptr);
 }
 
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addTempCudaMemoryToBeFreedOnCompletion( unsigned int   device_id
-                                                    , void         * ptr
+DetailedTask::addTempDeviceMemoryToBeFreedOnCompletion( unsigned int   device_id
+                                                      , void         * ptr
                                                     )
 {
   gpuMemoryPoolDevicePtrItem gpuItem(device_id, ptr);
-  taskCudaMemoryPoolItems.push_back(gpuItem);
+  m_taskDeviceMemoryPoolItems.push_back(gpuItem);
 }
 
 //_____________________________________________________________________________
@@ -1036,22 +1036,23 @@ void
 DetailedTask::deleteTemporaryTaskVars()
 {
   // clean out the host list
-  while (!taskHostMemoryPoolItems.empty()) {
+  while (!m_taskHostMemoryPoolItems.empty()) {
   // ARS - FIX ME
 #if defined(USE_KOKKOS_INSTANCE)
 #else
-    cudaHostUnregister(taskHostMemoryPoolItems.front());
+    cudaHostUnregister(m_taskHostMemoryPoolItems.front());
 #endif
     // TODO: Deletes a void*, and that doesn't call any object destructors
-    delete[] taskHostMemoryPoolItems.front();
-    taskHostMemoryPoolItems.pop();
+    delete[] m_taskHostMemoryPoolItems.front();
+    m_taskHostMemoryPoolItems.pop();
   }
 
   // and the device
-  for (auto p : taskCudaMemoryPoolItems) {
-    GPUMemoryPool::reclaimCudaMemoryIntoPool(p.device_id, p.ptr);
+  for (auto p : m_taskDeviceMemoryPoolItems) {
+    GPUMemoryPool::reclaimMemoryIntoPool(p.device_id, p.ptr);
   }
-  taskCudaMemoryPoolItems.clear();
+
+  m_taskDeviceMemoryPoolItems.clear();
 }
 
 //______________________________________________________________________

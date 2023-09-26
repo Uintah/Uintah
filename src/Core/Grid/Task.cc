@@ -128,9 +128,9 @@ Task::initialize()
   m_max_ghost_cells[0] = 0;
   m_max_level_offset   = 0;
 
-  // Assures that CPU tasks will have 1 stream
+  // Assures that CPU tasks will have one and only one instance
   if(Uintah::Parallel::usingDevice())
-    m_max_streams_per_task = 1;
+    m_max_instances_per_task = 1;
 }
 
 //______________________________________________________________________
@@ -218,16 +218,16 @@ void Task::setExecutionAndMemorySpace( const TaskAssignedExecutionSpace & execut
 //______________________________________________________________________
 //
 void
-Task::usesDevice(bool state, int maxStreamsPerTask /* = -1 */ )
+Task::usesDevice(bool state, int maxInstancesPerTask /* = -1 */ )
 {
   m_uses_device = state;
 
-  if (maxStreamsPerTask == -1) {
+  if (maxInstancesPerTask == -1) {
     // The default case, get it from a command line argument
-    m_max_streams_per_task = Uintah::Parallel::getCudaStreamsPerTask();
+    m_max_instances_per_task = Uintah::Parallel::getKokkosInstancesPerTask();
   } else {
     // Let the user override it
-    m_max_streams_per_task = maxStreamsPerTask;
+    m_max_instances_per_task = maxInstancesPerTask;
   }
 }
 
@@ -1128,7 +1128,7 @@ void
 Task::ActionNonPortableBase::
 assignDevicesAndInstances(intptr_t dTask)
 {
-  for (int i = 0; i < this->taskPtr->maxStreamsPerTask(); i++) {
+  for (int i = 0; i < this->taskPtr->maxInstancesPerTask(); i++) {
    this->assignDevicesAndInstances(dTask, i);
   }
 }
@@ -1576,7 +1576,7 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
 void
 Task::assignDevicesAndStreams(intptr_t dTask)
 {
-  for (int i = 0; i < maxStreamsPerTask(); i++) {
+  for (int i = 0; i < m_max_instances_per_task; i++) {
     assignDevicesAndStreams(dTask, i);
 
     // if (this->haveCudaStreamForThisTask(dTask, i) == false) {

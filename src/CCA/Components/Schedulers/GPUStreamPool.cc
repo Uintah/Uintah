@@ -34,8 +34,7 @@
 #if defined(USE_KOKKOS_INSTANCE)
   // Not needed instances are managed by DetailedTask/Task.
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-std::map <unsigned int, std::queue<cudaStream_t*> > Uintah::GPUStreamPool::s_idle_streams;//  =
-    // new std::map <unsigned int, std::queue<cudaStream_t*> >;
+std::map <unsigned int, std::queue<cudaStream_t*> > Uintah::GPUStreamPool::s_idle_streams;
 #endif
 
 extern Uintah::MasterLock cerrLock;

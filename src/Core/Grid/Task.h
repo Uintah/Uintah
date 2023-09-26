@@ -49,7 +49,7 @@
     #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #endif
 
-#ifdef USE_KOKKOS_INSTANCE
+  #ifdef USE_KOKKOS_INSTANCE
   #elif defined(HAVE_CUDA) // CUDA only when using streams
     #include <CCA/Components/Schedulers/GPUStreamPool.h>
   #endif
@@ -227,7 +227,7 @@ public: // private:
                                GPUDataWarehouse *taskgpudw);
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
-    // task has to keep track of the device and stream on a DetailedTask
+    // task has to keep track of the device and instance on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
@@ -460,12 +460,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -476,8 +473,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -561,7 +558,7 @@ public: // private:
 
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
-    // task has to keep track of the device and stream on a DetailedTask
+    // task has to keep track of the device and instance on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
@@ -1064,12 +1061,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1080,8 +1074,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1138,12 +1132,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1154,8 +1145,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1217,12 +1208,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1233,8 +1221,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1301,12 +1289,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1317,8 +1302,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1390,12 +1375,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1406,8 +1388,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1485,12 +1467,9 @@ public: // private:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-      execObj.setCudaThreadsPerBlock(Uintah::Parallel::getCudaThreadsPerBlock());
-      execObj.setCudaBlocksPerLoop(Uintah::Parallel::getCudaBlocksPerLoop());
-
 #ifdef TASK_MANAGES_EXECSPACE
-      const int numStreams = this->taskPtr->maxStreamsPerTask();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = this->taskPtr->maxInstancesPerTask();
+      for (int i = 0; i < nInstances; i++) {
 #ifdef USE_KOKKOS_INSTANCE
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
@@ -1501,8 +1480,8 @@ public: // private:
 #endif
       }
 #elif defined(HAVE_CUDA) // CUDA only when using streams
-      const int numStreams = uintahParams.getNumStreams();
-      for (int i = 0; i < numStreams; i++) {
+      const int nInstances = uintahParams.getNumStreams();
+      for (int i = 0; i < nInstances; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
 #endif
@@ -1903,9 +1882,9 @@ public: // class Task
          TaskAssignedExecutionSpace getExecutionSpace() const;
          TaskAssignedMemorySpace    getMemorySpace() const;
 
-         void usesDevice(bool state, int maxStreamsPerTask = -1);
+         void usesDevice(bool state, int maxInstancesPerTask = -1);
   inline bool usesDevice() const { return m_uses_device; }
-  inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
+  inline int  maxInstancesPerTask() const { return  m_max_instances_per_task; }
   
   inline void setDebugFlag( bool in ){m_debugFlag = in;}
   inline bool getDebugFlag()const {return m_debugFlag;}
@@ -2459,7 +2438,7 @@ private: // class Task
 #if defined(UINTAH_USING_GPU)
 #ifdef TASK_MANAGES_EXECSPACE
   // The task is pointed to by multiple DetailedTasks. As such, the
-  // task has to keep track of the device and stream on a DetailedTask
+  // task has to keep track of the device and instance on a DetailedTask
   // basis. The DetailedTask's pointer address is used as the key.
   std::map<intptr_t, deviceNumSet>  m_deviceNums;
 #ifdef USE_KOKKOS_INSTANCE
@@ -2506,10 +2485,7 @@ protected: // class Task
   TaskAssignedMemorySpace    m_memory_space{};
   bool m_uses_device{false};
   bool m_preload_sim_vars{false};
-  // bool m_uses_kokkos_openmp{false};
-  // bool m_uses_kokkos_openmptarget{false};
-  // bool m_uses_kokkos_cuda{false};
-  int  m_max_streams_per_task{0};
+  int  m_max_instances_per_task{0};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
   bool m_debugFlag{false};
@@ -2561,7 +2537,7 @@ void
 Task::ActionPortableBase<ExecSpace, MemSpace>::
 assignDevicesAndInstances(intptr_t dTask)
 {
-  for (int i = 0; i < this->taskPtr->maxStreamsPerTask(); i++) {
+  for (int i = 0; i < this->taskPtr->maxInstancesPerTask(); i++) {
    this->assignDevicesAndInstances(dTask, i);
   }
 }

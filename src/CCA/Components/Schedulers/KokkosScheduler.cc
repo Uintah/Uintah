@@ -100,12 +100,6 @@ namespace {
 
 #if defined(UINTAH_USING_GPU)
 extern Uintah::MasterLock cerrLock;
-
-namespace {
-#if defined(HAVE_CUDA_NOT_NEEDED)
-  Dout g_gpu_ids( "Kokkos_GPU_IDs", "KokkosScheduler", "detailed information to uniquely identify GPUs on a node", false );
-#endif
-}
 #endif
 
 
@@ -115,19 +109,12 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-thread_local  int  t_tid = 0;   // unique ID assigned in thread_driver()
+thread_local int t_tid = 0;   // unique ID assigned in thread_driver()
 
 }
 
 } } // namespace Uintah::Impl
 
-#  define CUDA_RT_SAFE_CALL( call ) {                                          \
-    cudaError err = call;                                                      \
-    if(err != cudaSuccess) {                                                   \
-        fprintf(stderr, "\nCUDA error %i in file '%s', on line %i : %s.\n\n",  \
-                err, __FILE__, __LINE__, cudaGetErrorString( err) );           \
-        exit(EXIT_FAILURE);                                                    \
-    } }
 
 //______________________________________________________________________
 //
@@ -144,44 +131,6 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
     // precluding memory blocks being defined across multiple patches.
     Uintah::OnDemandDataWarehouse::s_combine_memory = false;
   }
-
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA)
-  // ARS - true if cuda or kokkos??
-  //__________________________________
-  //
-  if ( Uintah::Parallel::usingDevice() ) {
-    // ARS - This call resets each device  - not needed???
-    // gpuInitialize();
-
-    // ARS - Here is a basic check to make sure only GPUs on the same
-    // NUMA can be seen.
-    // KOKKOS equivalent - not needed??
-
-    //get the true numDevices (in case we have the simulation turned on)
-    int numDevices = 0;
-    CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
-    int can_access = 0;
-    for (int i = 0; i < numDevices; i++) {
-      CUDA_RT_SAFE_CALL( cudaSetDevice(i) );
-      for (int j = 0; j < numDevices; j++) {
-        if (i != j) {
-          cudaDeviceCanAccessPeer(&can_access, i, j);
-          if (can_access) {
-            printf("GOOD\n GPU device #%d can access GPU device #%d\n", i, j);
-            cudaDeviceEnablePeerAccess(j, 0);
-          } else {
-            printf("ERROR\n GPU device #%d cannot access GPU device #%d\n.  "
-                   "Uintah is not yet configured to work with multiple GPUs "
-                   "in different NUMA regions.  For now, use the environment "
-                   "variable CUDA_VISIBLE_DEVICES and don't list GPU device "
-                   "#%d\n." , i, j, j);
-            SCI_THROW( InternalError("** GPUs in multiple NUMA regions are currently unsupported.", __FILE__, __LINE__));
-          }
-        }
-      }
-    }
-  }  // using Device
-#endif
 }
 
 
@@ -193,13 +142,13 @@ KokkosScheduler::~KokkosScheduler()
 #if defined(USE_KOKKOS_MALLOC)
   // The data warehouses have not been cleared so Kokkos pointers are
   // still valid as they are reference counted.
-  GPUMemoryPool::freeCudaMemoryFromPool();
+  GPUMemoryPool::freeMemoryFromPool();
 #else // if defined(USE_KOKKOS_VIEW)
   GPUMemoryPool::freeViewsFromPool();
 #endif
 #elif(HAVE_CUDA)
   // The data warehouses have not been cleared.
-  GPUMemoryPool::freeCudaMemoryFromPool();
+  GPUMemoryPool::freeMemoryFromPool();
 #endif
 }
 
@@ -209,21 +158,6 @@ KokkosScheduler::~KokkosScheduler()
 int
 KokkosScheduler::verifyAnyGpuActive()
 {
-#if defined(HAVE_CUDA_NOT_NEEDED)
-  // ARS - true if cuda or kokkos??
-
-  // ARS called from sus as a check (no further execution). Normally
-  // this call would exit out but sus should exit out.
-
-  // CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
-
-  // Attempt to access the zeroth GPU
-  cudaError_t errorCode = cudaSetDevice(0);
-  if (errorCode == cudaSuccess) {
-    return 1;  // let 1 be a good error code
-  }
-#endif
-
   return 2;
 }
 
@@ -291,56 +225,9 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   if (d_myworld->myRank() == 0) {
-    std::cout << "\nWARNING: Multi-threaded Kokkos scheduler is EXPERIMENTAL, not all tasks are thread safe or Kokkos-enabled yet.\n" << std::endl;
-
-#if defined(HAVE_CUDA_NOT_NEEDED)
-    // ARS Prefunctory check of properties. Seems to me that this call
-    // should have been combined with the check in the constructor.
-    // KOKKOS equivalent - not needed??
-    if ( !g_gpu_ids && Uintah::Parallel::usingDevice() ) {
-      cudaError_t retVal;
-      int availableDevices;
-      // Note: m_num_devices == availableDevices
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
-      std::cout << "   Using " << m_num_devices << "/" << availableDevices
-                << " available GPU(s)" << std::endl;
-
-      for (int device_id = 0; device_id < availableDevices; device_id++) {
-        cudaDeviceProp device_prop;
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
-        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n",
-               device_id, device_prop.name, device_prop.major, device_prop.minor);
-      }
-    }
-#endif
+    std::cout << "\nWARNING: Multi-threaded Kokkos scheduler is EXPERIMENTAL, "
+	      << "not all tasks are thread safe or Kokkos-enabled yet.\n" << std::endl;
   }
-
-#if defined(HAVE_CUDA_NOT_NEEDED)
-  // ARS Prefunctory check of properties. Seems to me that this call
-  // should have been combined with the check in the constructor.
-  // KOKKOS equivalent - not needed??
-  if ( g_gpu_ids && Uintah::Parallel::usingDevice() ) {
-    cudaError_t retVal;
-    int availableDevices;
-    // Note: m_num_devices == availableDevices
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
-    std::ostringstream message;
-    message << "   Rank-" << d_myworld->myRank()
-            << " using " << m_num_devices << "/" << availableDevices
-            << " available GPU(s)\n";
-
-    for ( int device_id = 0; device_id < availableDevices; device_id++ ) {
-      cudaDeviceProp device_prop;
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
-      message << "   Rank-" << d_myworld->myRank()
-              << " using GPU Device " << device_id
-              << ": \"" << device_prop.name << "\""
-              << " with compute capability " << device_prop.major << "." << device_prop.minor
-              << " on PCI " << device_prop.pciDomainID << ":" << device_prop.pciBusID << ":" << device_prop.pciDeviceID << "\n";
-    }
-    DOUT(true, message.str());
-  }
-#endif
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 }
@@ -371,7 +258,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
 
-  RuntimeStats::initialize_timestep(m_num_schedulers, m_task_graphs);
+  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
   TaskGraph* tg = m_task_graphs[tgnum];
@@ -1347,8 +1234,6 @@ KokkosScheduler::runTasks( int thread_id )
           if (readyTask->getVarsBeingCopiedByTask().getMap().empty()) {
             if (readyTask->allHostVarsProcessingReady(m_dws)) {
               m_detailed_tasks->addHostReadyToExecute(readyTask);
-              //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-              //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
             } else {
               m_detailed_tasks->addHostCheckIfExecutable(readyTask);
             }
@@ -1362,16 +1247,12 @@ KokkosScheduler::runTasks( int thread_id )
           readyTask->markHostRequiresAndModifiesDataAsValid(m_dws);
           if (readyTask->allHostVarsProcessingReady(m_dws)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
-            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           } else {
             m_detailed_tasks->addHostCheckIfExecutable(readyTask);
           }
         } else if (cpuCheckIfExecutable) {
           if (readyTask->allHostVarsProcessingReady(m_dws)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
-            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-            //GPUStreamPool::reclaimCudaStreamsIntoPool(readyTask);
           }  else {
             // Some vars aren't valid and ready, We must be waiting on
             // another task to finish copying in some of the variables

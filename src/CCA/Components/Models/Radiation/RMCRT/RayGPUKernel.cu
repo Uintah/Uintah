@@ -1794,18 +1794,17 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                    GPUDataWarehouse* new_gdw)
 {
   // Setup random number generator states on the device, 1 for each thread
-  curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimGrid.z *
     dimBlock.x * dimBlock.y * dimBlock.z;
 
-  randNumStates = (curandState*)GPUMemoryPool::allocateCudaMemoryFromPool(0, numStates * sizeof(curandState));
+  curandState* randNumStates =
+    (curandState*)GPUMemoryPool::allocateMemoryFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
   // Create a host array, load it with data, and send it over to the GPU
   int nRandNums = 512;
-  double* d_debugRandNums;
   size_t randNumsByteSize = nRandNums * sizeof(double);
-  d_debugRandNums = (double*)GPUMemoryPool::allocateCudaMemoryFromPool(0, randNumsByteSize);
+  double* d_debugRandNums = (double*)GPUMemoryPool::allocateMemoryFromPool(0, randNumsByteSize);
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, d_debugRandNums);
 
   // Making sure we have kernel/mem copy overlapping
@@ -1864,12 +1863,9 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   // Copy regionLo & regionHi to device memory.
   int maxLevels = gridP.maxLevels;
 
-  int3* dev_regionLo;
-  int3* dev_regionHi;
-
   size_t size = d_MAXLEVELS * sizeof(int3);
-  dev_regionLo = (int3*)GPUMemoryPool::allocateCudaMemoryFromPool(0, size);
-  dev_regionHi = (int3*)GPUMemoryPool::allocateCudaMemoryFromPool(0, size);
+  int3 * dev_regionLo = (int3*)GPUMemoryPool::allocateMemoryFromPool(0, size);
+  int3 * dev_regionHi = (int3*)GPUMemoryPool::allocateMemoryFromPool(0, size);
 
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionLo);
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionHi);
@@ -1900,8 +1896,8 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   // Setup random number generator states on the device, 1 for each thread
   int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
 
-  curandState* randNumStates;
-  randNumStates = (curandState*)GPUMemoryPool::allocateCudaMemoryFromPool(0, numStates * sizeof(curandState));
+  curandState* randNumStates =
+    (curandState*)GPUMemoryPool::allocateMemoryFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
   rayTraceDataOnionKernel< T >

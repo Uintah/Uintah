@@ -29,12 +29,8 @@
 // will run the functor in a loop and also not use Kokkos views.  If
 // Kokkos is provided, this creates a lambda expression and inside
 // that it contains loops over the functor.  Kokkos Views are also
-// used.  At the moment we seek to only support regular CPU code,
-// Kokkos OpenMP, and CUDA execution spaces, though it shouldn't be
-// too difficult to expand it to others.  This doesn't extend it to
-// CUDA kernels (without Kokkos), and that can get trickier (block/dim
-// parameters) especially with regard to a parallel_reduce (many ways
-// to "reduce" a value and return it back to host memory)
+// used.  At the moment regular CPU code and Kokkos execution spaces
+// are supported.
 
 #ifndef UINTAH_LOOP_EXECUTION_HPP
 #define UINTAH_LOOP_EXECUTION_HPP
@@ -182,10 +178,10 @@ private:
   int m_dim[rank];
 };
 
-// Lambda expressions for CUDA cannot properly capture plain fixed
+// Lambda expressions for Kokkos cannot properly capture plain fixed
 // sized arrays (it passes pointers, not the arrays) but they can
 // properly capture and copy a struct of arrays.  These arrays have
-// sizes known at compile time.  For CUDA, this struct containing an
+// sizes known at compile time.  For Kokkos, this struct containing an
 // array will do a full clone/by value copy as part of the lambda
 // capture.  If you require a runtime/variable sized array, that
 // requires a different mechanism involving pools and deep copies, and
@@ -466,15 +462,14 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // Team Policy
   else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Assumption - there is only one block for OpenMP
-    const int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const int thread_range_size = numItems;
+    // Assumption - there is only one league for OpenMP
+    const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+    const int team_range_size = numItems;
 
-    const int actualThreads =
-      threads_per_block < thread_range_size ?
-      threads_per_block : thread_range_size;
+    const int actualTeams = teams_per_league < team_range_size ?
+                            teams_per_league : team_range_size;
 
-    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
     typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
     int size = Parallel::getKokkosChunkSize();
@@ -484,7 +479,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     Kokkos::parallel_for(name, teamPolicy,
                          KOKKOS_LAMBDA(typename policy_type::member_type thread) {
       // printf("i is %d\n", thread.team_rank());
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                            [&](const int& n) {
         const int i = n / (j_size * k_size) + rbegin0;
         const int j = (n / k_size) % j_size + rbegin1;
@@ -543,7 +538,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   // Team Policy
   if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Team policy approach (reuses CUDA threads)
+    // Team policy approach.
 
     // Overall goal, split a 3D range requested by the user into various
     // SMs on the GPU.  (In essence, this would be a Kokkos
@@ -560,15 +555,14 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     // (SM) and number of SMs totals.
     if(std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
-      // Assumption - there is only one block for OpenMP
-      const int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int thread_range_size = numItems;
+      // Assumption - there is only one league for OpenMP
+      const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+      const int team_range_size = numItems;
 
-      const int actualThreads =
-        threads_per_block < thread_range_size ?
-                            threads_per_block : thread_range_size;
+      const int actualTeams = teams_per_league < team_range_size ?
+                              teams_per_league : team_range_size;
 
-      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
       typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
       int size = Parallel::getKokkosChunkSize();
@@ -578,7 +572,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       Kokkos::parallel_for(name, teamPolicy,
                            KOKKOS_LAMBDA(typename policy_type::member_type thread) {
         // printf("i is %d\n", thread.team_rank());
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                              [&](const int& n) {
           const int i = n / (j_size * k_size) + rbegin0;
           const int j = (n / k_size) % j_size + rbegin1;
@@ -590,8 +584,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
     }
     else
     {
-      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+      const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
 #if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
@@ -603,27 +597,27 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
-      int threads_per_loop = cuda_threads_per_block * cuda_blocks_per_loop;
-      int thread_range_size = numItems / nPartitions;
+      int teams_per_loop = kokkos_teams_per_league * kokkos_leagues_per_loop;
+      int team_range_size = numItems / nPartitions;
 
-      const unsigned int actual_threads =
-        threads_per_loop < thread_range_size ?
-        threads_per_loop : thread_range_size;
+      const unsigned int actual_teams =
+        teams_per_loop < team_range_size ?
+        teams_per_loop : team_range_size;
 
-      const unsigned int actual_threads_per_block =
-        cuda_threads_per_block < thread_range_size ?
-        cuda_threads_per_block : thread_range_size;
+      const unsigned int actual_teams_per_league =
+        kokkos_teams_per_league < team_range_size ?
+        kokkos_teams_per_league : team_range_size;
 
-      const unsigned int actual_blocks_per_loop =
-        (actual_threads - 1) / cuda_threads_per_block + 1;
+      const unsigned int actual_leagues_per_loop =
+        (actual_teams - 1) / kokkos_teams_per_league + 1;
 
       for (int p = 0; p < nPartitions; p++) {
 
         ExecSpace instanceObject = getInstance(execObj, p);
 
         // Use a Team Policy, this allows us to control how many threads
-        // per block and how many blocks are used.
-        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, actual_blocks_per_loop, actual_threads_per_block);
+        // per league and how many leagues are used.
+        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, actual_leagues_per_loop, actual_teams_per_league);
         typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
         int size = Parallel::getKokkosChunkSize();
@@ -633,18 +627,18 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
         Kokkos::parallel_for(name, teamPolicy,
                              KOKKOS_LAMBDA(typename policy_type::member_type thread) {
           // We are within an SM, and all SMs share the same amount of
-          // assigned CUDA threads.  Figure out which range of N items
+          // assigned Kokkos threads.  Figure out which range of N items
           // this SM should work on (as a multiple of 32).
-          const unsigned int currentPartition = p * actual_blocks_per_loop + thread.league_rank();
-          unsigned int estimatedThreadAmount = numItems * (currentPartition) / (actual_blocks_per_loop * nPartitions);
+          const unsigned int currentPartition = p * actual_leagues_per_loop + thread.league_rank();
+          unsigned int estimatedThreadAmount = numItems * (currentPartition) / (actual_leagues_per_loop * nPartitions);
           const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           unsigned int endingN;
 
           // Check if this is the last partition
-          if(currentPartition + 1 == actual_blocks_per_loop * nPartitions) {
+          if(currentPartition + 1 == actual_leagues_per_loop * nPartitions) {
             endingN = numItems;
           } else {
-            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_blocks_per_loop * nPartitions);
+            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_leagues_per_loop * nPartitions);
             endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           }
 
@@ -654,7 +648,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
           Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, totalN),
                                [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
             // Craft an i,j,k out of this range.  This approach works with
-            // row-major layout so that consecutive Cuda threads work
+            // row-major layout so that consecutive Kokkos threads work
             // along consecutive slots in memory.
 
             // printf("parallel_for team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
@@ -915,15 +909,14 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // Team Policy
   else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Assumption - there is only one block for the OpenMP
-    const int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const int thread_range_size = numItems;
+    // Assumption - there is only one league for the OpenMP
+    const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+    const int team_range_size = numItems;
 
-    const int actualThreads =
-      threads_per_block < thread_range_size ?
-      threads_per_block : thread_range_size;
+    const int actualTeams = teams_per_league < team_range_size ?
+                            teams_per_league : team_range_size;
 
-    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
     typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
     int size = Parallel::getKokkosChunkSize();
@@ -933,7 +926,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     Kokkos::parallel_reduce(name, teamPolicy,
                             KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_sum) {
       // printf("i is %d\n", thread.team_rank());
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                            [&](const int& n) {
         const int i = n / (j_size * k_size) + rbegin0;
         const int j = (n / k_size) % j_size + rbegin1;
@@ -1001,7 +994,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   // Team Policy
   if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Team policy approach (reuses CUDA threads)
+    // Team policy approach.
 
     // Overall goal, split a 3D range requested by the user into various
     // SMs on the GPU.  (In essence, this would be a Kokkos
@@ -1018,15 +1011,14 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     // (SM) and number of SMs totals.
     if (std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
-      // Assumption - there is only one block for the OpenMP
-      const int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int thread_range_size = numItems;
+      // Assumption - there is only one league for the OpenMP
+      const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+      const int team_range_size = numItems;
 
-      const int actualThreads =
-        threads_per_block < thread_range_size ?
-                            threads_per_block : thread_range_size;
+      const int actualTeams = teams_per_league < team_range_size ?
+                              teams_per_league : team_range_size;
 
-      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
       typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
       int size = Parallel::getKokkosChunkSize();
@@ -1036,7 +1028,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       Kokkos::parallel_reduce(name, teamPolicy,
                               KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_sum) {
         // printf("i is %d\n", thread.team_rank());
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                              [&](const int& n) {
           const int i = n / (j_size * k_size) + rbegin0;
           const int j = (n / k_size) % j_size + rbegin1;
@@ -1051,8 +1043,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
     }
     else
     {
-      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+      const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
 #if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
@@ -1064,19 +1056,19 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
-      int threads_per_loop = cuda_threads_per_block * cuda_blocks_per_loop;
-      int thread_range_size = numItems / nPartitions;
+      int teams_per_loop = kokkos_teams_per_league * kokkos_leagues_per_loop;
+      int team_range_size = numItems / nPartitions;
 
-      const unsigned int actual_threads =
-        threads_per_loop < thread_range_size ?
-        threads_per_loop : thread_range_size;
+      const unsigned int actual_teams =
+        teams_per_loop < team_range_size ?
+        teams_per_loop : team_range_size;
 
-      const unsigned int actual_threads_per_block =
-        cuda_threads_per_block < thread_range_size ?
-        cuda_threads_per_block : thread_range_size;
+      const unsigned int actual_teams_per_league =
+        kokkos_teams_per_league < team_range_size ?
+        kokkos_teams_per_league : team_range_size;
 
-      const unsigned int actual_blocks_per_loop =
-        (actual_threads - 1) / cuda_threads_per_block + 1;
+      const unsigned int actual_leagues_per_loop =
+        (actual_teams - 1) / kokkos_teams_per_league + 1;
 
       for (int p = 0; p < nPartitions; p++) {
         ReductionType tmp0 = 0;
@@ -1084,8 +1076,11 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
         ExecSpace instanceObject = getInstance(execObj, p);
 
         // Use a Team Policy, this allows us to control how many threads
-        // per block and how many blocks are used.
-        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, actual_blocks_per_loop, actual_threads_per_block);
+        // per league and how many leagues are used.
+        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject,
+                                                   actual_leagues_per_loop,
+                                                   actual_teams_per_league);
+
         typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
         int size = Parallel::getKokkosChunkSize();
@@ -1096,18 +1091,20 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
                                 KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_sum) {
 
           // We are within an SM, and all SMs share the same amount of
-           // assigned CUDA threads.  Figure out which range of N items
+          // assigned Kokkos threads.  Figure out which range of N items
           // this SM should work on (as a multiple of 32).
-          const unsigned int currentPartition = p * actual_blocks_per_loop + thread.league_rank();
-          unsigned int estimatedThreadAmount = numItems * (currentPartition) / (actual_blocks_per_loop * nPartitions);
-          const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+          const unsigned int currentPartition = p * actual_leagues_per_loop + thread.league_rank();
+          unsigned int estimatedThreadAmount =
+            numItems * (currentPartition) / (actual_leagues_per_loop * nPartitions);
+          const unsigned int startingN =  estimatedThreadAmount +
+            ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           unsigned int endingN;
 
           // Check if this is the last partition
-          if (currentPartition + 1 == actual_blocks_per_loop * nPartitions) {
+          if (currentPartition + 1 == actual_leagues_per_loop * nPartitions) {
             endingN = numItems;
           } else {
-            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_blocks_per_loop * nPartitions);
+            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_leagues_per_loop * nPartitions);
             endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           }
 
@@ -1117,7 +1114,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
           Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, totalN),
                                [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
             // Craft an i,j,k out of this range.  This approach works with
-            // row-major layout so that consecutive Cuda threads work
+            // row-major layout so that consecutive Kokkos threads work
             // along consecutive slots in memory.
 
             // printf("parallel_reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
@@ -1395,15 +1392,14 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // Team Policy
   else if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Assumption - there is only one block for OpenMP
-    const int threads_per_block = execObj.getCudaThreadsPerBlock();
-    const int thread_range_size = numItems;
+    // Assumption - there is only one league for OpenMP
+    const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+    const int team_range_size = numItems;
 
-    const int actualThreads =
-      threads_per_block < thread_range_size ?
-      threads_per_block : thread_range_size;
+    const int actualTeams = teams_per_league < team_range_size ?
+                            teams_per_league : team_range_size;
 
-    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+    Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
     typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
     int size = Parallel::getKokkosChunkSize();
@@ -1413,7 +1409,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     Kokkos::parallel_reduce(name, teamPolicy,
                             KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_min) {
       // printf("i is %d\n", thread.team_rank());
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                            [&](const int& n) {
         const int i = n / (j_size * k_size) + rbegin0;
         const int j = (n / k_size) % j_size + rbegin1;
@@ -1478,7 +1474,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // Team Policy
   if(kokkos_policy == Parallel::Kokkos_Team_Policy)
   {
-    // Team policy approach (reuses CUDA threads)
+    // Team policy approach.
 
     // Overall goal, split a 3D range requested by the user into various
     // SMs on the GPU.  (In essence, this would be a Kokkos
@@ -1495,15 +1491,14 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     // (SM) and number of SMs totals.
     if (std::is_same<ExecSpace, Kokkos::OpenMP>::value)
     {
-      // Assumption - there is only one block for OpenMP
-      const int threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int thread_range_size = numItems;
+      // Assumption - there is only one league for OpenMP
+      const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
+      const int team_range_size = numItems;
 
-      const int actualThreads =
-        threads_per_block < thread_range_size ?
-                            threads_per_block : thread_range_size;
+      const int actualTeams = teams_per_league < team_range_size ?
+                              teams_per_league : team_range_size;
 
-      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualThreads);
+      Kokkos::TeamPolicy<ExecSpace> teamPolicy(1, actualTeams);
       typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
 
       int size = Parallel::getKokkosChunkSize();
@@ -1513,7 +1508,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       Kokkos::parallel_reduce(name, teamPolicy,
                               KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_min) {
         // printf("i is %d\n", thread.team_rank());
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, thread_range_size),
+        Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, team_range_size),
                              [&](const int& n) {
           const int i = n / (j_size * k_size) + rbegin0;
           const int j = (n / k_size) % j_size + rbegin1;
@@ -1529,8 +1524,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      const int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-      const int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+      const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+      const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
 #if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
@@ -1542,19 +1537,19 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
-      int threads_per_loop = cuda_threads_per_block * cuda_blocks_per_loop;
-      int thread_range_size = numItems / nPartitions;
+      int teams_per_loop = kokkos_teams_per_league * kokkos_leagues_per_loop;
+      int team_range_size = numItems / nPartitions;
 
-      const unsigned int actual_threads =
-        threads_per_loop < thread_range_size ?
-        threads_per_loop : thread_range_size;
+      const unsigned int actual_teams =
+        teams_per_loop < team_range_size ?
+        teams_per_loop : team_range_size;
 
-      const unsigned int actual_threads_per_block =
-        cuda_threads_per_block < thread_range_size ?
-        cuda_threads_per_block : thread_range_size;
+      const unsigned int actual_teams_per_league =
+        kokkos_teams_per_league < team_range_size ?
+        kokkos_teams_per_league : team_range_size;
 
-      const unsigned int actual_blocks_per_loop =
-        (actual_threads - 1) / cuda_threads_per_block + 1;
+      const unsigned int actual_leagues_per_loop =
+        (actual_teams - 1) / kokkos_teams_per_league + 1;
 
       for (int p = 0; p < nPartitions; p++) {
         ReductionType tmp0 = 0;
@@ -1562,8 +1557,11 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
         ExecSpace instanceObject = getInstance(execObj, p);
 
         // Use a Team Policy, this allows us to control how many threads
-        // per block and how many blocks are used.
-        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, actual_blocks_per_loop, actual_threads_per_block);
+        // per league and how many leagues are used.
+        Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject,
+                                                   actual_leagues_per_loop,
+                                                   actual_teams_per_league);
+
         typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
         int size = Parallel::getKokkosChunkSize();
@@ -1574,18 +1572,20 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 KOKKOS_LAMBDA(typename policy_type::member_type thread, ReductionType& inner_min) {
 
           // We are within an SM, and all SMs share the same amount of
-          // assigned CUDA threads.  Figure out which range of N items
+          // assigned Kokkos threads.  Figure out which range of N items
           // this SM should work on (as a multiple of 32).
-          const unsigned int currentPartition = p * actual_blocks_per_loop + thread.league_rank();
-          unsigned int estimatedThreadAmount = numItems * (currentPartition) / (actual_blocks_per_loop * nPartitions);
-          const unsigned int startingN =  estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
+          const unsigned int currentPartition = p * actual_leagues_per_loop + thread.league_rank();
+          unsigned int estimatedThreadAmount =
+            numItems * (currentPartition) / (actual_leagues_per_loop * nPartitions);
+          const unsigned int startingN =  estimatedThreadAmount +
+            ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           unsigned int endingN;
 
           // Check if this is the last partition
-          if (currentPartition + 1 == actual_blocks_per_loop * nPartitions) {
+          if (currentPartition + 1 == actual_leagues_per_loop * nPartitions) {
             endingN = numItems;
           } else {
-            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_blocks_per_loop * nPartitions);
+            estimatedThreadAmount = numItems * (currentPartition + 1) / (actual_leagues_per_loop * nPartitions);
             endingN = estimatedThreadAmount + ((estimatedThreadAmount % 32 == 0) ? 0 : (32-estimatedThreadAmount % 32));
           }
 
@@ -1595,7 +1595,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
           Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, totalN),
                                [&, startingN, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2] (const int& N) {
             // Craft an i,j,k out of this range.  This approach works with
-            // row-major layout so that consecutive Cuda threads work
+            // row-major layout so that consecutive Kokkos threads work
             // along consecutive slots in memory.
 
             // printf("parallel_reduce team demo - n is %d, league_rank is %d, true n is %d\n", N, thread.league_rank(), (startingN + N));
@@ -1961,14 +1961,17 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
 
   /*
-  const int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
-  const int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
+  const int leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+  const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
-  const int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
+  const int actualTeams = teams_per_league < list_size ?
+                          teams_per_league : list_size;
 
   ExecSpace instanceObject = getInstance(execObj);
 
-  Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, cudaBlocksPerLoop, actualThreads);
+  Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject,
+                                             leagues_per_loop,
+                                             actualTeams);
   typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
   Kokkos::parallel_for("GPU Unstructured", teamPolicy,
@@ -2005,14 +2008,15 @@ typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::
 parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
                         T2 KV3, const T3 init_val)
 {
-  int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
-  int cuda_blocks_per_loop   = execObj.getCudaBlocksPerLoop();
+  int leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+  int teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
   const int num_cells = KV3.m_view.size();
-  const int actualThreads = num_cells > cuda_threads_per_block ? cuda_threads_per_block : num_cells;
+  const int actualTeams = teams_per_league < num_cells ?
+                          teams_per_league : num_cells;
 
   typedef Kokkos::TeamPolicy<ExecSpace> policy_type;
-  Kokkos::TeamPolicy<ExecSpace> teamPolicy(cuda_blocks_per_loop, actualThreads);
+  Kokkos::TeamPolicy<ExecSpace> teamPolicy(leagues_per_loop, actualTeams);
 
   Kokkos::parallel_for("GPU Initialized", teamPolicy,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
@@ -2099,9 +2103,9 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #if defined(KOKKOS_USING_GPU)
 
 /* DS 11052019: Wrote alternative (and simpler) version of
- * parallel_initialize_grouped for cuda The previous version seems to
- * produce error in parallel_initialize.  This version finds the max
- * numb of cells among variables and uses it as an iteration
+ * parallel_initialize_grouped for Kokkos The previous version seems
+ * to produce error in parallel_initialize.  This version finds the
+ * max numb of cells among variables and uses it as an iteration
  * count. Using simpler RangePolicy instead of TeamPolicy. All
  * computations to find out index in TeamPolicy - especially divides
  * and mods do not seem worth for simple init code. Secondly iterating
@@ -2156,39 +2160,43 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
     n_cells += KKV3[j].m_view.size();
   }
 
-  const int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
-  const int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
+  const int leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
+  const int teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
-  const int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
+  const int actualTeams = teams_per_league < n_cells ?
+                          teams_per_league : n_cells;
 
   ExecSpace instanceObject = getInstance(execObj);
 
-  Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject, cudaBlocksPerLoop, actualThreads);
+  Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject,
+                                             leagues_per_loop,
+					     actualTeams);
+
   typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 
   Kokkos::parallel_for("GPU Initialize Grouped", teamPolicy,
                        KOKKOS_LAMBDA(typename policy_type::member_type thread) {
 
-      // i_tot will come in as a number between 0 and actualThreads.  Suppose actualThreads is 256.
+      // i_tot will come in as a number between 0 and actualTeams.  Suppose actualTeams is 256.
       // Thread 0 should work on cell 0, thread 1 should work on cell 1, ... thread 255 should work on cell 255
-      // then they all advanced forward by actualThreads.
+      // then they all advanced forward by actualTeams.
       // Thread 0 works on cell 256, thread 1 works on cell 257... thread 511 works on cell 511.
       // This should continue until all cells are completed.
-    Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, actualThreads),
-                         [&, n_cells, actualThreads, KKV3] (const unsigned int& i_tot) {
-      const unsigned int n_iter = n_cells / actualThreads  + (n_cells % actualThreads > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(thread, actualTeams),
+                         [&, n_cells, actualTeams, KKV3] (const unsigned int& i_tot) {
+      const unsigned int n_iter = n_cells / actualTeams + (n_cells % actualTeams > 0 ? 1 : 0); // round up (more efficient to compute this outside parallel_for?)
       unsigned int  j = 0;
       unsigned int old_i = 0;
       for (unsigned int i = 0; i < n_iter; i++) {
          // use a while for small data sets or massive streaming multiprocessors
-         while (i * actualThreads + i_tot - old_i >= KKV3[j].m_view.size()) {
+         while (i * actualTeams + i_tot - old_i >= KKV3[j].m_view.size()) {
            old_i += KKV3[j].m_view.size();
            j++;
            if(KKV3.runTime_size <= j) {
              return; // do nothing
            }
          }
-         KKV3[j](i * actualThreads + i_tot - old_i) = init_val;
+         KKV3[j](i * actualTeams + i_tot - old_i) = init_val;
       }
     });
   });
@@ -2392,45 +2400,6 @@ void parallel_for(BlockRange const & r, const Functor & functor, const Option& o
     }
   }
 };
-
-//----------------------------------------------------------------------------
-// FunctorBuilderReduce helper
-//----------------------------------------------------------------------------
-
-// #if defined(KOKKOS_USING_GPU)
-
-// // This FunctorBuilder exists because I couldn't go the lambda
-// // approach.  I was running into some conflict with
-// // Uintah/nvcc_wrapper/Kokkos/CUDA somewhere.  So I went the
-// // alternative route and built a functor instead of building a lambda.
-// template < typename Functor, typename ReductionType >
-// struct FunctorBuilderReduce {
-//   //std::function is probably a wrong idea, CUDA doesn't support these.
-//   //std::function<void(int i, int j, int k, ReductionType & red)> f;
-//   int ib{0};
-//   int ie{0};
-//   int jb{0};
-//   int je{0};
-
-//   FunctorBuilderReduce(const BlockRange & r, const Functor & functor) {
-//     ib = r.begin(0);
-//     ie = r.end(0);
-//     jb = r.begin(1);
-//     je = r.end(1);
-//   }
-
-//   void operator()(int k, ReductionType & red) const {
-//     //const int ib = r.begin(0); const int ie = r.end(0);
-//     //const int jb = r.begin(1); const int je = r.end(1);
-
-//     for (int j=jb; j<je; ++j) {
-//       for (int i=ib; i<ie; ++i) {
-//         functor(i, j, k, red);
-//       }
-//     }
-//   }
-// };
-// #endif //if defined(KOKKOS_USING_GPU)
 
 } // namespace Uintah
 

@@ -61,9 +61,7 @@ bool             Parallel::s_using_cpu               = false;
 bool             Parallel::s_using_cpu               = true;
 #endif
 bool             Parallel::s_using_device            = false;
-int              Parallel::s_cuda_threads_per_block  = -1;
-int              Parallel::s_cuda_blocks_per_loop    = -1;
-int              Parallel::s_cuda_streams_per_task   =  1;
+
 std::string      Parallel::s_task_name_to_time       = "";
 int              Parallel::s_amount_task_name_expected_to_run = -1;
 int              Parallel::s_num_threads             = -1;
@@ -71,6 +69,10 @@ int              Parallel::s_num_partitions          = -1;
 int              Parallel::s_threads_per_partition   = -1;
 int              Parallel::s_world_rank              = -1;
 int              Parallel::s_world_size              = -1;
+
+int              Parallel::s_kokkos_instances_per_task =  1;
+int              Parallel::s_kokkos_teams_per_league   = -1;
+int              Parallel::s_kokkos_leagues_per_loop   = -1;
 
 Parallel::Kokkos_Policy Parallel::s_kokkos_policy =
   Parallel::Kokkos_MDRange_Policy;
@@ -101,7 +103,7 @@ namespace Uintah {
 //
 static
 void
-MpiError( char * what, int errorcode )
+MPIError( char * what, int errorcode )
 {
   // Simple error handling for now...
   int  resultlen = -1;
@@ -113,6 +115,71 @@ MpiError( char * what, int errorcode )
   std::exit(1);
 }
 
+//_____________________________________________________________________________
+//
+bool
+Parallel::isInitialized()
+{
+  return s_initialized;
+}
+
+//_____________________________________________________________________________
+//
+bool
+Parallel::usingMPI()
+{
+  // TODO: Remove this method once all prior usage of
+  // Parallel::usingMPI() is gone - APH 09/17/16
+
+  // We now assume this to be an invariant for Uintah, and hence this
+  // is always true.
+  return true;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getMPISize()
+{
+  return s_world_size;
+}
+
+//_____________________________________________________________________________
+//
+int
+Parallel::getMPIRank()
+{
+  if(s_world_rank == -1) {
+    // Can't throw an exception here because it won't get trapped
+    // properly because 'getMPIRank()' is called in the exception
+    // handler...
+    std::cout << "ERROR:\n";
+    std::cout << "ERROR: getMPIRank() called before initializeManager()...\n";
+    std::cout << "ERROR:\n";
+    exitAll(1);
+  }
+  return s_world_rank;
+}
+
+//_____________________________________________________________________________
+//
+ProcessorGroup*
+Parallel::getRootProcessorGroup()
+{
+   if(s_root_context == nullptr) {
+      throw InternalError("Parallel not initialized", __FILE__, __LINE__);
+   }
+
+   return s_root_context;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::exitAll( int code )
+{
+  std::exit(code);
+}
 //_____________________________________________________________________________
 //
 void
@@ -127,19 +194,6 @@ Parallel::CpuThreadEnvironment
 Parallel::getCpuThreadEnvironment()
 {
   return s_cpu_thread_environment;
-}
-
-//_____________________________________________________________________________
-//
-bool
-Parallel::usingMPI()
-{
-  // TODO: Remove this method once all prior usage of
-  // Parallel::usingMPI() is gone - APH 09/17/16
-
-  // We now assume this to be an invariant for Uintah, and hence this
-  // is always true.
-  return true;
 }
 
 //_____________________________________________________________________________
@@ -160,6 +214,14 @@ Parallel::usingCPU()
 
 //_____________________________________________________________________________
 //
+void
+Parallel::setUsingDevice( bool state )
+{
+  s_using_device = state;
+}
+
+//_____________________________________________________________________________
+//
 bool
 Parallel::usingDevice()
 {
@@ -169,43 +231,17 @@ Parallel::usingDevice()
 //_____________________________________________________________________________
 //
 void
-Parallel::setUsingDevice( bool state )
-{
-  s_using_device = state;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::setCudaThreadsPerBlock( unsigned int num )
-{
-  s_cuda_threads_per_block = num;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::setCudaBlocksPerLoop( unsigned int num )
-{
-#if defined(KOKKOS_USING_GPU)
-  s_cuda_blocks_per_loop = num;
-#endif
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::setCudaStreamsPerTask( unsigned int num )
-{
-  s_cuda_streams_per_task = num;
-}
-
-//_____________________________________________________________________________
-//
-void
 Parallel::setTaskNameToTime( const std::string& taskNameToTime )
 {
   s_task_name_to_time = taskNameToTime;
+}
+
+//_____________________________________________________________________________
+//
+std::string
+Parallel::getTaskNameToTime()
+{
+  return s_task_name_to_time;
 }
 
 //_____________________________________________________________________________
@@ -219,41 +255,17 @@ Parallel::setAmountTaskNameExpectedToRun( unsigned int amountTaskNameExpectedToR
 //_____________________________________________________________________________
 //
 unsigned int
-Parallel::getCudaThreadsPerBlock()
-{
-  return s_cuda_threads_per_block;
-}
-
-//_____________________________________________________________________________
-//
-unsigned int
-Parallel::getCudaBlocksPerLoop()
-{
-  return s_cuda_blocks_per_loop;
-}
-
-//_____________________________________________________________________________
-//
-unsigned int
-Parallel::getCudaStreamsPerTask()
-{
-  return s_cuda_streams_per_task;
-}
-
-//_____________________________________________________________________________
-//
-std::string
-Parallel::getTaskNameToTime()
-{
-  return s_task_name_to_time;
-}
-
-//_____________________________________________________________________________
-//
-unsigned int
 Parallel::getAmountTaskNameExpectedToRun()
 {
   return s_amount_task_name_expected_to_run;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setNumThreads( int num )
+{
+  s_num_threads = num;
 }
 
 //_____________________________________________________________________________
@@ -266,10 +278,26 @@ Parallel::getNumThreads()
 
 //_____________________________________________________________________________
 //
+void
+Parallel::setNumPartitions( int num )
+{
+  s_num_partitions = num;
+}
+
+//_____________________________________________________________________________
+//
 int
 Parallel::getNumPartitions()
 {
   return s_num_partitions;
+}
+
+//_____________________________________________________________________________
+//
+void
+Parallel::setThreadsPerPartition( int num )
+{
+  s_threads_per_partition = num;
 }
 
 //_____________________________________________________________________________
@@ -291,25 +319,51 @@ Parallel::getMainThreadID()
 //_____________________________________________________________________________
 //
 void
-Parallel::setNumThreads( int num )
+Parallel::setKokkosInstancesPerTask( unsigned int num )
 {
-  s_num_threads = num;
+  s_kokkos_instances_per_task = num;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getKokkosInstancesPerTask()
+{
+  return s_kokkos_instances_per_task;
 }
 
 //_____________________________________________________________________________
 //
 void
-Parallel::setNumPartitions( int num )
+Parallel::setKokkosLeaguesPerLoop( unsigned int num )
 {
-  s_num_partitions = num;
+#if defined(KOKKOS_USING_GPU)
+  s_kokkos_leagues_per_loop = num;
+#endif
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getKokkosLeaguesPerLoop()
+{
+  return s_kokkos_leagues_per_loop;
 }
 
 //_____________________________________________________________________________
 //
 void
-Parallel::setThreadsPerPartition( int num )
+Parallel::setKokkosTeamsPerLeague( unsigned int num )
 {
-  s_threads_per_partition = num;
+  s_kokkos_teams_per_league = num;
+}
+
+//_____________________________________________________________________________
+//
+unsigned int
+Parallel::getKokkosTeamsPerLeague()
+{
+  return s_kokkos_teams_per_league;
 }
 
 //_____________________________________________________________________________
@@ -420,14 +474,6 @@ void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
 
 //_____________________________________________________________________________
 //
-bool
-Parallel::isInitialized()
-{
-  return s_initialized;
-}
-
-//_____________________________________________________________________________
-//
 void
 Parallel::initializeManager( int& argc , char**& argv )
 {
@@ -462,20 +508,20 @@ Parallel::initializeManager( int& argc , char**& argv )
   // weren't set.
 #if defined(KOKKOS_USING_GPU)
   if(s_using_device) {
-    if(s_cuda_threads_per_block <= 0) {
-      s_cuda_threads_per_block = 256;
+    if(s_kokkos_teams_per_league <= 0) {
+      s_kokkos_teams_per_league = 256;
     }
-    if(s_cuda_blocks_per_loop <= 0) {
-      s_cuda_blocks_per_loop = 1;
+    if(s_kokkos_leagues_per_loop <= 0) {
+      s_kokkos_leagues_per_loop = 1;
     }
   }
 #endif
 #if defined(KOKKOS_ENABLE_OPENMP)
-  if(s_cuda_threads_per_block <= 0) {
-    s_cuda_threads_per_block = 16;
+  if(s_kokkos_teams_per_league <= 0) {
+    s_kokkos_teams_per_league = 16;
   }
-  if(s_cuda_blocks_per_loop <= 0) {
-    s_cuda_blocks_per_loop = 1;
+  if(s_kokkos_leagues_per_loop <= 0) {
+    s_kokkos_leagues_per_loop = 1;
   }
 #endif
 
@@ -497,7 +543,7 @@ Parallel::initializeManager( int& argc , char**& argv )
 
   int status = Uintah::MPI::Init_thread(&argc, &argv, required, &provided);
   if(status != MPI_SUCCESS)
-    MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
+    MPIError(const_cast<char*>("Uinath::MPI::Init"), status);
 
   s_required = required;
   s_provided = provided;
@@ -514,18 +560,18 @@ Parallel::initializeManager( int& argc , char**& argv )
 #else
   int status = Uintah::MPI::Init(&argc, &argv);
   if(status != MPI_SUCCESS)
-    MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
+    MPIError(const_cast<char*>("Uinath::MPI::Init"), status);
 #endif
 
   Uintah::worldComm_ = MPI_COMM_WORLD;
 
   status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size);
   if(status != MPI_SUCCESS)
-    MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
+    MPIError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
 
   status = Uintah::MPI::Comm_rank(Uintah::worldComm_, &s_world_rank);
   if(status != MPI_SUCCESS)
-    MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
+    MPIError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
 
 #if(!defined( DISABLE_SCI_MALLOC))
   Uintah::AllocatorSetDefaultTagMalloc(oldtag);
@@ -634,63 +680,9 @@ Parallel::printManager()
     }
 #endif
 
-#if defined(KOKKOS_ENABLE_OPENMP) && !defined(UINTAH_USING_GPU)
-    if(s_cuda_blocks_per_loop > 0) {
-      proc0cout << "Parallel CPU OpenMP blocks per loop: \t"
-                << s_cuda_blocks_per_loop << std::endl;
-    }
-
-    if(s_cuda_threads_per_block > 0) {
-      proc0cout << "Parallel CPU OpenMP threads per block: \t"
-                << s_cuda_threads_per_block << std::endl;
-    }
-#else
-
-#if defined(KOKKOS_USING_GPU)
-  if(s_using_device &&
-     Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy)
-#endif
-    {
-      if(s_cuda_blocks_per_loop > 0) {
-        proc0cout << "Parall blocks per loop: \t"
-                  << s_cuda_blocks_per_loop << notUsedStr << std::endl;
-      }
-
-      if(s_cuda_threads_per_block > 0) {
-        proc0cout << "Parallel threads per block: \t"
-                  << s_cuda_threads_per_block << notUsedStr << std::endl;
-      }
-    }
-#endif
-
 #endif  // defined(THREADED_MPI_AVAILABLE)
   }
 //    Uintah::MPI::Errhandler_set(Uintah::worldComm_, MPI_ERRORS_RETURN);
-}
-
-  //_____________________________________________________________________________
-  //
-int
-Parallel::getMPIRank()
-{
-  if(s_world_rank == -1) {
-    // Can't throw an exception here because it won't get trapped
-    // properly because 'getMPIRank()' is called in the exception
-    // handler...
-    std::cout << "ERROR:\n";
-    std::cout << "ERROR: getMPIRank() called before initializeManager()...\n";
-    std::cout << "ERROR:\n";
-    exitAll(1);
-  }
-  return s_world_rank;
-}
-
-//_____________________________________________________________________________
-//
-int
-Parallel::getMPISize()
-{
-  return s_world_size;
 }
 
 //_____________________________________________________________________________
@@ -745,7 +737,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
   else {
     int status;
     if((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
-      MpiError(const_cast<char*>("Uintah::MPI::Finalize"), status);
+      MPIError(const_cast<char*>("Uintah::MPI::Finalize"), status);
     }
   }
 
@@ -753,24 +745,4 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     delete s_root_context;
     s_root_context = nullptr;
   }
-}
-
-//_____________________________________________________________________________
-//
-ProcessorGroup*
-Parallel::getRootProcessorGroup()
-{
-   if(s_root_context == nullptr) {
-      throw InternalError("Parallel not initialized", __FILE__, __LINE__);
-   }
-
-   return s_root_context;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::exitAll( int code )
-{
-  std::exit(code);
 }

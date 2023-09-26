@@ -113,50 +113,50 @@ public:
   };
 
 #if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
-// Not needed for Kokkos malloc
-#else // if defined(USE_KOKKOS_VIEW)
-  struct gpuMemoryPoolDeviceViewItem {
+  #if defined(USE_KOKKOS_MALLOC)
+  // Not needed for Kokkos malloc
+  #else // if defined(USE_KOKKOS_VIEW)
+    struct gpuMemoryPoolDeviceViewItem {
 
-    unsigned int  device_id;
-    Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> view;
+      unsigned int  device_id;
+      Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> view;
 
-    gpuMemoryPoolDeviceViewItem(unsigned int device_id, Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> view) {
-      this->device_id = device_id;
-      this->view = view;
-    }
-
-    // Less than operator so it can be used in an STL map
-    bool operator<(const gpuMemoryPoolDeviceViewItem& right) const {
-      if (this->device_id < right.device_id) {
-        return true;
-      } else if (this->device_id == right.device_id &&
-                 this->view.data() < right.view.data()) {
-        return true;
-      } else {
-        return false;
+      gpuMemoryPoolDeviceViewItem(unsigned int device_id, Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> view) {
+        this->device_id = device_id;
+        this->view = view;
       }
-    }
-  };
-#endif
+
+      // Less than operator so it can be used in an STL map
+      bool operator<(const gpuMemoryPoolDeviceViewItem& right) const {
+        if (this->device_id < right.device_id) {
+          return true;
+        } else if (this->device_id == right.device_id &&
+                   this->view.data() < right.view.data()) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    };
+  #endif
 #else
 // Not needed for CUDA streams
 #endif
 
-  static void* allocateCudaMemoryFromPool(unsigned int device_id,
-                                          size_t memSize,
-                                          const char *name = nullptr);
+  static void* allocateMemoryFromPool(unsigned int device_id,
+                                      size_t memSize,
+                                      const char *name = nullptr);
 
-  static bool reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr);
+  static bool reclaimMemoryIntoPool(unsigned int device_id, void* addr);
 
 #if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
-  static void freeCudaMemoryFromPool();
-#else // if defined(USE_KOKKOS_VIEW)
-  static void freeViewsFromPool();
-#endif
+  #if defined(USE_KOKKOS_MALLOC)
+    static void freeMemoryFromPool();
+  #else // if defined(USE_KOKKOS_VIEW)
+    static void freeViewsFromPool();
+  #endif
 #else
-  static void freeCudaMemoryFromPool();
+  static void freeMemoryFromPool();
 #endif
 
 private:

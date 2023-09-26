@@ -42,12 +42,12 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
                       Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
 
 #if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
-// Not needed
-#else // if defined(USE_KOKKOS_VIEW)
-std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
-              Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue> Uintah::GPUMemoryPool::gpuMemoryPoolViewInUse;
-#endif
+  #if defined(USE_KOKKOS_MALLOC)
+  // Not needed
+  #else // if defined(USE_KOKKOS_VIEW)
+  std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
+                Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue> Uintah::GPUMemoryPool::gpuMemoryPoolViewInUse;
+  #endif
 #else
 // Not needed
 #endif
@@ -68,9 +68,9 @@ namespace Uintah {
 //______________________________________________________________________
 //
 void*
-GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id,
-                                          size_t memSize,
-                                          const char * name)
+GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
+                                      size_t memSize,
+                                      const char * name)
 {
   // Right now the memory pool assumes that each time step is going to
   // be using variables of the same size as the previous time step So
@@ -96,7 +96,7 @@ GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id,
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-                    << " GPUMemoryPool::allocateCudaMemoryFromPool() -"
+                    << " GPUMemoryPool::allocateMemoryFromPool() -"
                     << " reusing space starting at " << addr
                     << " on device " << device_id
                     << " with size " << memSize
@@ -152,7 +152,7 @@ GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id,
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-              << " GPUMemoryPool::allocateCudaMemoryFromPool() -"
+              << " GPUMemoryPool::allocateMemoryFromPool() -"
               << " allocated GPU space starting at " << addr
               << " on device " << device_id
               << " with size " << memSize
@@ -192,7 +192,7 @@ GPUMemoryPool::allocateCudaMemoryFromPool(unsigned int device_id,
 //
 #if defined(USE_KOKKOS_INSTANCE)
 #if defined(USE_KOKKOS_MALLOC)
-void GPUMemoryPool::freeCudaMemoryFromPool()
+void GPUMemoryPool::freeMemoryFromPool()
 {
   for(const auto &item: *gpuMemoryPoolUnused)
   {
@@ -221,7 +221,7 @@ void GPUMemoryPool::freeViewsFromPool()
 }
 #endif
 #else
-void GPUMemoryPool::freeCudaMemoryFromPool()
+void GPUMemoryPool::freeMemoryFromPool()
 {
   for(const auto &item: *gpuMemoryPoolUnused)
   {
@@ -246,7 +246,7 @@ void GPUMemoryPool::freeCudaMemoryFromPool()
 
 //______________________________________________________________________
 //
-bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr)
+bool GPUMemoryPool::reclaimMemoryIntoPool(unsigned int device_id, void* addr)
 {
   if(addr != nullptr)
   {
@@ -265,7 +265,7 @@ bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr
         cerrLock.lock();
         {
           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-                    << " GPUMemoryPool::reclaimCudaMemoryIntoPool() -"
+                    << " GPUMemoryPool::reclaimMemoryIntoPool() -"
                     << " space starting at " << addr
                     << " on device " << device_id
                     << " with size " << memSize
@@ -287,7 +287,7 @@ bool GPUMemoryPool::reclaimCudaMemoryIntoPool(unsigned int device_id, void* addr
       // Ignore if the pools are empty as Uintah is shutting down.
       if(gpuMemoryPoolUnused->size() || gpuMemoryPoolInUse->size() )
       {
-        printf("ERROR: GPUMemoryPool::reclaimCudaMemoryIntoPool - "
+        printf("ERROR: GPUMemoryPool::reclaimMemoryIntoPool - "
                "No memory found at pointer %p on device %u\n", addr, device_id);
         return false;
       }

@@ -32,8 +32,8 @@
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & execObj
-// For Cuda related tasks in particular, this object wraps a Cuda
-// Stream.  Further, this task wraps the command line execution
+// For GPU related tasks in particular, this object wraps a Kokkos
+// instance.  Further, this task wraps the command line execution
 // arguments given so that a particular task can modify these
 // arguments further.  From the application developer's perpsective,
 // the execObj received should be passed into a Uintah parallel loop
@@ -63,16 +63,16 @@ public:
   // itself.  The application developer probably shouldn't be managing
   // their own instances.
   void setInstance(ExecSpace instance, int deviceID) {
-    //Ignore the non-CUDA case as those instances are pointless.
     m_instances.push_back(instance);
     this->deviceID = deviceID;
   }
 
   void setInstances(const std::vector<ExecSpace>& instances, int deviceID) {
-  for (auto& instance : instances) {
-    m_instances.push_back(instance);
-  }
-  this->deviceID = deviceID;
+    for (auto& instance : instances) {
+      m_instances.push_back(instance);
+    }
+
+    this->deviceID = deviceID;
   }
 
   ExecSpace getInstance() const {
@@ -102,7 +102,6 @@ public:
   // itself.  The application developer probably shouldn't be managing
   // their own streams.
   void setStream(void* stream, int deviceID) {
-    //Ignore the non-CUDA case as those streams are pointless.
     m_streams.push_back(stream);
     this->deviceID = deviceID;
   }
@@ -113,7 +112,7 @@ public:
     }
     this->deviceID = deviceID;
   }
-  
+
   void * getStream() const {
     if ( m_streams.size() == 0 ) {
       std::cout << "Requested a stream that doesn't exist." << std::endl;
@@ -136,23 +135,6 @@ public:
   }
 #endif
 
-  int getCudaThreadsPerBlock() const {
-    return cuda_threads_per_block;
-  }
-
-  void setCudaThreadsPerBlock(int CudaThreadsPerBlock) {
-    this->cuda_threads_per_block = CudaThreadsPerBlock;
-  }
-
-  int getCudaBlocksPerLoop() const {
-    return cuda_blocks_per_loop;
-  }
-
-  void setCudaBlocksPerLoop(int CudaBlocksPerLoop) {
-    this->cuda_blocks_per_loop = CudaBlocksPerLoop;
-  }
-
-  // void getTempTaskSpaceFromPool(void** ptr, unsigned int size) const {}
 private:
 #if defined(USE_KOKKOS_INSTANCE)
   std::vector<ExecSpace> m_instances;
@@ -160,8 +142,6 @@ private:
   std::vector<void*> m_streams;
 #endif
   int deviceID{0};
-  int cuda_threads_per_block{-1};
-  int cuda_blocks_per_loop{-1};
 };
 
 } // end namespace Uintah

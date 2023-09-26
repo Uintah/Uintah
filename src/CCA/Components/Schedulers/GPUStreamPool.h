@@ -44,13 +44,13 @@ public:
 
   // Streams
 #ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
-  // Not needed instances are managed by DetailedTask/Task.
-#elif defined(HAVE_CUDA) // CUDA only when using streams
-  static cudaStream_t* getCudaStreamFromPool(const Task * task, int device);
-  static void reclaimCudaStreamsIntoPool(intptr_t dTask, Task * task);
-  static void freeCudaStreamsFromPool();
-#endif
+  #ifdef USE_KOKKOS_INSTANCE
+    // Not needed instances are managed by DetailedTask/Task.
+  #elif defined(HAVE_CUDA) // CUDA only when using streams
+    static cudaStream_t* getCudaStreamFromPool(const Task * task, int device);
+    static void reclaimCudaStreamsIntoPool(intptr_t dTask, Task * task);
+    static void freeCudaStreamsFromPool();
+  #endif
 #else
   static cudaStream_t* getCudaStreamFromPool(const DetailedTask * task, int device);
   static void reclaimCudaStreamsIntoPool(DetailedTask * task);
@@ -72,9 +72,12 @@ private:
   // task's stream completes, then we can infer the variable is ready
   // to go.  More about how a task claims a stream can be found in
   // DetailedTasks.cc
-#ifdef USE_KOKKOS_INSTANCE
-  static std::map <unsigned int, std::queue<Kokkos::DefaultExecutionSpace> > s_idle_instances;
-#elif defined(HAVE_CUDA) // CUDA only when using streams
+#ifdef TASK_MANAGES_EXECSPACE
+  #ifdef USE_KOKKOS_INSTANCE
+    // Not needed instances are managed by DetailedTask/Task.
+  #elif defined(HAVE_CUDA) // CUDA only when using streams
+    static std::map <unsigned int, std::queue<cudaStream_t*> > s_idle_streams;
+  #endif
   static std::map <unsigned int, std::queue<cudaStream_t*> > s_idle_streams;
 #endif
 };

@@ -161,63 +161,60 @@ static void usage( const std::string& message,
     std::cerr << "\n";
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
-    std::cerr << "-h[elp]                     : This usage information\n";
-    std::cerr << "-d[ebug]                    : List the debug streams\n";
+    std::cerr << "-h[elp]                         : This usage information.\n";
+    std::cerr << "-d[ebug]                        : List the debug streams.\n";
 
-    std::cerr << "-gpucheck                   : Returns 1 if sus was compiled with GPU support and there is a GPU available. \n";
-    std::cerr << "                            : Returns 2 if sus was not compiled with GPU support or there are no GPUs available. \n";
+    std::cerr << "-gpucheck                       : Returns 1 if sus was compiled with GPU support and there is a GPU available.\n";
+    std::cerr << "                                : Returns 2 if sus was not compiled with GPU support or there are no GPUs available.\n";
 
 #if defined(HAVE_KOKKOS)
-    std::cerr << "-cpu                        : Use the CPU MPI or Unified scheduler\n";
+    std::cerr << "-cpu                            : Use the CPU MPI or Unified scheduler instead of the multi-threaded Kokkos scheduler.\n";
 #endif
 
 #if defined(UINTAH_USING_GPU)
-    std::cerr << "-gpu                        : Use available GPU devices, requires multi-threaded Kokkos scheduler\n";
-    std::cerr << "-cuda_streams_per_task <#>  : Number of CUDA streams per task \n";
-#endif
-
-#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
-    std::cerr << "-cuda_threads_per_block <#> : Number of threads per CUDA block\n";
-    std::cerr << "-cuda_blocks_per_loop <#>   : Number of CUDA blocks per loop \n";
+    std::cerr << "-gpu                            : Use available GPU devices, requires multi-threaded Kokkos scheduler.\n";
+    std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task.\n";
 #endif
 
 #if defined(KOKKOS_USING_GPU)
-    std::cerr << "-kokkos_policy <policy>     : Kokkos Execution Policy - team, range, mdrange, or mdrange_rev\n";
-    std::cerr << "-kokkos_chunk_size <#>      : Kokkos TeamPolicy and RangePolicy chunk size\n";
-    std::cerr << "-kokkos_tile_size <# # #>   : Kokkos MDRangePolicy tile size\n";
+    std::cerr << "-kokkos_policy <policy>         : Kokkos Execution Policy - team, range, mdrange (default), or mdrange_rev.\n";
+    std::cerr << "-kokkos_leagues_per_loop <#>    : Kokkos TeamPolicy number of leagues (work items) per loop.\n";
+    std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league.\n";
+    std::cerr << "-kokkos_chunk_size <#>          : Kokkos TeamPolicy and RangePolicy chunk size.\n";
+    std::cerr << "-kokkos_tile_size <# # #>       : Kokkos MDRangePolicy tile size.\n";
 #endif
 
 #if defined(HAVE_KOKKOS) && defined(_OPENMP)
-    std::cerr << "-npartitions <#>            : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler\n";
-    std::cerr << "-nthreadsperpartition <#>   : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler\n";
+    std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler.\n";
+    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler.\n";
 #endif
 
-    std::cerr << "-nthreads <#>               : Number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires multi-threaded Unified scheduler.\n";
 
-    std::cerr << "-layout NxMxO               : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
-    std::cerr << "-local_filesystem           : If using MPI, use this flag if each node has a local disk.\n";
-    std::cerr << "-emit_taskgraphs            : Output taskgraph information\n";
-    std::cerr << "-restart                    : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-postProcessUda             : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
-    std::cerr << "-uda_suffix <number>        : Make a new uda dir with <number> as the default suffix\n";
-    std::cerr << "-t <index>                  : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
-    std::cerr << "-gitDiff                    : runs git diff <src/...../Packages/Uintah \n";
-    std::cerr << "-gitStatus                  : runs git status & git log -1 <src/...../Packages/Uintah \n";
-    std::cerr << "-copy                       : Copy from old uda when restarting\n";
-    std::cerr << "-move                       : Move from old uda when restarting\n";
-    std::cerr << "-nocopy                     : Default: Don't copy or move old uda timestep when restarting\n";
-    std::cerr << "-validate                   : Verifies the .ups file is valid and quits!\n";
-    std::cerr << "-do_not_validate            : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+    std::cerr << "-layout NxMxO                   : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
+    std::cerr << "-local_filesystem               : If using MPI, use this flag if each node has a local disk.\n";
+    std::cerr << "-emit_taskgraphs                : Output taskgraph information.\n";
+    std::cerr << "-restart                        : Give the checkpointed uda directory as the input file.\n";
+    std::cerr << "-postProcessUda                 : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
+    std::cerr << "-uda_suffix <number>            : Make a new uda dir with <number> as the default suffix.\n";
+    std::cerr << "-t <index>                      : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file).\n";
+    std::cerr << "-gitDiff                        : runs git diff <src/...../Packages/Uintah.\n";
+    std::cerr << "-gitStatus                      : runs git status & git log -1 <src/...../Packages/Uintah.\n";
+    std::cerr << "-copy                           : Copy from old uda when restarting.\n";
+    std::cerr << "-move                           : Move from old uda when restarting.\n";
+    std::cerr << "-nocopy                         : Default: Don't copy or move old uda timestep when restarting.\n";
+    std::cerr << "-validate                       : Verifies the .ups file is valid and quits!.\n";
+    std::cerr << "-do_not_validate                : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
-    std::cerr << "\n";
-    std::cerr << "-visit <filename>           : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
-    std::cerr << "-visit_connect              : Wait for a visit connection before executing the simulation\n";
-    std::cerr << "-visit_console              : Allow for console input while executing the simulation\n";
-    std::cerr << "-visit_comment <comment>    : A comment about the simulation\n";
-    std::cerr << "-visit_dir <directory>      : Top level directory for the VisIt installation\n";
-    std::cerr << "-visit_options <string>     : Optional args for the VisIt launch script\n";
-    std::cerr << "-visit_trace <file>         : Trace file for VisIt's Sim V2 function calls\n";
-    std::cerr << "-visit_ui <file>            : Use the named Qt GUI file instead of the default\n";
+    std::cerr << ".\n";
+    std::cerr << "-visit <filename>               : Create a VisIt .sim2 file and perform VisIt in-situ checks.\n";
+    std::cerr << "-visit_connect                  : Wait for a visit connection before executing the simulation.\n";
+    std::cerr << "-visit_console                  : Allow for console input while executing the simulation.\n";
+    std::cerr << "-visit_comment <comment>        : A comment about the simulation.\n";
+    std::cerr << "-visit_dir <directory>          : Top level directory for the VisIt installation.\n";
+    std::cerr << "-visit_options <string>         : Optional args for the VisIt launch script.\n";
+    std::cerr << "-visit_trace <file>             : Trace file for VisIt's Sim V2 function calls.\n";
+    std::cerr << "-visit_ui <file>                : Use the named Qt GUI file instead of the default.\n";
 #endif
     std::cerr << "\n\n";
   }
@@ -279,19 +276,19 @@ void sanityChecks()
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
   if (getenv("MALLOC_TRACE")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
   if (getenv("MALLOC_STRICT")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
@@ -501,54 +498,54 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(2);
 #endif
     }
-    else if (arg == "-cuda_threads_per_block") {
-#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
-      int cuda_threads_per_block = 0;
+    else if (arg == "-kokkos_instances_per_task") {
+#if defined(UINTAH_USING_GPU)
+      int kokkos_instances_per_task = 0;
       if (++i == argc) {
-        usage("You must provide a number of threads per streaming multiprocessor (SM) for -cuda_threads_per_block.", arg, argv[0]);
+        usage("You must provide a number of Kokkos instances per task for -kokkos_instances_per_task.", arg, argv[0]);
       }
-      cuda_threads_per_block = atoi(argv[i]);
-      if( cuda_threads_per_block < 1 ) {
-        usage("Number of threads per streaming multiprocessor (SM) is too small.", arg, argv[0]);
+      kokkos_instances_per_task = atoi(argv[i]);
+      if( kokkos_instances_per_task < 1 ) {
+        usage("Number of Kokkos Instances per task is too small.", arg, argv[0]);
         Parallel::exitAll(2);
       }
-      Uintah::Parallel::setCudaThreadsPerBlock(cuda_threads_per_block);
+      Uintah::Parallel::setKokkosInstancesPerTask(kokkos_instances_per_task);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+    else if (arg == "-kokkos_leagues_per_loop") {
+#if defined(UINTAH_USING_GPU)
+      int kokkos_leagues_per_loop = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy leagues (work items) per loop for -kokkos_leagues_per_loop.", arg, argv[0]);
+      }
+      kokkos_leagues_per_loop = atoi(argv[i]);
+      if( kokkos_leagues_per_loop < 1 ) {
+        usage("Number of Kokkos TeamPolicy leagues (work items) per loop is too small.", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+      Uintah::Parallel::setKokkosLeaguesPerLoop(kokkos_leagues_per_loop);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(2);
+#endif
+    }
+    else if (arg == "-kokkos_teams_per_league") {
+#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
+      int kokkos_teams_per_block = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy teams (threads) per legaue for -kokkos_teams_per_block.", arg, argv[0]);
+      }
+      kokkos_teams_per_block = atoi(argv[i]);
+      if( kokkos_teams_per_block < 1 ) {
+        usage("Number of Kokkos TeamPolicy teams (threads) per legaue is too small.", arg, argv[0]);
+        Parallel::exitAll(2);
+      }
+      Uintah::Parallel::setKokkosTeamsPerLeague(kokkos_teams_per_block);
 #else
       std::cout << "Not compiled for GPU support" << std::endl;
-      Parallel::exitAll(2);
-#endif
-    }
-    else if (arg == "-cuda_blocks_per_loop") {
-#if defined(UINTAH_USING_GPU)
-      int cuda_blocks_per_loop = 0;
-      if (++i == argc) {
-        usage("You must provide a number of streaming multiprocessors (SMs) per loop for -cuda_blocks_per_loop.", arg, argv[0]);
-      }
-      cuda_blocks_per_loop = atoi(argv[i]);
-      if( cuda_blocks_per_loop < 1 ) {
-        usage("Number of streaming multiprocessors (SMs) per loop is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
-      }
-      Uintah::Parallel::setCudaBlocksPerLoop(cuda_blocks_per_loop);
-#else
-      std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
-#endif
-    }
-    else if (arg == "-cuda_streams_per_task") {
-#if defined(UINTAH_USING_GPU)
-      int cuda_streams_per_task = 0;
-      if (++i == argc) {
-        usage("You must provide a number of CUDA streams per task for -cuda_streams_per_task.", arg, argv[0]);
-      }
-      cuda_streams_per_task = atoi(argv[i]);
-      if( cuda_streams_per_task < 1 ) {
-        usage("Number of CUDA streams per task is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
-      }
-      Uintah::Parallel::setCudaStreamsPerTask(cuda_streams_per_task);
-#else
-      std::cout << "Not compiled for GPU support." << std::endl;
       Parallel::exitAll(2);
 #endif
     }
