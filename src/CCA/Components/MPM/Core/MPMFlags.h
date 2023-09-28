@@ -116,6 +116,9 @@ class Output;
     bool        d_prescribeDeformation;                        // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile;                   // File containing prescribed deformations
     bool        d_doGranularMPM;                               // Apply Wojtek Solowski's Granular MPM methodology
+    double      d_GranularMPM_Vcrix;                            // X-dimension factor in computing critical volume
+    double      d_GranularMPM_Vcriy;                            // Y-dimension factor in computing critical volume
+    double      d_GranularMPM_Vcriz;                            // Z-dimension factor in computing critical volume
     bool        d_exactDeformation;                            // Set steps exactly to match times in prescribed deformation file
     bool        d_insertParticles;                             // Activate particles according to color
     std::string d_insertParticlesFile;                         // File containing activation plan

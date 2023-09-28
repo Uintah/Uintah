@@ -4775,17 +4775,10 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
         double JOld=pFOld[idx].Determinant();
         pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
         partvoldef += pvolume[idx];
-        if(flags->d_doGranularMPM){ //MJ
-#if 0
-          double Vcri = 1.1*1.1*0.0125*0.0125*0.05 + 1.0e-12;
-          if (pvolume[idx]> Vcri ) {
-             pFNew[idx] = pFOld[idx];
-             pvolume[idx] = pVolumeOld[idx];
-          }
-#endif
-          double Vcrix=1.1;
-          double Vcriy=1.1;
-          double Vcriz=1.1;
+        if(flags->d_doGranularMPM){ //MJ //JG
+          double Vcrix = flags->d_GranularMPM_Vcrix;
+          double Vcriy = flags->d_GranularMPM_Vcriy;
+          double Vcriz = flags->d_GranularMPM_Vcriz;
           if(flags->d_ndim<=2){
             Vcriz=1.0;
           }
@@ -4851,10 +4844,10 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           double JOld=pFOld[idx].Determinant();
           pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
 
-          if(flags->d_doGranularMPM){ //MJ
-            double Vcrix=1.1;
-            double Vcriy=1.1;
-            double Vcriz=1.1;
+          if(flags->d_doGranularMPM){ //MJ //JG
+            double Vcrix = flags->d_GranularMPM_Vcrix;
+            double Vcriy = flags->d_GranularMPM_Vcriy;
+            double Vcriz = flags->d_GranularMPM_Vcriz;
             if(flags->d_ndim<=2){
               Vcriz=1.0;
             }
@@ -4866,16 +4859,6 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
                pFNew[idx] = pFOld[idx];
                pvolume[idx] = pVolumeOld[idx];
             }
-#if 0
-            double r1=dx.x()*pSizeOrig[idx](0,0);
-            double r2=dx.y()*pSizeOrig[idx](1,1);
-            double r3=dx.z()*pSizeOrig[idx](2,2);
-            const double Vcri = (1.1*r1 * 1.1*r2 * 1.1*r3);
-            if (pvolume[idx]> (Vcri + 1.0e-12)){
-              pFNew[idx] = pFOld[idx];
-              pvolume[idx] = pVolumeOld[idx];
-            }
-#endif
           } // end if Granular MPM
         }
       } //end of pressureStabilization loop  at the patch level
@@ -6755,9 +6738,9 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
     vector<double> px1(NumbParticles);            //a vector for the material point cordinate in x-direction
     vector<double> px2(NumbParticles);            //a vector for the material point cordinate in y-direction
     vector<double> px3(NumbParticles);            //a vector for the material point cordinate in z-direction
-    const  double r1 = 0.025/2.0;                  //initial domain of material point in x direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-    const  double r2 = 0.025/2.0;                  //initial domain of material point in y direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
-    const  double r3 = 0.05/2.0;                  //initial domain of material point in z direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+//    const  double r1 = 0.025/2.0;                  //initial domain of material point in x direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+//    const  double r2 = 0.025/2.0;                  //initial domain of material point in y direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
+//    const  double r3 = 0.05/2.0;                  //initial domain of material point in z direction. Ideally, this parameter is defined by the user in the ups file. For simplicity, I am setting it here and shoud fix it later. 
     vector<double> DI1(NumbParticles);            //declaring a vector for x values of domain of interaction
     vector<double> DI2(NumbParticles);            //declaring a vector for y values of domain of interaction 
     vector<double> DI3(NumbParticles);            //declaring a vector for z values of domain of interaction 
@@ -6777,6 +6760,10 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
       new_dw->getModifiable(pSize,   lb->pSizeLabel_preReloc, pset);
       new_dw->getModifiable(pvolume, lb->pVolumeLabel_preReloc, pset);
 
+      double Vcrix = flags->d_GranularMPM_Vcrix;
+      double Vcriy = flags->d_GranularMPM_Vcriy;
+      double Vcriz = flags->d_GranularMPM_Vcriz;
+
       //moving on the particles in each materaial and each pataches
       for (ParticleSubset::iterator iter1 = pset->begin();     
          iter1 != pset->end(); iter1++) {
@@ -6787,14 +6774,13 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
          px1[pcounter] = px[idx0](0);                      
          px2[pcounter] = px[idx0](1);                    
          px3[pcounter] = px[idx0](2);
-//         double r1=dx.x()*pSize[idx0](0,0);
-//         double r2=dx.y()*pSize[idx0](1,1);
-//         double r3=dx.z()*pSize[idx0](2,2);
-//         const  double Vcri = (0.055 * 0.055 * 0.055);
+         double r1=dx.x()*pSize[idx0](0,0);
+         double r2=dx.y()*pSize[idx0](1,1);
+         double r3=dx.z()*pSize[idx0](2,2);
          if(dimensionality==3){
            //Critical volume of material point.
 //         const  double Vcri = (0.055 * 0.055 * 0.055);
-           const  double Vcri = (1.1*r1 * 1.1*r2 * 1.1*r3); // JG - Sort this out
+           const  double Vcri = (Vcrix*r1 * Vcriy*r2 * Vcriz*r3); // JG - Sort this out
 
            //domain of interaction in x, y and z directions, respectively.
            DI1[pcounter] = cbrt(( 0.125*(r1*r1/r2/r3) * Vcri ));
@@ -6803,8 +6789,7 @@ void SerialMPM::GranularMPM(const ProcessorGroup*,
            pcounter = pcounter + 1;
          } else {
            //Critical volume of material point.
-//           const  double Vcri = (1.1*r1 * 1.1*r2);  // JG - Sort this out
-           const  double Vcri = 0.026*0.026;
+           const  double Vcri = (Vcrix*r1 * Vcriy*r2);  // JG - Sort this out
 
            //domain of interaction in x and y directions.
            DI1[pcounter] = sqrt(( 0.25*(r1/r2) * Vcri ));
