@@ -5,14 +5,15 @@
 <Uintah_specification>
 <!--            
 
-                - 2D-Axisymmetric simulation
-		- Eta=0.15
-                - Ganular uGIMP             
-                - The size in Z-direction is corrected.
-                - Vcr= 0.000121*0.01
-                - The silo bottom is edited to be gradually reduced.
-                - Cohesion is set to change between 1kPa in intial stage to 10kPa in critical state.
-                - Material points are not stress-free even after reaching Vcr.
+      - 2D-Axisymmetric simulation
+	- Eta=0.15
+        - Ganular uGIMP             
+        - The size in Z-direction is corrected.
+        - Vcr= 0.000121*0.01
+        - The silo bottom is edited to be gradually reduced.
+        - Cohesion is set to change between 1kPa in intial
+          stage to 10kPa in critical state.
+        - Material points are not stress-free even after reaching Vcr.
 -->
   <Meta>
     <title>Granular_Flow_01</title>
@@ -44,12 +45,19 @@
 	<filebase> Silo.uda</filebase>
         <outputInterval>.01</outputInterval> 
 	<save label = "p.x"/>
-	<save label = "p.displacement"/>
 	<save label = "p.velocity"/>
 	<save label = "p.mass"/>
         <save label = "p.volume"/>
-	<save label = "p.externalforce"/>
+	<save label = "p.scalefactor"/>
 	<save label = "p.stress"/>
+<!--
+	<save label = "p.x" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+	<save label = "p.velocity" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+	<save label = "p.mass" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+        <save label = "p.volume" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+	<save label = "p.scalefactor" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+	<save label = "p.stress" material="0,1,51,52,53,54,55,56,57,58,59,60,61"/>
+-->
 	<save label = "TotalMass"/>
         <checkpoint cycle = "2" interval = "0.05"/>   <!--  to restart a simulation from a point this command can be used  -->
   </DataArchiver>
@@ -68,6 +76,9 @@
     <axisymmetric>		     false     </axisymmetric>
     <withColor>                      true      </withColor>
     <DoGranularMPM>                  true      </DoGranularMPM>
+    <GranularMPMVcrix>               1.1       </GranularMPMVcrix>
+    <GranularMPMVcriy>               1.1       </GranularMPMVcriy>
+    <GranularMPMVcriz>               1.0       </GranularMPMVcriz>
     <InsertParticles>                false    </InsertParticles>
   </MPM>
 
@@ -118,8 +129,8 @@
 
         <geom_object>  
           <box label = "Wall03">
-               <min>[0.0, 0.0, 0.0]</min>
-               <max>[0.20, 0.02, 0.01]</max>
+               <min>[0.0,  0.1,  0.0]</min>
+               <max>[0.20, 0.12, 0.01]</max>
           </box>
           <res>[2,2,1]</res>
           <velocity>[0.0,0.0,0.0]</velocity>
@@ -161,10 +172,13 @@
 
       <!--      This include 85 dummy granular materials. These material
       are empty places for moving granular material points on them  -->
-      <include href="Dummy10GranularMaterials.xml"/>
+      <include href="DummyGranularMaterials200.xml"/>
       <contact>
         <type>friction_bard</type>
         <materials>[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]</materials>	
+<!--
+        <materials>[0,1,2,3,4,5,6,7,8,9,10]</materials>	
+-->
         <mu> 0.3 </mu>
       </contact>  
     </MPM>
@@ -173,18 +187,19 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>[ 0.0, 0.0, 0.0]</lower>
+        <lower>[ 0.0, 0.1, 0.0]</lower>
         <upper>[ 0.2, 0.7, 0.01]</upper>
-        <resolution>[20,70,1]</resolution>
-        <patches>[1,2,1]</patches>
+        <resolution>[20,60,1]</resolution>
+        <patches>[1,1,1]</patches>
         <extraCells>[1,1,1]</extraCells>
       </Box>
     </Level>
     <BoundaryConditions>
        <Face side = "x-">
-          <BCType id = "all" label = "Velocity" var = "Dirichlet">
+         <BCType id = "0" label = "Velocity" var = "Dirichlet">
                <value> [0.0,0.0,0.0] </value>
-          </BCType>
+         </BCType>
+         <BCType id = "1" var = "symmetry" label = "Symmetric"> </BCType>
        </Face>
        <Face side = "x+">                     
          <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
