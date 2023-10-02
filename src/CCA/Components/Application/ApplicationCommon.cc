@@ -409,8 +409,6 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
 
   // Check for a task computing the reduction variable, if found add
   // in a requires and activate the variable it will be tested.
-  std::vector< std::string > inactive;
-
   for (auto & var : m_appReductionVars) {
     const VarLabel* label = var.second->getLabel();
 
@@ -422,14 +420,9 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
       task->computes(label);
     }
     else {
-      inactive.push_back(var.first);
+      activateReductionVariable(var.first, false);
     }
   }
-
-  // Remove the inactive reduction variables.
-  // for (auto & name : inactive) {
-  //   removeReductionVariable(name);
-  // }
 
   // These two reduction vars may be set by the application via a
   // compute in which case a requires is needed (done above). Or if
@@ -439,13 +432,13 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   if( m_outputIfInvalidNextDelTFlag ) {
     activateReductionVariable(outputTimeStep_name, true);
   } else {
-    removeReductionVariable(outputTimeStep_name);
+    activateReductionVariable(outputTimeStep_name, false);
   }
 
   if( m_checkpointIfInvalidNextDelTFlag ) {
     activateReductionVariable(checkpointTimeStep_name, true);
   } else {
-    removeReductionVariable(checkpointTimeStep_name);
+    activateReductionVariable(outputTimeStep_name, false);
   }
 
   // The above three tasks are on a per proc basis any rank can make
