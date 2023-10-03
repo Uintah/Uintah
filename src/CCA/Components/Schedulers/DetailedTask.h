@@ -310,7 +310,8 @@ public:
     printf("ERROR: DetailedTask::checkAllCudaStreamsDoneForThisTask - Should not be called.\n");
     SCI_THROW(InternalError("DetailedTask::checkAllCudaStreamsDoneForThisTask - Should not be called.", __FILE__, __LINE__));
   };
-#else
+
+#else  // When using CUDA streams with Kokkos
 
   // Pass through methods
   void reclaimCudaStreamsIntoPool();
@@ -333,7 +334,7 @@ public:
     SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
   };
 #endif
-#else // CUDA - streams 
+#else // When using CUDA streams only (no Kokkos)
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
 
