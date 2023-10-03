@@ -191,6 +191,7 @@ void Poisson1::computeStableTimeStep( const ProcessorGroup * pg
     sum_vartype residual;
     new_dw->get(residual, residual_label);
   }
+
   new_dw->put(delt_vartype(delt_), getDelTLabel(), getLevel(patches));
 }
 
@@ -229,6 +230,7 @@ void Poisson1::initialize( const ProcessorGroup *
         }
       }
     }
+
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
@@ -271,29 +273,30 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
     auto phi = old_dw->getConstGridVariable<constvartype, double, MemSpace> (phi_label, matl, patch, POISSON1_GHOST_TYPE, 1);
     auto newphi = new_dw->getGridVariable<vartype, double, MemSpace> (phi_label, matl, patch);
 
-    // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
-    //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
+    // Perform the boundary condition of copying over prior initialized values.
+    // TODO:  Replace with boundary condition
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
       newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop
-    Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
+    Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual) {
       newphi(i, j, k) = ( 1. / 6 ) *
-                        ( phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
-                          phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) );
+                        ( phi(i+1, j, k) + phi(i-1, j, k) + phi(i, j+1, k) +
+                          phi(i, j-1, k) + phi(i, j, k+1) + phi(i, j, k-1) );
 
-
-//    printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-//           phi.m_view.data(), &(phi(i,j,k)),
-//           phi(i,j,k),
-//           phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-//           phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-//           newphi(i,j,k));
+   // printf("In lambda CUDA at %d,%d,%d,  "
+   //     "m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and "
+   //     "m_newphi is %g\n", i, j, k,
+   //        phi.m_view.data(), &(phi(i,j,k)), phi(i,j,k),
+   //        phi(i+1, j, k), phi(i-1, j, k), phi(i, j+1, k),
+   //        phi(i, j-1, k), phi(i, j, k+1), phi(i, j, k-1),
+   //        newphi(i,j,k));
 
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
     }, residual);
 
+    new_dw->put(sum_vartype(residual), residual_label);
   }
 }
