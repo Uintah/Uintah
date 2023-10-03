@@ -333,7 +333,7 @@ public:
     SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
   };
 #endif
-#else - CUDA - streams 
+#else // CUDA - streams 
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
 
