@@ -2796,12 +2796,12 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       out << std::setprecision(17);
 
       // For outputing the sim time and/or time step with the global vars
-      if( m_outputGlobalVarsTimeStep ){              // default false
+      if( m_outputGlobalVarsTimeStep ) {  // default false
         out << std::setw(10) << timeStep << "\t";
       }
 
-      if( m_outputGlobalVarsSimTime ) {             // default true
-        out << std::setprecision(17) << simTime + delT << "\t";
+      if( m_outputGlobalVarsSimTime ) {   // default true
+        out << std::setprecision(17) << simTime << "\t";
       }
       // Output the global var for this material index.
       new_dw->print(out, var, 0, matlIndex);
