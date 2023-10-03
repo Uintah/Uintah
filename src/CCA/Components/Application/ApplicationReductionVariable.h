@@ -36,7 +36,7 @@ namespace Uintah {
 
 CLASS
    ApplicationReductionVariable
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -48,16 +48,16 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
+
+
 KEYWORDS
-   Application Reduction Variable 
+   Application Reduction Variable
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
   class ApplicationReductionVariable
   {
@@ -71,7 +71,7 @@ WARNING
       nonconstVar->schedReductionTask(false);
       m_label = nonconstVar;
 
-      m_active = varActive;      
+      m_active = varActive;
 
       setBenignValue();
       reset();
@@ -81,7 +81,7 @@ WARNING
     {
       VarLabel::destroy(m_label);
     }
-    
+
     void setBenignValue()
     {
       m_bool_var.setBenignValue();
@@ -92,7 +92,7 @@ WARNING
     void reset()
     {
       m_reduction = false;
-      
+
       m_count = 0;
       m_overriddenValue = false;
     }
@@ -103,7 +103,7 @@ WARNING
       // Idiot proofing - If the reduction has occured do an override.
       if( m_reduction )
         overrideValue( new_dw, val );
-      else {      
+      else {
         m_bool_value = val;
         m_overrideValue = true;
       }
@@ -114,7 +114,7 @@ WARNING
       // Idiot proofing - If the reduction has occured do an override.
       if( m_reduction )
         overrideValue( new_dw, val );
-      else {      
+      else {
         m_double_value = val;
         m_overrideValue = true;
       }
@@ -125,7 +125,7 @@ WARNING
     {
       if( m_reduction ) {
         m_overriddenValue = true;
-        
+
         new_dw->override( bool_or_vartype( val ), m_label);
 
         // Get the reduced value.
@@ -161,9 +161,7 @@ WARNING
     {
       Patch* patch = nullptr;
 
-      m_bool_var.setBenignValue();
-      m_min_var.setBenignValue();
-      m_max_var.setBenignValue();
+      setBenignValue();
 
       // Reduce only if active.
       if (m_active) {
@@ -238,25 +236,27 @@ WARNING
       m_reduction = true;
     }
 
-    void setActive( bool val ) { m_active = val; }
+    void setActive( bool val )
+    {
+      m_active = val;
+
+      if(!m_active)
+        setBenignValue();
+    }
+
     bool getActive() const { return m_active; }
-    
+
     const VarLabel    * getLabel() const { return m_label; }
     const std::string   getName()  const { return m_label->getName(); }
 
     double getValue() const
     {
-      if( m_active )
-      {
-        if( m_label->typeDescription() == bool_or_vartype::getTypeDescription() )
-          return double(m_bool_var);
-        else if( m_label->typeDescription() == min_vartype::getTypeDescription() )
-          return m_min_var;
-        else if( m_label->typeDescription() == max_vartype::getTypeDescription() )
-          return m_max_var;
-        else
-          return 0;
-      }
+      if( m_label->typeDescription() == bool_or_vartype::getTypeDescription() )
+        return double(m_bool_var);
+      else if( m_label->typeDescription() == min_vartype::getTypeDescription() )
+        return m_min_var;
+      else if( m_label->typeDescription() == max_vartype::getTypeDescription() )
+        return m_max_var;
       else
         return 0;
     }
@@ -280,7 +280,7 @@ WARNING
 
     unsigned int getCount() const { return m_count; }
     bool overridden() const { return m_overriddenValue; }
-    
+
   private:
     bool m_active{false};
 
@@ -313,10 +313,10 @@ WARNING
     bool     m_bool_value{0};
     double m_double_value{0};
     bool m_overrideValue{false};
-    
+
     bool m_overriddenValue{false};
   };
 
 } // End namespace Uintah
-   
+
 #endif
