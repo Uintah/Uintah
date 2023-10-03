@@ -1946,7 +1946,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //Get the computational variables on the fine level
     divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
     radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
-#elif !defined( KOKKOS_USING_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#else
     for(int L = 0; L<numLevels; L++) {
       LevelP level = new_dw->getGrid()->getLevel(L);
       if (level->hasFinerLevel() ) {
@@ -1996,7 +1996,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
     divQ_fine_view          = divQ_fine.getKokkosView();
     radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
-#endif // end  !defined( KOKKOS_USING_GPU ) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#endif
 
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
