@@ -478,23 +478,6 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
   }
 }
 
-//______________________________________________________________________
-//
-ReductionVariableBase*
-OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
-                                           , int              matlIndex
-                                           , const Level    * level
-                                           ) const
-{
-  if (m_level_DB.exists(label, matlIndex, level)) {
-    ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>(m_level_DB.get(label, matlIndex, level));
-    return var;
-  }
-  else {
-    return nullptr;
-  }
-}
-
 #if defined(UINTAH_USING_GPU)
 
 int

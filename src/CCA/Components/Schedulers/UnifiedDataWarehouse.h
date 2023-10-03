@@ -118,10 +118,6 @@ public:
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::exists() not implemented yet\n"); }
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) { printf("UnifiedDataWarehouse::exists() not implemented yet\n"); }
 
-  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
-                   int matlIndex,
-                   const Level* ) { printf("UnifiedDataWarehouse::getReductionVariable() not implemented yet\n"); return nullptr;}
-
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
   virtual const Grid * getGrid() { printf("UnifiedDataWarehouse::getGrid() not implemented yet\n"); return nullptr;}

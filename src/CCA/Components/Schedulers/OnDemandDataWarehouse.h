@@ -131,11 +131,6 @@ public:
                      , const Level    * level
                      ) const;
 
-  virtual ReductionVariableBase* getReductionVariable( const VarLabel * label
-                                                     ,       int        matlIndex
-                                                     , const Level    * level
-                                                     ) const;
-
   void copyKeyDB( KeyDatabase<Patch> & varkeyDB
                 , KeyDatabase<Level> & levekeyDB
                 );
@@ -149,59 +144,27 @@ public:
     return m_grid.get_rep();
   }
 
-  // Generic put and allocate, passing Variable as a pointer rather than
-  // by reference to avoid ambiguity with other put overloaded methods.
+  // Generic put, passing Variable as a pointer rather than by
+  // reference to avoid ambiguity with other put overloaded methods.
   virtual void put(       Variable * var
                   , const VarLabel * label
                   ,       int        matlIndex
                   , const Patch    * patch
                   );
 
+  //__________________________________
   // Reduction Variables
   virtual void get(       ReductionVariableBase & var
                   , const VarLabel              * label
                   , const Level                 * level     = nullptr
                   ,       int                     matlIndex = -1
                   );
-                              // get a map filled with reductionVars
-                              // C++ doesn't allow templated Virtual method
-  template< class T>
-  std::map<int,T> get_sum_vartypeT( const VarLabel       * label
-                                  , const MaterialSubset * matls
-                                  );
-  virtual                     // double
-  std::map<int,double> get_sum_vartypeD( const VarLabel       * label
-                                       , const MaterialSubset * matls
-                                       );
-                              // Vector
-  virtual
-  std::map<int,Vector> get_sum_vartypeV( const VarLabel       * label
-                                       , const MaterialSubset * matls
-                                       );
 
   virtual void put( const ReductionVariableBase & var
                   , const VarLabel              * label
                   , const Level                 * level     = nullptr
                   ,       int                     matlIndex = -1
                   );
-
-                              // put a map filled with reductionVars
-                              // C++ doesn't allow templated Virtual methods
-  template< class T>
-  void put_sum_vartypeT( std::map<int, T>  reductionVars
-                       , const VarLabel       * label
-                       , const MaterialSubset * matls
-                       );
-                              // Vector
-  virtual void put_sum_vartype( std::map<int, Vector>  reductionVars
-                              , const VarLabel       * label
-                              , const MaterialSubset * matls
-                              );
-                              // double
-  virtual void put_sum_vartype( std::map<int, double>  reductionVars
-                              , const VarLabel       * label
-                              , const MaterialSubset * matls
-                              );
 
   virtual void override( const ReductionVariableBase & var
                        , const VarLabel              * label
@@ -215,6 +178,38 @@ public:
                     ,       int            matlIndex = -1
                     );
 
+  // Get a map filled with reductionVars
+  // C++ doesn't allow templated Virtual method
+  template< class T>
+  std::map<int,T> get_sum_vartypeT( const VarLabel       * label
+                                  , const MaterialSubset * matls
+                                  );
+  // Double
+  virtual std::map<int,double> get_sum_vartypeD( const VarLabel       * label
+					       , const MaterialSubset * matls
+						 );
+  // Vector
+  virtual std::map<int,Vector> get_sum_vartypeV( const VarLabel       * label
+					       , const MaterialSubset * matls
+						 );
+
+  // Put a map filled with reductionVars
+  // C++ doesn't allow templated Virtual methods
+  template< class T>
+  void put_sum_vartypeT( std::map<int, T>  reductionVars
+                       , const VarLabel       * label
+                       , const MaterialSubset * matls
+                       );
+  // Double
+  virtual void put_sum_vartype( std::map<int, double>  reductionVars
+                              , const VarLabel       * label
+                              , const MaterialSubset * matls
+                              );
+  // Vector
+  virtual void put_sum_vartype( std::map<int, Vector>  reductionVars
+                              , const VarLabel       * label
+                              , const MaterialSubset * matls
+                              );
 
   //__________________________________
   // Sole Variables
@@ -298,7 +293,7 @@ public:
                                            , const VarLabel         * posvar
                                            );
 
-  // returns the particle subset in the range of low->high
+  // Returns the particle subset in the range of low->high
   // relPatch is used as the key and should be the patch you are querying from
   // level is used if you are querying from an old level
   virtual ParticleSubset* getParticleSubset(       int         matlIndex
@@ -313,14 +308,14 @@ public:
                                 , ParticleSubset       * pset
                                 );
 
-  virtual void allocateAndPut(       ParticleVariableBase & car
+  virtual void allocateAndPut(       ParticleVariableBase & var
                              , const VarLabel             * label
                              ,       ParticleSubset       * pset
                              );
 
-  virtual void get(constParticleVariableBase & constVar
-                  , const VarLabel           * label
-                  , ParticleSubset           * pset
+  virtual void get(       constParticleVariableBase & constVar
+                  , const VarLabel                 * label
+                  ,       ParticleSubset           * pset
                   );
 
   virtual void get(       constParticleVariableBase & constVar
@@ -420,8 +415,9 @@ public:
                        , const Level                 * level
                        );
 
-  //meant for the UnifiedScheduler only.  Puts a contiguous level in the *level* database so that
-  //it doesn't need to constantly make new deep copies each time the full level is requested.
+  // Meant for the UnifiedScheduler only.  Puts a contiguous level in
+  // the *level* database so that it doesn't need to constantly make
+  // new deep copies each time the full level is requested.
   void putLevelDB(       GridVariableBase * gridVar
                  , const VarLabel         * label
                  , const Level            * level
@@ -618,12 +614,18 @@ public:
                          , std::vector<const Patch *> & adjacentNeighbors
                          );
 
-  // This method will retrieve those neighbors, and also the regions (indicated in low and high) which constitute the ghost cells.
-  // Data is return in the ValidNeighbors vector. IgnoreMissingNeighbors is designed for the Unified Scheduler so that it can request what
-  // neighbor patches *should* be, and those neighbor patches we hope are found in the host side DW (this one) or the GPU DW
+  // This method will retrieve those neighbors, and also the regions
+  // (indicated in low and high) which constitute the ghost cells.
   //
-  // TODO, This method might create a reference to the neighbor, and so these references
-  // need to be deleted afterward. (It's not pretty, but it seemed to be the best option.)
+  // Data is return in the ValidNeighbors
+  // vector. IgnoreMissingNeighbors is designed for the Unified
+  // Scheduler so that it can request what neighbor patches *should*
+  // be, and those neighbor patches we hope are found in the host side
+  // DW (this one) or the GPU DW
+  //
+  // TODO, This method might create a reference to the neighbor, and
+  // so these references need to be deleted afterward. (It's not
+  // pretty, but it seemed to be the best option.)
   void getValidNeighbors( const VarLabel                    * label
                         ,       int                           matlIndex
                         , const Patch                       * patch

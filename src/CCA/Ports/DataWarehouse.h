@@ -120,10 +120,6 @@ public:
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
 
-  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
-                                                       int matlIndex,
-                                                       const Level* ) const = 0;
-
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
   virtual const Grid * getGrid() = 0;
@@ -176,13 +172,13 @@ public:
   virtual void doReserve() = 0;
 
   // Particle Variables
-  // changed way PS's were stored from ghost info to low-high range.
+  // Changed way PS's were stored from ghost info to low-high range.
   // we can still keep the getPS function API the same though to not annoy
   // everybody -- BJW, May 05
-  virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
-                                                 int matlIndex, const Patch*,
-                                                 IntVector low = IntVector(0,0,0),
-                                                 IntVector high = IntVector(0,0,0) ) = 0;
+  virtual ParticleSubset* createParticleSubset( particleIndex numParticles,
+                                                int matlIndex, const Patch*,
+                                                IntVector low = IntVector(0,0,0),
+                                                IntVector high = IntVector(0,0,0) ) = 0;
 
   virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
 
@@ -232,7 +228,6 @@ public:
   getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
   // Generic grid based variables
-
   virtual void get( constGridVariableBase& var,
                     const VarLabel* label, int matlIndex, const Patch* patch,
                     Ghost::GhostType gtype, int numGhostCells ) = 0;
@@ -242,7 +237,7 @@ public:
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
                                   Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
-//                                  const IntVector& boundaryLayer ) = 0;
+//                                const IntVector& boundaryLayer ) = 0;
 //                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
 
   virtual void allocateAndPut( GridVariableBase& var,
@@ -253,7 +248,7 @@ public:
   virtual void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
             bool replace = false) = 0;
 
-  // returns the constGridVariable for all patches on the level
+  // Returns the constGridVariable for all patches on the level
   virtual void getLevel( constGridVariableBase&,
                          const VarLabel*,
                          int matlIndex,
@@ -282,7 +277,7 @@ public:
   virtual void put(PerPatchBase&, const VarLabel*,
                    int matlIndex, const Patch*, bool replace = false) = 0;
 
-  // this is so we can get reduction information for regridding
+  // This is so we can get reduction information for regridding
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
 
   // Remove particles that are no longer relevant
@@ -322,16 +317,16 @@ public:
                         size_t bufferSize) = 0;
 #endif
 
-
   // Scrubbing
   enum ScrubMode {
     ScrubNone,
     ScrubComplete,
     ScrubNonPermanent
   };
+
   virtual ScrubMode setScrubbing(ScrubMode) = 0;
 
-      // For related datawarehouses
+  // For related datawarehouses
   virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW) = 0;
 
   // For the schedulers
@@ -366,6 +361,7 @@ public:
     return d_gpuDWs[i]; 
   }
 #endif
+
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
                  Scheduler* scheduler,
@@ -383,6 +379,7 @@ protected:
 #if defined(UINTAH_USING_GPU)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
+
 private:
   DataWarehouse(const DataWarehouse&);
   DataWarehouse& operator=(const DataWarehouse&);
