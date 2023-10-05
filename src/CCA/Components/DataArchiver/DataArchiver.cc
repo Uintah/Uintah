@@ -1153,6 +1153,14 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",this,
                               &DataArchiver::outputGlobalVars );
 
+    // Really want to schedule this task to be executed after the
+    // simulation time is updated. But it causes a crash when getting
+    // the sim time from the new data warehouse. As the simulation
+    // time can be calculated from the simulation time and the delta t
+    // which are both in the old data warehouse do that instead.
+
+    // task->requires( Task::NewDW, m_application->getSimTimeLabel() );
+
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
       SaveItem& saveItem = m_saveGlobalLabels[i];
 
@@ -1312,7 +1320,6 @@ DataArchiver::setCheckpointTimeStep( bool val,
 void
 DataArchiver::beginOutputTimeStep( const GridP& grid )
 {
-
   const int    timeStep = m_application->getTimeStep();
   const double simTime  = m_application->getSimTime();
   const double delT     = m_application->getDelT();
@@ -1616,9 +1623,6 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 void
 DataArchiver::recompute_OutputCheckPointTimeStep()
 {
-
-
-
   const double simTime = m_application->getSimTime();
   const double delT    = m_application->getDelT();
 
@@ -2750,9 +2754,22 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  const int    timeStep = getTimeStepTopLevel();
-  const double simTime  = m_application->getSimTime();
-  const double delT     = m_application->getDelT();
+  // See note on the scheduling of this task.
+
+  // The values must come from the old data warehouse because system
+  // vars can be updated before or after this task. Those are in the
+  // new data warehouse.
+  timeStep_vartype timeStepVar;
+  simTime_vartype   simTimeVar;
+  delt_vartype         delTVar;
+
+  old_dw->get( timeStepVar, m_application->getTimeStepLabel() );
+  old_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
+  old_dw->get( delTVar,     m_application->getDelTLabel() );
+
+  const int    timeStep = timeStepVar;
+  const double simTime  =  simTimeVar;
+  const double delT     =     delTVar;
 
   // Dump the variables in the global saveset into files in the uda.
   for(int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
@@ -2801,7 +2818,7 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       }
 
       if( m_outputGlobalVarsSimTime ) {   // default true
-        out << std::setprecision(17) << simTime << "\t";
+        out << std::setprecision(17) << simTime + delT << "\t";
       }
       // Output the global var for this material index.
       new_dw->print(out, var, 0, matlIndex);
@@ -3329,7 +3346,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     PIDX_physical_point physical_global_size;
     IntVector zlo = { 0, 0, 0 };
-    IntVector ohi = { 1, 1, 1 }; 
+    IntVector ohi = { 1, 1, 1 };
     BBox b;
     level->getSpatialRange( b );
 
@@ -4369,10 +4386,12 @@ DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
     fromPath = fromPath1;
   }
   else {
+    char name[256];
+    getcwd(name, sizeof(name));
+
+    printf("Current working dir: %s\n", name);
+
     ostringstream mesg;
-
-    printf("Current working dir: %s\n", get_current_dir_name());
-
     mesg << "DataArchiver::copy_outputProblemSpec(): The directory "
          << tname.str() << " not found in either: "
          << fromPath0 << " or " << fromPath1;
