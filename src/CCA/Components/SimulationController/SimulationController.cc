@@ -566,9 +566,7 @@ SimulationController::ScheduleReportStats( bool header )
 
   task->setType(Task::OncePerProc);
 
-  // Require delta T so that the task gets scheduled
-  // correctly. Otherwise the scheduler/taskgraph will toss an error :
-  // Caught std exception: map::at: key not found
+  task->requires(Task::NewDW, m_application->getSimTimeLabel() );
   task->requires(Task::NewDW, m_application->getDelTLabel() );
 
   m_scheduler->addTask(task,
@@ -579,16 +577,19 @@ SimulationController::ScheduleReportStats( bool header )
 //______________________________________________________________________
 //
 void
-SimulationController::ReportStats(const ProcessorGroup*,
-                                  const PatchSubset*,
-                                  const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse*,
-                                        bool header )
+SimulationController::ReportStats( const ProcessorGroup *
+                                 , const PatchSubset    *
+                                 , const MaterialSubset *
+                                 ,       DataWarehouse  *
+                                 ,       DataWarehouse  * new_dw
+                                 ,       bool header )
 {
   bool reportStats = false;
 
-  // If the reporting frequency is greater than 1 check to see if output is needed.
+  int timeStep = m_application->getTimeStep();
+
+  // If the reporting frequency is greater than 1 check to see if
+  // output is needed.
   if (m_reportStatsFrequency == 1) {
     reportStats = true;
   }
@@ -600,7 +601,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if (header) {
       reportStats = true;
     }
-    else if (m_application->getTimeStep() % m_reportStatsFrequency == m_reportStatsOnTimeStep) {
+    else if (timeStep % m_reportStatsFrequency == m_reportStatsOnTimeStep) {
       reportStats = true;
     }
     else {
@@ -615,6 +616,29 @@ SimulationController::ReportStats(const ProcessorGroup*,
       }
       reportStats = m_application->isLastTimeStep(walltime);
     }
+  }
+
+  // If scheduled as a task get the values from the data warehouse. It
+  // should not matter because values in the application should be in
+  // sync with those in the data warehouse.
+  double simTime;
+  double nextDelT;
+
+  if( new_dw )
+  {
+    simTime_vartype   simTimeVar;
+    delt_vartype         delTVar;
+
+    new_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
+    new_dw->get( delTVar,     m_application->getDelTLabel() );
+
+    simTime  =  simTimeVar;
+    nextDelT =     delTVar;
+  }
+  else
+  {
+    simTime  = m_application->getSimTime();
+    nextDelT = m_application->getNextDelT();
   }
 
   // Get and reduce the performance runtime stats
@@ -663,39 +687,41 @@ SimulationController::ReportStats(const ProcessorGroup*,
               << "at the end of each time step" << std::endl
               << "EMA == Wall time as an exponential moving average "
               << "using a window of the last " << m_wall_timers.getWindow()
-              << " time steps\n" 
+              << " time steps\n"
               << "ETC == Estimated time to completion [HH:MM:SS]\n"
               << "______________________________________________________________________"<< std::endl;
     }
 
     //__________________________________
-    //compute ETC  Estimated time to completion
-    double nTimesteps = trunc( (m_application->getSimTimeMax() - m_application->getSimTime()) / m_application->getNextDelT() );
-    int ETC_sec       = trunc( m_wall_timers.ExpMovingAverage().seconds() * nTimesteps ); 
-    
-    
+    // Compute the ETC (Estimated Time to Completion).
+    double nTimesteps =
+      trunc( (m_application->getSimTimeMax()- simTime) / nextDelT );
+    int ETC_sec =
+      trunc( m_wall_timers.ExpMovingAverage().seconds() * nTimesteps );
+
     using namespace std::chrono;
     seconds secs(ETC_sec);
     auto mins =  duration_cast<minutes>(secs);           // sec -> minutes
-    secs     -=  duration_cast<seconds>(mins);           // 
+    secs     -=  duration_cast<seconds>(mins);           //
     auto hrs  =  duration_cast<hours>(mins);             // min -> hrs
     mins     -=  duration_cast<minutes>(hrs);
-    
-    int hrs_setw = std::fmax( 2 , floor( log10(hrs.count()) ) );           // hrs can be a large number
-    
-    std::ios orgFormat(NULL);                                     // keep track of 
+
+    // note: hrs can be a large number.
+    int hrs_setw = std::fmax( 2 , floor( log10(hrs.count()) ) );
+
+    std::ios orgFormat(NULL);  // keep track of the original format.
     orgFormat.copyfmt(message);
-    
+
     message << std::left
-            << "Timestep "      << std::setw(8)  << m_application->getTimeStep()
-            << "Time="          << std::setw(12) << m_application->getSimTime()
-            << "Next delT="     << std::setw(12) << m_application->getNextDelT()
+            << "Timestep "      << std::setw(8)  << timeStep
+            << "Time="          << std::setw(12) << simTime
+            << "Next delT="     << std::setw(12) << nextDelT
             << "Wall Time="     << std::setw(10) << m_wall_timers.GetWallTime()
 //          << "Net Wall Time=" << std::setw(10) << timeStepTime.seconds()
             << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
             << std::right
-            << "ETC="           << std::setfill('0') << std::setw(hrs_setw) << hrs.count()  << ":" 
-                                << std::setfill('0') << std::setw(2) << mins.count() << ":" 
+            << "ETC="           << std::setfill('0') << std::setw(hrs_setw) << hrs.count()  << ":"
+                                << std::setfill('0') << std::setw(2) << mins.count() << ":"
                                 << std::setfill('0') << std::setw(2) << secs.count() << "  ";
     message.copyfmt(orgFormat);
     message << std::left;
@@ -839,8 +865,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       m_runtime_stats.reportRankSummaryStats( "Runtime Summary ", "",
                                               d_myworld->myRank(),
                                               d_myworld->nRanks(),
-                                              m_application->getTimeStep(),
-                                              m_application->getSimTime(),
+                                              timeStep, simTime,
                                               BaseInfoMapper::Dout,
                                               true );
 
@@ -880,8 +905,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                               d_myworld->myNode_nRanks(),
                                               d_myworld->myNode(),
                                               d_myworld->nNodes(),
-                                              m_application->getTimeStep(),
-                                              m_application->getSimTime(),
+                                              timeStep, simTime,
                                               BaseInfoMapper::Dout,
                                               true );
     }
@@ -891,8 +915,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
       m_runtime_stats.reportIndividualStats( "Runtime", "",
                                              d_myworld->myRank(),
                                              d_myworld->nRanks(),
-                                             m_application->getTimeStep(),
-                                             m_application->getSimTime(),
+                                             timeStep, simTime,
                                              BaseInfoMapper::Dout );
     }
 
@@ -902,8 +925,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         reportRankSummaryStats( "Application Summary", "",
                                 d_myworld->myRank(),
                                 d_myworld->nRanks(),
-                                m_application->getTimeStep(),
-                                m_application->getSimTime(),
+                                timeStep, simTime,
                                 BaseInfoMapper::Dout,
                                 false );
     }
@@ -916,8 +938,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
                                 d_myworld->myNode_nRanks(),
                                 d_myworld->myNode(),
                                 d_myworld->nNodes(),
-                                m_application->getTimeStep(),
-                                m_application->getSimTime(),
+                                timeStep, simTime,
                                 BaseInfoMapper::Dout,
                                 false );
     }
@@ -928,8 +949,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
         reportIndividualStats( "Application", "",
                                d_myworld->myRank(),
                                d_myworld->nRanks(),
-                               m_application->getTimeStep(),
-                               m_application->getSimTime(),
+                               timeStep, simTime,
                                BaseInfoMapper::Dout );
     }
   }
