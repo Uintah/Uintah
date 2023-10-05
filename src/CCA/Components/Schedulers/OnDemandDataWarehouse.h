@@ -881,7 +881,7 @@ public:
   }
 #endif
 
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_T >::type
   getGridVariable( const VarLabel         * label
                  ,       int                matlIndex
@@ -895,7 +895,7 @@ public:
     if ( matlIndex != -999 ) {
       if ( l_getModifiable ) {
         this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      }else{
+      } else {
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
@@ -903,7 +903,7 @@ public:
   }
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
   getGridVariable( const VarLabel         * label
                  ,       int                matlIndex
@@ -917,7 +917,7 @@ public:
     if ( matlIndex != -999 ) {
       if ( l_getModifiable ) {
         this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      }else{
+      } else {
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
@@ -926,7 +926,7 @@ public:
 #endif
 
 #if defined(KOKKOS_USING_GPU)
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getGridVariable( const VarLabel         * label
                  ,       int                matlIndex
@@ -944,7 +944,7 @@ public:
   }
 #endif
 
-  template <typename grid_CT,typename T, typename MemSpace>
+  template <typename grid_CT, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_CT >::type
   getConstGridVariable( const VarLabel         * label
                       ,       int                matlIndex
@@ -961,7 +961,7 @@ public:
   }
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-  template <typename grid_CT,typename T, typename MemSpace>
+  template <typename grid_CT, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
   getConstGridVariable( const VarLabel         * label
                       ,       int                matlIndex
@@ -980,7 +980,7 @@ public:
 #endif
 
 #if defined(KOKKOS_USING_GPU)
-  template <typename grid_CT,typename T, typename MemSpace>
+  template <typename grid_CT, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstGridVariable( const VarLabel         * label
                       ,       int                matlIndex
@@ -997,7 +997,7 @@ public:
   }
 #endif
 
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void>::type
   assignGridVariable(       grid_T           & var
                     , const VarLabel         * label
@@ -1011,14 +1011,14 @@ public:
     if ( matlIndex != -999 ) {
       if ( l_getModifiable ) {
         this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      }else{
+      } else {
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
   }
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & kvar
                     , const VarLabel                 * label
@@ -1033,7 +1033,7 @@ public:
     if ( matlIndex != -999 ) {
       if ( l_getModifiable ) {
         this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      }else{
+      } else {
         this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
       }
     }
@@ -1042,7 +1042,7 @@ public:
 #endif
 
 #if defined(KOKKOS_USING_GPU)
-  template <typename grid_T,typename T, typename MemSpace>
+  template <typename grid_T, typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & var
                     , const VarLabel                 * label
