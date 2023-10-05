@@ -2127,7 +2127,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   // cells and another var had 5832 cells, n_cells would become
   // 5832
   unsigned int n_cells = 0;
-  for (unsigned int j = 0; j < KKV3.runTime_size; j++){
+  for (size_t j = 0; j < KKV3.runTime_size; j++){
     n_cells = KKV3[j].m_view.size() > n_cells ? KKV3[j].m_view.size() : n_cells;
   }
 
@@ -2136,8 +2136,8 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Kokkos::RangePolicy< ExecSpace > rangePolicy(instanceObject, 0, n_cells);
 
   Kokkos::parallel_for("GPU Initialize Grouped", rangePolicy,
-                       KOKKOS_LAMBDA(int i) {
-      for(int j=0; j<KKV3.runTime_size; j++){
+                       KOKKOS_LAMBDA(size_t i) {
+      for(size_t j=0; j<KKV3.runTime_size; j++){
         if(i<KKV3[j].m_view.size())
           KKV3[j](i) = init_val;
       }
