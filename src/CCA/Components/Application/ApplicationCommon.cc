@@ -619,7 +619,10 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
                            &ApplicationCommon::updateSystemVars);
 
   task->setType(Task::OncePerProc);
-  
+
+  // This task really should be last as the simulation time gets
+  // updated. Without the requires it could be first.
+  task->requires(Task::NewDW, m_delTLabel);
   task->computes(m_timeStepLabel);
   task->computes(m_simulationTimeLabel);
 
@@ -639,12 +642,13 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {  
-  // If recomputing a time step do not update the time step or the simulation time.
+  // If recomputing a time step do not update the time step or the
+  // simulation time.
   if ( !getReductionVariable( recomputeTimeStep_name ) ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
-    
+
     // Update the simulation time.
     m_simTime += m_delT;
 
@@ -769,10 +773,15 @@ ApplicationCommon::prepareForNextTimeStep()
   // what time step they are on and get the delta T that will be used.
   incrementTimeStep();
 
-  // Get the delta that will be used for the time step.
-  delt_vartype delt_var;
-  m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
-  m_delT = delt_var;
+  // Get the current simulation time that will be used for the time step.
+  simTime_vartype simTimeVar;
+  m_scheduler->getLastDW()->get( simTimeVar,  m_simulationTimeLabel );
+  m_simTime = simTimeVar;
+
+  // Get the delta time that will be used for the time step.
+  delt_vartype delTVar;
+  m_scheduler->getLastDW()->get( delTVar, m_delTLabel );
+  m_delT = delTVar;
 
   // Clear the time step based reduction variables.
   for ( auto & var : m_appReductionVars ) {
