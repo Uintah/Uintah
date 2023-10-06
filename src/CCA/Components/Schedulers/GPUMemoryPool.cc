@@ -41,17 +41,6 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
     new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
                       Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
 
-#if defined(USE_KOKKOS_INSTANCE)
-  #if defined(USE_KOKKOS_MALLOC)
-  // Not needed
-  #else // if defined(USE_KOKKOS_VIEW)
-  std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
-                Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue> Uintah::GPUMemoryPool::gpuMemoryPoolViewInUse;
-  #endif
-#else
-// Not needed
-#endif
-
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
@@ -121,33 +110,15 @@ GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
       // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
       // Allocate the memory.
-#if defined(USE_KOKKOS_INSTANCE)
+      std::string label;
+      if(name == nullptr)
+	label = std::string("device");
+      else
+	label = std::string(name);
 
-    std::string label;
-    if(name == nullptr)
-      label = std::string("device");
-    else
-      label = std::string(name);
-
-#if defined(USE_KOKKOS_MALLOC)
       addr =
-        Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
+	Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
 
-#else // if defined(USE_KOKKOS_VIEW)
-      Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space>
-        deviceView(label, memSize);
-
-      // ARS - FIX ME - The view should be schelped around.
-      addr = deviceView.data();
-#endif
-
-#else
-      cudaError_t err = cudaMalloc(&addr, memSize);
-      if (err == cudaErrorMemoryAllocation) {
-        printf("The GPU memory pool is full.  Need to clear!\n");
-        exit(-1);
-      }
-#endif
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
@@ -167,20 +138,6 @@ GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
 
       gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem,
                                            gpuMemoryPoolDevicePtrValue>(insertItem, insertValue));
-
-#if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
-// Not needed
-#else // if defined(USE_KOKKOS_VIEW)
-      // Keep a copy of the view so the view reference count is
-      // incremented which prevents the memory from being de-allocated.
-      gpuMemoryPoolDeviceViewItem insertView(device_id, deviceView);
-      gpuMemoryPoolViewInUse.insert(std::pair<gpuMemoryPoolDeviceViewItem,
-                                              gpuMemoryPoolDevicePtrValue>(insertView, insertValue));
-#endif
-#else
-// Not needed
-#endif
     }
   } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
 
@@ -190,8 +147,6 @@ GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
 
 //______________________________________________________________________
 //
-#if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
 void GPUMemoryPool::freeMemoryFromPool()
 {
   for(const auto &item: *gpuMemoryPoolUnused)
@@ -212,36 +167,6 @@ void GPUMemoryPool::freeMemoryFromPool()
 
   gpuMemoryPoolInUse->clear();
 }
-#else // if defined(USE_KOKKOS_VIEW)
-void GPUMemoryPool::freeViewsFromPool()
-{
-  // By clearing the pool the view reference count is decremented and if
-  // zero is deleted.
-  gpuMemoryPoolViewInUse.clear();
-}
-#endif
-#else
-void GPUMemoryPool::freeMemoryFromPool()
-{
-  for(const auto &item: *gpuMemoryPoolUnused)
-  {
-    void * addr = item.second.ptr;
-    cudaFree(addr);
-  }
-
-  gpuMemoryPoolUnused->clear();
-
-  // The data warehouses have not been cleared so Kokkos pointers are
-  // still valid as they are reference counted.
-  // for(const auto &item: *gpuMemoryPoolInUse)
-  // {
-  //   void * addr = item.first.ptr;
-  //   cudaFree(addr);
-  // }
-
-  gpuMemoryPoolInUse->clear();
-}
-#endif
 
 
 //______________________________________________________________________

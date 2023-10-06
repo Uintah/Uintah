@@ -39,11 +39,6 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/gpu_defs.h>
 
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-  #include <curand.h>
-  #include <curand_kernel.h>
-#endif
-
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -240,21 +235,6 @@ namespace Uintah{
                      Task::WhichDW which_sigmaT4_dw,
                      Task::WhichDW which_celltype_dw );
 
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-      //__________________________________
-      template<class T, typename ExecSpace, typename MemSpace>
-      void rayTraceGPU( const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        OnDemandDataWarehouse* old_dw,
-                        OnDemandDataWarehouse* new_dw,
-                        UintahParams& uintahParams,
-                        ExecutionObject<ExecSpace, MemSpace>& execObj,
-                        int timeStep,
-                        bool modifies_divQ,
-                        Task::WhichDW which_abskg_dw,
-                        Task::WhichDW which_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw);
-#endif
       //__________________________________
       template<class T>
       void rayTrace_dataOnion( const ProcessorGroup* pg,
@@ -266,22 +246,6 @@ namespace Uintah{
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw );
-
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-      //__________________________________
-      template<class T, typename ExecSpace, typename MemSpace>
-      void rayTraceDataOnionGPU( const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 OnDemandDataWarehouse* old_dw,
-                                 OnDemandDataWarehouse* new_dw,
-                                 UintahParams& uintahParams,
-                                 ExecutionObject<ExecSpace, MemSpace>& execObj,
-                                 int timeStep,
-                                 bool modifies_divQ,
-                                 Task::WhichDW which_abskg_dw,
-                                 Task::WhichDW which_sigmaT4_dw,
-                                 Task::WhichDW which_celltype_dw );
-#endif
 
       //__________________________________
       template<class T>

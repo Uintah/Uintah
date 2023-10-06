@@ -605,15 +605,10 @@ public:
     SCI_THROW(InternalError("GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space: ", __FILE__, __LINE__) );
   };
 
-#ifdef USE_KOKKOS_PARALLEL_FOR
   KOKKOS_FUNCTION void
   copyGpuGhostCellsToGpuVars( const int threadIdxX,
                               const int threadIdxY,
                               const int threadIdxZ);
-#else
-  __device__ void
-  copyGpuGhostCellsToGpuVars();
-#endif
 
   __host__ bool ghostCellCopiesNeeded();
   __host__ void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndx, int levelIndx = 0);
@@ -698,20 +693,11 @@ private:
 
 //______________________________________________________________________
 //
-#ifdef USE_KOKKOS_INSTANCE
 template <>
 __host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance);
 
 template<>
 __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance);
-#else
-template <>
-__host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<cudaStream_t*>(cudaStream_t* stream);
-
-template<>
-__host__ void
-GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream);
-#endif
 
 //______________________________________________________________________
 //  Deep copies (not shallow copies or moves) an entry from one data
@@ -779,7 +765,6 @@ GPUDataWarehouse::transferFrom<UintahSpaces::CPU>( UintahSpaces::CPU instance
 };
 #endif
 
-#ifdef USE_KOKKOS_INSTANCE
 template <typename ExecSpace>
 __host__ inline bool
 GPUDataWarehouse::transferFrom( ExecSpace instance
@@ -791,23 +776,6 @@ GPUDataWarehouse::transferFrom( ExecSpace instance
                               , int matlIndx
                               , int levelIndx)
 {
-#else
-template <>
-__host__ inline bool
-GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
-                                             , GPUGridVariableBase &var_source
-                                             , GPUGridVariableBase &var_dest
-                                             , GPUDataWarehouse * from
-                                             , char const* label
-                                             , int patchID
-                                             , int matlIndx
-                                             , int levelIndx)
-{
-#if defined(USE_KOKKOS_PARALLEL_FOR)
-    Kokkos::DefaultExecutionSpace instance(*stream);
-#endif
-#endif
-
   from->varLock->lock();
   this->varLock->lock();  // Lock both data warehouses, no way to lock
                           // free this section, you could get the
@@ -895,7 +863,6 @@ GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
 
   var_source.setArray3(dest_it->second.var->device_offset, dest_it->second.var->device_size, dest_it->second.var->device_ptr);
 
-#if defined(USE_KOKKOS_INSTANCE) || defined(USE_KOKKOS_PARALLEL_FOR)
   const char * srcPtr =
     static_cast<const char *>(source_it->second.var->device_ptr);
   char * dstPtr =
@@ -911,16 +878,6 @@ GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
                        KOKKOS_LAMBDA (const int i) {
                          dstPtr[i] = srcPtr[i];
                          });
-#else
-  cudaMemcpyAsync(dest_it->second.var->device_ptr,
-                  source_it->second.var->device_ptr,
-                  source_it->second.var->device_size.x *
-                  source_it->second.var->device_size.y *
-                  source_it->second.var->device_size.z *
-                  source_it->second.var->sizeOfDataType,
-                  cudaMemcpyDeviceToDevice,
-                  *stream);
-#endif
 
   from->varLock->unlock();
   this->varLock->unlock();

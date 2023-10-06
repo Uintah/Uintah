@@ -58,7 +58,6 @@ template <typename ExecSpace, typename MemSpace>
 class ExecutionObject {
 public:
 
-#if defined(USE_KOKKOS_INSTANCE)
   // Instances should be created, supplied, and managed by the Task
   // itself.  The application developer probably shouldn't be managing
   // their own instances.
@@ -97,50 +96,8 @@ public:
     return m_instances.size();
   }
 
-#elif defined(HAVE_CUDA) // CUDA only when using streams
-  // Streams should be created, supplied, and managed by the Task
-  // itself.  The application developer probably shouldn't be managing
-  // their own streams.
-  void setStream(void* stream, int deviceID) {
-    m_streams.push_back(stream);
-    this->deviceID = deviceID;
-  }
-
-  void setStreams(const std::vector<void*>& streams, int deviceID) {
-    for (auto& stream : streams) {
-      m_streams.push_back(stream);
-    }
-    this->deviceID = deviceID;
-  }
-
-  void * getStream() const {
-    if ( m_streams.size() == 0 ) {
-      std::cout << "Requested a stream that doesn't exist." << std::endl;
-      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
-    } else {
-      return m_streams[0];
-    }
-  }
-  void * getStream(unsigned int i) const {
-    if ( i >= m_streams.size() ) {
-      std::cout << "Requested a stream that doesn't exist." << std::endl;
-      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
-    } else {
-      return m_streams[i];
-    }
-  }
-
-  unsigned int getNumStreams() const {
-    return m_streams.size();
-  }
-#endif
-
 private:
-#if defined(USE_KOKKOS_INSTANCE)
   std::vector<ExecSpace> m_instances;
-#elif defined(HAVE_CUDA) // CUDA only when using streams
-  std::vector<void*> m_streams;
-#endif
   int deviceID{0};
 };
 

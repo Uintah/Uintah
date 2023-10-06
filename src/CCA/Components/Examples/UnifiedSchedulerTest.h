@@ -35,10 +35,6 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-#endif
-
 namespace Uintah {
 
   class SimpleMaterial;
@@ -221,70 +217,6 @@ timeAdvance( const PatchSubset           * patches
     }
   }  // end CPU task execution
   //-----------------------------------------------------------------------------------------------
-
-
-  // When Task is scheduled to GPU
-#if defined(HAVE_CUDA) && !defined(HAVE_KOKKOS)
-  else if (event == CallBackEvent::GPU) {
-
-    // Do time steps
-    int num_patches = patches->size();
-    for (int p = 0; p < num_patches; ++p) {
-      const Patch* patch = patches->get(p);
-
-      // Calculate the memory block size
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex();
-
-      uint3 patchNodeLowIndex = make_uint3(l.x(), l.y(), l.z());
-      uint3 patchNodeHighIndex = make_uint3(h.x(), h.y(), h.z());
-      IntVector s = h - l;
-      int xdim = s.x();
-      int ydim = s.y();
-
-      constexpr int BLOCKSIZE = 16;
-
-      // define dimensions of the thread grid to be launched
-      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
-      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
-      dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
-      dim3 dimGrid(xblocks, yblocks, 1);
-
-      // now calculate the computation domain (ignoring the outside cell regions)
-      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-
-      h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zplus)  == Patch::Neighbor ? 0 : 1);
-
-      // Domain extents used by the kernel to prevent out of bounds accesses.
-      uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
-      uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-
-      // setup and launch kernel
-      GPUGridVariable<double> device_var;
-      new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0, 0);
-
-      launchUnifiedSchedulerTestKernel( dimGrid
-                                      , dimBlock
-                                      , (cudaStream_t*)uintahParams.getStream(0)
-                                      , patch->getID()
-                                      , patchNodeLowIndex
-                                      , patchNodeHighIndex
-                                      , domainLow
-                                      , domainHigh
-                                      , (GPUDataWarehouse*)uintahParams.getOldTaskGpuDW()
-                                      , (GPUDataWarehouse*)uintahParams.getNewTaskGpuDW()
-                                      );
-
-      // residual is automatically "put" with the D2H copy of the GPUReductionVariable
-      // new_dw->put(sum_vartype(residual), m_residual_label);
-
-    } // end patch loop
-  } // end GPU task execution
-#endif
 }
 
 } // namespace Uintah

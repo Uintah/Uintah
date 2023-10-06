@@ -50,18 +50,10 @@ SRCS += \
         $(SRCDIR)/UnifiedScheduler.cc
 
 ifeq ($(UINTAH_USING_GPU),yes)
-  SRCS += $(SRCDIR)/GPUGridVariableInfo.cc    \
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cc       \
+          $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
           $(SRCDIR)/GPUMemoryPool.cc
-
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu \
-          $(SRCDIR)/GPUStreamPool.cc
-  DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
-else ifeq ($(HAVE_KOKKOS),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cc
-endif
-
 endif
 
 PSELIBS := \

@@ -488,11 +488,6 @@ OnDemandDataWarehouse::getNumDevices() {
     numDevices = 1;
   }
 
-#if defined(HAVE_CUDA)
-  // If multiple devices are desired.
-  CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
-#endif
-
   return numDevices;
 }
 
@@ -3563,34 +3558,12 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
-#if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
             bool foundGPU = getGPUDW(0)->transferFrom(execObj.getInstance(),
-                                        *device_var_source, *device_var_dest,
-                                        from->getGPUDW(0),
-                                        label->getName().c_str(), patchID, matl, levelID);
-#else
-            cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
-            if(!stream) {
-              std::cout << "ERROR! transferFrom() does not have access to "
-                        << "the task and its associated CUDA stream. You need "
-                        << "to update the task's callback function to include "
-                        << "more parameters which supplies this information. "
-                        << "Then pass that detailed task pointer into the "
-                        << "transferFrom method. As an example, see the "
-                        << "parameters for Poisson1::timeAdvanceUnified."
-                        << std::endl;
-              throw InternalError("OnDemandDataWarehouse::transferFrom() "
-                                  "needs access to the task's pointer and "
-                                  "its associated CUDA stream.\n",
-                                  __FILE__, __LINE__);
-            }
-            // The GPU assigns streams per task. For transferFrom to
-            // work, it *must* know which stream to use.
-            bool foundGPU = getGPUDW(0)->transferFrom(stream,
-                                        *device_var_source, *device_var_dest,
-                                        from->getGPUDW(0),
-                                        label->getName().c_str(), patchID, matl, levelID);
-#endif
+                                                      *device_var_source,
+                                                      *device_var_dest,
+                                                      from->getGPUDW(0),
+                                                      label->getName().c_str(),
+                                                      patchID, matl, levelID);
             if (!found && foundGPU) {
               found = true;
             }

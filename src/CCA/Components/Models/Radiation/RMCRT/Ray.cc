@@ -361,19 +361,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   }
   d_sigma_over_pi = d_sigma/M_PI;
 
-
-//__________________________________
-// Increase the printf buffer size only once!
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-  #ifdef CUDA_PRINTF
-  if( Parallel::usingDevice() && Parallel::getMPIRank() == 0){
-    size_t size;
-    CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
-    CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
-    printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
-  }
-  #endif
-#endif
   proc0cout << "__________________________________ " << endl;
 }
 
@@ -450,47 +437,12 @@ Ray::sched_rayTrace( const LevelP& level,
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-  if (Parallel::usingDevice()) {          // G P U
-    taskname = "Ray::rayTraceGPU";
-
-    // Pass the time step in which is used to generate what should be
-    // a unique seed. But it is not, see RayGPUKernel.cu.
-
-    // The reason a timestep is passed in is that Todd liked random
-    // numbers that are in a sense repeatable.  But the same could be
-    // accomplished with repeatable random numbers passed in.
-
-    timeStep_vartype timeStepVar(0);
-
-    DataWarehouse* old_dw = sched->get_dw(0);
-    DataWarehouse* new_dw = sched->get_dw(1);
-
-    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
-      old_dw->get( timeStepVar, m_timeStepLabel );
-    }
-    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
-      new_dw->get( timeStepVar, m_timeStepLabel );
-    }
-
-    int timeStep = timeStepVar;
-
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceSpace >, timeStep, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >, timeStep, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
-    }
-    tsk->usesDevice(true);
-  } else {                                // C P U
-#endif
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-    } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-    }
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
   }
-#endif
+
   printSchedule(level, g_ray_dbg, "Ray::sched_rayTrace");
 
   //__________________________________
@@ -894,49 +846,12 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   Task::WhichDW NotUsed = Task::None;
 
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-  if (Parallel::usingDevice()) {          // G P U
-    taskname = "Ray::rayTraceDataOnionGPU";
-
-    // Pass the time step in which is used to generate what should be
-    // a unique seed. But it is not, see RayGPUKernel.cu.
-
-    // The reason a timestep is passed in is that Todd liked random
-    // numbers that are in a sense repeatable.  But the same could be
-    // accomplished with repeatable random numbers passed in.
-
-    timeStep_vartype timeStepVar(0);
-
-    DataWarehouse* old_dw = sched->get_dw(0);
-    DataWarehouse* new_dw = sched->get_dw(1);
-
-    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
-      old_dw->get( timeStepVar, m_timeStepLabel );
-    }
-    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
-      new_dw->get( timeStepVar, m_timeStepLabel );
-    }
-
-    int timeStep = timeStepVar;
-
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double, UintahSpaces::GPU, UintahSpaces::DeviceSpace>, timeStep, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float, UintahSpaces::GPU, UintahSpaces::DeviceSpace>, timeStep, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    }
-    // Allow it to use up to 4 GPU streams per patch.
-    tsk->usesDevice(true, 1);  // ARS - FIX ME - Only one stream is allowed.
-  } else {                                // C P U
-#endif
-    taskname = "Ray::rayTrace_dataOnion";
-    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-    }
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
+  taskname = "Ray::rayTrace_dataOnion";
+  if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+    tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
+  } else {
+    tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
-#endif
 
   printSchedule(level, g_ray_dbg, taskname);
 

@@ -125,7 +125,7 @@ namespace Uintah {
 
     /**
      * returns true if the iterator is done
-     */    
+     */
     bool done() const { return index_ == mySize; }
 
     /**
@@ -160,7 +160,7 @@ namespace Uintah {
      * Return one past the last element of the iterator
      */
     inline IntVector end() const { return IntVector( listOfCells_[mySize][0], listOfCells_[mySize][1], listOfCells_[mySize][2] ); }
-    
+
     /**
      * Return the number of cells in the iterator
      */
@@ -240,17 +240,12 @@ namespace Uintah {
         if(cur_val == 0){ //comparison was successful and this is a lucky thread that gets to copy the value.
           listOfCells_gpu = Kokkos::View<IntVector*, Kokkos::DefaultExecutionSpace::memory_space>( "gpu_listOfCellsIterator", listOfCells_.size() );
 
-#ifdef USE_KOKKOS_INSTANCE
-	  ExecSpace instance = execObj.getInstance();
+          ExecSpace instance = execObj.getInstance();
 
-	  // Deep copy the host view to the device view.
-	  Kokkos::deep_copy(instance, listOfCells_gpu, listOfCells_);
-	  instance.fence();
-#else	  
-          cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
-          cudaMemcpyAsync(listOfCells_gpu.data(), listOfCells_.data(), listOfCells_.size() * sizeof(IntVector), cudaMemcpyHostToDevice, *stream);
-          cudaStreamSynchronize(*stream); //Think how cudaStreamSynchronize can be avoided. No other way to set copied_to_gpu as of now.
-#endif
+          // Deep copy the host view to the device view.
+          Kokkos::deep_copy(instance, listOfCells_gpu, listOfCells_);
+          instance.fence();
+
           bool success = __sync_bool_compare_and_swap(&copied_to_gpu, 1, 2);
           if(!success){
             printf("Error in copying values. Possible CPU race condition. %s:%d\n", __FILE__, __LINE__);

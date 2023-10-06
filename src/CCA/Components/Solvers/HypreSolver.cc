@@ -86,30 +86,10 @@ using namespace Uintah;
 // 4. If gpu hypre can not perform, possibly use cpu only
 //    version. (May be with thread as rank approach).
 
-
-// ARS - For backwards compatipility check USE_KOKKOS_VIEW and
-// USE_KOKKOS_INSTANCE but going forward HAVE_KOKKOS could be used.
 #if (defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)) && \
-    (defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_MALLOC) || \
-     defined(USE_KOKKOS_INSTANCE))
+    (defined(HAVE_KOKKOS))
   #define HYPRE_SOLVER_GPU
-
-#elif (defined(HYPRE_USING_CUDA)   && defined(HAVE_CUDA)) || \
-      (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-  #define HYPRE_SOLVER_CUDA
 #endif
-
-#if defined(HYPRE_SOLVER_CUDA)
-//-----------------  bgein of hypre-cuda  -----------------
-  #define cudaErrorCheck(err) \
-    if(err != cudaSuccess) { \
-      printf("error in cuda call at %s: %d. %s: %s\n", \
-             __FILE__, __LINE__, \
-             cudaGetErrorName(err), cudaGetErrorString(err));   \
-      exit(1); \
-    }
-#endif
-//-----------------  end of hypre-cuda  -----------------
 
 //__________________________________
 //  To turn on normal output
@@ -177,15 +157,9 @@ namespace Uintah {
       VarLabel::destroy(m_timeStepLabel);
       VarLabel::destroy(m_hypre_solver_label);
 
-#if defined(USE_KOKKOS_MALLOC)
+#if defined(HYPRE_SOLVER_GPU)
       if (m_buff) {
         Kokkos::kokkos_free((void*)m_buff);
-      }
-#elif defined(USE_KOKKOS_VIEW)
-      // Kokkos::View is used directly
-#elif defined(HYPRE_SOLVER_CUDA)
-      if(m_buff) {
-        cudaErrorCheck(cudaFree((void*)m_buff));
       }
 #else
       if(m_buff) {
@@ -218,7 +192,7 @@ namespace Uintah {
       if (m_buff_size < buff_size) {
         m_buff_size = buff_size;
 
-#if defined(USE_KOKKOS_MALLOC)
+#if defined(HYPRE_SOLVER_GPU)
         if (m_buff) {
           Kokkos::kokkos_free((void*)m_buff);
         }
@@ -226,14 +200,6 @@ namespace Uintah {
         m_buff = (double *)
           Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>("HypreStencil7", m_buff_size);
 
-#elif defined(USE_KOKKOS_VIEW)
-        // Kokkos::View is used directly
-#elif defined(HYPRE_SOLVER_CUDA)
-        if (m_buff) {
-          cudaErrorCheck(cudaFree((void*)m_buff));
-        }
-
-        cudaErrorCheck(cudaMalloc((void**)&m_buff, buff_size));
 #else
         if (m_buff) {
           free(m_buff);
@@ -311,17 +277,8 @@ namespace Uintah {
            // Ensure starting point is 0 while indexing d_buff
           int start_offset = lo.x() + lo.y()*Nx + lo.z()*Nx*Ny;
 
-#if defined(USE_KOKKOS_VIEW)
-          // Kokkos equivalent - KokkosView
-          size_t buff_size = Nx*Ny*Nz;
-          Kokkos::View<double*, MemSpace> deviceView( "HypreSolver createPopulateHypreVector", buff_size);
-
-          // For compatibility use the raw Kokkos::View data pointer.
-          double * d_buff = deviceView.data();
-#else
           size_t buff_size = Nx*Ny*Nz*sizeof(double);
           double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
-#endif
           Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
             int id = (i + j*Nx + k*Nx*Ny - start_offset);
             d_buff[id] = Q(i, j, k);
@@ -619,17 +576,9 @@ namespace Uintah {
             int stencil_point = ( m_params->getSymmetric()) ? 4 : 7;
             unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
             int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
-#if defined(USE_KOKKOS_VIEW)
-            // Kokkos equivalent - KokkosView
-            size_t buff_size = Nx*Ny*Nz;
-            Kokkos::View<double*, MemSpace> deviceView( "HypreSolver solve copy to buffer", buff_size);
 
-            // For compatibility use the raw Kokkos::View data pointer.
-            double * d_buff = deviceView.data();
-#else
             size_t buff_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
             double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
-#endif
             //-----------------  end of hypre-gpu  -----------------
 
             //__________________________________
@@ -968,7 +917,7 @@ namespace Uintah {
           Uintah::BlockRange range( l, h );
 
           //-------------DS: 04262019: Added to use Uintah::parallel_for to copy values portably.----------------
-          // existing invokes cuda kernel inside
+          // existing invokes the kernel inside
           // HYPRE_StructVectorGetBoxValues Ny*Nz into times. Copying
           // entire patch into the buffer and then calling
           // HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel
@@ -980,17 +929,8 @@ namespace Uintah {
           unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
           int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
 
-#if defined(USE_KOKKOS_VIEW)
-          // Kokkos equivalent - KokkosView
-          size_t buff_size = Nx*Ny*Nz;
-          Kokkos::View<double*, MemSpace> deviceView( "HypreSolver solve copy from buffer", buff_size);
-
-          // For compatibility use the raw Kokkos::View data pointer.
-          double * d_buff = deviceView.data();
-#else
           size_t buff_size = Nx*Ny*Nz*sizeof(double);
           double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
-#endif
           // Get the solution back from hypre
           HYPRE_StructVectorGetBoxValues(HX,
               l.get_pointer(), hh.get_pointer(),

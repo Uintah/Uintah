@@ -72,6 +72,17 @@ using namespace Uintah;
 
 //______________________________________________________________________
 //
+#if defined(UINTAH_USING_GPU)
+
+namespace Uintah {
+
+  DebugStream gpu_stats("GPUStats"             , "KokkosScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
+  DebugStream gpudbg(   "GPUDataWarehouse"     , "KokkosScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
+
+}
+
+#endif
+
 namespace Uintah {
 
   extern Dout g_task_dbg;
@@ -138,15 +149,7 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
 //
 KokkosScheduler::~KokkosScheduler()
 {
-#if defined(USE_KOKKOS_INSTANCE)
-#if defined(USE_KOKKOS_MALLOC)
-  // The data warehouses have not been cleared so Kokkos pointers are
-  // still valid as they are reference counted.
-  GPUMemoryPool::freeMemoryFromPool();
-#else // if defined(USE_KOKKOS_VIEW)
-  GPUMemoryPool::freeViewsFromPool();
-#endif
-#elif(HAVE_CUDA)
+#if defined(HAVE_KOKKOS)
   // The data warehouses have not been cleared.
   GPUMemoryPool::freeMemoryFromPool();
 #endif
@@ -226,7 +229,7 @@ KokkosScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   if (d_myworld->myRank() == 0) {
     std::cout << "\nWARNING: Multi-threaded Kokkos scheduler is EXPERIMENTAL, "
-	      << "not all tasks are thread safe or Kokkos-enabled yet.\n" << std::endl;
+              << "not all tasks are thread safe or Kokkos-enabled yet.\n" << std::endl;
   }
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
@@ -1177,13 +1180,6 @@ KokkosScheduler::runTasks( int thread_id )
         // But it will run post computation management logic, which includes
         // marking the task as done.
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
-
-        // Recycle this task's stream
-#ifdef USE_KOKKOS_INSTANCE
-        // Not needed instances are freed when the detailed task is deleted.
-#else
-        readyTask->reclaimCudaStreamsIntoPool();
-#endif
       } // if(gpuPending)
 #endif
       else {
@@ -1278,12 +1274,6 @@ KokkosScheduler::runTasks( int thread_id )
           // See note above near cpuInitReady.  Some CPU tasks may
           // internally interact with GPUs without modifying the
           // structure of the data warehouse.
-
-#ifdef USE_KOKKOS_INSTANCE
-          // Not needed instances are freed when the detailed task is deleted.
-#else
-          readyTask->reclaimCudaStreamsIntoPool();
-#endif
         }
 #endif
       } // CPU

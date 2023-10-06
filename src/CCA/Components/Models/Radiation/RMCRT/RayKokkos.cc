@@ -411,20 +411,6 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   }
   d_sigma_over_pi = d_sigma/M_PI;
 
-
-//__________________________________
-// Increase the printf buffer size only once!
-// #if defined(HAVE_CUDA)
-//   #ifdef CUDA_PRINTF
-//   if( Parallel::usingDevice() && Parallel::getMPIRank() == 0) {
-//     size_t size;
-//     CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size, cudaLimitPrintfFifoSize) );
-//     CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
-//     printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",
-//         (long uint) size, ((long uint)10 * size) );
-//   }
-//   #endif
-// #endif
   proc0cout << "__________________________________ " << endl;
 }
 

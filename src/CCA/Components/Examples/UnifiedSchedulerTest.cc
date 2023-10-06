@@ -112,12 +112,6 @@ void UnifiedSchedulerTest::scheduleTimeAdvance( const LevelP     & level
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP"    , this, &UnifiedSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP"    , this, &UnifiedSchedulerTest::timeAdvance3DP);
 
-#ifdef HAVE_CUDA
-  if (Uintah::Parallel::usingDevice()) {
-    task->usesDevice(true);
-  }
-#endif
-
   task->requires(Task::OldDW, m_phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(m_phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(m_residual_label);

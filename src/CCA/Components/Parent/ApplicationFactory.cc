@@ -38,10 +38,6 @@
 
 #ifndef NO_EXAMPLES
 
-#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
-#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#endif
-
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/AMRHeat.hpp>
 #include <CCA/Components/Examples/Benchmark.h>
@@ -98,7 +94,7 @@
 
 #ifndef NO_PHASEFIELD
 #  include <CCA/Components/PhaseField/Applications/ApplicationFactory.h>
-#endif 
+#endif
 
 #ifndef NO_WASATCH
 #  include <CCA/Components/Wasatch/Wasatch.h>
@@ -289,21 +285,21 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(myworld, materialManager, STAND_MPMICE, doAMR);
-  } 
+  }
   else {
     turned_on_options += "mpmice ";
   }
 
   if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
     return scinew MPMICE(myworld, materialManager, SHELL_MPMICE, doAMR);
-  } 
+  }
   else {
     turned_on_options += "shellmpmice ";
   }
 
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
     return scinew MPMICE(myworld, materialManager, RIGID_MPMICE, doAMR);
-  } 
+  }
   else {
     turned_on_options += "rigidmpmice ";
   }
@@ -332,20 +328,20 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(myworld, materialManager, prob_spec, uda);
-  } 
+  }
   else if (!turned_on_options.empty() ) {
     turned_on_options += "switcher ";
   }
 
   if (sim_comp == "postProcessUda") {
     return scinew PostProcessUda(myworld, materialManager, uda);
-  } 
+  }
   else {
     turned_on_options += "postProcessUda ";
   }
 
   //----------------------------
-  
+
 #ifndef NO_EXAMPLES
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(myworld, materialManager);
@@ -353,21 +349,21 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   else {
     turned_on_options += "benchmark ";
   }
-  
+
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(myworld, materialManager);
   }
   else {
     turned_on_options += "burger ";
   }
-  
+
   if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
     return scinew DOSweep(myworld, materialManager);
-  } 
+  }
   else {
     turned_on_options += "dosweep ";
   }
-  
+
   if (sim_comp == "heat" || sim_comp == "heat") {
     if (doAMR) {
       return scinew AMRHeat(myworld, materialManager);
@@ -379,31 +375,31 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   else {
     turned_on_options += "heat ";
   }
-  
+
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(myworld, materialManager);
-  } 
+  }
   else {
     turned_on_options += "particletest ";
   }
-  
+
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(myworld, materialManager);
   }
   else {
     turned_on_options += "poisson1 ";
   }
-  
+
   if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
     return scinew Poisson2(myworld, materialManager);
-  } 
+  }
   else {
     turned_on_options += "poisson2 ";
   }
 
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(myworld, materialManager);
-  } 
+  }
   else {
     turned_on_options += "poisson3 ";
   }
@@ -444,7 +440,7 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "RMCRT_Test ";
   }
 #endif
-  
+
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(myworld, materialManager);
   }
@@ -471,17 +467,8 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "wave ";
   }
 
-#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
-  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
-    return scinew UnifiedSchedulerTest(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "unifiedschedulertest ";
-  }
 #endif
 
-#endif
-  
   //----------------------------
 
   throw ProblemSetupException("ERROR<Application>: Unknown simulationComponent ('" + sim_comp + "'). It must one of the following: " + turned_on_options + "\n"

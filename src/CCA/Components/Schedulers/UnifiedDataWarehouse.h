@@ -155,9 +155,9 @@ public:
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
                                                  IntVector high = IntVector(0,0,0) ) = 0;
-  
+
   virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
-  
+
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
@@ -330,14 +330,6 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
     const MaterialSubset* matls, int nComm) = 0;
 
-  #ifdef HAVE_CUDA
-    GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
-    GPUDataWarehouse* getGPUDW() const {
-      int i;
-      CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-      return d_gpuDWs[i];
-    }
-  #endif
   protected:
     DataWarehouse( const ProcessorGroup* myworld,
        Scheduler* scheduler,
@@ -352,9 +344,6 @@ public:
     // many previous time steps had taken place before the restart.
     int d_generation;
 
-  #ifdef HAVE_CUDA
-    std::vector<GPUDataWarehouse*> d_gpuDWs;
-  #endif
   private:
     DataWarehouse(const DataWarehouse&);
     DataWarehouse& operator=(const DataWarehouse&);

@@ -78,12 +78,6 @@ namespace Kokkos {
 }
 
 #if defined(KOKKOS_USING_GPU)
-    #define TASK_MANAGES_EXECSPACE
-    #define USE_KOKKOS_PARALLEL_FOR
-    #define USE_KOKKOS_DEEPCOPY
-    #define USE_KOKKOS_MALLOC
-    // #define USE_KOKKOS_VIEW // Use Kokkos malloc
-    #define USE_KOKKOS_INSTANCE
     #define USE_KOKKOS_FENCE
 
  // #if defined(KOKKOS_ENABLE_OPENMP) && defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)

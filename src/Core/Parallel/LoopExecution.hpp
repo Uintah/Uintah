@@ -293,16 +293,7 @@ template <typename ExecSpace, typename MemSpace>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, ExecSpace>::type
 getInstance(ExecutionObject<ExecSpace, MemSpace>& execObj, int index = 0)
 {
-#if defined(USE_KOKKOS_INSTANCE)
   return execObj.getInstance(index);
-#elif defined(HAVE_CUDA)
-  void* stream = execObj.getStream(index);
-  ExecSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
-  return instanceObject;
-#else
-  ExecSpace instanceObject;
-  return instanceObject;
-#endif
 }
 #endif
 
@@ -587,13 +578,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
       const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
-#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#elif defined(HAVE_CUDA)
-      const int nPartitions = execObj.getNumStreams();
-#else
-      const int nPartitions = 1;
-#endif
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
@@ -1046,13 +1031,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
       const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
-#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#elif defined(HAVE_CUDA)
-      const int nPartitions = execObj.getNumStreams();
-#else
-      const int nPartitions = 1;
-#endif
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
@@ -1527,13 +1506,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       const int kokkos_leagues_per_loop = Parallel::getKokkosLeaguesPerLoop();
       const int kokkos_teams_per_league = Parallel::getKokkosTeamsPerLeague();
 
-#if defined(USE_KOKKOS_INSTANCE)
       const int nPartitions = execObj.getNumInstances();
-#elif defined(HAVE_CUDA)
-      const int nPartitions = execObj.getNumStreams();
-#else
-      const int nPartitions = 1;
-#endif
 
       // The requested range of data may not have enough work for the
       // requested command line arguments, so shrink them if necessary.
@@ -2170,7 +2143,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   Kokkos::TeamPolicy< ExecSpace > teamPolicy(instanceObject,
                                              leagues_per_loop,
-					     actualTeams);
+                                             actualTeams);
 
   typedef Kokkos::TeamPolicy< ExecSpace > policy_type;
 

@@ -56,7 +56,7 @@ namespace Uintah {
 
   // used externally in DetailedTask.cc
   Dout g_scrubbing_dbg(      "Scrubbing", "DetailedTasks", "report var scrubbing: see DetailedTasks.cc for usage", false);
-  
+
   // used externally in DetailedTask.cc
   // for debugging - set the variable name (inside the quotes) and patchID to watch one in the scrubout
   std::string g_var_scrub_dbg   = "";
@@ -66,14 +66,14 @@ namespace Uintah {
 namespace {
 
   Uintah::MasterLock g_internal_ready_mutex{}; // synchronizes access to the internal-ready task queue
-  
+
   Dout g_detailed_dw_dbg(    "DetailedDWDBG", "DetailedTasks", "report when var is saved in varDB", false);
   Dout g_detailed_tasks_dbg( "DetailedTasks", "DetailedTasks", "general bdg info for DetailedTasks", false);
   Dout g_message_tags_dbg(           "MessageTags",         "DetailedTasks", "info on MPI message tag assignment", false);
   Dout g_message_tags_stats_dbg(     "MessageTagStats",     "DetailedTasks", "stats on MPI message tag assignment", false);
 #ifdef HAVE_VISIT
   Dout g_message_tags_task_stats_dbg("MessageTagTaskStats", "DetailedTasks", "stats on MPI message tag task assignment", false);
-#endif  
+#endif
 
 #if defined(UINTAH_USING_GPU)
   struct device_transfer_complete_queue_tag{};
@@ -169,7 +169,7 @@ DetailedTasks::assignMessageTags( unsigned int index )
   m_comm_info[ allTasks ].setKeyName( "Rank" );
   m_comm_info[ allTasks ].insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
   m_comm_info[ allTasks ].insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
-    
+
   // Map for individual task pairs.
   std::map< std::pair< std::string, std::string >, int > taskPairs;
 
@@ -210,16 +210,16 @@ DetailedTasks::assignMessageTags( unsigned int index )
 #ifdef HAVE_VISIT
         // Individual task comm stats.
         ++m_comm_info[taskPair][ to ][CommPTPMsgTo];
-#endif  
+#endif
       }
-      
+
       if( to == me ) {
         m_dep_batches[i]->m_message_tag = ++m_comm_info[allTasks][ from ][CommPTPMsgFrom];
 
 #ifdef HAVE_VISIT
         // Individual task comm stats.
         ++m_comm_info[taskPair][ from ][CommPTPMsgFrom];
-#endif  
+#endif
       }
 
       DOUT(g_message_tags_dbg, "Rank-" << me
@@ -238,7 +238,7 @@ DetailedTasks::assignMessageTags( unsigned int index )
   for (auto& info: m_comm_info) {
 
     std::pair< std::string, std::string > taskPair = info.first;
-    
+
     // Do the stats first so they are not affected by adding in the
     // other (possibly) unused ranks.
     info.second.calculateMinimum( true );
@@ -253,7 +253,7 @@ DetailedTasks::assignMessageTags( unsigned int index )
       double simTime = m_sched_common->getApplication()->getSimTime();
       std::string title = "Communication TG [" + std::to_string(index) + "] " +
         "for task <" + taskPair.first + "|" + taskPair.second + ">";
-      
+
       info.second.reportSummaryStats   ( title.c_str(), "", me,
                                          nRanks, timeStep, simTime,
                                          BaseInfoMapper::Dout, false );
@@ -265,13 +265,13 @@ DetailedTasks::assignMessageTags( unsigned int index )
     // If the number of keys (ranks) is different then add in the
     // missing ranks (the counts will be zero).
     if( info.second.size() != m_comm_info[allTasks].size() ) {
-      
+
       unsigned int nComms = m_comm_info[allTasks].size();
-      
+
       for( unsigned int i=0; i<nComms; ++i) {
-        
+
         unsigned int key = m_comm_info[allTasks].getKey(i); // rank
-        
+
         // This call adds in the ranks and inits the value to zero.
         info.second[ key ];
       }
@@ -294,7 +294,7 @@ DetailedTasks::makeDWKeyDatabase()
 {
   for (auto i = 0u; i < m_local_tasks.size(); i++) {
     DetailedTask* task = m_local_tasks[i];
-    //for reduction task check modifies other task check computes
+    // for reduction task check modifies other task check computes
     const Task::Dependency *comp = task->getTask()->isReductionTask() ? task->getTask()->getModifies() : task->getTask()->getComputes();
     for (; comp != nullptr; comp = comp->m_next) {
       const MaterialSubset* matls = comp->m_matls ? comp->m_matls : task->getMaterials();
@@ -362,8 +362,8 @@ DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int 
     }
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
     if (dw != nullptr && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
-      // only a OldDW or a CoarseOldDW will have scrubComplete 
-      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
+      // only a OldDW or a CoarseOldDW will have scrubComplete
+      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws
       //   between New and Old.  In this case, the scrub count needs to be complemented with CoarseOldDW
       int tgtype = getTaskGraph()->getType();
       if (!initialized[dwmap[i]] || tgtype == Scheduler::IntermediateTaskGraph) {
@@ -633,10 +633,10 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
  * This function will create the detailed dependency for the
  * parameters passed in.  If a similar detailed dependency
  * already exists it will combine those dependencies into a single
- * dependency.  
+ * dependency.
  *
- * Dependencies are ordered from oldest to newest in a linked list.  It is vital that 
- * this order is maintained.  Failure to maintain this order can cause messages to be combined 
+ * Dependencies are ordered from oldest to newest in a linked list.  It is vital that
+ * this order is maintained.  Failure to maintain this order can cause messages to be combined
  * inconsistently across different tasks causing various problems.  New dependencies are added
  * to the end of the list.  If a dependency was combined then the extended dependency is added
  * at the same location that it was first combined.  This is to ensure all future dependencies
@@ -921,7 +921,7 @@ DetailedTasks::getOldDWSendTask( int proc )
     std::cout << m_proc_group->myRank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
     throw InternalError("oldDWSendTask does not exist", __FILE__, __LINE__);
   }
-#endif 
+#endif
   return m_tasks[m_send_old_map[proc]];
 }
 
@@ -1208,16 +1208,12 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
 bool
 DetailedTasks::getDeviceValidateRequiresAndModifiesCopiesTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator device_validateRequiresAndModifiesCopies_pool_iter = device_validateRequiresAndModifiesCopies_pool.find_any(ready_request);
 
@@ -1236,16 +1232,12 @@ DetailedTasks::getDeviceValidateRequiresAndModifiesCopiesTask(DetailedTask *& dt
 bool
 DetailedTasks::getDevicePerformGhostCopiesTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator device_performGhostCopies_pool_iter = device_performGhostCopies_pool.find_any(ready_request);
 
@@ -1264,16 +1256,12 @@ DetailedTasks::getDevicePerformGhostCopiesTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceValidateGhostCopiesTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator device_validateGhostCopies_pool_iter = device_validateGhostCopies_pool.find_any(ready_request);
 
@@ -1293,16 +1281,12 @@ DetailedTasks::getDeviceValidateGhostCopiesTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceCheckIfExecutableTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator device_checkIfExecutable_pool_iter = device_checkIfExecutable_pool.find_any(ready_request);
   if (device_checkIfExecutable_pool_iter) {
@@ -1320,16 +1304,12 @@ DetailedTasks::getDeviceCheckIfExecutableTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator device_readyToExecute_pool_iter = device_readyToExecute_pool.find_any(ready_request);
   if (device_readyToExecute_pool_iter) {
@@ -1341,11 +1321,11 @@ DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
       std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
       std::string current_task = dtask->getTask()->getName();
       int task_to_debug_count = atomic_task_to_debug_size.load(std::memory_order_relaxed);
-      if ( current_task.size() >= task_to_debug_name.size() 
+      if ( current_task.size() >= task_to_debug_name.size()
            && dtask->getTask()->getName().substr(0, task_to_debug_name.size()) == task_to_debug_name ) {
         if ( task_to_debug_count % task_to_debug_threshold != 0 ) {
           proceed = false;
-        } 
+        }
       }
     }
     if (proceed) {
@@ -1362,17 +1342,13 @@ DetailedTasks::getDeviceReadyToExecuteTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getDeviceExecutionPendingTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
-  
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
+
   TaskPool::iterator device_executionPending_pool_iter = device_executionPending_pool.find_any(ready_request);
   if (device_executionPending_pool_iter) {
     dtask = *device_executionPending_pool_iter;
@@ -1389,16 +1365,12 @@ DetailedTasks::getDeviceExecutionPendingTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getHostValidateRequiresAndModifiesCopiesTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator host_validateRequiresAndModifiesCopies_pool_iter = host_validateRequiresAndModifiesCopies_pool.find_any(ready_request);
 
@@ -1417,17 +1389,13 @@ DetailedTasks::getHostValidateRequiresAndModifiesCopiesTask(DetailedTask *& dtas
 bool
 DetailedTasks::getHostCheckIfExecutableTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
-    
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
+
   TaskPool::iterator host_checkIfExecutable_pool_iter = host_checkIfExecutable_pool.find_any(ready_request);
   if (host_checkIfExecutable_pool_iter) {
     dtask = *host_checkIfExecutable_pool_iter;
@@ -1444,16 +1412,12 @@ DetailedTasks::getHostCheckIfExecutableTask(DetailedTask *& dtask)
 bool
 DetailedTasks::getHostReadyToExecuteTask(DetailedTask *& dtask)
 {
-  //This function should ONLY be called within runTasks() part 1.
-  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  // This function should ONLY be called within runTasks() part 1.
+  // This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
   bool retVal = false;
   dtask = nullptr;
 
-#ifdef USE_KOKKOS_INSTANCE
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
-#else
-    auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-#endif
+  auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllKokkosInstancesDoneForThisTask(); };
 
   TaskPool::iterator host_readyToExecute_pool_iter = host_readyToExecute_pool.find_any(ready_request);
   if (host_readyToExecute_pool_iter) {
@@ -1594,13 +1558,13 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
   DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, to, req, fromPatch, matl, new_dep->m_low, new_dep->m_high,
                                                               varRangeLow, varRangeHigh, parent_dep);
 
-  //This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
+  // This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
   DetailedDep* insert_dep = parent_dep;
   //If two dependencies are going to be on two different GPUs,
   //then do not merge the two dependencies into one collection.
   //Instead, keep them separate.  If they will be on the same GPU
   //then we can merge the dependencies as normal.
-  //This means that no
+  // This means that no
 
 
   //if we have matching dependencies we will extend the new dependency to include the old one and delete the old one
@@ -1768,21 +1732,21 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch     
   DetailedDep * last_dep  = nullptr;
   DetailedDep * valid_dep = nullptr;
 
-  //For now, turning off a feature that can combine ghost cells into larger vars
-  //for scenarios where one source ghost cell var can handle more than one destination patch.
+  // for now, turning off a feature that can combine ghost cells into larger vars
+  // for scenarios where one source ghost cell var can handle more than one destination patch.
 
   //search each dep
   for (; dep != nullptr; dep = dep->m_next) {
-    //Temporarily disable feature of merging source ghost cells in the same patch into
-    //a larger var (so instead of two transfers, it can be done as one transfer)
+    // Temporarily disable feature of merging source ghost cells in the same patch into
+    // a larger var (so instead of two transfers, it can be done as one transfer)
     /*
     //if deps are equivalent
     if (fromPatch == dep->fromPatch && matl == dep->matl
         && (req == dep->req || (req->var->equals(dep->req->var) && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
 
 
-      //For the GPUs, ensure that the destinations will be on the same device, and not another device
-      //This assumes that a GPU task will not be assigned to multiple patches belonging to more than one device.
+      // for the GPUs, ensure that the destinations will be on the same device, and not another device
+      // This assumes that a GPU task will not be assigned to multiple patches belonging to more than one device.
       if (getGpuIndexForPatch(toTask->getPatches()->get(0)) == getGpuIndexForPatch( dep->toTasks.front()->getPatches()->get(0))) {
         // total range - the same var in each dep needs to have the same patchlow/high
         dep->patchLow = totalLow = Min(totalLow, dep->patchLow);

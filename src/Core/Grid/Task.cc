@@ -37,15 +37,9 @@ using namespace Uintah;
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
 #if defined(UINTAH_USING_GPU)
-#if defined(TASK_MANAGES_EXECSPACE)
 namespace {
   Uintah::MasterLock deviceNums_mutex{};
 }
-#else
-namespace {
-  Uintah::MasterLock cudaStreams_mutex{};
-}
-#endif
 #endif
 
 //______________________________________________________________________
@@ -677,7 +671,7 @@ void Task::modifies( const VarLabel           * var
                    ,       PatchDomainSpec      patches_dom
                    , const MaterialSubset     * matls
                    ,       MaterialDomainSpec   matls_dom
-                   ,       SearchTG             whichTG 
+                   ,       SearchTG             whichTG
                    )
 {
   if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
@@ -1083,9 +1077,6 @@ Task::doit( const PatchSubset           * patches
 #if defined(UINTAH_USING_GPU)
 //______________________________________________________________________
 //
-#if defined(TASK_MANAGES_EXECSPACE)
-//_____________________________________________________________________________
-//
 void
 Task::assignDevice(intptr_t dTask, unsigned int device_id)
 {
@@ -1117,7 +1108,6 @@ Task::getDeviceNums(intptr_t dTask)
   return dNumSet;
 }
 
-#ifdef USE_KOKKOS_INSTANCE
 //_____________________________________________________________________________
 //
 //  Task::ActionNonPortableBase
@@ -1289,7 +1279,7 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
 #if defined(USE_KOKKOS_FENCE)
   instance.fence();
 
-#elif defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA)
+#elif defined(KOKKOS_ENABLE_CUDA)
   cudaStream_t stream = instance.cuda_stream();
 
   cudaError_t retVal = cudaStreamQuery(stream);
@@ -1318,9 +1308,7 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
     ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
 
     nanosleep(&ts, &ts);
-#if defined(HAVE_CUDA)
-    CUDA_RT_SAFE_CALL (retVal);
-#endif
+
     return false;
   }
 #elif defined(HAVE_HIP) || defined(KOKKOS_ENABLE_HIP)
@@ -1570,326 +1558,6 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
     m_action->syncTaskGpuDW(dTask, deviceNum, taskgpudw);
   }
 }
-#else  // #if defined(TASK_MANAGES_EXECSPACE) - STREAMS
-//_____________________________________________________________________________
-//
-void
-Task::assignDevicesAndStreams(intptr_t dTask)
-{
-  for (int i = 0; i < m_max_instances_per_task; i++) {
-    assignDevicesAndStreams(dTask, i);
-
-    // if (this->haveCudaStreamForThisTask(dTask, i) == false) {
-    //   this->assignDevice(dTask, 0);
-    //   // this->assignDevice(i);
-    //   this->setCudaStreamForThisTask(dTask, i);
-    // }
-  }
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::assignDevicesAndStreams(intptr_t dTask, unsigned int device_id)
-{
-  if (this->haveCudaStreamForThisTask(dTask, device_id) == false) {
-    this->assignDevice(dTask, device_id);
-    this->setCudaStreamForThisTask(dTask, device_id);
-  }
-}
-
-//_____________________________________________________________________________
-//
-cudaStream_t*
-Task::getCudaStreamForThisTask(intptr_t dTask, unsigned int device_id) const
-{
-  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
-  cudaStreams_mutex.lock();
-  {
-    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
-
-    if( iter != m_cudaStreams.end())
-    {
-      cudaStreamMap streamMap = iter->second;
-      cudaStreamMapIter it = streamMap.find(device_id);
-
-      if (it != streamMap.end())
-      {
-        cudaStreams_mutex.unlock();
-
-        return it->second;
-      }
-    }
-  }
-  cudaStreams_mutex.unlock();
-
-  printf("ERROR! - Task::getCudaStreamForThisTask() - "
-         "This task %s does not have a stream assigned for device %d\n",
-         getName().c_str(), device_id);
-  SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
-                          getName(), __FILE__, __LINE__));
-
-  return nullptr;
-}
-
-//_____________________________________________________________________________
-//
-bool
-Task::haveCudaStreamForThisTask(intptr_t dTask, unsigned int device_id) const
-{
-  bool retVal = false;
-
-  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
-  cudaStreams_mutex.lock();
-  {
-    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
-
-    if(iter != m_cudaStreams.end())
-    {
-      cudaStreamMap streamMap = iter->second;
-      cudaStreamMapIter it = streamMap.find(device_id);
-
-      retVal = (it != streamMap.end());
-    }
-  }
-  cudaStreams_mutex.unlock();
-
-  return retVal;
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::setCudaStreamForThisTask( intptr_t dTask
-                              , unsigned int   device_id
-                              )
-{
-  // Comment out as the stream at this point should never be a nullptr.
-  // if (stream == nullptr) {
-  //   printf("ERROR! - Task::setCudaStreamForThisTask() - "
-  //          "A request was made to assign a stream to a nullptr address "
-  //          "for this task %s\n", getName().c_str());
-  //   SCI_THROW(InternalError("A request was made to assign a stream to a "
-  //                           "nullptr address for this task :" +
-  //                           getName() , __FILE__, __LINE__));
-  // } else
-  if(haveCudaStreamForThisTask(dTask, device_id)) {
-    printf("ERROR! - Task::setCudaStreamForThisTask() - "
-           "This task %s already has a stream assigned for device %d\n",
-           getName().c_str(), device_id);
-    SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
-                            getName(), __FILE__, __LINE__));
-  } else {
-    // printf("Task::setCudaStreamForThisTask() - "
-    //        "This task %s now has a stream assigned for device %d\n",
-    //        getName().c_str(), device_id);
-    // As m_cudaStreams can be touched by multiple threads a mutext is needed.
-    cudaStreams_mutex.lock();
-    {
-      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, device_id);
-      m_cudaStreams[dTask][device_id] = stream;
-    }
-    cudaStreams_mutex.unlock();
-  }
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::reclaimCudaStreamsIntoPool(intptr_t dTask)
-{
-  // Once streams are reclaimed, clearCudaStreamsForThisTask is called.
-  GPUStreamPool::reclaimCudaStreamsIntoPool(dTask, this);
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::clearCudaStreamsForThisTask(intptr_t dTask)
-{
-  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
-  cudaStreams_mutex.lock();
-  {
-    if(m_cudaStreams.find(dTask) != m_cudaStreams.end())
-    {
-      m_cudaStreams[dTask].clear();
-      m_cudaStreams.erase(dTask);
-    }
-  }
-  cudaStreams_mutex.unlock();
-}
-
-//_____________________________________________________________________________
-//
-bool
-Task::checkCudaStreamDoneForThisTask( intptr_t dTask
-                                    , unsigned int device_id) const
-{
-  // sets the CUDA context, for the call to cudaEventQuery()
-
-  if (device_id != 0) {
-   printf("Error, Task::checkCudaStreamDoneForThisTask is %u\n", device_id);
-   exit(-1);
-  }
-
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
-
-  cudaStream_t* stream = getCudaStreamForThisTask(dTask, device_id);
-
-  cudaError_t retVal = cudaStreamQuery(*stream);
-  if (retVal == cudaSuccess) {
-    return true;
-  }
-  else if (retVal == cudaErrorNotReady ) {
-    return false;
-  }
-  else if (retVal == cudaErrorLaunchFailure) {
-    printf("ERROR! - Task::checkCudaStreamDoneForThisTask(%d) - "
-           "CUDA kernel execution failure on Task: %s\n",
-           device_id, getName().c_str());
-    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " +
-                            getName() , __FILE__, __LINE__));
-    return false;
-  } else { //other error
-    printf("\nA CUDA error occurred with error code %d.\n\n"
-           "Waiting for 60 seconds\n", retVal);
-
-    int sleepTime = 60;
-
-    struct timespec ts;
-    ts.tv_sec = (int) sleepTime;
-    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
-
-    nanosleep(&ts, &ts);
-
-    CUDA_RT_SAFE_CALL (retVal);
-    return false;
-  }
-}
-
-//_____________________________________________________________________________
-//
-bool
-Task::checkAllCudaStreamsDoneForThisTask(intptr_t dTask) const
-{
-  // A task can have multiple streams (such as an output task pulling
-  // from multiple GPUs).  Check all streams to see if they are done.
-  // If any one stream isn't done, return false.  If nothing returned
-  // false, then they all must be good to go.
-  bool retVal = true;
-
-  // As m_cudaStreams can be touched by multiple threads get a local
-  // copy so not to lock everything.
-  cudaStreamMap cudaStreams;
-
-  cudaStreams_mutex.lock();
-  {
-    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
-
-    if(iter != m_cudaStreams.end()) {
-      cudaStreams = iter->second;
-    } else {
-      cudaStreams_mutex.unlock();
-
-      return retVal;
-    }
-  }
-  cudaStreams_mutex.unlock();
-
-  for (auto & it : cudaStreams)
-  {
-    retVal = checkCudaStreamDoneForThisTask(dTask, it.first);
-    if (retVal == false)
-      break;
-  }
-
-  return retVal;
-}
-
-
-//_____________________________________________________________________________
-//
-void
-Task::doCudaMemcpyAsync( intptr_t dTask, unsigned int deviceNum,
-                         void* dst, void* src,
-                         size_t count, cudaMemcpyKind kind)
-{
-  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
-
-#ifdef USE_KOKKOS_DEEPCOPY
-  Kokkos::DefaultExecutionSpace instance(*stream);
-
-  char * srcPtr = static_cast<char *>(src);
-  char * dstPtr = static_cast<char *>(dst);
-
-  if(kind == GPUMemcpyHostToDevice)
-  {
-    Kokkos::View<char*, Kokkos::HostSpace>               hostView( srcPtr, count);
-    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( dstPtr, count);
-    // Deep copy the host view to the device view.
-    Kokkos::deep_copy(instance, deviceView, hostView);
-  }
-  else if(kind == GPUMemcpyDeviceToHost)
-  {
-    Kokkos::View<char*, Kokkos::HostSpace>               hostView( dstPtr, count);
-    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( srcPtr, count);
-    // Deep copy the device view to the host view.
-    Kokkos::deep_copy(instance, hostView, deviceView);
-  }
-#else
-  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(dst, src, count, kind, *stream));
-#endif
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
-                                   void* dst, int  dstDevice,
-                             const void* src, int  srcDevice,
-                             size_t count )
-{
-  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
-
-#ifdef USE_KOKKOS_DEEPCOPY
-  printf("ERROR! - Task::doCudaMemcpyPeerAsync() - NOT DEFINED"
-           "This task %s does not have an stream assigned for device %d\n",
-           this->getName().c_str(), deviceNum);
-  SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
-                          this->getName(), __FILE__, __LINE__));
-#else
-  CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
-                                        count, *stream));
-#endif
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
-                                 GPUDataWarehouse *taskgpudw)
-{
-  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
-
-  taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
-
-  // Kokkos::DefaultExecutionSpace instanceObject(*stream);
-  // taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(instanceObject);
-}
-
-//_____________________________________________________________________________
-//
-void
-Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
-                    GPUDataWarehouse *taskgpudw)
-{
-  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
-
-  taskgpudw->syncto_device(stream);
-}
-#endif // #ifdef USE_KOKKOS_INSTANCE - STREAMS
-#endif // #ifdef TASK_MANAGES_EXECSPACE
 #endif // #if defined(UINTAH_USING_GPU)
 
 //______________________________________________________________________

@@ -109,6 +109,7 @@ DetailedTask::~DetailedTask()
 #if defined(UINTAH_USING_GPU)
   delete varLock;
 #endif
+
   if (m_patches && m_patches->removeReference()) {
     delete m_patches;
   }
@@ -116,7 +117,8 @@ DetailedTask::~DetailedTask()
   if (m_matls && m_matls->removeReference()) {
     delete m_matls;
   }
-#ifdef USE_KOKKOS_INSTANCE
+
+#if defined(UINTAH_USING_GPU)
   clearKokkosInstancesForThisTask();
 #endif
 }
@@ -138,11 +140,11 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   //__________________________________
   //  Debugging output
   if ( g_internal_deps_dbg ) {
-    
-    DOUTR(true, "  DetailedTask::doit " << m_task->getName() 
-                  << ", num Pending Deps: " << m_num_pending_internal_dependencies 
+
+    DOUTR(true, "  DetailedTask::doit " << m_task->getName()
+                  << ", num Pending Deps: " << m_num_pending_internal_dependencies
                   << ", Originally needed deps (" << m_internal_dependencies.size() << "):");
-    
+
     std::ostringstream message;
     auto iter = m_internal_dependencies.begin();
     for (size_t i = 0u; iter != m_internal_dependencies.end(); ++iter, ++i) {
@@ -163,21 +165,6 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   uintahParams.setTaskIntPtr(reinterpret_cast<intptr_t>(this));
   uintahParams.setProcessorGroup(pg);
   uintahParams.setCallBackEvent(event);
-
-#if defined(UINTAH_USING_GPU)
-  // Load in streams whether this is a CPU task or GPU task. GPU tasks
-  // need streams. CPU tasks can also use streams for D2H copies or
-  // transferFrom calls.
-#ifdef TASK_MANAGES_EXECSPACE
-  // Now in the Task
-#else
-  int numStreams = m_task->maxStreamsPerTask();
-  for (int i = 0; i < numStreams; i++) {
-    cudaStream_t* stream = this->getCudaStreamForThisTask(i);
-    uintahParams.setStream(stream);
-  }
-#endif
-#endif
 
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
@@ -212,7 +199,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
    //}
 #else
     SCI_THROW(InternalError("A task was marked as GPU enabled, "
-			    "but Uintah was not compiled for GPU support", __FILE__, __LINE__));
+                            "but Uintah was not compiled for GPU support", __FILE__, __LINE__));
 #endif
 
   } else {
@@ -306,7 +293,7 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
                 count = dws[dw]->decrementScrubCount(req->m_var, matls->get(m), neighbor);
                 if (g_scrubbing_dbg && (req->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
                                        (neighbor->getID() == g_patch_scrub_dbg   || g_patch_scrub_dbg == -1)) {
-                                       
+
                   DOUTR(g_scrubbing_dbg, "    decrementing scrub count for requires of " << dws[dw]->getID() << "/"
                                          << neighbor->getID() << "/" << matls->get(m) << "/" << req->m_var->getName() << ": " << count
                                          << (count == 0 ? " - scrubbed\n" : "\n"));
@@ -327,7 +314,7 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
   for (const Task::Dependency* mod = task->getModifies(); mod != nullptr; mod = mod->m_next) {
     int dw = mod->mapDataWarehouse();
     DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
-    
+
     if (scrubmode == DataWarehouse::ScrubComplete
         || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(mod->m_var) == initialRequires.end())) {
 
@@ -337,14 +324,14 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
       constHandle<PatchSubset> patches = mod->getPatchesUnderDomain(getPatches());
       constHandle<MaterialSubset> matls = mod->getMaterialsUnderDomain(getMaterials());
       TypeDescription::Type type = mod->m_var->typeDescription()->getType();
-    
+
       if (type != TypeDescription::ReductionVariable && type != TypeDescription::SoleVariable) {
         for (int i = 0; i < patches->size(); i++) {
           const Patch* patch = patches->get(i);
-          
+
           for (int m = 0; m < matls->size(); m++) {
             int count = dws[dw]->decrementScrubCount(mod->m_var, matls->get(m), patch);
-          
+
             if (g_scrubbing_dbg && (mod->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
                                    (patch->getID() == g_patch_scrub_dbg || g_patch_scrub_dbg == -1)) {
               DOUTR(g_scrubbing_dbg, "    decrementing scrub count for modifies of " << dws[dw]->getID() << "/"
@@ -360,12 +347,12 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
   // Set the scrub count for each of the computes variables
   for (const Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
     TypeDescription::Type type = comp->m_var->typeDescription()->getType();
-    
+
     if (type != TypeDescription::ReductionVariable && type != TypeDescription::SoleVariable) {
       int whichdw = comp->m_whichdw;
       int dw = comp->mapDataWarehouse();
       DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
-      
+
       if (scrubmode == DataWarehouse::ScrubComplete
           || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(comp->m_var) == initialRequires.end())) {
         constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(getPatches());
@@ -377,13 +364,13 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
 
         for (int i = 0; i < patches->size(); i++) {
           const Patch* patch = patches->get(i);
-          
+
           for (int m = 0; m < matls->size(); m++) {
             int matl = matls->get(m);
             int count;
-            
+
             if ( m_task_group->getScrubCount(comp->m_var, matl, patch, whichdw, count) ) {
-            
+
               if (g_scrubbing_dbg && (comp->m_var->getName() == g_var_scrub_dbg || g_var_scrub_dbg == "") &&
                                      (patch->getID() == g_patch_scrub_dbg || g_patch_scrub_dbg == -1)) {
                 DOUTR(true, "    setting scrub count for computes of " << dws[dw]->getID() << "/"
@@ -528,15 +515,15 @@ DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
   if ( m_task_group->mustConsiderInternalDependencies() ) {
     // Avoid unnecessary multiple internal dependency links between tasks.
     std::map<DetailedTask*, InternalDependency*>::iterator foundIt = prerequisiteTask->m_internal_dependents.find(this);
-    
+
     if (foundIt == prerequisiteTask->m_internal_dependents.end()) {
       m_internal_dependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0 /* 0 == not satisfied */));
       prerequisiteTask->m_internal_dependents[this] = &m_internal_dependencies.back();
       m_num_pending_internal_dependencies = m_internal_dependencies.size();
 
-      DOUTR(g_internal_deps_dbg, "  DetailedTask::addInternalDependency  Adding dependency between " << *this 
+      DOUTR(g_internal_deps_dbg, "  DetailedTask::addInternalDependency  Adding dependency between " << *this
                                 << " and " << *prerequisiteTask << " for var " << var->getName()
-                                << " source dep count: " << m_num_pending_internal_dependencies 
+                                << " source dep count: " << m_num_pending_internal_dependencies
                                 << " pre-req dep count " << prerequisiteTask->m_internal_dependents.size() );
     }
     else {
@@ -555,8 +542,8 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 
   if (g_internal_deps_dbg) {
     std::ostringstream message;
-    DOUTR( true, "  DetailedTask::done  This: " << this->getTask()->getName() 
-                 << " is done with task: " << m_task->getName() 
+    DOUTR( true, "  DetailedTask::done  This: " << this->getTask()->getName()
+                 << " is done with task: " << m_task->getName()
                  <<"  which has (" << m_internal_dependents.size() << ") tasks waiting on it:" );
   }
 
@@ -586,7 +573,7 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
   dep->m_satisfied_generation = currentGeneration;
   m_num_pending_internal_dependencies--;
 
-  DOUTR(g_internal_deps_dbg, "  DetailedTask::dependencySatisfied" << *(dep->m_dependent_task->getTask()) 
+  DOUTR(g_internal_deps_dbg, "  DetailedTask::dependencySatisfied" << *(dep->m_dependent_task->getTask())
                               << " has " << m_num_pending_internal_dependencies << " left.");
 
   DOUTR(g_internal_deps_dbg, "   satisfying dependency: prereq: " << *dep->m_prerequisite_task
@@ -751,70 +738,6 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
 
 #if defined(UINTAH_USING_GPU)
 
-#ifdef TASK_MANAGES_EXECSPACE
-  // Now in the Task
-#else
-//_____________________________________________________________________________
-//
-void
-DetailedTask::assignDevice( unsigned int device_id )
-{
-  // m_deviceNum = device_id;
-  m_deviceNums.insert( device_id );
-}
-
-//_____________________________________________________________________________
-// For tasks where there are multiple devices for the task (i.e. data
-// archiver output tasks)
-DetailedTask::deviceNumSet
-DetailedTask::getDeviceNums() const
-{
-  return m_deviceNums;
-}
-
-//_____________________________________________________________________________
-//
-cudaStream_t*
-DetailedTask::getCudaStreamForThisTask( unsigned int device_id ) const
-{
-  cudaStreamMapIter it = m_cudaStreams.find(device_id);
-
-  if (it != m_cudaStreams.end()) {
-    return it->second;
-  }
-
-  return nullptr;
-}
-
-//_____________________________________________________________________________
-//
-void
-DetailedTask::setCudaStreamForThisTask( unsigned int   device_id
-                                      , cudaStream_t * stream
-                                      )
-{
-  if (stream == nullptr) {
-    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - "
-           "A request was made to assign a stream at address nullptr "
-           "into this task %s\n", getName().c_str());
-    SCI_THROW(InternalError("A request was made to assign a stream at "
-                            "address nullptr into this task :" +
-                            getName() , __FILE__, __LINE__));
-  } else {
-    if (m_cudaStreams.find(device_id) == m_cudaStreams.end()) {
-      m_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(device_id, stream));
-    } else {
-      printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - "
-             "This task %s already had a stream assigned for device %d\n",
-             getName().c_str(), device_id);
-      SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
-                              getName() , __FILE__, __LINE__));
-    }
-  }
-};
-#endif
-
-#ifdef USE_KOKKOS_INSTANCE
 //_____________________________________________________________________________
 //
 void
@@ -829,114 +752,6 @@ DetailedTask::checkAllKokkosInstancesDoneForThisTask() const
 {
   return m_task->checkAllKokkosInstancesDoneForThisTask(reinterpret_cast<intptr_t>(this));
 }
-#else
-//_____________________________________________________________________________
-//
-void
-DetailedTask::reclaimCudaStreamsIntoPool() {
-#ifdef TASK_MANAGES_EXECSPACE
-  m_task->reclaimCudaStreamsIntoPool(reinterpret_cast<intptr_t>(this));
-#else
-  // Once streams are reclaimed, clearCudaStreamsForThisTask is called.
-  GPUStreamPool::reclaimCudaStreamsIntoPool(this);
-#endif
-}
-
-//_____________________________________________________________________________
-//
-void
-DetailedTask::clearCudaStreamsForThisTask() {
-#ifdef TASK_MANAGES_EXECSPACE
-  m_task->clearCudaStreamsForThisTask(reinterpret_cast<intptr_t>(this));
-#else
-  m_cudaStreams.clear();
-#endif
-}
-
-//_____________________________________________________________________________
-//
-bool
-DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
-{
-#ifdef TASK_MANAGES_EXECSPACE
-  return m_task->checkCudaStreamDoneForThisTask(reinterpret_cast<intptr_t>(this), device_id);
-#else
-  // sets the CUDA context, for the call to cudaEventQuery()
-
-  if (device_id != 0) {
-   printf("Error, DetailedTask::checkCudaStreamDoneForThisTask is %u\n", device_id);
-   exit(-1);
-  }
-
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
-  cudaStreamMapIter it = m_cudaStreams.find(device_id);
-
-  // if (it == m_cudaStreams.end()) {
-  //   printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Request for stream information for device %d, but this task wasn't assigned any streams for this device.  For task %s\n", device_id,  getName().c_str());
-  //   SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
-  //   return false;
-  // }
-  // else if (it->second == nullptr) {
-  //   printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
-  //   SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
-  //   return false;
-  // }
-
-  cudaError_t retVal = cudaStreamQuery(*(it->second));
-  if (retVal == cudaSuccess) {
-    return true;
-  }
-  else if (retVal == cudaErrorNotReady ) {
-    return false;
-  }
-  else if (retVal ==  cudaErrorLaunchFailure) {
-    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask(%d) - CUDA kernel execution failure on Task: %s\n", device_id, getName().c_str());
-    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " + getName() , __FILE__, __LINE__));
-    return false;
-  } else { //other error
-    printf("\nA CUDA error occurred with error code %d.\n\n"
-           "Waiting for 60 seconds\n", retVal);
-
-    int sleepTime = 60;
-
-    struct timespec ts;
-    ts.tv_sec = (int) sleepTime;
-    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
-
-    nanosleep(&ts, &ts);
-
-    CUDA_RT_SAFE_CALL (retVal);
-    return false;
-  }
-#endif
-}
-
-//_____________________________________________________________________________
-//
-bool
-DetailedTask::checkAllCudaStreamsDoneForThisTask() const
-{
-#ifdef TASK_MANAGES_EXECSPACE
-  return m_task->checkAllCudaStreamsDoneForThisTask(reinterpret_cast<intptr_t>(this));
-#else
-  // A task can have multiple streams (such as an output task pulling
-  // from multiple GPUs).  Check all streams to see if they are done.
-  // If any one stream isn't done, return false.  If nothing returned
-  // false, then they all must be good to go.
-  bool retVal = false;
-
-  for (auto & it : m_cudaStreams) {
-    retVal = checkCudaStreamDoneForThisTask(it.first);
-    if (retVal == false) {
-      return retVal;
-    }
-  }
-
-  return true;
-#endif
-}
-#endif
 
 //_____________________________________________________________________________
 //
@@ -1037,11 +852,6 @@ DetailedTask::deleteTemporaryTaskVars()
 {
   // clean out the host list
   while (!m_taskHostMemoryPoolItems.empty()) {
-  // ARS - FIX ME
-#if defined(USE_KOKKOS_INSTANCE)
-#else
-    cudaHostUnregister(m_taskHostMemoryPoolItems.front());
-#endif
     // TODO: Deletes a void*, and that doesn't call any object destructors
     delete[] m_taskHostMemoryPoolItems.front();
     m_taskHostMemoryPoolItems.pop();
@@ -1484,8 +1294,6 @@ DetailedTask::initiateH2DCopies(std::vector<OnDemandDataWarehouseP> & m_dws)
   if (varIter != vars.end()) {
     // int device_id =
     //   GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(this->getPatches())->get(0));
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   }
 
   // Go through each unique dependent var and see if we should allocate space and/or queue it to be copied H2D.
@@ -2267,10 +2075,6 @@ DetailedTask::prepareDeviceVars(std::vector<OnDemandDataWarehouseP> & m_dws)
 
                 if (host_ptr && device_ptr) {
                   // Perform the copy!
-
-                  // Base call is commented out
-                  // OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
-
                   if (it->second.m_varMemSize == 0) {
                     printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
                         label_cstr, patchID, matlIndx, levelID, staging ? "true" : "false" );
@@ -2293,24 +2097,10 @@ DetailedTask::prepareDeviceVars(std::vector<OnDemandDataWarehouseP> & m_dws)
                   } else {
 //                      printf("%s task: %s, prepareDeviceVars - copying %s %d %d %d %d: %d\n",myRankThread().c_str(), this->getName().c_str(), it->first.m_label.c_str(),
 //                                                    it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->first.m_dataWarehouse, numGhostCells);
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
                     m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                               whichGPU,
                                               device_ptr, host_ptr,
                                               it->second.m_varMemSize, GPUMemcpyHostToDevice);
-#else
-                    m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                              whichGPU,
-                                              device_ptr, host_ptr,
-                                              it->second.m_varMemSize, cudaMemcpyHostToDevice);
-#endif
-#else
-                    cudaStream_t* stream = this->getCudaStreamForThisTask(whichGPU);
-                    // ARS cudaMemcpyAsync copy from host to device
-                    // Kokkos equivalent - deep copy.
-                    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
-#endif
                     // Tell this task that we're managing the copies for this variable.
 
                     this->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
@@ -2359,24 +2149,10 @@ DetailedTask::copyDelayedDeviceVars()
 //    printf("%s task: %s, delayed copying %s %d %d %d %d\n",myRankThread().c_str(), this->getName().c_str(), lpmld.m_label.c_str(),
 //          lpmld.m_patchID, lpmld.m_matlIndx, lpmld.m_levelIndx, lpmld.m_dataWarehouse);
 
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
     m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                               devGridVarInfo.m_whichGPU,
                               device_ptr, host_ptr,
                               size, GPUMemcpyHostToDevice);
-#else
-    m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                              devGridVarInfo.m_whichGPU,
-                              device_ptr, host_ptr,
-                              size, cudaMemcpyHostToDevice);
-#endif
-#else
-    cudaStream_t* stream = this->getCudaStreamForThisTask(devGridVarInfo.m_whichGPU);
-    // ARS cudaMemcpyAsync copy from host to device
-    // Kokkos equivalent - deep copy.
-    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, size, cudaMemcpyHostToDevice, *stream));
-#endif
 
     // Tell this task that we're managing the copies for this variable.
     this->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>(lpmld, devGridVarInfo));
@@ -3294,10 +3070,6 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-
-          // Base call is commented out
-          // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
-
           if (gpudw != nullptr) {
 
             // It's not valid on the CPU but it is on the GPU.  Copy it on over.
@@ -3375,25 +3147,10 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
                         && device_size.y   == host_size.y()
                         && device_size.z   == host_size.z()) {
 
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
                       m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                                 deviceNum,
                                                 host_ptr, device_ptr,
                                                 host_bytes, GPUMemcpyDeviceToHost);
-#else
-                      m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                                deviceNum,
-                                                host_ptr, device_ptr,
-                                                host_bytes, cudaMemcpyDeviceToHost);
-#endif
-#else
-                      cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
-                      cudaError_t retVal;
-                      // ARS cudaMemcpyAsync copy from device to host
-                      // Kokkos equivalent - deep copy.
-                      CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
-#endif
 
                       IntVector temp(0,0,0);
                       this->getVarsBeingCopiedByTask().add(patch, matlID, levelID,
@@ -3619,9 +3376,6 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
     }
 
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
 
@@ -4037,26 +3791,11 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
                   SCI_THROW( InternalError("DetailedTask::initiateD2H() - Invalid host pointer, it was nullptr.", __FILE__, __LINE__));
                 }
 
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, GPUMemcpyDeviceToHost);
-#else
-                m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                          deviceNum,
-                                          host_ptr, device_ptr,
-                                          host_bytes, cudaMemcpyDeviceToHost);
-#endif
-#else
-                cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
-                // ARS cudaMemcpyAsync copy from device to host
-                // Kokkos equivalent - deep copy.
-                cudaError_t retVal;
 
-                CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
-#endif
                 IntVector temp(0,0,0);
                 this->getVarsBeingCopiedByTask().add(patch, matlID, levelID,
                                                       false,
@@ -4106,24 +3845,11 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
 
               // TODO: Verify no memory leaks
               if (host_bytes == device_bytes) {
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, GPUMemcpyDeviceToHost);
-#else
-                m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                          deviceNum,
-                                          host_ptr, device_ptr,
-                                          host_bytes, cudaMemcpyDeviceToHost);
-#endif
-#else
-                cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
-                // ARS cudaMemcpyAsync copy from device to host
-                // Kokkos equivalent - deep copy.
-                CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
-#endif
+
                 this->getVarsBeingCopiedByTask().add(patch, matlID, levelID,
                                                       host_bytes, host_bytes,
                                                       dependantVar,
@@ -4161,24 +3887,12 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
               delete gpuReductionVar;
 
               if (host_bytes == device_bytes) {
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
+
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, GPUMemcpyDeviceToHost);
-#else
-                m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                          deviceNum,
-                                          host_ptr, device_ptr,
-                                          host_bytes, cudaMemcpyDeviceToHost);
-#endif
-#else
-                cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
-                // ARS cudaMemcpyAsync copy from device to host
-                // Kokkos equivalent - deep copy.
-                CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
-#endif
+
                 this->getVarsBeingCopiedByTask().add(patch, matlID, levelID,
                                                       host_bytes, host_bytes,
                                                       dependantVar,
@@ -4215,9 +3929,8 @@ DetailedTask::createTaskGpuDWs()
   // get copied into the GPU.  This is sizing these datawarehouses
   // dynamically and doing it all in only one alloc per datawarehouse.
   // See the bottom of the GPUDataWarehouse.h for more information.
-#ifdef TASK_MANAGES_EXECSPACE
   deviceNumSet m_deviceNums = m_task->getDeviceNums(reinterpret_cast<intptr_t>(this));
-#endif
+
   for (deviceNumSetIter deviceNums_it = m_deviceNums.begin(); deviceNums_it != m_deviceNums.end(); ++deviceNums_it) {
     const unsigned int currentDevice = *deviceNums_it;
     unsigned int numItemsInDW = this->getTaskVars().getTotalVars(currentDevice, Task::OldDW) + this->getGhostVars().getNumGhostCellCopies(currentDevice, Task::OldDW);
@@ -4282,22 +3995,8 @@ DetailedTask::assignDevicesAndStreams()
     const Patch* patch = this->getPatches()->get(p);
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
-      // See if this task doesn't yet have a stream for this GPU device.
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
+      // See if this task doesn't yet have an instance for this GPU device.
       m_task->assignDevicesAndInstances(reinterpret_cast<intptr_t>(this));
-#else
-      m_task->assignDevicesAndStreams(reinterpret_cast<intptr_t>(this));
-#endif
-#else
-      for (int i = 0; i < this->getTask()->maxStreamsPerTask(); i++) {
-        if (this->getCudaStreamForThisTask(i) == nullptr) {
-          this->assignDevice(0);
-          cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, i);
-          this->setCudaStreamForThisTask(i, stream);
-        }
-      }
-#endif
     } else {
       cerrLock.lock();
       {
@@ -4320,20 +4019,7 @@ DetailedTask::assignDevicesAndStreamsFromGhostVars()
   deviceNumSet & destinationDevices = this->getGhostVars().getDestinationDevices();
 
   for( auto &deviceNum : destinationDevices) {
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
     m_task->assignDevicesAndInstances(reinterpret_cast<intptr_t>(this), deviceNum);
-#else
-    m_task->assignDevicesAndStreams(reinterpret_cast<intptr_t>(this), deviceNum);
-#endif
-#else
-    // See if this task was already assigned a stream.
-    if (this->getCudaStreamForThisTask(deviceNum) == nullptr) {
-      this->assignDevice(deviceNum);
-      cudaStream_t* stream = GPUStreamPool::getCudaStreamFromPool(this, deviceNum);
-      this->setCudaStreamForThisTask(deviceNum, stream);
-    }
-#endif
   }
 }
 
@@ -4473,7 +4159,6 @@ DetailedTask::findIntAndExtGpuDependencies(std::vector<OnDemandDataWarehouseP> &
 void
 DetailedTask::syncTaskGpuDWs()
 {
-#ifdef TASK_MANAGES_EXECSPACE
   // For each GPU datawarehouse, see if there are ghost cells listed
   // to be copied if so, launch a kernel that copies them.
   GPUDataWarehouse *taskgpudw;
@@ -4493,25 +4178,6 @@ DetailedTask::syncTaskGpuDWs()
                             currentDevice, taskgpudw);
     }
   }
-#else
-  // For each GPU datawarehouse, see if there are ghost cells listed
-  // to be copied if so, launch a kernel that copies them.
-  GPUDataWarehouse *taskgpudw;
-  for (deviceNumSetIter deviceNums_it = m_deviceNums.begin(); deviceNums_it != m_deviceNums.end(); ++deviceNums_it) {
-    const unsigned int currentDevice = *deviceNums_it;
-    cudaStream_t* stream = this->getCudaStreamForThisTask(currentDevice);
-
-    taskgpudw = this->getTaskGpuDataWarehouse(currentDevice,Task::OldDW);
-    if (taskgpudw) {
-      taskgpudw->syncto_device(stream);
-    }
-
-    taskgpudw = this->getTaskGpuDataWarehouse(currentDevice,Task::NewDW);
-    if (taskgpudw) {
-      taskgpudw->syncto_device(stream);
-    }
-  }
-#endif
 }
 
 
@@ -4520,7 +4186,6 @@ DetailedTask::syncTaskGpuDWs()
 void
 DetailedTask::performInternalGhostCellCopies()
 {
-#ifdef TASK_MANAGES_EXECSPACE
   // For each GPU datawarehouse, see if there are ghost cells listed
   // to be copied if so, launch a kernel that copies them.
   GPUDataWarehouse *taskgpudw;
@@ -4543,28 +4208,6 @@ DetailedTask::performInternalGhostCellCopies()
                                          currentDevice, taskgpudw);
     }
   }
-#else
-  // For each GPU datawarehouse, see if there are ghost cells listed
-  // to be copied if so, launch a kernel that copies them.
-  GPUDataWarehouse *taskgpudw;
-  for (deviceNumSetIter deviceNums_it = m_deviceNums.begin(); deviceNums_it != m_deviceNums.end(); ++deviceNums_it) {
-    const unsigned int currentDevice = *deviceNums_it;
-
-    cudaStream_t* stream = this->getCudaStreamForThisTask(currentDevice);
-
-    taskgpudw = this->getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
-
-    if (taskgpudw != nullptr && taskgpudw->ghostCellCopiesNeeded()) {
-      taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
-    }
-
-    taskgpudw = this->getTaskGpuDataWarehouse(currentDevice, Task::NewDW);
-
-    if (taskgpudw != nullptr && taskgpudw->ghostCellCopiesNeeded()) {
-      taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
-    }
-  }
-#endif
 }
 
 
@@ -4629,28 +4272,11 @@ DetailedTask::copyAllGpuToGpuDependences(std::vector<OnDemandDataWarehouseP> & m
       // streams and be naturally queued anyway.  When a copy
       // completes, anything placed in the destination stream can then
       // process.
-
-      // Note: If we move to UVA, then we could just do a straight memcpy
-
-      // Base call is commented out
-      // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
-
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
       m_task->doKokkosMemcpyPeerAsync(reinterpret_cast<intptr_t>(this),
-#else
-      m_task->doCudaMemcpyPeerAsync(reinterpret_cast<intptr_t>(this),
-#endif
-                                    it->second.m_destDeviceNum,
-                                    device_dest_ptr,   it->second.m_destDeviceNum,
-                                    device_source_ptr, it->second.m_sourceDeviceNum,
-                            memSize);
-#else
-      cudaStream_t* stream = this->getCudaStreamForThisTask(it->second.m_destDeviceNum);
-      // ARS cudaMemcpyPeerAsync copy from device to device
-      // Kokkos equivalent - ??
-      CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
-#endif
+                                      it->second.m_destDeviceNum,
+                                      device_dest_ptr,   it->second.m_destDeviceNum,
+                                      device_source_ptr, it->second.m_sourceDeviceNum,
+                                      memSize);
     }
   }
 }
@@ -4735,28 +4361,11 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
             && device_size.y == host_size.y()
             && device_size.z == host_size.z()) {
 
-          // Base call is commented out
-          // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
-
           // Since we know we need a stream, obtain one.
-#ifdef TASK_MANAGES_EXECSPACE
-#ifdef USE_KOKKOS_INSTANCE
           m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                     it->second.m_sourceDeviceNum,
                                     host_ptr, device_ptr,
                                     host_bytes, GPUMemcpyDeviceToHost);
-#else
-          m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-                                    it->second.m_sourceDeviceNum,
-                                    host_ptr, device_ptr,
-                                    host_bytes, cudaMemcpyDeviceToHost);
-#endif
-#else
-          cudaStream_t* stream = this->getCudaStreamForThisTask(it->second.m_sourceDeviceNum);
-          // ARS cudaMemcpyAsync copy from host to device - replace with
-          // Kokkos equivalent - deep copy.
-          CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
-#endif
           copiesExist = true;
         } else {
           std::cerr << "unifiedSCheduler::GpuDependenciesToHost() - Error - The host and device variable sizes did not match.  Cannot copy D2H." << std::endl;
@@ -4780,11 +4389,7 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
     // ARS - FIXME This should replaced with a Kokkos::fence??
     // Kokkos::fence("copyAllExtGpuDependenciesToHost "
     //            "waiting for copies to finish");
-#ifdef USE_KOKKOS_INSTANCE
     while (!this->checkAllKokkosInstancesDoneForThisTask()) {
-#else
-    while (!this->checkAllCudaStreamsDoneForThisTask()) {
-#endif
       // printf("Sleeping\n");
     }
 

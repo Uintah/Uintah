@@ -353,13 +353,7 @@ public:
 
 #if defined(UINTAH_USING_GPU)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
-  GPUDataWarehouse* getGPUDW() const {
-    int i = 0;
-#if defined(HAVE_CUDA) // Direct CUDA call
-    CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-#endif
-    return d_gpuDWs[i]; 
-  }
+  GPUDataWarehouse* getGPUDW()      const { return d_gpuDWs[0]; }
 #endif
 
 protected:
@@ -375,7 +369,7 @@ protected:
   // for the first DW) to the correct generation number based on how
   // many previous time steps had taken place before the restart.
   int d_generation;
-  
+
 #if defined(UINTAH_USING_GPU)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
