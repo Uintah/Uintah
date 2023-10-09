@@ -107,7 +107,7 @@ void PortableDependencyTest1::computeTask( task_parameters )
 			newphi(i, j, k) = 1.0;
 		});
 	}
-	//CUDA_CALL(cudaDeviceSynchronize());
+
 	g_expected = 1.0;
 	std::cout << "computeTask: " << typeid(ExecSpace).name() << ", expected value for the NEXT task: " << g_expected << "\n";
 }
@@ -115,7 +115,6 @@ void PortableDependencyTest1::computeTask( task_parameters )
 template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::modifyTask( task_parameters )
 {
-	//CUDA_CALL(cudaDeviceSynchronize());
 	int wrong=0;
 	double expected = g_expected;
 	for (int p = 0; p < patches->size(); p++) {
@@ -134,7 +133,7 @@ void PortableDependencyTest1::modifyTask( task_parameters )
 			newphi(i, j, k) = newphi(i, j, k) + 0.5;
 		}, wrong);
 	}
-	//CUDA_CALL(cudaDeviceSynchronize());
+
 	printf("modifyTask. wrong values: %d\n", wrong);
 
 	g_expected+=0.5;
@@ -146,7 +145,6 @@ void PortableDependencyTest1::modifyTask( task_parameters )
 template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::requireTask( task_parameters )
 {
-	//CUDA_CALL(cudaDeviceSynchronize());
 	int wrong=0;
 	double expected = g_expected;
 	for (int p = 0; p < patches->size(); p++) {
@@ -164,7 +162,7 @@ void PortableDependencyTest1::requireTask( task_parameters )
 			}
 		}, wrong);
 	}
-	//CUDA_CALL(cudaDeviceSynchronize());
+
 	printf("requireTask. wrong values: %d\n", wrong);
 
 	std::cout << "requireTask: " << typeid(ExecSpace).name() << ", expected value for the NEXT task: " << g_expected << "\n";

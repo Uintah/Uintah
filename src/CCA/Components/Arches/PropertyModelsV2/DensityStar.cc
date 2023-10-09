@@ -170,7 +170,7 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   }, check_guess_density_out);
 
   if (check_guess_density_out > 0){
-    std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
+    std::cout << __FUNCTION__ << " NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
   } else {
     Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
       rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density

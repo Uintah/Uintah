@@ -25,13 +25,11 @@
 /* GPU DataWarehouse device & host access*/
 
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
-#include <Core/Grid/Variables/GPUVariable.h>
-#include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/GPUReductionVariable.h>
-#include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -52,7 +50,7 @@
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
-  extern DebugStream gpu_stats;
+  extern DebugStream gpu_stats;  // From KokkosScheduler
 }
 
 GPUDataWarehouse::GPUDataWarehouse()
@@ -917,9 +915,6 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label,
   // Now allocate it
   if (allocationNeeded) {
 
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
-
     unsigned int memSize = var.getMemSize();
 
     if (gpu_stats.active()) {
@@ -1197,8 +1192,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 {
 /*
 #if defined(DEVICE_COMPILE_ONLY)
-  //Should not put from device side as all memory allocation should be
-  //done on CPU side through CUDAMalloc()
+  //Should not called from device side as all memory allocation should be done on CPU side through Kokkos malloc()
 #else
 
   varLock->lock();
@@ -1251,11 +1245,11 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
     var.setArray3(offset, size, device_ptr);
     host_contiguousArrayPtr = (void*)((uint8_t*)ca->allocatedHostMemory + ca->assignedOffset);
 
-    //We ran into cuda misaligned errors previously when mixing different data types.  We suspect the ints at 4 bytes
-    //were the issue.  So the engine previously computes buffer room for each variable as a multiple of UnifiedScheduler::bufferPadding.
+    //We ran into misaligned errors previously when mixing different data types.  We suspect the ints at 4 bytes
+    //were the issue.  So the engine previously computes buffer room for each variable as a multiple of KokkosScheduler::bufferPadding.
     //So the contiguous array has been sized with extra padding.  (For example, if a var holds 12 ints, then it would be 48 bytes in
-    //size.  But if UnifiedScheduler::bufferPadding = 32, then it should add 16 bytes for padding, for a total of 64 bytes).
-    int memSizePlusPadding = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    //size.  But if KokkosScheduler::bufferPadding = 32, then it should add 16 bytes for padding, for a total of 64 bytes).
+    int memSizePlusPadding = ((KokkosScheduler::bufferPadding - varMemSize % KokkosScheduler::bufferPadding) % KokkosScheduler::bufferPadding) + varMemSize;
     ca->assignedOffset += memSizePlusPadding;
 
 
@@ -1287,8 +1281,7 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
 {
 /*
 #if defined(DEVICE_COMPILE_ONLY)
-  // Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
-#else
+  //Should not called from device side as all memory allocation should be done on CPU side through Kokkos malloc()
   if (size == 0) {
     return;
   }
@@ -1298,13 +1291,11 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //chunk of memory, only one malloc and one copy to device should be needed.
   double *d_ptr = nullptr;
   double *h_ptr = nullptr;
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
 
   printf("Allocated GPU buffer of size %lu \n", (unsigned long)size);
 
   CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size) );
-  //printf("In allocate(), cuda malloc for size %ld at %p on device %d\n", size, d_ptr, d_device_id);
+  //printf("In allocate(), cudaMalloc for size %ld at %p on device %d\n", size, d_ptr, d_device_id);
 
 
   if (d_debug) {
@@ -1340,7 +1331,7 @@ __host__ void
 GPUDataWarehouse::copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx) {
 /*
 #if defined(DEVICE_COMPILE_ONLY)
-  //Should not called from device side as all memory allocation should be done on CPU side through CUDAMalloc()
+  //Should not called from device side as all memory allocation should be done on CPU side through Kokkos malloc()
 #else
   //see if this datawarehouse has anything for this patchGroupID.
   varLock->lock();
@@ -1500,7 +1491,6 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
   }
 
   varLock->unlock();
-
 }
 
 //______________________________________________________________________
@@ -1593,9 +1583,6 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var,
      var.setData(addr);
   } else {
     // We are the first task to request allocation.  Do it.
-
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
     size_t memSize = var.getMemSize();
 
     if (gpu_stats.active()) {
@@ -1723,9 +1710,6 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var,
     var.setData(addr);
   } else {
     // We are the first task to request allocation.  Do it.
-
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
     size_t memSize = var.getMemSize();
 
     if (gpu_stats.active()) {
@@ -1768,7 +1752,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var,
 __device__ GPUDataWarehouse::dataItem*
 GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
-  // ARS - FIX ME
+  // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   // The upcoming __syncthreads is needed.  CUDA function calls are
   // inlined.  Without the __syncthreads here is what may possibly happen:
@@ -1963,15 +1947,11 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   if(d_device_copy != nullptr)
     GPUMemoryPool::reclaimMemoryIntoPool(d_device_id, d_device_copy);
 
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-
   void* addr =
     GPUMemoryPool::allocateMemoryFromPool(d_device_id, objectSizeInBytes,
                                               "init_device");
 
   d_device_copy = (GPUDataWarehouse*) addr;
-  // cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
 
   d_dirty = true;
 
@@ -2003,9 +1983,6 @@ __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kok
   varLock->lock();
 
   if (d_dirty) {
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-
     // Even though this is in a writeLock state on the CPU, the nature
     // of multiple threads each with their own stream copying to a GPU
     // means that one stream might seemingly go out of order.  This is
@@ -2016,13 +1993,12 @@ __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kok
     // gpu data warehouse, but cpu threads will only access their own
     // data, not data copied in by other cpu threada via streams.
 
-    // This approach does NOT require CUDA pinned memory.
     // unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
         gpu_stats << UnifiedScheduler::myRankThread()
-            << " GPUDataWarehouse::syncto_device() - cudaMemcpy -"
+            << " GPUDataWarehouse::syncto_device() - Kokkos::deep_copy -"
             << " sync GPUDW at " << d_device_copy
             << " with description " << _internalName
             << " to device " << d_device_id
@@ -2052,9 +2028,6 @@ __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kok
 __host__ void
 GPUDataWarehouse::clear()
 {
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-
   varLock->lock();
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator varIter;
   for (varIter = varPointers->begin(); varIter != varPointers->end(); ++varIter) {
@@ -2141,8 +2114,6 @@ __host__ void
 GPUDataWarehouse::deleteSelfOnDevice()
 {
   if( d_device_copy ) {
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
@@ -2441,9 +2412,6 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpac
   // See if this GPU datawarehouse has ghost cells in it.
   if (numGhostCellCopiesNeeded > 0) {
     // Call a kernel which gets the copy process started.
-    // Base call is commented out
-    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
-
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
@@ -4175,7 +4143,7 @@ GPUDataWarehouse::getPlacementNewBuffer()
 __device__ bool
 GPUDataWarehouse::isThread0_Blk0()
 {
-  // ARS - FIX ME
+  // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +
@@ -4199,7 +4167,7 @@ GPUDataWarehouse::isThread0_Blk0()
 __device__ bool
 GPUDataWarehouse::isThread0()
 {
-  // ARS - FIX ME
+  // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   int threadID = threadIdx.x +  threadIdx.y + threadIdx.z;
 
@@ -4217,7 +4185,7 @@ GPUDataWarehouse::isThread0()
 __device__ void
 GPUDataWarehouse::printThread()
 {
-  // ARS - FIX ME
+  // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) // || defined(__HIP_DEVICE_COMPILE__)
   int threadID = threadIdx.x + threadIdx.y + threadIdx.z;
 
@@ -4232,7 +4200,7 @@ GPUDataWarehouse::printThread()
 __device__ void
 GPUDataWarehouse::printBlock()
 {
-  // ARS - FIX ME
+  // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) // || defined(__HIP_DEVICE_COMPILE__)
   int blockID  = (blockIdx.x +
                   blockIdx.y * gridDim.x +

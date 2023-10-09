@@ -97,7 +97,7 @@ DESCRIPTION
  * Scrub counters may be preserved when a strategy is developed to vacate variables from device memory if
          problems can fit in host memory but not in device memory.
  * Having knowledge of which memory spaces can communicate with which, and what bandwidth speeds
-         (a host to device copy over a CUDA device may go through a slower PCIe bus but a faster device from
+         (a host to device copy over a GPU device may go through a slower PCIe bus but a faster device from
          host over NVLINK may go MUCH faster).
  * Possibly allow for MPI calls to pull and push data straight from GPUs (if that approach ends up being
          more efficient overall).

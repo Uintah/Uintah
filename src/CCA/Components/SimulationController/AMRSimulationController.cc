@@ -420,10 +420,11 @@ AMRSimulationController::run()
       }
     }
 
-    // ARS - CAN THIS BE SCHEDULED??
+    // ARS - CAN THIS TASK BE SCHEDULED??
     m_output->writeto_xml_files( m_current_gridP );
 
-    // ARS - FIX ME - SCHEDULE INSTEAD
+    // ARS - FIX ME - Schedule instead, setup but not used. Crash in
+    // some cases.
     ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
 
     CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, false );
@@ -501,10 +502,12 @@ AMRSimulationController::doInitialTimeStep()
     }
 
     // Report all of the stats before doing any possible in-situ work
-    // as that effects the lap timer for the time steps.
+    // as that effects the lap timer for the time steps. Crash in some
+    // cases.
     // ScheduleReportStats( true );
 
     // If compiled with VisIt check the in-situ status for work.
+    // Crash in some cases.
     // ScheduleCheckInSitu( true );
 
     taskGraphTimer.reset( true );
@@ -575,11 +578,11 @@ AMRSimulationController::doInitialTimeStep()
       // Compute the next time step.
       scheduleComputeStableTimeStep();
 
-      // ARS COMMENT THESE TASKS WILL BE SCHEDULED FOR EACH
+      // ARS - COMMENT THESE TASKS WILL BE SCHEDULED FOR EACH
       // LEVEL. THAT MAY OR MAY NOT BE REASONABLE.
 
-      // NOTE ARS - FIXME before the output so the values can be saved.
-      // Monitoring tasks must be scheduled last!!
+      // ARS - Schedule before the output so the values can be
+      // saved.  Otherwise monitoring tasks must be scheduled last!!
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
         m_scheduler->scheduleTaskMonitoring(m_current_gridP->getLevel(i));
       }
@@ -591,11 +594,13 @@ AMRSimulationController::doInitialTimeStep()
 
       m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, recompile );
 
-      // Report all of the stats before doing any possible in-situ work
-      // as that effects the lap timer for the time steps.
+      // Report all of the stats before doing any possible in-situ
+      // work as that effects the lap timer for the time steps. Crash
+      // in some cases.
       // ScheduleReportStats( true );
 
-      // If compiled with VisIt check the in-situ status for work.
+      // If compiled with VisIt check the in-situ status for
+      // work. Crash in some cases.
       // ScheduleCheckInSitu( true );
 
       //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
@@ -630,7 +635,8 @@ AMRSimulationController::doInitialTimeStep()
     m_output->writeto_xml_files( m_current_gridP );
   }
 
-  // ARS - FIX ME - SCHEDULE INSTEAD
+  // ARS - FIX ME - Schedule instead, setup but not used. Crash in
+  // some cases.
   ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
 
   CheckInSitu( nullptr, nullptr, nullptr, nullptr, nullptr, true );
@@ -1017,8 +1023,8 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   // Compute the next time step.
   scheduleComputeStableTimeStep();
 
-  // NOTE ARS - FIXME before the output so the values can be saved.
-  // Monitoring tasks must be scheduled last!!
+  // ARS - Schedule before the output so the values can be saved.
+  // Otherwise monitoring tasks must be scheduled last!!
   for (int i = 0; i < m_current_gridP->numLevels(); i++) {
     m_scheduler->scheduleTaskMonitoring(m_current_gridP->getLevel(i));
   }
@@ -1034,11 +1040,13 @@ AMRSimulationController::compileTaskGraph( int totalFine )
                                            m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                            m_scheduler );
 
-  // Report all of the stats before doing any possible in-situ work
-  // as that effects the lap timer for the time steps.
+  // Report all of the stats before doing any possible in-situ work as
+  // that effects the lap timer for the time steps. Crash in some
+  // cases.
   // ScheduleReportStats( false );
 
-  // If compiled with VisIt check the in-situ status for work.
+  // If compiled with VisIt check the in-situ status for work. Crash
+  // in some cases.
   // ScheduleCheckInSitu( false );
 
   m_scheduler->compile();

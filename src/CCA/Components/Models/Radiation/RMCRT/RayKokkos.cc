@@ -58,7 +58,6 @@
 
 // From Ray.cc
 #define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
-#define CUDA_PRINTF       // increase the printf buffer
 
 // From RMCRTCommon.cc
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
@@ -69,7 +68,7 @@
 /*______________________________________________________________________
   TO DO:
   - Add support for legacy code paths (i.e., UintahSpaces::CPU)
-  - Add GPU-specific setup for Kokkos::CUDA
+  - Add GPU-specific setup for Kokkos
   - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
   - Kokkos-ify the radiometer
@@ -854,7 +853,7 @@ Ray::rayTrace( const PatchSubset* patches,
 //        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
 //        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
 //        RT_flags.cellsPerGroup = hiRange.x();
-//        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
+//        range.setValues(IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
 //        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::DefaultExecutionSpace>   >
 //#else
 //      {
@@ -2012,8 +2011,8 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       // NOTE: When building Uintah, portable tasks are built for all tags passed into create_portable_tasks.
-      //       For Kokkos::CUDA builds, the KOKKOS_OPENMP_TAG is downshifted to UINTAH_CPU_TAG in Core/Parallel/LoopExecution.h.
-      //       This bulletproofing is to prevent Kokkos::CUDA builds from attempting to build for the not yet supported UINTAH_CPU_TAG.
+      //       For Kokkos builds, the KOKKOS_OPENMP_TAG is downshifted to UINTAH_CPU_TAG in Core/Parallel/LoopExecution.h.
+      //       This bulletproofing is to prevent Kokkos builds from attempting to build for the not yet supported UINTAH_CPU_TAG.
       // TODO: Add support for Mersenne Twister-based random number generation
 #if defined(KOKKOS_USING_GPU)
       auto random_pool = Uintah::GetKokkosRandom1024Pool<Kokkos::DefaultExecutionSpace>( );

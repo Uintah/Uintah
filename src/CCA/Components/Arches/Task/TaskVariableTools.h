@@ -336,7 +336,7 @@ namespace Uintah {
 
   // The createContainer() calls.
   // Legacy tasks need to create a container of things like CCVariable<double>.  Vector are ok here.
-  // Kokkos tasks can't use vectors (not allowed for CUDA).  Further, the containers must be of Kokkos views of
+  // Kokkos tasks can't use vectors.  Further, the containers must be of Kokkos views of
   // an internal data type.  For portability, both kinds of types are passed in, and only one of the two is used
   // depending on the portability mode.
 

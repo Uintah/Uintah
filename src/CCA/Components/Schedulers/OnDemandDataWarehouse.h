@@ -518,7 +518,6 @@ public:
 
 #if defined(UINTAH_USING_GPU)
   static int getNumDevices();
-  // static void uintahSetCudaDevice(int deviceNum);
   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
   static GPUGridVariableBase* createGPUGridVariable(const TypeDescription::Type& type);
   static GPUPerPatchBase* createGPUPerPatch(const TypeDescription::Type& type);

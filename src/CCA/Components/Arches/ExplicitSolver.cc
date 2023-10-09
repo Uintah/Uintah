@@ -3551,7 +3551,7 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
         new_dw->put( bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name) );
       }
       else {
-        proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
+        proc0cout << __FUNCTION__ << " NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }

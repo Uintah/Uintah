@@ -36,7 +36,6 @@
 #if defined(UINTAH_USING_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
 #include <atomic>

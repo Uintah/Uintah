@@ -28,11 +28,10 @@
 #define CCA_COMPONENTS_SCHEDULERS_GPUDATAWAREHOUSE_H
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
+#include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
-#include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
 
@@ -63,10 +62,6 @@
                                         // level instead of a regular
                                         // patch.
 extern Uintah::MasterLock cerrLock;
-
-namespace Uintah {
-  extern DebugStream gpu_stats;
-}
 
 namespace Uintah {
 
@@ -663,7 +658,7 @@ private:
   void *             placementNewBuffer {nullptr};
 
   // These STL data structures being here do not pose a problem for
-  // the CUDA compiler
+  // the nvcc compiler
   // std::map<std::string, contiguousArrayInfo> *contiguousArrays;
 
   // For the device side.  The variable database. It's a very large buffer.

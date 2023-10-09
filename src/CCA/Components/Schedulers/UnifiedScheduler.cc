@@ -865,7 +865,7 @@ std::string
 UnifiedScheduler::myRankThread()
 {
   std::ostringstream out;
-  out << Uintah::Parallel::getMPIRank()<< "." << Impl::t_tid;
+  out << Uintah::Parallel::getMPIRank() << "." << Impl::t_tid;
   return out.str();
 }
 

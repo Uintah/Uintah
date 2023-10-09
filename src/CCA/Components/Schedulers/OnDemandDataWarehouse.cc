@@ -89,7 +89,7 @@ namespace Uintah {
   extern Dout g_DA_dbg;
 
 #if defined(UINTAH_USING_GPU)
-  extern DebugStream gpudbg;
+  extern DebugStream gpu_dbg;  // from KokkosScheduler
 #endif
 
 }
@@ -167,7 +167,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
       out << "Host GPU DW " << i;
 
       gpuDW->init(i, out.str());
-      gpuDW->setDebug(gpudbg.active());
+      gpuDW->setDebug(gpu_dbg.active());
       d_gpuDWs.push_back(gpuDW);
     }
   }

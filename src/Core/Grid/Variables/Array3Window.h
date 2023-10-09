@@ -33,7 +33,7 @@
 
 #include <climits>
 
-#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )
   #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 
@@ -130,23 +130,11 @@ template<class T> class Array3Window : public RefCounted {
         return data->get(i-offset.x(), j-offset.y(), k-offset.z());
       }
 
-#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )
       template< typename U = T >
       inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
       getKokkosView() const
       {
-          //DS 12/06/202 : passing only  data->getKokkosData() instead of subview to KokkosView3. subtracting offset from subview and again from index in operator() causes two times offset subtractions. Should ideally be done only once.
-          // It causes isotropic_kokkos_dynSmag_unpacked_noPress to fail with kokkos scheduler and using mix of openmp and cuda. Need to check why Dan Sunderland did double subtraction. As of now all basic tests worked well with the fix.
-//        return KokkosView3<U, Kokkos::HostSpace>( Kokkos::subview( data->getKokkosData()
-//                                                                 , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x() )
-//                                                                 , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y() )
-//                                                                 , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z() )
-//                                                                 )
-//                                                , offset.x()
-//                                                , offset.y()
-//                                                , offset.z()
-//                                                , data
-//                                                );
         return KokkosView3<U, Kokkos::HostSpace>( data->getKokkosData(), offset.x(), offset.y(), offset.z(), data );
       }
 
@@ -156,7 +144,7 @@ template<class T> class Array3Window : public RefCounted {
       {
         return KokkosView3<U, Kokkos::HostSpace>();
       }
-#endif //HAVE_KOKKOS
+#endif
 
       ///////////////////////////////////////////////////////////////////////
       // Return pointer to the data

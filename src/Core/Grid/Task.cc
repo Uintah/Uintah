@@ -1264,14 +1264,12 @@ bool
 Task::ActionNonPortableBase::
 checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) const
 {
-  // ARS - FIXME
+  // ARS - FIX ME - For now use the Kokkos fence but perhaps the direct
+  // checks should be performed. Also see Task::ActionPortableBase (Task.h)
   if (device_id != 0) {
    printf("Error, Task::checkKokkosInstanceDoneForThisTask is %u\n", device_id);
    exit(-1);
   }
-
-  // Base call is commented out
-  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
   Kokkos::DefaultExecutionSpace instance =
     this->getKokkosInstanceForThisTask(dTask, device_id);
@@ -1290,7 +1288,7 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
   else if (retVal == cudaErrorNotReady ) {
     return false;
   }
-  else if (retVal ==  cudaErrorLaunchFailure) {
+  else if (retVal == cudaErrorLaunchFailure) {
     printf("ERROR! - Task::ActionNonPortableBase::checkKokkosInstanceDoneForThisTask(%d) - "
            "CUDA kernel execution failure on Task: %s\n",
            device_id, this->taskPtr->getName().c_str());
@@ -1311,7 +1309,7 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
 
     return false;
   }
-#elif defined(HAVE_HIP) || defined(KOKKOS_ENABLE_HIP)
+#elif defined(KOKKOS_ENABLE_HIP)
   hipStream_t stream = instance.hip_stream();
 
   hipError_t retVal = hipStreamQuery(stream);
@@ -1340,13 +1338,11 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
     ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
 
     nanosleep(&ts, &ts);
-#if defined(HAVE_HIP)
-    HIP_RT_SAFE_CALL (retVal);
-#endif
+
     return false;
   }
 
-#elif defined(HAVE_SYCL) || defined(KOKKOS_ENABLE_SYCL)
+#elif defined(KOKKOS_ENABLE_SYCL)
   sycl::queue que = instance.sycl_queue();
   // Not yet available.
   //  return que.ext_oneapi_empty();
@@ -1442,9 +1438,8 @@ doKokkosMemcpyPeerAsync( intptr_t dTask,
 {
   Kokkos::DefaultExecutionSpace instance =
     this->getKokkosInstanceForThisTask(dTask, deviceNum);
-  // ARS - FIXME
-  // CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
-  //                                    count, *stream));
+
+  SCI_THROW(InternalError("Error - doKokkosMemcpyPeerAsync is not implemented. No Kokkos equivalent function.", __FILE__, __LINE__));
 }
 
 //_____________________________________________________________________________

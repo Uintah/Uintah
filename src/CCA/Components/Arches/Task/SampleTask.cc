@@ -106,13 +106,13 @@ using namespace Uintah;
 //         double dudz = 0.0;
 //       });
 //
-//  (10) Eliminate use of C++ standard library classes and functions that do not have CUDA equivalents, e.g.,:
+//  (10) Eliminate use of C++ standard library classes and functions that do not have Kokkos equivalents, e.g.,:
 //
 //       Replace std::cout with printf, replace std::string with null-terminated arrays of characters, hard-code std::accumulate, etc
 //
 //       * A collection of supported C/C++ functionality can be found at https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#c-cplusplus-language-support
 //
-//  (11) Drop use of std:: before C++ standard library classes and functions that do have CUDA equivalents, e.g.,:
+//  (11) Drop use of std:: before C++ standard library classes and functions that do have Kokkos equivalents, e.g.,:
 //
 //       Replace std::fabs with fabs, replace std::fmax with fmax, replace std::fmin with fmin, etc
 //
@@ -133,7 +133,7 @@ using namespace Uintah;
 //  * Keep code within portable loops as simple as possible
 //  * Keep formatting and whitespace consistent across tasks for searchability
 //  * Port tasks incrementally one-by-one
-//  * Search uncommented tags for portable task examples (current best example supporting non-Kokkos, Kokkos::OpenMP, Kokkos::DefaultHostExecutionSpace, Kokkos::DefaultExecutionSpace and Kokkos::CUDA builds is src/CCA/Components/Arches/ParticleModels/CharOxidationps.h)
+//  * Search uncommented tags for portable task examples (current best example supporting non-Kokkos, Kokkos::OpenMP, Kokkos::DefaultHostExecutionSpace, Kokkos::DefaultExecutionSpace and Kokkos builds is src/CCA/Components/Arches/ParticleModels/CharOxidationps.h)
 //  * Verify correctness before and after changes for portability across multiple inputs and platforms
 //  * Verify execution takes place where expected (e.g., using htop, ps, etc on host, nvpp on device, etc)
 //  * When in doubt, port by brute force (e.g., uncomment tag(s), try to build, fix build-breaking portability barriers, repeat)
@@ -174,7 +174,7 @@ SampleTask::~SampleTask()
 //    - e.g., Thread-safe tasks using Uintah::parallel_<pattern>
 //
 //  * Tag non-empty tasks refactored to support Kokkos builds with KOKKOS_DEFAULT_DEVICE_TAG
-//    - e.g., Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++ functionality support by CUDA
+//    - e.g., Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++ functionality support by Kokkos
 //--------------------------------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------------------------------

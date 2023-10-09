@@ -333,7 +333,7 @@ private:
 
   // NOTE: This is a temp placeholder for the birth model.
   const double lambda_birth_placeholder = 0.0;
-  double kvisc = m_kvisc, gravity = m_gravity, scaling_constant = m_scaling_constant;	//copy class variables into local, otherwise cuda throws error.
+  double kvisc = m_kvisc, gravity = m_gravity, scaling_constant = m_scaling_constant;	//copy class variables into local, otherwise Kokkos throws error.
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){

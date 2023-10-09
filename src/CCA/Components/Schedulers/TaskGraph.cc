@@ -1331,8 +1331,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
         }
       }
     }
-    // ARS - FIX ME
-    //else if (patches && patches->empty() &&
     else if ( patches && ( patches->empty() || patches->size() <= 1 ) &&
               ( req->m_patches_dom          == Task::FineLevel   ||
                 dtask->getTask()->getType() == Task::OncePerProc ||

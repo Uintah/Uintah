@@ -701,7 +701,7 @@ namespace Uintah {
         }
         //______________________________________________________________________
         //
-        case pfmg:{
+        case pfmg: {
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver_p;
 
@@ -735,7 +735,7 @@ namespace Uintah {
         }
         //______________________________________________________________________
         //
-        case sparsemsg:{
+        case sparsemsg: {
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver_p;
 
@@ -1019,8 +1019,7 @@ namespace Uintah {
       switch( hypre_solver_s->precond_solver_type ) {
       //__________________________________
       // use symmetric SMG as preconditioner
-      case smg:{
-
+      case smg: {
         HYPRE_StructSMGCreate         (pg->getComm(),    &precond_solver);
         HYPRE_StructSMGSetMemoryUse   (precond_solver,   0);
         HYPRE_StructSMGSetMaxIter     (precond_solver,   m_params->precond_maxiters);
@@ -1033,12 +1032,11 @@ namespace Uintah {
         precond = HYPRE_StructSMGSolve;
         pcsetup = HYPRE_StructSMGSetup;
         break;
-
       }
+
       //__________________________________
       // use symmetric PFMG as preconditioner
-      case pfmg:{
-
+      case pfmg: {
         HYPRE_StructPFMGCreate        (pg->getComm(),    &precond_solver);
         HYPRE_StructPFMGSetMaxIter    (precond_solver,   m_params->precond_maxiters);
         HYPRE_StructPFMGSetTol        (precond_solver,   m_params->precond_tolerance);
@@ -1065,12 +1063,11 @@ namespace Uintah {
         precond = HYPRE_StructPFMGSolve;
         pcsetup = HYPRE_StructPFMGSetup;
         break;
-
       }
+
       //__________________________________
       //  use symmetric SparseMSG as preconditioner
-      case sparsemsg:{
-
+      case sparsemsg: {
         HYPRE_StructSparseMSGCreate       (pg->getComm(),   &precond_solver);
         HYPRE_StructSparseMSGSetMaxIter   (precond_solver,  m_params->precond_maxiters);
         HYPRE_StructSparseMSGSetJump      (precond_solver,  m_params->jump);
@@ -1086,12 +1083,11 @@ namespace Uintah {
         precond = HYPRE_StructSparseMSGSolve;
         pcsetup = HYPRE_StructSparseMSGSetup;
         break;
-
       }
+
       //__________________________________
       //  use two-step Jacobi as preconditioner
-      case jacobi:{
-
+      case jacobi: {
         HYPRE_StructJacobiCreate      (pg->getComm(),    &precond_solver);
         HYPRE_StructJacobiSetMaxIter  (precond_solver,   m_params->precond_maxiters);
         HYPRE_StructJacobiSetTol      (precond_solver,   m_params->precond_tolerance);
@@ -1100,19 +1096,18 @@ namespace Uintah {
         precond = HYPRE_StructJacobiSolve;
         pcsetup = HYPRE_StructJacobiSetup;
         break;
-
       }
+
       //__________________________________
       //  use diagonal scaling as preconditioner
-      case diagonal:{
-
+      case diagonal: {
         precond_solver = NULL;
         precond = HYPRE_StructDiagScale;
         pcsetup = HYPRE_StructDiagScaleSetup;
 
         break;
-
       }
+
       default:
         // This should have been caught in readParameters...
         throw InternalError("Unknown preconditionertype: "+ m_params->precondtype, __FILE__, __LINE__);
@@ -1124,26 +1119,25 @@ namespace Uintah {
     destroyPrecond( struct hypre_solver_struct * hypre_solver_s
                    ,       HYPRE_StructSolver  & precond_solver )
     {
-
       switch( hypre_solver_s->precond_solver_type ) {
 
-      case smg:{
+      case smg: {
         HYPRE_StructSMGDestroy( precond_solver );
         break;
       }
-      case pfmg:{
+      case pfmg: {
         HYPRE_StructPFMGDestroy( precond_solver );
         break;
       }
-      case sparsemsg:{
+      case sparsemsg: {
         HYPRE_StructSparseMSGDestroy( precond_solver );
         break;
       }
-      case jacobi:{
+      case jacobi: {
         HYPRE_StructJacobiDestroy( precond_solver );
         break;
       }
-      case diagonal:{
+      case diagonal: {
         // do nothing
         break;
       }

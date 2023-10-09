@@ -529,7 +529,7 @@ TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * task
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ){
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::DefaultExecutionSpace)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
@@ -540,21 +540,8 @@ TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * task
       else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {      /* Task supports Kokkos builds */
         helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::DefaultExecutionSpace)), static_cast< archesFunctionPtr<ExecSpace3, MemSpace3> >(afp3), taskPtr );
       }
-      assignedTag = KOKKOS_CUDA;
+      assignedTag = KOKKOS_DEVICE;
     }
-    // Kokkos OpenMPTarget
-//    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ){
-//      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {      /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//        helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
-//      }
-//      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) { /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//        helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr );
-//      }
-//      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ) { /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//        helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace3, MemSpace3> >(afp3), taskPtr );
-//      }
-//      assignedTag = KOKKOS_OPENMPTARGET;
-//    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -611,7 +598,7 @@ TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * task
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::DefaultExecutionSpace)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
@@ -619,18 +606,8 @@ TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * task
       else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {      /* Task supports Kokkos builds */
         helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::DefaultExecutionSpace)), static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr );
       }
-      assignedTag = KOKKOS_CUDA;
+      assignedTag = KOKKOS_DEVICE;
     }
-    // Kokkos OpenMPTarget
-//    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {
-//      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {      /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//        helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
-//      }
-//      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) { /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//        helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace2, MemSpace2> >(afp2), taskPtr );
-//      }
-//      assignedTag = KOKKOS_OPENMPTARGET;
-//    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -676,16 +653,11 @@ TaskAssignedExecutionSpace create_portable_arches_tasks( ArchesTaskObject * task
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
       helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::DefaultExecutionSpace)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
-      assignedTag = KOKKOS_CUDA;
+      assignedTag = KOKKOS_DEVICE;
     }
-    // Kokkos OpenMPTarget
-//    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) { /* Task supports Kokkos::Experimental::OpenMPTarget builds */
-//      helpMe.addFunctionPtr( std::type_index(typeid(Kokkos::Experimental::OpenMPTarget)), static_cast< archesFunctionPtr<ExecSpace1, MemSpace1> >(afp1), taskPtr );
-//      assignedTag = KOKKOS_OPENMPTARGET;
-//    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded

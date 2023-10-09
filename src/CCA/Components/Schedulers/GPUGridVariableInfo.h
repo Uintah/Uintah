@@ -30,8 +30,6 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
 #define CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
 
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/Patch.h>
@@ -250,7 +248,6 @@ public:
   int                      m_numGhostCells;
   unsigned int             m_whichGPU;
   TypeDescription::Type    m_type;
-
 };
 
 
@@ -401,6 +398,13 @@ private:
 
   std::map<unsigned int, DeviceInfo> deviceInfoMap;
 
+  // 32 threads can write floats out in one coalesced access.  (32 *
+  // 4 bytes = 128 bytes).
+
+  // TODO: Ideally, this number should be determined from the arch
+  // during the CMAKE/configure step so that future programmers don't
+  // have to manually remember to update this value if it ever changes.
+  const int m_bufferPadding = 128;
 };
 
 static std::map<const Patch *, int> patchAcceleratorLocation;

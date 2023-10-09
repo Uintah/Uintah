@@ -907,7 +907,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    // ARS - FIXME CHECK THE WAREHOUSE
+    // ARS - FIX ME - Check the warehouse
     OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
     if (!abort && dw && dw->abortTimeStep()) {
       // TODO - abort might not work with external queue...

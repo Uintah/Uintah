@@ -23,9 +23,10 @@
  */
 
 #include <CCA/Components/Schedulers/KokkosScheduler.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
@@ -76,8 +77,8 @@ using namespace Uintah;
 
 namespace Uintah {
 
-  DebugStream gpu_stats("GPUStats"             , "KokkosScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
-  DebugStream gpudbg(   "GPUDataWarehouse"     , "KokkosScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
+  DebugStream gpu_stats("GPUStats"             , "KokkosScheduler", "detailed GPU statistics on H2D and D2H data movement", false );
+  DebugStream gpu_dbg(  "GPUDataWarehouse"     , "KokkosScheduler", "detailed GPU statistics on GPUDataWarehouse activity", false );
 
 }
 
@@ -113,14 +114,14 @@ namespace {
 extern Uintah::MasterLock cerrLock;
 #endif
 
-
 //______________________________________________________________________
 //
 namespace Uintah { namespace Impl {
 
 namespace {
 
-thread_local int t_tid = 0;   // unique ID assigned in thread_driver()
+thread_local int t_tid = 0;   // ARS - FIX ME - unique ID assigned in
+			      // ??? See UnifiedScheduler.
 
 }
 
@@ -133,8 +134,7 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
                                 ,       KokkosScheduler * parentScheduler
                                 )
   : MPIScheduler(myworld, parentScheduler)
-{
-
+{  
   if ( Uintah::Parallel::usingDevice() ) {
 
     // Disable memory windowing on variables.  This will ensure that
@@ -352,7 +352,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
 #endif
 
-  while ( m_num_tasks_done < m_num_tasks )
+  while( m_num_tasks_done < m_num_tasks )
   {
     // Check the associated variables for a parallel dispatch request.
 #if defined(USE_KOKKOS_PARTITION_MASTER)

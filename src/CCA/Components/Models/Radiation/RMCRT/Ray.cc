@@ -51,7 +51,6 @@
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
-#define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
   TO DO

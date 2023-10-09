@@ -41,7 +41,7 @@ namespace Uintah {
 
       HOST_DEVICE const T& operator[](const int3& idx) const
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds( idx);
 #endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
@@ -49,7 +49,7 @@ namespace Uintah {
 
       HOST_DEVICE T& operator[](const int3& idx)
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds( idx);
 #endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
@@ -58,7 +58,7 @@ namespace Uintah {
       HOST_DEVICE const T&
       operator()(const int& x, const int& y, const int& z) const
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds3(x,y,z);
 #endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
@@ -66,7 +66,7 @@ namespace Uintah {
 
       HOST_DEVICE T& operator()(const int& x, const int& y, const int& z)
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds3(x,y,z);
 #endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];

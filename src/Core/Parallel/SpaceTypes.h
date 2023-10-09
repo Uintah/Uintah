@@ -30,18 +30,16 @@
 
 enum TaskAssignedExecutionSpace {
   NONE_EXECUTION_SPACE = 0,
-  UINTAH_CPU = 1,                          //binary  001
-  KOKKOS_OPENMP = 2,                       //binary  010
-  KOKKOS_CUDA = 4,                         //binary  100
-  KOKKOS_OPENMPTARGET = 8,                 //binary 1000
+  UINTAH_CPU           = 1,                   // binary  001
+  KOKKOS_OPENMP        = 2,                   // binary  010
+  KOKKOS_DEVICE        = 4,                   // binary  100
 };
 
 enum TaskAssignedMemorySpace {
-  NONE_MEMORY_SPACE = 0,
-  UINTAH_HOSTSPACE = 1,                    //binary  001
-  KOKKOS_HOSTSPACE = 2,                    //binary  010
-  KOKKOS_CUDASPACE = 4,                    //binary  100
-  KOKKOS_OPENMPTARGETSPACE = 8,            //binary 1000
+  NONE_MEMORY_SPACE   = 0,
+  UINTAH_HOST_SPACE   = 1,                    // binary  001
+  KOKKOS_HOST_SPACE   = 2,                    // binary  010
+  KOKKOS_DEVICE_SPACE = 4,                    // binary  100
 };
 
 #endif // UINTAH_CORE_PARALLEL_SPACE_TYPES_H

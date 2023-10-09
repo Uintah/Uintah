@@ -27,7 +27,6 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
-
 #include <string>
 #include <vector>
 

@@ -807,8 +807,8 @@ CharOxidationps<T>::eval( const Patch                                * patch
   auto surfAreaF = tsk_info->get_field<CT, const double, MemSpace>( m_surfAreaF_name );
 
   // Class data members are a problem!  They need to be both
-  // 1) local in scope so they can be captured by value (for CUDA)
-  // 2) arrays need to be part of a plain old data type so the entire array can be captured (again for CUDA).
+  // 1) local in scope so they can be captured by value (for Kokkos)
+  // 2) arrays need to be part of a plain old data type so the entire array can be captured (again for Kokkos).
 
   struct1DArray<bool,   max_reactions_count> local_use_co2co_l(this->_use_co2co_l,reactions_count);
   struct1DArray<double, max_reactions_count> local_phi_l(this->_phi_l,reactions_count);

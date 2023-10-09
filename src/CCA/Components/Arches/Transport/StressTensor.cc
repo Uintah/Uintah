@@ -164,7 +164,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
  
-  //auto apply_uVelStencil=functorCreationWrapper(  uVel,  Dx); // non-macro approach gives cuda streaming error downstream
+  //auto apply_uVelStencil=functorCreationWrapper(  uVel,  Dx); // non-macro approach gives Kokkos? error downstream
   //auto apply_vVelStencil=functorCreationWrapper(  vVel,  Dx);
   //auto apply_wVelStencil=functorCreationWrapper(  wVel,  Dx);
 
@@ -184,7 +184,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     const double mu23  = 0.5 * ( 0.5 * ( D(i,j,k)+D(i,j,k-1))
                                + 0.5 * (D(i,j-1,k)+D(i,j-1,k-1)) );
 
-    //apply_uVelStencil(dudx,dudy,dudz,i,j,k);  // non-macro approach gives cuda streaming error downstream, likely due to saving templated value as reference instead of value. But must save by reference to suppor legacy code.  poosibly Use getKokkosView in functor constructor
+    //apply_uVelStencil(dudx,dudy,dudz,i,j,k);  // non-macro approach gives Kokkos? error downstream, likely due to saving templated value as reference instead of value. But must save by reference to suppor legacy code.  poosibly Use getKokkosView in functor constructor
     //apply_vVelStencil(dvdx,dvdy,dvdz,i,j,k);
     //apply_wVelStencil(dwdx,dwdy,dwdz,i,j,k);
 

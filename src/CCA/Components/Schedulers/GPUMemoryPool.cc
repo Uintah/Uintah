@@ -44,7 +44,7 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
-  extern DebugStream gpu_stats;
+  extern DebugStream gpu_stats;  // from KokkosScheduler
 }
 
 namespace {
@@ -105,9 +105,6 @@ GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
       gpuMemoryPoolUnused->erase(ret);
     } else {
       // No chunk of memory found on this device so create it.
-
-      // Base call is commented out
-      // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
       // Allocate the memory.
       std::string label;

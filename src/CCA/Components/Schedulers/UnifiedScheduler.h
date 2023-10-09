@@ -29,11 +29,6 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
-  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-#endif
-
 #include <map>
 #include <queue>
 #include <string>
@@ -58,24 +53,26 @@ GENERAL INFORMATION
    Scientific Computing and Imaging Institute
    University of Utah
 
-
 KEYWORDS
-   Task Scheduler, Multi-threaded MPI, CPU, GPU
+   Task Scheduler, Multi-threaded MPI, CPU
 
 DESCRIPTION
-   A multi-threaded scheduler that uses a combination of MPI + std::thread
-   and offers support for GPU tasks. Dynamic scheduling with non-deterministic,
-   out-of-order execution of tasks at runtime. One MPI rank per multi-core node.
-   threads (std::thread) are pinned to individual CPU cores where these tasks are executed.
-   Uses a decentralized model wherein all threads can access task queues,
-   processes there own MPI sends and recvs, with shared access to the DataWarehouse.
+   A multi-threaded scheduler that uses a combination of MPI +
+   std::thread. Dynamic scheduling with non-deterministic,
+   out-of-order execution of tasks at runtime. One MPI rank per
+   multi-core node.  threads (std::thread) are pinned to individual
+   CPU cores where these tasks are executed.
 
-   Uintah task scheduler to support, schedule and execute solely CPU tasks
-   or some combination of CPU and GPU tasks when enabled.
+   Uses a decentralized model wherein all threads can access task
+   queues, processes there own MPI sends and recvs, with shared access
+   to the DataWarehouse.
+
+   Uintah task scheduler to support, schedule and execute solely CPU
+   tasks.
 
 WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
-   development, not all tasks/components are GPU-enabled and/or thread-safe yet.
+   development, not all tasks/components are thread-safe yet.
 
    Requires MPI_THREAD_MULTIPLE support.
 
@@ -91,9 +88,12 @@ class UnifiedScheduler : public MPIScheduler  {
 
     virtual ~UnifiedScheduler();
 
-    static int verifyAnyGpuActive();  // used only to check if this Uintah build can communicate with a GPU.  This function exits the program
+    // Used only to check if this Uintah build can communicate with a
+    // GPU.  This function exits the program.
+    static int verifyAnyGpuActive();
 
-    virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & materialManager );
+    virtual void problemSetup( const ProblemSpecP & prob_spec,
+			       const MaterialManagerP & materialManager );
 
     virtual SchedulerP createSubScheduler();
 
@@ -101,14 +101,9 @@ class UnifiedScheduler : public MPIScheduler  {
 
     virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
 
-    void runTask( DetailedTask * dtask , int iteration , int thread_id , CallBackEvent event );
+    void runTask( DetailedTask * dtask, int iteration, int thread_id, CallBackEvent event );
 
     void runTasks( int thread_id );
-
-    static const int bufferPadding = 128;  // 32 threads can write floats out in one coalesced access.  (32 * 4 bytes = 128 bytes).
-                                           // TODO: Ideally, this number should be determined from the CUDA arch during the
-                                           // CMAKE/configure step so that future programmers don't have to manually remember to
-                                           // update this value if it ever changes.
 
     // timing statistics for Uintah infrastructure overhead
     enum ThreadStatsEnum {

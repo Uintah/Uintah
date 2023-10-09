@@ -646,10 +646,6 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
           });
         });
       }
-
-#if defined(NO_STREAM)
-      cudaDeviceSynchronize();
-#endif
     }
   }
   else
@@ -1111,10 +1107,6 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
         red += tmp0;
       }
-
-#if defined(NO_STREAM)
-      cudaDeviceSynchronize();
-#endif
     }
   }
   else
@@ -1588,10 +1580,6 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
         if(red > tmp0)
           red = tmp0;
       }
-
-#if defined(NO_STREAM)
-      cudaDeviceSynchronize();
-#endif
     }
   }
   else
@@ -1958,10 +1946,6 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
   */
 
-#if defined(NO_STREAM)
-  cudaDeviceSynchronize();
-#endif
-
   // std::free( name );
 }
 
@@ -2173,10 +2157,6 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
       }
     });
   });
-
-#if defined(NO_STREAM)
-  cudaDeviceSynchronize();
-#endif
 }
 */
 

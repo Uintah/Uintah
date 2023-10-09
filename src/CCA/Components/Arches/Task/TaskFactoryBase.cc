@@ -549,7 +549,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                           &TaskFactoryBase::do_task<KOKKOS_OPENMP_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
-  } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
+  } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_DEVICE) {
 
     //some race condition in kokkos::parallel_reduce. So combine all patches together in a single reduction task to avoid the multiple cpu threads calling parallel_reduce
     //temp work around until the permanent solution
@@ -559,7 +559,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 							  &TaskFactoryBase::do_task<KOKKOS_DEFAULT_DEVICE_TAG>,
 							  sched, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls, TASKGRAPH::DEFAULT,
 							  variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
-	  //printf("warning: Creating per processor task for density_star due to race condition in kokkos cuda parallel_reduce %s %d\n", __FILE__, __LINE__);
+	  //printf("warning: Creating per processor task for density_star due to race condition in kokkos parallel_reduce %s %d\n", __FILE__, __LINE__);
 	}
 	else{
       create_portable_tasks( TaskDependencies, this,

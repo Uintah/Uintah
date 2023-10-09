@@ -111,7 +111,7 @@ private:
   //
   //  * Tag non-empty tasks refactored to support Kokkos builds with KOKKOS_DEFAULT_DEVICE_TAG
   //    - e.g. Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++
-  //           functionality support by CUDA
+  //           functionality support by Kokkos
   //--------------------------------------------------------------------------------------------------
 
   //--------------------------------------------------------------------------------------------------

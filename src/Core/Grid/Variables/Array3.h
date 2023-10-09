@@ -226,20 +226,19 @@ public:
 #endif
 
 // For now, if it's a homogeneous only Kokkos environment, use Kokkos
-// Views If it's a legacy environment or a CUDA environment, use the
+// Views If it's a legacy environment or a Kokkos environment, use the
 // original way of accessing data.
-#if !defined(UINTAH_USING_GPU) && defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-
+#if !defined(UINTAH_USING_GPU) && defined( KOKKOS_ENABLE_OPENMP )
   // Note: Dan Sunderland used a Kokkos define
   // KOKKOS_FORCEINLINE_FUNCTION, however, this caused problems when
-  // trying to compile with CUDA, as it tried to put a __device__
+  // trying to compile with nvcc, as it tried to put a __device__
   // __host__ header (needed for GPU builds) instead of
   // __attribute__((always_inline)) (which makes sense in a CPU build
   // as Array3.h won't ever run on the GPU).
 
   // I couldn't find a way to ask Kokkos to be smart and choose a
-  // non-CUDA version here, so I'll just explicitly provide the gcc
-  // one as this will never be compiled as CUDA code.  Brad Peterson
+  // non-nvcc version here, so I'll just explicitly provide the gcc
+  // one as this will never be compiled with nvcc.  Brad Peterson
   // Nov 23 2017
   //KOKKOS_FORCEINLINE_FUNCTION
   __attribute__((always_inline))

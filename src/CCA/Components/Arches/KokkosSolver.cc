@@ -274,7 +274,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
     //temp work around until the permanent solution
     if ( Uintah::Parallel::usingDevice() ) {
 	  LoadBalancer * lb = sched->getLoadBalancer();
-	  //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos cuda parallel_reduce %s %d\n", __FILE__, __LINE__);
+	  //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos parallel_reduce %s %d\n", __FILE__, __LINE__);
 	  create_portable_tasks(taskDependencies, this,
 						  "KokkosSolver::computeStableTimeStep",
 						  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,

@@ -118,7 +118,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace5>::value ) {
       taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
@@ -141,7 +141,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesDevice(true);
       task->usesSimVarPreloading(true);
 
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_DEVICE, TaskAssignedMemorySpace::KOKKOS_DEVICE_SPACE );
     }
   }
 
@@ -163,7 +163,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<Kokkos::OpenMP, ExecSpace5>::value ) {    /* Task supports Kokkos::OpenMP builds */
         task = scinew Task( taskName, ptr, pmf5, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOST_SPACE );
     }
     else if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value || std::is_same<UintahSpaces::CPU, ExecSpace2>::value || std::is_same<UintahSpaces::CPU, ExecSpace3>::value || std::is_same<UintahSpaces::CPU, ExecSpace4>::value || std::is_same<UintahSpaces::CPU, ExecSpace5>::value ) {
       if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value ) {      /* Task supports non-Kokkos builds */
@@ -181,7 +181,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<UintahSpaces::CPU, ExecSpace5>::value ) { /* Task supports non-Kokkos builds */
         task = scinew Task( taskName, ptr, pmf5, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOST_SPACE );
     }
   }
 
@@ -250,7 +250,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value ) {
       taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
@@ -270,7 +270,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesDevice(true);
       task->usesSimVarPreloading(true);
 
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_DEVICE, TaskAssignedMemorySpace::KOKKOS_DEVICE_SPACE );
     }
   }
 
@@ -289,7 +289,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<Kokkos::OpenMP, ExecSpace4>::value ) {    /* Task supports Kokkos::OpenMP builds */
         task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOST_SPACE );
     }
     else if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value || std::is_same<UintahSpaces::CPU, ExecSpace2>::value || std::is_same<UintahSpaces::CPU, ExecSpace3>::value || std::is_same<UintahSpaces::CPU, ExecSpace4>::value ) {
       if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value ) {      /* Task supports non-Kokkos builds */
@@ -304,7 +304,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<UintahSpaces::CPU, ExecSpace4>::value ) { /* Task supports non-Kokkos builds */
         task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOST_SPACE );
     }
   }
 
@@ -364,7 +364,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {
       taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
@@ -381,7 +381,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesDevice(true);
       task->usesSimVarPreloading(true);
 
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_DEVICE, TaskAssignedMemorySpace::KOKKOS_DEVICE_SPACE );
     }
   }
 
@@ -397,7 +397,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<Kokkos::OpenMP, ExecSpace3>::value ) {    /* Task supports Kokkos::OpenMP builds */
         task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOST_SPACE );
     }
     else if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value || std::is_same<UintahSpaces::CPU, ExecSpace2>::value || std::is_same<UintahSpaces::CPU, ExecSpace3>::value ) {
       if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value ) {      /* Task supports non-Kokkos builds */
@@ -409,7 +409,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<UintahSpaces::CPU, ExecSpace3>::value ) { /* Task supports non-Kokkos builds */
         task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOST_SPACE );
     }
   }
 
@@ -460,7 +460,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {
       taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
@@ -474,7 +474,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesDevice(true);
       task->usesSimVarPreloading(true);
 
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_DEVICE, TaskAssignedMemorySpace::KOKKOS_DEVICE_SPACE );
     }
   }
 
@@ -487,7 +487,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<Kokkos::OpenMP, ExecSpace2>::value ) {    /* Task supports Kokkos::OpenMP builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOST_SPACE );
     }
     else if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value || std::is_same<UintahSpaces::CPU, ExecSpace2>::value ) {
       if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value ) {      /* Task supports non-Kokkos builds */
@@ -496,7 +496,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       else if ( std::is_same<UintahSpaces::CPU, ExecSpace2>::value ) { /* Task supports non-Kokkos builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOST_SPACE );
     }
   }
 
@@ -538,7 +538,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
-    // Kokkos CUDA
+    // Kokkos device
     if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
       taskName = taskName + " (GPUTask)";
       task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
@@ -547,7 +547,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesDevice(true);
       task->usesSimVarPreloading(true);
 
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_DEVICE, TaskAssignedMemorySpace::KOKKOS_DEVICE_SPACE );
     }
   }
 
@@ -555,11 +555,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   if ( !task ) {
     if ( std::is_same<Kokkos::OpenMP, ExecSpace1>::value ) {         /* Task supports Kokkos::OpenMP builds */
       task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMP, TaskAssignedMemorySpace::KOKKOS_HOST_SPACE );
     }
     else if ( std::is_same<UintahSpaces::CPU, ExecSpace1>::value ) { /* Task supports non-Kokkos builds */
       task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
-      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOSTSPACE );
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::UINTAH_CPU, TaskAssignedMemorySpace::UINTAH_HOST_SPACE );
     }
   }
 

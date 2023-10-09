@@ -39,6 +39,10 @@
 
 #include <sci_defs/config_defs.h>
 
+#if defined(UINTAH_USING_GPU)
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#endif
+
 #include <sstream>
 #include <string>
 
@@ -50,15 +54,16 @@ extern Uintah::MasterLock cerrLock;
 
 namespace {
 
-  Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
+  // An ugly hack to get superpatches for host levels to work.
+  Uintah::MasterLock g_GridVarSuperPatch_mutex{};
 
+  extern DebugStream gpu_stats; // From KokkosScheduler
 }
 #endif
 
-// declared in DetailedTasks.cc - used in both places to protect external ready queue (hence, extern here)
+// Declared in DetailedTasks.cc - used in both places to protect
+// external ready queue (hence, extern here)
 namespace Uintah {
-  extern DebugStream gpu_stats;
-
   extern Uintah::MasterLock g_external_ready_mutex;
   extern Dout               g_scrubbing_dbg;
   extern std::string        g_var_scrub_dbg;
@@ -991,7 +996,7 @@ DetailedTask::prepareGpuDependencies( DependencyBatch       * batch
           // patch A to patch B, while a ghost cell edge/line may be
           // sent from patch A to patch C, and the line of data for C
           // is wholly within the face data for B.  For the sake of
-          // preparing for cuda aware MPI, we still want to create two
+          // preparing for Kokkos aware MPI, we still want to create two
           // staging vars here, a contiguous face for B, and a
           // contiguous edge/line for C.
           if (!(this->getDeviceVars().stagingVarAlreadyExists(dep->m_req->m_var, fromPatch, matlIndx, levelID, host_low, host_size, dep->m_req->mapDataWarehouse()))) {
@@ -1083,30 +1088,6 @@ DetailedTask::prepareGpuDependencies( DependencyBatch       * batch
     }
   }
 }
-
-//______________________________________________________________________
-//
-// void
-// DetailedTask::gpuInitialize( bool reset )
-// {
-//  // ARS Reset each device.
-//  // Kokkos equivalent - not needed? or would there be a Kokkos init?
-//  cudaError_t retVal;
-//  int numDevices = 0;
-//  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-//  m_num_devices = numDevices;  // ARS Set but only used for information.
-
-//  for (int i = 0; i < m_num_devices; i++) {
-//    if (reset) {
-//      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-//      CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
-//    }
-//  }
-
-//  // set it back to the 0th device
-//  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
-//  //m_current_device = 0;  // ARS Set but unused.
-// }
 
 
 //______________________________________________________________________
@@ -3161,18 +3142,6 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
                                                             comp,
                                                             gtype, numGhostCells,  deviceNum,
                                                             gridVar, GpuUtilities::sameDeviceSameMpiRank);
-
-
-                      // ARS cuda error handling. If there is an error
-                      // not sure the code would get here as the
-                      // previous call to CUDA_RT_SAFE_CALL would exit
-                      // upon an error.
-                      // Kokkos equivalent - not needed??
-                      // if (retVal == cudaErrorLaunchFailure) {
-                      //   SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ this->getName(), __FILE__, __LINE__));
-                      // } else {
-                      //   CUDA_RT_SAFE_CALL(retVal);
-                      // }
                     }
                     delete gridVar;
                   }
@@ -3183,7 +3152,6 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
                   warn << "  ERROR: DetailedTask::initiateD2HForHugeGhostCells (" << this->getName() << ") variable: "
                        << comp->m_var->getName() << " not implemented " << std::endl;
                   SCI_THROW(InternalError( warn.str() , __FILE__, __LINE__));
-
               }
             }
           }
@@ -3805,19 +3773,7 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
                                                       dependantVar,
                                                       gtype, numGhostCells,  deviceNum,
                                                       gridVar, GpuUtilities::sameDeviceSameMpiRank);
-
-                // ARS cuda error handling. If there is an error
-                // not sure the code would get here as the
-                // previous call to CUDA_RT_SAFE_CALL would exit
-                // upon an error.
-                // if (retVal == cudaErrorLaunchFailure) {
-                //   SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ this->getName(), __FILE__, __LINE__));
-                // } else {
-                //   // Kokkos equivalent - not needed??
-                //   CUDA_RT_SAFE_CALL(retVal);
-                // }
               }
-              // delete gridVar;
             }
             break;
           }
@@ -3941,7 +3897,7 @@ DetailedTask::createTaskGpuDWs()
           + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
 
       GPUDataWarehouse* old_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-      // cudaHostRegister(old_taskGpuDW, objectSizeInBytes, cudaHostRegisterDefault);
+
       std::ostringstream out;
       out << "Old task GPU DW" << " MPIRank: " << Uintah::Parallel::getMPIRank() << " Task: " << this->getTask()->getName();
       old_taskGpuDW->init(currentDevice, out.str());
@@ -3964,11 +3920,11 @@ DetailedTask::createTaskGpuDWs()
 
       memset(new_taskGpuDW, 0, objectSizeInBytes);
 
-// cudaHostRegister(new_taskGpuDW, objectSizeInBytes, cudaHostRegisterDefault);
       std::ostringstream out;
       out << "Task GPU DW"
           << " MPIRank: " << Uintah::Parallel::getMPIRank()
-//        << " Thread:" << Impl::t_tid // ARS - FIXME
+// ARS - Set in KokkosSceduler cannot access.
+//        << " Thread:" << Impl::t_tid 
           << " Task: " << this->getName();
 
       new_taskGpuDW->init(currentDevice, out.str());
@@ -4301,9 +4257,9 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
   // the device instead.
 
   // To be even more efficient than that, if everything is pinned,
-  // unified addressing set up, and CUDA aware MPI used, then we could
-  // pull everything out via MPI that way and avoid the manual D2H
-  // copy and the H2H copy.
+  // unified addressing set up, and Kokkos aware MPI used, then we
+  // could pull everything out via MPI that way and avoid the manual
+  // D2H copy and the H2H copy.
   const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = this->getGhostVars().getMap();
   for (std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it = ghostVarMap.begin(); it != ghostVarMap.end(); ++it) {
     // TODO: Needs a particle section
@@ -4386,9 +4342,6 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
     // for other streams to complete.
     // TODO: There's got to be a better way to do this.
 
-    // ARS - FIXME This should replaced with a Kokkos::fence??
-    // Kokkos::fence("copyAllExtGpuDependenciesToHost "
-    //            "waiting for copies to finish");
     while (!this->checkAllKokkosInstancesDoneForThisTask()) {
       // printf("Sleeping\n");
     }
@@ -4476,8 +4429,9 @@ std::string
 DetailedTask::myRankThread()
 {
   std::ostringstream out;
-  out << Uintah::Parallel::getMPIRank()
-   // << "." << Impl::t_tid // ARS - FIXME
+  out << Uintah::Parallel::getMPIRank() << "."
+// ARS - Set in KokkosSceduler cannot access.
+//    << Impl::t_tid
       ;
   return out.str();
 }

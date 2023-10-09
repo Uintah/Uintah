@@ -92,14 +92,6 @@ WARNING
 		UintahParams& uintahParams,		\
 		ExecutionObject<ExecSpace, MemSpace>& execObj
 
-//#define CUDA_CALL( call )               \
-//{                                       \
-//	if ( cudaSuccess != call ){         \
-//		printf("CUDA Error at %s %d: %s %s\n", __FILE__, __LINE__,cudaGetErrorName( call ),  cudaGetErrorString( call ) );  \
-//		exit(1);						\
-//	}									\
-//}
-
 class PortableDependencyTest1 : public ApplicationCommon {
 public:
 	PortableDependencyTest1( const ProcessorGroup   * myworld, const MaterialManagerP   materialManager)

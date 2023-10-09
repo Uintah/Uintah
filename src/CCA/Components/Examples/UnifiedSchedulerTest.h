@@ -147,18 +147,6 @@ namespace Uintah {
 
   };
 
-void launchUnifiedSchedulerTestKernel( dim3               dimGrid
-                                     , dim3               dimBlock
-                                     , cudaStream_t     * stream
-                                     , int                patchID
-                                     , uint3              patchNodeLowIndex
-                                     , uint3              patchNodeHighIndex
-                                     , uint3              domainLow
-                                     , uint3              domainHigh
-                                     , GPUDataWarehouse * old_gpudw
-                                     , GPUDataWarehouse * new_gpudw
-                                     );
-
 //______________________________________________________________________
 //
 template<typename ExecSpace, typename MemSpace>
