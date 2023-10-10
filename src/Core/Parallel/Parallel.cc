@@ -517,6 +517,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     }
   }
 #endif
+
 #if defined(KOKKOS_ENABLE_OPENMP)
   if(s_kokkos_teams_per_league <= 0) {
     s_kokkos_teams_per_league = 16;
