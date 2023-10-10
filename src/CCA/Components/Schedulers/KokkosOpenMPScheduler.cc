@@ -23,8 +23,8 @@
  */
 
 #include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
