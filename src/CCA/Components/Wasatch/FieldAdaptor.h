@@ -385,7 +385,7 @@ namespace WasatchCore{
                           fieldValues_,
                           so::ExternalStorage,
                           CPU_INDEX );
-#     ifdef UINTAH_USING_GPU
+#     ifdef KOKKOS_USING_GPU
       if(IS_GPU_INDEX(deviceIndex)) field->add_device(GPU_INDEX);
 #     endif
     }
@@ -408,7 +408,7 @@ namespace WasatchCore{
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
-#     ifdef UINTAH_USING_GPU
+#     ifdef KOKKOS_USING_GPU
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
     }
@@ -442,7 +442,7 @@ namespace WasatchCore{
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
-#     ifdef UINTAH_USING_GPU
+#     ifdef KOKKOS_USING_GPU
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
     }

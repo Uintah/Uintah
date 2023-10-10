@@ -45,7 +45,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
@@ -351,7 +351,7 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
           const MaterialSubset* matls, int nComm) = 0;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW()      const { return d_gpuDWs[0]; }
 #endif
@@ -370,7 +370,7 @@ protected:
   // many previous time steps had taken place before the restart.
   int d_generation;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
 

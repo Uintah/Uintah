@@ -49,7 +49,7 @@ SRCS += \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
 
-ifeq ($(UINTAH_USING_GPU),yes)
+ifeq ($(KOKKOS_USING_GPU),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cc       \
           $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \

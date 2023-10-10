@@ -33,7 +33,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
 #endif
@@ -55,7 +55,7 @@ class DetailedTasks;
 
 //_____________________________________________________________________________
 //
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   struct TaskGpuDataWarehouses {
     GPUDataWarehouse* TaskGpuDW[2];
   };
@@ -156,7 +156,7 @@ public:
     }
   };
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   struct delayedCopyingInfo {
     delayedCopyingInfo( GpuUtilities::LabelPatchMatlLevelDw   lpmld_
                       , DeviceGridVariableInfo                devGridVarInfo_
@@ -246,7 +246,7 @@ public:
   double task_exec_time() const { return m_exec_timer().seconds(); }
 
 //-----------------------------------------------------------------------------
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
@@ -370,7 +370,7 @@ private:
 
 
 //-----------------------------------------------------------------------------
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 private:
 
   // Store information about each set of grid variables.  This will

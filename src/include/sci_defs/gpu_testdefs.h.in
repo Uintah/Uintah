@@ -25,16 +25,59 @@
 #ifndef SCI_GPU_DEFS_H
 #define SCI_GPU_DEFS_H
 
-@DEF_UINTAH_USING_GPU@
-
-#include "cuda_defs.h"
+#define SCI_GPU_ASSERTION_LEVEL @ASSERTION_LEVEL@
 
 #include "kokkos_defs.h"
 
-// HOST_DEVICE maybe defined in the cuda or kokkos defs. 
+// HOST_DEVICE maybe defined in the kokkos_defs.h.
 #if !defined(HOST_DEVICE)
-#define HOST_DEVICE
+  #define HOST_DEVICE
 #endif
 
+// Allow easy indexing into device-side 3D array
+#define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
+
+// int3 bound checking
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_INSIDE( idx, offset, size ) {                              \
+     if (idx.x < offset.x || idx.y< offset.y || idx.z < offset.z ||        \
+         idx.x > offset.x + size.x ||                                      \
+         idx.y > offset.y + size.y ||                                      \
+         idx.z > offset.z + size.z)                                        \
+             printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) "               \
+                    "not inside (%d, %d, %d)-(%d, %d, %d) \n",             \
+                     idx.x, idx.y, idx.z, offset.x, offset.y, offset.z,    \
+                     offset.x+size.x, offset.y+size.y, offset.z+size.z);   \
+   }
+#else
+  #define  CHECK_INSIDE( idx, offset, size )
 #endif
 
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_INSIDE3( x, y, z, offset, size ) {                         \
+     if (x < offset.x || y< offset.y || z < offset.z ||                    \
+         x > offset.x + size.x ||                                          \
+	 y > offset.y + size.y ||                                          \
+         z > offset.z + size.z)                                            \
+           printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) "                 \
+		   "not inside (%d, %d, %d)-(%d, %d, %d) \n",	           \
+                   x, y, z, offset.x, offset.y, offset.z,                  \
+                   offset.x+size.x, offset.y+size.y, offset.z+size.z);     \
+   }
+#else
+  #define  CHECK_INSIDE3( x, y, z, offset, size )
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_RANGE( idx, low, high ) {                   \
+      if (idx < low || idx > high )                         \
+            printf ("GPU INDEX_OUT_OF_RANGE ERROR: "        \
+                    "index (%d) not in range [%d, %d] \n",  \
+                    idx, low, high);                        \
+   }
+#else
+  #define CHECK_RANGE( idx, low, high )
+#endif
+
+
+#endif

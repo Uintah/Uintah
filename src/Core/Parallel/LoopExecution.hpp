@@ -487,7 +487,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP)
 
 // GPU - parallel_for
-#if defined(KOKKOS_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
+#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 
@@ -730,7 +730,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 
   std::free( name );
 }
-#endif  // #if defined(KOKKOS_USING_GPU)
+#endif  // #if defined(HAVE_KOKKOS)
 
 //----------------------------------------------------------------------------
 // Parallel_reduce_sum loops
@@ -927,7 +927,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
 
 // GPU parallel_reduce_sum
-#if defined(KOKKOS_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
+#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 
@@ -1195,7 +1195,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
   std::free( name );
 }
-#endif  // #if KOKKOS_USING_GPU)
+#endif  // #if defined(HAVE_KOKKOS)
 
 //----------------------------------------------------------------------------
 // Parallel_reduce_min loops
@@ -1400,7 +1400,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif  // #if defined(KOKKOS_ENABLE_OPENMP
 
 // GPU parallel_reduce_min
-#if defined(KOKKOS_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
+#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 
@@ -1673,7 +1673,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   std::free( name );
 }
 
-#endif  // #if defined(KOKKOS_USING_GPU)
+#endif  // #if defined(HAVE_KOKKOS)
 
 //----------------------------------------------------------------------------
 // Sweeping_parallel_for loops

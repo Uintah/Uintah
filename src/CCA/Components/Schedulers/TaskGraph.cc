@@ -244,7 +244,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 
   nullSort(sorted_tasks);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   overrideGhostCells(sorted_tasks); //DS: 01042020: fix for OnDemandDW race condition - only if using device. Do not disturb legacy CPU execution
 #endif
 //  topologicalSort(sorted_tasks);

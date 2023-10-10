@@ -36,7 +36,7 @@ using namespace Uintah;
 
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 namespace {
   Uintah::MasterLock deviceNums_mutex{};
 }
@@ -1074,7 +1074,7 @@ Task::doit( const PatchSubset           * patches
   }
 }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 //______________________________________________________________________
 //
 void
@@ -1553,7 +1553,7 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
     m_action->syncTaskGpuDW(dTask, deviceNum, taskgpudw);
   }
 }
-#endif // #if defined(UINTAH_USING_GPU)
+#endif // #if defined(KOKKOS_USING_GPU)
 
 //______________________________________________________________________
 //

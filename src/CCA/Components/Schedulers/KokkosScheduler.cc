@@ -73,7 +73,7 @@ using namespace Uintah;
 
 //______________________________________________________________________
 //
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
 namespace Uintah {
 
@@ -110,7 +110,7 @@ namespace {
 } // namespace
 
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 extern Uintah::MasterLock cerrLock;
 #endif
 
@@ -429,7 +429,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
       runTask(g_HypreTask, m_curr_iteration, 0, g_hypre_task_event);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       if(g_hypre_task_event == CallBackEvent::GPU)
         m_detailed_tasks->addDeviceExecutionPending(g_HypreTask);
 #endif
@@ -563,7 +563,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
 
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     // DS: 10312019: If GPU task is going to modify any variable, mark
     // that variable as invalid on CPU.
     if (event == CallBackEvent::GPU) {
@@ -581,7 +581,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == CallBackEvent::CPU || event == CallBackEvent::postGPU) {
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     if (Uintah::Parallel::usingDevice()) {
 
       //DS: 10312019: If CPU task is going to modify any variable,
@@ -647,7 +647,7 @@ KokkosScheduler::runTask( DetailedTask  * dtask
 
   MPIScheduler::postMPISends(dtask, iteration);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     if (Uintah::Parallel::usingDevice()) {
       dtask->deleteTaskGpuDataWarehouses();
     }
@@ -721,7 +721,7 @@ KokkosScheduler::runTasks( int thread_id )
 
     bool havework = false;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     bool usingDevice = Uintah::Parallel::usingDevice();
     bool gpuInitReady = false;
     bool gpuValidateRequiresAndModifiesCopies = false;
@@ -769,7 +769,7 @@ KokkosScheduler::runTasks( int thread_id )
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
           markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
           cpuRunReady = true;
 #endif
         }
@@ -791,7 +791,7 @@ KokkosScheduler::runTasks( int thread_id )
       else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
         havework = true;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
         /*
          * (1.2.1)
          *
@@ -855,7 +855,7 @@ KokkosScheduler::runTasks( int thread_id )
         }
       }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       else if (usingDevice) {
         /*
          * (1.4)
@@ -1067,7 +1067,7 @@ KokkosScheduler::runTasks( int thread_id )
       if (readyTask->getTask()->getType() == Task::Reduction) {
         MPIScheduler::initiateReduction(readyTask);
       }
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       else if (gpuInitReady) {
         // Prepare to run a GPU task.
 
@@ -1194,7 +1194,7 @@ KokkosScheduler::runTasks( int thread_id )
 #endif
       else {
         // Prepare to run a CPU task.
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
         if (cpuInitReady) {
 
           // Some CPU tasks still interact with the GPU.  For example,
@@ -1280,7 +1280,7 @@ KokkosScheduler::runTasks( int thread_id )
           // Run the task on the CPU.
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
           // See note above near cpuInitReady.  Some CPU tasks may
           // internally interact with GPUs without modifying the
           // structure of the data warehouse.

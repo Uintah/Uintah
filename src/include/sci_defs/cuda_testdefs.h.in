@@ -26,30 +26,25 @@
 #define SCI_CUDA_DEFS_H
 
 @DEF_CUDA@
-#define SCI_CUDA_ASSERTION_LEVEL @ASSERTION_LEVEL@
 
 #ifdef HAVE_CUDA
 
-#  include <cuda.h>
-#  include <cuda_runtime.h>
-#  include <cuda_runtime_api.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
 
-#  ifdef __CUDACC__
-#    define HOST_DEVICE __host__ __device__
-#  endif
+#ifdef __CUDACC__
+  #define HOST_DEVICE __host__ __device__
+#endif
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#  endif
+#endif
 
-#  include <stdio.h>
-
-// Allow easy indexing into device-side 3D array
-#  define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
-
+#include <stdio.h>
 
 // Error handling wrapper for CUDA RUNTIME API calls (no-sync)
-#  define CUDA_RT_SAFE_CALL( call ) {                                          \
+#define CUDA_RT_SAFE_CALL( call ) {                                            \
     cudaError err = call;                                                      \
     if(err != cudaSuccess) {                                                   \
         fprintf(stderr, "\nCUDA error %i in file '%s', on line %i : %s.\n\n",  \
@@ -58,7 +53,7 @@ extern "C" {
     } }
 
 // Error handling wrapper for CUDA Driver API calls (no-sync)
-#  define CUDA_DRV_SAFE_CALL( call ) {                                         \
+#define CUDA_DRV_SAFE_CALL( call ) {                                           \
     CUresult err = call;                                                       \
     if(err != CUDA_SUCCESS) {                                                  \
         fprintf(stderr, "\nCUDA driver error %i in file '%s' on line %i.\n\n", \
@@ -67,7 +62,7 @@ extern "C" {
     } }
 
 // Error handling wrapper for CUDA Rand API calls
-#  define CURAND_CALL( call ) {                                                \
+#define CURAND_CALL( call ) {                                                  \
     curandStatus status = call;                                                \
     if(status != CURAND_STATUS_SUCCESS) {                                      \
         fprintf(stderr, "cuRand error %i in file '%s' on line %i.\n\n",        \
@@ -75,52 +70,9 @@ extern "C" {
         exit(EXIT_FAILURE);                                                    \
     } }
 
-// int3 bound checking
-#  if SCI_CUDA_ASSERTION_LEVEL >= 3
-#    define CHECK_INSIDE( idx, offset, size ) {                                                          \
-       if (idx.x < offset.x || idx.y< offset.y || idx.z < offset.z ||                                    \
-           idx.x > offset.x + size.x || idx.y > offset.y + size.y || idx.z > offset.z + size.z)          \
-              printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, %d)-(%d, %d, %d) \n",    \
-                      idx.x, idx.y, idx.z, offset.x, offset.y, offset.z,                                 \
-                      offset.x+size.x, offset.y+size.y, offset.z+size.z);                                \
-     }
-#  else
-#    define  CHECK_INSIDE( idx, offset, size )
-#  endif
-
-#  if SCI_CUDA_ASSERTION_LEVEL >= 3
-#    define CHECK_INSIDE3( x, y, z, offset, size ) {                                                      \
-       if (x < offset.x || y< offset.y || z < offset.z ||                                                 \
-           x > offset.x + size.x || y > offset.y + size.y || z > offset.z + size.z)                       \
-             printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) not inside (%d, %d, %d)-(%d, %d, %d) \n",      \
-                     x, y, z, offset.x, offset.y, offset.z,                                               \
-                     offset.x+size.x, offset.y+size.y, offset.z+size.z);                                  \
-     }
-#  else
-#    define  CHECK_INSIDE3( x, y, z, offset, size )
-#  endif
-
-#  if SCI_CUDA_ASSERTION_LEVEL >= 3
-#    define CHECK_RANGE( idx, low, high ) {                                                    \
-        if (idx < low || idx > high )                                                            \
-              printf ("GPU INDEX_OUT_OF_RANGE ERROR: index (%d) not in range [%d, %d] \n",       \
-                      idx, low, high);                                                           \
-     }
-#  else
-#    define CHECK_RANGE( idx, low, high )
-#  endif
-
-#  ifdef __cplusplus
+#ifdef __cplusplus
 }
-#  endif
-
-#else // No CUDA but needed for Kokkos
-
-// Allow easy indexing into device-side 3D array
-#  define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
-#  define CHECK_INSIDE( idx, offset, size )
-#  define CHECK_INSIDE3( x, y, z, offset, size )
-#  define CHECK_RANGE( idx, low, high )
+#endif
 
 #endif // HAVE_CUDA
 

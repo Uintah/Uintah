@@ -897,7 +897,7 @@ SchedulerCommon::addTask(       Task        * task
 {
   bool is_init = m_is_init_timestep || m_is_restart_init_timestep;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   // DS 12062019: Store max ghost cell count for this variable across
   // all GPU tasks. update it in dependencies of all gpu tasks before
   // task graph compilation in case modifieswithscratchghost is used.

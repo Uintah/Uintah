@@ -41,7 +41,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -516,7 +516,7 @@ public:
 
   virtual void finalize();
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   static int getNumDevices();
   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
   static GPUGridVariableBase* createGPUGridVariable(const TypeDescription::Type& type);
@@ -1221,10 +1221,9 @@ private:
                             );
 
 
-#if defined(UINTAH_USING_GPU)
-
-  std::map<Patch*, bool> assignedPatches; // indicates where a given patch should be stored in an accelerator
-
+#if defined(KOKKOS_USING_GPU)
+  // Indicates where a given patch should be stored in an accelerator
+  std::map<Patch*, bool> assignedPatches;
 #endif
 
 

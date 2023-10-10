@@ -63,7 +63,7 @@
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Geometry/GPUVector.h>
@@ -88,7 +88,7 @@ namespace Uintah {
   extern Dout g_mpi_dbg;
   extern Dout g_DA_dbg;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   extern DebugStream gpu_dbg;  // from KokkosScheduler
 #endif
 
@@ -149,7 +149,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 
   varLock = new Uintah::MasterLock{};
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
   if (Uintah::Parallel::usingDevice()) {
     int numDevices = getNumDevices();
@@ -217,7 +217,7 @@ OnDemandDataWarehouse::clear()
   m_running_tasks.clear();
 
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
   if (Uintah::Parallel::usingDevice()) {
     // Clear out the host side GPU data warehouses. This does NOT
@@ -478,7 +478,7 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
   }
 }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
 int
 OnDemandDataWarehouse::getNumDevices() {
@@ -3545,7 +3545,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             m_var_DB.put( label, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
           if (Uintah::Parallel::usingDevice()) {
             // See if it's in the GPU.  Both the source and destination
             // must be in the GPU data warehouse, both must be listed

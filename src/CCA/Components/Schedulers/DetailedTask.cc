@@ -39,7 +39,7 @@
 
 #include <sci_defs/config_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
@@ -49,7 +49,7 @@
 
 using namespace Uintah;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 extern Uintah::MasterLock cerrLock;
 
 namespace {
@@ -92,7 +92,7 @@ DetailedTask::DetailedTask(       Task           * task
   , m_matls( matls )
   , m_task_group( taskGroup )
 {
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   varLock = new Uintah::MasterLock{};
 #endif
   if (m_patches) {
@@ -111,7 +111,7 @@ DetailedTask::DetailedTask(       Task           * task
 //
 DetailedTask::~DetailedTask()
 {
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   delete varLock;
 #endif
 
@@ -123,7 +123,7 @@ DetailedTask::~DetailedTask()
     delete m_matls;
   }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   clearKokkosInstancesForThisTask();
 #endif
 }
@@ -173,7 +173,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     // Run the GPU task.  Technically the engine has structure to run
     // one task on multiple devices if that task had patches on
     // multiple devices.  So run the task once per device.  As often
@@ -741,7 +741,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
 
 } // end namespace Uintah
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
 //_____________________________________________________________________________
 //
@@ -4434,7 +4434,7 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
   }
 }
 
-#endif // end defined(UINTAH_USING_GPU)
+#endif // end defined(KOKKOS_USING_GPU)
 
 // ______________________________________________________________________
 //  generate string   <MPI_rank>.<Thread_ID>

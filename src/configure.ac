@@ -3820,17 +3820,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 ##  --  defines for GPU builds  ------------------------------------------
 
-UINTAH_USING_GPU=""
-DEF_UINTAH_USING_GPU=""
-
 KOKKOS_USING_GPU=""
 DEF_KOKKOS_USING_GPU=""
-
-if test "$HAVE_CUDA" = "yes"; then
-  AC_MSG_NOTICE(Building with GPU support)
-  UINTAH_USING_GPU="yes"
-  DEF_UINTAH_USING_GPU="#define UINTAH_USING_GPU"
-fi
 
 if test "$HAVE_KOKKOS" = "yes"; then
 
@@ -3857,8 +3848,6 @@ $CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
 
 if test $? = 0; then
   AC_MSG_RESULT(yes)
-  UINTAH_USING_GPU="yes"
-  DEF_UINTAH_USING_GPU="#define UINTAH_USING_GPU"
   KOKKOS_USING_GPU="yes"
   DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
 else
@@ -3868,9 +3857,6 @@ fi
 rm -f conftest-kokkos.cc conftest-kokkos
 
 fi
-
-AC_SUBST(UINTAH_USING_GPU)
-AC_SUBST(DEF_UINTAH_USING_GPU)
 
 AC_SUBST(KOKKOS_USING_GPU)
 AC_SUBST(DEF_KOKKOS_USING_GPU)

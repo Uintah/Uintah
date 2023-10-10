@@ -43,11 +43,11 @@
 // Create some data types for non-Kokkos CPU runs.
 namespace UintahSpaces{
   class CPU {};          // These are used for legacy Uintah CPU tasks
-                         // (e.g. no Cuda or Kokkos)
+                         // (e.g. no Kokkos)
   class HostSpace {};    // And also to refer to any data in host
                          // memory
 
-  class GPU {};          // These are used for legacy Uintah GPU (Cuda) tasks
+  class GPU {};          // These are used for legacy Uintah GPU tasks
                          // (e.g. no Kokkos)
   class DeviceSpace {};  // And also to refer to any data in device
                          // memory
@@ -65,11 +65,11 @@ namespace UintahSpaces{
 #include <Kokkos_Random.hpp>
 
 namespace Kokkos {
-  // Kokkos CUDA (NVIDIA GPU) is not included in this build.  Create
+  // Kokkos is not included in this build.  Create
   // some stub types so these types at least exist.
 
 #if !defined(KOKKOS_ENABLE_OPENMP)
-  // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
+  // For the Kokkos Scheduler + Kokkos GPU but not Kokkos OpenMP.
   // This logic may be temporary if all GPU functionality is merged
   // into the Kokkos scheduler and the Unified Scheduler is no longer
   // used for GPU logic.  Brad P Jun 2018
@@ -94,13 +94,10 @@ namespace Kokkos {
 
 #define HOST_DEVICE __host__ __device__
 
-using cudaStream_t = void;
-
 // #elif defined(KOKKOS_ENABLE_SYCL)
 // int3 requires access methods .x() vs direct access .x
 // so roll our own for now as is done for OpenMPTarget
 
-// using cudaStream_t = void;
 // using int3 = sycl::int3;
 
 #elif defined(KOKKOS_ENABLE_SYCL) || \
@@ -112,8 +109,6 @@ using cudaStream_t = void;
 #define __host__
 #define __device__
 #define __shared__
-
-using cudaStream_t = void;
 
 struct int3
 {

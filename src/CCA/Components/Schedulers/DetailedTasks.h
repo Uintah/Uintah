@@ -227,7 +227,7 @@ public:
     return m_task_priority_alg;
   }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
   void addDeviceValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
@@ -390,7 +390,7 @@ private:
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 
   using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t

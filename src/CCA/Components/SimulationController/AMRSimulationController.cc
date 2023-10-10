@@ -45,7 +45,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
@@ -184,7 +184,7 @@ AMRSimulationController::run()
   finalSetup();
 
   // Once the grid is set up pass it on to the GPU.
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   GpuUtilities::assignPatchesToGpus( m_current_gridP );
 #endif
 
@@ -604,7 +604,7 @@ AMRSimulationController::doInitialTimeStep()
       // ScheduleCheckInSitu( true );
 
       //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       collectGhostCells();
 #endif
 

@@ -53,7 +53,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if !defined(UINTAH_USING_GPU)
+#if !defined(KOKKOS_USING_GPU)
   #include <Core/GeometryPiece/ConvexPolyhedronGeometryPiece.h>
 #endif
 
@@ -349,7 +349,7 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
     else if ( go_type == NullGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew NullGeometryPiece(child);
     }
-#if !defined(UINTAH_USING_GPU)
+#if !defined(KOKKOS_USING_GPU)
     else if ( go_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConvexPolyhedronGeometryPiece(child);
     }

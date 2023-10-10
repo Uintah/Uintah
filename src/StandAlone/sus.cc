@@ -61,7 +61,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 #  include <CCA/Components/Schedulers/KokkosScheduler.h>
 #endif
 
@@ -189,16 +189,16 @@ static void usage( const std::string& message,
     std::cerr << "-d[ebug]                        : List the debug streams.\n";
 
 #if defined(HAVE_KOKKOS)
-    std::cerr << "-gpucheck                       : Checks if there is a GPU available for the " << kokkosStr << ".\n";
     std::cerr << "-cpu                            : Use the CPU based MPI or Unified scheduler instead of the " << kokkosStr << ".\n";
 #endif
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     std::cerr << "-gpu                            : Use available GPU devices, requires the " << kokkosStr << ".\n";
+    std::cerr << "-gpucheck                       : Checks if there is a GPU available for the " << kokkosStr << ".\n";
     std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task.\n";
 #endif
 
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS)
     std::cerr << "-kokkos_policy <policy>         : Kokkos Execution Policy - team, range, mdrange (default), or mdrange_rev.\n";
     std::cerr << "-kokkos_leagues_per_loop <#>    : Kokkos TeamPolicy number of leagues (work items) per loop.\n";
     std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league.\n";
@@ -491,8 +491,26 @@ int main( int argc, char *argv[], char *env[] )
       restartFromScratch = false;
       restartRemoveOldDir = true;
     }
-    else if (arg == "-gpucheck") {
+    else if(arg == "-cpu") {
 #if defined(HAVE_KOKKOS)
+      Uintah::Parallel::setUsingCPU( true );
+#else
+      std::cout << "Ignoring '-cpu' flag as it is true by default." << std::endl;
+      // Parallel::exitAll(1);
+#endif
+    }
+
+    else if(arg == "-gpu") {
+#if defined(KOKKOS_USING_GPU)
+      Uintah::Parallel::setUsingDevice( true );
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-gpucheck") {
+#if defined(KOKKOS_USING_GPU)
       if (KokkosScheduler::verifyAnyGpuActive()) {
         std::cout << "At least one GPU detected!" << std::endl;
       }
@@ -505,24 +523,9 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(0);
 #endif
     }
-    else if(arg == "-cpu") {
-#if defined(HAVE_KOKKOS)
-      Uintah::Parallel::setUsingCPU( true );
-#else
-      std::cout << "Ignoring '-cpu' flag as it is true by default." << std::endl;
-      // Parallel::exitAll(1);
-#endif
-    }
-    else if(arg == "-gpu") {
-#if defined(UINTAH_USING_GPU)
-      Uintah::Parallel::setUsingDevice( true );
-#else
-      std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(0);
-#endif
-    }
+
     else if (arg == "-kokkos_instances_per_task") {
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       int kokkos_instances_per_task = 0;
       if (++i == argc) {
         usage("You must provide a number of Kokkos instances per task for -kokkos_instances_per_task.", arg, argv[0]);
@@ -538,43 +541,9 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(0);
 #endif
     }
-    else if (arg == "-kokkos_leagues_per_loop") {
-#if defined(UINTAH_USING_GPU)
-      int kokkos_leagues_per_loop = 0;
-      if (++i == argc) {
-        usage("You must provide a number of Kokkos TeamPolicy leagues (work items) per loop for -kokkos_leagues_per_loop.", arg, argv[0]);
-      }
-      kokkos_leagues_per_loop = atoi(argv[i]);
-      if( kokkos_leagues_per_loop < 1 ) {
-        usage("Number of Kokkos TeamPolicy leagues (work items) per loop is too small.", arg, argv[0]);
-        Parallel::exitAll(1);
-      }
-      Uintah::Parallel::setKokkosLeaguesPerLoop(kokkos_leagues_per_loop);
-#else
-      std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(0);
-#endif
-    }
-    else if (arg == "-kokkos_teams_per_league") {
-#if defined(UINTAH_USING_GPU) || defined(KOKKOS_ENABLE_OPENMP)
-      int kokkos_teams_per_block = 0;
-      if (++i == argc) {
-        usage("You must provide a number of Kokkos TeamPolicy teams (threads) per legaue for -kokkos_teams_per_block.", arg, argv[0]);
-      }
-      kokkos_teams_per_block = atoi(argv[i]);
-      if( kokkos_teams_per_block < 1 ) {
-        usage("Number of Kokkos TeamPolicy teams (threads) per legaue is too small.", arg, argv[0]);
-        Parallel::exitAll(1);
-      }
-      Uintah::Parallel::setKokkosTeamsPerLeague(kokkos_teams_per_block);
-#else
-      std::cout << "Not compiled for GPU support" << std::endl;
-      Parallel::exitAll(0);
-#endif
-    }
 
     else if (arg == "-kokkos_policy") {
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS)
       Parallel::Kokkos_Policy kokkos_policy = Parallel::Kokkos_Team_Policy;
       if (++i == argc) {
         usage("You must provide the policy -kokkos_policy.", arg, argv[0]);
@@ -601,8 +570,44 @@ int main( int argc, char *argv[], char *env[] )
 #endif
     }
 
+    else if (arg == "-kokkos_leagues_per_loop") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_leagues_per_loop = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy leagues (work items) per loop for -kokkos_leagues_per_loop.", arg, argv[0]);
+      }
+      kokkos_leagues_per_loop = atoi(argv[i]);
+      if( kokkos_leagues_per_loop < 1 ) {
+        usage("Number of Kokkos TeamPolicy leagues (work items) per loop is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+      Uintah::Parallel::setKokkosLeaguesPerLoop(kokkos_leagues_per_loop);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-kokkos_teams_per_league") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_teams_per_block = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy teams (threads) per legaue for -kokkos_teams_per_block.", arg, argv[0]);
+      }
+      kokkos_teams_per_block = atoi(argv[i]);
+      if( kokkos_teams_per_block < 1 ) {
+        usage("Number of Kokkos TeamPolicy teams (threads) per legaue is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+      Uintah::Parallel::setKokkosTeamsPerLeague(kokkos_teams_per_block);
+#else
+      std::cout << "Not compiled for GPU support" << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
     else if (arg == "-kokkos_chunk_size") {
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS)
       int kokkos_chunk_size = 0;
       if (++i == argc) {
         usage("You must provide the chunk size -kokkos_chunk_size.", arg, argv[0]);
@@ -622,9 +627,8 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::exitAll(0);
 #endif
     }
-
     else if (arg == "-kokkos_tile_size") {
-#if defined(KOKKOS_USING_GPU)
+#if defined(HAVE_KOKKOS)
       int kokkos_tile_isize = 0;
       if (++i == argc) {
         usage("You must provide the tile i index size -kokkos_tile_size.", arg, argv[0]);

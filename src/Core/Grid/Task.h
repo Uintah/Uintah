@@ -44,7 +44,7 @@
 
 #include <sci_defs/gpu_defs.h>
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
@@ -114,7 +114,7 @@ protected: // class Task
                        ,       UintahParams   & uintahParams
                        ) = 0;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     virtual void assignDevicesAndInstances(intptr_t dTask) = 0;
 
     virtual void assignDevicesAndInstances(intptr_t dTask,
@@ -145,7 +145,7 @@ protected: // class Task
     virtual void syncTaskGpuDW(intptr_t dTask,
                                unsigned int deviceNum,
                                GPUDataWarehouse *taskgpudw) = 0;
-#endif  // defined(UINTAH_USING_GPU)
+#endif  // defined(KOKKOS_USING_GPU)
 
     protected:
       Task *taskPtr {nullptr};
@@ -162,7 +162,7 @@ public:
       ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionNonPortableBase() {};
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
 
@@ -209,7 +209,7 @@ public:
     // task has to keep track of the device and instance on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
-#endif  // defined(UINTAH_USING_GPU)
+#endif  // defined(KOKKOS_USING_GPU)
   };
 
   // CPU Action constructor
@@ -287,7 +287,7 @@ public:
       ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionPortableBase() {};
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
     typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
 
@@ -388,7 +388,7 @@ public:
     // task has to keep track of the Kokkos intance on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
-#endif  // defined(UINTAH_USING_GPU)
+#endif  // defined(KOKKOS_USING_GPU)
   };
 
   template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
@@ -436,7 +436,7 @@ public:
     {
       ExecutionObject<ExecSpace, MemSpace> execObj;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
       const int nInstances = this->taskPtr->maxInstancesPerTask();
       for (int i = 0; i < nInstances; i++) {
         ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
@@ -834,7 +834,7 @@ public: // class Task
                    );
 
   //////////
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
 
@@ -875,7 +875,7 @@ public: // class Task
   virtual void syncTaskGpuDW(intptr_t dTask,
                              unsigned int deviceNum,
                              GPUDataWarehouse *taskgpudw);
-#endif  // defined(UINTAH_USING_GPU)
+#endif  // defined(KOKKOS_USING_GPU)
 
   inline const std::string & getName() const { return m_task_name; }
 
@@ -1084,7 +1084,7 @@ private: // class Task
 
   std::string m_task_name;
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
   std::map<intptr_t, deviceNumSet>  m_deviceNums;
 #endif
 
@@ -1165,7 +1165,7 @@ inline void Task::Dependency::addReq( Edge * edge )
   m_req_tail = edge;
 }
 
-#if defined(UINTAH_USING_GPU)
+#if defined(KOKKOS_USING_GPU)
 //_____________________________________________________________________________
 //
 template<typename ExecSpace, typename MemSpace>
@@ -1547,7 +1547,7 @@ syncTaskGpuDW(intptr_t dTask,
 
   taskgpudw->syncto_device(instance);
 }
-#endif  // defined(UINTAH_USING_GPU)
+#endif  // defined(KOKKOS_USING_GPU)
 
 }  // End namespace Uintah
 

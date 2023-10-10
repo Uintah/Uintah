@@ -1751,8 +1751,8 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
 {
   // ARS - FIX ME - Only defined for CUDA and HIP
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
-  // The upcoming __syncthreads is needed.  CUDA function calls are
-  // inlined.  Without the __syncthreads here is what may possibly happen:
+  // The upcoming __syncthreads calls are needed.  Without them here
+  // is what may possibly happen:
   // * The correct index iss found by one of the threads.
   // * The last __syncthreads is called, all threads met up there.
   // * Some threads in the block then make a second "function" call
@@ -1760,7 +1760,7 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
   // * Meanwhile, those other threads were still in the first
   //   "function" call and hadn't yet processed if (index == -1).
   //   They now run that line and see index is now -1.  That's bad.
-  // To prevent this scenario, an additional __syncthreads listed
+  // To prevent this scenario, an additional __syncthreads is called
   // immediately below.
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   __syncthreads();  // Sync before get
