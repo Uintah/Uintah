@@ -102,7 +102,7 @@ public:
 
   struct materialItem {
     materialType material;
-    char       simulationType[MAX_NAME_LENGTH]; // ICE, MPM, etc.  Currently unused
+    char         simulationType[MAX_NAME_LENGTH]; // ICE, MPM, etc. Not used.
   };
 
 
@@ -413,8 +413,8 @@ public:
       data_ptr = reinterpret_cast<T*>(vp.var->device_ptr);
     }
     else {
-      printf( "Error in getKokkosView() - I'm GPUDW with name: \"%s\" at %p \n", _internalName, this );
-      printf( "Couldn't find an entry for label %s patch %d matl %d level %d\n", label, levelIndx, patchID, matlIndx );
+      printf( "Error in getKokkosView() - GPUDW with name: \"%s\" at %p \n", _internalName, this );
+      printf( "cannot find an entry for label %s patch %d matl %d level %d\n", label, levelIndx, patchID, matlIndx );
       GPUDataWarehouse::printGetError("GPUDataWarehouse::getKokkosView(...)", label, levelIndx, patchID, matlIndx );
       exit(-1);
     }
@@ -507,11 +507,13 @@ public:
     int status;
     char *name = abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
 
-    printf("Error: GPUDataWarehouse::syncto_device not implemented for the execution space: %s.\n", name);
+    printf("Error: GPUDataWarehouse::syncto_device not implemented "
+           "for the execution space: %s.\n", name);
 
     std::free(name);
 
-    SCI_THROW(InternalError("GPUDataWarehouse::syncto_device not implemented for this execution space", __FILE__, __LINE__) );
+    SCI_THROW(InternalError("GPUDataWarehouse::syncto_device not implemented "
+                            "for this execution space", __FILE__, __LINE__) );
   };
   __host__ void clear();
   __host__ void deleteSelfOnDevice();
@@ -791,8 +793,9 @@ GPUDataWarehouse::transferFrom( ExecSpace instance
     //printf("GPU dest not found in DW at %p for variable %s patch %d matl %d level %d\n", this, label, patchID, matlIndx, levelIndx);
     proceed = false;
   } else if (((__sync_fetch_and_or(&(source_it->second.var->atomicStatusInGpuMemory), 0) & ALLOCATED) != ALLOCATED)){
-    //It may just be there wasn't any computes in the GPU to begin with, so don't bother attempting to copy.
-    //printf("GPU source not allocated for variable %s patch %d matl %d level %d, it has status codes %s\n",  label, patchID, matlIndx, levelIndx, getDisplayableStatusCodes(source_it->second.atomicStatusInGpuMemory).c_str());
+    // It may just be there wasn't any computes in the GPU to begin
+    // with, so don't bother attempting to copy.
+    //printf("GPU source not allocated for variable %s patch %d matl %d level %d, it has status codes %s\n", label, patchID, matlIndx, levelIndx, getDisplayableStatusCodes(source_it->second.atomicStatusInGpuMemory).c_str());
     proceed = false;
 
     // Is this a problem?  We know of this variable in the data
@@ -835,7 +838,7 @@ GPUDataWarehouse::transferFrom( ExecSpace instance
     exit(-1);
 
   } else if (!(source_it->second.var->device_ptr)) {
-    //A couple more santiy checks, this may be overkill...
+    // A couple more santiy checks, this may be overkill...
     printf("Error: GPUDataWarehouse::transferFrom() - No source variable pointer found for variable %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
     from->varLock->unlock();
     this->varLock->unlock();
@@ -848,12 +851,11 @@ GPUDataWarehouse::transferFrom( ExecSpace instance
     exit(-1);
   }
 
-  // We shouldn't need to allocate space on either the source or the
-  // datination.  The source should have been listed as a requires, and
-  // the destination should have been listed as a computes for the
-  // task.  And this solves a mess of problems, mainly deailing with
-  // when it is listed as allocated and when it's listed as valid.
-
+  // There shouldn't be a need to allocate space on either the source
+  // or the datination. For the task, the source and destination
+  // should have been set as a requires and as a computes,
+  // respectively and solves a mess of problems. Mainly deailing with
+  // when it is set as allocated and when it's set as valid.
   var_source.setArray3(source_it->second.var->device_offset, source_it->second.var->device_size, source_it->second.var->device_ptr);
 
   var_source.setArray3(dest_it->second.var->device_offset, dest_it->second.var->device_size, dest_it->second.var->device_ptr);
@@ -877,7 +879,7 @@ GPUDataWarehouse::transferFrom( ExecSpace instance
   from->varLock->unlock();
   this->varLock->unlock();
 
-  // Let the caller know we found and transferred something.
+  // Let the caller know the variable was found and transferred.
   return true;
 }
 
