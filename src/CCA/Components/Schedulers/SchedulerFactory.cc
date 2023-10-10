@@ -65,8 +65,11 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     if (Uintah::Parallel::usingCPU() == false &&
         // If Kokkos was built with OpenMP these two values will be
         // defaulted to 1.
-        Uintah::Parallel::getNumPartitions() > 0 &&
-        Uintah::Parallel::getThreadsPerPartition() > 0)
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+	(Uintah::Parallel::getNumPartitions() > 1 || Uintah::Parallel::getThreadsPerPartition() > 1))
+#else
+	(Uintah::Parallel::getNumPartitions() > 1))
+#endif
     {
       if (Uintah::Parallel::usingDevice()) {
         scheduler = "Kokkos"; // User passed -gpu'

@@ -231,15 +231,6 @@ UnifiedScheduler::~UnifiedScheduler()
 
 //______________________________________________________________________
 //
-int
-UnifiedScheduler::verifyAnyGpuActive()
-{
-  return 2;
-}
-
-
-//______________________________________________________________________
-//
 void
 UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
                               , const MaterialManagerP & materialManager

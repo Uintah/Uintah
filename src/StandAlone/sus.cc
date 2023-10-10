@@ -62,7 +62,7 @@
 #include <sci_defs/gpu_defs.h>
 
 #if defined(UINTAH_USING_GPU)
-#  include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#  include <CCA/Components/Schedulers/KokkosScheduler.h>
 #endif
 
 #include <Core/Exceptions/Exception.h>
@@ -148,6 +148,30 @@ static void usage( const std::string& message,
                    const std::string& badarg,
                    const std::string& progname )
 {
+
+#if defined(HAVE_KOKKOS)
+  std::string kokkosStr;
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  kokkosStr = "multi-threaded Kokkos OpenMP ";
+#else
+  kokkosStr = "Kokkos ";
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA)
+  kokkosStr += "CUDA ";
+#elif defined(KOKKOS_ENABLE_HIP)
+  kokkosStr += "HIP ";
+#elif defined(KOKKOS_ENABLE_SYCL)
+  kokkosStr += "SYCL ";
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  kokkosStr += "OpenAcc ";
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  kokkosStr += "OpenMP Target ";
+#endif
+  kokkosStr += "schduler";
+#endif
+
   start();
 
   if (Uintah::Parallel::getMPIRank() == 0) {
@@ -164,15 +188,13 @@ static void usage( const std::string& message,
     std::cerr << "-h[elp]                         : This usage information.\n";
     std::cerr << "-d[ebug]                        : List the debug streams.\n";
 
-    std::cerr << "-gpucheck                       : Returns 1 if sus was compiled with GPU support and there is a GPU available.\n";
-    std::cerr << "                                : Returns 2 if sus was not compiled with GPU support or there are no GPUs available.\n";
-
 #if defined(HAVE_KOKKOS)
-    std::cerr << "-cpu                            : Use the CPU MPI or Unified scheduler instead of the multi-threaded Kokkos scheduler.\n";
+    std::cerr << "-gpucheck                       : Checks if there is a GPU available for the " << kokkosStr << ".\n";
+    std::cerr << "-cpu                            : Use the CPU based MPI or Unified scheduler instead of the " << kokkosStr << ".\n";
 #endif
 
 #if defined(UINTAH_USING_GPU)
-    std::cerr << "-gpu                            : Use available GPU devices, requires multi-threaded Kokkos scheduler.\n";
+    std::cerr << "-gpu                            : Use available GPU devices, requires the " << kokkosStr << ".\n";
     std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task.\n";
 #endif
 
@@ -186,7 +208,9 @@ static void usage( const std::string& message,
 
 #if defined(HAVE_KOKKOS) && defined(_OPENMP)
     std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler.\n";
-    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler.\n";
+  #if defined(USE_KOKKOS_PARTITION_MASTER)
+    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler with Partition Master.\n";
+  #endif
 #endif
 
     std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires multi-threaded Unified scheduler.\n";
@@ -404,11 +428,11 @@ int main( int argc, char *argv[], char *env[] )
       Uintah::Parallel::setNumPartitions( numPartitions );
 #else
       std::cout << "Not compiled for Kokkos OpenMP support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-nthreadsperpartition") {
-#if defined(HAVE_KOKKOS) && defined(_OPENMP)
+#if defined(HAVE_KOKKOS) && defined(_OPENMP) && defined(USE_KOKKOS_PARTITION_MASTER)
       if (++i == argc) {
         usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
       }
@@ -421,8 +445,8 @@ int main( int argc, char *argv[], char *env[] )
       }
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
 #else
-      std::cout << "Not compiled for Kokkos OpenMP support." << std::endl;
-      Parallel::exitAll(2);
+      std::cout << "Not compiled for Kokkos OpenMP Partition Master support." << std::endl;
+      Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-solver") {
@@ -468,18 +492,17 @@ int main( int argc, char *argv[], char *env[] )
       restartRemoveOldDir = true;
     }
     else if (arg == "-gpucheck") {
-#if defined(UINTAH_USING_GPU)
-      int retVal = UnifiedScheduler::verifyAnyGpuActive();
-      if (retVal == 1) {
+#if defined(HAVE_KOKKOS)
+      if (KokkosScheduler::verifyAnyGpuActive()) {
         std::cout << "At least one GPU detected!" << std::endl;
       }
       else {
         std::cout << "No GPU detected!" << std::endl;
       }
-      Parallel::exitAll(retVal);
+      Parallel::exitAll(1);
 #else
       std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
     else if(arg == "-cpu") {
@@ -487,7 +510,7 @@ int main( int argc, char *argv[], char *env[] )
       Uintah::Parallel::setUsingCPU( true );
 #else
       std::cout << "Ignoring '-cpu' flag as it is true by default." << std::endl;
-      // Parallel::exitAll(2);
+      // Parallel::exitAll(1);
 #endif
     }
     else if(arg == "-gpu") {
@@ -495,7 +518,7 @@ int main( int argc, char *argv[], char *env[] )
       Uintah::Parallel::setUsingDevice( true );
 #else
       std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-kokkos_instances_per_task") {
@@ -507,12 +530,12 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_instances_per_task = atoi(argv[i]);
       if( kokkos_instances_per_task < 1 ) {
         usage("Number of Kokkos Instances per task is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
       Uintah::Parallel::setKokkosInstancesPerTask(kokkos_instances_per_task);
 #else
       std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-kokkos_leagues_per_loop") {
@@ -524,12 +547,12 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_leagues_per_loop = atoi(argv[i]);
       if( kokkos_leagues_per_loop < 1 ) {
         usage("Number of Kokkos TeamPolicy leagues (work items) per loop is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
       Uintah::Parallel::setKokkosLeaguesPerLoop(kokkos_leagues_per_loop);
 #else
       std::cout << "Not compiled for GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-kokkos_teams_per_league") {
@@ -541,12 +564,12 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_teams_per_block = atoi(argv[i]);
       if( kokkos_teams_per_block < 1 ) {
         usage("Number of Kokkos TeamPolicy teams (threads) per legaue is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
       Uintah::Parallel::setKokkosTeamsPerLeague(kokkos_teams_per_block);
 #else
       std::cout << "Not compiled for GPU support" << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
 
@@ -568,13 +591,13 @@ int main( int argc, char *argv[], char *env[] )
       else
       {
         usage("Unknown Kokkos policy", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
 
       Uintah::Parallel::setKokkosPolicy(kokkos_policy);
 #else
       std::cout << "Not compiled for Kokkos Range Policy support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
 
@@ -587,7 +610,7 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_chunk_size = atoi(argv[i]);
       if( kokkos_chunk_size < 1 ) {
         usage("The Kokkos chunk size is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
 
       if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy &&
@@ -596,7 +619,7 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::setKokkosChunkSize(kokkos_chunk_size);
 #else
       std::cout << "Not compiled for Kokkos GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
 
@@ -609,7 +632,7 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_tile_isize = atoi(argv[i]);
       if( kokkos_tile_isize < 1 ) {
         usage("The Kokkos tile isize is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
 
       int kokkos_tile_jsize = 0;
@@ -619,7 +642,7 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_tile_jsize = atoi(argv[i]);
       if( kokkos_tile_jsize < 1 ) {
         usage("The Kokkos tile jsize is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(0);
       }
 
       int kokkos_tile_ksize = 0;
@@ -629,7 +652,7 @@ int main( int argc, char *argv[], char *env[] )
       kokkos_tile_ksize = atoi(argv[i]);
       if( kokkos_tile_ksize < 1 ) {
         usage("The Kokkos tile ksize is too small.", arg, argv[0]);
-        Parallel::exitAll(2);
+        Parallel::exitAll(1);
       }
 
       if(Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy &&
@@ -641,7 +664,7 @@ int main( int argc, char *argv[], char *env[] )
                                   kokkos_tile_ksize);
 #else
       std::cout << "Not compiled for Kokkos GPU support." << std::endl;
-      Parallel::exitAll(2);
+      Parallel::exitAll(0);
 #endif
     }
 

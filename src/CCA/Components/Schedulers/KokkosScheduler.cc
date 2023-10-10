@@ -144,10 +144,34 @@ KokkosScheduler::~KokkosScheduler()
 
 //______________________________________________________________________
 //
-int
+bool
 KokkosScheduler::verifyAnyGpuActive()
 {
-  return 2;
+#if defined(KOKKOS_ENABLE_CUDA)
+  // Attempt to access the zeroth GPU
+  return (cudaSetDevice(0) == cudaSuccess);
+
+#elif defined(KOKKOS_ENABLE_HIP)
+  // Attempt to access the zeroth GPU
+  return (hipSetDevice(0) == hipSuccess);
+
+#elif defined(KOKKOS_ENABLE_SYCL)
+  // Attempt to select a GPU device
+  sycl::device d;
+  try {
+    d = sycl::device(sycl::gpu_selector_v);
+    return true;
+  }
+
+  catch (sycl::exception const &e) {
+    // d = sycl::device(sycl::cpu_selector_v);
+    return false;
+  }
+
+#else
+  return false;
+
+#endif
 }
 
 
