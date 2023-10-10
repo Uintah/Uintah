@@ -1376,7 +1376,15 @@ DetailedTask::initiateH2DCopies(std::vector<OnDemandDataWarehouseP> & m_dws)
 
       // correctSize allocating allocated copyingIn validOnGPU gatheringGhostCells validWithGhostCellsOnGPU deallocating formingSuperPatch superPatch
       // printf("%d %d %s %s %d %d %d: flags: %d %d %d %d %d %d %d %d %d %d\n",
-      //       Uintah::Parallel::getMPIRank(), Impl::t_tid, this->getName().c_str(), curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
+      //       Uintah::Parallel::getMPIRank(),
+// #if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+//             Kokkos::OpenMP::impl_hardware_thread_id(),
+// #elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+//             Kokkos::OpenMP::hardware_thread_id(),
+// #else
+//             0,
+// #endif
+//             this->getName().c_str(), curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
       //       (int)correctSize, (int)allocating, (int)allocated, (int)copyingIn, (int)validOnGPU, (int)gatheringGhostCells, (int)validWithGhostCellsOnGPU,
       //       (int)deallocating, (int)formingSuperPatch, (int)superPatch
       //      );
@@ -3923,8 +3931,13 @@ DetailedTask::createTaskGpuDWs()
       std::ostringstream out;
       out << "Task GPU DW"
           << " MPIRank: " << Uintah::Parallel::getMPIRank()
-// ARS - Set in KokkosSceduler cannot access.
-//        << " Thread:" << Impl::t_tid 
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+          << " Thread " << Kokkos::OpenMP::impl_hardware_thread_id()
+#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+          << " Thread " << Kokkos::OpenMP::hardware_thread_id()
+#else
+          << " Thread " << 0
+#endif
           << " Task: " << this->getName();
 
       new_taskGpuDW->init(currentDevice, out.str());
@@ -4429,9 +4442,14 @@ std::string
 DetailedTask::myRankThread()
 {
   std::ostringstream out;
-  out << Uintah::Parallel::getMPIRank() << "."
-// ARS - Set in KokkosSceduler cannot access.
-//    << Impl::t_tid
-      ;
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::impl_hardware_thread_id();
+#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::hardware_thread_id();
+#else
+  out << Uintah::Parallel::getMPIRank();
+#endif
+
   return out.str();
 }

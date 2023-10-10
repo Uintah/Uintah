@@ -116,25 +116,11 @@ extern Uintah::MasterLock cerrLock;
 
 //______________________________________________________________________
 //
-namespace Uintah { namespace Impl {
-
-namespace {
-
-thread_local int t_tid = 0;   // ARS - FIX ME - unique ID assigned in
-			      // ??? See UnifiedScheduler.
-
-}
-
-} } // namespace Uintah::Impl
-
-
-//______________________________________________________________________
-//
 KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
                                 ,       KokkosScheduler * parentScheduler
                                 )
   : MPIScheduler(myworld, parentScheduler)
-{  
+{
   if ( Uintah::Parallel::usingDevice() ) {
 
     // Disable memory windowing on variables.  This will ensure that
@@ -1294,6 +1280,14 @@ std::string
 KokkosScheduler::myRankThread()
 {
   std::ostringstream out;
-  out << Uintah::Parallel::getMPIRank()<< "." << Impl::t_tid;
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::impl_hardware_thread_id();
+#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::hardware_thread_id();
+#else
+  out << Uintah::Parallel::getMPIRank();
+#endif
+
   return out.str();
 }
