@@ -62,14 +62,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
 #if defined(HAVE_KOKKOS)
     // If built with Kokkos it is possible to still use the CPU schedulers.
-    if (Uintah::Parallel::usingCPU() == false &&
-        // If Kokkos was built with OpenMP these two values will be
-        // defaulted to 1.
-#if defined(USE_KOKKOS_PARTITION_MASTER)
-	(Uintah::Parallel::getNumPartitions() > 0 || Uintah::Parallel::getThreadsPerPartition() > 0))
-#else
-	(Uintah::Parallel::getNumPartitions() > 0))
-#endif
+    if (Uintah::Parallel::usingCPU() == false)
     {
       if (Uintah::Parallel::usingDevice()) {
         scheduler = "Kokkos"; // User passed -gpu'
@@ -129,22 +122,35 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   //__________________________________
   //  bulletproofing
 
-  // "-nthreads" was given in the command line, but "Unified" was not
-  // specified in UPS file (w/ -do_not_validate)
-  if (scheduler != "Unified" && Uintah::Parallel::getNumThreads() > 0) {
+#if defined(_OPENMP)
+  // "-nthreads" was given in the command line, but a multi-threaded
+  // scheduler was not specified in UPS file (w/ -do_not_validate)
+  if (scheduler != "Unified" && scheduler != "Kokkos" &&
+      scheduler != "KokkosOpenMP" && Uintah::Parallel::getNumThreads() > 0) {
     std::string error = "\nERROR<Scheduler>: "
       "Unified Scheduler needed for '-nthreads <n>' option.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
-  // "-nthreads" was not given in the command line but "Unified" was
-  // specified in UPS file.
+  // "-nthreads" was not given in the command line but the Unified
+  // scheduler was specified in UPS file.
   if (scheduler == "Unified" && Uintah::Parallel::getNumThreads() < 1) {
     std::string error = "\nERROR<Scheduler>: "
-      "Add '-nthreads <n>' to the sus command line if 'Unified' is specified "
-      "in the input file.\n";
+      "Add '-nthreads <n>' to the sus command line if "
+      "'Unified' is specified in the input file.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
+#else
+  // "-nthreads" was given in the command line or a multi-threaded
+  // scheduler was specified in UPS file, but Uintah was not
+  // built with OpenMP.
+  if (scheduler == "Unified" || scheduler == "Kokkos" ||
+      scheduler == "KokkosOpenMP" && Uintah::Parallel::getNumThreads() > 0) {
+    std::string error = "\nERROR<Scheduler>: "
+      "To use a multi-threaded scheduler, Uintah must be built with OpenMP.\n";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+#endif
 
 #if defined(HAVE_KOKKOS)
 #else

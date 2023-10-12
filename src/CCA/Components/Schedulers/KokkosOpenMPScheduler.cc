@@ -271,19 +271,20 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   //---------------------------------------------------------------------------
   // A bit of mess here. Four options:
-  // 1. Not compiled with OpenMP - serial dispatch
-  // 2. Compiled with OpenMP but no Kokkos OpenMP front end.
-  // 3. Compiled with OpenMP and Kokkos OpenMP front end,   no depreciated code.
-  // 4. Compiled with OpenMP and Kokkos OpenMP front end, with depreciated code.
+  // 1. Compiled without OpenMP - serial dispatch.
+  // 2. Compiled with OpenMP - parallel dispatch.
+  // 3. Compiled with OpenMP and Kokkos OpenMP front end with depreciated code.
 
   // If compiled with OpenMP posssiby a parallel dispatch so get the
   // associated variables that determines the dispatching.
-#if defined(_OPENMP)
+#if defined(USE_KOKKOS_PARTITION_MASTER)
   int num_partitions        = Uintah::Parallel::getNumPartitions();
   int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
+#elif defined(_OPENMP)
+  int num_threads           = Uintah::Parallel::getNumThreads();
 #endif
 
-  while ( g_num_tasks_done < m_num_tasks )
+  while( g_num_tasks_done < m_num_tasks )
   {
     // Check the associated variables for a parallel dispatch request.
 #if defined(USE_KOKKOS_PARTITION_MASTER)
@@ -308,7 +309,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
     }
     else
 #elif defined(_OPENMP)
-    if( num_partitions > 1 )
+    if( num_threads > 0 )
     {
 #if _OPENMP >= 201511
       if (omp_get_max_active_levels() > 1)
@@ -318,10 +319,10 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
       {
         Kokkos::Profiling::pushRegion("OpenMP Parallel");
 
-        #pragma omp parallel num_threads(num_partitions)
-        {
-          omp_set_num_threads(threads_per_partition);
+	omp_set_num_threads(num_threads);
 
+        #pragma omp parallel
+        {
           // omp_get_num_threads() is not used so call runTasks directly
           // task_runner(omp_get_thread_num(), omp_get_num_threads());
 

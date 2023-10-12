@@ -152,10 +152,14 @@ static void usage( const std::string& message,
 #if defined(HAVE_KOKKOS)
   std::string kokkosStr;
 
-#if defined(KOKKOS_ENABLE_OPENMP)
-  kokkosStr = "multi-threaded Kokkos OpenMP ";
+#if defined(_OPENMP)
+  kokkosStr = "multi-threaded Kokkos ";
 #else
   kokkosStr = "Kokkos ";
+#endif
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  kokkosStr += "OpenMP ";
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -167,9 +171,9 @@ static void usage( const std::string& message,
 #elif defined(KOKKOS_ENABLE_OPENACC)
   kokkosStr += "OpenAcc ";
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  kokkosStr += "OpenMP Target ";
+  kokkosStr += "OpenMPTarget ";
 #endif
-  kokkosStr += "schduler";
+  kokkosStr += "scheduler";
 #endif
 
   start();
@@ -206,14 +210,17 @@ static void usage( const std::string& message,
     std::cerr << "-kokkos_tile_size <# # #>       : Kokkos MDRangePolicy tile size.\n";
 #endif
 
-#if defined(HAVE_KOKKOS) && defined(_OPENMP)
-    std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires multi-threaded Kokkos scheduler.\n";
-  #if defined(USE_KOKKOS_PARTITION_MASTER)
-    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires multi-threaded Kokkos scheduler with Partition Master.\n";
-  #endif
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+    std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires the " << kokkosStr << " with the Partition Master.\n";
+    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires the " << kokkosStr << " with the Partition Master.\n";
 #endif
-
-    std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires multi-threaded Unified scheduler.\n";
+#if defined(_OPENMP)
+    std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires the multi-threaded Unified scheduler"
+#if defined(HAVE_KOKKOS)
+              << " or the " << kokkosStr
+#endif
+              << ".\n";
+#endif
 
     std::cerr << "-layout NxMxO                   : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem               : If using MPI, use this flag if each node has a local disk.\n";
@@ -356,11 +363,7 @@ int main( int argc, char *argv[], char *env[] )
 
   int    restartCheckpointIndex     = -1;
   int    udaSuffix           = -1;
-  int    numThreads          =  0;
-#if defined(HAVE_KOKKOS) && defined(_OPENMP)
-  int    numPartitions       =  0;
-  int    threadsPerPartition =  0;
-#endif
+
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
   std::string solverName = "";  // empty string defaults to CGSolver
@@ -399,10 +402,11 @@ int main( int argc, char *argv[], char *env[] )
       quit();
     }
     else if (arg == "-nthreads") {
+#if defined(_OPENMP)
       if (++i == argc) {
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
-      numThreads = atoi(argv[i]);
+      int numThreads = atoi(argv[i]);
       if( numThreads < 1 ) {
         usage("Number of threads is too small", arg, argv[0]);
       }
@@ -411,13 +415,17 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
+#else
+      std::cout << "Not compiled with OpenMP support." << std::endl;
+      Parallel::exitAll(0);
+#endif
     }
     else if (arg == "-npartitions") {
-#if defined(HAVE_KOKKOS) && defined(_OPENMP)
+#if defined(USE_KOKKOS_PARTITION_MASTER)
       if (++i == argc) {
         usage("You must provide a number of thread partitions for -npartitions", arg, argv[0]);
       }
-      numPartitions = atoi(argv[i]);
+      int numPartitions = atoi(argv[i]);
       if( numPartitions < 1 ) {
         usage("Number of thread partitions is too small", arg, argv[0]);
       }
@@ -427,16 +435,16 @@ int main( int argc, char *argv[], char *env[] )
       }
       Uintah::Parallel::setNumPartitions( numPartitions );
 #else
-      std::cout << "Not compiled for Kokkos OpenMP support." << std::endl;
+      std::cout << "Not compiled for Kokkos Partition Master (deprecated)." << std::endl;
       Parallel::exitAll(0);
 #endif
     }
     else if (arg == "-nthreadsperpartition") {
-#if defined(HAVE_KOKKOS) && defined(_OPENMP) && defined(USE_KOKKOS_PARTITION_MASTER)
+#if defined(USE_KOKKOS_PARTITION_MASTER)
       if (++i == argc) {
         usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
       }
-      threadsPerPartition = atoi(argv[i]);
+      int threadsPerPartition = atoi(argv[i]);
       if( threadsPerPartition < 1 ) {
         usage("Number of threads per partition is too small", arg, argv[0]);
       }
@@ -445,7 +453,7 @@ int main( int argc, char *argv[], char *env[] )
       }
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
 #else
-      std::cout << "Not compiled for Kokkos OpenMP Partition Master support." << std::endl;
+      std::cout << "Not compiled for Kokkos Partition Master (deprecated)." << std::endl;
       Parallel::exitAll(0);
 #endif
     }
