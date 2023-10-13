@@ -152,6 +152,10 @@ main(int argc, char *argv[])
               string f_name,of_name;
               child->require("name",f_name);
               ifstream source(f_name.c_str());
+              if(!source) {
+                  cout << "Cannot open file " << f_name.c_str() << endl;
+                  return 1;
+              }
               int ncols = 0;
               // count number of vars, and their sizes
               for( ProblemSpecP varblock = child->findBlock("var"); varblock != nullptr; varblock = varblock->findNextBlock("var") ) {
