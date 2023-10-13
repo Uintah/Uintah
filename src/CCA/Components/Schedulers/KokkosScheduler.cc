@@ -24,7 +24,6 @@
 
 #include <CCA/Components/Schedulers/KokkosScheduler.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
-#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -42,6 +41,10 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/gpu_defs.h>
+
+#if defined(KOKKOS_USING_GPU)
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#endif
 
 #include <atomic>
 #include <cstring>
@@ -135,7 +138,7 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
 //
 KokkosScheduler::~KokkosScheduler()
 {
-#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_USING_GPU)
   // The data warehouses have not been cleared.
   GPUMemoryPool::freeMemoryFromPool();
 #endif
