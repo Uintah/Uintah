@@ -144,8 +144,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   // "-nthreads" was given in the command line or a multi-threaded
   // scheduler was specified in UPS file, but Uintah was not
   // built with OpenMP.
-  if (scheduler == "Unified" || scheduler == "Kokkos" ||
-      scheduler == "KokkosOpenMP" && Uintah::Parallel::getNumThreads() > 0) {
+  if ((scheduler == "Unified" || scheduler == "Kokkos" ||
+       scheduler == "KokkosOpenMP") && Uintah::Parallel::getNumThreads() > 0) {
     std::string error = "\nERROR<Scheduler>: "
       "To use a multi-threaded scheduler, Uintah must be built with OpenMP.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
