@@ -1480,6 +1480,8 @@ Task::assignDevicesAndInstances(intptr_t dTask)
 {
   if (m_action)
     m_action->assignDevicesAndInstances(dTask);
+  else
+    assignDevice(dTask, 0);
 }
 
 //_____________________________________________________________________________
@@ -1489,6 +1491,8 @@ Task::assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
 {
   if (m_action)
     m_action->assignDevicesAndInstances(dTask, device_id);
+  else
+    assignDevice(dTask, device_id);
 }
 
 //_____________________________________________________________________________
