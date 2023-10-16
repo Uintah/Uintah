@@ -4563,7 +4563,7 @@ DetailedTask::copyAllGpuToGpuDependences(std::vector<OnDemandDataWarehouseP> & m
   const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = this->getGhostVars().getMap();
 
   for (std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it = ghostVarMap.begin(); it != ghostVarMap.end(); ++it) {
-    printf( "copyAllGpuToGpuDependences num ghost vars \n");
+
     if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank) {
       // TODO: Needs a particle section
 
