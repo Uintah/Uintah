@@ -3771,9 +3771,9 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel         * label
     }
   }  // running task loop
 
-#endif // end #if 1
-
 #endif // end #if SCI_ASSERTION_LEVEL >= 1
+
+#endif // end #if 0
 }
 
 //______________________________________________________________________
@@ -3851,9 +3851,9 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel * label
     }
   }
 
-#endif // end #if 1
-
 #endif // end #if SCI_ASSERTION_LEVEL >= 1
+
+#endif // end #if 0
 }
 
 //______________________________________________________________________
