@@ -44,6 +44,9 @@ namespace {
 
 //______________________________________________________________________
 //
+// CPU ancillary task constructor. Currently used with a TaskType of
+// Reduction and InitialSend (send_old_data). These tasks do not have
+// an action but may have GPU devices assigned to them.
 Task::Task( const std::string & taskName, TaskType type )
   : m_task_name(taskName)
   , m_action(nullptr)
@@ -1491,8 +1494,10 @@ Task::assignDevicesAndInstances(intptr_t dTask)
   if (m_action) {
     m_action->assignDevicesAndInstances(dTask);
   } else {
-    // Assign devices in a similar fashion as if there was an
-    // action. Needed for some tasks such as send_old_data.
+    // Assign devices in a similar fashion as if there was an action
+    // (which require an actual task which is not the case
+    // here. Some tasks such as send_old_data that need a
+    // device but not an instance.
     for (int i = 0; i < this->maxInstancesPerTask(); i++) {
       assignDevice(dTask, i);
     }
@@ -1507,8 +1512,10 @@ Task::assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
   if (m_action) {
     m_action->assignDevicesAndInstances(dTask, device_id);
   } else {
-    // Assign devices in a similar fashion as if there was an
-    // action. Needed for some tasks such as send_old_data.
+    // Assign devices in a similar fashion as if there was an action
+    // (which require an actual task which is not the case
+    // here. Some tasks such as send_old_data that need a
+    // device but not an instance.
     assignDevice(dTask, device_id);
   }
 }

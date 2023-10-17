@@ -713,13 +713,13 @@ __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kok
 //  program will exit.  If all above conditions are met, then it will
 //  do a device to device memcopy call.
 
-// *Important*: For this to work, it needs a GPU stream.  GPU streams
-// are stored per task, every Uintah task is assigned a possible
-// stream to use.  To get the stream you have to request it from the
-// detailedTask object.  Normal CPU task callback functions do not
-// have access to the detailedTask object, but it is possible to
-// extend the callack function parameter list so that it does.  See
-// UnifiedSchedulerTest::timeAdvanceUnified as an example.
+// *Important*: For this to work, it needs a GPU instance.  GPU
+// instances are stored per DetailedTask in the Task, every Uintah
+// DetailedTask is assigned a possible instance to use.  Normal CPU
+// task callback functions do not have access to the detailedTask
+// object, but it is possible to extend the callack function parameter
+// list so that it does.  See UnifiedSchedulerTest::timeAdvanceUnified
+// as an example.
 
 // *Also important*: For this to work, the destination variable *MUST*
 // be listed as a computes in the task that's calling transferFrom().

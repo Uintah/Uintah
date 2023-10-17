@@ -615,8 +615,8 @@ KokkosScheduler::runTask( DetailedTask  * dtask
                                           iteration, thread_id);
 
       // The ghost cell destinations indicate which devices we're using,
-      // and which ones we'll need streams for.
-      dtask->assignDevicesAndStreamsFromGhostVars();
+      // and which ones we'll need instances for.
+      dtask->assignDevicesAndInstancesFromGhostVars();
       dtask->createTaskGpuDWs();
 
       // place everything in the GPU data warehouses
@@ -869,7 +869,7 @@ KokkosScheduler::runTasks( int thread_id )
          * (1.4)
          *
          * Check if highest priority GPU task's asynchronous H2D
-         * copies are completed. If so, then reclaim the streams and
+         * copies are completed. If so, then reclaim the instances and
          * events it used for these operations, and mark as valid the
          * vars for which this task was responsible.  (If the vars are
          * awaiting ghost cells then those vars will be updated with a
@@ -939,7 +939,7 @@ KokkosScheduler::runTasks( int thread_id )
          *
          * Check if highest priority GPU task's asynchronous device to
          * device ghost cell copies are finished. If so, then reclaim
-         * the streams and events it used for these operations,
+         * the instances and events it used for these operations,
          * execute the task and then put it into the GPU
          * completion-pending queue.
          *
@@ -1099,7 +1099,7 @@ KokkosScheduler::runTasks( int thread_id )
 
         // Ghost cells from GPU same device to variable already on GPU
         // -> Managed in initiateH2DCopies()?
-        readyTask->assignDevicesAndStreams();
+        readyTask->assignDevicesAndInstances();
         readyTask->initiateH2DCopies(m_dws);
         readyTask->syncTaskGpuDWs();
 
@@ -1167,7 +1167,7 @@ KokkosScheduler::runTasks( int thread_id )
 
         // See if we're dealing with 32768 ghost cells per patch.  If
         // so, it's easier to manage them on the host for now than on
-        // the GPU.  We can issue these on the same stream as runTask,
+        // the GPU.  We can issue these on the same instance as runTask,
         // and it won't process until after the GPU kernel completed.
         // initiateD2HForHugeGhostCells(readyTask);
 
@@ -1214,9 +1214,9 @@ KokkosScheduler::runTasks( int thread_id )
           // the scheduler never needs to know about it
           // (e.g. transferFrom()).  So because we aren't sure which
           // CPU tasks could use the GPU, just go ahead and assign each
-          // task a GPU stream.
+          // task a GPU instance.
           // readyTask->assignStatusFlagsToPrepareACpuTask();
-          readyTask->assignDevicesAndStreams();
+          readyTask->assignDevicesAndInstances();
 
           // Run initiateD2H on all tasks in case the data we need is
           // in GPU memory but not in host memory.  The exception

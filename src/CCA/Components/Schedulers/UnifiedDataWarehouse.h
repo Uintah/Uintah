@@ -276,12 +276,6 @@ public:
           const PatchSubset*, const MaterialSubset*,
                             bool replace, const PatchSubset*) = 0;
 
-  //An overloaded version of transferFrom.  GPU transfers need a stream, and a
-  //stream is found in a detailedTask object.
-  virtual void transferFrom(DataWarehouse*, const VarLabel*,
-                            const PatchSubset*, const MaterialSubset*, void * detailedTask,
-                            bool replace, const PatchSubset*) = 0;
-
   virtual size_t emit(OutputContext&, const VarLabel* label,
         int matlIndex, const Patch* patch) = 0;
 

@@ -834,7 +834,7 @@ public: // class Task
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
 
-  // Device and Stream related calls
+  // Device and Instance related calls
   void assignDevice(intptr_t dTask, unsigned int device);
 
   // Most tasks will only run on one device.

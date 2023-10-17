@@ -1924,7 +1924,7 @@ DetailedTask::prepareDeviceVars(std::vector<OnDemandDataWarehouseP> & m_dws)
                 // ghost layer being overwritten by those queued
                 // earlier with smaller ghost layer. This race
                 // condition was observed due to using different
-                // streams.
+                // instances.
                 delayedCopy = gpudw->isDelayedCopyingNeededOnGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
               }
 
@@ -2681,7 +2681,7 @@ DetailedTask::markDeviceRequiresAndModifiesDataAsValid(std::vector<OnDemandDataW
 
   // Go through device requires vars and mark them as valid on the
   // device.  They are either already valid because they were there
-  // previously.  Or they just got copied in and the stream completed.
+  // previously.  Or they just got copied in and the instance completed.
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = this->getVarsBeingCopiedByTask().getMap();
   for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = varMap.begin();
             it != varMap.end(); ++it) {
@@ -2720,7 +2720,7 @@ DetailedTask::markDeviceGhostsAsValid(std::vector<OnDemandDataWarehouseP> & m_dw
 {
   // Go through requires vars and mark them as valid on the device.
   // They are either already valid because they were there previously.
-  // Or they just got copied in and the stream completed.  Now go
+  // Or they just got copied in and the instance completed.  Now go
   // through the varsToBeGhostReady collection.  Any in there should
   // be marked as valid with ghost cells
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = this->getVarsToBeGhostReady().getMap();
@@ -2746,8 +2746,8 @@ DetailedTask::markHostComputesDataAsValid(std::vector<OnDemandDataWarehouseP> & 
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->m_next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(this->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(this->getMaterials());
-    // this is so we can allocate persistent events and streams to
-    // distribute when needed one stream and one event per variable
+    // this is so we can allocate persistent events and instances to
+    // distribute when needed one instance and one event per variable
     // per H2D copy (numPatches * numMatls)
     int numPatches = patches->size();
     int numMatls = matls->size();
@@ -2786,8 +2786,8 @@ DetailedTask::markDeviceComputesDataAsValid(std::vector<OnDemandDataWarehouseP> 
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->m_next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(this->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(this->getMaterials());
-    // this is so we can allocate persistent events and streams to
-    // distribute when needed one stream and one event per variable
+    // this is so we can allocate persistent events and instances to
+    // distribute when needed one instance and one event per variable
     // per H2D copy (numPatches * numMatls)
     int numPatches = patches->size();
     int numMatls = matls->size();
@@ -2824,8 +2824,8 @@ DetailedTask::markDeviceModifiesGhostAsInvalid(std::vector<OnDemandDataWarehouse
   for (const Task::Dependency* comp = task->getModifies(); comp != 0; comp = comp->m_next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(this->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(this->getMaterials());
-    // this is so we can allocate persistent events and streams to
-    // distribute when needed one stream and one event per variable
+    // this is so we can allocate persistent events and instances to
+    // distribute when needed one instance and one event per variable
     // per H2D copy (numPatches * numMatls)
     int numPatches = patches->size();
     int numMatls = matls->size();
@@ -2855,7 +2855,7 @@ DetailedTask::markDeviceModifiesGhostAsInvalid(std::vector<OnDemandDataWarehouse
 void
 DetailedTask::markDeviceAsInvalidHostAsValid(std::vector<OnDemandDataWarehouseP> & m_dws)
 {
-  // Data has been copied from the device to the host.  The stream has
+  // Data has been copied from the device to the host.  The instance has
   // completed.  Go through all variables that this CPU task was
   // responsible for copying mark them as valid on the CPU
 
@@ -2914,7 +2914,7 @@ DetailedTask::markDeviceAsInvalidHostAsValid(std::vector<OnDemandDataWarehouseP>
 void
 DetailedTask::markHostAsInvalid(std::vector<OnDemandDataWarehouseP> & m_dws)
 {
-  // Data has been copied from the device to the host.  The stream has
+  // Data has been copied from the device to the host.  The instance has
   // completed.  Go through all variables that this CPU task was
   // responsible for copying mark them as valid on the CPU
 
@@ -2971,7 +2971,7 @@ DetailedTask::markHostAsInvalid(std::vector<OnDemandDataWarehouseP> & m_dws)
 void
 DetailedTask::markHostRequiresAndModifiesDataAsValid(std::vector<OnDemandDataWarehouseP> & m_dws)
 {
-  // Data has been copied from the device to the host.  The stream has
+  // Data has been copied from the device to the host.  The instance has
   // completed.  Go through all variables that this CPU task was
   // responsible for copying mark them as valid on the CPU
 
@@ -3291,8 +3291,8 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(this->getMaterials());
 
 
-    // This is so we can allocate persistent events and streams to
-    // distribute when needed one stream and one event per variable
+    // This is so we can allocate persistent events and instances to
+    // distribute when needed one instance and one event per variable
     // per H2D copy (numPatches * numMatls)
     int numPatches = patches->size();
     int dwIndex = dependantVar->mapDataWarehouse();
@@ -3952,7 +3952,7 @@ DetailedTask::createTaskGpuDWs()
 // ______________________________________________________________________
 //
 void
-DetailedTask::assignDevicesAndStreams()
+DetailedTask::assignDevicesAndInstances()
 {
   // Figure out which device this patch was assigned to.  If a task
   // has multiple patches, then assign all.  Most tasks should only
@@ -3981,7 +3981,7 @@ DetailedTask::assignDevicesAndStreams()
 // ______________________________________________________________________
 //
 void
-DetailedTask::assignDevicesAndStreamsFromGhostVars()
+DetailedTask::assignDevicesAndInstancesFromGhostVars()
 {
   // Go through the ghostVars collection and look at the patch where
   // all ghost cells are going.
@@ -4232,14 +4232,14 @@ DetailedTask::copyAllGpuToGpuDependences(std::vector<OnDemandDataWarehouseP> & m
                      make_int3(ghostSize.x(), ghostSize.y(), ghostSize.z()));
       device_dest_var->getArray3(device_dest_offset, device_dest_size, device_dest_ptr);
 
-      // We can run peer copies from the source or the device stream.
+      // We can run peer copies from the source or the device instance.
       // While running it from the device technically is said to be a
       // bit slower, it's likely just to an extra event being created
-      // to manage blocking the destination stream.  By putting it on
+      // to manage blocking the destination instance.  By putting it on
       // the device we are able to not need a synchronize step after
       // all the copies, because any upcoming API call will use the
-      // streams and be naturally queued anyway.  When a copy
-      // completes, anything placed in the destination stream can then
+      // instances and be naturally queued anyway.  When a copy
+      // completes, anything placed in the destination instance can then
       // process.
       m_task->doKokkosMemcpyPeerAsync(reinterpret_cast<intptr_t>(this),
                                       it->second.m_destDeviceNum,
@@ -4330,7 +4330,6 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
             && device_size.y == host_size.y()
             && device_size.z == host_size.z()) {
 
-          // Since we know we need a stream, obtain one.
           m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
                                     it->second.m_sourceDeviceNum,
                                     host_ptr, device_ptr,
@@ -4350,9 +4349,9 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
 
   if (copiesExist) {
 
-    // Wait until all streams are done.  Further optimization could be
-    // to check each stream one by one and make copies before waiting
-    // for other streams to complete.
+    // Wait until all instances are done.  Further optimization could be
+    // to check each instance one by one and make copies before waiting
+    // for other instances to complete.
     // TODO: There's got to be a better way to do this.
 
     while (!this->checkAllKokkosInstancesDoneForThisTask()) {

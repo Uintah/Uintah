@@ -455,9 +455,9 @@ public:
 
     void assignStatusFlagsToPrepareACpuTask();
 
-    void assignDevicesAndStreams();
+    void assignDevicesAndInstances();
 
-    void assignDevicesAndStreamsFromGhostVars();
+    void assignDevicesAndInstancesFromGhostVars();
 
     void findIntAndExtGpuDependencies( std::vector<OnDemandDataWarehouseP> & m_dws
                                      , std::set<std::string> &m_no_copy_data_vars

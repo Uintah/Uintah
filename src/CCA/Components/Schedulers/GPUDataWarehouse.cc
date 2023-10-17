@@ -1982,14 +1982,14 @@ __host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kok
 
   if (d_dirty) {
     // Even though this is in a writeLock state on the CPU, the nature
-    // of multiple threads each with their own stream copying to a GPU
-    // means that one stream might seemingly go out of order.  This is
+    // of multiple threads each with their own instance copying to a GPU
+    // means that one instance might seemingly go out of order.  This is
     // ok for two reasons. 1) Nothing should ever be *removed* from a
-    // gpu data warehouse 2) Therefore, it doesn't matter if streams go
+    // gpu data warehouse 2) Therefore, it doesn't matter if instances go
     // out of order, each thread will still ensure it copies exactly
-    // what it needs.  Other streams may write additional data to the
+    // what it needs.  Other instances may write additional data to the
     // gpu data warehouse, but cpu threads will only access their own
-    // data, not data copied in by other cpu threada via streams.
+    // data, not data copied in by other cpu threads via instances.
 
     // unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
     if (gpu_stats.active()) {
