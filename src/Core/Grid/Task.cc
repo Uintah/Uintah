@@ -1494,10 +1494,15 @@ syncTaskGpuDW(intptr_t dTask,
 void
 Task::assignDevicesAndInstances(intptr_t dTask)
 {
-  if (m_action)
+  if (m_action) {
     m_action->assignDevicesAndInstances(dTask);
-  else
-    assignDevice(dTask, 0);
+  } else {
+    // Assign devices in a similar fashion as if there was an
+    // action. Needed for some tasks such as send_old_data.
+    for (int i = 0; i < this->maxInstancesPerTask(); i++) {
+      assignDevice(dTask, i);
+    }
+  }
 }
 
 //_____________________________________________________________________________
@@ -1505,10 +1510,13 @@ Task::assignDevicesAndInstances(intptr_t dTask)
 void
 Task::assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
 {
-  if (m_action)
+  if (m_action) {
     m_action->assignDevicesAndInstances(dTask, device_id);
-  else
+  } else {
+    // Assign devices in a similar fashion as if there was an
+    // action. Needed for some tasks such as send_old_data.
     assignDevice(dTask, device_id);
+  }
 }
 
 //_____________________________________________________________________________
