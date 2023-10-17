@@ -214,7 +214,7 @@ public:
 
   // CPU Action constructor
   template<typename T, typename... Args>
-  class Action : public ActionNonPortableBase {
+  class ActionNonPortable : public ActionNonPortableBase {
 
       T * ptr;
       void (T::*pmf)( const ProcessorGroup * pg
@@ -229,7 +229,7 @@ public:
 
   public: // class Action
 
-    Action( Task * taskPtr
+    ActionNonPortable( Task * taskPtr
           , T * ptr
           , void (T::*pmf)( const ProcessorGroup * pg
                           , const PatchSubset    * patches
@@ -246,7 +246,7 @@ public:
       , m_args(std::forward<Args>(args)...)
     {}
 
-    virtual ~Action() {}
+    virtual ~ActionNonPortable() {}
 
     //////////
     //
@@ -274,7 +274,7 @@ public:
       (ptr->*pmf)(pg, patches, matls, fromDW, toDW, std::get<S>(m_args)...);
     }
 
-  };  // end CPU Action class
+  };  // end CPU ActionNonPortable class
 
 
   // Kokkos enabled task portable Action constructor
@@ -496,13 +496,9 @@ public: // class Task
   };
 
 
-  Task( const std::string & taskName, TaskType type )
-    : m_task_name(taskName)
-    , m_action(nullptr)
-  {
-    d_tasktype = type;
-    initialize();
-  }
+  // CPU ancillary task constructor. Currently used with a TaskType of
+  // Reduction and InitialSend.
+  Task( const std::string & taskName, TaskType type );
 
   // CPU Task constructor
   template<typename T, typename... Args>
@@ -518,7 +514,7 @@ public: // class Task
        , Args... args
       )
      : m_task_name(taskName)
-     , m_action(scinew Action<T, Args...>(this, ptr, pmf, std::forward<Args>(args)...))
+     , m_action(scinew ActionNonPortable<T, Args...>(this, ptr, pmf, std::forward<Args>(args)...))
   {
     d_tasktype = Normal;
     initialize();
