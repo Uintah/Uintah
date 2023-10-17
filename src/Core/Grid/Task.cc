@@ -1499,7 +1499,7 @@ Task::assignDevicesAndInstances(intptr_t dTask)
   } else {
     // Assign devices in a similar fashion as if there was an
     // action. Needed for some tasks such as send_old_data.
-    for (int i = 0; i < this->maxInstancesPerTask(); i++) {
+    for (int i = 0; i < this->maxStreamsPerTask(); i++) {
       assignDevice(dTask, i);
     }
   }
