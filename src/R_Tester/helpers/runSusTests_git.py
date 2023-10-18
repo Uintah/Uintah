@@ -498,8 +498,9 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
         here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,application,testname,testname)
         chdir(here)
       except Exception:
-        print( " ERROR: runSusTests: checkpoint uda (%s) does not exist" % here )
+        print( "ERROR: runSusTests: checkpoint uda (%s) does not exist" % here )
         print( "This file must exist when using 'startFromCheckpoint' or 'PostProcessUda' option" )
+        print( "You can override the default path to the checkpoints directory with the environmental variable RT_CHECKPOINTS" )
         exit(1)
 
 
