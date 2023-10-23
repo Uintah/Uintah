@@ -48,9 +48,9 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/gpu_defs.h>
+#include <sci_defs/hypre_defs.h>
 
 #if defined(HAVE_HYPRE)
-#  include <sci_defs/hypre_defs.h>
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #elif defined(HAVE_PETSC)
 #  include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
@@ -334,15 +334,18 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
       if (linear_sol == "petsc"){
 
         d_linearSolver = scinew RadPetscSolver(d_myworld);
-
-      }
-#elif defined(HAVE_HYPRE)
-      else if (linear_sol == "hypre"){
-
-        d_linearSolver = scinew RadHypreSolver(d_myworld);
-
       }
 #endif
+#if defined(HAVE_PETSC) && defined(HAVE_HYPRE)
+      else
+#endif
+#if defined(HAVE_HYPRE)
+      if (linear_sol == "hypre"){
+
+        d_linearSolver = scinew RadHypreSolver(d_myworld);
+      }
+#endif
+
       d_linearSolver->problemSetup(db);
     }
   }
@@ -402,7 +405,7 @@ DORadiationModel::insertEveryNth( const std::vector<std::vector<double>>& orthog
                                   std::vector<double>& vec)     // vector to modify
 {
   auto it = vec.begin() + nthElement;
-  
+
   for( size_t i = 0; i < orthogonalCosineDirs.size(); i++){
 
     it = vec.insert( it, orthogonalCosineDirs[i][dir] );
