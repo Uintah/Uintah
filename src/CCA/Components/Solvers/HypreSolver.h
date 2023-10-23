@@ -311,6 +311,8 @@ namespace Uintah {
 
     virtual void finialize();  // Used to cleanup Thirdparty libs (Hypre)
 
+    inline static const std::string hypreSolver_name = "hypreSolver";
+
   private:
     void initialize( const ProcessorGroup *,
                      const PatchSubset    * patches,

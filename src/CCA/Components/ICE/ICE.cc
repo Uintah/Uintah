@@ -112,7 +112,7 @@ ICE::ICE(const ProcessorGroup* myworld,
   lb   = scinew ICELabel();
 
 #ifdef HAVE_HYPRE
-  hypre_solver_label = VarLabel::create("hypre_solver_label",
+  hypre_solver_label = VarLabel::create(HypreSolver2::hypreSolver_name,
                                         SoleVariable<hypre_solver_structP>::getTypeDescription());
 #endif
   d_conservationTest         = scinew conservationTest_flags();

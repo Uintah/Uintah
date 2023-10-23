@@ -139,7 +139,7 @@ namespace Uintah {
     {
       // Time Step
       m_timeStepLabel      = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
+      m_hypre_solver_label = VarLabel::create(HypreSolver2::hypreSolver_name,
                                               SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
@@ -1205,8 +1205,8 @@ namespace Uintah {
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
-    m_hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                             SoleVariable<hypre_solver_structP>::getTypeDescription());
+    m_hypre_solver_label = VarLabel::create(hypreSolver_name,
+                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
 
     m_params = scinew HypreParams();
   }
