@@ -56,19 +56,19 @@ SolverTest1::~SolverTest1()
 }
 //__________________________________
 //
-void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, 
-                               const ProblemSpecP& restart_prob_spec, 
+void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
+                               const ProblemSpecP& restart_prob_spec,
                                GridP&)
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
   }
-  
+
   ProblemSpecP st_ps = prob_spec->findBlock("SolverTest");
   solver->readParameters(st_ps, "implicitPressure");
   solver->getParameters()->setSolveOnExtraCells(false);
-    
+
   st_ps->require("delt", delt_);
 
   // whether or not to do laplacian in x,y,or z direction
@@ -92,7 +92,7 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   m_materialManager->registerSimpleMaterial(mymat_);
 }
 //__________________________________
-// 
+//
 void SolverTest1::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
@@ -106,11 +106,11 @@ void SolverTest1::scheduleRestartInitialize(const LevelP& level,
   solver->scheduleRestartInitialize(level,sched,m_materialManager->allMaterials());
 }
 //__________________________________
-// 
+//
 void SolverTest1::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimeStep",this, 
+  Task* task = scinew Task("computeStableTimeStep",this,
                            &SolverTest1::computeStableTimeStep);
   task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
@@ -128,9 +128,11 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
-  solver->scheduleSolve(level, sched, m_materialManager->allMaterials(), 
-                        lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
-                        false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
+  solver->scheduleSolve(level, sched, m_materialManager->allMaterials(),
+                        lb_->pressure_matrix, Task::NewDW,
+                        lb_->pressure, false,
+                        lb_->pressure_rhs, Task::NewDW,
+                        nullptr, Task::OldDW,
                         true);
 
 }
@@ -177,7 +179,7 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
     t = -1;
     b = -1;
   }
-  
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -192,11 +194,11 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
       for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
         IntVector c = *iter;
         Stencil7&  A_tmp=A[c];
-        A_tmp.p = center; 
+        A_tmp.p = center;
         A_tmp.n = n;   A_tmp.s = s;
-        A_tmp.e = e;   A_tmp.w = w; 
+        A_tmp.e = e;   A_tmp.w = w;
         A_tmp.t = t;   A_tmp.b = b;
-        
+
         if (c == IntVector(0,0,0)) {
           rhs[c] = 1.0;
         }
