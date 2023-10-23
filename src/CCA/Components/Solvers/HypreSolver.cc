@@ -139,8 +139,8 @@ namespace Uintah {
     {
       // Time Step
       m_timeStepLabel      = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
-                                               SoleVariable<hypre_solver_structP>::getTypeDescription());
+      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
+                                              SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
 
@@ -352,7 +352,7 @@ namespace Uintah {
       m_tCopySolution = hypre_InitializeTiming("Copy Solution");
 
 
-       //________________________________________________________
+      //________________________________________________________
       // get struct from data warehouse
       SoleVariable<hypre_solver_structP> hypre_solverP;
 
@@ -1205,11 +1205,10 @@ namespace Uintah {
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
-    m_hypre_solver_label = VarLabel::create("m_hypre_solver_label",
-                                           SoleVariable<hypre_solver_structP>::getTypeDescription());
+    m_hypre_solver_label = VarLabel::create("hypre_solver_label",
+                                             SoleVariable<hypre_solver_structP>::getTypeDescription());
 
     m_params = scinew HypreParams();
-
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1356,6 +1355,7 @@ namespace Uintah {
     hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
 
     hypre_solverP.setData( hypre_struct );
+
     new_dw->put( hypre_solverP, m_hypre_solver_label );
   }
 
@@ -1372,6 +1372,8 @@ namespace Uintah {
   {
     allocateHypreMatrices( new_dw, isRestart );
   }
+
+  //---------------------------------------------------------------------------------------------
 
   void HypreSolver2::finialize()  // Used to cleanup Thirdparty libs (Hypre)
   {
