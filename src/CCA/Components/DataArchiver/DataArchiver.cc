@@ -1159,7 +1159,8 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     // time can be calculated from the simulation time and the delta t
     // which are both in the old data warehouse do that instead.
 
-    // task->requires( Task::NewDW, m_application->getSimTimeLabel() );
+    task->requires( Task::NewDW, m_application->getTimeStepLabel() );
+    task->requires( Task::NewDW, m_application->getSimTimeLabel() );
 
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
       SaveItem& saveItem = m_saveGlobalLabels[i];
@@ -2761,15 +2762,12 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   // new data warehouse.
   timeStep_vartype timeStepVar;
   simTime_vartype   simTimeVar;
-  delt_vartype         delTVar;
 
   old_dw->get( timeStepVar, m_application->getTimeStepLabel() );
-  old_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
-  old_dw->get( delTVar,     m_application->getDelTLabel() );
+  new_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
 
   const int    timeStep = timeStepVar;
   const double simTime  =  simTimeVar;
-  const double delT     =     delTVar;
 
   // Dump the variables in the global saveset into files in the uda.
   for(int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
@@ -2818,8 +2816,9 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       }
 
       if( m_outputGlobalVarsSimTime ) {   // default true
-        out << std::setprecision(17) << simTime + delT << "\t";
+        out << std::setprecision(17) << simTime << "\t";
       }
+
       // Output the global var for this material index.
       new_dw->print(out, var, 0, matlIndex);
       out << std::endl;

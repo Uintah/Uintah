@@ -1029,16 +1029,15 @@ AMRSimulationController::compileTaskGraph( int totalFine )
     m_scheduler->scheduleTaskMonitoring(m_current_gridP->getLevel(i));
   }
 
-  // Output tasks
-  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
-
-  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
-
   // Update the system var (time step and simulation time). Must be
-  // done after the output and after scheduleComputeStableTimeStep.
+  // scheduled after scheduleComputeStableTimeStep and before the output.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
                                            m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                            m_scheduler );
+
+  // Output tasks
+  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
+  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
 
   // Report all of the stats before doing any possible in-situ work as
   // that effects the lap timer for the time steps. Crash in some
