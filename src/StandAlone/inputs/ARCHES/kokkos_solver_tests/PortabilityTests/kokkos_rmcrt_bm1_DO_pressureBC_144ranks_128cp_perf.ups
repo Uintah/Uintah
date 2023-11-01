@@ -27,7 +27,7 @@
   <!--__________________________________-->
   <DataArchiver>
     <filebase>kokkos_rmcrt_bm1_DO_pressureBC.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>0</outputTimestepInterval>
     <save label="pressurePS" levels="-1"/>
     <save label="CCVelocity" levels="-1"/>
     <save label="uVelocitySPBC" levels="-1"/>
@@ -46,7 +46,7 @@
     <save label="gas_abskg"      levels="-1"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
-    <checkpoint cycle="2" timestepInterval="2"/>
+    <checkpoint cycle="0" timestepInterval="0"/>
   </DataArchiver>
   <!--__________________________________-->
   <Grid doAMR="true">
