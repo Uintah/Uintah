@@ -86,7 +86,7 @@ namespace Uintah {
       }
 
       //====================================================================================
-      // GRID VARIABLE ACCESS
+      // GRID VARIABLE ACCESS - Const grid variable
       //====================================================================================
 
       /** @brief Return a CONST grid variable **/
@@ -129,10 +129,8 @@ namespace Uintah {
           return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
         }
       }
-#endif
 
-#if defined(KOKKOS_USING_GPU)
-      /** @brief Return a CONST grid variable **/
+      /** @brief Return a CONST grid variable from a specific data warehouse **/
       template <typename T, typename PODType, typename MemSpace>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, KokkosView3<PODType, Kokkos::DefaultExecutionSpace::memory_space>>::type
       get_field( const std::string                    name
@@ -146,6 +144,10 @@ namespace Uintah {
         }
       }
 #endif
+
+      //====================================================================================
+      // GRID VARIABLE ACCESS - NON-CONST grid variable
+      //====================================================================================
 
       /** @brief Return a NON-CONST grid variable **/
       template <typename T, typename... Args>
@@ -183,6 +185,10 @@ namespace Uintah {
       }
 #endif
 
+      //====================================================================================
+      // GRID VARIABLE ACCESS - empty field
+      //====================================================================================
+
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type
       get_empty_field()
@@ -210,7 +216,11 @@ namespace Uintah {
       }
 #endif
 
-      /** @brief Return a UINTAH field allowing the user to manage the memory. **/
+      //====================================================================================
+      // GRID VARIABLE MANAGEMENT -
+      //====================================================================================
+
+      /** @brief Return a UINTAH field with user managed memory. **/
       template <typename FIELD_TYPE>
       inline void
       get_unmanaged_uintah_field( const std::string   name
@@ -259,6 +269,7 @@ namespace Uintah {
         field = getNewDW()->getGPUDW()->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, _field_container->getPatch()->getLevel()->getIndex() );
       }
 #endif
+
 
       template <typename T, typename ElemType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void >::type
@@ -328,9 +339,9 @@ namespace Uintah {
 
       ArchesFieldContainer* _field_container{nullptr};
 
-            std::vector<ArchesFieldContainer::VariableInformation>   _var_reg;
-      const Patch                                                  * _patch{nullptr};
-            SchedToTaskInfo                                        & _tsk_info;
+      std::vector<ArchesFieldContainer::VariableInformation>   _var_reg;
+      const Patch                                            * _patch{nullptr};
+      SchedToTaskInfo                                        & _tsk_info;
 
   }; // ArchesTaskInfoManager
 
