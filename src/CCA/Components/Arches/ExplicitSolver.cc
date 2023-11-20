@@ -3849,25 +3849,26 @@ void ExplicitSolver::computeKE( const ProcessorGroup* pc,
 
       ke[c] = 0.5 * ( u[c]*u[c] + v[c]*v[c] + w[c]*w[c] );
 
-      if ( ke[c] > max_ke ){
+      if ( ke[c] > max_ke ) {
         max_ke = ke[c];
       }
 
       sum_ke += ke[c];
-
     }
 
     new_dw->put(sum_vartype(sum_ke), d_lab->d_totalKineticEnergyLabel);
 
-    if ( sum_ke != sum_ke )
-      throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);
-
-    if ( sum_ke > d_ke_limit ) {
+    if ( sum_ke != sum_ke ) {
       std::stringstream msg;
-      msg << "Error: Your KE has exceeded the max threshold allowed of: " << d_ke_limit << endl;
+      msg << "Error: Your KE, " << sum_ke << " has diverged." << endl;
       throw InvalidValue(msg.str(), __FILE__, __LINE__);
     }
 
+    if ( sum_ke > d_ke_limit ) {
+      std::stringstream msg;
+      msg << "Error: Your KE, " << sum_ke << " has exceeded the max threshold allowed of: " << d_ke_limit << endl;
+      throw InvalidValue(msg.str(), __FILE__, __LINE__);
+    }
   }
 }
 

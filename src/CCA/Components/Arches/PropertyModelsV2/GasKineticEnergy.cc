@@ -125,7 +125,11 @@ void GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
     ke_sum += ke(i,j,k);
   }, ke_p);
   // check if ke is diverging in this patch
-  if ( ke_p > m_max_ke )
-    throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);
+  if ( ke_p > m_max_ke ) {
+      std::stringstream msg;
+      msg << "Error: Your KE, " << ke_p << " has exceeded the max threshold allowed of: " << m_max_ke << std::endl;
+      throw InvalidValue(msg.str(), __FILE__, __LINE__);
+  }
 }
+
 } //namespace Uintah
