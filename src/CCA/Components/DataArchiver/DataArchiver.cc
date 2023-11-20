@@ -1300,13 +1300,14 @@ DataArchiver::setCheckpointTimeStep( bool val,
       if( d_myworld->myRank() == 0 ) {
         if( m_checkpointCycle == 0 ) {
           DOUTR( true, "WARNING the checkpoint cycle is set to zero. "
-                "No checkpoints will be deleted. This may cause unacceptable disk usage." );
+                 "No checkpoints will be deleted. "
+                 "This may cause unacceptable disk usage." );
         }
 
         if( (int) m_checkpointTimeStepDirs.size() > 10 ) {
-          DOUTR( true, "WARNING there are currently checkpoint "
-                << m_checkpointTimeStepDirs.size() << " files. "
-                << "This may be excessive and cause unacceptable disk usage." );
+          DOUTR( true, "WARNING there are currently "
+                 << m_checkpointTimeStepDirs.size() << " checkpoint files. "
+                 << "This may be excessive and cause unacceptable disk usage." );
         }
       }
 
@@ -2907,6 +2908,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // this task should be called once per variable (per patch/matl subset).
   if (g_DA_dbg) {
     ostringstream msg;
+
+    msg << "    data warehouse ID = " << dw->getID();
+
     if ( type == CHECKPOINT_GLOBAL ) {
       msg << "    global";
     }
