@@ -314,17 +314,17 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   int status;
   char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
-  for (unsigned int k=rbegin2; k<rend2; ++k) {
-    for (unsigned int j=rbegin1; j<rend1; ++j) {
-      for (unsigned int i=rbegin0; i<rend0; ++i) {
+  for (int k=rbegin2; k<rend2; ++k) {
+    for (int j=rbegin1; j<rend1; ++j) {
+      for (int i=rbegin0; i<rend0; ++i) {
         functor(i, j, k);
       }
     }
@@ -362,13 +362,13 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -512,13 +512,13 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -746,17 +746,17 @@ template <typename ExecSpace, typename MemSpace, typename Functor, typename Redu
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red)
 {
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
-  for (unsigned int k=rbegin2; k<rend2; ++k) {
-    for (unsigned int j=rbegin1; j<rend1; ++j) {
-      for (unsigned int i=rbegin0; i<rend0; ++i) {
+  for (int k=rbegin2; k<rend2; ++k) {
+    for (int j=rbegin1; j<rend1; ++j) {
+      for (int i=rbegin0; i<rend0; ++i) {
 
         ReductionType tmp = 0;
         functor(i, j, k, tmp);
@@ -797,13 +797,13 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -958,13 +958,13 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1213,19 +1213,19 @@ inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value
 parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
                     BlockRange const & r, const Functor & functor, ReductionType & red)
 {
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   ReductionType tmp = red;
 
-  for (unsigned int k=rbegin2; k<rend2; ++k) {
-    for (unsigned int j=rbegin1; j<rend1; ++j) {
-      for (unsigned int i=rbegin0; i<rend0; ++i) {
+  for (int k=rbegin2; k<rend2; ++k) {
+    for( int j=rbegin1; j<rend1; ++j) {
+      for (int i=rbegin0; i<rend0; ++i) {
         functor(i, j, k, tmp);
 
         if(red > tmp)
@@ -1265,13 +1265,13 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1428,13 +1428,13 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1876,7 +1876,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor)
+             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace, const unsigned int list_size, const Functor & functor)
 {
   // int status;
   // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
