@@ -1153,12 +1153,9 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",this,
                               &DataArchiver::outputGlobalVars );
 
-    // Really want to schedule this task to be executed after the
-    // simulation time is updated. But it causes a crash when getting
-    // the sim time from the new data warehouse. As the simulation
-    // time can be calculated from the simulation time and the delta t
-    // which are both in the old data warehouse do that instead.
-
+    // This task must be executed after the simulation time is updated
+    // because when doing an AMR grid the delta T in the old warehouse
+    // is overwritten in ApplicationCommon::setDelTForAllLevels.
     task->requires( Task::NewDW, m_application->getTimeStepLabel() );
     task->requires( Task::NewDW, m_application->getSimTimeLabel() );
 
@@ -2758,13 +2755,24 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
 
   // See note on the scheduling of this task.
 
-  // The values must come from the old data warehouse because system
-  // vars can be updated before or after this task. Those are in the
-  // new data warehouse.
+  // A data warehouse will contain the current time step but the
+  // simulation time is the time at the beginning, not the end of the
+  // time step.
+
+  // As such, the time step come must come from the old data
+  // warehouse. The exception is when one is dumping the initial time
+  // step as there is no old data warehouse, only a new.
+
+  // Whereas the simulation time must always come from the new data
+  // warehouse because the while the time step in old data warehouse
+  // is accurate, the delta T will be overwritten for AMR grids.
   timeStep_vartype timeStepVar;
   simTime_vartype   simTimeVar;
 
-  old_dw->get( timeStepVar, m_application->getTimeStepLabel() );
+  if( old_dw && old_dw->exists(m_application->getTimeStepLabel()) )
+    old_dw->get( timeStepVar, m_application->getTimeStepLabel() );
+  else
+    new_dw->get( timeStepVar, m_application->getTimeStepLabel() );
   new_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
 
   const int    timeStep = timeStepVar;
