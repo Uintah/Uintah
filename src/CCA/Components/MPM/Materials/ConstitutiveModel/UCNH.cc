@@ -391,7 +391,6 @@ void UCNH::addComputesAndRequires(Task* task,
 
   // Plasticity
   if(d_usePlasticity) {
-
     task->requires(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
     task->requires(Task::OldDW, pYieldStressLabel,     matlset, gnone);
     task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
@@ -400,12 +399,10 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(bElBarLabel_preReloc,               matlset);
   }
 
-  if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
-  }
+  task->requires(Task::OldDW, lb->pJThermalLabel,      matlset, gnone);
 
   // Universal
-  task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,    matlset, gnone);
 }
 //______________________________________________________________________
 //
@@ -622,7 +619,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
     // Particle and grid data universal to model type
     // Old data containers
-    constParticleVariable<double>  pMass, pVolume_new;
+    constParticleVariable<double>  pMass, pVolume_new, pJThermal;
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Vector>  pVelocity;
@@ -665,6 +662,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
+    old_dw->get(pJThermal,           lb->pJThermalLabel,           pset);
 
     // Universal Allocations
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
@@ -752,7 +750,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
 
       // get the hydrostatic part of the stress
-      double p = 0.5*bulk*(J - 1.0/J);
+      double p = 0.5*bulk*((J - 1.0/J) - (pJThermal[idx] - 1.0/pJThermal[idx]));
 
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;

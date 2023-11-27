@@ -128,20 +128,22 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  ps->getWithDefault("linear_thermal_expansion_coef",
+                                     d_thermalExpCoeff, 0.);
   
   // Also use for Darcy momentum exchange model
   ps->get("permeability", d_permeability);
 
   // For MPM hydro-mechanical coupling
   if (flags->d_coupledflow) {
-      // Rigid material does not require porosity and permeability
-      if (!ps->findBlockWithAttributeValue("constitutive_model", "type", "rigid")) {
-          ps->require("water_density", d_waterdensity);
-          ps->require("porosity", d_porosity);
-          //ps->require("permeability", d_permeability);
-          d_initial_porepressure = 0.0;
-          ps->get("initial_pore_pressure", d_initial_porepressure);
-      }
+    // Rigid material does not require porosity and permeability
+    if (!ps->findBlockWithAttributeValue("constitutive_model", "type","rigid")){
+        ps->require("water_density", d_waterdensity);
+        ps->require("porosity", d_porosity);
+        //ps->require("permeability", d_permeability);
+        d_initial_porepressure = 0.0;
+        ps->get("initial_pore_pressure", d_initial_porepressure);
+    }
   }
 
   // Assume the the centered specific heat is C_v
@@ -151,8 +153,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_Cp = d_Cv;
   ps->get("C_p",d_Cp);
 
-  d_troom = 294.0; d_tmelt = 295.0e10;
-  ps->get("room_temp", d_troom);
+  if(d_thermalExpCoeff != 0.){
+    ps->require("room_temp", d_troom);
+  } else {
+    d_troom = 294.0; 
+    ps->get("room_temp", d_troom);
+  }
+  d_tmelt = 295.0e10;
   ps->get("melt_temp", d_tmelt);
 
   // Material is rigid (velocity prescribed)
@@ -304,6 +311,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("density",d_density);
   mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   mpm_ps->appendElement("specific_heat",d_specificHeat);
+  mpm_ps->appendElement("linear_thermal_expansion_coef",
+                                        d_thermalExpCoeff);
   mpm_ps->appendElement("C_p",d_Cp);
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
@@ -408,16 +417,19 @@ double MPMMaterial::getInitialDensity() const
   return d_density;
 }
 
-double 
-MPMMaterial::getInitialCp() const
+double MPMMaterial::getInitialCp() const
 {
   return d_Cp;
 }
 
-double 
-MPMMaterial::getInitialCv() const
+double MPMMaterial::getInitialCv() const
 {
   return d_Cv;
+}
+
+double MPMMaterial::getThermalExpansionCoefficient() const
+{
+  return d_thermalExpCoeff;
 }
 
 double MPMMaterial::getRoomTemperature() const

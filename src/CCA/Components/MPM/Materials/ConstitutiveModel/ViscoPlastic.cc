@@ -501,7 +501,7 @@ ViscoPlastic::addComputesAndRequires(Task* task,
 ////////// Delegate as much to d_plastic as possible.
 void 
 ViscoPlastic::computeStressTensor(const PatchSubset* patches,
-                                        const MPMMaterial* matl,
+                                  const MPMMaterial* matl,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
@@ -537,11 +537,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
   double totalStrainEnergy = 0.0;
   double epdot; //plastic strain rate (1/sec)
-
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -984,11 +979,6 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   double Tm = matl->getMeltTemperature();
   int implicitFlag = 1;
 
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
-
 //   Particle and Grid data
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
@@ -1396,11 +1386,6 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
   int implicitFlag = 1;
-
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
 
   // Data location
   int dwi = matl->getDWIndex();

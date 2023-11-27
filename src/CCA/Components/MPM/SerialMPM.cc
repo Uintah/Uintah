@@ -434,6 +434,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->delTLabel,level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
+  t->computes(lb->pJThermalLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -464,7 +465,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+    MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -839,7 +841,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
   if(flags->d_doGranularMPM){ //MJ
-    scheduleGranularMPM(                    sched, patches, matls);
+    scheduleGranularMPM(                  sched, patches, matls);
   }
 
   scheduleFinalParticleUpdate(            sched, patches, matls);
@@ -1665,6 +1667,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
+  t->computes(lb->pJThermalLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1672,7 +1675,6 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -4647,7 +4649,8 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
       // Get the arrays of particle values to be changed
@@ -4894,12 +4897,13 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<int> pLocalized;
       constParticleVariable<double> pdTdt,pmassNew;
-      ParticleVariable<double> pTempNew;
+      ParticleVariable<double> pTempNew, pJThermal;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -4908,13 +4912,21 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
-      new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
+      new_dw->getModifiable(pTempNew,   lb->pTemperatureLabel_preReloc,pset);
+      new_dw->allocateAndPut(pJThermal, lb->pJThermalLabel_preReloc,   pset);
+
+      double pRef = mpm_matl->getRoomTemperature();
+      double thermExpCoeff = mpm_matl->getThermalExpansionCoefficient();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pTempNew[idx] += pdTdt[idx]*delT;
+
+        // Thermal Expansion
+        double thermalStretch = 1. + (pTempNew[idx]-pRef)*thermExpCoeff;
+        pJThermal[idx] = thermalStretch*thermalStretch*thermalStretch;
 
         // Delete particles whose mass is too small (due to combustion),
         // whose pLocalized flag has been set to -999 or who have

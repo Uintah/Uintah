@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: Updated 7/31/00 -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Heat conduction problem</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>1.e-3</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.0e-8</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase>ThermalExpansionTest.uda</filebase>
+       <outputInterval>1.0e-4</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.particleID"/>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.velocity"/>
+       <save label = "p.displacement"/>
+       <save label = "p.externalHeatRate"/>
+       <save label = "p.stress"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.loadCurveID"/>
+       <save label = "p.JThermal"/>
+       <save label = "p.temperature"/>
+       <save label = "g.mass"/>
+       <checkpoint cycle = "2" interval = "1.0e-4"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <use_load_curves> true </use_load_curves>
+       <DoThermalExpansion> true </DoThermalExpansion>
+       <DoExplicitHeatConduction> true </DoExplicitHeatConduction>
+   </MPM>
+
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1000.0</density>
+              <thermal_conductivity>45.0</thermal_conductivity>
+              <specific_heat>466</specific_heat>
+              <room_temp>300</room_temp>
+              <linear_thermal_expansion_coef>23.6e-6
+                                              </linear_thermal_expansion_coef>
+              <constitutive_model type="comp_neo_hook">
+                  <bulk_modulus>150.0e9</bulk_modulus>
+                  <shear_modulus>77.0e9</shear_modulus>
+              </constitutive_model>
+              <geom_object>
+                <box label="gp1">
+                   <min>[0,0,0]</min>
+                   <max>[0.02,0.004,0.001]</max>
+                </box>
+                <res>[2,2,1]</res>
+                <velocity>[0.,0.,0.]</velocity>
+                <temperature>300.</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>null</type>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+
+  <PhysicalBC>
+    <MPM>
+      <heat_flux>
+        <!--  Apply a heat flux of 1e6 W/m^2 (??) to the top of block 1-->
+        <geom_object>
+          <box label="y+face">
+            <min>[0.0,  0.0039, 0.000]</min>
+            <max>[0.02, 0.0041, 0.001]</max>
+          </box>
+        </geom_object>
+        <load_curve>
+          <id>1</id>
+          <material>0</material>
+          <time_point>
+            <time> 0.0  </time>
+            <load> 1.e7 </load>
+          </time_point>
+          <time_point>
+            <time> 0.99e-3  </time>
+            <load> 1.e7 </load>
+          </time_point>
+          <time_point>
+            <time> 1.01e-3  </time>
+            <load> 0.0 </load>
+          </time_point>
+          <time_point>
+            <time> 2.0e-3  </time>
+            <load> 0.0 </load>
+          </time_point>
+        </load_curve>
+      </heat_flux>
+    </MPM>
+  </PhysicalBC>
+    <Grid>
+      <BoundaryConditions>
+             <Face side = "x-">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "x+">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "y-">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "y+">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+           </BCType>
+       </Face>
+       <Face side = "z-">
+          <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       </Face>
+       <Face side = "z+">
+          <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       </Face>
+       </BoundaryConditions>       
+       <Level>
+           <Box label="1">
+              <lower>[-0.004, -.005, 0.000]</lower>
+              <upper>[ 0.024, 0.010, 0.001]</upper>
+               <resolution>[28,15,1]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>

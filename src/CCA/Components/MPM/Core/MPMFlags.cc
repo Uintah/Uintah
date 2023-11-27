@@ -71,7 +71,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
   d_maxGridLevel                  =  1000;
-  d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
@@ -250,7 +249,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
   mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
   mpm_flag_ps->get("DoCapDensity", d_doCapDensity);
-  mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
   mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
   mpm_flag_ps->get("do_grid_reset",                     d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",             d_min_part_mass);
@@ -448,7 +446,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoCapDensity", d_doCapDensity);
   ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);
-  ps->appendElement("DoThermalExpansion",                 d_doThermalExpansion);
   ps->appendElement("UseGradientEnhancedVelocityProjection",  d_GEVelProj);
   ps->appendElement("do_grid_reset",                      d_doGridReset);
   ps->appendElement("minimum_particle_mass",              d_min_part_mass);

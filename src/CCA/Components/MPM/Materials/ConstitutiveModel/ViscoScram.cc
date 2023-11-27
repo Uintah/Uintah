@@ -421,11 +421,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   double arad  = d_initialData.CrackParameterA;
   double arad3 = arad*arad*arad;
 
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
-
   double Gmw[5];
   Gmw[0]=d_initialData.G[0];
   Gmw[1]=d_initialData.G[1];
