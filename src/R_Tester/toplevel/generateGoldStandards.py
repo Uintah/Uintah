@@ -166,16 +166,16 @@ def generateGS() :
 
     #__________________________________
     # Does mpirun command exist or has the environmental variable been set?
-    try :
-      MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
-    except :
-      try:
+    MPIRUN = os.getenv("MPIRUN")    # first try the environmental variable
+    if MPIRUN is None:
         MPIRUN = shutil.which("mpirun")
-      except:
+
+    if MPIRUN is None:
         print( "ERROR:generateGoldStandards.py ")
         print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
         print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
-        exit (1)
+        exit (1)         
+
 
     print( "Using mpirun: %s " % MPIRUN )
     print( "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable" )
@@ -238,34 +238,34 @@ def generateGS() :
           exit( 1 )
 
     # Warn user if directories already exist
-    some_dirs_already_exist = False
+    some_GS_exist = False
 
     for component in components :
-        if os.path.isdir( component ) :
-            if not some_dirs_already_exist :
-                some_dirs_already_exist = True
-                print( "" )
-                print( "Note, the following gold standards already exist: " )
-            else :
-                print( ", " )
-            os.sys.stdout.write( component )
+      if os.path.isdir( component ) :
+        some_GS_exist  = True
 
-    if some_dirs_already_exist :
-        answer = ""
-        while answer != "n" and answer != "y" :
-            print( "" )
-            print( "Delete existing gold standards?  (If 'no', script will exit.) [y/n]" )
-            answer = os.sys.stdin.readline()[:-1]
-            if answer == "n" :
-                print( "" )
-                print( "Goodbye." )
-                print( "" )
-                exit( 0 )
-
+    # delete all GS
+    if some_GS_exist :
+      print( "Delete existing ALL gold standards? [y/n]" )
+      answer = os.sys.stdin.readline()[:-1]
+      ans    = str.upper( answer );
+      
+      if ans == "Y" :
         for component in components :
-            if os.path.isdir( component ) :
-                print( "Deleting " + component )
-                shutil.rmtree( component )
+          if os.path.isdir( component ) :
+            print( "Deleting " + component )
+            shutil.rmtree( component )
+
+    # Cherry pick component's gold standards to delete
+    for component in components :
+      if os.path.isdir( component ) :
+        print( "Delete " + component + " gold standards? [y/n]" )
+        answer = os.sys.stdin.readline()[:-1]
+        ans    = str.upper( answer );
+        
+        if ans == "Y" :
+          print( "Deleting " + component )
+          shutil.rmtree( component )
 
     #__________________________________
     #
@@ -287,7 +287,9 @@ def generateGS() :
           print( "" )
           exit( -1 )
 
-        os.mkdir( component )
+        if not os.path.isdir( component ) :
+          os.mkdir( component )
+          
         os.chdir( component )
 
         #__________________________________
@@ -325,6 +327,7 @@ def generateGS() :
             sus_options    = ""
             preProcess_cmd = ""
             do_restart     = 1
+            startFrom      = "inputFile"
             do_gpu         = 0    # run test if gpu is supported
             testname       = getTestName( test )
             upsFile        = inputs + "/" + component + "/" + getUpsFile( test )
@@ -351,6 +354,12 @@ def generateGS() :
                   sus_options = tmp[1]
                   print( "sus_option: %s \n"%(sus_options) )
 
+                if flags[i] == "postProcessUda":
+                  startFrom = "postProcessUda"
+                  
+                if flags[i] == "startFromCheckpoint":
+                  startFrom  = "checkpoint"
+
                 if tmp[0] == "preProcessCmd":
                   preProcess_cmd = tmp[1]
                   print( "preProcess_cmd: %s \n"%(preProcess_cmd) )
@@ -373,7 +382,7 @@ def generateGS() :
 
             #__________________________________
             #
-            if isValid_inputFile( upsFile, "null", do_restart ) == False:
+            if isValid_inputFile( upsFile, startFrom, do_restart ) == False:
               print ("    Now skipping test %s \n" % testname)
               continue
 

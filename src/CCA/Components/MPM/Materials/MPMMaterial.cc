@@ -169,7 +169,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   // Material is force transmitting (moves according to sum of forces)
   d_is_force_transmitting_material=false;
   ps->get("is_force_transmitting_material", d_is_force_transmitting_material);
-  flags->d_reductionVars->sumTransmittedForce = true;
+  if(d_is_force_transmitting_material){
+    flags->d_reductionVars->sumTransmittedForce = true;
+  }
 
   // Enable ability to activate materials when needed to save computation time
   d_is_active=true;
