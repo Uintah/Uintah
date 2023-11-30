@@ -838,9 +838,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_flags->d_integrator_type == "explicit") {
     particle_state.push_back(d_lb->pExternalHeatRateLabel);
     particle_state_preReloc.push_back(d_lb->pExternalHeatRateLabel_preReloc);
-
-    particle_state.push_back(d_lb->pJThermalLabel);
-    particle_state_preReloc.push_back(d_lb->pJThermalLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pMassLabel);
