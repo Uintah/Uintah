@@ -386,7 +386,9 @@ void UCNH::addComputesAndRequires(Task* task,
     addSharedCRForImplicit(task, matlset, reset);
   } else {
     addSharedCRForExplicit(task, matlset, patches);
-    task->requires(Task::NewDW, lb->pJThermalLabel,      matlset, gnone);
+    if(!matl->getIsRigid()){ // Rigid test
+      task->requires(Task::NewDW, lb->pJThermalLabel,    matlset, gnone);
+    }
   }
 
   task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
