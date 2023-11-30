@@ -557,7 +557,6 @@ MPMLabel::~MPMLabel()
 
   //PermanentParticleState
   VarLabel::destroy(pJThermalLabel);          // for thermal stress
-  VarLabel::destroy(pJThermalLabel_preReloc); // for thermal stress
   VarLabel::destroy(pDeformationMeasureLabel);
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pVelGradLabel);
