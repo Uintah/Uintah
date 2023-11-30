@@ -376,16 +376,18 @@ void UCNH::addComputesAndRequires(Task* task,
   // Add the computes and requires that are common to all explicit
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
+
+  // Other constitutive model and input dependent computes and requires
+  Ghost::GhostType  gnone = Ghost::None;
+
   const MaterialSubset* matlset = matl->thisMaterial();
   if (flag->d_integrator == MPMFlags::Implicit) {
     bool reset = flag->d_doGridReset;
     addSharedCRForImplicit(task, matlset, reset);
   } else {
     addSharedCRForExplicit(task, matlset, patches);
+    task->requires(Task::NewDW, lb->pJThermalLabel,      matlset, gnone);
   }
-
-  // Other constitutive model and input dependent computes and requires
-  Ghost::GhostType  gnone = Ghost::None;
 
   task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
 
@@ -398,8 +400,6 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(pYieldStressLabel_preReloc,         matlset);
     task->computes(bElBarLabel_preReloc,               matlset);
   }
-
-  task->requires(Task::OldDW, lb->pJThermalLabel,      matlset, gnone);
 
   // Universal
   task->requires(Task::OldDW, lb->pParticleIDLabel,    matlset, gnone);
@@ -662,7 +662,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
-    old_dw->get(pJThermal,           lb->pJThermalLabel,           pset);
+    new_dw->get(pJThermal,           lb->pJThermalLabel,           pset);
 
     // Universal Allocations
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);

@@ -434,7 +434,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->delTLabel,level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
-  t->computes(lb->pJThermalLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -1624,11 +1623,13 @@ void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
 
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
+  t->computes(lb->pJThermalLabel);
 
   // JBH -- Need code to use these variables -- FIXME TODO
   if(flags->d_doScalarDiffusion) {
@@ -1665,9 +1666,6 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
-
-  t->modifies(lb->pTemperatureLabel_preReloc);
-  t->computes(lb->pJThermalLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -4656,12 +4654,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize, pSizeOrig;
-      constParticleVariable<double> pVolumeOld,pmass,pmassNew;
+      constParticleVariable<double> pVolumeOld,pmass,pmassNew,pTemperature;
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pFOld;
-      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<double> pvolume,pJThermal;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       ParticleVariable<Vector> pTempGrad;
+
+      double pRef = mpm_matl->getRoomTemperature();
+      double thermExpCoeff = mpm_matl->getThermalExpansionCoefficient();
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector>  gvelocity_star;
@@ -4677,6 +4678,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+      old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
 
       new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
@@ -4684,6 +4686,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
                                                                           pset);
       new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
+      new_dw->allocateAndPut(pJThermal,  lb->pJThermalLabel,              pset);
 
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
@@ -4773,6 +4776,10 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
           pFNew[idx] = Finc*pFOld[idx];
         }
+
+        // Thermal Expansion
+        double thermalStretch = 1. + (pTemperature[idx]-pRef)*thermExpCoeff;
+        pJThermal[idx] = thermalStretch*thermalStretch*thermalStretch;
 
         double J   =pFNew[idx].Determinant();
         double JOld=pFOld[idx].Determinant();
@@ -4903,7 +4910,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<int> pLocalized;
       constParticleVariable<double> pdTdt,pmassNew;
-      ParticleVariable<double> pTempNew, pJThermal;
+      ParticleVariable<double> pTempNew;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -4913,20 +4920,12 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
       new_dw->getModifiable(pTempNew,   lb->pTemperatureLabel_preReloc,pset);
-      new_dw->allocateAndPut(pJThermal, lb->pJThermalLabel_preReloc,   pset);
-
-      double pRef = mpm_matl->getRoomTemperature();
-      double thermExpCoeff = mpm_matl->getThermalExpansionCoefficient();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pTempNew[idx] += pdTdt[idx]*delT;
-
-        // Thermal Expansion
-        double thermalStretch = 1. + (pTempNew[idx]-pRef)*thermExpCoeff;
-        pJThermal[idx] = thermalStretch*thermalStretch*thermalStretch;
 
         // Delete particles whose mass is too small (due to combustion),
         // whose pLocalized flag has been set to -999 or who have

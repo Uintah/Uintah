@@ -87,9 +87,6 @@ MPMLabel::MPMLabel()
   pJThermalLabel = VarLabel::create( "p.JThermal",
                         ParticleVariable<double>::getTypeDescription() ); 
     
-  pJThermalLabel_preReloc = VarLabel::create( "p.JThermal+",
-                        ParticleVariable<double>::getTypeDescription() ); 
-    
   p_qLabel  = VarLabel::create( "p.q",
                         ParticleVariable<double>::getTypeDescription() );
   

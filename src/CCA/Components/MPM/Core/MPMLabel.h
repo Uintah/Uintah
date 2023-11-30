@@ -92,7 +92,6 @@ namespace Uintah {
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pJThermalLabel; //for thermal stress 
-      const VarLabel* pJThermalLabel_preReloc; //for thermal stress 
       const VarLabel* pTempPreviousLabel; //for thermal stress 
       const VarLabel* pTempPreviousLabel_preReloc; //for thermal stress  
       const VarLabel* pdTdtLabel; //for heat conduction
