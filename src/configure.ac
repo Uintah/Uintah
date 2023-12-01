@@ -3830,28 +3830,48 @@ if test "$HAVE_KOKKOS" = "yes"; then
 
 cat > conftest-kokkos.cc <<EOF
 #include <Kokkos_Macros.hpp>
+#include <iostream>
 int
 main()
 {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
-  return 0;
-#else
-  return 1;
+  int val = 0;
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  val += 1;
 #endif
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  val += 2;
+#endif
+
+  std::cout << val << std::endl;
+
+  return 0;
 }
 EOF
 
-AC_MSG_CHECKING(if Kokkos uses a GPU)
+AC_MSG_CHECKING(if Kokkos enabled a GPU or OpenMP)
 $CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
 
-./conftest-kokkos
+LOC=$(./conftest-kokkos)
 
-if test $? = 0; then
-  AC_MSG_RESULT(yes)
+if test $LOC = 3; then
+  AC_MSG_RESULT(both)
   KOKKOS_USING_GPU="yes"
   DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 2; then
+  AC_MSG_RESULT(GPU)
+  KOKKOS_USING_GPU="yes"
+  DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 1; then
+  AC_MSG_RESULT(OpenMP)
+
 else
   AC_MSG_RESULT(no)
+  AC_MSG_ERROR( The Kokkos library was not built with GPU or OpenMP support. One or both must be enabled if including Kokkos. )
+
 fi
 
 rm -f conftest-kokkos.cc conftest-kokkos

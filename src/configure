@@ -36643,31 +36643,53 @@ if test "$HAVE_KOKKOS" = "yes"; then
 
 cat > conftest-kokkos.cc <<EOF
 #include <Kokkos_Macros.hpp>
+#include <iostream>
 int
 main()
 {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
-  return 0;
-#else
-  return 1;
+  int val = 0;
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  val += 1;
 #endif
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  val += 2;
+#endif
+
+  std::cout << val << std::endl;
+
+  return 0;
 }
 EOF
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if Kokkos uses a GPU" >&5
-$as_echo_n "checking if Kokkos uses a GPU... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if Kokkos enabled a GPU or OpenMP" >&5
+$as_echo_n "checking if Kokkos enabled a GPU or OpenMP... " >&6; }
 $CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
 
-./conftest-kokkos
+LOC=$(./conftest-kokkos)
 
-if test $? = 0; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
+if test $LOC = 3; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: both" >&5
+$as_echo "both" >&6; }
   KOKKOS_USING_GPU="yes"
   DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 2; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: GPU" >&5
+$as_echo "GPU" >&6; }
+  KOKKOS_USING_GPU="yes"
+  DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 1; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: OpenMP" >&5
+$as_echo "OpenMP" >&6; }
+
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
+  as_fn_error $? "The Kokkos library was not built with GPU or OpenMP support. One or both must be enabled if including Kokkos. " "$LINENO" 5
+
 fi
 
 rm -f conftest-kokkos.cc conftest-kokkos
