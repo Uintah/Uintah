@@ -162,7 +162,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
                                           const PatchSet* ) const
 {
   Ghost::GhostType  gnone = Ghost::None;
-  Ghost::GhostType  gac   = Ghost::AroundCells;
 
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);

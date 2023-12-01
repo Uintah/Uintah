@@ -332,20 +332,15 @@ void MohrCoulomb::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("Phi",UI[3]);   // friction angle (degrees)
   cm_ps->appendElement("Psi",UI[4]);   // dilation angle (degrees, for non-associated flow rule)
   cm_ps->appendElement("Version",UI[5]);   // Version of the model
-
-   cm_ps->appendElement("suction",UI[6]);
+  cm_ps->appendElement("suction",UI[6]);
   cm_ps->appendElement("UseWaterRetention",UI[7]);
-
-
   cm_ps->appendElement("WR_Param1",UI[8]);
   cm_ps->appendElement("WR_Param2",UI[9]);
   cm_ps->appendElement("WR_Param3",UI[10]);
   cm_ps->appendElement("WR_Param4",UI[11]);
-
   cm_ps->appendElement("SpecVol",UI[12]);  // meridional yld prof param
-
   cm_ps->appendElement("PhiB",UI[13]);  // Fredlund shear angle, c=c+suction*tan(phib)
-    cm_ps->appendElement("Usetransition",UI[14]); // undrained shear strength transition
+  cm_ps->appendElement("Usetransition",UI[14]); // undrained shear strength transition
   cm_ps->appendElement("A1",UI[15]);	// water influence parameter
   cm_ps->appendElement("B1",UI[16]);	// water influence parameter
   cm_ps->appendElement("W",UI[17]);	// water content
@@ -357,11 +352,9 @@ void MohrCoulomb::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("nuy",UI[23]); // modul ratio
   cm_ps->appendElement("shear_strain",UI[24]);
 
-
   cm_ps->appendElement("Use_linear",UI[25]);
   cm_ps->appendElement("a",UI[26]);
   cm_ps->appendElement("y_ref",UI[27]);
-
 
   cm_ps->appendElement("strain11",UI[28]);
   cm_ps->appendElement("strain22",UI[29]);
@@ -374,22 +367,21 @@ void MohrCoulomb::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("St",UI[35]);
   cm_ps->appendElement("strain_95",UI[36]);
 
-    cm_ps->appendElement("y",UI[37]);
-    cm_ps->appendElement("n",UI[38]);
+  cm_ps->appendElement("y",UI[37]);
+  cm_ps->appendElement("n",UI[38]);
 
-    cm_ps->appendElement("s_xx",UI[39]);
-    cm_ps->appendElement("s_yy",UI[40]);
-    cm_ps->appendElement("Ko",UI[41]);
+  cm_ps->appendElement("s_xx",UI[39]);
+  cm_ps->appendElement("s_yy",UI[40]);
+  cm_ps->appendElement("Ko",UI[41]);
 
-    cm_ps->appendElement("Use_regular",UI[42]);
-    cm_ps->appendElement("tFE",UI[43]);
-    cm_ps->appendElement("tShear",UI[44]);
+  cm_ps->appendElement("Use_regular",UI[42]);
+  cm_ps->appendElement("tFE",UI[43]);
+  cm_ps->appendElement("tShear",UI[44]);
 
-    cm_ps->appendElement("s_xy",UI[45]);
+  cm_ps->appendElement("s_xy",UI[45]);
 
-	cm_ps->appendElement("n_nonlocalMC", UI[46]);
-	cm_ps->appendElement("l_nonlocal", UI[47]);
-
+  cm_ps->appendElement("n_nonlocalMC", UI[46]);
+  cm_ps->appendElement("l_nonlocal", UI[47]);
 }
 
 MohrCoulomb* MohrCoulomb::clone()
@@ -409,7 +401,7 @@ void MohrCoulomb::initializeCMData(const Patch* patch,
 
   std::vector<ParticleVariable<double> > ISVs(d_NINSV+1);
 
-  cout << "In initializeCMData" << endl;
+//  cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
@@ -476,7 +468,7 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
                                   DataWarehouse* new_dw)
 {
 
-double rho_orig = matl->getInitialDensity();
+  double rho_orig = matl->getInitialDensity();
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
@@ -507,10 +499,10 @@ double rho_orig = matl->getInitialDensity();
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-	new_dw->get(pvolume_new,		 lb->pVolumeLabel_preReloc,    pset);
-	new_dw->get(pxnew,				 lb->pXLabel_preReloc,		   pset);
+    new_dw->get(pvolume_new,         lb->pVolumeLabel_preReloc,    pset);
+    new_dw->get(pxnew,	             lb->pXLabel_preReloc,         pset);
 
-	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+    std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
@@ -583,12 +575,12 @@ double rho_orig = matl->getInitialDensity();
 
       // Load into 1-D array for the fortran code
       double Dlocal[6];
-	  Dlocal[0]=D(0,0);
-	  Dlocal[1]=D(1,1);
-	  Dlocal[2]=D(2,2);
-	  Dlocal[3]=D(0,1);
-	  Dlocal[4]=D(1,2);
-	  Dlocal[5]=D(2,0);
+      Dlocal[0]=D(0,0);
+      Dlocal[1]=D(1,1);
+      Dlocal[2]=D(2,2);
+      Dlocal[3]=D(0,1);
+      Dlocal[4]=D(1,2);
+      Dlocal[5]=D(2,0);
       double svarg[d_NINSV];
       double USM=9e99;
       double dt = delT;
@@ -599,14 +591,14 @@ double rho_orig = matl->getInitialDensity();
         svarg[i]=ISVs[i][idx];
       }
 
-	  // Undrained increase linearly with depth
-	  double n = svarg[38];
+      // Undrained increase linearly with depth
+      double n = svarg[38];
 
-	  for (int i = 0; i < n; i++) {
-		  svarg[37] = px[idx](1);
-		  n = n - 1;
-	  }
-	  svarg[38] = n;
+      for (int i = 0; i < n; i++) {
+        svarg[37] = px[idx](1);
+        n = n - 1;
+      }
+      svarg[38] = n;
 
 	  // Compute Ko
 	  double s_xx = sigarg[0];
@@ -647,9 +639,18 @@ double rho_orig = matl->getInitialDensity();
 	  strain23 += e23 * dt;
 	  strain13 += e13 * dt;
 
-	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + pow((strain11 - strain33), 2.0) + pow((strain22 - strain33), 2.0)) + 3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
+//	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + 
+//                                                 pow((strain11 - strain33), 2.0) + 
+//                                                 pow((strain22 - strain33), 2.0)) +
+//                                            3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
+          shear_strain_local = 0.5*sqrt(2.0*((strain11 - strain22)*(strain11 - strain22) + 
+                                             (strain11 - strain33)*(strain11 - strain33) + 
+                                             (strain22 - strain33)*(strain22 - strain33)) +
+                                        3.0*(strain12*strain12 + strain13*strain13 + strain23*strain23));
 
-	  shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));  
+//        shear_strain_rate = 1.0 / 2.0*sqrt(2 * (pow((e11 - e22), 2) + pow((e11 - e33), 2) + pow((e22 - e33), 2)) + 3 * (pow(e12, 2) + pow(e13, 2) + pow(e23, 2)));  
+          shear_strain_rate = 0.5*sqrt(2.0*(((e11 - e22)*(e11 - e22)) + (e11 - e33)*(e11 - e33) + (e22 - e33)*(e22 - e33)) +
+                                       3.0*(e12*e12 + e13*e13 + e23*e23));
 
 	  svarg[28] = strain11;
 	  svarg[29] = strain22;
@@ -905,7 +906,7 @@ void MohrCoulomb::addInitialComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  cout << "In add InitialComputesAnd" << endl;
+//  cout << "In add InitialComputesAnd" << endl;
 
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){

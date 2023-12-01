@@ -209,7 +209,6 @@
     <DoExplicitHeatConduction>true</DoExplicitHeatConduction>
     <DoPressureStabilization>false</DoPressureStabilization>
     <computeNodalHeatFlux>false</computeNodalHeatFlux>
-    <DoThermalExpansion>false</DoThermalExpansion>
     <minimum_particle_mass>3.0000000000000001e-12</minimum_particle_mass>
     <minimum_mass_for_acc>0</minimum_mass_for_acc>
     <UsePrescribedDeformation>false</UsePrescribedDeformation>

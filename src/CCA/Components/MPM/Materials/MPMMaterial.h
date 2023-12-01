@@ -136,6 +136,7 @@ WARNING
    // Get the specific heats at room temperature
    double getInitialCp() const;
    double getInitialCv() const;
+   double getThermalExpansionCoefficient() const;
 
    // for temperature dependent plasticity models
    double getRoomTemperature() const;
@@ -206,6 +207,9 @@ WARNING
    // for temperature dependent plasticity models
    double d_troom;
    double d_tmelt;
+
+   // for thermal expansion (linear thermal expansion coefficient)
+   double d_thermalExpCoeff;
 
    // for rigid body contact
    bool d_is_rigid;

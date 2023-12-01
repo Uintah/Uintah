@@ -74,7 +74,6 @@
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
     <use_load_curves>               true     </use_load_curves>
-    <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
 

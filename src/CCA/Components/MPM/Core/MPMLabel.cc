@@ -84,7 +84,7 @@ MPMLabel::MPMLabel()
                         ParticleVariable<Matrix3>::getTypeDescription());
   
   // for thermal stress
-  pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
+  pJThermalLabel = VarLabel::create( "p.JThermal",
                         ParticleVariable<double>::getTypeDescription() ); 
     
   p_qLabel  = VarLabel::create( "p.q",
@@ -554,9 +554,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(heatRate_CCLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
-  VarLabel::destroy(pTempCurrentLabel); // for thermal stress
 
   //PermanentParticleState
+  VarLabel::destroy(pJThermalLabel);          // for thermal stress
   VarLabel::destroy(pDeformationMeasureLabel);
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pVelGradLabel);

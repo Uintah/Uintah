@@ -71,7 +71,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
   d_maxGridLevel                  =  1000;
-  d_doThermalExpansion            =  true;
   d_refineParticles               =  false;
   d_XPIC2                         =  false;
   d_artificialDampCoeff           =  0.0;
@@ -95,6 +94,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doTransientImplicitHeatConduction  =  true;
   d_prescribeDeformation               =  false;
   d_prescribedDeformationFile          =  "time_defgrad_rotation";
+  d_doGranularMPM                      =  false;
+  d_GranularMPM_Vcrix                  =  1.04;
+  d_GranularMPM_Vcriy                  =  1.04;
+  d_GranularMPM_Vcriz                  =  1.00;
   d_exactDeformation                   =  false;
   d_insertParticles                    =  false;
   d_doGridReset                        =  true;
@@ -246,13 +249,16 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
   mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
   mpm_flag_ps->get("DoCapDensity", d_doCapDensity);
-  mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
   mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
   mpm_flag_ps->get("do_grid_reset",                     d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",             d_min_part_mass);
   mpm_flag_ps->get("minimum_subcycles_for_F",           d_min_subcycles_for_F);
   mpm_flag_ps->get("minimum_mass_for_acc",              d_min_mass_for_acceleration);
   mpm_flag_ps->get("UsePrescribedDeformation",          d_prescribeDeformation);
+  mpm_flag_ps->get("DoGranularMPM",                     d_doGranularMPM);
+  mpm_flag_ps->get("GranularMPMVcrix",                  d_GranularMPM_Vcrix);
+  mpm_flag_ps->get("GranularMPMVcriy",                  d_GranularMPM_Vcriy);
+  mpm_flag_ps->get("GranularMPMVcriz",                  d_GranularMPM_Vcriz);
 
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
@@ -440,7 +446,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoCapDensity", d_doCapDensity);
   ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);
-  ps->appendElement("DoThermalExpansion",                 d_doThermalExpansion);
   ps->appendElement("UseGradientEnhancedVelocityProjection",  d_GEVelProj);
   ps->appendElement("do_grid_reset",                      d_doGridReset);
   ps->appendElement("minimum_particle_mass",              d_min_part_mass);
@@ -457,6 +462,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
+  ps->appendElement("DoGranularMPM",     d_doGranularMPM);
+  ps->appendElement("GranularMPMVcrix",  d_GranularMPM_Vcrix);
+  ps->appendElement("GranularMPMVcriy",  d_GranularMPM_Vcriy);
+  ps->appendElement("GranularMPMVcriz",  d_GranularMPM_Vcriz);
 //MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);

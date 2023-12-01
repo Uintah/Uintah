@@ -128,20 +128,22 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  ps->getWithDefault("linear_thermal_expansion_coef",
+                                     d_thermalExpCoeff, 0.);
   
   // Also use for Darcy momentum exchange model
   ps->get("permeability", d_permeability);
 
   // For MPM hydro-mechanical coupling
   if (flags->d_coupledflow) {
-      // Rigid material does not require porosity and permeability
-      if (!ps->findBlockWithAttributeValue("constitutive_model", "type", "rigid")) {
-          ps->require("water_density", d_waterdensity);
-          ps->require("porosity", d_porosity);
-          //ps->require("permeability", d_permeability);
-          d_initial_porepressure = 0.0;
-          ps->get("initial_pore_pressure", d_initial_porepressure);
-      }
+    // Rigid material does not require porosity and permeability
+    if (!ps->findBlockWithAttributeValue("constitutive_model", "type","rigid")){
+        ps->require("water_density", d_waterdensity);
+        ps->require("porosity", d_porosity);
+        //ps->require("permeability", d_permeability);
+        d_initial_porepressure = 0.0;
+        ps->get("initial_pore_pressure", d_initial_porepressure);
+    }
   }
 
   // Assume the the centered specific heat is C_v
@@ -151,8 +153,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_Cp = d_Cv;
   ps->get("C_p",d_Cp);
 
-  d_troom = 294.0; d_tmelt = 295.0e10;
-  ps->get("room_temp", d_troom);
+  if(d_thermalExpCoeff != 0.){
+    ps->require("room_temp", d_troom);
+  } else {
+    d_troom = 294.0; 
+    ps->get("room_temp", d_troom);
+  }
+  d_tmelt = 295.0e10;
   ps->get("melt_temp", d_tmelt);
 
   // Material is rigid (velocity prescribed)
@@ -162,7 +169,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   // Material is force transmitting (moves according to sum of forces)
   d_is_force_transmitting_material=false;
   ps->get("is_force_transmitting_material", d_is_force_transmitting_material);
-  flags->d_reductionVars->sumTransmittedForce = true;
+  if(d_is_force_transmitting_material){
+    flags->d_reductionVars->sumTransmittedForce = true;
+  }
 
   // Enable ability to activate materials when needed to save computation time
   d_is_active=true;
@@ -201,6 +210,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   if(!isRestart){
     d_allTriGeometry=true;
     d_allFileGeometry=true;
+    int numTriGeom = 0;
+    int numFileGeom = 0;
+    int numPieces = 0;
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -208,11 +220,15 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
      vector<GeometryPieceP> pieces;
      GeometryPieceFactory::create(geom_obj_ps, pieces);
 
+     numPieces+=pieces.size();
+
      for(unsigned int i = 0; i< pieces.size(); i++){
        TriGeometryPiece* tri_piece = 
                            dynamic_cast<TriGeometryPiece*>(pieces[i].get_rep());
        if (!tri_piece){
          d_allTriGeometry=false;
+       } else{
+         numTriGeom++;
        }
 
        // FileGeometryPiece is inherited from SmoothGeomPiece, so this
@@ -221,6 +237,8 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
                          dynamic_cast<SmoothGeomPiece*>(pieces[i].get_rep());
        if (!smooth_piece){
          d_allFileGeometry=false;
+       } else{
+         numFileGeom++;
        }
      }
 
@@ -246,6 +264,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
      }
 
      d_geom_objs.push_back( obj );
+    }
+    if(numFileGeom!=0 && numFileGeom!=numPieces){
+       throw ParameterNotFound("file geometry pieces can't be mixed with other geometry types in a single material",
+                                __FILE__, __LINE__);
     }
   }
 }
@@ -291,6 +313,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("density",d_density);
   mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   mpm_ps->appendElement("specific_heat",d_specificHeat);
+  mpm_ps->appendElement("linear_thermal_expansion_coef",
+                                        d_thermalExpCoeff);
   mpm_ps->appendElement("C_p",d_Cp);
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
@@ -395,16 +419,19 @@ double MPMMaterial::getInitialDensity() const
   return d_density;
 }
 
-double 
-MPMMaterial::getInitialCp() const
+double MPMMaterial::getInitialCp() const
 {
   return d_Cp;
 }
 
-double 
-MPMMaterial::getInitialCv() const
+double MPMMaterial::getInitialCv() const
 {
   return d_Cv;
+}
+
+double MPMMaterial::getThermalExpansionCoefficient() const
+{
+  return d_thermalExpCoeff;
 }
 
 double MPMMaterial::getRoomTemperature() const

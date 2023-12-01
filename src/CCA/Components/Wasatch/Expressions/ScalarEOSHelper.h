@@ -21,7 +21,34 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+<<<<<<< HEAD
 
+=======
+#ifndef test_species_density_solver_h
+#define test_species_density_solver_h
+
+<<<<<<< HEAD:src/CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h
+#include <sci_defs/wasatch_defs.h>
+
+#ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
+#error test code for the density solver for low-Mach species transport requires PoKiTT.
+#endif
+
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
+
+namespace WasatchCore{
+
+void test_low_mach_species_density_solver( Uintah::ProblemSpecP& params,
+                                           GraphCategories& gc,
+                                           std::set<std::string>& persistentFields );
+
+} // namespace WasatchCore
+
+#endif // test_species_density_solver_h
+=======
+>>>>>>> master
 //-- Uintah Includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
@@ -55,3 +82,7 @@ namespace ScalarEOS {
 
 }
 #endif
+<<<<<<< HEAD
+=======
+>>>>>>> master:src/CCA/Components/Wasatch/Expressions/ScalarEOSHelper.h
+>>>>>>> master

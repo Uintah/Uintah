@@ -238,7 +238,6 @@
         <artificial_damping_coeff>       0.0      </artificial_damping_coeff>
         <use_load_curves>                false    </use_load_curves>
         <do_contact_friction_heating>    false    </do_contact_friction_heating>
-        <DoThermalExpansion>             false    </DoThermalExpansion>
         <testForNegTemps_mpm>            false    </testForNegTemps_mpm>
 
     </MPM>

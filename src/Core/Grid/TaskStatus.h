@@ -1,7 +1,11 @@
 /*
  * The MIT License
  *
+<<<<<<< HEAD:src/Core/Grid/TaskStatus.h
  * Copyright (c) 1997-2019 The University of Utah
+=======
+ * Copyright (c) 2012-2023 The University of Utah
+>>>>>>> master:src/CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,7 +25,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#ifndef test_species_density_solver_h
+#define test_species_density_solver_h
 
+<<<<<<< HEAD:src/Core/Grid/TaskStatus.h
 #ifndef CORE_GRID_TASK_STATUS_H
 #define CORE_GRID_TASK_STATUS_H
 
@@ -38,3 +45,24 @@ namespace Uintah {
 
 } //end namespace Uintah
 #endif //#ifndef CORE_GRID_TASK_STATUS_H
+=======
+#include <sci_defs/wasatch_defs.h>
+
+#ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
+#error test code for the density solver for low-Mach species transport requires PoKiTT.
+#endif
+
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
+
+namespace WasatchCore{
+
+void test_low_mach_species_density_solver( Uintah::ProblemSpecP& params,
+                                           GraphCategories& gc,
+                                           std::set<std::string>& persistentFields );
+
+} // namespace WasatchCore
+
+#endif // test_species_density_solver_h
+>>>>>>> master:src/CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h

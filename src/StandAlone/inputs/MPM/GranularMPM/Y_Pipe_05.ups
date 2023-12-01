@@ -1,0 +1,387 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<!--  First try for creatng granular flow -->
+<Uintah_specification>
+<!--            
+
+                3D simulation,
+                Granular Mixing            
+                Y Pipe- only two part
+                The pipe are elastic rectangular box
+                On the outer side of the pipe is a rigid rectangular box to support the pipe and make sure it does not move
+                The pipe are stragiht (one in x direction and the other in y direction)
+                rigid material points on the bottom parts
+                Gravity has 45 degree inclination
+                Granular uGIMP
+                Vcr= (0.055 * 0.055 * 0.055)
+                Granualr material points of the same size      
+                Granualr material points of the different color (so they can be seperated in VISIT)
+                Different initial velocity
+                400 Dummy Granular material
+                "bard" contact algorithm
+                Granular material E=10 MPa
+                nu=0.45
+                Eta=0.25      
+                -->
+
+
+
+
+
+  <Meta>
+    <title>Granular_Flow_01</title>
+  </Meta>
+  
+  
+  
+  
+<LoadBalancer type="PLB">
+<timestepInterval>25</timestepInterval>
+<gainThreshold>0.15</gainThreshold>
+<doSpaceCurve>true</doSpaceCurve>
+</LoadBalancer>
+
+
+
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+    <maxTime>2.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>3.0e-6</delt_min>
+    <delt_max>05.0e-3</delt_max>
+    <delt_init>5.0e-3</delt_init>
+    <timestep_multiplier>0.5</timestep_multiplier>     <!-- CFL number for MPM simulations, number multiplied by the timestep size that
+	                                               is automatically calculated by the MPM code.keep this value	below 0.5, and should expect to use smaller values for high-rate, large-deformation
+	                                               simulations -->
+  </Time>
+
+  
+  
+  
+  <DataArchiver>
+	<filebase> /m/local/data/Seyed.Seyedan/GranularMPM/Pipe/Y_pipe/Results/Y_Pipe05_Granular_uGIMP_0</filebase>
+
+     <outputInterval>.01</outputInterval> 
+    
+	<save label = "p.x"/>
+	<save label = "p.displacement"/>
+	<save label = "p.color"/>
+	<save label = "p.velocity"/>
+	<save label = "p.mass"/>
+        <save label = "p.volume"/>
+	<save label = "p.externalforce"/>
+	<save label = "p.stress"/>
+	<save label = "TotalMass"/>
+    <checkpoint cycle = "2" interval = "0.05"/>   <!--  to restart a simulation from a point this command can be used  -->
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator> 		     explicit  </time_integrator>
+    <interpolator>                   gimp      </interpolator>
+    <minimum_particle_mass>          1.0e-8    </minimum_particle_mass>
+    <minimum_mass_for_acc>           1.e-15    </minimum_mass_for_acc>
+    <artificial_damping_coeff>       0.0001   </artificial_damping_coeff>
+    <artificial_viscosity>           false     </artificial_viscosity>
+    <use_load_curves>                false     </use_load_curves>
+    <do_contact_friction_heating>    false     </do_contact_friction_heating>
+    <DoExplicitHeatConduction>       false     </DoExplicitHeatConduction>
+    <temperature_solve>	             false     </temperature_solve>
+    <axisymmetric>                   false     </axisymmetric>
+    <withColor>                      true      </withColor>
+    <InsertParticles>                false      </InsertParticles>     
+  </MPM>
+  
+  
+
+  <PhysicalConstants>
+   <gravity>[-6.9367,-6.9367,0]</gravity>
+  </PhysicalConstants>
+  
+  
+  
+
+ <MaterialProperties>
+     <MPM>
+	
+
+ <material name="Rgid_outer_Pipe">
+     	
+	        <density>3000</density>
+                <constitutive_model type="rigid">
+                </constitutive_model> 			
+	        <specific_heat>132.0</specific_heat>
+                <thermal_conductivity>174.0</thermal_conductivity>		
+
+        <geom_object>
+         <difference>
+            <box label = "Rigid_Pipe01">
+               <min>[-0.15, 1.8, -0.45]</min>
+               <max>[0.75, 2.55,  0.45]</max>
+            </box>
+
+            <box label = "Rigid_Pipe01_difference">
+               <min>[-0.1, 1.8, -0.4]</min>
+               <max>[0.7, 2.5,  0.4]</max>
+            </box>
+         </difference>
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>294</temperature>
+		<color>00</color>
+        </geom_object>
+
+
+
+        <geom_object>
+         <difference>
+            <box label = "Rigid_Pipe02">
+               <min>[0.7, 1.15, -0.45]</min>
+               <max>[1.95, 1.75,  0.45]</max>
+            </box>
+
+            <box label = "Rigid_Pipe02_difference">
+               <min>[0.7, 1.2, -0.4]</min>
+               <max>[1.9, 1.7,  0.4]</max>
+            </box>
+         </difference>
+
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>294</temperature>
+		<color>00</color>
+        </geom_object>
+
+
+ </material>
+
+
+
+ <material name="Pipe">
+     	
+	        <density>3000</density>
+                <constitutive_model type="comp_neo_hook">
+                <bulk_modulus> 	1.667e7 </bulk_modulus>  
+                <shear_modulus>9.692e6</shear_modulus>
+                <useModifiedEOS> true </useModifiedEOS>
+                </constitutive_model> 			
+	        <specific_heat>132.0</specific_heat>
+                <thermal_conductivity>174.0</thermal_conductivity>		
+
+        <geom_object>
+         <difference>
+            <box label = "Pipe01">
+               <min>[-0.1, 1.8, -0.4]</min>
+               <max>[0.7, 2.5,  0.4]</max>
+            </box>
+
+            <box label = "Pipe01_difference">
+               <min>[0.0, 1.8, -0.3]</min>
+               <max>[0.6, 2.4,  0.3]</max>
+            </box>
+         </difference>
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>294</temperature>
+		<color>00</color>
+        </geom_object>
+
+
+
+        <geom_object>
+         <difference>
+            <box label = "Pipe02">
+               <min>[0.7, 1.2, -0.4]</min>
+               <max>[1.9, 1.7,  0.4]</max>
+            </box>
+
+            <box label = "Pipe02_difference">
+               <min>[0.7, 1.3, -0.3]</min>
+               <max>[1.8, 1.6,  0.3]</max>
+            </box>
+         </difference>
+
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>294</temperature>
+		<color>00</color>
+        </geom_object>
+
+
+
+        <geom_object>
+            <box label = "bottom01">
+               <min>[-1.0, 0.0, -2.0]</min>
+               <max>[2.0, 0.1,  0.0]</max>
+            </box>
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>194</temperature>
+		<color>00</color>
+        </geom_object>
+
+
+        <geom_object>
+            <box label = "bottom02">
+               <min>[-1.0, 0.0, -2.0]</min>
+               <max>[-.9, 2.5,  0.0]</max>
+            </box>
+                <res>[2,2,2]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>194</temperature>
+		<color>00</color>
+        </geom_object>
+
+ </material>
+
+
+
+<material name="Granular_material00">
+
+                <density>1011.2</density>
+	        <specific_heat>132.0</specific_heat>
+                <thermal_conductivity>174.0</thermal_conductivity>
+
+   <constitutive_model type="MohrCoulomb">
+		<Version>11</Version>			
+                 <G>7.692e6</G>
+                 <K>1.667e7</K>            		  
+	        <Phi>30.0</Phi>
+	        <c>0.00001</c>
+                <Psi>0.00</Psi>   
+        <Usetransition>1</Usetransition>
+		  <A1>0.25</A1>
+		  <B1>1.0</B1>
+		  <W>1.0</W>		  
+		  <beta>2.0</beta>
+		  <strain_ref>1.0</strain_ref>
+		  <St>1.0</St>       		  		  					  		  
+        </constitutive_model>
+						
+
+
+        <geom_object>
+            <box label = "grains01">
+               <min>[0.0, 1.9, -0.3]</min>
+               <max>[0.6, 2.3,  0.3]</max>
+            </box>
+                <res>[2,2,2]</res>
+                <velocity>[0.0,-0.50,0.0]</velocity>
+                <temperature>194</temperature>
+		<color>01</color>
+        </geom_object>
+
+
+
+        <geom_object>
+            <box label = "grains02">
+               <min>[0.8, 1.3, -0.3]</min>
+               <max>[1.7, 1.6,  0.3]</max>
+            </box>
+                <res>[2,2,2]</res>
+                <velocity>[-2.5,0.0,0.0]</velocity>
+                <temperature>294</temperature>
+		<color>02</color>
+        </geom_object>
+
+
+
+   </material>
+
+
+<include href="/m/local/data/Seyed.Seyedan/GranularMPM/Pipe/Y_pipe/DummyGranularMaterial.xml"/> 
+
+<!-- 
+     This include 400 dummy granular materials. These material are empty places for moving granular material points on them  
+   <materials>[0,1]</materials>
+  -->
+
+
+
+<contact>
+   <type>specified</type>
+   <materials>[0,1]</materials>
+   <master_material>0</master_material>
+   <direction> [1,1,1] </direction>
+   <filename>/m/local/data/Seyed.Seyedan/GranularMPM/Pipe/Y_pipe/Speed.txt</filename>
+</contact>
+
+
+
+
+
+<contact>
+   <type>friction_bard</type>
+   <materials>[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202]</materials>
+   <mu> 0.1 </mu>
+   <master_material>1</master_material>
+   <direction> [1,1,1] </direction>
+</contact>
+
+
+
+
+
+
+ 
+
+    </MPM>
+  </MaterialProperties>
+
+
+
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[ -1.0, 0.0, -2.0]</lower>
+        <upper>[ 1.9, 2.5,  0.0]</upper>
+        <resolution>[29,25,20]</resolution>
+        <patches>[1,1,1]</patches>
+        <extraCells>[1,1,1]</extraCells>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+	
+	            <Face side = "x-">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                </Face>
+                <Face side = "x+">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                             <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                </Face>
+                <Face side = "y-">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                </Face>
+                <Face side = "y+">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                            <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                </Face>
+
+                <Face side = "z-">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                </Face>
+                <Face side = "z+">
+                      <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>                     
+                </Face>
+
+
+
+
+              	  
+			  
+			  
+		
+    </BoundaryConditions>
+  </Grid>
+
+</Uintah_specification>
