@@ -1667,6 +1667,8 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
+  t->modifies(lb->pTemperatureLabel_preReloc);
+
   sched->addTask(t, patches, matls);
 }
 
