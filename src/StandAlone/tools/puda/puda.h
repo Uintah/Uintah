@@ -41,6 +41,7 @@ namespace Uintah {
     bool do_gridstats;
     bool do_GV_MMS;
     bool do_ice_momentum;
+    bool do_make_raw_file;
     bool do_jacquie;
     bool do_jim1;
     bool do_jim2;
@@ -85,6 +86,7 @@ namespace Uintah {
       do_gridstats     = false;
       do_GV_MMS        = false;
       do_ice_momentum  = false;
+      do_make_raw_file = false;
       do_jacquie       = false;
       do_jim1          = false;
       do_jim2          = false;

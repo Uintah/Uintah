@@ -48,6 +48,7 @@
 #include <StandAlone/tools/puda/gridStats.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/ICE_momentum.h>
+#include <StandAlone/tools/puda/makeRawFile.h>
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/geocosm.h>
@@ -96,6 +97,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -DOP\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
+  cerr << "  -makeRawFile         (Make raw file based on cells w/particles)\n";
   cerr << "  -contactStress       (reports stress at nodes in contact)\n";
   cerr << "  -jacquie             (finds burn rate vs pressure)\n";
   cerr << "  -pressure            (finds  pressure)\n";
@@ -216,6 +218,9 @@ main( int argc, char *argv[] )
     } 
     else if(s == "-ICE_momentum"){
       clf.do_ice_momentum = true;
+    }
+    else if(s == "-makeRawFile"){
+      clf.do_make_raw_file = true;
     }
     else if(s == "-pStressHistogram"){
       clf.do_pStressHstgrm = true;
@@ -454,6 +459,10 @@ main( int argc, char *argv[] )
     
     if( clf.do_ice_momentum ){
       ICE_momentum( da, clf );
+    }
+
+    if( clf.do_make_raw_file ){
+      makeRawFile( da, clf );
     }
 
     if( clf.do_PIC ){

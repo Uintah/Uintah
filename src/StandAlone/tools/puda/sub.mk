@@ -37,6 +37,7 @@ SRCS := \
         $(SRCDIR)/geocosmtets.cc       \
         $(SRCDIR)/GV_MMS.cc            \
         $(SRCDIR)/ICE_momentum.cc      \
+        $(SRCDIR)/makeRawFile.cc       \
         $(SRCDIR)/jacquie.cc           \
         $(SRCDIR)/jim1.cc              \
         $(SRCDIR)/jim2.cc              \
@@ -51,6 +52,7 @@ SRCS := \
         $(SRCDIR)/todd1.cc             \
         $(SRCDIR)/util.cc              \
         $(SRCDIR)/varsummary.cc 
+  
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)
