@@ -109,6 +109,8 @@ void InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoM
       dp[i] = _fixed_d;
     }
   } else if ( _init_type == "random"){
+  
+    std::srand(1);      // seed the random number generator so the result are repeatable
     for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
       particleIndex i = *iter;
       dp[i] = ((double)std::rand()/RAND_MAX)*_max_d;
