@@ -508,21 +508,21 @@ Parallel::initializeManager( int& argc , char**& argv )
   // weren't set.
 #if defined(KOKKOS_USING_GPU)
   if(s_using_device) {
-    if(s_kokkos_teams_per_league <= 0) {
-      s_kokkos_teams_per_league = 256;
-    }
     if(s_kokkos_leagues_per_loop <= 0) {
       s_kokkos_leagues_per_loop = 1;
+    }
+    if(s_kokkos_teams_per_league <= 0) {
+      s_kokkos_teams_per_league = 256;
     }
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-  if(s_kokkos_teams_per_league <= 0) {
-    s_kokkos_teams_per_league = 16;
-  }
   if(s_kokkos_leagues_per_loop <= 0) {
     s_kokkos_leagues_per_loop = 1;
+  }
+  if(s_kokkos_teams_per_league <= 0) {
+    s_kokkos_teams_per_league = 16;
   }
 #endif
 
