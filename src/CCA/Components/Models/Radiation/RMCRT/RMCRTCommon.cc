@@ -928,27 +928,6 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 }
 
 //______________________________________________________________________
-//
-template <typename ExecSpace, typename MemSpace>
-void
-RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           OnDemandDataWarehouse* old_dw,
-                                           OnDemandDataWarehouse* new_dw,
-                                           UintahParams& uintahParams,
-                                           ExecutionObject<ExecSpace, MemSpace>& execObj)
-{
-  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
-
-  bool replaceVar = true;
-  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, execObj, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, execObj, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, execObj, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, execObj, replaceVar, nullptr );
-}
-
-
-//______________________________________________________________________
 //    Move all computed variables from old_dw -> new_dw
 //______________________________________________________________________
 void
@@ -969,27 +948,6 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
 }
-
-//______________________________________________________________________
-//
-template <typename ExecSpace, typename MemSpace>
-void
-RMCRTCommon::carryForward_VarLabels(const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    OnDemandDataWarehouse* old_dw,
-                                    OnDemandDataWarehouse* new_dw,
-                                    UintahParams& uintahParams,
-                                    ExecutionObject<ExecSpace, MemSpace>& execObj,
-                                    const std::vector< const VarLabel* > varLabels)
-{
-  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_VarLabels" );
-
-  bool replaceVar = true;
-  for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
-    new_dw->transferFrom(old_dw, *iter, patches, matls, execObj, replaceVar, nullptr );
-  }
-}
-
 
 
 //______________________________________________________________________
@@ -1013,19 +971,6 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);
 }
 
-//______________________________________________________________________
-template <typename ExecSpace, typename MemSpace>
-void
-RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                OnDemandDataWarehouse* old_dw,
-                                OnDemandDataWarehouse* new_dw,
-                                UintahParams& uintahParams,
-                                ExecutionObject<ExecSpace, MemSpace>& execObj,
-                                const VarLabel* variable )
-{
-  new_dw->transferFrom(old_dw, variable, patches, matls, execObj, true, nullptr);
-}
 
 //______________________________________________________________________
 //
