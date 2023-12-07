@@ -109,7 +109,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       SchedulerP  & sched
                           , const PatchSet    * patches
                           , const MaterialSet * matls
-                          , const int           tg_num = -1
+                          , const int           tg_num
                           ,       Args...       args
                           )
 {
@@ -241,7 +241,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       SchedulerP  & sched
                           , const PatchSet    * patches
                           , const MaterialSet * matls
-                          , const int           tg_num = -1
+                          , const int           tg_num
                           ,       Args...       args
                           )
 {
@@ -355,7 +355,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       SchedulerP  & sched
                           , const PatchSet    * patches
                           , const MaterialSet * matls
-                          , const int           tg_num = -1
+                          , const int           tg_num
                           ,       Args...       args
                           )
 {
