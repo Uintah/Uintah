@@ -199,13 +199,13 @@ static void usage( const std::string& message,
 #if defined(KOKKOS_USING_GPU)
     std::cerr << "-gpu                            : Use available GPU devices, requires the " << kokkosStr << ".\n";
     std::cerr << "-gpucheck                       : Checks if there is a GPU available for the " << kokkosStr << ".\n";
-    std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task.\n";
+    std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task (default 1).\n";
 #endif
 
 #if defined(HAVE_KOKKOS)
     std::cerr << "-kokkos_policy <policy>         : Kokkos Execution Policy - team, range, mdrange (default), or mdrange_rev.\n";
-    std::cerr << "-kokkos_leagues_per_loop <#>    : Kokkos TeamPolicy number of leagues (work items) per loop.\n";
-    std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league.\n";
+    std::cerr << "-kokkos_leagues_per_loop <#>    : Kokkos TeamPolicy number of leagues (work items) per loop (default 1).\n";
+    std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league (default 256/16).\n";
     std::cerr << "-kokkos_chunk_size <#>          : Kokkos TeamPolicy and RangePolicy chunk size.\n";
     std::cerr << "-kokkos_tile_size <# # #>       : Kokkos MDRangePolicy tile size.\n";
 #endif
