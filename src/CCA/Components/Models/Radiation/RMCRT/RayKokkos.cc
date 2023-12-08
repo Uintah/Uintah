@@ -1722,6 +1722,39 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                                Task::WhichDW which_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw )
 {
+  const ProcessorGroup * pg = uintahParams.getProcessorGroup();
+
+  if(pg->myRank() == 0) {
+
+#if defined(KOKKOS_USING_GPU)
+    bool rayTrace_gpu = true;
+#else
+    bool raytrace_gpu = false;
+#endif
+    int status;
+    char *name =
+      abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
+    if( std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value &&
+        !std::is_same<ExecSpace, Kokkos::OpenMP>::value) {
+      if(rayTrace_gpu == false) {
+        printf("######  Error at file %s, line %d: "
+               "ExecSpace of RayTrace task in Uintah is %s, "
+               "but RayTrace is NOT configured for the gpu. ######\n",
+               __FILE__, __LINE__, name);
+        exit(1);
+      }
+    }
+    else{
+      if(rayTrace_gpu == true) {
+        printf("######  Error at file %s, line %d: "
+               "ExecSpace of RayTrace task in Uintah is %s, "
+               "but RayTrace is configured for the gpu. ######\n",
+               __FILE__, __LINE__, name);
+        exit(1);
+      }
+    }
+  }
 
   const Level* fineLevel = getLevel(finePatches);
 
@@ -1784,13 +1817,13 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   CCVariable<double>   radiationVolq_fine;
 
 #if defined(KOKKOS_USING_GPU)
-  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> abskg_view[numLevels];
-  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> sigmaT4OverPi_view[numLevels];
-  KokkosView3<const int, Kokkos::DefaultExecutionSpace::memory_space> cellType_view[numLevels];
-
   GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
   GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
   GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
+
+  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> abskg_view[numLevels];
+  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> sigmaT4OverPi_view[numLevels];
+  KokkosView3<const int, Kokkos::DefaultExecutionSpace::memory_space> cellType_view[numLevels];
 
   KokkosView3<double, Kokkos::DefaultExecutionSpace::memory_space> divQ_fine_view;
   KokkosView3<double, Kokkos::DefaultExecutionSpace::memory_space> radiationVolq_fine_view;
