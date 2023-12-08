@@ -362,13 +362,13 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -512,13 +512,13 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -797,13 +797,13 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -958,13 +958,13 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1265,13 +1265,13 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1428,13 +1428,13 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int j_size = r.end(1) - r.begin(1);
   const unsigned int k_size = r.end(2) - r.begin(2);
 
-  const int rbegin0 = r.begin(0);
-  const int rbegin1 = r.begin(1);
-  const int rbegin2 = r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
 
-  const int rend0 = r.end(0);
-  const int rend1 = r.end(1);
-  const int rend2 = r.end(2);
+  const unsigned int rend0 = r.end(0);
+  const unsigned int rend1 = r.end(1);
+  const unsigned int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
