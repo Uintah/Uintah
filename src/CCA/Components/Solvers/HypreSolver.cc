@@ -322,11 +322,12 @@ namespace Uintah {
         char *name =
           abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
 
-        if(std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value) {
+	if( std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value &&
+	   !std::is_same<ExecSpace, Kokkos::OpenMP>::value) {
           if(hypre_gpu == false) {
             printf("######  Error at file %s, line %d: "
                    "ExecSpace of HypreSolver task in Uintah is %s, "
-                   "but hypre is NOT configured for the gpu. ######\n",
+                   "but Hypre was NOT compiled for the gpu. ######\n",
                    __FILE__, __LINE__, name);
             exit(1);
           }
@@ -335,7 +336,7 @@ namespace Uintah {
           if(hypre_gpu == true) {
             printf("######  Error at file %s, line %d: "
                    "ExecSpace of HypreSolver task in Uintah is %s, "
-                   "but hypre is configured for the gpu. ######\n",
+                   "but Hypre was compiled for the gpu. ######\n",
                    __FILE__, __LINE__, name);
             exit(1);
           }

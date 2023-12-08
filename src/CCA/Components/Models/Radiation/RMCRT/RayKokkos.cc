@@ -1740,7 +1740,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       if(rayTrace_gpu == false) {
         printf("######  Error at file %s, line %d: "
                "ExecSpace of RayTrace task in Uintah is %s, "
-               "but RayTrace is NOT configured for the gpu. ######\n",
+               "but RayTrace was NOT compiled for the gpu. ######\n",
                __FILE__, __LINE__, name);
         exit(1);
       }
@@ -1749,7 +1749,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       if(rayTrace_gpu == true) {
         printf("######  Error at file %s, line %d: "
                "ExecSpace of RayTrace task in Uintah is %s, "
-               "but RayTrace is configured for the gpu. ######\n",
+               "but RayTrace was compiled for the gpu. ######\n",
                __FILE__, __LINE__, name);
         exit(1);
       }
