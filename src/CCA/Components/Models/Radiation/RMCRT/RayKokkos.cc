@@ -1729,7 +1729,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 #if defined(KOKKOS_USING_GPU)
     bool rayTrace_gpu = true;
 #else
-    bool raytrace_gpu = false;
+    bool rayTrace_gpu = false;
 #endif
     int status;
     char *name =
