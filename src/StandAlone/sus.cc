@@ -208,6 +208,7 @@ static void usage( const std::string& message,
     std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league (default 256/16).\n";
     std::cerr << "-kokkos_chunk_size <#>          : Kokkos TeamPolicy and RangePolicy chunk size.\n";
     std::cerr << "-kokkos_tile_size <# # #>       : Kokkos MDRangePolicy tile size.\n";
+    std::cerr << "-no_kokkos_extra_cells_check    : Do not check for extra cells.\n";
 #endif
 
 #if defined(USE_KOKKOS_PARTITION_MASTER)
@@ -367,6 +368,10 @@ int main( int argc, char *argv[], char *env[] )
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
   std::string solverName = "";  // empty string defaults to CGSolver
+
+#ifdef HAVE_KOKKOS
+  bool kokkos_extra_cells_check = true;
+#endif
 
 #ifdef HAVE_VISIT
   // Assume if VisIt is compiled in that the user may want to connect
@@ -674,6 +679,14 @@ int main( int argc, char *argv[], char *env[] )
       Parallel::setKokkosTileSize(kokkos_tile_isize,
                                   kokkos_tile_jsize,
                                   kokkos_tile_ksize);
+#else
+      std::cout << "Not compiled for Kokkos GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+    else if (arg == "-no_kokkos_extra_cells_check") {
+#if defined(HAVE_KOKKOS)
+      kokkos_extra_cells_check = false;
 #else
       std::cout << "Not compiled for Kokkos GPU support." << std::endl;
       Parallel::exitAll(0);
@@ -1025,6 +1038,10 @@ int main( int argc, char *argv[], char *env[] )
     if ( postProcessUda ) {
       simController->setPostProcessFlags();
     }
+
+#if defined(HAVE_KOKKOS)
+    simController->setKokkosExtraCellsCheck(kokkos_extra_cells_check);
+#endif
 
 #ifdef HAVE_VISIT
     simController->setVisIt( do_VisIt );

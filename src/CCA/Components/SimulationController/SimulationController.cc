@@ -47,7 +47,7 @@
 
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/visit_defs.h>
-
+#include <sci_defs/gpu_defs.h>
 
 #include <cstring>
 #include <fstream>
@@ -388,6 +388,38 @@ SimulationController::gridSetup( void )
   if (m_current_gridP->numLevels() == 0) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
+
+#if defined(HAVE_KOKKOS)
+  for( int i = 0; i < m_current_gridP->numLevels(); i++ ) {
+    LevelP level = m_current_gridP->getLevel(i);
+
+    if( level->getExtraCells() != IntVector(0,0,0) ) {
+      std::ostringstream msg;
+      msg << std::endl
+          << "WARNING: Uintah was compiled with Kokkos and "
+          << "the grid uses extra cells. While Uintah may run to completion, "
+          << "extra cells create negative grid bounds which "
+          << "when ints are recast as unsigned ints will cause "
+          << "kokkos loops not to be properly executed "
+          << "POSSIBLY resulting in incorrect results."
+          << std::endl
+          << "Initial GPU results should be validated against CPU results."
+          << std::endl;
+
+      if( m_kokkos_extra_cells_check ) {
+        msg << "To bypass this check add '-no_kokkos_extra_cells_check' "
+            << "to the sus command line."
+            << std::endl;
+
+        throw InternalError(msg.str(),__FILE__,__LINE__);
+      } else {
+        DOUT(true, msg.str());
+        std::cout.flush();
+        break;
+      }
+    }
+  }
+#endif
 
   // Print out metadata
   if (d_myworld->myRank() == 0) {
