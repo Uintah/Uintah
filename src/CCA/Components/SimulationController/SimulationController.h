@@ -258,16 +258,12 @@ protected:
   bool m_restart_remove_old_dir{false};
 
   bool m_recompile_taskgraph{false};
-
-  bool m_kokkos_extra_cells_check{true};
-
+  
   // Runtime stat mappers.
   ReductionInfoMapper< RuntimeStatsEnum, double > m_runtime_stats;
 
-public:
 
-  void setKokkosExtraCellsCheck( bool val ) { m_kokkos_extra_cells_check = val; }
-  bool getKokkosExtraCellsCheck() { return m_kokkos_extra_cells_check; }
+public:
 
   void ScheduleCheckInSitu( bool header );
   void CheckInSitu( const ProcessorGroup *
