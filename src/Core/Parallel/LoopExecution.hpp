@@ -358,17 +358,17 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
   int status;
   char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
 
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -402,7 +402,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
@@ -411,7 +411,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
@@ -427,7 +427,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
@@ -439,7 +439,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
@@ -508,17 +508,17 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   int status;
   char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
 
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -678,7 +678,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
@@ -687,7 +687,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
@@ -703,7 +703,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
@@ -715,7 +715,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
@@ -793,17 +793,17 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
   int status;
   char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
 
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -837,7 +837,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
@@ -846,7 +846,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
@@ -862,7 +862,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
@@ -875,7 +875,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
@@ -954,17 +954,17 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
   // 3D range to a 1D range, partitioning the 1D range into groups
   // that are multiples of 32, then converting that group of 32 range
   // back into a 3D (i,j,k) index.
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1141,7 +1141,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
@@ -1150,7 +1150,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
@@ -1166,7 +1166,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
@@ -1179,7 +1179,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
@@ -1261,17 +1261,17 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
   int status;
   char *name(abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status));
 
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1308,7 +1308,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
@@ -1318,7 +1318,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
@@ -1335,7 +1335,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
@@ -1348,7 +1348,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     }
     else
     {
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
         mdRangePolicy({rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
@@ -1424,17 +1424,17 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   ReductionType tmp = red;
 
-  const unsigned int i_size = r.end(0) - r.begin(0);
-  const unsigned int j_size = r.end(1) - r.begin(1);
-  const unsigned int k_size = r.end(2) - r.begin(2);
+  const int i_size = r.end(0) - r.begin(0);
+  const int j_size = r.end(1) - r.begin(1);
+  const int k_size = r.end(2) - r.begin(2);
 
-  const unsigned int rbegin0 = r.begin(0);
-  const unsigned int rbegin1 = r.begin(1);
-  const unsigned int rbegin2 = r.begin(2);
+  const int rbegin0 = r.begin(0);
+  const int rbegin1 = r.begin(1);
+  const int rbegin2 = r.begin(2);
 
-  const unsigned int rend0 = r.end(0);
-  const unsigned int rend1 = r.end(1);
-  const unsigned int rend2 = r.end(2);
+  const int rend0 = r.end(0);
+  const int rend1 = r.end(1);
+  const int rend2 = r.end(2);
 
   const unsigned int numItems = ((i_size > 0 ? i_size : 1) *
                                  (j_size > 0 ? j_size : 1) *
@@ -1616,7 +1616,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
@@ -1626,7 +1626,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
@@ -1643,7 +1643,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
@@ -1656,7 +1656,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       }
       else
       {
-        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
           mdRangePolicy({rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
