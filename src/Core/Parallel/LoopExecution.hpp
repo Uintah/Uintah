@@ -336,7 +336,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
 // CPU - parallel_for - For legacy loops where no execution space was
 // specified as a template parameter.
 template <typename Functor>
-void
+inline void
 parallel_for(BlockRange const & r, const Functor & functor)
 {
   // Force users into using a single CPU thread if they didn't specify
@@ -770,7 +770,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 // CPU parallel_reduce_sum - For legacy loops where no execution space
 // was specified as a template parameter.
 template < typename Functor, typename ReductionType>
-void
+inline void
 parallel_reduce_sum(BlockRange const & r, const Functor & functor, ReductionType & red)
 {
   // Force users into using a single CPU thread if they didn't specify
@@ -1847,7 +1847,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
 
 // CPU parallel_for_unstructured
 template <typename ExecSpace, typename MemSpace, typename Functor>
-typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace, const unsigned int list_size , const Functor & functor)
 {
@@ -1860,7 +1860,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 // CPU parallel_for_unstructured
 template <typename ExecSpace, typename MemSpace, typename Functor>
-typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              std::vector<IntVector> &iterSpace, const unsigned int list_size, const Functor & functor)
 {
@@ -1901,13 +1901,10 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #if defined(KOKKOS_USING_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<IntVector*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace, const unsigned int list_size, const Functor & functor)
 {
-  // int status;
-  // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
-
   ExecSpace instanceObject = getInstance(execObj);
 
   Kokkos::RangePolicy< ExecSpace > rangePolicy(instanceObject, 0, list_size);
@@ -1961,7 +1958,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #if defined(KOKKOS_USING_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
                         T2 KV3, const T3 init_val)
 {
@@ -2039,7 +2036,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 }
 
 // template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
-// typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
+// inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 // parallel_initialize_single(ExecutionObject& execObj, T2 KKV3, const T3 init_val){
 //  for (unsigned int j=0; j < KKV3.size(); j++){
 //    Kokkos::RangePolicy<ExecSpace, int> rangePolicy(0, KKV3(j).m_view.size());
@@ -2071,7 +2068,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
  * produces correct result. Revisit later if it becomes a bottleneck.
  */
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
     const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val) {
 
@@ -2105,7 +2102,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 /*
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
                             const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val) {
 
@@ -2178,7 +2175,7 @@ using Alias = TTT;
 
 // CPU legacy_initialize
 template< typename T, typename T2, const unsigned int T3>
-void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // for vectors
+inline void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // for vectors
   int nfields=data_fields.runTime_size;
   for(int i=0;  i< nfields; i++){
     data_fields[i].initialize(inside_value);
@@ -2188,14 +2185,14 @@ void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // 
 
 // CPU legacy_initialize
 template< typename T, typename T2>
-void legacy_initialize(T inside_value, T2& data_fields) {  // for stand alone data fields
+inline void legacy_initialize(T inside_value, T2& data_fields) {  // for stand alone data fields
   data_fields.initialize(inside_value);
   return;
 }
 
 // CPU parallel_initialize
 template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
-typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
                     const T& initializationValue, Ts & ... inputs) {
   Alias<int[]>{( // first part of magic unpacker
@@ -2283,7 +2280,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& init
 // This function is the same as above, but appears to be necessary due
 // to CCVariable support.....
 template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
                     const T & initializationValue, Ts & ... inputs) {
   // Could this be modified to accept grid variables AND containers of
@@ -2323,7 +2320,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //----------------------------------------------------------------------------
 
 template <typename Functor>
-void serial_for(BlockRange const & r, const Functor & functor)
+inline void serial_for(BlockRange const & r, const Functor & functor)
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -2339,7 +2336,7 @@ void serial_for(BlockRange const & r, const Functor & functor)
 }
 
 template <typename Functor, typename Option>
-void parallel_for(BlockRange const & r, const Functor & functor, const Option& op)
+inline void parallel_for(BlockRange const & r, const Functor & functor, const Option& op)
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
