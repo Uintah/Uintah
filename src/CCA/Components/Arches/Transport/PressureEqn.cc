@@ -128,7 +128,7 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
 
   if(!do_custom_arches_linear_solve){
     //);
-    //custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
+    //custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0
     ProblemSpecP db_pressure{nullptr};
 
     //Pressure Solve as part of the momentum solver
@@ -191,18 +191,15 @@ PressureEqn::register_initialize(
 template <typename ExecSpace, typename MemSpace>
 void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  Vector DX = patch->dCell();
-  const double area_EW = DX.y()*DX.z();
-  const double area_NS = DX.x()*DX.z();
-  const double area_TB = DX.x()*DX.y();
-
   auto Apress = tsk_info->get_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
   auto b = tsk_info->get_field<CCVariable<double>, double, MemSpace>("b_press");
   auto x = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_pressure_name);
   auto guess = tsk_info->get_field<CCVariable<double>, double, MemSpace>("guess_press");
 
-  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(),
+			   patch->getExtraCellHighIndex());
+
+  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k) {
     Stencil7& A = Apress(i,j,k);
     A.e = 0.0;
     A.w = 0.0;
@@ -213,25 +210,32 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     b(i,j,k) = 0.0;
     x(i,j,k) = 0.0;
     guess(i,j,k) = 0.0;
-
   });
 
-   Uintah::BlockRange range2(patch->getCellLowIndex(), patch->getCellHighIndex() );
-   Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA(int i, int j, int k){
+  Vector DX = patch->dCell();
+  const double area_EW = DX.y()*DX.z();
+  const double area_NS = DX.x()*DX.z();
+  const double area_TB = DX.x()*DX.y();
 
-   Stencil7& A = Apress(i,j,k);
+  const double area_EW_X = -area_EW / DX.x();
+  const double area_NS_Y = -area_NS / DX.y();
+  const double area_TB_Z = -area_TB / DX.z();
 
-    A.e = -area_EW/DX.x();
-    A.w = -area_EW/DX.x();
-    A.n = -area_NS/DX.y();
-    A.s = -area_NS/DX.y();
-    A.t = -area_TB/DX.z();
-    A.b = -area_TB/DX.z();
+  Uintah::BlockRange range2(patch->getCellLowIndex(),
+			    patch->getCellHighIndex());
+
+  Uintah::parallel_for( execObj, range2, KOKKOS_LAMBDA (int i, int j, int k) {
+    Stencil7& A = Apress(i,j,k);
+    A.e = -area_EW_X;
+    A.w = -area_EW_X;
+    A.n = -area_NS_Y;
+    A.s = -area_NS_Y;
+    A.t = -area_TB_Z;
+    A.b = -area_TB_Z;
 
     A.p = A.e + A.w + A.n + A.s + A.t + A.b;
     A.p *= -1;
-
-   });
+  });
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -241,6 +245,11 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
     Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
     IntVector iDir = patch->faceDirection( i_bc->second.face );
+
+    const int iDir0 = iDir[0];
+    const int iDir1 = iDir[1];
+    const int iDir2 = iDir[2];
+
     Patch::FaceType face = i_bc->second.face;
     BndTypeEnum my_type = i_bc->second.type;
 
@@ -258,15 +267,17 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
       sign = 1.0;
     }
 
-    parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
+    Uintah::parallel_for_unstructured(execObj,
+                                      cell_iter.get_ref_to_iterator(execObj),
+                                      cell_iter.size(),
+                                      KOKKOS_LAMBDA(const int i, const int j, const int k) {
 
-      const int im=i- iDir[0];
-      const int jm=j- iDir[1];
-      const int km=k- iDir[2];
+      const int im = i - iDir0;
+      const int jm = j - iDir1;
+      const int km = k - iDir2;
 
       Apress(im,jm,km).p = Apress(im,jm,km).p + sign * Apress(im,jm,km)[face];
       Apress(im,jm,km)[face] = 0.;
-
     });
   }
 
@@ -375,7 +386,7 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
   //Now take care of intrusions:
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  parallel_for(execObj,range, KOKKOS_LAMBDA (const int i, const int j, const int k){ 
+  parallel_for(execObj,range, KOKKOS_LAMBDA (const int i, const int j, const int k){
 
     A(i,j,k).e *= eps(i,j,k);
     A(i,j,k).w *= eps(i,j,k);
@@ -488,7 +499,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                           ,       Task::WhichDW      which_b_dw
                           , const VarLabel         * guess_label
                           ,       Task::WhichDW      which_guess_dw
-                          ,       int       rk_step         
+                          ,       int       rk_step
                           ){
 
     xLabel=x_label;
@@ -548,13 +559,13 @@ PressureEqn::cg_init1(const PatchSubset* patches,
     auto x_v   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    (  xLabel, indx , patch, Ghost::AroundCells, 1 , getModifiable);
     auto residual = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>    ( d_residualLabel, indx , patch, Ghost::AroundCells, cg_ghost );
 
-    auto BJmat=createContainer<CCVariable<double>, double, num_prec_elem, MemSpace>(num_prec_elem); 
+    auto BJmat=createContainer<CCVariable<double>, double, num_prec_elem, MemSpace>(num_prec_elem);
     for (unsigned int i=0;i<d_precMLabel.size();i++){
         new_dw->assignGridVariable<CCVariable<double>, double, MemSpace>(BJmat[i],d_precMLabel[i],matl,patch,Ghost::AroundCells, cg_ghost+1); // not supported long term , but padds data(avoids copy)
     }
 
     if (rk_step==0){
-      parallel_initialize(execObj,0.0,residual,BJmat);  
+      parallel_initialize(execObj,0.0,residual,BJmat);
     }
 
     Uintah::parallel_for(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
@@ -614,7 +625,7 @@ PressureEqn::cg_init1(const PatchSubset* patches,
                       ////std::cout << A_m[3](i,j,k+1)<< " " ;
                     //std::cout <<  A_m(i,j,k)[5] << " ";
                     //}else{
-                      //std::cout <<" " <<"0" << " "; 
+                      //std::cout <<" " <<"0" << " ";
                     //}
                   //}
                 //}
@@ -630,7 +641,7 @@ PressureEqn::cg_init1(const PatchSubset* patches,
       //for ( int i=idxLo.x(); i< idxHi.x(); i++ ){  // move unpadded A matrix to padded space, we do this because it simplifies downstream logic
         //std::cout <<    b_v(i,j,k) << " \n";
       //}
-    //} 
+    //}
   //}
 
 //}
@@ -662,7 +673,7 @@ PressureEqn::cg_init2(const PatchSubset* patches,
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    auto BJmat=createConstContainer<constCCVariable<double>,const double,num_prec_elem, MemSpace>(num_prec_elem); 
+    auto BJmat=createConstContainer<constCCVariable<double>,const double,num_prec_elem, MemSpace>(num_prec_elem);
 
     int final_iter=total_rb_switch-1;
 
@@ -671,7 +682,7 @@ PressureEqn::cg_init2(const PatchSubset* patches,
     if (iter==0){
       parallel_initialize(execObj,0.0,smallP);
     }
-  
+
     if (iter == final_iter){
     auto littleQ= new_dw->getGridVariable<CCVariable<double>, double, MemSpace> (d_littleQLabel  ,matl,patch,Ghost::AroundCells,1); // computes with scratch ghosts
     auto bigZ= new_dw->getGridVariable<CCVariable<double>, double, MemSpace> (d_bigZLabel  ,matl,patch,Ghost::AroundCells,cg_ghost);
@@ -684,14 +695,14 @@ PressureEqn::cg_init2(const PatchSubset* patches,
 
        //               A      b       x0
       precondition_relax(execObj,BJmat,residual,smallP,idxLo, idxHi,iter, patch);
-      
+
   if (iter==final_iter){
         Uintah::parallel_reduce_sum(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& sum){  //compute correction, GHOST CELLS REQUIRED
-           sum=residual(i,j,k)*smallP(i,j,k);                                                                                                                        
+           sum=residual(i,j,k)*smallP(i,j,k);
           }, R_squared);
-  
-    
-  
+
+
+
   if ( rk_step==0 ){
     new_dw->put(sum_vartype(R_squared),d_resSumLabel[0]);
   } else{
@@ -708,7 +719,7 @@ void
 PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 struct1DArray<grid_CT,num_prec_elem>& precMatrix,
                                 grid_CT& residual, grid_T& bigZ,const IntVector &idxLo,const IntVector &idxHi, int rb_switch,const Patch* patch ){
-       // precMatrix is the inverted precondition matrix or the A matrix.  Depending on the relaxation type. 
+       // precMatrix is the inverted precondition matrix or the A matrix.  Depending on the relaxation type.
   if (d_custom_relax_type==jacobBlock){
     int offset=cg_ghost;
     int inside_buffer=std::max(cg_ghost-1,0);
@@ -724,8 +735,8 @@ PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
           int wallCheckzm= kk==0? idxLo.z()+inside_buffer: idxLo.z();
           int wallCheckyp= jj==4? idxHi.y()-inside_buffer: idxHi.y();
           int wallCheckym= jj==0? idxLo.y()+inside_buffer: idxLo.y();
-          int wallCheckxp= ii==4? idxHi.x()-inside_buffer: idxHi.x(); 
-          int wallCheckxm= ii==0? idxLo.x()+inside_buffer: idxLo.x(); 
+          int wallCheckxp= ii==4? idxHi.x()-inside_buffer: idxHi.x();
+          int wallCheckxm= ii==0? idxLo.x()+inside_buffer: idxLo.x();
 
           Uintah::BlockRange rangetemp(IntVector(wallCheckxm,wallCheckym,wallCheckzm) , IntVector(wallCheckxp,wallCheckyp,wallCheckzp) );
 
@@ -735,9 +746,9 @@ PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
         }
       }
     }
-  } else if(d_custom_relax_type==redBlack){ 
+  } else if(d_custom_relax_type==redBlack){
               //cout << "  REDBLACK\n";
-    int niter = cg_ghost; 
+    int niter = cg_ghost;
     if(rb_switch < 0 ){ // HACK DEREKX DEBUG FIX
       rb_switch=0;
       niter=3;
@@ -749,13 +760,13 @@ PressureEqn::precondition_relax(ExecutionObject<ExecSpace, MemSpace>& execObj,
       IntVector  iter_on_ghosts(std::max(cg_ghost-1-rb_i,0),std::max(cg_ghost-1-rb_i,0),std::max(cg_ghost-1-rb_i,0));
       Uintah::BlockRange rangedynamic(idxLo-iter_on_ghosts*patch->neighborsLow(),idxHi +iter_on_ghosts*patch->neighborsHigh() ); // assumes 1 ghost cell
       Uintah::parallel_for(execObj, rangedynamic,   KOKKOS_LAMBDA (int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
-          if ( (i + j +k + rb_i +rb_switch )% 2 ==0){    
+          if ( (i + j +k + rb_i +rb_switch )% 2 ==0){
           bigZ(i,j,k)= (residual(i,j,k) - precMatrix[1](i,j,k)*bigZ(i-1,j,k)-precMatrix[1](i+1,j,k)*bigZ(i+1,j,k)  // SYMMTRIC APPROXIMATION
-                                        - precMatrix[2](i,j,k)*bigZ(i,j-1,k)-precMatrix[2](i,j+1,k)*bigZ(i,j+1,k) 
+                                        - precMatrix[2](i,j,k)*bigZ(i,j-1,k)-precMatrix[2](i,j+1,k)*bigZ(i,j+1,k)
                                         - precMatrix[3](i,j,k)*bigZ(i,j,k-1)-precMatrix[3](i,j,k+1)*bigZ(i,j,k+1) ) / precMatrix[0](i,j,k) ; //red_black
-          } 
+          }
       });
-    } // this for loop exists to try and reduce mpi communication costs 
+    } // this for loop exists to try and reduce mpi communication costs
   } else{
     Uintah::BlockRange jrange(idxLo,idxHi); // assumes 1 ghost cell
     Uintah::parallel_for(execObj, jrange,   KOKKOS_LAMBDA (int i, int j, int k){  //compute correction, GHOST CELLS REQUIRED
@@ -780,7 +791,7 @@ PressureEqn::cg_task1(const PatchSubset* patches,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
- 
+
     auto A_m   = new_dw->getConstGridVariable<constCCVariable<Stencil7>, Stencil7, MemSpace>( ALabel , indx , patch, Ghost::None, 0 );
     auto smallP   = new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace> (d_smallPLabel , indx , patch, Ghost::AroundCells, 1 );
     auto littleQ   = new_dw->getGridVariable<CCVariable<double>, double, MemSpace>  (d_littleQLabel, indx , patch, Ghost::AroundCells, 1 );
@@ -788,7 +799,7 @@ PressureEqn::cg_task1(const PatchSubset* patches,
     Uintah::parallel_reduce_sum(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& sum){  //compute correction, GHOST CELLS REQUIRED
 
          //cout << "  " << littleQ(i,j,k) <<  "  " << smallP(i,j,k) << "  " << smallP(i,j,k) << " \n";
-        // NON-symmetric 
+        // NON-symmetric
         littleQ(i,j,k)=A_m(i,j,k)[6]*smallP(i,j,k)+
         A_m(i,j,k)[0]*smallP(i-1,j,k)+
         A_m(i,j,k)[1]*smallP(i+1,j,k)+
@@ -800,7 +811,7 @@ PressureEqn::cg_task1(const PatchSubset* patches,
         // ASSUME SYMMETRIC
         //littleQ(i,j,k)=A_m(i,j,k)[6]*smallP(i,j,k)+  // THIS MAKES NANS because A_m is not defined in extra cells, which is required for symmetric
         //A_m(i,j,k)[0]  *smallP(i-1,j,k)+
-        //A_m(i+1,j,k)[0]*smallP(i+1,j,k)+ 
+        //A_m(i+1,j,k)[0]*smallP(i+1,j,k)+
         //A_m(i,j,k)[2]  *smallP(i,j-1,k)+
         //A_m(i,j+1,k)[2]*smallP(i,j+1,k)+
         //A_m(i,j,k)[4]  *smallP(i,j,k-1)+
@@ -812,7 +823,7 @@ PressureEqn::cg_task1(const PatchSubset* patches,
 
   }
   new_dw->put(sum_vartype(correction_sum),d_corrSumLabel[iter]);
-  
+
 }
 
 template <typename ExecSpace, typename MemSpace>
@@ -828,7 +839,7 @@ PressureEqn::cg_task2(const PatchSubset* patches,
 //////////////////////////////////////////////////////////////////////////
 
     sum_vartype R_squared_old;
-    new_dw->get(R_squared_old,d_resSumLabel[iter]); 
+    new_dw->get(R_squared_old,d_resSumLabel[iter]);
     sum_vartype correction_sum;
     new_dw->get(correction_sum,d_corrSumLabel[iter]);
 
@@ -859,7 +870,7 @@ PressureEqn::cg_task3(const PatchSubset* patches,
                            OnDemandDataWarehouse* new_dw,
                            UintahParams& uintahParams,
                            ExecutionObject<ExecSpace, MemSpace>& execObj,int iter){
-  int matl = indx;  
+  int matl = indx;
   double  R_squared=0.0;
   double max_residual=0.0;
   const bool getModifiable=true;
@@ -868,7 +879,7 @@ PressureEqn::cg_task3(const PatchSubset* patches,
     IntVector idxLo(patch->getCellLowIndex());
     IntVector idxHi(patch->getCellHighIndex());
 
-    auto BJmat=createConstContainer<constCCVariable<double>,const double,num_prec_elem, MemSpace>(num_prec_elem); 
+    auto BJmat=createConstContainer<constCCVariable<double>,const double,num_prec_elem, MemSpace>(num_prec_elem);
     for (unsigned int i=0;i<d_precMLabel.size();i++){
       BJmat[i] =  new_dw->getConstGridVariable<constCCVariable<double>, double, MemSpace>(d_precMLabel[i],matl,patch,Ghost::AroundCells, cg_ghost+1); // not supported long term , but padds data(avoids copy)
     }
@@ -879,7 +890,7 @@ PressureEqn::cg_task3(const PatchSubset* patches,
 
     precondition_relax(execObj,BJmat,residual,bigZ,idxLo, idxHi,-1, patch);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-         
+
      Uintah::parallel_reduce_sum(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& sum){  //compute correction, GHOST CELLS REQUIRED
           sum=residual(i,j,k)*bigZ(i,j,k); // reduction
        }, R_squared);
@@ -887,7 +898,7 @@ PressureEqn::cg_task3(const PatchSubset* patches,
      Uintah::parallel_reduce_min(execObj, range,   KOKKOS_LAMBDA (int i, int j, int k, double& lmin){  //compute correction, GHOST CELLS REQUIRED
           lmin=-fabs(residual(i,j,k));  // presumably most efficcient to comptue here.......could be computed earlier
        }, max_residual);
-          
+
   }
 
   new_dw->put(sum_vartype(R_squared),d_resSumLabel[iter+1]);
@@ -917,12 +928,12 @@ PressureEqn::cg_task4(const PatchSubset* patches,
 
     max_vartype convergence;
     new_dw->get(convergence,d_convMaxLabel[iter]);
-    //proc0cout << " R_squared " << R_squared << "  " <<R_squared_old << "  " << convergence << " \n"; 
-    proc0cout << "MAX RESIDUAL VALUE:::: " << convergence << " \n"; 
+    //proc0cout << " R_squared " << R_squared << "  " <<R_squared_old << "  " << convergence << " \n";
+    proc0cout << "MAX RESIDUAL VALUE:::: " << convergence << " \n";
 
-    const double  beta=R_squared/R_squared_old;  
+    const double  beta=R_squared/R_squared_old;
     bool getModifiable=true;
-  int matl = indx ;  
+  int matl = indx ;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
