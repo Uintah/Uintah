@@ -704,6 +704,15 @@ ParticleCreator::initializeParticle(const Patch* patch,
   } else {
     pvars.position[i] = p;
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+#if 0
+    // Initialize particle velocities to represent a rotation about zero.
+    // This could be generalized into an input file option.
+    double omega = 1000.;
+    Point X = pvars.position[i];
+    double rad = sqrt(X.x()*X.x() + X.y()*X.y());
+    Vector tang = Vector(-X.y(),X.x(),0.);
+    pvars.pvelocity[i]  = omega*tang;
+#endif
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
@@ -746,6 +755,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   if(d_with_color){
     pvars.pcolor[i] = (*obj)->getInitialData_double("color");
   }
+
   if(d_doScalarDiffusion){
     pvars.pConcentration[i] = (*obj)->getInitialData_double("concentration");
     pvars.pConcPrevious[i]  = pvars.pConcentration[i];

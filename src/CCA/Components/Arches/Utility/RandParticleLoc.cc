@@ -37,6 +37,7 @@ RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
   ParticleVariable<double>& vary = *(std::get<0>(py));
   ParticleVariable<double>& varz = *(std::get<0>(pz));
 
+  std::srand(1);      // seed the random number generator so the result are repeatable
   for ( auto iter = (std::get<1>(px))->begin(); iter != (std::get<1>(px))->end(); iter++ ){
 
     particleIndex i = *iter;

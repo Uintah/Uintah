@@ -248,6 +248,7 @@ void RigidMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
+  t->computes(lb->pJThermalLabel);
 
   if(flags->d_reductionVars->volDeformed){
     t->computes(lb->TotalVolumeDeformedLabel);
@@ -287,7 +288,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize,pFOld;
       constParticleVariable<double> pVolumeOld;
       constParticleVariable<int> pLocalized;
-      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<double> pvolume,pTempNew,pJThermal;
       ParticleVariable<Vector> pTempGrad;
       ParticleVariable<Matrix3> pVelGrad,pFNew;
 
@@ -307,6 +308,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
                                                                           pset);
       new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
+      new_dw->allocateAndPut(pJThermal,  lb->pJThermalLabel,              pset);
 
       if (flags->d_doExplicitHeatConduction){
         new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
@@ -326,6 +328,7 @@ void RigidMPM::computeParticleGradients(const ProcessorGroup*,
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
         pFNew[idx] = Identity;
         partvoldef += pvolume[idx];
+        pJThermal[idx] = 0.;
       }
 
       if (flags->d_doExplicitHeatConduction){

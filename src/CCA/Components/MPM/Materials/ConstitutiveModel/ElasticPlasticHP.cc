@@ -1394,11 +1394,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
 
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
-
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<double>  pMass, pVolume,
@@ -1808,11 +1803,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
-
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
 
   // Data location
   int dwi = matl->getDWIndex();

@@ -464,7 +464,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+    MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
@@ -839,7 +840,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
   if(flags->d_doGranularMPM){ //MJ
-    scheduleGranularMPM(                    sched, patches, matls);
+    scheduleGranularMPM(                  sched, patches, matls);
   }
 
   scheduleFinalParticleUpdate(            sched, patches, matls);
@@ -1622,11 +1623,13 @@ void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
 
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
+  t->computes(lb->pJThermalLabel);
 
   // JBH -- Need code to use these variables -- FIXME TODO
   if(flags->d_doScalarDiffusion) {
@@ -1672,7 +1675,6 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -4647,18 +4649,22 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize, pSizeOrig;
-      constParticleVariable<double> pVolumeOld,pmass,pmassNew;
+      constParticleVariable<double> pVolumeOld,pmass,pmassNew,pTemperature;
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pFOld;
-      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<double> pvolume,pJThermal;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       ParticleVariable<Vector> pTempGrad;
+
+      double pRef = mpm_matl->getRoomTemperature();
+      double thermExpCoeff = mpm_matl->getThermalExpansionCoefficient();
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector>  gvelocity_star;
@@ -4674,6 +4680,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+      old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
 
       new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
@@ -4681,6 +4688,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
                                                                           pset);
       new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
+      new_dw->allocateAndPut(pJThermal,  lb->pJThermalLabel,              pset);
 
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
@@ -4770,6 +4778,10 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
           pFNew[idx] = Finc*pFOld[idx];
         }
+
+        // Thermal Expansion
+        double thermalStretch = 1. + (pTemperature[idx]-pRef)*thermExpCoeff;
+        pJThermal[idx] = thermalStretch*thermalStretch*thermalStretch;
 
         double J   =pFNew[idx].Determinant();
         double JOld=pFOld[idx].Determinant();
@@ -4894,7 +4906,8 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<int> pLocalized;
@@ -4908,7 +4921,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
-      new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
+      new_dw->getModifiable(pTempNew,   lb->pTemperatureLabel_preReloc,pset);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();

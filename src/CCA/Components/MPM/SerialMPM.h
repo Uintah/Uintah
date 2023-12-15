@@ -402,11 +402,11 @@ protected:
                                                DataWarehouse* new_dw);
   //////////MJ
   // From Wojtek Solowski's group:
-  virtual void GranularMPM(const ProcessorGroup*, 
+  virtual void GranularMPM(const ProcessorGroup*,
                            const PatchSubset* patches,
-                           const MaterialSubset* matls,                                         
+                           const MaterialSubset* matls,
                            DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);										  
+                           DataWarehouse* new_dw);
 
   virtual void computeParticleGradients(const ProcessorGroup*,
                                         const PatchSubset* patches,

@@ -27,7 +27,6 @@
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
       <DoCapDensity                       spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
-      <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
       <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
       <num_iters_to_increase_delT         spec="OPTIONAL INTEGER" />
@@ -256,6 +255,7 @@
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
+        <linear_thermal_expansion_coef   spec="OPTIONAL DOUBLE 'positive'"/>
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />
         <is_force_transmitting_material  spec="OPTIONAL BOOLEAN" />

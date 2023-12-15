@@ -132,7 +132,7 @@
       <material name = "PBX9501">
         <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
         <constitutive_model type = "visco_scram">
-          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
+          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501_CTE.xml"/>
           <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
           <randomize_parameters>          false </randomize_parameters>
           <use_time_temperature_equation> false </use_time_temperature_equation>
