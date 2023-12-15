@@ -326,7 +326,8 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-        if (checkForSurface(piece,*itr,dxpp)) {
+          pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
+//        if (checkForSurface(piece,*itr,dxpp)) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
           if (d_doScalarDiffusion) {
@@ -334,9 +335,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
                                      pvars.parea[pidx].y()*areacomps.y(),
                                      pvars.parea[pidx].z()*areacomps.z());
           }
-        } else {
-          pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
-        }
+//        } else {
+//          pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
+//        }
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
