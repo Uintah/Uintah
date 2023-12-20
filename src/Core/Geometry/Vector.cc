@@ -42,16 +42,15 @@
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
-#include <cstdio>
+#include <string>
 
 #include <stdlib.h>
 
 using namespace Uintah;
-using namespace std;
 
 namespace Uintah {
 
-string
+std::string
 Vector::get_string() const
 {
     char buf[100];
@@ -59,22 +58,23 @@ Vector::get_string() const
     return buf;
 }
 
+ // Creates a Vector from a string that looksl like "[Num, Num, Num]".
 Vector
-Vector::fromString( const string & source ) // Creates a Vector from a string that looksl like "[Num, Num, Num]".
+Vector::fromString( const std::string & source )
 {
   Vector result;
 
   // Parse out the [num,num,num]
   // Now pull apart the source string.
 
-  string::size_type i1 = source.find("[");
-  string::size_type i2 = source.find_first_of(",");
-  string::size_type i3 = source.find_last_of(",");
-  string::size_type i4 = source.find("]");
+  std::string::size_type i1 = source.find("[");
+  std::string::size_type i2 = source.find_first_of(",");
+  std::string::size_type i3 = source.find_last_of(",");
+  std::string::size_type i4 = source.find("]");
     
-  string x_val(source,i1+1,i2-i1-1);
-  string y_val(source,i2+1,i3-i2-1);
-  string z_val(source,i3+1,i4-i3-1);
+  std::string x_val(source,i1+1,i2-i1-1);
+  std::string y_val(source,i2+1,i3-i2-1);
+  std::string z_val(source,i3+1,i4-i3-1);
     
   UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE ); 
   UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
@@ -91,12 +91,12 @@ void
 Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
     Vector v0(Cross(*this, Vector(1,0,0)));
-    if(v0.length2() == 0){
-        v0=Cross(*this, Vector(0,1,0));
+    if(v0.length2() == 0) {
+        v0 = Cross(*this, Vector(0,1,0));
     }
-    v1=Cross(*this, v0);
+    v1 = Cross(*this, v0);
     v1.normalize();
-    v2=Cross(*this, v1);
+    v2 = Cross(*this, v1);
     v2.normalize();
 }
 
@@ -104,19 +104,24 @@ bool
 Vector::check_find_orthogonal(Vector& v1, Vector& v2) const
 {
     Vector v0(Cross(*this, Vector(1,0,0)));
-    if(v0.length2() == 0){
-        v0=Cross(*this, Vector(0,1,0));
+    if(v0.length2() == 0) {
+        v0 = Cross(*this, Vector(0,1,0));
     }
-    v1=Cross(*this, v0);
+
+    v1 = Cross(*this, v0);
     double length1 = v1.length();
     if(length1 == 0)
        return false;
+
     v1 *= 1./length1;
-    v2=Cross(*this, v1);
+    v2 = Cross(*this, v1);
+
     double length2 = v2.length();
     if(length2 == 0)
        return false;
+
     v2 *= 1./length2;
+
     return true;
 }
 
@@ -125,26 +130,11 @@ Vector::normal() const
 {
    Vector v(*this);
    v.normalize();
-   return v;                    // 
-}
-
-ostream& operator<<( ostream& os, const Vector& v )
-{
-  os << ' ' << v.x() << ' ' << v.y() << ' ' << v.z() << ' ';
-  return os;
-}
-
-istream& operator>>( istream& is, Vector& v)
-{
-  double x, y, z;
-  char st;
-  is >> st >> x >> st >> y >> st >> z >> st;
-  v=Vector(x,y,z);
-  return is;
+   return v;
 }
 
 int
-Vector::operator== ( const Vector& v ) const
+Vector::operator==( const Vector& v ) const
 {
     return v.x_ == x_ && v.y_ == y_ && v.z_ == z_;
 }
@@ -159,36 +149,47 @@ void
 Vector::rotz90(const int c)
 {
     // Rotate by c*90 degrees counter clockwise
-    switch(c%4){
+    switch(c%4) {
     case 0:
         // 0 degrees, do nothing
         break;
     case 1:
         // 90 degrees
         {
-            double newx=-y_;
-            y_=x_;
-            x_=newx;
+            double newx = -y_;
+            y_ = x_;
+            x_ = newx;
         }
         break;
     case 2:
         // 180 degrees
-        x_=-x_;
-        y_=-y_;
+        x_ = -x_;
+        y_ = -y_;
         break;
     case 3:
         // 270 degrees
         {
             double newy=-x_;
-            x_=y_;
-            y_=newy;
+            x_ = y_;
+            y_ = newy;
         }
         break;
     }
 }
 
+std::ostream& operator<<( std::ostream& os, const Vector& v )
+{
+  os << ' ' << v.x() << ' ' << v.y() << ' ' << v.z() << ' ';
+  return os;
+}
 
+std::istream& operator>>( std::istream& is, Vector& v)
+{
+  double x, y, z;
+  char st;
+  is >> st >> x >> st >> y >> st >> z >> st;
+  v = Vector(x,y,z);
+  return is;
+}
 
 } // End namespace Uintah
-
-

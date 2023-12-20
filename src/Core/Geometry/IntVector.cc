@@ -25,38 +25,28 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/XMLUtils.h>
 
-#include <stdlib.h>
-
 #include <iostream>
+#include <string>
 
-using namespace std;
 using namespace Uintah::UintahXML;
 
-
-namespace Uintah{
-
-ostream&
-operator<<(std::ostream& out, const Uintah::IntVector& v)
-{
-  out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
-  return out;
-}
+namespace Uintah {
 
 IntVector
-IntVector::fromString( const string & source )
+IntVector::fromString( const std::string & source )
 {
   IntVector result;
 
   // Parse out the [num,num,num]
 
-  string::size_type i1 = source.find("[");
-  string::size_type i2 = source.find_first_of(",");
-  string::size_type i3 = source.find_last_of(",");
-  string::size_type i4 = source.find("]");
+  std::string::size_type i1 = source.find("[");
+  std::string::size_type i2 = source.find_first_of(",");
+  std::string::size_type i3 = source.find_last_of(",");
+  std::string::size_type i4 = source.find("]");
   
-  string x_val(source,i1+1,i2-i1-1);
-  string y_val(source,i2+1,i3-i2-1);
-  string z_val(source,i3+1,i4-i3-1);
+  std::string x_val(source,i1+1,i2-i1-1);
+  std::string y_val(source,i2+1,i3-i2-1);
+  std::string z_val(source,i3+1,i4-i3-1);
 
   validateType( x_val, INT_TYPE );
   validateType( y_val, INT_TYPE );
@@ -67,6 +57,13 @@ IntVector::fromString( const string & source )
   result.z( atoi(z_val.c_str()) );
 
   return result;
+}
+
+std::ostream&
+operator<<(std::ostream& out, const Uintah::IntVector& v)
+{
+  out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
+  return out;
 }
 
 } //end namespace Uintah
