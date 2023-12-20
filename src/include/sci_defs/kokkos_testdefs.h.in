@@ -195,6 +195,7 @@ inline double3 make_double3(double x, double y, double z) { return double3(x, y,
 
 #else //#if defined(HAVE_KOKKOS)
 
+#define KOKKOS_INLINE_FUNCTION inline
 #define KOKKOS_LAMBDA [&]
 
   // Kokkos not included in this build. Create some stub types so
