@@ -191,11 +191,11 @@ struct struct1DArray
 {
   unsigned short int runTime_size{CAPACITY};
   T arr[CAPACITY];
-  HOST_DEVICE struct1DArray() {}
+  KOKKOS_INLINE_FUNCTION struct1DArray() {}
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  HOST_DEVICE struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
+  KOKKOS_INLINE_FUNCTION struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
 //       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
@@ -207,7 +207,7 @@ struct struct1DArray
   }
 
 // This constructor supports the initialization list interface
-  HOST_DEVICE struct1DArray(std::initializer_list<T> const myList)
+  KOKKOS_INLINE_FUNCTION struct1DArray(std::initializer_list<T> const myList)
     : runTime_size(myList.size()) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
@@ -218,7 +218,7 @@ struct struct1DArray
   }
 
 // This constructor allows for only the runtime_size to be specified
-  HOST_DEVICE struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
+  KOKKOS_INLINE_FUNCTION struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
 //       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
@@ -226,11 +226,11 @@ struct struct1DArray
 // #endif
   }
 
-  HOST_DEVICE inline T& operator[](unsigned int index) {
+  KOKKOS_INLINE_FUNCTION T& operator[](unsigned int index) {
     return arr[index];
   }
 
-  HOST_DEVICE inline const T& operator[](unsigned int index) const {
+  KOKKOS_INLINE_FUNCTION const T& operator[](unsigned int index) const {
     return arr[index];
   }
 
@@ -245,13 +245,13 @@ struct struct2DArray
 {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
-  HOST_DEVICE struct2DArray() {}
+  KOKKOS_INLINE_FUNCTION struct2DArray() {}
   unsigned short int i_runTime_size{CAPACITY_FIRST_DIMENSION};
   unsigned short int j_runTime_size{CAPACITY_SECOND_DIMENSION};
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  HOST_DEVICE struct2DArray(const Container& container,
+  KOKKOS_INLINE_FUNCTION struct2DArray(const Container& container,
                             int first_dim_runtimeSize = CAPACITY_FIRST_DIMENSION,
                             int second_dim_runtimeSize = CAPACITY_SECOND_DIMENSION) :
     i_runTime_size(first_dim_runtimeSize), j_runTime_size(second_dim_runtimeSize)
@@ -264,11 +264,11 @@ struct struct2DArray
     }
   }
 
-  HOST_DEVICE inline struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
+  KOKKOS_INLINE_FUNCTION struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
     return arr[index];
   }
 
-  HOST_DEVICE inline const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
+  KOKKOS_INLINE_FUNCTION const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
     return arr[index];
   }
 
@@ -1845,11 +1845,12 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange 
 
 #if defined(HAVE_KOKKOS)
 
-// CPU parallel_for_unstructured
+// CPU parallel_for_unstructured - Kokkos::View
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace, const unsigned int list_size , const Functor & functor)
+                          Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace,
+                          const unsigned int list_size , const Functor & functor)
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
@@ -1858,11 +1859,12 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 #else
 
-// CPU parallel_for_unstructured
+// CPU parallel_for_unstructured - std::vector
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             std::vector<IntVector> &iterSpace, const unsigned int list_size, const Functor & functor)
+                          std::vector<IntVector> &iterSpace,
+                          const unsigned int list_size, const Functor & functor)
 {
   for (unsigned int iblock=0; iblock<list_size; ++iblock) {
     functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
@@ -1876,7 +1878,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace, const unsigned int list_size, const Functor & functor)
+                          Kokkos::View<IntVector*, Kokkos::HostSpace> iterSpace,
+                          const unsigned int list_size, const Functor & functor)
 {
   // int status;
   // char *name(abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status));
@@ -1903,7 +1906,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<IntVector*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace, const unsigned int list_size, const Functor & functor)
+                          Kokkos::View<IntVector*, MemSpace> iterSpace,
+                          const unsigned int list_size, const Functor & functor)
 {
   ExecSpace instanceObject = getInstance(execObj);
 
@@ -1914,7 +1918,11 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     rangePolicy.set_chunk_size(size);
 
   Kokkos::parallel_for("GPU Unstructured", rangePolicy,
-                       KOKKOS_LAMBDA(const unsigned int& iblock) {
+                       KOKKOS_LAMBDA(const unsigned int & iblock) {
+
+      // const IntVector & is = iterSpace[iblock];
+      // functor(is.m_value[0], is.m_value[1], is.m_value[2]);
+
       functor(iterSpace[iblock][0], iterSpace[iblock][1], iterSpace[iblock][2]);
     });
 
