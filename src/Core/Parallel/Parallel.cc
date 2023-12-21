@@ -458,7 +458,10 @@ void Parallel::getKokkosTileSize( int &isize, int &jsize, int &ksize )
     while (tileSize >>= 1)
       exp++;
 
-    tileSize = pow(2, exp);
+    if( exp > 1 )
+      tileSize = pow(2, exp-1);
+    else
+      tileSize = 1;
 
     s_kokkos_tile_i_size = tileSize;
     s_kokkos_tile_j_size = tileSize;
