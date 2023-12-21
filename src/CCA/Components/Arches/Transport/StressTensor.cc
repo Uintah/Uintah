@@ -15,7 +15,6 @@ TaskInterface( task_name, matl_index ){
   m_sigma_t_names[3] = "sigma22";
   m_sigma_t_names[4] = "sigma23";
   m_sigma_t_names[5] = "sigma33";
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -141,7 +140,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
   auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
   auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
-  auto D  = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
+  auto D    = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
   auto eps_x = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
   auto eps_y = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
   auto eps_z = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);
@@ -181,7 +180,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
                                + 0.5 * (D(i-1,j-1,k)+D(i,j-1,k)) );
     const double mu13  = 0.5 * ( 0.5 * (D(i-1,j,k-1)+D(i,j,k-1))
                                + 0.5 * (D(i-1,j,k)+D(i,j,k)) );
-    const double mu23  = 0.5 * ( 0.5 * ( D(i,j,k)+D(i,j,k-1))
+    const double mu23  = 0.5 * ( 0.5 * (D(i,j,k)+D(i,j,k-1))
                                + 0.5 * (D(i,j-1,k)+D(i,j-1,k-1)) );
 
     //apply_uVelStencil(dudx,dudy,dudz,i,j,k);  // non-macro approach gives Kokkos? error downstream, likely due to saving templated value as reference instead of value. But must save by reference to suppor legacy code.  poosibly Use getKokkosView in functor constructor
@@ -192,31 +191,35 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       STENCIL3_1D(1);
       dudy = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.y();
     }
+
     {
       STENCIL3_1D(2);
-      dudz = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.z();\
+      dudz = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.z();
     }
-    {\
-      STENCIL3_1D(0);\
-      dvdx = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.x();\
-    }\
-    {\
-      STENCIL3_1D(2);\
+
+    {
+      STENCIL3_1D(0);
+      dvdx = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.x();
+    }
+
+    {
+      STENCIL3_1D(2);
       dvdz = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.z();
     }
-    {\
-      STENCIL3_1D(0);\
-      dwdx = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.x();\
-    }\
-    {\
-      STENCIL3_1D(1);\
-      dwdy = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.y();\
-    }\
+
+    {
+      STENCIL3_1D(0);
+      dwdx = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.x();
+    }
+
+    {
+      STENCIL3_1D(1);
+      dwdy = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.y();
+    }
 
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
     sigma13(i,j,k) =  mu13 * (dudz + dwdx );
     sigma23(i,j,k) =  mu23 * (dvdz + dwdy );
-
   });
 
   IntVector lowNx = patch->getCellLowIndex();
@@ -225,11 +228,10 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   GET_WALL_BUFFERED_PATCH_RANGE(lowNx, highNx,1,1,0,0,0,0);
   Uintah::BlockRange range1(lowNx, highNx);
   Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA (int i, int j, int k){
-
     const double mu11  = D(i-1,j,k); // it does not need interpolation
-    const double dudx  = eps_x(i,j,k)*eps_x(i-1,j,k) * (uVel(i,j,k) - uVel(i-1,j,k))/Dx.x();
-    sigma11(i,j,k)     =  mu11 * 2.0*dudx;
-
+    const double duVdx = (uVel(i,j,k) - uVel(i-1,j,k)) / Dx.x();
+    const double dudx  = eps_x(i,j,k) * eps_x(i-1,j,k) * duVdx;
+    sigma11(i,j,k)     = mu11 * 2.0*dudx;
   });
 
   IntVector lowNy = patch->getCellLowIndex();
@@ -238,10 +240,10 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   GET_WALL_BUFFERED_PATCH_RANGE(lowNy, highNy,0,0,1,1,0,0);
   Uintah::BlockRange range2(lowNy, highNy);
   Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
-    const double mu22 = D(i,j-1,k);  // it does not need interpolation
-    const double dvdy  = eps_y(i,j,k)*eps_y(i,j-1,k) * (vVel(i,j,k) - vVel(i,j-1,k))/Dx.y();
-    sigma22(i,j,k) =  mu22 * 2.0*dvdy;
-
+    const double mu22  = D(i,j-1,k);  // it does not need interpolation
+    const double dvVdy = (vVel(i,j,k) - vVel(i,j-1,k)) / Dx.y();
+    const double dvdy  = eps_y(i,j,k) * eps_y(i,j-1,k) * dvVdy;
+    sigma22(i,j,k)     =  mu22 * 2.0*dvdy;
   });
 
   IntVector lowNz = patch->getCellLowIndex();
@@ -250,9 +252,9 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   GET_WALL_BUFFERED_PATCH_RANGE(lowNz, highNz,0,0,0,0,1,1);
   Uintah::BlockRange range3(lowNz, highNz);
   Uintah::parallel_for(execObj, range3, KOKKOS_LAMBDA (int i, int j, int k){
-    const double mu33 = D(i,j,k-1);  // it does not need interpolation
-    const double dwdz  = eps_z(i,j,k)*eps_z(i,j,k-1) * (wVel(i,j,k) - wVel(i,j,k-1))/Dx.z();
-    sigma33(i,j,k) = mu33 * 2.0*dwdz;
-
+    const double mu33  = D(i,j,k-1);  // it does not need interpolation
+    const double dwVdz = (wVel(i,j,k) - wVel(i,j,k-1)) / Dx.z();
+    const double dwdz  = eps_z(i,j,k) * eps_z(i,j,k-1) * dwVdz;
+    sigma33(i,j,k)     = mu33 * 2.0*dwdz;
   });
 }

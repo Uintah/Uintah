@@ -158,56 +158,56 @@ private:
         switch (m_conv_scheme[ieqn]){
           case CENTRAL:
             {
-            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,CentralConvection  >              
-                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,CentralConvection  >
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             //Uintah::parallel_for(execObj, convection_range, get_flux );
-            Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,CentralConvection> partiallySpecializedTemplateStruct; 
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace, grid_T,grid_CT,CentralConvection> partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           case FOURTH:
             {
-            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,FourthConvection  >              
-                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+            //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,FourthConvection  >
+                //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             //Uintah::parallel_for(execObj, convection_range, get_flux );
-              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,FourthConvection  > partiallySpecializedTemplateStruct;           
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,FourthConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           case VANLEER:
             {
-              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,VanLeerConvection  >              
-                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,VanLeerConvection  >
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
               //Uintah::parallel_for(execObj, convection_range, get_flux );
-              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,VanLeerConvection  > partiallySpecializedTemplateStruct;              
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,VanLeerConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           case SUPERBEE:
             {
-              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,SuperBeeConvection  >              
-                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,SuperBeeConvection  >
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
               //Uintah::parallel_for(execObj, convection_range, get_flux );
-              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,SuperBeeConvection  > partiallySpecializedTemplateStruct;          
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,SuperBeeConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           case ROE:
             {
-              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,RoeConvection  >              
-                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,RoeConvection  >
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
               //Uintah::parallel_for(execObj, convection_range, get_flux );
-              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,RoeConvection  > partiallySpecializedTemplateStruct;             
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,RoeConvection  > partiallySpecializedTemplateStruct;
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           case UPWIND:
             {
-              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,UpwindConvection  >              
-                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+              //Uintah::ComputeConvectiveFlux<grid_T,grid_CT,UpwindConvection  >
+                   //get_flux( phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
               //Uintah::parallel_for(execObj, convection_range, get_flux );
               Uintah::ComputeConvectiveFlux3D<ExecSpace, MemSpace,grid_T,grid_CT,UpwindConvection  > partiallySpecializedTemplateStruct;
-                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );   
+                partiallySpecializedTemplateStruct.get_flux(execObj, convection_range,  phi, u_fx, v_fy, w_fz, x_flux, y_flux, z_flux, eps );
             }
             break;
           default:
@@ -618,7 +618,7 @@ private:
   void KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     Vector Dx = patch->dCell();
-    double V = Dx.x()*Dx.y()*Dx.z();
+    const double V = Dx.x()*Dx.y()*Dx.z();
 
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
@@ -676,11 +676,11 @@ private:
         auto sigma3 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmaz_name);
 
         auto stressTensor = KOKKOS_LAMBDA (int i, int j, int k){
-          double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
-                              (sigma2(i,j+1,k) - sigma2(i,j,k))*areaNS +
-                              (sigma3(i,j,k+1) - sigma3(i,j,k))*areaTB;
+          const double EW = areaEW * (sigma1(i+1,j,k) - sigma1(i,j,k));
+          const double NS = areaNS * (sigma2(i,j+1,k) - sigma2(i,j,k));
+          const double TB = areaTB * (sigma3(i,j,k+1) - sigma3(i,j,k));
 
-          rhs(i,j,k) += div_sigma1;
+          rhs(i,j,k) += EW + NS + TB; // div_sigma1 = EW + NS + TB;
         };
 
 
@@ -704,7 +704,7 @@ private:
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
         auto src = tsk_info->get_field<CT, const double, MemSpace>((*isrc).name);
-        double weight = (*isrc).weight;
+        const double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){
           GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1, 0)

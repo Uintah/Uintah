@@ -35,16 +35,36 @@ namespace Uintah {
   enum LIMITER { NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER, FOURTH };
 
 #define SUPERBEEMACRO(r) \
-  my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.;	\
-  my_psi = std::max( 0., my_psi );
+  { \
+    double r1 = (r  < 0.5) ? 2.*r : 1.0;   \
+    double r2 = (r  < 2.0) ?    r : 2.0;   \
+    double rm = (r1 > r2 ) ?   r1 :  r2;   \
+    my_psi = (r < huge) ? rm : 2.0;         \
+    my_psi = (my_psi > 0.0) ? my_psi : 0.0; \
+  }
 
+/* Cannot use std functions on the GPU
+#define SUPERBEEMACRO(r) \
+   my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.; \
+   my_psi = std::max( 0., my_psi );
+*/
+ 
 #define ROEMACRO(r) \
-  my_psi = ( r < huge ) ? std::min(1., r) : 1.; \
-  my_psi = std::max(0., my_psi);
+  my_psi = (r < huge) ? (r < 1.0 ? r : 1.0) : 1.; \
+  my_psi = (my_psi > 0.0) ? my_psi : 0;
+
+/* Cannot use std functions on the GPU
+#define ROEMACRO(r) \
+   my_psi = ( r < huge ) ? std::min(1., r) : 1.; \
+   my_psi = std::max(0., my_psi);
+*/
 
 #define VANLEERMACRO(r) \
-  my_psi = ( r < huge ) ? ( r + fabs(r) ) / ( 1. + fabs(r) ) : 2.; \
-  my_psi = ( r >= 0. ) ? my_psi : 0.;
+  { \
+    const double r_abs = (r < 0.0 ? -r : r);                 \
+    my_psi = (r < huge) ? (r + r_abs) / (1.0 + r_abs) : 2.0; \
+    my_psi = (r >= 0.0) ? my_psi : 0.0;                      \
+  }
 
   /**
       @struct IntegrateFlux
@@ -153,8 +173,8 @@ namespace Uintah {
 
     void operator()(int i, int j, int k ) const
     {
-      double c1 = 7./12.;
-      double c2 = -1./12.;
+      const double c1 =  7./12.;
+      const double c2 = -1./12.;
 
       //std::cout<<"fourth convection"<< std::endl;
 
@@ -162,27 +182,33 @@ namespace Uintah {
       {
         STENCIL5_1D(0);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       }
 
       //Y-dir
       {
         STENCIL5_1D(1);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
       }
 
       //Z-dir
       {
         STENCIL5_1D(2);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
       }
     }
 
@@ -242,8 +268,8 @@ namespace Uintah {
 
         STENCIL3_1D(dir);
 
+        const double afc = eps(IJK_) * eps(IJK_M_);
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = eps(IJK_)*eps(IJK_M_);
 
         flux(IJK_) = afc * u(IJK_) * Sup;
       });
@@ -266,9 +292,10 @@ namespace Uintah {
 
         STENCIL3_1D(dir);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-        flux(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+        flux(IJK_) = afc * u(IJK_) * phi_ave;
       });
     }
   }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, CentralConvection>
@@ -299,17 +326,17 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
 
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi );
+        flux(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       });
     }
   }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, SuperBeeConvection>
@@ -340,17 +367,17 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
 
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi);
+        flux(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       });
     }
   }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, VanLeerConvection>
@@ -381,15 +408,17 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc  = eps(IJK_)* eps(IJK_M_);
-        const double afcm = eps(IJK_M_)* eps(IJK_MM_);
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       });
     }
   }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, RoeConvection>
@@ -406,16 +435,18 @@ namespace Uintah {
                  , int                                    dir
                  )
     {
-      const double c1{7./12.};
-      const double c2{-1./12.};
+      const double c1 =  7./12.;
+      const double c2 = -1./12.;
 
       parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
         STENCIL5_1D(dir);
 
-        const double afc  = eps(IJK_)* eps(IJK_M_) ;
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       });
     }
   }; // struct ComputeConvectiveFlux1D<ExecSpace, MemSpace, grid_T, grid_CT, FourthConvection>
@@ -447,7 +478,7 @@ namespace Uintah {
     {
       throw InvalidValue("Error: Convection scheme not valid.",__FILE__, __LINE__);
     }
- 
+
   private:
 
     const grid_CT & phi;
@@ -490,7 +521,7 @@ namespace Uintah {
         STENCIL3_1D(0);
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
 
         flux_x(IJK_) = afc * u(IJK_) * Sup;
       }
@@ -500,7 +531,7 @@ namespace Uintah {
         STENCIL3_1D(1);
 
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
 
         flux_y(IJK_) = afc * v(IJK_) * Sup;
       }
@@ -510,7 +541,7 @@ namespace Uintah {
         STENCIL3_1D(2);
 
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
 
         flux_z(IJK_) = afc * w(IJK_) * Sup;
       }
@@ -558,27 +589,30 @@ namespace Uintah {
       {
         STENCIL3_1D(0);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-        flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+        flux_x(IJK_) = afc * u(IJK_) * phi_ave;
       }
 
       //Y-dir
       {
         STENCIL3_1D(1);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-        flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+        flux_y(IJK_) = afc * v(IJK_) * phi_ave;
       }
 
       //Z-dir
       {
         STENCIL3_1D(2);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
+        const double afc = eps(IJK_) * eps(IJK_M_);
+	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-        flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+        flux_z(IJK_) = afc * w(IJK_) * phi_ave;
       }
     }
 
@@ -633,15 +667,17 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Y-dir
@@ -655,15 +691,17 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc =  eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Z-dir
@@ -677,15 +715,17 @@ namespace Uintah {
 
         SUPERBEEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc =  eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
       }
     }
 
@@ -740,15 +780,17 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Y-dir
@@ -762,15 +804,17 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Z-dir
@@ -784,15 +828,17 @@ namespace Uintah {
 
         VANLEERMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc =  eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
       }
     }
 
@@ -844,15 +890,17 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc =  eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Y-dir
@@ -866,15 +914,17 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
       }
 
       //Z-dir
@@ -888,15 +938,17 @@ namespace Uintah {
 
         ROEMACRO(r);
 
-        const double afc = eps(IJK_)*eps(IJK_M_);
-        const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+        const double afc  = eps(IJK_)   * eps(IJK_M_);
+        const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
         my_psi *= afc * afcm;
 
         const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+        flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
       }
     }
 
@@ -944,27 +996,33 @@ namespace Uintah {
       {
         STENCIL5_1D(0);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc =  eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
+        flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       }
 
       //Y-dir
       {
         STENCIL5_1D(1);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc =  eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
       }
 
       //Z-dir
       {
         STENCIL5_1D(2);
 
-        const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+        const double afc =  eps(IJK_) * eps(IJK_M_);
+	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-        flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+        flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
       }
     }
 
@@ -978,7 +1036,7 @@ namespace Uintah {
           grid_T  & flux_y;
           grid_T  & flux_z;
     const grid_CT & eps;
-    const double    c1 {7./12.};
+    const double    c1 { 7./12.};
     const double    c2 {-1./12.};
 
   }; // struct ComputeConvectiveFlux<grid_T, grid_CT, FourthConvection>
@@ -1029,7 +1087,7 @@ namespace Uintah {
           STENCIL3_1D(0);
 
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
 
           flux_x(IJK_) = afc * u(IJK_) * Sup;
         }
@@ -1039,7 +1097,7 @@ namespace Uintah {
           STENCIL3_1D(1);
 
           const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
 
           flux_y(IJK_) = afc * v(IJK_) * Sup;
         }
@@ -1049,7 +1107,7 @@ namespace Uintah {
           STENCIL3_1D(2);
 
           const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
 
           flux_z(IJK_) = afc * w(IJK_) * Sup;
         }
@@ -1078,27 +1136,30 @@ namespace Uintah {
         {
           STENCIL3_1D(0);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-          flux_x(IJK_) = afc * u(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+          flux_x(IJK_) = afc * u(IJK_) * phi_ave;
         }
 
         //Y-dir
         {
           STENCIL3_1D(1);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-          flux_y(IJK_) = afc * v(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+          flux_y(IJK_) = afc * v(IJK_) * phi_ave;
         }
 
         //Z-dir
         {
           STENCIL3_1D(2);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
-          flux_z(IJK_) = afc * w(IJK_) * 0.5 * ( phi(IJK_) + phi(IJK_M_));
+          flux_z(IJK_) = afc * w(IJK_) * phi_ave;
         }
       });
     }
@@ -1135,15 +1196,17 @@ namespace Uintah {
 
           SUPERBEEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Y-dir
@@ -1157,15 +1220,17 @@ namespace Uintah {
 
           SUPERBEEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Z-dir
@@ -1178,15 +1243,17 @@ namespace Uintah {
 
           SUPERBEEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
         }
       });
     }
@@ -1223,15 +1290,17 @@ namespace Uintah {
 
           VANLEERMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Y-dir
@@ -1245,15 +1314,17 @@ namespace Uintah {
 
           VANLEERMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Z-dir
@@ -1267,15 +1338,17 @@ namespace Uintah {
 
           VANLEERMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
         }
       });
     }
@@ -1312,15 +1385,17 @@ namespace Uintah {
 
           ROEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_x(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_x(IJK_) = afc * u(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Y-dir
@@ -1334,15 +1409,17 @@ namespace Uintah {
 
           ROEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = v(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = v(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_y(IJK_) = afc * v(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_y(IJK_) = afc * v(IJK_) * (Sup + 0.5 * my_psi);
         }
 
         //Z-dir
@@ -1356,15 +1433,17 @@ namespace Uintah {
 
           ROEMACRO(r);
 
-          const double afc = eps(IJK_)*eps(IJK_M_);
-          const double afcm =  eps(IJK_M_) * eps(IJK_MM_) ;
+          const double afc  = eps(IJK_)   * eps(IJK_M_);
+          const double afcm = eps(IJK_M_) * eps(IJK_MM_);
 
           my_psi *= afc * afcm;
 
           const double Sup = w(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = w(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux_z(IJK_) = afc * w(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup ));
+        my_psi *= (Sdn - Sup); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+
+          flux_z(IJK_) = afc * w(IJK_) * (Sup + 0.5 * my_psi);
         }
       });
     }
@@ -1385,8 +1464,8 @@ namespace Uintah {
                  , const grid_CT                              & eps
                  )
     {
-      const double c1 {7./12.};
-      const double c2 {-1./12.};
+      const double c1 =  7./12.;
+      const double c2 = -1./12.;
 
       parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
@@ -1394,27 +1473,33 @@ namespace Uintah {
         {
           STENCIL5_1D(0);
 
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-          flux_x(IJK_) = afc * u(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) ) ;
+          flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
         }
 
         //Y-dir
         {
           STENCIL5_1D(1);
 
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-          flux_y(IJK_) = afc * v(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+          flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
         }
 
         //Z-dir
         {
           STENCIL5_1D(2);
 
-          const double afc  =  eps(IJK_) * eps(IJK_M_) ;
+          const double afc = eps(IJK_) * eps(IJK_M_);
+	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
-          flux_z(IJK_) = afc * w(IJK_) * ( c1*(phi(IJK_) + phi(IJK_M_)) + c2*(phi(IJK_MM_) + phi(IJK_P_)) );
+          flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
         }
       });
     }

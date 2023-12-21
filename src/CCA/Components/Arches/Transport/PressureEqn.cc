@@ -208,15 +208,17 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     A.s = 0.0;
     A.t = 0.0;
     A.b = 0.0;
+    A.p = 0.0;
     b(i, j, k) = 0.0;
     x(i, j, k) = 0.0;
     guess(i, j, k) = 0.0;
   });
 
-  Vector DX = patch->dCell();
-  const double area_EW = DX.y()*DX.z();
-  const double area_NS = DX.x()*DX.z();
-  const double area_TB = DX.x()*DX.y();
+  const Vector DX = patch->dCell();
+
+  const double area_EW = DX.y() * DX.z();
+  const double area_NS = DX.x() * DX.z();
+  const double area_TB = DX.x() * DX.y();
 
   const double area_EW_X = area_EW / DX.x();
   const double area_NS_Y = area_NS / DX.y();
@@ -275,8 +277,10 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
       const int jm = j - iDir1;
       const int km = k - iDir2;
 
-      Apress(im, jm, km).p = Apress(im, jm, km).p + sign * Apress(im, jm, km)[face];
-      Apress(im, jm, km)[face] = 0.;
+      Stencil7& A = Apress(im, jm, km);
+
+      A.p += sign * A[face];
+      A[face] = 0.0;
     });
   }
 }
@@ -330,11 +334,11 @@ PressureEqn::register_timestep_eval(
 template <typename ExecSpace, typename MemSpace>
 void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ) {
 
-  Vector DX = patch->dCell();
-  const double area_EW = DX.y()*DX.z();
-  const double area_NS = DX.x()*DX.z();
-  const double area_TB = DX.x()*DX.y();
-  const double V       = DX.x()*DX.y()*DX.z();
+  const Vector DX = patch->dCell();
+  const double area_EW = DX.y() * DX.z();
+  const double area_NS = DX.x() * DX.z();
+  const double area_TB = DX.x() * DX.y();
+  const double V       = DX.x() * DX.y() * DX.z();
 
   auto b = tsk_info->get_field<CCVariable<double>, double, MemSpace>("b_press");
   auto eps = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
@@ -356,10 +360,11 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
   Uintah::parallel_for(execObj, range2, KOKKOS_LAMBDA(int i, int j, int k) {
 
-      b(i, j, k) = -eps(i, j, k) * (area_EW * (xmom(i+1, j, k) - xmom(i, j, k)) +
-                                    area_NS * (ymom(i, j+1, k) - ymom(i, j, k)) +
-                                    area_TB * (zmom(i, j, k+1) - zmom(i, j, k)) +
-                                    V*drhodt(i, j, k)) / dt;
+      const double EW = area_EW * (xmom(i+1, j, k) - xmom(i, j, k));
+      const double NS = area_NS * (ymom(i, j+1, k) - ymom(i, j, k));
+      const double TB = area_TB * (zmom(i, j, k+1) - zmom(i, j, k));
+
+      b(i, j, k) = -eps(i, j, k) * (EW + NS + TB + V * drhodt(i, j, k)) / dt;
     });
 }
 
@@ -516,7 +521,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                           "PressureEqn::blindGuessToLinearSystem",
                           &PressureEqn::blindGuessToLinearSystem<UINTAH_CPU_TAG>,
                           &PressureEqn::blindGuessToLinearSystem<KOKKOS_OPENMP_TAG>,
-                          // &PressureEqn::blindGuessToLinearSystem<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          &PressureEqn::blindGuessToLinearSystem<KOKKOS_DEFAULT_DEVICE_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT);
    }
 
