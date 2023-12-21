@@ -293,7 +293,6 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   const double fhat     = 3.; //Mystery value for tilde(bar(delta))
   auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
 
-
   int nG = 0;
   if ( tsk_info->packed_tasks() ){
     nG = 1;
@@ -316,14 +315,12 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   typedef typename ArchesCore::VariableHelper< TY >::PODType TYPODType;
   typedef typename ArchesCore::VariableHelper< TZ >::PODType TZPODType;
 
-
   auto Beta11 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta11");
   auto Beta12 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta12");
   auto Beta13 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta13");
   auto Beta22 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta22");
   auto Beta23 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta23");
   auto Beta33 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta33");
-
 
   auto filterRho = tsk_info->get_field<TT, TTPODType, MemSpace >("Filterrho");
   auto filterRhoU = tsk_info->get_field<TX, TXPODType, MemSpace >("Filterrhou");
@@ -347,8 +344,7 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto filters33 = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filters33");
 
   Uintah::parallel_initialize(execObj, 0.0, filterBeta11, filterBeta12, filterBeta13, filterBeta22, filterBeta23, filterBeta33,
-		  filterIsI, filters11, filters12, filters13, filters22, filters23, filters33 );
-
+                  filterIsI, filters11, filters12, filters13, filters22, filters23, filters33 );
 
   m_Filter.applyFilter(Beta11,filterBeta11,vol_fraction,range1, execObj);
   m_Filter.applyFilter(Beta22,filterBeta22,vol_fraction,range1, execObj);
@@ -448,11 +444,12 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     filters12(i,j,k) = 0.5*((funp-fusp)/Dx.y() + (fvep-fvwp)/Dx.x());
     filters13(i,j,k) = 0.5*((futp-fubp)/Dx.z() + (fwep-fwwp)/Dx.x());
     filters23(i,j,k) = 0.5*((fvtp-fvbp)/Dx.z() + (fwnp-fwsp)/Dx.y());
-    filterIsI(i,j,k) = std::sqrt(2.0*(filters11(i,j,k)*filters11(i,j,k)
-                       + filters22(i,j,k)*filters22(i,j,k) + filters33(i,j,k)*filters33(i,j,k)+
-                       2.0*(filters12(i,j,k)*filters12(i,j,k) +
-                        filters13(i,j,k)*filters13(i,j,k) + filters23(i,j,k)*filters23(i,j,k))));
-
+    filterIsI(i,j,k) = sqrt(2.0 *(filters11(i,j,k)*filters11(i,j,k) +
+                                  filters22(i,j,k)*filters22(i,j,k) +
+                                  filters33(i,j,k)*filters33(i,j,k) +
+                                  2.0*(filters12(i,j,k)*filters12(i,j,k) +
+                                       filters13(i,j,k)*filters13(i,j,k) +
+                                       filters23(i,j,k)*filters23(i,j,k))));
   });
 
   auto alpha11 = tsk_info->get_field< CCVariable<double>, double, MemSpace >("alpha11");
@@ -468,9 +465,9 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto rhoUV = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoUV" );
   auto rhoUW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoUW" );
   auto rhoVW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoVW" );
-  auto rhoU = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoU");
-  auto rhoV = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoV");
-  auto rhoW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoW");
+  auto rhoU  = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoU");
+  auto rhoV  = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoV");
+  auto rhoW  = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoW");
 
   auto filter_rhoUU = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterrhoUU");
   auto filter_rhoVV = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterrhoVV");
@@ -483,7 +480,7 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto filter_rhoW = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterrhoW");
 
   Uintah::parallel_initialize(execObj, 0.0, alpha11, alpha12, alpha13, alpha22, alpha23, alpha33,
-		  filter_rhoUU, filter_rhoVV, filter_rhoWW, filter_rhoUV, filter_rhoUW, filter_rhoVW, filter_rhoU, filter_rhoV, filter_rhoW);
+                  filter_rhoUU, filter_rhoVV, filter_rhoWW, filter_rhoUV, filter_rhoUW, filter_rhoVW, filter_rhoU, filter_rhoV, filter_rhoW);
 
   Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA(int i, int j, int k){
     alpha11(i,j,k) = filterRho(i,j,k)*filterIsI(i,j,k)*filters11(i,j,k);
@@ -494,9 +491,7 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     alpha23(i,j,k) = filterRho(i,j,k)*filterIsI(i,j,k)*filters23(i,j,k);
   });
 
-
   // Filter rhouiuj and rhoui at cc
-
   m_Filter.applyFilter(rhoUU,filter_rhoUU,vol_fraction,range1, execObj);
   m_Filter.applyFilter(rhoVV,filter_rhoVV,vol_fraction,range1, execObj);
   m_Filter.applyFilter(rhoWW,filter_rhoWW,vol_fraction,range1, execObj);
@@ -507,12 +502,12 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   m_Filter.applyFilter(rhoW,filter_rhoW,vol_fraction,range1, execObj);
   m_Filter.applyFilter(rhoU,filter_rhoU,vol_fraction,range1, execObj);
 
-
   auto ML = tsk_info->get_field< CCVariable<double>, double, MemSpace >("ML");
   auto MM = tsk_info->get_field< CCVariable<double>, double, MemSpace >("MM");
   Uintah::parallel_initialize(execObj, 0.0, ML, MM);
 
- const double SMALL = 1e-16;
+  const double SMALL = 1e-16;
+
   Uintah::parallel_for(execObj, range1, KOKKOS_LAMBDA(int i, int j, int k){
     double M11 = 2.0*filter2*(filterBeta11(i,j,k) - 2.0*fhat*alpha11(i,j,k));
     double M22 = 2.0*filter2*(filterBeta22(i,j,k) - 2.0*fhat*alpha22(i,j,k));
@@ -531,7 +526,7 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     ML(i,j,k) = M11*L11 + M22*L22 + M33*L33 + 2.0*(M12*L12 + M13*L13 + M23*L23);
     MM(i,j,k) = M11*M11 + M22*M22 + M33*M33 + 2.0*(M12*M12 + M13*M13 + M23*M23);
   });
-
 }
+
 }
 #endif
