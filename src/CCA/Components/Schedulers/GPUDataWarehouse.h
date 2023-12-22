@@ -436,39 +436,39 @@ public:
 
   // ______________________________________________________________________
   // GPU GridVariable methods
-  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  GPU_FUNCTION void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     get(var, label, patchID, matlIndx, 0);
   }
-  HOST_DEVICE void getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
-  HOST_DEVICE bool stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  GPU_FUNCTION void getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  GPU_FUNCTION bool stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
 
 
-  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
-    get(var, label, patchID, matlIndx, 0);
-  }
-
-  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  GPU_FUNCTION void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     get(var, label, patchID, matlIndx, 0);
   }
 
-  HOST_DEVICE void getLevel(const GPUGridVariableBase& var, char const* label, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+    get(var, label, patchID, matlIndx, 0);
+  }
+
+  GPU_FUNCTION void getLevel(const GPUGridVariableBase& var, char const* label, const int8_t matlIndx, const int8_t levelIndx);
 
 
-  HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  GPU_FUNCTION void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
-  HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  GPU_FUNCTION void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
-  HOST_DEVICE void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx) {
+  GPU_FUNCTION void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
+  GPU_FUNCTION void getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx) {
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
@@ -491,9 +491,9 @@ public:
 
   // ______________________________________________________________________
   // GPU DataWarehouse support methods
-  // HOST_DEVICE bool existContiguously(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset);
-  // HOST_DEVICE bool existsLevelDB( char const* name, int matlIndx, int levelIndx);       // levelDB
-  // HOST_DEVICE bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
+  // GPU_FUNCTION bool existContiguously(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset);
+  // GPU_FUNCTION bool existsLevelDB( char const* name, int matlIndx, int levelIndx);       // levelDB
+  // GPU_FUNCTION bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
   __host__ bool remove(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void* getPlacementNewBuffer();
   template <typename ExecSpace>
@@ -531,8 +531,8 @@ public:
   // ______________________________________________________________________
   // Additional support methods
   __host__ void putMaterials(std::vector< std::string > materials);
-  HOST_DEVICE materialType getMaterial(int i) const;
-  HOST_DEVICE int getNumMaterials() const;
+  GPU_FUNCTION materialType getMaterial(int i) const;
+  GPU_FUNCTION int getNumMaterials() const;
   __host__ void putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndx, int levelIndx,
                                 bool sourceStaging, bool deststaging,
                                 int3 varOffset, int3 varSize,
@@ -619,14 +619,14 @@ public:
 
 private:
   __device__ dataItem* getItem(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
-  HOST_DEVICE void resetdVarDB();
+  GPU_FUNCTION void resetdVarDB();
 
-  HOST_DEVICE void printError(const char* msg, const char* methodName, char const* label, int patchID, int8_t matlIndx, int8_t levelIndx);
-  HOST_DEVICE void printError(const char* msg, const char* methodName) {
+  GPU_FUNCTION void printError(const char* msg, const char* methodName, char const* label, int patchID, int8_t matlIndx, int8_t levelIndx);
+  GPU_FUNCTION void printError(const char* msg, const char* methodName) {
     printError(msg, methodName, "", 0, 0, 0);
   }
-  HOST_DEVICE void printGetError( const char* msg, char const* label, int8_t matlIndx, const int patchID, int8_t levelIndx);
-  HOST_DEVICE void printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx);
+  GPU_FUNCTION void printGetError( const char* msg, char const* label, int8_t matlIndx, const int patchID, int8_t levelIndx);
+  GPU_FUNCTION void printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx);
 
   __device__ bool isThread0_Blk0();
   __device__ bool isThread0();

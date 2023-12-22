@@ -59,7 +59,7 @@ GPUDataWarehouse::GPUDataWarehouse()
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -94,7 +94,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, const i
 
 //______________________________________________________________________
 //
-HOST_DEVICE bool
+GPU_FUNCTION bool
 GPUDataWarehouse::stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -128,7 +128,7 @@ GPUDataWarehouse::stagingVarExists(char const* label, int patchID, int matlIndx,
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -170,7 +170,7 @@ GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* labe
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::getLevel(const GPUGridVariableBase& var, char const* label, int8_t matlIndx, int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -184,7 +184,7 @@ GPUDataWarehouse::getLevel(const GPUGridVariableBase& var, char const* label, in
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -218,7 +218,7 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, co
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -252,7 +252,7 @@ GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, const int p
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -290,7 +290,7 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, con
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -324,7 +324,7 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -2132,7 +2132,7 @@ GPUDataWarehouse::deleteSelfOnDevice()
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::resetdVarDB()
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -2228,7 +2228,7 @@ GPUDataWarehouse::putMaterials( std::vector< std::string > materials)
 
 //______________________________________________________________________
 //
-HOST_DEVICE int
+GPU_FUNCTION int
 GPUDataWarehouse::getNumMaterials() const
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -2242,7 +2242,7 @@ GPUDataWarehouse::getNumMaterials() const
 
 //______________________________________________________________________
 //
-HOST_DEVICE materialType
+GPU_FUNCTION materialType
 GPUDataWarehouse::getMaterial(int i) const
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -3991,7 +3991,7 @@ GPUDataWarehouse::print()
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::printError(const char* msg, const char* methodName, char const* label, const int patchID, int8_t matlIndx, int8_t levelIndx )
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -4042,7 +4042,7 @@ GPUDataWarehouse::printError(const char* msg, const char* methodName, char const
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
@@ -4078,7 +4078,7 @@ GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int8_t 
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
+GPU_FUNCTION void
 GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t levelIndx, const int patchID, int8_t matlIndx)
 {
 #if defined(DEVICE_COMPILE_ONLY)
