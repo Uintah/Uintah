@@ -8,3 +8,8 @@ target_link_libraries( graphview
         Core_DataArchive
         Core_Parallel
     )
+
+install( TARGETS graphview
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)

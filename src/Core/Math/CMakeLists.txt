@@ -36,8 +36,9 @@ target_link_libraries( Core_Math
 
 target_include_directories( Core_Math
         PUBLIC
-            ${CMAKE_SOURCE_DIR}
-            ${CMAKE_BINARY_DIR}
+            "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
+            "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
+            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         PRIVATE
             ${MPI_CXX_INCLUDE_DIRS}
             ${LIBXML2_INCLUDE_DIRS}
@@ -57,3 +58,14 @@ if( ENABLE_FORTRAN )
         DSYEV
       )
 endif()
+
+# this avoids having to enumerate each header file here:
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Core/Math
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install( TARGETS Core_Math
+    EXPORT uintah_lib_targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

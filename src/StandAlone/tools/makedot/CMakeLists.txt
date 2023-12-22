@@ -8,3 +8,8 @@ target_include_directories( makedot
 target_link_libraries( makedot
         Core_Parallel
     )
+
+install( TARGETS makedot
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)

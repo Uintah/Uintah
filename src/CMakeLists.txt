@@ -25,6 +25,9 @@ list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} )
 
 include( configure_options.cmake       )  # general, high-level options. Components should add specific options within their own scope
 include( configure_introspection.cmake )  # system introspection
+include( GNUInstallDirs                )  # sets cache variables for install destinations
+
+message( STATUS "Installation path: ${CMAKE_INSTALL_PREFIX}\n")
 
 #----------------------------------------------------------
 #               Set up core Uintah stuff
@@ -36,9 +39,7 @@ if( ENABLE_UNIT_TESTS )
     add_subdirectory( testprograms )
 endif()
 add_subdirectory( tools )
-if( HAVE_VISIT )
-    add_subdirectory( VisIt )
-endif()
+add_subdirectory( VisIt )
 
 # auto-generate header files for compilation.
 # Should be done after all system introspection and configuration is complete.
@@ -89,4 +90,12 @@ add_custom_target( runLocalRT
     COMMENT "Running Regression Tests"
     USES_TERMINAL
     )
+#----------------------------------------------------------
+
+
+#----------------------------------------------------------
+#                       INSTALLATION
+#----------------------------------------------------------
+install( EXPORT uintah_exe_targets DESTINATION ${CMAKE_INSTALL_BINDIR}/cmake )
+install( EXPORT uintah_lib_targets FILE uintah_lib_targets.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake )
 #----------------------------------------------------------

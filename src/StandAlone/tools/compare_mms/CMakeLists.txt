@@ -6,8 +6,8 @@ add_executable( compare_mms
     )
 
 target_include_directories( compare_mms
-    PUBLIC
-        ${CMAKE_SOURCE_DIR}
+    PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
     )
 
 target_link_libraries( compare_mms
@@ -17,3 +17,8 @@ target_link_libraries( compare_mms
 
         CCA_Components_ProblemSpecification
     )
+
+install( TARGETS compare_mms
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)

@@ -20,3 +20,8 @@ target_link_libraries( dumpfields
         Core_Grid
         Core_OS
     )
+
+install( TARGETS dumpfields
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)

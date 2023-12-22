@@ -36,7 +36,6 @@ elseif( CMAKE_BUILD_TYPE EQUAL Debug )
     set( ASSERTION_LEVEL 3 )
 endif()
 option( ENABLE_UNIT_TESTS "Turn on the unit tests." ON )  # jcs check this
-option( ENABLE_MINIMAL "Build a minimal set of libraries" OFF ) # jcs keep this?
 
 # COMPONENT ACTIVATION
 # jcs expand this.

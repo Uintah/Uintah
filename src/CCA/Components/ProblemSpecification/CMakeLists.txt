@@ -14,5 +14,12 @@ target_link_libraries( CCA_Components_ProblemSpecification
 target_include_directories( CCA_Components_ProblemSpecification
     PUBLIC
         ${LIBXML2_INCLUDE_DIRS}
-        ${CMAKE_SOURCE_DIR}
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+
+install( FILES ProblemSpecReader.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Components/ProblemSpecification )
+install( TARGETS CCA_Components_ProblemSpecification
+    EXPORT uintah_lib_targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

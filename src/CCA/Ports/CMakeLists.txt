@@ -26,5 +26,31 @@ target_link_libraries( CCA_Ports
 
 target_include_directories( CCA_Ports
     PUBLIC
-        ${CMAKE_SOURCE_DIR}
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+
+install( FILES ApplicationInterface.h
+    DataWarehouse.h
+    DataWarehouseP.h
+    InputContext.h
+    LoadBalancer.h
+    ModelInterface.h
+    Output.h
+    OutputContext.h
+    PIDXOutputContext.h
+    ProblemSpecInterface.h
+    Regridder.h
+    Scheduler.h
+    SchedulerP.h
+    SFC.h
+    SolverInterface.h
+    SwitchingCriteria.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CCA/Ports
+)
+
+install( TARGETS CCA_Ports
+    EXPORT uintah_lib_targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

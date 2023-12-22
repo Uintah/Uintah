@@ -70,6 +70,8 @@ if( NOT NO_COMPONENTS )
             CCA_Components_Models
             CCA_Components_OnTheFlyAnalysis
         )
+else()
+    message( STATUS "No components were specified. Minimal Uintah build...\n")
 endif( NOT NO_COMPONENTS )
 
 # create a library that is just a collection of all of the components we need to link against

@@ -25,6 +25,29 @@ target_link_libraries( Core_Exceptions
 
 target_include_directories( Core_Exceptions
     PUBLIC
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}/include
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+
+install( FILES
+    ArrayIndexOutOfBounds.h
+    AssertionFailed.h
+    ConvergenceFailure.h
+    DimensionMismatch.h
+    ErrnoException.h
+    Exception.h
+    FileNotFound.h
+    IllegalValue.h
+    InternalError.h
+    InvalidCompressionMode.h
+    InvalidGrid.h
+    InvalidState.h
+    InvalidValue.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Core/Exceptions
+)
+
+install( TARGETS Core_Exceptions
+    EXPORT uintah_lib_targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

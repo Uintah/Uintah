@@ -26,6 +26,8 @@ add_dependencies( sus
     scripts_link
     puda_link
     )
+
+install( TARGETS sus EXPORT uintah_exe_targets DESTINATION ${CMAKE_INSTALL_BINDIR} )
 #------------------------------ BUILD SUS -------------------------------
 
 

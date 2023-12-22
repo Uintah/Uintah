@@ -18,3 +18,8 @@ if( HAVE_TIFF )
     add_executable( particle2tiff particle2tiff.cc )
     target_link_libraries( particle2tiff Core_DataArchive )
 endif()
+
+install( TARGETS timeextract faceextract extractF extractV extractS partextract lineextract
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)

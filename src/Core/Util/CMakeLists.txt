@@ -35,7 +35,20 @@ target_link_libraries( Core_Util
 
 target_include_directories( Core_Util
     PUBLIC
-        ${CMAKE_SOURCE_DIR}
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
         ${MPI_CXX_INCLUDE_DIRS}
-        ${CMAKE_BINARY_DIR}
+        "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+
+
+# this avoids having to enumerate each header file:
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Core/Util
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install( TARGETS Core_Util
+    EXPORT uintah_lib_targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

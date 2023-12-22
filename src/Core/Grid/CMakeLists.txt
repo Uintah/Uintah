@@ -94,6 +94,18 @@ target_link_libraries( Core_Grid
 
 target_include_directories( Core_Grid
     PUBLIC
-        ${CMAKE_SOURCE_DIR}
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>"
         ${MPI_CXX_INCLUDE_DIRS}
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+
+# this avoids having to enumerate each header file
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Core/Grid
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install( TARGETS Core_Grid
+    EXPORT uintah_lib_targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

@@ -256,7 +256,7 @@ if( VISIT_FOUND )
     set( HAVE_VISIT TRUE )
 else()
     message( STATUS "VisIt was not found. "
-        "If you want to build VisIt extensions, specify"
+        "If you want to build VisIt in-situ extensions, specify"
         "\n\t\tVISIT_DIR=[path to visit installation]"
         "\n\twith the location of the VisIt installation"
         )

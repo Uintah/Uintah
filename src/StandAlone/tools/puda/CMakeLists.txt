@@ -25,3 +25,8 @@ target_link_libraries( puda Core_DataArchive Core_Datatypes Core_Parallel )
 
 add_executable( grid_reader grid_reader.cc )
 target_link_libraries( grid_reader Core_Parallel )
+
+install( TARGETS puda grid_reader
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    EXPORT uintah_exe_targets
+)
