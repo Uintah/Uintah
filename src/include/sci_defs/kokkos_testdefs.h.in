@@ -64,6 +64,10 @@ namespace UintahSpaces{
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Random.hpp>
 
+#define GPU_FUNCTION             KOKKOS_FUNCTION
+#define GPU_INLINE_FUNCTION      KOKKOS_INLINE_FUNCTION
+#define GPU_FORCEINLINE_FUNCTION KOKKOS_FORCEINLINE_FUNCTION
+
 namespace Kokkos {
   // Kokkos is not included in this build.  Create
   // some stub types so these types at least exist.
@@ -195,7 +199,6 @@ inline double3 make_double3(double x, double y, double z) { return double3(x, y,
 
 #else //#if defined(HAVE_KOKKOS)
 
-#define KOKKOS_INLINE_FUNCTION inline
 #define KOKKOS_LAMBDA [&]
 
   // Kokkos not included in this build. Create some stub types so

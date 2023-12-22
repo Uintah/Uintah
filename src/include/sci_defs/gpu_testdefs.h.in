@@ -29,9 +29,21 @@
 
 #include "kokkos_defs.h"
 
-// HOST_DEVICE maybe defined in the kokkos_defs.h.
+// These maybe defined in the kokkos_defs.h.
 #if !defined(HOST_DEVICE)
   #define HOST_DEVICE
+#endif
+
+#if !defined(GPU_FUNCTION)
+  #define GPU_FUNCTION
+#endif
+
+#if !defined(GPU_INLINE_FUNCTION)
+  #define GPU_INLINE_FUNCTION inline
+#endif
+
+#if !defined(GPU_FORCEINLINE_FUNCTION)
+  #define GPU_FORCEINLINE_FUNCTION inline
 #endif
 
 // Allow easy indexing into device-side 3D array
