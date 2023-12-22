@@ -134,7 +134,7 @@ struct ClassicTableInfo {
            int max_size=0;
            int size=d_allIndepVarNo(0); // size of a single dep variable
            for (int i = 0; i < numDim- 1; i++) {
-	     max_size=std::max(max_size, d_allIndepVarNo(i+1)); // pad this non-square portion of the table = (
+             max_size=std::max(max_size, d_allIndepVarNo(i+1)); // pad this non-square portion of the table = (
             size*=d_allIndepVarNo(i+1);
            }
 
@@ -207,7 +207,7 @@ struct ClassicTableInfo {
         struct1DArray<double,MAX_TABLE_DIMENSION> iv(indep_storage.runTime_size);
         // fill independent variables
         for (unsigned int ix = 0 ; ix<indep_storage.runTime_size; ix++) {
-        iv[ix]=indep_storage[index_map[ix]](i,j,k);
+          iv[ix]=indep_storage[index_map[ix]](i,j,k);
         }
 
         struct1DArray<double,max_dep_var> var_values;
@@ -215,15 +215,15 @@ struct ClassicTableInfo {
         //find_val_wrapper<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues);
         //find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
         //find_val_type_correct<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues, TDMS_table2, TDMS_d_allIndepVarNo, TDMS_indep, TDMS_ind_1);
-        
-       //COPY AND PASTE FIND_VAL DUE TO INTERNAL COMPILER ERROR?!!?!?  
+
+       //COPY AND PASTE FIND_VAL DUE TO INTERNAL COMPILER ERROR?!!?!?
      //////////////---------------------table constants ------------------------------//////
      //////////////-------these parameters are constant for all I J K ----------------//////
      //////////////-----------------( make them class members? )----------------------//////
       int dliniate[MAX_TABLE_DIMENSION]; // This should only be once instead of for each I J K (Conversion factors for each dimension, for transforming from N-D to 1D)
      //////////////-------------------------------------------------------------------//////
 
-      dliniate[0]=1; 
+      dliniate[0]=1;
       for( int  i=1 ; i<nDim; i++){
 #ifdef HAVE_KOKKOS
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo(i-1); // compute effective 1-D index
@@ -235,7 +235,7 @@ struct ClassicTableInfo {
 
       double table_vals[MAX_TABLE_READS];   // container for values read from the table needed to compute the interpolent
       double distal_val[MAX_TABLE_DIMENSION+1]; //  delta_x / DX   (nDim + 1  except for 1D)
-      int table_indices[MAX_TABLE_READS];   // container for table indices 
+      int table_indices[MAX_TABLE_READS];   // container for table indices
       int index[2][MAX_TABLE_DIMENSION-1]; // high and low indexes
       int theSpecial[2][2]; // high and low indexes of the special IV (first independent variable)
      //////////////-------------------------------------------------------------------//////
@@ -250,7 +250,7 @@ struct ClassicTableInfo {
        // ----------------perform search ------------//
        //  LINEAR search
       for (int j=0;  j< nDim-1 ; j++){
-        
+
 #ifdef HAVE_KOKKOS
         if (iv[j+1] <  TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-1))
 #else
@@ -370,7 +370,7 @@ struct ClassicTableInfo {
         } // end K
 
         for (unsigned int ix = 0 ; ix<dep_storage.runTime_size; ix++) {
-        dep_storage[ix](i,j,k) = var_values[ix];
+          dep_storage[ix](i,j,k) = var_values[ix];
         }
 
 
@@ -382,25 +382,25 @@ struct ClassicTableInfo {
 // DUE TO USING THE PORTABILITY API INCORRECTLY ( couldn't figure it out without c+= 14)
 #if defined(HAVE_KOKKOS)
     template< typename MemSpace, unsigned int numOfDep>
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
-   tableContainer<MemSpace>  TDMS_table2,  
+   tableContainer<MemSpace>  TDMS_table2,
    intContainer<MemSpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemSpace>  TDMS_indep,  
-   tableContainer<MemSpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_indep,
+   tableContainer<MemSpace>  TDMS_ind_1
     ) const {
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
 #if defined(KOKKOS_USING_GPU)
     template< typename MemSpace, unsigned int numOfDep>
-    KOKKOS_INLINE_FUNCTION 
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
-   tableContainer<MemSpace>  TDMS_table2,  
+   tableContainer<MemSpace>  TDMS_table2,
    intContainer<MemSpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemSpace>  TDMS_indep,  
-   tableContainer<MemSpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_indep,
+   tableContainer<MemSpace>  TDMS_ind_1
     ) const {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
@@ -409,25 +409,21 @@ struct ClassicTableInfo {
 #endif // end defined(HAVE_KOKKOS)
 
     template< typename MemSpace, unsigned int numOfDep>
-#ifdef HAVE_KOKKOS
-    KOKKOS_INLINE_FUNCTION 
-#else
-   inline
-#endif
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
 #ifdef HAVE_KOKKOS
-   tableContainer<Kokkos::HostSpace>  TDMS_table2,  
+   tableContainer<Kokkos::HostSpace>  TDMS_table2,
    intContainer<Kokkos::HostSpace>    TDMS_d_allIndepVarNo,
-   tableContainer<Kokkos::HostSpace>  TDMS_indep,  
-   tableContainer<Kokkos::HostSpace>  TDMS_ind_1 
+   tableContainer<Kokkos::HostSpace>  TDMS_indep,
+   tableContainer<Kokkos::HostSpace>  TDMS_ind_1
 #else
-   tableContainer  TDMS_table2,  
+   tableContainer  TDMS_table2,
    intContainer    TDMS_d_allIndepVarNo,
-   tableContainer  TDMS_indep,  
-   tableContainer  TDMS_ind_1 
+   tableContainer  TDMS_indep,
+   tableContainer  TDMS_ind_1
 #endif
- ) const { 
+ ) const {
 #ifdef HAVE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
       find_val<Kokkos::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
 #else
@@ -438,14 +434,14 @@ struct ClassicTableInfo {
 
 #if defined(HAVE_KOKKOS)
     template< typename MemSpace, unsigned int numOfDep>
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
     }
 #if defined(KOKKOS_USING_GPU)
     template< typename MemSpace, unsigned int numOfDep>
-    KOKKOS_INLINE_FUNCTION 
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
@@ -455,11 +451,7 @@ struct ClassicTableInfo {
 #endif // end defined(HAVE_KOKKOS)
 
     template< typename MemSpace, unsigned int numOfDep>
-#ifdef HAVE_KOKKOS
-    KOKKOS_INLINE_FUNCTION 
-#else
-   inline
-#endif
+    GPU_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
 #ifdef HAVE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
@@ -472,31 +464,27 @@ struct ClassicTableInfo {
     enum HighLow { iLow, iHigh};
 
     template< typename MemSpace, unsigned int numOfDep>
+    GPU_INLINE_FUNCTION
+    void find_val( const struct1DArray<double,MAX_TABLE_DIMENSION>& iv, const struct1DArray<int,numOfDep>& var_index, struct1DArray<double,numOfDep>& var_values,
 #ifdef HAVE_KOKKOS
-    KOKKOS_INLINE_FUNCTION 
-#else
-   inline
-#endif
-    void find_val( const struct1DArray<double,MAX_TABLE_DIMENSION>& iv, const struct1DArray<int,numOfDep>& var_index, struct1DArray<double,numOfDep>& var_values, 
-#ifdef HAVE_KOKKOS
-   tableContainer<MemSpace>  TDMS_table2,  
+   tableContainer<MemSpace>  TDMS_table2,
    intContainer<MemSpace>    TDMS_d_allIndepVarNo,
-   tableContainer<MemSpace>  TDMS_indep,  
-   tableContainer<MemSpace>  TDMS_ind_1 
+   tableContainer<MemSpace>  TDMS_indep,
+   tableContainer<MemSpace>  TDMS_ind_1
 #else
-   tableContainer  TDMS_table2,  
+   tableContainer  TDMS_table2,
    intContainer    TDMS_d_allIndepVarNo,
-   tableContainer  TDMS_indep,  
-   tableContainer  TDMS_ind_1 
+   tableContainer  TDMS_indep,
+   tableContainer  TDMS_ind_1
 #endif
- ) const { 
+ ) const {
 
 
      //////////////---------------------table constants ------------------------------//////
      //////////////-------these parameters are constant for all I J K ----------------//////
      //////////////-----------------( make them class members? )----------------------//////
       const int nDim = TDMS_d_allIndepVarNo.size();   // Number of dimensions
-      const int npts = std::exp2(nDim); // double to int (danerous?)?
+      const int npts = pow(2,nDim); // double to int (danerous?)?
       const int oneD_switch= nDim == 1 ? 1 : 2;       // if/then switch for switching between 1-D and n-D tables
       const int nDim_withSwitch=nDim+1-oneD_switch;   //  nDim-1 except for 1D
       int dliniate[MAX_TABLE_DIMENSION]; // This should only be once instead of for each I J K (Conversion factors for each dimension, for transforming from N-D to 1D)
@@ -528,7 +516,7 @@ struct ClassicTableInfo {
        // ----------------perform search ------------//
        //  LINEAR search
       for (int j=0;  j< nDim-1 ; j++){
-        
+
 #ifdef HAVE_KOKKOS
         if (iv[j+1] <  TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-1))
 #else
@@ -656,7 +644,7 @@ struct ClassicTableInfo {
 
 //I always thought these access functions were silly, but these actually does something; template meta progrimming
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,
 #ifdef HAVE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
@@ -669,8 +657,8 @@ tableContainer
 
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef HAVE_KOKKOS  
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,
+#ifdef HAVE_KOKKOS
 intContainer<Kokkos::HostSpace>
 #else
 intContainer
@@ -682,7 +670,7 @@ intContainer
 
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,
 #ifdef HAVE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
@@ -695,8 +683,8 @@ tableContainer
 
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef HAVE_KOKKOS 
+typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,
+#ifdef HAVE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
 tableContainer

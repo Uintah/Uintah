@@ -620,7 +620,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           _iv_transform->transform( iv, total_inert_f );
 
-          struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+          struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv.data(),iv.size());  //portable version
 
           struct1DArray<double, MAX_NUM_DEP_VARS > depVarValues;
           ND_interp->find_val_wrapper<UintahSpaces::HostSpace>(iv_p, depVarIndexes, depVarValues);
@@ -759,7 +759,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variab
   int dep_index = findIndex( variable );
   _iv_transform->transform( iv, 0.0 );
 
-  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv.data(),iv.size());  //portable version
 
   struct1DArray<int,1> varIndex{dep_index};
   struct1DArray<double,1> tabValue(1);
@@ -790,7 +790,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f );
 
-  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv.data(),iv.size());  //portable version
 
   struct1DArray<int,1> varIndex{dep_index};
   struct1DArray<double,1> tabValue(1);
@@ -832,7 +832,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f );
 
-  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv,iv.size());  //portable version
+  struct1DArray<double,MAX_TABLE_DIMENSION> iv_p(iv.data(),iv.size());  //portable version
 
   struct1DArray<int,1> varIndex{dep_index};
   struct1DArray<double,1> tabValue(1);

@@ -892,7 +892,7 @@ namespace Uintah {
 
             this->transform(iv, 0.0);
 
-            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv,iv.size());  //portable version
+            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
 
             std::cout << "IV=" << iv_p[0] << " " << iv_p[1] << std::endl;
 
@@ -906,7 +906,7 @@ namespace Uintah {
 
             this->transform(iv, 0.0);
 
-            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv,iv.size());  //portable version
+            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
 
             return iv_p;
           }
@@ -1056,7 +1056,7 @@ namespace Uintah {
 
           this->transform(iv, 0.0);
 
-          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv,iv.size());  //portable version
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
           return iv_p;
         };
 

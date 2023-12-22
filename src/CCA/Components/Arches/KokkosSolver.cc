@@ -364,13 +364,12 @@ KokkosSolver::computeStableTimeStep( const PatchSubset                          
 
       Uintah::parallel_reduce_min( execObj, range, KOKKOS_LAMBDA ( const int i, const int j, const int k, double & m_dt ) {
 
-        m_dt = 1. / ( std::fabs( u(i,j,k) ) / dx +
-                      std::fabs( v(i,j,k) ) / dy +
-                      std::fabs( w(i,j,k) ) / dz +
+        m_dt = 1. / ( fabs( u(i,j,k) ) / dx +
+                      fabs( v(i,j,k) ) / dy +
+                      fabs( w(i,j,k) ) / dz +
                       mu(i,j,k) / rho(i,j,k) *
                       ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
                       small_num);
-
       }, dt );
 
       new_dw->put(delt_vartype(dt), m_delTLabel, level);
