@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-// GPU PerPatch base class: in host & device code (HOST_DEVICE == __host__ __device__)
-
 #ifndef UINTAH_CORE_GRID_VARIABLES_GPUPERPATCHBASE_H
 #define UINTAH_CORE_GRID_VARIABLES_GPUPERPATCHBASE_H
 
@@ -37,17 +35,17 @@ class GPUPerPatchBase : public GPUVariable {
   friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
 
   public:
-    HOST_DEVICE virtual ~GPUPerPatchBase() {}
-    HOST_DEVICE virtual size_t getMemSize() = 0;
+    GPU_INLINE_FUNCTION virtual ~GPUPerPatchBase() {}
+    GPU_INLINE_FUNCTION virtual size_t getMemSize() = 0;
 
   protected:
-    HOST_DEVICE GPUPerPatchBase() {}
-    HOST_DEVICE GPUPerPatchBase(const GPUPerPatchBase&);
+    GPU_INLINE_FUNCTION GPUPerPatchBase() {}
+    GPU_INLINE_FUNCTION GPUPerPatchBase(const GPUPerPatchBase&);
 
   private:
-    HOST_DEVICE virtual void getData(void* &ptr) const = 0;
-    HOST_DEVICE virtual void setData(void* &ptr) const = 0;
-    HOST_DEVICE GPUPerPatchBase& operator=(const GPUPerPatchBase&);
+    GPU_INLINE_FUNCTION virtual void getData(void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION virtual void setData(void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION GPUPerPatchBase& operator=(const GPUPerPatchBase&);
 };
 
 }  // end namespace Uintah

@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable base class: in host & device code (HOST_DEVICE = __host__ __device__)
-
 #ifndef UINTAH_GPUPARTICLEVARIABLEBASE_H
 #define UINTAH_GPUPARTICLEVARIABLEBASE_H
 
@@ -37,17 +35,17 @@ class GPUParticleVariableBase : public GPUVariable {
   friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
 
   public:
-    HOST_DEVICE virtual ~GPUParticleVariableBase() {}
-    HOST_DEVICE virtual size_t getMemSize() = 0;
+    GPU_INLINE_FUNCTION virtual ~GPUParticleVariableBase() {}
+    GPU_INLINE_FUNCTION virtual size_t getMemSize() = 0;
 
   protected:
-    HOST_DEVICE GPUParticleVariableBase() {}
-    HOST_DEVICE GPUParticleVariableBase(const GPUParticleVariableBase&);
+    GPU_INLINE_FUNCTION GPUParticleVariableBase() {}
+    GPU_INLINE_FUNCTION GPUParticleVariableBase(const GPUParticleVariableBase&);
 
   private:
-    HOST_DEVICE virtual void setData(const size_t& size, void* &ptr) const = 0;
-    HOST_DEVICE virtual void getData(size_t& size, void* &ptr) const = 0;
-    HOST_DEVICE GPUParticleVariableBase& operator=(const GPUParticleVariableBase&);
+    GPU_INLINE_FUNCTION virtual void setData(const size_t& size, void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION virtual void getData(size_t& size, void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION GPUParticleVariableBase& operator=(const GPUParticleVariableBase&);
 };
 
 }  // end namespace Uintah

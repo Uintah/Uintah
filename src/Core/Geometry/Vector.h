@@ -52,15 +52,15 @@ class TypeDescription;
 class Vector {
 
 public:
-  KOKKOS_INLINE_FUNCTION Vector() {}
-  KOKKOS_INLINE_FUNCTION Vector(const Vector& v) :
+  GPU_INLINE_FUNCTION Vector() {}
+  GPU_INLINE_FUNCTION Vector(const Vector& v) :
     x_(v.x_), y_(v.y_), z_(v.z_) {};
-  KOKKOS_INLINE_FUNCTION Vector(double x, double y, double z) :
+  GPU_INLINE_FUNCTION Vector(double x, double y, double z) :
     x_(x), y_(y), z_(z) {};
-  KOKKOS_INLINE_FUNCTION explicit Vector(double init) :
+  GPU_INLINE_FUNCTION explicit Vector(double init) :
     x_(init), y_(init), z_(init) {};
 
-  KOKKOS_INLINE_FUNCTION explicit Vector(const Point&);
+  GPU_INLINE_FUNCTION explicit Vector(const Point&);
 
   inline double length() const;
   inline double length2() const;
@@ -80,26 +80,26 @@ public:
   !!! */
 
   //Note vector(0)=vector.x();vector(1)=vector.y();vector(2)=vector.z()
-  KOKKOS_INLINE_FUNCTION double& operator()(int idx) {
+  GPU_INLINE_FUNCTION double& operator()(int idx) {
     // Ugly, but works
     return (&x_)[idx];
   }
 
   //Note vector(0)=vector.x();vector(1)=vector.y();vector(2)=vector.z()
-  KOKKOS_INLINE_FUNCTION double operator()(int idx) const {
+  GPU_INLINE_FUNCTION double operator()(int idx) const {
     // Ugly, but works
     return (&x_)[idx];
   }
 #endif
 
   //Note vector[0]=vector.x();vector[1]=vector.y();vector[2]=vector.z()
-  KOKKOS_INLINE_FUNCTION double& operator[](int idx) {
+  GPU_INLINE_FUNCTION double& operator[](int idx) {
     // Ugly, but works
     return (&x_)[idx];
   }
 
   //Note vector[0]=vector.x();vector[1]=vector.y();vector[2]=vector.z()
-  KOKKOS_INLINE_FUNCTION double operator[](int idx) const {
+  GPU_INLINE_FUNCTION double operator[](int idx) const {
     // Ugly, but works
     return (&x_)[idx];
   }
@@ -129,18 +129,18 @@ public:
   friend inline Vector Abs(const Vector&);
 
   inline void x(double);
-  KOKKOS_INLINE_FUNCTION double x() const;
+  GPU_INLINE_FUNCTION double x() const;
   inline void y(double);
-  KOKKOS_INLINE_FUNCTION double y() const;
+  GPU_INLINE_FUNCTION double y() const;
   inline void z(double);
-  KOKKOS_INLINE_FUNCTION double z() const;
+  GPU_INLINE_FUNCTION double z() const;
 
   inline void u(double);
-  KOKKOS_INLINE_FUNCTION double u() const;
+  GPU_INLINE_FUNCTION double u() const;
   inline void v(double);
-  KOKKOS_INLINE_FUNCTION double v() const;
+  GPU_INLINE_FUNCTION double v() const;
   inline void w(double);
-  KOKKOS_INLINE_FUNCTION double w() const;
+  GPU_INLINE_FUNCTION double w() const;
 
   void rotz90(const int);
 
@@ -214,7 +214,7 @@ std::istream& operator>>(std::istream& os, Vector& p);
 
 namespace Uintah {
 
-KOKKOS_INLINE_FUNCTION Vector::Vector(const Point& p)
+GPU_INLINE_FUNCTION Vector::Vector(const Point& p)
     : x_(p.x_), y_(p.y_), z_(p.z_)
 {
 }
@@ -393,7 +393,7 @@ inline void Vector::x(double d)
     x_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::x() const
+GPU_INLINE_FUNCTION double Vector::x() const
 {
     return x_;
 }
@@ -403,7 +403,7 @@ inline void Vector::y(double d)
     y_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::y() const
+GPU_INLINE_FUNCTION double Vector::y() const
 {
     return y_;
 }
@@ -413,7 +413,7 @@ inline void Vector::z(double d)
     z_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::z() const
+GPU_INLINE_FUNCTION double Vector::z() const
 {
     return z_;
 }
@@ -424,7 +424,7 @@ inline void Vector::u(double d)
     x_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::u() const
+GPU_INLINE_FUNCTION double Vector::u() const
 {
     return x_;
 }
@@ -434,7 +434,7 @@ inline void Vector::v(double d)
     y_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::v() const
+GPU_INLINE_FUNCTION double Vector::v() const
 {
     return y_;
 }
@@ -444,7 +444,7 @@ inline void Vector::w(double d)
     z_ = d;
 }
 
-KOKKOS_INLINE_FUNCTION double Vector::w() const
+GPU_INLINE_FUNCTION double Vector::w() const
 {
     return z_;
 }

@@ -40,15 +40,15 @@ namespace Uintah {
     // diagonal term
     double p;
 
-    HOST_DEVICE double& operator[](int index) {
+    GPU_INLINE_FUNCTION double& operator[](int index) {
       CHECK_RANGE(index, 0, 7);
       return (&w)[index];
     }
-    HOST_DEVICE const double& operator[](int index) const {
+    GPU_INLINE_FUNCTION const double& operator[](int index) const {
       CHECK_RANGE(index, 0, 7);
       return (&w)[index];
     }
-    HOST_DEVICE void initialize(double a){
+    GPU_INLINE_FUNCTION void initialize(double a){
       w = a;
       e = a;
       s = a;

@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable: in host & device code (HOST_DEVICE == __host__ __device__)
-
 #ifndef UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
 #define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
 
@@ -42,30 +40,30 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
   public:
 
-    HOST_DEVICE GPUReductionVariable()
+    GPU_INLINE_FUNCTION GPUReductionVariable()
     {
       d_data = nullptr;
     }
 
-    HOST_DEVICE virtual ~GPUReductionVariable() {}
+    GPU_INLINE_FUNCTION virtual ~GPUReductionVariable() {}
 
-    HOST_DEVICE virtual size_t getMemSize()
+    GPU_INLINE_FUNCTION virtual size_t getMemSize()
     {
       return sizeof(T);
     }
 
-    HOST_DEVICE T* getPointer() const
+    GPU_INLINE_FUNCTION T* getPointer() const
     {
       return d_data;
     }
 
-    HOST_DEVICE void* getVoidPointer() const
+    GPU_INLINE_FUNCTION void* getVoidPointer() const
         {
           return d_data;
         }
 
 
-    HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
+    GPU_INLINE_FUNCTION void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
     {
       elems = "1";
       totsize = sizeof(T);
@@ -76,18 +74,18 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
     mutable T* d_data;
 
-    HOST_DEVICE virtual void getData(void* &ptr) const
+    GPU_INLINE_FUNCTION virtual void getData(void* &ptr) const
     {
         ptr = (void*)d_data;
     }
 
-    HOST_DEVICE virtual void setData(void* &ptr) const
+    GPU_INLINE_FUNCTION virtual void setData(void* &ptr) const
     {
       d_data = (T*)ptr;
     }
 
-    HOST_DEVICE GPUReductionVariable& operator=(const GPUReductionVariable&);
-    HOST_DEVICE GPUReductionVariable(const GPUReductionVariable&);
+    GPU_INLINE_FUNCTION GPUReductionVariable& operator=(const GPUReductionVariable&);
+    GPU_INLINE_FUNCTION GPUReductionVariable(const GPUReductionVariable&);
 };
 
 }  // end namespace Uintah

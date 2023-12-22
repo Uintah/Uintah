@@ -191,11 +191,11 @@ struct struct1DArray
 {
   unsigned short int runTime_size{CAPACITY};
   T arr[CAPACITY];
-  KOKKOS_INLINE_FUNCTION struct1DArray() {}
+  GPU_INLINE_FUNCTION struct1DArray() {}
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  KOKKOS_INLINE_FUNCTION struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
+  GPU_INLINE_FUNCTION struct1DArray(const Container& container, unsigned int runTimeSize) : runTime_size(runTimeSize) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
 //       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (std::vector constructor).", __FILE__, __LINE__);
@@ -207,7 +207,7 @@ struct struct1DArray
   }
 
 // This constructor supports the initialization list interface
-  KOKKOS_INLINE_FUNCTION struct1DArray(std::initializer_list<T> const myList)
+  struct1DArray(std::initializer_list<T> const myList)
     : runTime_size(myList.size()) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
@@ -218,7 +218,7 @@ struct struct1DArray
   }
 
 // This constructor allows for only the runtime_size to be specified
-  KOKKOS_INLINE_FUNCTION struct1DArray(int  runTimeSize) : runTime_size(runTimeSize) {
+  GPU_INLINE_FUNCTION struct1DArray(int runTimeSize) : runTime_size(runTimeSize) {
 // #ifndef NDEBUG
 //     if(runTime_size > CAPACITY){
 //       throw InternalError("ERROR. struct1DArray is not being used properly. The run-time size exceeds the compile time size (int constructor).", __FILE__, __LINE__);
@@ -226,15 +226,15 @@ struct struct1DArray
 // #endif
   }
 
-  KOKKOS_INLINE_FUNCTION T& operator[](unsigned int index) {
+  GPU_INLINE_FUNCTION T& operator[](unsigned int index) {
     return arr[index];
   }
 
-  KOKKOS_INLINE_FUNCTION const T& operator[](unsigned int index) const {
+  GPU_INLINE_FUNCTION const T& operator[](unsigned int index) const {
     return arr[index];
   }
 
-  int mySize(){
+  GPU_INLINE_FUNCTION int mySize(){
     return CAPACITY;
   }
 
@@ -245,13 +245,13 @@ struct struct2DArray
 {
   struct1DArray<T, CAPACITY_SECOND_DIMENSION> arr[CAPACITY_FIRST_DIMENSION];
 
-  KOKKOS_INLINE_FUNCTION struct2DArray() {}
+  GPU_INLINE_FUNCTION struct2DArray() {}
   unsigned short int i_runTime_size{CAPACITY_FIRST_DIMENSION};
   unsigned short int j_runTime_size{CAPACITY_SECOND_DIMENSION};
 
   // This constructor copies elements from one container into here.
   template <typename Container>
-  KOKKOS_INLINE_FUNCTION struct2DArray(const Container& container,
+  GPU_INLINE_FUNCTION struct2DArray(const Container& container,
                             int first_dim_runtimeSize = CAPACITY_FIRST_DIMENSION,
                             int second_dim_runtimeSize = CAPACITY_SECOND_DIMENSION) :
     i_runTime_size(first_dim_runtimeSize), j_runTime_size(second_dim_runtimeSize)
@@ -264,11 +264,11 @@ struct struct2DArray
     }
   }
 
-  KOKKOS_INLINE_FUNCTION struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
+  GPU_INLINE_FUNCTION struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) {
     return arr[index];
   }
 
-  KOKKOS_INLINE_FUNCTION const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
+  GPU_INLINE_FUNCTION const struct1DArray<T, CAPACITY_SECOND_DIMENSION>& operator[](unsigned int index) const {
     return arr[index];
   }
 
@@ -1389,7 +1389,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
         ReductionType tmp = 0;
         functor(i, j, k, tmp);
 
-        if(inner_min < tmp)
+        if(inner_min > tmp)
           inner_min = tmp;
       });
     }, Kokkos::Min<ReductionType>(red));
@@ -1421,8 +1421,6 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
 {
   int status;
   char *name = abi::__cxa_demangle(typeid(Functor).name(), 0, 0, &status);
-
-  ReductionType tmp = red;
 
   const int i_size = r.end(0) - r.begin(0);
   const int j_size = r.end(1) - r.begin(1);
@@ -1488,7 +1486,7 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
           ReductionType tmp = 0;
           functor(i, j, k, tmp);
 
-          if(inner_min < tmp)
+          if(inner_min > tmp)
             inner_min = tmp;
         });
       }, Kokkos::Min<ReductionType>(red));

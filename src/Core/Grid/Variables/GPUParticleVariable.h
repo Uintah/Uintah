@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable: in host & device code (HOST_DEVICE == __host__ __device__)
-
 #ifndef UINTAH_GPUPARTICLEVARIABLE_H
 #define UINTAH_GPUPARTICLEVARIABLE_H
 
@@ -40,18 +38,18 @@ class GPUParticleVariable : public GPUParticleVariableBase {
 
   public:
 
-    HOST_DEVICE GPUParticleVariable() {d_data = nullptr; d_size = 0;}
-    HOST_DEVICE virtual ~GPUParticleVariable() {}
+    GPU_INLINE_FUNCTION GPUParticleVariable() {d_data = nullptr; d_size = 0;}
+    GPU_INLINE_FUNCTION virtual ~GPUParticleVariable() {}
 
-    HOST_DEVICE virtual size_t getMemSize() {
+    GPU_INLINE_FUNCTION virtual size_t getMemSize() {
       return (d_size * sizeof(T));
     }
 
-    HOST_DEVICE T* getPointer() const {
+    GPU_INLINE_FUNCTION T* getPointer() const {
       return d_data;
     }
 
-    HOST_DEVICE void* getVoidPointer() const {
+    GPU_INLINE_FUNCTION void* getVoidPointer() const {
       return d_data;
     }
 
@@ -60,18 +58,18 @@ class GPUParticleVariable : public GPUParticleVariableBase {
     mutable T* d_data;
     mutable size_t d_size;
 
-    HOST_DEVICE virtual void setData(const size_t& size, void* &ptr) const {
+    GPU_INLINE_FUNCTION virtual void setData(const size_t& size, void* &ptr) const {
       d_data = (T*)ptr;
       d_size = size;
     }
 
-    HOST_DEVICE virtual void getData(size_t& size, void* &ptr) const {
+    GPU_INLINE_FUNCTION virtual void getData(size_t& size, void* &ptr) const {
       ptr = (void*)d_data;
       size = d_size;
     }
 
-    HOST_DEVICE GPUParticleVariable& operator=(const GPUParticleVariable&);
-    HOST_DEVICE GPUParticleVariable(const GPUParticleVariable&);
+    GPU_INLINE_FUNCTION GPUParticleVariable& operator=(const GPUParticleVariable&);
+    GPU_INLINE_FUNCTION GPUParticleVariable(const GPUParticleVariable&);
 };
 
 }  // end namespace Uintah

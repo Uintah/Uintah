@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-// GPU Variable base class: in host & device code (HOST_DEVICE == __host__ __device__)
-
 #ifndef UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
 #define UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
 
@@ -34,16 +32,16 @@ namespace Uintah {
 class GPUVariable {
 
   public:
-    HOST_DEVICE virtual ~GPUVariable() {};
-    HOST_DEVICE virtual size_t getMemSize() = 0;
-    HOST_DEVICE virtual void* getVoidPointer() const = 0;
+    GPU_INLINE_FUNCTION virtual ~GPUVariable() {};
+    GPU_INLINE_FUNCTION virtual size_t getMemSize() = 0;
+    GPU_INLINE_FUNCTION virtual void* getVoidPointer() const = 0;
 
   protected:
-    HOST_DEVICE GPUVariable() {};
+    GPU_INLINE_FUNCTION GPUVariable() {};
 
   private:
-    HOST_DEVICE GPUVariable& operator=(const GPUVariable&);
-    HOST_DEVICE GPUVariable(const GPUVariable&);
+    GPU_INLINE_FUNCTION GPUVariable& operator=(const GPUVariable&);
+    GPU_INLINE_FUNCTION GPUVariable(const GPUVariable&);
 };
 
 } // end namespace Uintah

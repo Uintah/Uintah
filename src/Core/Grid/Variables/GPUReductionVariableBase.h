@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable base class: in host & device code (HOST_DEVICE == __host__ __device__)
+// GPU ReductionVariable base class: in host & device code (GPU_INLINE_FUNCTION == __host__ __device__)
 
 #ifndef UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLEBASE_H
 #define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLEBASE_H
@@ -37,17 +37,17 @@ class GPUReductionVariableBase : public GPUVariable {
   friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
 
   public:
-    HOST_DEVICE virtual ~GPUReductionVariableBase() {}
-    HOST_DEVICE virtual size_t getMemSize() = 0;
+    GPU_INLINE_FUNCTION virtual ~GPUReductionVariableBase() {}
+    GPU_INLINE_FUNCTION virtual size_t getMemSize() = 0;
 
   protected:
-    HOST_DEVICE GPUReductionVariableBase() {}
-    HOST_DEVICE GPUReductionVariableBase(const GPUReductionVariableBase&);
+    GPU_INLINE_FUNCTION GPUReductionVariableBase() {}
+    GPU_INLINE_FUNCTION GPUReductionVariableBase(const GPUReductionVariableBase&);
 
   private:
-    HOST_DEVICE virtual void getData(void* &ptr) const = 0;
-    HOST_DEVICE virtual void setData(void* &ptr) const = 0;
-    HOST_DEVICE GPUReductionVariableBase& operator=(const GPUReductionVariableBase&);
+    GPU_INLINE_FUNCTION virtual void getData(void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION virtual void setData(void* &ptr) const = 0;
+    GPU_INLINE_FUNCTION GPUReductionVariableBase& operator=(const GPUReductionVariableBase&);
 };
 
 }  // end namespace Uintah

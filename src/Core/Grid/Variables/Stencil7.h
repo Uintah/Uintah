@@ -43,17 +43,17 @@ namespace Uintah {
     // diagonal term
     double p;
 
-    KOKKOS_INLINE_FUNCTION double& operator[](int index) {
+    GPU_INLINE_FUNCTION double& operator[](int index) {
       // ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
 
-    KOKKOS_INLINE_FUNCTION const double& operator[](int index) const {
+    GPU_INLINE_FUNCTION const double& operator[](int index) const {
       // ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
 
-    KOKKOS_INLINE_FUNCTION void initialize(double a) {
+    GPU_INLINE_FUNCTION void initialize(double a) {
       w = a;
       e = a;
       s = a;
@@ -64,9 +64,9 @@ namespace Uintah {
     }
 
     // constructors
-    KOKKOS_INLINE_FUNCTION Stencil7() {}
+    GPU_INLINE_FUNCTION Stencil7() {}
 
-    KOKKOS_INLINE_FUNCTION Stencil7(double init) :
+    GPU_INLINE_FUNCTION Stencil7(double init) :
       w(init), e(init),
       s(init), n(init),
       b(init), t(init),

@@ -51,17 +51,17 @@ class IntVector {
 
 public:
 
-  KOKKOS_INLINE_FUNCTION IntVector() {}
-  KOKKOS_INLINE_FUNCTION ~IntVector() {}
+  GPU_INLINE_FUNCTION IntVector() {}
+  GPU_INLINE_FUNCTION ~IntVector() {}
 
-  KOKKOS_INLINE_FUNCTION IntVector( const IntVector & copy )
+  GPU_INLINE_FUNCTION IntVector( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
     }
   }
 
-  KOKKOS_INLINE_FUNCTION IntVector& operator=( const IntVector & copy )
+  GPU_INLINE_FUNCTION IntVector& operator=( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
@@ -69,14 +69,14 @@ public:
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION IntVector( int x, int y, int z )
+  GPU_INLINE_FUNCTION IntVector( int x, int y, int z )
   {
     m_value[0] = x;
     m_value[1] = y;
     m_value[2] = z;
   }
 
-  KOKKOS_INLINE_FUNCTION IntVector( int v )
+  GPU_INLINE_FUNCTION IntVector( int v )
   {
     m_value[0] = v;
     m_value[1] = v;
@@ -192,11 +192,11 @@ public:
   //           i(1)=i.y()
   //           i(2)=i.z()
   //   --tan
-  KOKKOS_INLINE_FUNCTION int  operator()( int i ) const { return m_value[i]; }
-  KOKKOS_INLINE_FUNCTION int& operator()( int i )       { return m_value[i]; }
+  GPU_INLINE_FUNCTION int  operator()( int i ) const { return m_value[i]; }
+  GPU_INLINE_FUNCTION int& operator()( int i )       { return m_value[i]; }
 
-  KOKKOS_INLINE_FUNCTION int  operator[]( int i ) const { return m_value[i]; }
-  KOKKOS_INLINE_FUNCTION int& operator[]( int i )       { return m_value[i]; }
+  GPU_INLINE_FUNCTION int  operator[]( int i ) const { return m_value[i]; }
+  GPU_INLINE_FUNCTION int& operator[]( int i )       { return m_value[i]; }
 
   inline int x() const { return m_value[0]; }
   inline int y() const { return m_value[1]; }

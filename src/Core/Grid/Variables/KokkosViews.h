@@ -46,27 +46,11 @@ class KokkosView3
 {
 public:
 
-  ~KokkosView3() {
-
-    if( m_A3Data && m_A3Data->removeReference())  // Race condition
-    {
-      delete m_A3Data;
-      m_A3Data = nullptr;
-    }
-  }
   using view_type = Kokkos::View<T***, Kokkos::LayoutStride, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
   using reference_type = typename view_type::reference_type;
 
-  template< typename IType, typename JType, typename KType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()(const IType & i, const JType & j, const KType & k ) const
-  { return m_view( i - m_i, j - m_j, k - m_k ); }
-
-  template< typename IType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()(const IType & i ) const
-  { return m_view( i, 0, 0 ); }
+  KokkosView3() = default;
 
   KokkosView3( const view_type & v, int i, int j, int k, Array3Data<T>* A3Data)
     : m_view(v)
@@ -79,8 +63,6 @@ public:
       this->m_A3Data->addReference();
     }
   }
-
-  KokkosView3() = default;
 
   //template <typename U, typename MemSpaceSource,
   //          typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
@@ -103,6 +85,25 @@ public:
     }
   }
 
+  ~KokkosView3()
+  {
+    if( m_A3Data && m_A3Data->removeReference())  // Race condition
+    {
+      delete m_A3Data;
+      m_A3Data = nullptr;
+    }
+  }
+
+  template< typename IType, typename JType, typename KType >
+  GPU_FORCEINLINE_FUNCTION
+  reference_type operator()(const IType & i, const JType & j, const KType & k ) const
+  { return m_view( i - m_i, j - m_j, k - m_k ); }
+
+  template< typename IType >
+  GPU_FORCEINLINE_FUNCTION
+  reference_type operator()(const IType & i ) const
+  { return m_view( i, 0, 0 ); }
+
   //template <typename U, typename MemSpaceSource,
   //          typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value >,
   //          typename = std::enable_if< std::is_same<MemSpaceSource, MemSpace>::value > >
@@ -124,7 +125,6 @@ public:
     }
     return *this;
   }
-
 
   template <typename ExecSpace>
   inline  void
