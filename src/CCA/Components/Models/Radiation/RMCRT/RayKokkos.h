@@ -96,7 +96,7 @@ namespace Uintah{
 
     //__________________________________
     //  Portable version of level::getCellPosition()
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     void getCellPosition(const int x, const int y, const int z, double cellPos[3]) const
     {
       cellPos[0] = anchor[0] + (Dx[0] * x) + (0.5 * Dx[0]);
@@ -104,7 +104,7 @@ namespace Uintah{
       cellPos[2] = anchor[2] + (Dx[2] * z) + (0.5 * Dx[2]);
     }
 
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     void print() const {
       printf(" Dx: [%g,%g,%g]\n", Dx[0], Dx[1], Dx[2]);
     }
@@ -153,7 +153,7 @@ namespace Uintah{
 
     //__________________________________
     //  Portable version of level::mapCellToCoarser()
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     void mapCellToCoarser(int idx[3]) const
     {
       //TODO, level::mapCellToCoarser has this code.  Do we need it here too?
@@ -190,7 +190,7 @@ namespace Uintah{
       idx[2] = ratio[2] + offset[2];
     }
 
-    KOKKOS_INLINE_FUNCTION
+    GPU_INLINE_FUNCTION
     void print() {
       printf( " LevelParams: Dx: [%g,%g,%g] ", Dx[0], Dx[1], Dx[2]);
       printf( " regionLo: [%i,%i,%i], regionHi: [%i,%i,%i] ",regionLo[0], regionLo[1], regionLo[2], regionHi[0], regionHi[1], regionHi[2]);

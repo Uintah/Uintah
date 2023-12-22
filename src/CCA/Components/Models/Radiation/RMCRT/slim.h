@@ -73,7 +73,7 @@ struct SlimRayTrace_dataOnion_solveDivQFunctor {
   }
 
   // This operator() replaces the cellIterator loop used to solve DivQ
-  KOKKOS_INLINE_FUNCTION
+  GPU_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
 
 #ifndef FIXED_RANDOM_NUM

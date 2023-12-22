@@ -1205,10 +1205,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   // When verifying correctness, parallel_reduce is used to confirm ray step consistency across implementations
   // When benchmarking, parallel_for is used to improve performance by avoiding scalar reduction syncronization
 #ifdef FIXED_RANDOM_NUM
-  KOKKOS_INLINE_FUNCTION
+  GPU_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
 #else
-  KOKKOS_INLINE_FUNCTION
+  GPU_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k ) const {
 
     rnd_type rand_gen = m_rand_pool.get_state(); // Each thread needs a unique state
