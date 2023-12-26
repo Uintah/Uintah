@@ -151,7 +151,7 @@ UniformGrid::UniformGrid(const UniformGrid& copy)
   d_max_min = copy.d_max_min;
 
   d_grid.resize(copy.d_grid.getLowIndex(),copy.d_grid.getHighIndex());
-  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+  serial_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = copy.d_grid(i,j,k);
   });
 
@@ -163,7 +163,7 @@ UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
   if (this == &rhs)
     return *this;
 
-  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+  serial_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k).clear();
   });
 
@@ -172,7 +172,7 @@ UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
   d_bound_box = rhs.d_bound_box;
   d_max_min = rhs.d_max_min;
 
-  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+  serial_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = rhs.d_grid(i,j,k);
   });
 

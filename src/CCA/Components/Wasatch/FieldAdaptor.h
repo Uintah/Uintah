@@ -40,7 +40,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <sci_defs/uintah_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
@@ -385,7 +385,7 @@ namespace WasatchCore{
                           fieldValues_,
                           so::ExternalStorage,
                           CPU_INDEX );
-#     ifdef HAVE_CUDA
+#     ifdef KOKKOS_USING_GPU
       if(IS_GPU_INDEX(deviceIndex)) field->add_device(GPU_INDEX);
 #     endif
     }
@@ -408,7 +408,7 @@ namespace WasatchCore{
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
-#     ifdef HAVE_CUDA
+#     ifdef KOKKOS_USING_GPU
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
     }
@@ -442,7 +442,7 @@ namespace WasatchCore{
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
-#     ifdef HAVE_CUDA
+#     ifdef KOKKOS_USING_GPU
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
     }

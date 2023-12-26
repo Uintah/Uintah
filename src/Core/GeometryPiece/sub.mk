@@ -30,33 +30,36 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/GeometryPiece
 
 SRCS += \
-        $(SRCDIR)/BoxGeometryPiece.cc            \
-        $(SRCDIR)/ConeGeometryPiece.cc           \
-        $(SRCDIR)/CylinderGeometryPiece.cc       \
-        $(SRCDIR)/CylinderShellPiece.cc          \
-        $(SRCDIR)/DifferenceGeometryPiece.cc     \
-        $(SRCDIR)/FileGeometryPiece.cc           \
-        $(SRCDIR)/GeometryObject.cc              \
-        $(SRCDIR)/GeometryPiece.cc               \
-        $(SRCDIR)/GeometryPieceFactory.cc        \
-        $(SRCDIR)/IntersectionGeometryPiece.cc   \
-        $(SRCDIR)/NaaBoxGeometryPiece.cc         \
-        $(SRCDIR)/NullGeometryPiece.cc           \
-        $(SRCDIR)/PlaneShellPiece.cc             \
-        $(SRCDIR)/ShellGeometryFactory.cc        \
-        $(SRCDIR)/ShellGeometryPiece.cc          \
-        $(SRCDIR)/SmoothCylGeomPiece.cc          \
-        $(SRCDIR)/SmoothGeomPiece.cc             \
-        $(SRCDIR)/SphereGeometryPiece.cc         \
-        $(SRCDIR)/SphereMembraneGeometryPiece.cc \
-        $(SRCDIR)/SphereShellPiece.cc            \
-        $(SRCDIR)/TorusGeometryPiece.cc          \
-        $(SRCDIR)/TriGeometryPiece.cc            \
-        $(SRCDIR)/LineSegGeometryPiece.cc        \
-        $(SRCDIR)/UniformGrid.cc                 \
-        $(SRCDIR)/UnionGeometryPiece.cc          \
-    $(SRCDIR)/EllipsoidGeometryPiece.cc      \
-    $(SRCDIR)/ConvexPolyhedronGeometryPiece.cc \
+	$(SRCDIR)/BoxGeometryPiece.cc            \
+	$(SRCDIR)/ConeGeometryPiece.cc           \
+	$(SRCDIR)/CylinderGeometryPiece.cc       \
+	$(SRCDIR)/CylinderShellPiece.cc          \
+	$(SRCDIR)/DifferenceGeometryPiece.cc     \
+	$(SRCDIR)/FileGeometryPiece.cc           \
+	$(SRCDIR)/GeometryObject.cc              \
+	$(SRCDIR)/GeometryPiece.cc               \
+	$(SRCDIR)/GeometryPieceFactory.cc        \
+	$(SRCDIR)/IntersectionGeometryPiece.cc   \
+	$(SRCDIR)/NaaBoxGeometryPiece.cc         \
+	$(SRCDIR)/NullGeometryPiece.cc           \
+	$(SRCDIR)/PlaneShellPiece.cc             \
+	$(SRCDIR)/ShellGeometryFactory.cc        \
+	$(SRCDIR)/ShellGeometryPiece.cc          \
+	$(SRCDIR)/SmoothCylGeomPiece.cc          \
+	$(SRCDIR)/SmoothGeomPiece.cc             \
+	$(SRCDIR)/SphereGeometryPiece.cc         \
+	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
+	$(SRCDIR)/SphereShellPiece.cc            \
+	$(SRCDIR)/TorusGeometryPiece.cc          \
+	$(SRCDIR)/TriGeometryPiece.cc            \
+	$(SRCDIR)/LineSegGeometryPiece.cc        \
+	$(SRCDIR)/UniformGrid.cc                 \
+	$(SRCDIR)/UnionGeometryPiece.cc          \
+        $(SRCDIR)/EllipsoidGeometryPiece.cc
+
+ifneq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/ConvexPolyhedronGeometryPiece.cc
+endif
 
 #       $(SRCDIR)/GUVSphereShellPiece.cc         \
 

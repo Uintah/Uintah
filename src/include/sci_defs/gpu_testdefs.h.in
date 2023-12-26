@@ -1,0 +1,95 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2020 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#ifndef SCI_GPU_DEFS_H
+#define SCI_GPU_DEFS_H
+
+#define SCI_GPU_ASSERTION_LEVEL @ASSERTION_LEVEL@
+
+#include "kokkos_defs.h"
+
+// These maybe defined in the kokkos_defs.h.
+#if !defined(HOST_DEVICE)
+  #define HOST_DEVICE
+#endif
+
+#if !defined(GPU_FUNCTION)
+  #define GPU_FUNCTION
+#endif
+
+#if !defined(GPU_INLINE_FUNCTION)
+  #define GPU_INLINE_FUNCTION inline
+#endif
+
+#if !defined(GPU_FORCEINLINE_FUNCTION)
+  #define GPU_FORCEINLINE_FUNCTION inline
+#endif
+
+// Allow easy indexing into device-side 3D array
+#define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
+
+// int3 bound checking
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_INSIDE( idx, offset, size ) {                              \
+     if (idx.x < offset.x || idx.y< offset.y || idx.z < offset.z ||        \
+         idx.x > offset.x + size.x ||                                      \
+         idx.y > offset.y + size.y ||                                      \
+         idx.z > offset.z + size.z)                                        \
+             printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) "               \
+                    "not inside (%d, %d, %d)-(%d, %d, %d) \n",             \
+                     idx.x, idx.y, idx.z, offset.x, offset.y, offset.z,    \
+                     offset.x+size.x, offset.y+size.y, offset.z+size.z);   \
+   }
+#else
+  #define  CHECK_INSIDE( idx, offset, size )
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_INSIDE3( x, y, z, offset, size ) {                         \
+     if (x < offset.x || y< offset.y || z < offset.z ||                    \
+         x > offset.x + size.x ||                                          \
+	 y > offset.y + size.y ||                                          \
+         z > offset.z + size.z)                                            \
+           printf ("GPU OUT_OF_BOUND ERROR: (%d, %d, %d) "                 \
+		   "not inside (%d, %d, %d)-(%d, %d, %d) \n",	           \
+                   x, y, z, offset.x, offset.y, offset.z,                  \
+                   offset.x+size.x, offset.y+size.y, offset.z+size.z);     \
+   }
+#else
+  #define  CHECK_INSIDE3( x, y, z, offset, size )
+#endif
+
+#if SCI_GPU_ASSERTION_LEVEL >= 3
+  #define CHECK_RANGE( idx, low, high ) {                   \
+      if (idx < low || idx > high )                         \
+            printf ("GPU INDEX_OUT_OF_RANGE ERROR: "        \
+                    "index (%d) not in range [%d, %d] \n",  \
+                    idx, low, high);                        \
+   }
+#else
+  #define CHECK_RANGE( idx, low, high )
+#endif
+
+
+#endif

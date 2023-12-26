@@ -41,24 +41,6 @@
 
 #include <map>
 
-#include <sci_defs/cuda_defs.h>
-
-#ifdef HAVE_CUDA
-#ifdef __cplusplus
-extern "C" {
-#endif
-void launchConstructLinearSystemKernel(double* weightsArray,
-                                       double* weightedAbscissasArray,
-                                       double* modelsArray,
-                                       int*    momentIndicesArray,
-                                       double* AAArray,
-                                       double* BBArray,
-                                       int     num_cells);
-#ifdef __cplusplus
-}
-#endif
-#endif
-
 namespace Uintah {
 
 //-------------------------------------------------------

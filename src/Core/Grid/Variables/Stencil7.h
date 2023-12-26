@@ -28,6 +28,9 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
+
+#include <sci_defs/gpu_defs.h>
+
 #include <iostream>
 
 namespace Uintah {
@@ -39,40 +42,38 @@ namespace Uintah {
     double  w, e, s, n, b, t;
     // diagonal term
     double p;
-    
-    double& operator[](int index) {
-      ASSERTRANGE(index, 0, 7);
-      return (&w)[index];
-    }
-    const double& operator[](int index) const {
-      ASSERTRANGE(index, 0, 7);
+
+    GPU_INLINE_FUNCTION double& operator[](int index) {
+      // ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
 
-    void initialize(double a){
+    GPU_INLINE_FUNCTION const double& operator[](int index) const {
+      // ASSERTRANGE(index, 0, 7);
+      return (&w)[index];
+    }
+
+    GPU_INLINE_FUNCTION void initialize(double a) {
       w = a;
       e = a;
       s = a;
-      n = a; 
-      b = a; 
+      n = a;
+      b = a;
       t = a;
       p = a;
     }
 
     // constructors
-    Stencil7(){}
-    
-    inline Stencil7(double init) : 
+    GPU_INLINE_FUNCTION Stencil7() {}
+
+    GPU_INLINE_FUNCTION Stencil7(double init) :
       w(init), e(init),
       s(init), n(init),
       b(init), t(init),
-      p(init){}
-    
-    
+      p(init) {}
   };
 
   std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
-
 }
 
 namespace Uintah {

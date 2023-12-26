@@ -26,12 +26,14 @@
 //
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
+#include <Core/Parallel/Portability.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <fstream>
+#include <cmath>
 
 #define DEBUG -9            // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
@@ -85,6 +87,9 @@ const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
 
+// For the RMCRT slim version
+const VarLabel* RMCRTCommon::d_abskgSigmaT4CellTypeLabel;
+
 //______________________________________________________________________
 // Class: Constructor.
 //______________________________________________________________________
@@ -99,6 +104,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
     proc0cout << "  - Using float implementation of RMCRT" << std::endl;
   }
+
+  // For the RMCRT slim version
+  d_abskgSigmaT4CellTypeLabel = VarLabel::create( "abskgSigmaT4CellType", CCVariable<double>::getTypeDescription() );
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
@@ -328,6 +336,90 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
       const IntVector& c = *iter;
       double T_sqrd = temp[c] * temp[c];
       sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
+    }
+  }
+}
+
+void
+RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
+                           SchedulerP& sched,
+                           Task::WhichDW temp_dw,
+                           const bool includeEC )
+{
+
+  std::string taskname = "RMCRTCommon::sigmaT4";
+
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::combineAbskgSigmaT4CellType<double>, temp_dw );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::combineAbskgSigmaT4CellType<float>, temp_dw );
+  }
+
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_combineAbskgSigmaT4CellType");
+
+  tsk->requires( temp_dw, d_abskgLabel,    d_gn, 0 );
+  tsk->requires( temp_dw, d_sigmaT4Label,    d_gn, 0 );
+  tsk->requires( temp_dw, d_cellTypeLabel,    d_gn, 0 );
+
+  tsk->computes(d_abskgSigmaT4CellTypeLabel);
+  
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+  printf("Completed sched_combineAbskgSigmaT4CellType\n");
+}
+
+
+//______________________________________________________________________
+// Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::combineAbskgSigmaT4CellType( const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      Task::WhichDW which_temp_dw )
+{
+  //__________________________________
+  //  do the work
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::combineAbskgSigmaT4CellType");
+
+    constCCVariable< T > abskg;
+    constCCVariable< T > sigmaT4;
+    constCCVariable< int> cellType;
+    CCVariable<double> abskgSigmaT4CellType;
+    
+    DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
+    temp_dw->get(abskg,    d_abskgLabel,  d_matl, patch, Ghost::None, 0);
+    temp_dw->get(sigmaT4,  d_sigmaT4Label,  d_matl, patch, Ghost::None, 0);
+    temp_dw->get(cellType, d_cellTypeLabel,  d_matl, patch, Ghost::None, 0);
+
+    printf("into %p\n", new_dw);
+    new_dw->allocateAndPut(abskgSigmaT4CellType, d_abskgSigmaT4CellTypeLabel, d_matl, patch);
+
+    // set the cell iterator
+    CellIterator iter = patch->getExtraCellIterator();
+    //CellIterator iter = patch->getCellIterator();
+    //if(includeEC){
+      iter = patch->getExtraCellIterator();
+    //}
+    printf("****Running task for patch %d****\n", patch->getID());
+    // Pack them on in!
+    for (;!iter.done();iter++){
+      const IntVector& c = *iter;
+      struct Combined_RMCRT_Required_Vars item;
+      item.abskg = abskg[c];
+      if (cellType[c] != -1) { 
+        item.abskg = -1.0 * item.abskg;
+      }
+      item.sigmaT4 = sigmaT4[c];
+      abskgSigmaT4CellType[c] = reinterpret_cast<double&>(item);   
     }
   }
 }
@@ -820,7 +912,7 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
   std::string taskName  = "RMCRTCommon::carryForward_FineLevelLabels";
   printSchedule( level, g_ray_dbg, schedName );
 
-  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_FineLevelLabels );
+  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
 
   tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
   tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
@@ -836,31 +928,6 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 }
 
 //______________________________________________________________________
-//
-void
-RMCRTCommon::carryForward_FineLevelLabels(DetailedTask* dtask,
-                                    Task::CallBackEvent event,
-                                    const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    void* old_TaskGpuDW,
-                                    void* new_TaskGpuDW,
-                                    void* stream,
-                                    int deviceID)
-{
-  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
-
-  bool replaceVar = true;
-  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
-  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, dtask, replaceVar, nullptr );
-}
-
-
-//______________________________________________________________________
 //    Move all computed variables from old_dw -> new_dw
 //______________________________________________________________________
 void
@@ -872,7 +939,7 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
   std::string taskName  = "RMCRTCommon::carryForward_VarLabels";
   printSchedule( level, g_ray_dbg, schedName );
 
-  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_VarLabels, varLabels );
+  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_VarLabels<UintahSpaces::CPU, UintahSpaces::HostSpace>, varLabels );
 
   for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
     tsk->requires( Task::OldDW, *iter, d_gn, 0 );
@@ -881,31 +948,6 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
 }
-
-//______________________________________________________________________
-//
-void
-RMCRTCommon::carryForward_VarLabels(DetailedTask* dtask,
-                                    Task::CallBackEvent event,
-                                    const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    void* old_TaskGpuDW,
-                                    void* new_TaskGpuDW,
-                                    void* stream,
-                                    int deviceID,
-                                    const std::vector< const VarLabel* > varLabels)
-{
-  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_VarLabels" );
-
-  bool replaceVar = true;
-  for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
-    new_dw->transferFrom(old_dw, *iter, patches, matls, dtask, replaceVar, nullptr );
-  }
-}
-
 
 
 //______________________________________________________________________
@@ -921,7 +963,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   std::string taskName  = "RMCRTCommon::carryForward_Var_" + variable->getName();
   printSchedule(level, g_ray_dbg, schedName);
 
-  Task* task = scinew Task( taskName, this, &RMCRTCommon::carryForward_Var, variable );
+  Task* task = scinew Task( taskName, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
 
   task->requires(Task::OldDW, variable,   d_gn, 0);
   task->computes(variable);
@@ -929,23 +971,6 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);
 }
 
-//______________________________________________________________________
-void
-RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
-                                Task::CallBackEvent event,
-                                const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                void* old_TaskGpuDW,
-                                void* new_TaskGpuDW,
-                                void* stream,
-                                int deviceID,
-                                const VarLabel* variable )
-{
-  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
-}
 
 //______________________________________________________________________
 //

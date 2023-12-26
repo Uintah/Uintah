@@ -9,8 +9,10 @@ namespace Uintah { namespace ArchesCore {
   FILTER get_filter_from_string( const std::string & value );
 
   struct BCFilter {
-    void apply_BC_filter_rho( const Patch* patch, CCVariable<double>& var,
-                            CCVariable<double>& rho, constCCVariable<double>& vol_fraction){
+	template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+    void apply_BC_filter_rho( const Patch* patch, grid_T& var,
+    		                  grid_T& rho, grid_CT& vol_fraction,
+	                          ExecutionObject<ExecSpace, MemSpace>& execObj){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
@@ -20,20 +22,22 @@ namespace Uintah { namespace ArchesCore {
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
         Patch::FaceType face = *itr;
-        IntVector f_dir = patch->getFaceDirection(face);
+        CellIterator iter=patch->getFaceIterator(face, MEC);
+        BlockRange range(iter.begin(), iter.end());
 
-        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-          IntVector c = *iter;
-
-              var[c] = rho[c] ;
-        }
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+              var(i, j, k) = rho(i, j, k) ;
+        });
       }
 
 
     }
-    void apply_BC_rho( const Patch* patch, CCVariable<double>& var,
-                            constCCVariable<double>& rho,
-                            constCCVariable<double>& vol_fraction){
+
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+    void apply_BC_rho( const Patch* patch, grid_T& var,
+             		        grid_CT& rho,
+ 			                grid_CT& vol_fraction,
+                            ExecutionObject<ExecSpace, MemSpace>& execObj){
 
 
       std::vector<Patch::FaceType> bf;
@@ -44,44 +48,59 @@ namespace Uintah { namespace ArchesCore {
 
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
+        int fx = f_dir[0], fy = f_dir[1], fz = f_dir[2];
+        CellIterator iter=patch->getFaceIterator(face, MEC);
+        BlockRange range(iter.begin(), iter.end());
 
-        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-          IntVector c = *iter;
-          var[c] = vol_fraction[c]*0.5*(rho[c]+rho[c-f_dir])+(1.-vol_fraction[c])*rho[c-f_dir];
-        }
+        parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+          var(i, j, k) = vol_fraction(i, j, k)*0.5*(rho(i, j, k)+rho(i-fx, j-fy, k-fz))+(1.-vol_fraction(i, j, k))*rho(i-fx, j-fy, k-fz);
+        });
       }
     }
 
-    void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
-                             constCCVariable<double>& vol_fraction ){
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+    void apply_zero_neumann( ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, grid_T& var,
+                             grid_CT& vol_fraction ){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
-      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      IntVector dcdp=(patch->getCellHighIndex()-patch->getCellLowIndex()); // delta cells / delta patch
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
         Patch::FaceType face = *itr;
         IntVector f_dir = patch->getFaceDirection(face);
 
-        for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-          IntVector c = *iter;
+        // FACE EXTRA CELLS ONLY, not edge cells, not corner cells  (invalid for faces that don't have extra cells)
+        int pom=f_dir[0]+f_dir[1]+f_dir[2]; // plus or minus
+        IntVector cutEdges=IntVector(pom,pom,pom)-f_dir;
+        IntVector loVal  = (pom < 0) ?patch->getCellLowIndex()  + f_dir: patch->getCellLowIndex()  + f_dir*dcdp ; 
+        IntVector HiVal  = (pom < 0) ?patch->getCellHighIndex() + f_dir*dcdp: patch->getCellHighIndex() +f_dir; 
 
-          if ( vol_fraction[c] > 1e-10 ){
-            var[c] = var[c-f_dir];
+        parallel_for(execObj, BlockRange(loVal,HiVal), KOKKOS_LAMBDA (int i, int j, int k){
+
+          int im=i-f_dir[0];
+          int jm=j-f_dir[1];
+          int km=k-f_dir[2];
+
+          if ( vol_fraction(i,j,k) > 1e-10 ){ // This loop only executes over extra cells
+            var(i,j,k) = var(im,jm,km);
           }
-        }
+        });
       }
     }
-    template <typename T, typename CT>
+
+    //Need to pass extra HostV_T (type on host)  to be used by VariableHelper. VariableHelper can not use KokkosView3
+    template <typename HostV_T, typename T, typename CT, typename grid_CT, typename ExecSpace, typename MemSpace>
     void apply_BC_rhou( const Patch* patch, T& var, CT& vel,
-                        constCCVariable<double>& rho, constCCVariable<double>& vol_fraction  ){
+    		            grid_CT& rho, grid_CT& vol_fraction,
+						ExecutionObject<ExecSpace, MemSpace>& execObj){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
 
-      ArchesCore::VariableHelper<T> var_help;
+      ArchesCore::VariableHelper<HostV_T> var_help;
       IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -94,36 +113,46 @@ namespace Uintah { namespace ArchesCore {
         //The face normal and the velocity are in parallel
         if (dot == -1) {
             //Face +
-          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-            IntVector c = *iter;
+          CellIterator iter=patch->getFaceIterator(face, MEC);
+          BlockRange range(iter.begin(), iter.end());
 
-            if ( vol_fraction[c] > 1e-10 ){
-              var[c-f_dir] = vel[c-f_dir]*(rho[c-f_dir]+rho[c])/2.;
-              var[c] = vel[c-f_dir];
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+            int im=i-f_dir[0];
+            int jm=j-f_dir[1];
+            int km=k-f_dir[2];
+
+            if ( vol_fraction(i,j,k) > 1e-10 ){
+              var(im,jm,km) = vel(im,jm,km)*(rho(im,jm,km)+rho(i,j,k))/2.;
+              var(i,j,k) = vel(im,jm,km);
             }
-          }
-          } else {
+          });
+        } else {
               // Face -
-          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-            IntVector c = *iter;
+          CellIterator iter=patch->getFaceIterator(face, MEC);
+          BlockRange range(iter.begin(), iter.end());
 
-            if ( vol_fraction[c] > 1e-10 ){
-              var[c] = vel[c]*(rho[c-f_dir]+rho[c])/2.;
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+            int im=i-f_dir[0];
+            int jm=j-f_dir[1];
+            int km=k-f_dir[2];
+
+            if ( vol_fraction(i,j,k) > 1e-10 ){
+              var(i,j,k) = vel(i,j,k)*(rho(im,jm,km)+rho(i,j,k))/2.;
             }
-          }
+          });
         }
       }
     }
 
-    template <typename T>
-    void apply_zero_neumann( const Patch* patch, T& var,
-                             constCCVariable<double>& vol_fraction  ){
+    //Not use. Not tested after porting.
+    template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT, typename VarHelper>
+    void apply_zero_neumann(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, grid_T& var,
+                             grid_CT& vol_fraction, VarHelper& var_help  ){ // NOT USED??
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
 
-      ArchesCore::VariableHelper<T> var_help;
       IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
       for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -136,23 +165,38 @@ namespace Uintah { namespace ArchesCore {
         //The face normal and the velocity are in parallel
         if (dot == -1) {
             //Face +
-          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-            IntVector c = *iter;
+          CellIterator iter=patch->getFaceIterator(face, MEC);
+          BlockRange range(iter.begin(), iter.end());
 
-            if ( vol_fraction[c] > 1e-10 ){
-              var[c-f_dir] = var[c-f_dir-f_dir];
-              var[c] = var[c-f_dir];
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+
+            if ( vol_fraction(i,j,k) > 1e-10 ){
+              int im=i-f_dir[0];
+              int jm=j-f_dir[1];
+              int km=k-f_dir[2];
+              int imm=im-f_dir[0];
+              int jmm=jm-f_dir[1];
+              int kmm=km-f_dir[2];
+
+              var(im,jm,km) = var(imm,jmm,kmm);
+              var(i,j,k) = var(im,jm,km);
             }
-          }
+          });
           } else {
               // Face -
-          for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
-            IntVector c = *iter;
+          CellIterator iter=patch->getFaceIterator(face, MEC);
+          BlockRange range(iter.begin(), iter.end());
 
-            if ( vol_fraction[c] > 1e-10 ){
-              var[c] = var[c-f_dir];
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+
+            if ( vol_fraction(i,j,k) > 1e-10 ){
+              int im=i-f_dir[0];
+              int jm=j-f_dir[1];
+              int km=k-f_dir[2];
+
+              var(i,j,k) = var(im,jm,km);
             }
-          }
+          });
         }
       }
     }
@@ -204,72 +248,90 @@ namespace Uintah { namespace ArchesCore {
     }
     }
   // rh*u filter
-  template <typename V_T>
-  void applyFilter(V_T& var, Array3<double>& Fvar, constCCVariable<double>& rho,
-        constCCVariable<double>& eps, BlockRange range)
+  //Need to pass extra HostV_T (type on host)  to be used by VariableHelper. VariableHelper can not use KokkosView3
+  template <typename HostV_T, typename V_T, typename grid_T, typename grid_CT, typename ExecSpace, typename MemSpace>
+  void applyFilter(V_T& var, grid_T& Fvar, grid_CT& rho,
+		           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
   {
-  ArchesCore::VariableHelper<V_T> helper;
+  ArchesCore::VariableHelper<HostV_T> helper;
   const int i_n = helper.ioff;
   const int j_n = helper.joff;
   const int k_n = helper.koff;
+  localW wl(w);
+  const double wtl = wt;
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
           double vf = std::floor((eps(i+m,j+n,k+l)
                       + eps(i+m-i_n,j+n-j_n,k+l-k_n))/2.0);
-          F_var += w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
+          F_var += wl.w[m+1][n+1][l+1]*(vf*var(i+m,j+n,k+l)*
                    (rho(i+m,j+n,k+l)+rho(i+m-i_n,j+n-j_n,k+l-k_n))/2.);
         }
       }
     }
-    F_var /= wt;
+    F_var /= wtl;
     F_var *= (eps(i,j,k)*eps(i-i_n,j-j_n,k-k_n));
     Fvar(i,j,k) = F_var;
   });
   }
   //  This filter does not weight the intrusion cells instead c value is used.
   //  used in density
-  template <typename T>
-  void applyFilter(T& var, Array3<double>& Fvar,
-                  BlockRange range, constCCVariable<double>& eps )
+  template <typename T, typename grid_T, typename grid_CT, typename ExecSpace, typename MemSpace>
+  void applyFilter(T& var, grid_T& Fvar,
+                   BlockRange range, grid_CT& eps, ExecutionObject<ExecSpace, MemSpace>& execObj )
   {
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  localW wl(w);
+  const double wtl = wt;
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
-          F_var += w[m+1][n+1][l+1]*(eps(i+m,j+n,k+l)*var(i+m,j+n,k+l)
+          F_var += wl.w[m+1][n+1][l+1]*(eps(i+m,j+n,k+l)*var(i+m,j+n,k+l)
                  +(1.-eps(i+m,j+n,k+l))*var(i,j,k));
         }
       }
     }
-    F_var /= wt;
+    F_var /= wtl;
     Fvar(i,j,k) = F_var;
   });
   }
   // scalar filter
-  template <typename V_T>
-  void applyFilter(V_T& var, Array3<double>& Fvar,
-        constCCVariable<double>& eps, BlockRange range)
+  template <typename V_T, typename grid_T, typename grid_CT, typename ExecSpace, typename MemSpace>
+  void applyFilter(V_T& var, grid_T& Fvar,
+		           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
   {
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  localW wl(w);
+  const double wtl = wt;
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     double F_var = 0.0;
     for ( int m = -1; m <= 1; m++ ){
       for ( int n = -1; n <= 1; n++ ){
         for ( int l = -1; l <= 1; l++ ){
-          F_var += w[m+1][n+1][l+1]* eps(i+m,j+n,k+l)*var(i+m,j+n,k+l);
+          F_var += wl.w[m+1][n+1][l+1]* eps(i+m,j+n,k+l)*var(i+m,j+n,k+l);
         }
       }
     }
-    F_var /= wt;
+    F_var /= wtl;
     Fvar(i,j,k) = F_var;
   });
   }
+
+  struct localW{
+	localW(double  a[][3][3]){
+      for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+   	      for(int k=0; k<3; k++)
+            w[i][j][k] = a[i][j][k];
+	}
+    double w[3][3][3];
+  };
+
   private:
 
   FILTER Type ;

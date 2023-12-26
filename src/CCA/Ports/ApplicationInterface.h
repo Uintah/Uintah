@@ -97,6 +97,7 @@ WARNING
     friend class SchedulerCommon;
     friend class DynamicMPIScheduler;
     friend class MPIScheduler;
+    friend class KokkosScheduler;
     friend class UnifiedScheduler;
     friend class DetailedTasks;
 

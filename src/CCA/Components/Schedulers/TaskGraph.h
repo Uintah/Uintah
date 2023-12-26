@@ -214,6 +214,8 @@ class TaskGraph {
                                       , const bool    hasDistalReqs = false
                                       );
 
+    void overrideGhostCells(const std::vector<Task*> &sorted_tasks);	//DS: 01042020: fix for OnDemandDW race condition
+
     inline DetailedTasks* getDetailedTasks()
     {
       return m_detailed_tasks;

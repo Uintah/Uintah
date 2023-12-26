@@ -159,6 +159,12 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       m_RMCRT->setBC_onOff( true );
 
     }
+    else if ( type == "dataOnionSlim" ) {       // DATA ONION SLIM
+
+      m_whichAlgo = dataOnionSlim;
+      m_RMCRT->setBC_onOff( true );
+
+    } 
     else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
 
       m_whichAlgo = coarseLevel;
@@ -364,6 +370,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   // common flags
   bool modifies_divQ     = false;
+  bool includeExtraCells = true;  // domain for sigmaT4 computation
 
   if (timeSubStep == 0) {
     modifies_divQ = false;
@@ -383,19 +390,23 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   typedef std::vector<const VarLabel*> VarLabelVec;
 
-  VarLabelVec fineLevelVarLabels = { m_RMCRT->d_divQLabel,
-                                     m_RMCRT->d_boundFluxLabel,
-                                     m_RMCRT->d_radiationVolqLabel,            // ToDo: only carry forward saved vars
-                                     m_RMCRT->d_abskgLabel,
-                                     m_RMCRT->d_sigmaT4Label };
+  VarLabelVec fineLevelVarLabels, coarseLevelVarLabels;
 
-  VarLabelVec coarseLevelVarLabels = { m_RMCRT->d_abskgLabel,
-                                       m_RMCRT->d_sigmaT4Label };
+  fineLevelVarLabels.push_back(m_RMCRT->d_divQLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_boundFluxLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_radiationVolqLabel);            // ToDo: only carry forward saved vars
+  fineLevelVarLabels.push_back(m_RMCRT->d_abskgLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_sigmaT4Label);
+
+  coarseLevelVarLabels.push_back(m_RMCRT->d_abskgLabel);
+  coarseLevelVarLabels.push_back(m_RMCRT->d_sigmaT4Label);
 
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
-  if ( m_whichAlgo == dataOnion ) {
+  if (m_whichAlgo == dataOnion || m_whichAlgo == dataOnionSlim) {
+
+    Task::WhichDW temp_dw       = Task::OldDW;
     Task::WhichDW celltype_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw    = Task::NewDW;
     const bool backoutTemp      = true;
@@ -430,6 +441,14 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
       if( m_RMCRT->d_coarsenExtraCells == false ) {
         sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
+      }
+    }
+
+    if (m_whichAlgo == dataOnionSlim) {
+      //Combine vars for every level
+      for (int l = maxLevels - 1; l >= 0; l--) {
+        const LevelP& level = grid->getLevel(l);
+        m_RMCRT->sched_combineAbskgSigmaT4CellType(level, sched, temp_dw, includeExtraCells);
       }
     }
 

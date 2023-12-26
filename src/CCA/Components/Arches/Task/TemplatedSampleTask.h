@@ -13,6 +13,16 @@ public:
     TemplatedSampleTask<T>( std::string task_name, int matl_index );
     ~TemplatedSampleTask<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (TemplatedSampleTask) class.
@@ -43,13 +53,17 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     void create_local_labels();
 
@@ -59,20 +73,100 @@ private:
 
   //Function definitions:
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TemplatedSampleTask<T>::TemplatedSampleTask( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   TemplatedSampleTask<T>::~TemplatedSampleTask()
   {
   }
 
+  //--------------------------------------------------------------------------------------------------
+  //  loadTask<task>FunctionPointers is used to indicate the build(s) supported by a given Arches task
+  //
+  //  For empty tasks, use the below:
+  //
+  //    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  //
+  //  For non-empty tasks, use the below with unsupported tags commented out:
+  //
+  //    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+  //                                       , &TemplatedSampleTask<T>::eval<UINTAH_CPU_TAG>              // Task supports non-Kokkos builds
+  //                                       , &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>           // Task supports Kokkos::OpenMP builds
+  //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_HOST_TAG>   // Task supports Kokkos::DefaultHostExecutionSpace builds
+  //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG> // Task supports Kokkos::DefaultExecutionSpace builds
+  //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>           // Task supports Kokkos builds
+  //                                       );
+  //
+  //  * Tag all non-empty tasks with UINTAH_CPU_TAG
+  //
+  //  * Tag non-empty tasks refactored to support Kokkos::OpenMP builds with KOKKOS_OPENMP_TAG
+  //    - e.g. Thread-safe tasks using Uintah::parallel_<pattern>
+  //
+  //  * Tag non-empty tasks refactored to support Kokkos::Experimental::OpenMPTarget builds with KOKKOS_DEFAULT_DEVICE_TAG
+  //
+  //  * Tag non-empty tasks refactored to support Kokkos builds with KOKKOS_DEFAULT_DEVICE_TAG
+  //    - e.g. Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++
+  //           functionality support by Kokkos
+  //--------------------------------------------------------------------------------------------------
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskComputeBCsFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &TemplatedSampleTask<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &TemplatedSampleTask<T>::eval<UINTAH_CPU_TAG>             // Task supports non-Kokkos builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>        // Task supports Kokkos::OpenMP builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_HOST_TAG>  // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE>    // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>          // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::problemSetup( ProblemSpecP& db ){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::create_local_labels(){
 
@@ -80,7 +174,7 @@ private:
 
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                                                     const bool packed_tasks ){
@@ -90,9 +184,11 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   //This is the work for the task.  First, get the variables. Second, do the work!
   template <typename T>
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     T& field = tsk_info->get_field<T>( "templated_variable" );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -102,7 +198,7 @@ private:
 
   }
 
-
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
@@ -111,8 +207,10 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
-  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     T& field = tsk_info->get_field<T>( "templated_variable" );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -122,12 +220,15 @@ private:
 
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void TemplatedSampleTask<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
   }
 
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
-  void TemplatedSampleTask<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+  template <typename ExecSpace, typename MemSpace>
+  void TemplatedSampleTask<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 }
 #endif

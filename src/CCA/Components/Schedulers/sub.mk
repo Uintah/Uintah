@@ -36,6 +36,7 @@ SRCS += \
         $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
+        $(SRCDIR)/KokkosScheduler.cc          \
         $(SRCDIR)/KokkosOpenMPScheduler.cc    \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
@@ -48,13 +49,11 @@ SRCS += \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
 
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu       \
+ifeq ($(KOKKOS_USING_GPU),yes)
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cc       \
           $(SRCDIR)/GPUGridVariableInfo.cc    \
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
           $(SRCDIR)/GPUMemoryPool.cc
-
-  DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
 endif
 
 PSELIBS := \

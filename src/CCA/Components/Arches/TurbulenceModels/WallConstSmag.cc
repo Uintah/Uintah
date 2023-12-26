@@ -32,6 +32,42 @@ TaskInterface( task_name, matl_index ), m_db_turb_parent(db_turb_parent)
 WallConstSmag::~WallConstSmag()
 {}
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WallConstSmag::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WallConstSmag::loadTaskInitializeFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WallConstSmag::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &WallConstSmag::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &WallConstSmag::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &WallConstSmag::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &WallConstSmag::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &WallConstSmag::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WallConstSmag::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace WallConstSmag::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 //---------------------------------------------------------------------------------
 void
 WallConstSmag::problemSetup( ProblemSpecP& db ){
@@ -105,8 +141,8 @@ WallConstSmag::register_initialize( std::vector<AFC::VariableInformation>&
 }
 
 //---------------------------------------------------------------------------------
-void
-WallConstSmag::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void WallConstSmag::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
 }
@@ -131,8 +167,8 @@ WallConstSmag::register_timestep_eval( std::vector<AFC::VariableInformation>&
 }
 
 //---------------------------------------------------------------------------------
-void
-WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);

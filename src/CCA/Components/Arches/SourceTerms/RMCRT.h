@@ -256,6 +256,7 @@ private:
   //
 
   enum Algorithm{ dataOnion,
+                  dataOnionSlim,
                   coarseLevel,
                   singleLevel,
                   radiometerOnly       // VRFlux is computed at radiometer locations

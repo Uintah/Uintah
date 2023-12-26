@@ -1153,6 +1153,12 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",this,
                               &DataArchiver::outputGlobalVars );
 
+    // This task must be executed after the simulation time is updated
+    // because when doing an AMR grid the delta T in the old warehouse
+    // is overwritten in ApplicationCommon::setDelTForAllLevels.
+    task->requires( Task::NewDW, m_application->getTimeStepLabel() );
+    task->requires( Task::NewDW, m_application->getSimTimeLabel() );
+
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
       SaveItem& saveItem = m_saveGlobalLabels[i];
 
@@ -1291,13 +1297,14 @@ DataArchiver::setCheckpointTimeStep( bool val,
       if( d_myworld->myRank() == 0 ) {
         if( m_checkpointCycle == 0 ) {
           DOUTR( true, "WARNING the checkpoint cycle is set to zero. "
-                "No checkpoints will be deleted. This may cause unacceptable disk usage." );
+                 "No checkpoints will be deleted. "
+                 "This may cause unacceptable disk usage." );
         }
 
         if( (int) m_checkpointTimeStepDirs.size() > 10 ) {
-          DOUTR( true, "WARNING there are currently checkpoint "
-                << m_checkpointTimeStepDirs.size() << " files. "
-                << "This may be excessive and cause unacceptable disk usage." );
+          DOUTR( true, "WARNING there are currently "
+                 << m_checkpointTimeStepDirs.size() << " checkpoint files. "
+                 << "This may be excessive and cause unacceptable disk usage." );
         }
       }
 
@@ -1312,7 +1319,6 @@ DataArchiver::setCheckpointTimeStep( bool val,
 void
 DataArchiver::beginOutputTimeStep( const GridP& grid )
 {
-
   const int    timeStep = m_application->getTimeStep();
   const double simTime  = m_application->getSimTime();
   const double delT     = m_application->getDelT();
@@ -1616,9 +1622,6 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 void
 DataArchiver::recompute_OutputCheckPointTimeStep()
 {
-
-
-
   const double simTime = m_application->getSimTime();
   const double delT    = m_application->getDelT();
 
@@ -2750,9 +2753,30 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   Timers::Simple timer;
   timer.start();
 
-  const int    timeStep = getTimeStepTopLevel();
-  const double simTime  = m_application->getSimTime();
-  const double delT     = m_application->getDelT();
+  // See note on the scheduling of this task.
+
+  // A data warehouse will contain the current time step but the
+  // simulation time is the time at the beginning, not the end of the
+  // time step.
+
+  // As such, the time step come must come from the old data
+  // warehouse. The exception is when one is dumping the initial time
+  // step as there is no old data warehouse, only a new.
+
+  // Whereas the simulation time must always come from the new data
+  // warehouse because the while the time step in old data warehouse
+  // is accurate, the delta T will be overwritten for AMR grids.
+  timeStep_vartype timeStepVar;
+  simTime_vartype   simTimeVar;
+
+  if( old_dw && old_dw->exists(m_application->getTimeStepLabel()) )
+    old_dw->get( timeStepVar, m_application->getTimeStepLabel() );
+  else
+    new_dw->get( timeStepVar, m_application->getTimeStepLabel() );
+  new_dw->get( simTimeVar,  m_application->getSimTimeLabel() );
+
+  const int    timeStep = timeStepVar;
+  const double simTime  =  simTimeVar;
 
   // Dump the variables in the global saveset into files in the uda.
   for(int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
@@ -2796,13 +2820,14 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       out << std::setprecision(17);
 
       // For outputing the sim time and/or time step with the global vars
-      if( m_outputGlobalVarsTimeStep ){              // default false
+      if( m_outputGlobalVarsTimeStep ) {  // default false
         out << std::setw(10) << timeStep << "\t";
       }
 
-      if( m_outputGlobalVarsSimTime ) {             // default true
-        out << std::setprecision(17) << simTime + delT << "\t";
+      if( m_outputGlobalVarsSimTime ) {   // default true
+        out << std::setprecision(17) << simTime << "\t";
       }
+
       // Output the global var for this material index.
       new_dw->print(out, var, 0, matlIndex);
       out << std::endl;
@@ -2891,6 +2916,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // this task should be called once per variable (per patch/matl subset).
   if (g_DA_dbg) {
     ostringstream msg;
+
+    msg << "    data warehouse ID = " << dw->getID();
+
     if ( type == CHECKPOINT_GLOBAL ) {
       msg << "    global";
     }
@@ -3329,7 +3357,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     PIDX_physical_point physical_global_size;
     IntVector zlo = { 0, 0, 0 };
-    IntVector ohi = { 1, 1, 1 }; 
+    IntVector ohi = { 1, 1, 1 };
     BBox b;
     level->getSpatialRange( b );
 
@@ -4369,10 +4397,11 @@ DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
     fromPath = fromPath1;
   }
   else {
+    char name[256];
+    getcwd(name, sizeof(name));
+    printf("Current working dir: %s\n", name);
+
     ostringstream mesg;
-
-    printf("Current working dir: %s\n", get_current_dir_name());
-
     mesg << "DataArchiver::copy_outputProblemSpec(): The directory "
          << tname.str() << " not found in either: "
          << fromPath0 << " or " << fromPath1;

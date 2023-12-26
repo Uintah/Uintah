@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-
-
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Components/Solvers/HypreSolver.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <Core/Grid/DbgOutput.h>
@@ -40,23 +40,28 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Parallel/Portability.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/Timers/Timers.hpp>
-#include <iomanip>
+
+#include <sci_defs/gpu_defs.h>
+#include <sci_defs/visit_defs.h>
 
 // hypre includes
 #include <_hypre_struct_mv.h>
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
+
+#include <iomanip>
+#include <typeinfo>
+#include <cxxabi.h>
 
 //#define PRINTSYSTEM
 
@@ -67,8 +72,24 @@
 #endif
 #endif
 
-using namespace std;
 using namespace Uintah;
+
+// If using Hypre with a gpu, copy all values to the gpu memory buffer
+// then pass it to SetBoxValues. Everything else remains the same.
+
+// This is a temporary solution to get the code working. TODO:
+// 1. Analyze performance of hypre gpu solve without considering the
+//    copying time. (look at solve only time)
+// 2. Improve performance, if possible.
+// 3. If gpu hypre performs faster than mpi only cpu hypre, convert
+//    this code into portable task (similar to CharOx)
+// 4. If gpu hypre can not perform, possibly use cpu only
+//    version. (May be with thread as rank approach).
+
+#if (defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)) && \
+    (defined(HAVE_KOKKOS))
+  #define HYPRE_SOLVER_GPU
+#endif
 
 //__________________________________
 //  To turn on normal output
@@ -117,11 +138,17 @@ namespace Uintah {
       , m_isFirstSolve(isFirstSolve_in)
     {
       // Time Step
-      m_timeStepLabel    = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
+      m_timeStepLabel      = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+      m_hypre_solver_label = VarLabel::create(HypreSolver2::hypreSolver_name,
+                                              SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
+
+      const char* hypre_superpatch_str = std::getenv("HYPRE_SUPERPATCH"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
+      if(hypre_superpatch_str) {
+        m_superpatch = atoi(hypre_superpatch_str);
+      }
+
     }
 
     //---------------------------------------------------------------------------------------------
@@ -129,6 +156,16 @@ namespace Uintah {
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
       VarLabel::destroy(m_hypre_solver_label);
+
+#if defined(HYPRE_SOLVER_GPU)
+      if (m_buff) {
+        Kokkos::kokkos_free((void*)m_buff);
+      }
+#else
+      if(m_buff) {
+        free(m_buff);
+      }
+#endif
     }
 
 
@@ -150,7 +187,39 @@ namespace Uintah {
     }
 
     //---------------------------------------------------------------------------------------------
+    double * getBuffer( size_t buff_size )
+    {
+      if (m_buff_size < buff_size) {
+        m_buff_size = buff_size;
+
+#if defined(HYPRE_SOLVER_GPU)
+        if (m_buff) {
+          Kokkos::kokkos_free((void*)m_buff);
+        }
+
+        m_buff = (double *)
+          Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>("HypreStencil7", m_buff_size);
+
+#else
+        if (m_buff) {
+          free(m_buff);
+        }
+
+        m_buff = (double *) malloc(buff_size);
+#endif
+      }
+
+      // Although m_buff is a member of the class and can be accessed
+      // inside task, it can not be directly accessed inside
+      // parallel_for on device (even though its a device pointer,
+      // value is not passed by reference) So return explicitly to a
+      // local variable. The local variable gets passed by copy.
+      return m_buff;
+    }
+
+    //---------------------------------------------------------------------------------------------
     //   Create and populate a Hypre struct vector,
+    template <typename ExecSpace, typename MemSpace>
     HYPRE_StructVector
     createPopulateHypreVector(   const timeStep_vartype   timeStep
                                , const bool               recompute
@@ -160,12 +229,13 @@ namespace Uintah {
                                , const PatchSubset      * patches
                                , const int                matl
                                , const VarLabel         * Q_label
-                               , DataWarehouse          * Q_dw
-                               , HYPRE_StructVector     * HQ)
+                               , OnDemandDataWarehouse  * Q_dw
+                               , HYPRE_StructVector     * HQ
+                               , ExecutionObject<ExecSpace, MemSpace> & execObj)
     {
       //__________________________________
       // Create the vector
-      if( do_setup ){
+      if( do_setup ) {
         HYPRE_StructVectorDestroy( *HQ );
       }
 
@@ -174,43 +244,54 @@ namespace Uintah {
         HYPRE_StructVectorInitialize( *HQ );
       }
 
-      for(int p=0;p<patches->size();p++){
+      for(int p=0;p<patches->size();p++) {
         const Patch* patch = patches->get(p);
 
         //__________________________________
         // Get Q
-        if( Q_label ){
-          ostringstream msg;
+        if( Q_label ) {
+          std::ostringstream msg;
           msg<< "HypreSolver:createPopulateHypreVector ("<< Q_label->getName() <<")\n";
           printTask( patches, patch, cout_doing, msg.str() );
 
-          typename GridVarType::const_double_type Q;
-          Q_dw->get( Q, Q_label, matl, patch, Ghost::None, 0);
+          //Q type should be "typename GridVarType::const_double_type" on host and KokkosView3 based on const_double_type on device;
+          auto Q = Q_dw->getConstGridVariable<typename GridVarType::const_double_type, double, MemSpace> (Q_label, matl, patch, Ghost::None, 0);
 
           // find box range
           IntVector lo;
           IntVector hi;
           getPatchExtents( patch, lo, hi );
 
-          //__________________________________
-          // Feed Q variable to Hypre
-          for(int z=lo.z(); z<hi.z(); z++){
-            for(int y=lo.y(); y<hi.y(); y++){
+          //-------------DS: 04262019: Added to use Uintah::parallel_for to copy values portably.----------------
+          // Existing invokes gpu kernel inside
+          // HYPRE_StructMatrixSetBoxValues Ny*Nz into times. Copying
+          // entire patch into the buffer and then calling
+          // HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel
+          // calls - 1 parallel_for to copy values into the buffer and
+          // 1 kernel call by HYPRE_StructMatrixSetBoxValues. Although
+          // new method needs extra buffer and no cache reuse, it
+          // still should be faster than existing code
+          IntVector hh(hi.x()-1, hi.y()-1, hi.z()-1);
+          Uintah::BlockRange range( lo, hi );
+          unsigned long Nx = abs(hi.x()-lo.x()), Ny = abs(hi.y()-lo.y()), Nz = abs(hi.z()-lo.z());
+           // Ensure starting point is 0 while indexing d_buff
+          int start_offset = lo.x() + lo.y()*Nx + lo.z()*Nx*Ny;
 
-              IntVector l(lo.x(), y, z);
-              IntVector h(hi.x()-1, y, z);
+          size_t buff_size = Nx*Ny*Nz*sizeof(double);
+          double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
+            int id = (i + j*Nx + k*Nx*Ny - start_offset);
+            d_buff[id] = Q(i, j, k);
+          });
+          //-----------------  end of hypre-gpu  -----------------
 
-              const double* values = &Q[l];
-
-              HYPRE_StructVectorSetBoxValues( *HQ,
-                                             l.get_pointer(), h.get_pointer(),
-                                             const_cast<double*>(values));
-            }
-          }
+          HYPRE_StructVectorSetBoxValues( *HQ,
+                                         lo.get_pointer(), hh.get_pointer(),
+                                         d_buff);
         }  // label exist?
       }  // patch loop
 
-      if (timeStep == 1 || recompute || do_setup){
+      if (timeStep == 1 || recompute || do_setup) {
         HYPRE_StructVectorAssemble( *HQ );
       }
 
@@ -218,15 +299,50 @@ namespace Uintah {
     }
 
     //---------------------------------------------------------------------------------------------
-
-    void solve( const ProcessorGroup * pg
-              , const PatchSubset    * patches
-              , const MaterialSubset * matls
-              ,       DataWarehouse  * old_dw
-              ,       DataWarehouse  * new_dw
+    template <typename ExecSpace, typename MemSpace>
+    void solve( const PatchSubset                          * patches
+              , const MaterialSubset                       * matls
+              ,       OnDemandDataWarehouse                * old_dw
+              ,       OnDemandDataWarehouse                * new_dw
+              ,       UintahParams                         & uintahParams
+              ,       ExecutionObject<ExecSpace, MemSpace> & execObj
               ,       Handle<HypreStencil7<GridVarType>>
               )
     {
+      const ProcessorGroup * pg = uintahParams.getProcessorGroup();
+
+      if(pg->myRank() == 0) {
+
+#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
+        bool hypre_gpu = true;
+#else
+        bool hypre_gpu = false;
+#endif
+        int status;
+        char *name =
+          abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
+
+	if( std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value &&
+	   !std::is_same<ExecSpace, Kokkos::OpenMP>::value) {
+          if(hypre_gpu == false) {
+            printf("######  Error at file %s, line %d: "
+                   "ExecSpace of HypreSolver task in Uintah is %s, "
+                   "but Hypre was NOT compiled for the gpu. ######\n",
+                   __FILE__, __LINE__, name);
+            exit(1);
+          }
+        }
+        else{
+          if(hypre_gpu == true) {
+            printf("######  Error at file %s, line %d: "
+                   "ExecSpace of HypreSolver task in Uintah is %s, "
+                   "but Hypre was compiled for the gpu. ######\n",
+                   __FILE__, __LINE__, name);
+            exit(1);
+          }
+        }
+      }
+
       //__________________________________
       //   timers
       m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
@@ -237,19 +353,21 @@ namespace Uintah {
       m_tCopySolution = hypre_InitializeTiming("Copy Solution");
 
 
-       //________________________________________________________
+      //________________________________________________________
       // get struct from data warehouse
-      struct hypre_solver_struct* hypre_solver_s = 0;
+      SoleVariable<hypre_solver_structP> hypre_solverP;
 
       if ( new_dw->exists( m_hypre_solver_label ) ) {
-        new_dw->get( m_hypre_solverP, m_hypre_solver_label );
+        new_dw->get( hypre_solverP, m_hypre_solver_label );
       }
       else {
-        old_dw->get( m_hypre_solverP, m_hypre_solver_label );
-        new_dw->put( m_hypre_solverP, m_hypre_solver_label );
+        old_dw->get( hypre_solverP, m_hypre_solver_label );
+        new_dw->put( hypre_solverP, m_hypre_solver_label );
       }
 
-      hypre_solver_s = m_hypre_solverP.get().get_rep();
+      struct hypre_solver_struct* hypre_solver_s =
+        hypre_solverP.get().get_rep();
+
       bool recompute = hypre_solver_s->isRecomputeTimeStep;
 
       //__________________________________
@@ -276,7 +394,7 @@ namespace Uintah {
       //
       int suFreq = m_params->getSetupFrequency();
       bool do_setup = false;
-      if (suFreq != 0){
+      if (suFreq != 0) {
         do_setup = (timeStep % suFreq == 0);
       }
 
@@ -285,28 +403,28 @@ namespace Uintah {
       //
       const int updateCoefFreq = m_params->getUpdateCoefFrequency();
      bool updateCoefs = true;
-      if (updateCoefFreq != 0){
+      if (updateCoefFreq != 0) {
         updateCoefs = (timeStep % updateCoefFreq == 0);
       }
 
       // if it the first pass through ignore the flags
-      if(timeStep == 1 || recompute){
+      if(timeStep == 1 || recompute) {
         updateCoefs = false;
         do_setup    = false;
       }
 
       //std::cout << "      HypreSolve  timestep: " << timeStep << " recompute: " << recompute << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
 
-      DataWarehouse* A_dw     = new_dw->getOtherDataWarehouse( m_which_A_dw );
-      DataWarehouse* b_dw     = new_dw->getOtherDataWarehouse( m_which_b_dw );
-      DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse( m_which_guess_dw );
+      OnDemandDataWarehouse* A_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_A_dw ));
+      OnDemandDataWarehouse* b_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_b_dw ));
+      OnDemandDataWarehouse* guess_dw = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_guess_dw ));
 
       ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
       Timers::Simple timer;
       timer.start();
 
-      for(int m = 0;m<matls->size();m++){
+      for(int m = 0;m<matls->size();m++) {
         int matl = matls->get(m);
 
         hypre_BeginTiming(m_tMatVecSetup);
@@ -316,17 +434,59 @@ namespace Uintah {
         if (timeStep == 1 || do_setup || recompute) {
           HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
 
-          for(int p=0;p<patches->size();p++){
-            const Patch* patch = patches->get(p);
+          if(m_superpatch) { //if m_superpatch is set then pass patch(0).lo and patch(n-1).hi to HYPRE_StructGridSetExtents. Then hypre will treat the rank's subdomain as one giant superpatch
 
-            IntVector lo;
-            IntVector hi;
-            getPatchExtents( patch, lo, hi );
-            hi -= IntVector(1,1,1);
+            IntVector  lo, hi, superlo, superhi;
+            getPatchExtents( patches->get(0), superlo, hi );  //lo of 0th patch will be superlo
+            getPatchExtents( patches->get(patches->size()-1), lo, superhi ); //hi of n-1 th patch will be superhi
+            unsigned long supercells = (superhi[0] - superlo[0]) * (superhi[1] - superlo[1]) * (superhi[2] - superlo[2]); //num cells in super patch
+            unsigned long totcells = 0;
 
-            HYPRE_StructGridSetExtents(grid, lo.get_pointer(), hi.get_pointer());
+            if(m_superpatch_bulletproof==false) {
+              //check whether all patches fall within superpatch boundary. Converse checked by comparing number of cells which should match.
+              for(int p=0;p<patches->size();p++) {
+                const Patch* patch = patches->get(p);
+                getPatchExtents( patch, lo, hi );
+
+                if(superlo <= lo && hi <= superhi) {  //patch falls within superpatch boundaries.
+                  totcells += (hi[0] - lo[0]) * (hi[1] - lo[1]) * (hi[2] - lo[2]);
+                }
+                else{//raise error if patch is outside superpatch boundaries
+                  printf("*** Error: super patch can not be used for this domain decomposition.  ***\n");
+                  printf("rank %d: superlo [%d %d %d], superhi [%d %d %d], lo [%d %d %d], hi [%d %d %d] for patch %d at %s %d\n",
+                         pg->myRank(), superlo[0], superlo[1], superlo[2], superhi[0], superhi[1], superhi[2], lo[0], lo[1], lo[2], hi[0], hi[1], hi[2], patch->getID(), __FILE__, __LINE__ );
+                  fflush(stdout);
+                  exit(1);
+                }
+              }
+              if(supercells != totcells) {
+              printf("*** Error: super patch can not be used for this domain decomposition.  ***\n");
+              printf("rank %d: superlo [%d %d %d], superhi [%d %d %d] super patch has extra cells than the subdomain assigned to this rank at %s %d\n",
+                     pg->myRank(), superlo[0], superlo[1], superlo[2], superhi[0], superhi[1], superhi[2], __FILE__, __LINE__ );
+              fflush(stdout);
+              exit(1);
+              }
+              m_superpatch_bulletproof = true;
+            }
+
+            if(pg->myRank()==0) {
+              printf("Warning: Using an experimental superpatch for hypre\n");
+            }
+            superhi -= IntVector(1,1,1);
+            HYPRE_StructGridSetExtents(grid, superlo.get_pointer(), superhi.get_pointer()); //pass super patch boundaries to hypre
           }
+          else{//add individual patches as they are without merging into super patch. Existing code as it is
+            for(int p=0;p<patches->size();p++) {
+              const Patch* patch = patches->get(p);
 
+              IntVector lo;
+              IntVector hi;
+              getPatchExtents( patch, lo, hi );
+              hi -= IntVector(1,1,1);
+
+              HYPRE_StructGridSetExtents(grid, lo.get_pointer(), hi.get_pointer());
+            }
+          }
           // Periodic boundaries
           const Level* level = getLevel(patches);
           IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -349,7 +509,7 @@ namespace Uintah {
         // Create the stencil
         HYPRE_StructStencil stencil;
         if ( timeStep == 1 || do_setup || recompute) {
-          if( m_params->getSymmetric()){
+          if( m_params->getSymmetric()) {
 
             HYPRE_StructStencilCreate(3, 4, &stencil);
             int offsets[4][3] = {{0,0,0},
@@ -368,7 +528,7 @@ namespace Uintah {
               {0,1,0}, {0,-1,0},
               {0,0,1}, {0,0,-1}};
 
-            for(int i=0;i<7;i++){
+            for(int i=0;i<7;i++) {
               HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
             }
           }
@@ -378,7 +538,7 @@ namespace Uintah {
         // Create the matrix
         HYPRE_StructMatrix* HA = hypre_solver_s->HA_p;
 
-        if( do_setup ){
+        if( do_setup ) {
           HYPRE_StructMatrixDestroy( *HA );
         }
 
@@ -398,116 +558,91 @@ namespace Uintah {
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
 
-            //__________________________________
-            // Get A matrix from the DW
-            typename GridVarType::symmetric_matrix_type AStencil4;
-            typename GridVarType::matrix_type A;
-
-            if ( m_params->getUseStencil4() ){
-              A_dw->get( AStencil4, m_A_label, matl, patch, Ghost::None, 0);
-            } else {
-              A_dw->get( A, m_A_label, matl, patch, Ghost::None, 0);
-            }
-
             IntVector l;
             IntVector h;
             getPatchExtents( patch, l, h );
 
+            //-------------DS: 04262019: Added to use Uintah::parallel_for to copy values portably.----------------
+            // existing invokes GPU kernel inside
+            // HYPRE_StructMatrixSetBoxValues Ny*Nz into
+            // times. Copying entire patch into the buffer and then
+            // calling HYPRE_StructMatrixSetBoxValues will lead to
+            // only 2 kernel calls - 1 parallel_for to copy values
+            // into the buffer and 1 kernel call by
+            // HYPRE_StructMatrixSetBoxValues. Although new method
+            // needs extra buffer and no cache reuse, it still should
+            // be faster than existing code
+            IntVector hh(h.x()-1, h.y()-1, h.z()-1);
+            Uintah::BlockRange range( l, h );
+            int stencil_point = ( m_params->getSymmetric()) ? 4 : 7;
+            unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
+            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
+
+            size_t buff_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
+            double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
+            //-----------------  end of hypre-gpu  -----------------
+
             //__________________________________
             // Feed it to Hypre
-            if( m_params->getSymmetric()){
+            int stencil_indices[] = {0,1,2,3,4,5,6};
 
-              double* values = scinew double[(h.x()-l.x())*4];
-              int stencil_indices[] = {0,1,2,3};
+            if( m_params->getSymmetric()) {
 
-              // use stencil4 as coefficient matrix. NOTE: This should be templated
-              // on the stencil type. This workaround is to get things moving
-              // until we convince component developers to move to stencil4. You must
-              // set m_params->setUseStencil4(true) when you setup your linear solver
-              // if you want to use stencil4. You must also provide a matrix of type
-              // stencil4 otherwise this will crash.
+              // Use stencil4 as coefficient matrix. NOTE: This should
+              // be templated on the stencil type. This workaround is
+              // to get things moving until we convince component
+              // developers to move to stencil4. You must set
+              // m_params->setUseStencil4(true) when you setup your
+              // linear solver if you want to use stencil4. You must
+              // also provide a matrix of type stencil4 otherwise this
+              // will crash.
               if ( m_params->getUseStencil4()) {
 
-                for(int z=l.z();z<h.z();z++){
-                  for(int y=l.y();y<h.y();y++){
+                auto AStencil4 = (A_dw->getConstGridVariable<typename GridVarType::symmetric_matrix_type, Stencil4, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-                    const Stencil4* AA = &AStencil4[IntVector(l.x(), y, z)];
-                    double* p = values;
-
-                    for(int x=l.x();x<h.x();x++){
-                      *p++ = AA->p;
-                      *p++ = AA->w;
-                      *p++ = AA->s;
-                      *p++ = AA->b;
-                      AA++;
-                    }
-                    IntVector ll(l.x(), y, z);
-                    IntVector hh(h.x()-1, y, z);
-                    HYPRE_StructMatrixSetBoxValues(*HA,
-                                                   ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, values);
-
-                  } // y loop
-                }  // z loop
+                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
+                  int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                  d_buff[id + 0] = AStencil4(i, j, k).p;
+                  d_buff[id + 1] = AStencil4(i, j, k).w;
+                  d_buff[id + 2] = AStencil4(i, j, k).s;
+                  d_buff[id + 3] = AStencil4(i, j, k).b;
+                });
 
               } else { // use stencil7
 
-                for(int z=l.z();z<h.z();z++){
-                  for(int y=l.y();y<h.y();y++){
+                auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-                    const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                    double* p = values;
+                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
+                  int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                  d_buff[id + 0] = A(i, j, k).p;
+                  d_buff[id + 1] = A(i, j, k).w;
+                  d_buff[id + 2] = A(i, j, k).s;
+                  d_buff[id + 3] = A(i, j, k).b;
+                });
 
-                    for(int x=l.x();x<h.x();x++){
-                      *p++ = AA->p;
-                      *p++ = AA->w;
-                      *p++ = AA->s;
-                      *p++ = AA->b;
-                      AA++;
-                    }
-                    IntVector ll(l.x(), y, z);
-                    IntVector hh(h.x()-1, y, z);
-                    HYPRE_StructMatrixSetBoxValues(*HA,
-                                                   ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, values);
-
-                  } // y loop
-                }  // z loop
               }
-              delete[] values;
-            } else {
-              double* values = scinew double[(h.x()-l.x())*7];
-              int stencil_indices[] = {0,1,2,3,4,5,6};
+            } else { // if( m_params->getSymmetric())
 
-              for(int z=l.z();z<h.z();z++){
-                for(int y=l.y();y<h.y();y++){
+              auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-                  const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                  double* p = values;
-
-                  for(int x=l.x();x<h.x();x++){
-                    *p++ = AA->p;
-                    *p++ = AA->e;
-                    *p++ = AA->w;
-                    *p++ = AA->n;
-                    *p++ = AA->s;
-                    *p++ = AA->t;
-                    *p++ = AA->b;
-                    AA++;
-                  }
-
-                  IntVector ll(l.x(), y, z);
-                  IntVector hh(h.x()-1, y, z);
-                  HYPRE_StructMatrixSetBoxValues(*HA,
-                                                 ll.get_pointer(), hh.get_pointer(),
-                                                 7, stencil_indices,
-                                                 values);
-                }  // y loop
-              } // z loop
-              delete[] values;
+              Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
+                int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                d_buff[id + 0] = A(i, j, k).p;
+                d_buff[id + 1] = A(i, j, k).e;
+                d_buff[id + 2] = A(i, j, k).w;
+                d_buff[id + 3] = A(i, j, k).n;
+                d_buff[id + 4] = A(i, j, k).s;
+                d_buff[id + 5] = A(i, j, k).t;
+                d_buff[id + 6] = A(i, j, k).b;
+              });
             }
+
+            HYPRE_StructMatrixSetBoxValues(*HA,
+                                           l.get_pointer(), hh.get_pointer(),
+                                           stencil_point, stencil_indices,
+                                           d_buff);
           }
-          if (timeStep == 1 || recompute || do_setup){
+          if (timeStep == 1 || recompute || do_setup) {
             HYPRE_StructMatrixAssemble(*HA);
           }
         }
@@ -515,12 +650,12 @@ namespace Uintah {
         //__________________________________
         // Create the RHS
         HYPRE_StructVector HB;
-        HB = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
+        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p, execObj);
 
         //__________________________________
         // Create the solution vector
         HYPRE_StructVector HX;
-        HX = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
+        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p, execObj);
 
         hypre_EndTiming( m_tMatVecSetup );
 
@@ -535,13 +670,13 @@ namespace Uintah {
 
         //______________________________________________________________________
         // Solve the system
-        switch( hypre_solver_s->solver_type ){
+        switch( hypre_solver_s->solver_type ) {
         //__________________________________
         // use symmetric SMG
         case smg: {
           HYPRE_StructSolver * solver  = hypre_solver_s->solver_p;
 
-          if ( do_setup ){
+          if ( do_setup ) {
             HYPRE_StructSMGDestroy( *solver );
           }
 
@@ -567,11 +702,11 @@ namespace Uintah {
         }
         //______________________________________________________________________
         //
-        case pfmg:{
+        case pfmg: {
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver_p;
 
-          if ( do_setup ){
+          if ( do_setup ) {
             HYPRE_StructPFMGDestroy( *solver );
           }
 
@@ -601,10 +736,11 @@ namespace Uintah {
         }
         //______________________________________________________________________
         //
-        case sparsemsg:{
+        case sparsemsg: {
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver_p;
-          if ( do_setup ){
+
+          if ( do_setup ) {
             HYPRE_StructSparseMSGDestroy(*solver);
           }
 
@@ -639,7 +775,7 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if( do_setup ){
+          if( do_setup ) {
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructPCGDestroy(*solver);
           }
@@ -676,7 +812,7 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if ( do_setup ){
+          if ( do_setup ) {
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructHybridDestroy( *solver );
           }
@@ -714,10 +850,11 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if ( do_setup ){
+          if ( do_setup ) {
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructGMRESDestroy(*solver);
           }
+
           if (timeStep == 1 || recompute || do_setup ) {
             HYPRE_StructGMRESCreate(pg->getComm(),solver);
 
@@ -766,7 +903,7 @@ namespace Uintah {
         // Push the solution into Uintah data structure
         hypre_BeginTiming( m_tCopySolution );
 
-        for(int p=0;p<patches->size();p++){
+        for(int p=0;p<patches->size();p++) {
           const Patch* patch = patches->get(p);
           printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
 
@@ -776,26 +913,35 @@ namespace Uintah {
 
           CellIterator iter(l, h);
 
-          typename GridVarType::double_type Xnew;
-          if( m_modifies_X ){
-            new_dw->getModifiable(Xnew, m_X_label, matl, patch);
-          }else{
-            new_dw->allocateAndPut(Xnew, m_X_label, matl, patch);
-          }
+          auto Xnew = new_dw->getGridVariable<typename GridVarType::double_type, double, MemSpace> (m_X_label, matl, patch, Ghost::None, 0, m_modifies_X);
 
+          Uintah::BlockRange range( l, h );
+
+          //-------------DS: 04262019: Added to use Uintah::parallel_for to copy values portably.----------------
+          // existing invokes the kernel inside
+          // HYPRE_StructVectorGetBoxValues Ny*Nz into times. Copying
+          // entire patch into the buffer and then calling
+          // HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel
+          // calls - 1 parallel_for to copy values into the buffer and
+          // 1 kernel call by HYPRE_StructMatrixSetBoxValues. Although
+          // new method needs extra buffer and no cache reuse, it
+          // still should be faster than existing code
+          IntVector hh(h.x()-1, h.y()-1, h.z()-1);
+          unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
+          int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
+
+          size_t buff_size = Nx*Ny*Nz*sizeof(double);
+          double * d_buff = getBuffer( buff_size ); //allocate / reallocate d_buff;
           // Get the solution back from hypre
-          for(int z=l.z();z<h.z();z++){
-            for(int y=l.y();y<h.y();y++){
+          HYPRE_StructVectorGetBoxValues(HX,
+              l.get_pointer(), hh.get_pointer(),
+              d_buff);
 
-              double* values = &Xnew[IntVector(l.x(), y, z)];
-              IntVector ll(l.x(), y, z);
-              IntVector hh(h.x()-1, y, z);
-
-              HYPRE_StructVectorGetBoxValues(HX,
-                  ll.get_pointer(), hh.get_pointer(),
-                  values);
-            }
-          }
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
+            int id = (i + j*Nx + k*Nx*Ny - start_offset);
+            Xnew(i, j, k) = d_buff[id];
+          });
+          //-----------------  end of hypre-gpu  -----------------
         }
 
         hypre_EndTiming( m_tCopySolution );
@@ -822,10 +968,10 @@ namespace Uintah {
 
         if(pg->myRank() == 0) {
 
-          cout << "Solve of " << m_X_label->getName()
-               << " on level " << m_level->getIndex()
-               << " completed in " << timer().seconds()
-               << " s (solve only: " << solve_timer().seconds() << " s, ";
+          std::cout << "Solve of " << m_X_label->getName()
+                    << " on level " << m_level->getIndex()
+                    << " completed in " << timer().seconds()
+                    << " s (solve only: " << solve_timer().seconds() << " s, ";
 
           if (timeStep > 2) {
             // alpha = 2/(N+1)
@@ -833,11 +979,11 @@ namespace Uintah {
             double alpha   = 2.0/(std::min( int(timeStep) - 2, 10) + 1);
             m_movingAverage = alpha*solve_timer().seconds() + (1-alpha) * m_movingAverage;
 
-            cout << "mean: " <<  m_movingAverage << " s, ";
+            std::cout << "mean: " <<  m_movingAverage << " s, ";
           }
 
-          cout << num_iterations << " iterations, residual = "
-               << final_res_norm << ")." << std::endl;
+          std::cout << num_iterations << " iterations, residual = "
+                    << final_res_norm << ")." << std::endl;
         }
 
         timer.reset( true );
@@ -845,8 +991,8 @@ namespace Uintah {
         //__________________________________
         // Test for convergence failure
 
-        if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
-          if( m_params->getRecomputeTimeStepOnFailure() ){
+        if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ) {
+          if( m_params->getRecomputeTimeStepOnFailure() ) {
             proc0cout << "  WARNING:  HypreSolver not converged in " << num_iterations
                       << " iterations, final residual= " << final_res_norm
                       << ", requesting the time step be recomputed.\n";
@@ -871,11 +1017,10 @@ namespace Uintah {
                  ,       HYPRE_StructSolver         & precond_solver
                  )
     {
-      switch( hypre_solver_s->precond_solver_type ){
+      switch( hypre_solver_s->precond_solver_type ) {
       //__________________________________
       // use symmetric SMG as preconditioner
-      case smg:{
-
+      case smg: {
         HYPRE_StructSMGCreate         (pg->getComm(),    &precond_solver);
         HYPRE_StructSMGSetMemoryUse   (precond_solver,   0);
         HYPRE_StructSMGSetMaxIter     (precond_solver,   m_params->precond_maxiters);
@@ -888,12 +1033,11 @@ namespace Uintah {
         precond = HYPRE_StructSMGSolve;
         pcsetup = HYPRE_StructSMGSetup;
         break;
-
       }
+
       //__________________________________
       // use symmetric PFMG as preconditioner
-      case pfmg:{
-
+      case pfmg: {
         HYPRE_StructPFMGCreate        (pg->getComm(),    &precond_solver);
         HYPRE_StructPFMGSetMaxIter    (precond_solver,   m_params->precond_maxiters);
         HYPRE_StructPFMGSetTol        (precond_solver,   m_params->precond_tolerance);
@@ -906,15 +1050,25 @@ namespace Uintah {
         HYPRE_StructPFMGSetSkipRelax   (precond_solver,  m_params->skip);
         HYPRE_StructPFMGSetLogging     (precond_solver,  0);
 
+#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
+        // DS 10252019: added levels to be solved on GPU. coarser
+        // level will be executed on CPU, which is faster. 12 is
+        // determined by experiments.  Can be modified later or added
+        // into ups file.
+
+        // MGM 11162022: deprecated HYPRE function and deprecated
+        // whole "feature" of Device-Level in PFMG/SMG.
+//      HYPRE_StructPFMGSetDeviceLevel(precond_solver, 12);
+#endif
+
         precond = HYPRE_StructPFMGSolve;
         pcsetup = HYPRE_StructPFMGSetup;
         break;
-
       }
+
       //__________________________________
       //  use symmetric SparseMSG as preconditioner
-      case sparsemsg:{
-
+      case sparsemsg: {
         HYPRE_StructSparseMSGCreate       (pg->getComm(),   &precond_solver);
         HYPRE_StructSparseMSGSetMaxIter   (precond_solver,  m_params->precond_maxiters);
         HYPRE_StructSparseMSGSetJump      (precond_solver,  m_params->jump);
@@ -930,12 +1084,11 @@ namespace Uintah {
         precond = HYPRE_StructSparseMSGSolve;
         pcsetup = HYPRE_StructSparseMSGSetup;
         break;
-
       }
+
       //__________________________________
       //  use two-step Jacobi as preconditioner
-      case jacobi:{
-
+      case jacobi: {
         HYPRE_StructJacobiCreate      (pg->getComm(),    &precond_solver);
         HYPRE_StructJacobiSetMaxIter  (precond_solver,   m_params->precond_maxiters);
         HYPRE_StructJacobiSetTol      (precond_solver,   m_params->precond_tolerance);
@@ -944,19 +1097,18 @@ namespace Uintah {
         precond = HYPRE_StructJacobiSolve;
         pcsetup = HYPRE_StructJacobiSetup;
         break;
-
       }
+
       //__________________________________
       //  use diagonal scaling as preconditioner
-      case diagonal:{
-
+      case diagonal: {
         precond_solver = NULL;
         precond = HYPRE_StructDiagScale;
         pcsetup = HYPRE_StructDiagScaleSetup;
 
         break;
-
       }
+
       default:
         // This should have been caught in readParameters...
         throw InternalError("Unknown preconditionertype: "+ m_params->precondtype, __FILE__, __LINE__);
@@ -968,26 +1120,25 @@ namespace Uintah {
     destroyPrecond( struct hypre_solver_struct * hypre_solver_s
                    ,       HYPRE_StructSolver  & precond_solver )
     {
+      switch( hypre_solver_s->precond_solver_type ) {
 
-      switch( hypre_solver_s->precond_solver_type ){
-
-      case smg:{
+      case smg: {
         HYPRE_StructSMGDestroy( precond_solver );
         break;
       }
-      case pfmg:{
+      case pfmg: {
         HYPRE_StructPFMGDestroy( precond_solver );
         break;
       }
-      case sparsemsg:{
+      case sparsemsg: {
         HYPRE_StructSparseMSGDestroy( precond_solver );
         break;
       }
-      case jacobi:{
+      case jacobi: {
         HYPRE_StructJacobiDestroy( precond_solver );
         break;
       }
-      case diagonal:{
+      case diagonal: {
         // do nothing
         break;
       }
@@ -1014,11 +1165,20 @@ namespace Uintah {
     const HypreParams* m_params;
     bool               m_isFirstSolve;
 
+    mutable double *   m_buff {nullptr};
+    mutable size_t     m_buff_size {0};
+
     const VarLabel*    m_timeStepLabel;
     const VarLabel*    m_hypre_solver_label;
-    SoleVariable<hypre_solver_structP> m_hypre_solverP;
+
     bool   m_firstPassThrough;
     double m_movingAverage;
+
+    //set by the environment variable HYPRE_SUPERPATCH. Hypre will combine all patches into a superpatch if set to HYPRE_SUPERPATCH 1
+    //superpatch works only if patch to rank assignment is aligned with the domain number of patches in x, y, and z dimensions.
+    //will work only if the subdomain assigned to the rank is rectangular/cubical.
+    bool   m_superpatch {false};
+    bool   m_superpatch_bulletproof {false}; //ensure all patches assigned to rank fall within the super-patch boundaries and set it to true. No need to do it for every timestep
 
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these
@@ -1039,14 +1199,17 @@ namespace Uintah {
   HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
   : SolverCommon(myworld)
   {
+#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
+    HYPRE_Init();
+#endif
+
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
-    hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                          SoleVariable<hypre_solver_structP>::getTypeDescription());
+    m_hypre_solver_label = VarLabel::create(hypreSolver_name,
+                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
 
     m_params = scinew HypreParams();
-
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1054,28 +1217,28 @@ namespace Uintah {
   HypreSolver2::~HypreSolver2()
   {
     VarLabel::destroy(m_timeStepLabel);
-    VarLabel::destroy(hypre_solver_label);
+    VarLabel::destroy(m_hypre_solver_label);
     delete m_params;
   }
 
   //---------------------------------------------------------------------------------------------
 
   void HypreSolver2::readParameters(       ProblemSpecP & params_ps
-                                   , const string       & varname)
+                                   , const std::string  & varname)
   {
     bool found=false;
-    if(params_ps){
+    if(params_ps) {
       for( ProblemSpecP param_ps = params_ps->findBlock("Parameters"); param_ps != nullptr; param_ps = param_ps->findNextBlock("Parameters")) {
 
-        string variable;
+        std::string variable;
         if( param_ps->getAttribute("variable", variable) && variable != varname ) {
           continue;
         }
 
         int sFreq;
         int coefFreq;
-        string str_solver;
-        string str_precond;
+        std::string str_solver;
+        std::string str_precond;
 
         param_ps->getWithDefault ("solver",          str_solver,     "smg");
         param_ps->getWithDefault ("preconditioner",  str_precond,    "diagonal");
@@ -1117,7 +1280,7 @@ namespace Uintah {
         found=true;
       }
     }
-    if(!found){
+    if(!found) {
       m_params->solvertype    = "smg";
       m_params->precondtype   = "diagonal";
       m_params->tolerance     = 1.e-10;
@@ -1147,7 +1310,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches on this proc when scheduling
 
-    task->computes(hypre_solver_label);
+    task->computes(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1167,7 +1330,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches  on this proc when scheduling restarts with regridding
 
-    task->computes(hypre_solver_label);
+    task->computes(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1193,7 +1356,8 @@ namespace Uintah {
     hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
 
     hypre_solverP.setData( hypre_struct );
-    new_dw->put( hypre_solverP, hypre_solver_label );
+
+    new_dw->put( hypre_solverP, m_hypre_solver_label );
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1212,6 +1376,59 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
 
+  void HypreSolver2::finialize()  // Used to cleanup Thirdparty libs (Hypre)
+  {
+    // Scrub the Unitah Hypre struct from the data warehouse so that
+    // when HYPRE_Finalize is called all hypre structures have been deleted.
+    DataWarehouse* dw = nullptr;
+    DataWarehouse* last_dw = m_scheduler->getLastDW();
+
+    int i = 0;
+    do {
+      dw = m_scheduler->get_dw(i++);
+
+      if ( dw && dw->exists( m_hypre_solver_label ) ) {
+        dw->scrub( m_hypre_solver_label );
+      }
+    } while( dw != last_dw );
+
+#if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_KOKKOS)
+    HYPRE_Finalize();
+#endif
+  }
+
+  //---------------------------------------------------------------------------------------------
+
+  template<typename GridVarType, typename functor>
+  void HypreSolver2::createPortableHypreSolverTasks( const LevelP        & level
+                                                   ,       SchedulerP    & sched
+                                                   , const PatchSet      * patches
+                                                   , const MaterialSet   * matls
+                                                   , const VarLabel      * A_label
+                                                   ,       Task::WhichDW   which_A_dw
+                                                   , const VarLabel      * x_label
+                                                   ,       bool            modifies_X
+                                                   , const VarLabel      * b_label
+                                                   ,       Task::WhichDW   which_b_dw
+                                                   , const VarLabel      * guess_label
+                                                   ,       Task::WhichDW   which_guess_dw
+                                                   ,       bool            isFirstSolve /* = true */
+                                                   ,       functor         TaskDependencies
+                                                   )
+  {
+    HypreStencil7<GridVarType>* that = scinew HypreStencil7<GridVarType>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
+    Handle<HypreStencil7<GridVarType> > handle = that;
+
+    create_portable_tasks(TaskDependencies, that,
+                          "Hypre:Matrix solve (SFCX)",
+                          &HypreStencil7<GridVarType>::template solve<UINTAH_CPU_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_HOST_TAG>,
+                          // &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          sched, patches, matls, TASKGRAPH::DEFAULT, handle);
+  }
+
   void
   HypreSolver2::scheduleSolve( const LevelP           & level
                              ,       SchedulerP       & sched
@@ -1227,9 +1444,56 @@ namespace Uintah {
                              ,       bool               isFirstSolve /* = true */
                              )
   {
+    //__________________________________
+    //  Computes and requires
+    auto TaskDependencies = [&](Task* task) {
+
+      // Matrix A
+      task->requires(which_A_dw, A_label, Ghost::None, 0);
+
+      // Solution X
+      if(modifies_X) {
+        task->modifies( x_label );
+      } else {
+        task->computes( x_label );
+      }
+
+      // Initial Guess
+      if(guess_label) {
+        task->requires(which_guess_dw, guess_label, Ghost::None, 0);
+      }
+
+      // RHS  B
+      task->requires(which_b_dw, b_label, Ghost::None, 0);
+
+      // timestep
+      // it could come from old_dw or parentOldDw
+      Task::WhichDW old_dw = m_params->getWhichOldDW();
+      task->requires( old_dw, m_timeStepLabel );
+
+      // solve struct
+      if (isFirstSolve) {
+        task->requires( Task::OldDW, m_hypre_solver_label);
+        task->computes( m_hypre_solver_label);
+      }  else {
+        task->requires( Task::NewDW, m_hypre_solver_label);
+      }
+
+      sched->overrideVariableBehavior(m_hypre_solver_label->getName(),false,true,false,false,true);
+
+      task->setType(Task::Hypre);
+
+      if( m_params->getRecomputeTimeStepOnFailure() ) {
+        task->computes( VarLabel::find(abortTimeStep_name) );
+        task->computes( VarLabel::find(recomputeTimeStep_name) );
+      }
+    };
+
+    LoadBalancer * lb = sched->getLoadBalancer();
+    const PatchSet* patches = lb->getPerProcessorPatchSet(level);
+
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
 
-    Task* task;
     // The extra handle arg ensures that the stencil7 object will get freed
     // when the task gets freed.  The downside is that the refcount gets
     // tweaked everytime solve is called.
@@ -1241,14 +1505,14 @@ namespace Uintah {
     //__________________________________
     // bulletproofing
     IntVector periodic = level->getPeriodicBoundaries();
-    if(periodic != IntVector(0,0,0)){
+    if(periodic != IntVector(0,0,0)) {
 
       IntVector l,h;
       level->findCellIndexRange( l, h );
       IntVector range = (h - l ) * periodic;
 
       if( fmodf(range.x(),2) != 0  || fmodf(range.y(),2) != 0 || fmodf(range.z(),2) != 0 ) {
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "\nINPUT FILE WARNING: hypre solver: \n"
              << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be as close to a power of 2 as possible (i.e. M x 2^n).\n";
 
@@ -1261,97 +1525,30 @@ namespace Uintah {
       }
     }
 
-    switch(domtype){
+    switch(domtype) {
     case TypeDescription::SFCXVariable:
-      {
-        HypreStencil7<SFCXTypes>* that = scinew HypreStencil7<SFCXTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCXTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCX)", that, &HypreStencil7<SFCXTypes>::solve, handle);
-      }
+      createPortableHypreSolverTasks<SFCXTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
       break;
     case TypeDescription::SFCYVariable:
-      {
-        HypreStencil7<SFCYTypes>* that = scinew HypreStencil7<SFCYTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCYTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCY)", that, &HypreStencil7<SFCYTypes>::solve, handle);
-      }
+      createPortableHypreSolverTasks<SFCYTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
       break;
     case TypeDescription::SFCZVariable:
-      {
-        HypreStencil7<SFCZTypes>* that = scinew HypreStencil7<SFCZTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCZTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCZ)", that, &HypreStencil7<SFCZTypes>::solve, handle);
-      }
+      createPortableHypreSolverTasks<SFCZTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
       break;
     case TypeDescription::CCVariable:
-      {
-        HypreStencil7<CCTypes>* that = scinew HypreStencil7<CCTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<CCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (CC)", that, &HypreStencil7<CCTypes>::solve, handle);
-      }
+      createPortableHypreSolverTasks<CCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
       break;
     case TypeDescription::NCVariable:
-      {
-        HypreStencil7<NCTypes>* that = scinew HypreStencil7<NCTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<NCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (NC)", that, &HypreStencil7<NCTypes>::solve, handle);
-      }
+      createPortableHypreSolverTasks<NCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
       break;
     default:
       throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
-
-    //__________________________________
-    //  Computes and requires
-
-    // Matrix A
-    task->requires(which_A_dw, A_label, Ghost::None, 0);
-
-    // Solution X
-    if(modifies_X){
-      task->modifies( x_label );
-    } else {
-      task->computes( x_label );
-    }
-
-    // Initial Guess
-    if(guess_label){
-      task->requires(which_guess_dw, guess_label, Ghost::None, 0);
-    }
-
-    // RHS  B
-    task->requires(which_b_dw, b_label, Ghost::None, 0);
-
-    // timestep
-    // it could come from old_dw or parentOldDw
-    Task::WhichDW old_dw = m_params->getWhichOldDW();
-    task->requires( old_dw, m_timeStepLabel );
-
-    // solve struct
-    if (isFirstSolve) {
-      task->requires( Task::OldDW, hypre_solver_label);
-      task->computes( hypre_solver_label);
-    }  else {
-      task->requires( Task::NewDW, hypre_solver_label);
-    }
-
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
-
-    task->setType(Task::Hypre);
-
-    if( m_params->getRecomputeTimeStepOnFailure() ){
-      task->computes( VarLabel::find(abortTimeStep_name) );
-      task->computes( VarLabel::find(recomputeTimeStep_name) );
-    }
-
-    LoadBalancer * lb = sched->getLoadBalancer();
-
-    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
   //---------------------------------------------------------------------------------------------
 
-  string HypreSolver2::getName(){
+  std::string HypreSolver2::getName() {
     return "hypre";
   }
 
@@ -1359,28 +1556,28 @@ namespace Uintah {
   //  Return the solver or preconditioner type
   SolverType HypreSolver2::stringToSolverType( std::string str )
   {
-    if( str == "smg" ){
+    if( str == "smg" ) {
       return smg;
     }
-    else if ( str == "pfmg" ){
+    else if ( str == "pfmg" ) {
       return pfmg;
     }
-    else if ( str == "sparsemsg" ){
+    else if ( str == "sparsemsg" ) {
       return sparsemsg;
     }
-    else if ( str == "cg" || str == "pcg" ){
+    else if ( str == "cg" || str == "pcg" ) {
       return pcg;
     }
-    else if ( str == "hybrid" ){
+    else if ( str == "hybrid" ) {
       return hybrid;
     }
-    else if ( str == "gmres" ){
+    else if ( str == "gmres" ) {
       return gmres;
     }
-    else if ( str == "jacobi" ){
+    else if ( str == "jacobi" ) {
       return jacobi;
     }
-    else if ( str == "diagonal" ){
+    else if ( str == "diagonal" ) {
       return diagonal;
     }
     else {

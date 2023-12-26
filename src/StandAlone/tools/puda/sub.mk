@@ -71,7 +71,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)  \
           $(F_LIBRARY) $(BLAS_LIBRARY)                 \
-          $(CUDA_LIBRARY) $(PIDX_LIBRARY)
+          $(CUDA_LIBRARY) $(PIDX_LIBRARY)              \
+          $(KOKKOS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -87,6 +88,16 @@ PSELIBS :=
 
 SRCS    := $(SRCDIR)/grid_reader.cc
 PROGRAM := StandAlone/tools/puda/grid_reader
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)        \
+          $(BOOST_LIBRARY)                             \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
+          $(M_LIBRARY) $(PIDX_LIBRARY)
+else
+  LIBS := $(XML2_LIBRARY) $(KOKKOS_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

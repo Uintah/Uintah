@@ -30,6 +30,7 @@
 // Display flags that were used to compile it.
 #define CFLAGS "@CFLAGS@"
 #define CXXFLAGS "@CXXFLAGS@"
+#define LDFLAGS "@LDFLAGS@"
 
 @STATIC_BUILD_DEF@
 

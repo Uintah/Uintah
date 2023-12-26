@@ -33,7 +33,6 @@
  *
 */
 
-#include <sci_defs/cuda_defs.h>
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/uintah_defs.h> // For FIX_NAME
 

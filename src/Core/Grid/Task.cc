@@ -32,13 +32,28 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/StringUtil.h>
 
-
-#include <set>
-
 using namespace Uintah;
 
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
+#if defined(KOKKOS_USING_GPU)
+namespace {
+  Uintah::MasterLock deviceNums_mutex{};
+}
+#endif
+
+//______________________________________________________________________
+//
+// CPU ancillary task constructor. Currently used with a TaskType of
+// Reduction and InitialSend (send_old_data). These tasks do not have
+// an action but may have GPU devices assigned to them.
+Task::Task( const std::string & taskName, TaskType type )
+  : m_task_name(taskName)
+  , m_action(nullptr)
+{
+  d_tasktype = type;
+  initialize();
+}
 
 //______________________________________________________________________
 //
@@ -77,8 +92,8 @@ Task::~Task()
     delete m_patch_set;
   }
 
-  // easier to periodically delete this than to force a call to a cleanup
-  // function, and probably not very expensive.
+  // easier to periodically delete this than to force a call to a
+  // cleanup function, and probably not very expensive.
   if (globalMatlSubset && globalMatlSubset->removeReference()) {
     delete globalMatlSubset;
   }
@@ -101,11 +116,12 @@ Task::initialize()
   m_patch_set = nullptr;
   m_matl_set  = nullptr;
 
-  m_uses_mpi         = false;
-  m_uses_threads     = false;
-  m_uses_device      = false;
-  m_subpatch_capable = false;
-  m_has_subscheduler = false;
+  m_uses_mpi           = false;
+  m_uses_threads       = false;
+  m_uses_device        = false;
+  m_preload_sim_vars   = false;
+  m_subpatch_capable   = false;
+  m_has_subscheduler   = false;
 
   for (int i = 0; i < TotalDWs; i++) {
     m_dwmap[i] = Task::InvalidDW;
@@ -115,9 +131,13 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  //The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
+  // The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
   m_max_ghost_cells[0] = 0;
   m_max_level_offset   = 0;
+
+  // Assures that CPU tasks will have one and only one instance
+  if(Uintah::Parallel::usingDevice())
+    m_max_instances_per_task = 1;
 }
 
 //______________________________________________________________________
@@ -126,12 +146,16 @@ Task::initialize()
 void
 Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  // NOTE: the outer [patch/matl]Set checks are related to temporal scheduling, e.g. more then 1 regular task graph
+  // NOTE: the outer [patch/matl]Set checks are related to temporal
+  // scheduling, e.g. more then 1 regular task graph
   //
-  // This is called from TaskGraph::addTask() in which a single task may be added to more than 1 Normal
-  // task graphs. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
-  // will be the same pointer as ps and ms respectively. Without these checks, the refCount gets
-  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted, resulting in a mem leak. APH, 06/08/17
+  // This is called from TaskGraph::addTask() in which a single task
+  // may be added to more than 1 Normal task graphs. In this case,
+  // first time here, m_path/matl_set will be nullptr and subsequent
+  // visits will be the same pointer as ps and ms
+  // respectively. Without these checks, the refCount gets
+  // artificially inflated and ComputeSubsets (Patch/Matl)) are not
+  // deleted, resulting in a mem leak. APH, 06/08/17
   if (m_patch_set == nullptr) {
     m_patch_set = ps;
     if (m_patch_set) {
@@ -190,11 +214,52 @@ Task::usesThreads(bool state)
 
 //______________________________________________________________________
 //
+void Task::setExecutionAndMemorySpace( const TaskAssignedExecutionSpace & executionSpaceTypeName
+                                     , const TaskAssignedMemorySpace    & memorySpaceTypeName
+                                     )
+{
+  m_execution_space = executionSpaceTypeName;
+  m_memory_space = memorySpaceTypeName;
+}
+
+//______________________________________________________________________
+//
 void
-Task::usesDevice(bool state, int maxStreamsPerTask /* = 1 */ )
+Task::usesDevice(bool state, int maxInstancesPerTask /* = -1 */ )
 {
   m_uses_device = state;
-  m_max_streams_per_task = maxStreamsPerTask;
+
+  if (maxInstancesPerTask == -1) {
+    // The default case, get it from a command line argument
+    m_max_instances_per_task = Uintah::Parallel::getKokkosInstancesPerTask();
+  } else {
+    // Let the user override it
+    m_max_instances_per_task = maxInstancesPerTask;
+  }
+}
+
+//______________________________________________________________________
+//
+void
+Task::usesSimVarPreloading(bool state)
+{
+  m_preload_sim_vars = state;
+}
+
+//______________________________________________________________________
+//
+TaskAssignedExecutionSpace
+Task::getExecutionSpace() const
+{
+  return m_execution_space;
+}
+
+//______________________________________________________________________
+//
+TaskAssignedMemorySpace
+Task::getMemorySpace() const
+{
+  return m_memory_space;
 }
 
 //______________________________________________________________________
@@ -405,6 +470,7 @@ void Task::requires(       WhichDW              dw
       return;  // no materials, no dependency
     }
 
+
     Dependency* dep = scinew Dependency(Requires, this, dw, var, whichTG, level, matls, matls_dom);
     dep->m_next = nullptr;
 
@@ -589,8 +655,26 @@ void Task::modifiesWithScratchGhost( const VarLabel           * var
                                    ,       SearchTG             whichTG
                                    )
 {
-  this->requires(NewDW, var, patches, patches_dom, matls, matls_dom, gtype, numGhostCells);
-  this->modifies(var, patches, patches_dom, matls, matls_dom);
+  if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+    matls_dom = OutOfDomain;
+    ASSERT(patches == nullptr);
+  }
+
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, whichTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells);
+  dep->m_next = nullptr;
+  if (m_mod_tail) {
+    m_mod_tail->m_next = dep;
+  }
+  else {
+    m_mod_head = dep;
+  }
+  m_mod_tail = dep;
+
+  m_requires.insert(std::make_pair(var, dep));
+  m_computes.insert(std::make_pair(var, dep));
+  m_modifies.insert(std::make_pair(var, dep));
 }
 
 //______________________________________________________________________
@@ -600,7 +684,7 @@ void Task::modifies( const VarLabel           * var
                    ,       PatchDomainSpec      patches_dom
                    , const MaterialSubset     * matls
                    ,       MaterialDomainSpec   matls_dom
-                   ,       SearchTG             whichTG 
+                   ,       SearchTG             whichTG
                    )
 {
   if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
@@ -790,24 +874,30 @@ Task::isInDepMap( const DepMap   & depMap
       hasPatches = true;
     }
     else {
-      if (dep->m_patches_dom == Task::CoarseLevel) {  // check that the level of the patches matches the coarse level
+      // check that the level of the patches matches the coarse level
+      if (dep->m_patches_dom == Task::CoarseLevel) {
         hasPatches = getLevel(getPatchSet())->getRelativeLevel(-dep->m_level_offset) == getLevel(patches);
       }
-      else if (dep->m_patches_dom == Task::FineLevel) {  // check that the level of the patches matches the fine level
+      // check that the level of the patches matches the fine level
+      else if (dep->m_patches_dom == Task::FineLevel) {
         hasPatches = getLevel(getPatchSet())->getRelativeLevel(dep->m_level_offset) == getLevel(patches);
       }
-      else { // check that the patches subset contain the requested patch
+      // check that the patches subset contain the requested patch
+      else {
         hasPatches = patches->contains(patch);
       }
     }
-    if (matls == nullptr) { // if matls == nullptr then the requirement for matls is satisfied
+    // if matls == nullptr then the requirement for matls is satisfied
+    if (matls == nullptr) {
       hasMatls = true;
     }
     else { // check that the malts subset contains the matlIndex
       hasMatls = matls->contains(matlIndex);
     }
 
-    if (hasMatls && hasPatches) {  // if this dependency contains both the matls and patches return the dependency
+    if (hasMatls && hasPatches) {  // if this dependency contains both
+                                   // the matls and patches return the
+                                   // dependency
       return dep;
     }
     found_iter++;
@@ -913,7 +1003,8 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset * domainPatches) const
 {
   switch(m_patches_dom){
   case Task::ThisLevel:
-  case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
+  case Task::OtherGridDomain: // use the same patches, we'll figure
+                              // out where it corresponds on the other grid
     return PatchSubset::intersection(m_patches, domainPatches);
   case Task::CoarseLevel:
   case Task::FineLevel:
@@ -978,26 +1069,520 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
 
 //______________________________________________________________________
 //
+// TODO: Provide an overloaded legacy CPU/non-portable version that
+// doesn't use UintahParams or ExecutionObject
 void
-Task::doit( DetailedTask                * task
-          , CallBackEvent                 event
-          , const ProcessorGroup        * pg
-          , const PatchSubset           * patches
+Task::doit( const PatchSubset           * patches
           , const MaterialSubset        * matls
           , std::vector<DataWarehouseP> & dws
-          , void                        * oldTaskGpuDW
-          , void                        * newTaskGpuDW
-          , void                        * stream
-          , int                           deviceID
+          , UintahParams                & uintahParams
           )
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW   = mapDataWarehouse(Task::NewDW, dws);
 
   if (m_action) {
-    m_action->doit(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
+    //m_action->doit(patches, matls, fromDW, toDW, uintahParams, execObj);
+    m_action->doit(patches, matls, fromDW, toDW, uintahParams);
   }
 }
+
+#if defined(KOKKOS_USING_GPU)
+//______________________________________________________________________
+//
+void
+Task::assignDevice(intptr_t dTask, unsigned int device_id)
+{
+  // m_deviceNum = device_id;
+
+  // As m_deviceNums can be touched by multiple threads a mutext is needed.
+  deviceNums_mutex.lock();
+  {
+    m_deviceNums[dTask].insert( device_id );
+  }
+  deviceNums_mutex.unlock();
+}
+
+//_____________________________________________________________________________
+// For tasks where there are multiple devices for the task (i.e. data
+// archiver output tasks)
+Task::deviceNumSet
+Task::getDeviceNums(intptr_t dTask)
+{
+  // As m_deviceNums can be touched by multiple threads a local copy is needed.
+  Task::deviceNumSet dNumSet;
+
+  deviceNums_mutex.lock();
+  {
+    dNumSet = m_deviceNums[dTask];
+  }
+  deviceNums_mutex.unlock();
+
+  return dNumSet;
+}
+
+//_____________________________________________________________________________
+//
+//  Task::ActionNonPortableBase
+//_____________________________________________________________________________
+//
+
+void
+Task::ActionNonPortableBase::
+assignDevicesAndInstances(intptr_t dTask)
+{
+  for (int i = 0; i < this->taskPtr->maxInstancesPerTask(); i++) {
+   this->assignDevicesAndInstances(dTask, i);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
+{
+  if (this->haveKokkosInstanceForThisTask(dTask, device_id) == false) {
+    this->taskPtr->assignDevice(dTask, device_id);
+
+    this->setKokkosInstanceForThisTask(dTask, device_id);
+  }
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+haveKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  bool retVal = false;
+
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      retVal = (it != iMap.end());
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+Kokkos::DefaultExecutionSpace
+Task::ActionNonPortableBase::
+getKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      if (it != iMap.end())
+      {
+        kokkosInstances_mutex.unlock();
+
+        return it->second;
+      }
+    }
+  }
+
+  kokkosInstances_mutex.unlock();
+
+  printf("ERROR! - Task::ActionNonPortableBase::getKokkosInstanceForThisTask() - "
+           "This task %s does not have an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                            this->taskPtr->getName(), __FILE__, __LINE__));
+
+  Kokkos::DefaultExecutionSpace instance;
+
+  return instance;
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+setKokkosInstanceForThisTask(intptr_t dTask,
+                             unsigned int device_id)
+{
+  // if (instance == nullptr) {
+  //   printf("ERROR! - Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+  //          "A request was made to assign an instance to a nullptr address "
+  //          "for this task %s\n", this->taskPtr->getName().c_str());
+  //   SCI_THROW(InternalError("A request was made to assign an instance to a "
+  //                           "nullptr address for this task :" +
+  //                           this->taskPtr->getName() , __FILE__, __LINE__));
+  // } else
+  if(this->haveKokkosInstanceForThisTask(dTask, device_id) == true) {
+    printf("ERROR! - Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+           "This task %s already has an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                            this->taskPtr->getName(), __FILE__, __LINE__));
+  } else {
+    // printf("Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+    //        "This task %s now has an instance assigned for device %d\n",
+    //        this->taskPtr->getName().c_str(), device_id);
+    // As m_kokkosInstances can be touched by multiple threads a
+    // mutext is needed.
+    kokkosInstances_mutex.lock();
+    {
+      Kokkos::DefaultExecutionSpace instance;
+      m_kokkosInstances[dTask][device_id] = instance;
+    }
+    kokkosInstances_mutex.unlock();
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+clearKokkosInstancesForThisTask(intptr_t dTask)
+{
+  // As m_kokkosInstances can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    if(m_kokkosInstances.find(dTask) != m_kokkosInstances.end())
+    {
+      m_kokkosInstances[dTask].clear();
+      m_kokkosInstances.erase(dTask);
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  // printf("Task::ActionNonPortableBase::clearKokkosInstancesForThisTask() - "
+  //     "Clearing instances for task %s\n",
+  //     this->taskPtr->getName().c_str());
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) const
+{
+  // ARS - FIX ME - For now use the Kokkos fence but perhaps the direct
+  // checks should be performed. Also see Task::ActionPortableBase (Task.h)
+  if (device_id != 0) {
+   printf("Error, Task::checkKokkosInstanceDoneForThisTask is %u\n", device_id);
+   exit(-1);
+  }
+
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, device_id);
+
+#if defined(USE_KOKKOS_FENCE)
+  instance.fence();
+
+#elif defined(KOKKOS_ENABLE_CUDA)
+  cudaStream_t stream = instance.cuda_stream();
+
+  cudaError_t retVal = cudaStreamQuery(stream);
+
+  if (retVal == cudaSuccess) {
+    return true;
+  }
+  else if (retVal == cudaErrorNotReady ) {
+    return false;
+  }
+  else if (retVal == cudaErrorLaunchFailure) {
+    printf("ERROR! - Task::ActionNonPortableBase::checkKokkosInstanceDoneForThisTask(%d) - "
+           "CUDA kernel execution failure on Task: %s\n",
+           device_id, this->taskPtr->getName().c_str());
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " +
+                            this->taskPtr->getName() , __FILE__, __LINE__));
+    return false;
+  } else { // other error
+    printf("\nA CUDA error occurred with error code %d.\n\n"
+           "Waiting for 60 seconds\n", retVal);
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+
+    return false;
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  hipStream_t stream = instance.hip_stream();
+
+  hipError_t retVal = hipStreamQuery(stream);
+
+  if (retVal == hipSuccess) {
+    return true;
+  }
+  else if (retVal == hipErrorNotReady ) {
+    return false;
+  }
+  else if (retVal ==  hipErrorLaunchFailure) {
+    printf("ERROR! - Task::ActionNonPortableBase::checkKokkosInstanceDoneForThisTask(%d) - "
+           "HIP kernel execution failure on Task: %s\n",
+           device_id, this->taskPtr->getName().c_str());
+    SCI_THROW(InternalError("Detected HIP kernel execution failure on Task: " +
+                            this->taskPtr->getName() , __FILE__, __LINE__));
+    return false;
+  } else { // other error
+    printf("\nA HIP error occurred with error code %d.\n\n"
+           "Waiting for 60 seconds\n", retVal);
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+
+    return false;
+  }
+
+#elif defined(KOKKOS_ENABLE_SYCL)
+  sycl::queue que = instance.sycl_queue();
+  // Not yet available.
+  //  return que.ext_oneapi_empty();
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+#elif defined(KOKKOS_ENABLE_OPENACC)
+
+#endif
+
+  return true;
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
+{
+  // A task can have multiple instances (such as an output task
+  // pulling from multiple GPUs).  Check all instacnes to see if they
+  // are done.  If any one instance isn't done, return false.  If
+  // nothing returned false, then they all must be good to go.
+  bool retVal = true;
+
+  // As m_kokkosInstances can be touched by multiple threads get a local
+  // copy so not to lock everything.
+  kokkosInstanceMap kokkosInstances;
+
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask);
+    if(iter != m_kokkosInstances.end()) {
+      kokkosInstances = iter->second;
+    } else {
+      kokkosInstances_mutex.unlock();
+
+      return retVal;
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  for (auto & it : kokkosInstances)
+  {
+    retVal = this->checkKokkosInstanceDoneForThisTask(dTask, it.first);
+    if (retVal == false)
+      break;
+  }
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                  void* dst, void* src,
+                  size_t count, GPUMemcpyKind kind)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  char * srcPtr = static_cast<char *>(src);
+  char * dstPtr = static_cast<char *>(dst);
+
+  if(kind == GPUMemcpyHostToDevice)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView(srcPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView(dstPtr, count);
+    // Deep copy the host view to the device view.
+    Kokkos::deep_copy(instance, deviceView, hostView);
+  }
+  else if(kind == GPUMemcpyDeviceToHost)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView(dstPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView(srcPtr, count);
+    // Deep copy the device view to the host view.
+    Kokkos::deep_copy(instance, hostView, deviceView);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+doKokkosMemcpyPeerAsync( intptr_t dTask,
+                       unsigned int deviceNum,
+                             void* dst, int  dstDevice,
+                       const void* src, int  srcDevice,
+                       size_t count )
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  SCI_THROW(InternalError("Error - doKokkosMemcpyPeerAsync is not implemented. No Kokkos equivalent function.", __FILE__, __LINE__));
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                           unsigned int deviceNum,
+                           GPUDataWarehouse *taskgpudw)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(instance);
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+syncTaskGpuDW(intptr_t dTask,
+              unsigned int deviceNum,
+              GPUDataWarehouse *taskgpudw)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->syncto_device<Kokkos::DefaultExecutionSpace>(instance);
+}
+
+//_____________________________________________________________________________
+//
+//  Task instance pass through methods to the action
+//_____________________________________________________________________________
+//
+void
+Task::assignDevicesAndInstances(intptr_t dTask)
+{
+  if (m_action) {
+    m_action->assignDevicesAndInstances(dTask);
+  } else {
+    // Assign devices in a similar fashion as if there was an action
+    // (which require an actual task which is not the case
+    // here. Some tasks such as send_old_data that need a
+    // device but not an instance.
+    for (int i = 0; i < this->maxInstancesPerTask(); i++) {
+      assignDevice(dTask, i);
+    }
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
+{
+  if (m_action) {
+    m_action->assignDevicesAndInstances(dTask, device_id);
+  } else {
+    // Assign devices in a similar fashion as if there was an action
+    // (which require an actual task which is not the case
+    // here. Some tasks such as send_old_data that need a
+    // device but not an instance.
+    assignDevice(dTask, device_id);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void Task::clearKokkosInstancesForThisTask(intptr_t dTask)
+{
+  if (m_action)
+    m_action->clearKokkosInstancesForThisTask(dTask);
+}
+
+//_____________________________________________________________________________
+//
+bool Task::checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
+{
+  if (m_action)
+    return m_action->checkAllKokkosInstancesDoneForThisTask(dTask);
+  else
+    return true;
+}
+
+//_____________________________________________________________________________
+//
+void Task::doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                             void* dst, void* src,
+                             size_t count, GPUMemcpyKind kind)
+{
+  if (m_action)
+    m_action->doKokkosDeepCopy(dTask, deviceNum, dst,src, count, kind);
+}
+
+//_____________________________________________________________________________
+//
+void Task::doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                            void* dst, int dstDevice,
+                                      const void* src, int srcDevice,
+                                      size_t count )
+{
+  if (m_action) {
+    m_action->doKokkosMemcpyPeerAsync(dTask, deviceNum,
+                                      dst, dstDevice, src, srcDevice, count);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
+                                 GPUDataWarehouse *taskgpudw)
+{
+  if (m_action) {
+    m_action->copyGpuGhostCellsToGpuVars(dTask, deviceNum, taskgpudw);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
+                    GPUDataWarehouse *taskgpudw)
+{
+  if (m_action) {
+    m_action->syncTaskGpuDW(dTask, deviceNum, taskgpudw);
+  }
+}
+#endif // #if defined(KOKKOS_USING_GPU)
 
 //______________________________________________________________________
 //
@@ -1287,4 +1872,3 @@ Task::mapDataWarehouse( WhichDW dw, std::vector<DataWarehouseP> & dws ) const
     return dws[m_dwmap[dw]].get_rep();
   }
 }
-

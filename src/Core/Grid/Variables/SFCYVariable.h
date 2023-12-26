@@ -95,8 +95,10 @@ WARNING
     // variable is not used for anything else in the program.
     static TypeDescription::Register registerMe;
 
-  protected:
+    SFCYVariable(SFCYVariable<T>&&);
     SFCYVariable(const SFCYVariable<T>&);
+
+  protected:
 
   private:
     static TypeDescription* td;
@@ -158,6 +160,13 @@ WARNING
   template<class T>
   SFCYVariable<T>::SFCYVariable()
   {
+  }
+
+  template<class T>
+  SFCYVariable<T>::SFCYVariable(SFCYVariable<T>&& other)
+    : GridVariable<T>(other)
+  {
+    // Implementing this somehow turned on and properly supported Return Value Optimization (RVO).  I'm not entirely sure why -- Brad P June 2018
   }
 
   template<class T>

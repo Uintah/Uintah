@@ -12,6 +12,48 @@ TaskInterface( task_name, matl_index ){}
 ConsScalarDiffusion::~ConsScalarDiffusion(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &ConsScalarDiffusion::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ConsScalarDiffusion::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ConsScalarDiffusion::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &ConsScalarDiffusion::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ConsScalarDiffusion::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ConsScalarDiffusion::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ConsScalarDiffusion::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void ConsScalarDiffusion::problemSetup( ProblemSpecP& db ){
 
   m_density_name        = parse_ups_for_role( DENSITY_ROLE, db, "density" );
@@ -40,14 +82,15 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
-  CCVariable<double>& gamma = tsk_info->get_field<CCVariable<double> >(m_gamma_name);
+  auto gamma = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_gamma_name);
   //constCCVariable<double>& mu_t = tsk_info->get_field<constCCVariable<double> >(m_turb_viscosity_name);
   //constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >(m_density_name);
 
-  gamma.initialize(0.0);
+  parallel_initialize(execObj,0.0,gamma);
 
   //Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -62,7 +105,8 @@ void ConsScalarDiffusion::register_timestep_init( AVarInfo& variable_registry , 
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+ConsScalarDiffusion::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
 }
@@ -79,17 +123,21 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
 }
 
 //--------------------------------------------------------------------------------------------------
-void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& gamma = tsk_info->get_field<CCVariable<double> >(m_gamma_name);
-  constCCVariable<double>& mu_t = tsk_info->get_field<constCCVariable<double> >(m_turb_viscosity_name);
-  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  auto gamma = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_gamma_name);
+  auto mu_t = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_turb_viscosity_name);
+  auto density = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
-  gamma.initialize(0.0);
+  parallel_initialize(execObj, 0.0, gamma);
+
+  const double  PrNo= m_Pr;
+  const double molecular_diffusivity =m_Diffusivity;
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-   gamma(i,j,k) = density(i,j,k)*m_Diffusivity + mu_t(i,j,k)/m_Pr;
+  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+   gamma(i,j,k) = density(i,j,k)*molecular_diffusivity + mu_t(i,j,k)/PrNo;
   });
 
 }

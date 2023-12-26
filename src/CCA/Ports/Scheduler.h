@@ -247,6 +247,8 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) = 0;
 
+    virtual void setMaxGhostCellsCollectionPhase(bool val) = 0;
+
   private:
 
     // eliminate copy, assignment and move

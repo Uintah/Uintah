@@ -93,7 +93,7 @@ PressureSolver::~PressureSolver()
 void
 PressureSolver::problemSetup(ProblemSpecP& params,MaterialManagerP& materialManager)
 {
-  //do_custom_arches_linear_solve=true; //  Don't use hypre, use proto-type solver
+  //do_custom_arches_linear_solve = true; // Use the custom Arches linear solve instead of hypre
 
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();

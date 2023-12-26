@@ -4,6 +4,54 @@
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &cloudBenchmark::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &cloudBenchmark::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &cloudBenchmark::restart_initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 cloudBenchmark::problemSetup( ProblemSpecP& db ){
 
@@ -45,8 +93,9 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 
 }
 
-void
-cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+//--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
+void cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   BBox domain(m_min,m_max);
   if( m_min == m_notSetMin  ||  m_max == m_notSetMax ){
@@ -94,8 +143,9 @@ void cloudBenchmark::register_restart_initialize( VIVec& variable_registry , con
   register_initialize(variable_registry, false);
 }
 
-void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  initialize( patch,tsk_info);
+template <typename ExecSpace, typename MemSpace>
+void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  initialize(patch, tsk_info, execObj);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -108,7 +158,8 @@ void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bo
 
 }
 
-void cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >(m_abskg_name);
   constCCVariable<double>& old_abskg = tsk_info->get_field<constCCVariable<double> >(m_abskg_name);

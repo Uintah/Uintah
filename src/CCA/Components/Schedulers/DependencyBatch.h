@@ -25,8 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 
-#include <CCA/Components/Schedulers/DetailedTasks.h>
-
+#include <atomic>
 #include <list>
 #include <map>
 #include <vector>
@@ -34,6 +33,7 @@
 namespace Uintah {
 
 class DetailedDep;
+class DetailedTask;
 class ProcessorGroup;
 class Variable;
 class VarLabel;

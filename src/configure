@@ -35,7 +35,7 @@
 # ## IN THE SOFTWARE.
 # ##
 #
-##
+## 
 ## IMPORTANT!!!  Configure developers, PLEASE READ:
 ##
 ## The following BULLET PROOFING needs to be placed manually into
@@ -51,6 +51,7 @@
 ##
 enable_option_checking=fatal
 
+#
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -720,6 +721,8 @@ VISUS_LIB_FLAG
 INC_VISUS_H
 DEF_VISUS
 HAVE_VISUS
+DEF_KOKKOS_USING_GPU
+KOKKOS_USING_GPU
 NVCC_LIBS
 CUDA_LIB_FLAG
 CUDA_LIB_DIR_FLAG
@@ -3002,6 +3005,23 @@ fi
 
 
   sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
+
+
+##
+## IMPORTANT!!!  Configure developers, PLEASE READ:
+##
+## The following BULLET PROOFING needs to be placed manually into
+## configure every time after autoconf is run, and before configure is
+## checked in:
+##
+## To avoid allowing invalid arguments to configure, we have to manually
+## hack the 'configure' script after it has been 'autoconf'd, and add the
+## line "enable_option_checking=fatal".  There apparently is no way to do
+## this through autoconf macros... sigh.  Manually find this entire text
+## block (comment and all) in configure, MOVE IT ALL TO THE TOP OF THE FILE
+## (just after the MIT license), and uncomment the following line:
+##
+# enable_option_checking=fatal
 
 
 # Make sure we can run config.sub.
@@ -6148,13 +6168,14 @@ fi
 # --- end list of -enable components ------
 #
 BUILD_MODELS_RADIATION=no
-DEF_MODELS_RADIATION=
+DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"
 
 if test "$enable_all_components" = "yes" -o  \
         "$enable_arches"         = "yes" -o  \
         "$enable_examples"       = "yes" -o  \
         "$enable_wasatch"        = "yes" ; then
   BUILD_MODELS_RADIATION=yes
+  DEF_MODELS_RADIATION=
 fi
 
 # Check for enabling a specific component (one or more)
@@ -7001,10 +7022,18 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking the type of compiler we are using" >&5
 $as_echo_n "checking the type of compiler we are using... " >&6; }
 USING_GCC=no
+USING_NVCC=no
 USING_ICC=no
 USING_CLANG=no
 USING_XLC=no
 USING_PGCC=no
+
+($CXX --version | grep -iq "NVIDIA") &> /dev/null
+if test "$?" = 0; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: Using the NVIDIA compiler." >&5
+$as_echo "Using the NVIDIA compiler." >&6; }
+  USING_NVCC=yes
+fi
 
 ($CC --version | grep -iq "Free Software Foundation") &> /dev/null
 if test "$?" = 0; then
@@ -7896,6 +7925,8 @@ sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
 ## -- Begin Test for Bluegene Q --
+CXX_BASE=$CXX
+CXXFLAGS_BASE=$CXXFLAGS
 
 cat > conftest-bgq.cc <<EOF
 #include <stdio.h>
@@ -9003,8 +9034,76 @@ $as_echo "$as_me: WARNING: Don't know which type of compiler you are using so ca
       CFLAGS=$CFLAGS
       CXXFLAGS=$CXXFLAGS
     else
-      CFLAGS="$CFLAGS -Wall"
-      CXXFLAGS="$CXXFLAGS -Wall"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wall" >&5
+$as_echo_n "checking whether C compiler accepts -Wall... " >&6; }
+if ${ax_cv_check_cflags___Wall+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -Wall"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___Wall=yes
+else
+  ax_cv_check_cflags___Wall=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___Wall" >&5
+$as_echo "$ax_cv_check_cflags___Wall" >&6; }
+if test "x$ax_cv_check_cflags___Wall" = xyes; then :
+  CFLAGS="$CFLAGS -Wall"
+else
+  :
+fi
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -Wall" >&5
+$as_echo_n "checking whether C compiler accepts -Wall... " >&6; }
+if ${ax_cv_check_cflags___Wall+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -Wall"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ax_cv_check_cflags___Wall=yes
+else
+  ax_cv_check_cflags___Wall=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___Wall" >&5
+$as_echo "$ax_cv_check_cflags___Wall" >&6; }
+if test "x$ax_cv_check_cflags___Wall" = xyes; then :
+  CXXFLAGS="$CXXFLAGS -Wall"
+else
+  :
+fi
+
     fi
 
     ######################################
@@ -9189,6 +9288,7 @@ $as_echo "no (found version: $_SCI_REPORT_)" >&6; }
     fi
 
       fi
+      if test "$USING_NVCC" = "no"; then
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
@@ -9251,6 +9351,10 @@ $as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 
+      else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Not verifying version of '$CXX'" >&5
+$as_echo "$as_me: WARNING: Not verifying version of '$CXX'" >&2;}
+      fi
     else
       if test "$USING_ICC" = "yes"; then
 
@@ -9316,8 +9420,8 @@ $as_echo "no (found version: $_SCI_REPORT_)" >&6; }
     fi
 
       else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Not checking for version of $CC" >&5
-$as_echo "$as_me: WARNING: Not checking for version of $CC" >&2;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Not verifying version of $CC" >&5
+$as_echo "$as_me: WARNING: Not verifying version of $CC" >&2;}
       fi
     fi
 
@@ -9832,7 +9936,7 @@ fi
 
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
-  for flag in -M; do
+  for flag in -MD -M; do
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking 3 - if depend mode flag '$flag' works " >&5
 $as_echo_n "checking 3 - if depend mode flag '$flag' works ... " >&6; }
     rm -f configure-test.o configure-test-dir/configure-test.o
@@ -35025,7 +35129,6 @@ fi
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
 ##  --  Handle --enable-kokkos -------------------------------
-
 if test "$build_kokkos_lib" != "no"; then
 
   if test "$with_kokkos" != NOT_SET; then
@@ -35128,7 +35231,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : Kokkos libraries and headers
 ## arg 3 : Kokkos_Core.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : kokkos
+## arg 5 : kokkoscore
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -35208,10 +35311,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "kokkos"; then
+if test -n "kokkoscore"; then
 
    found_framework=no
-   for lib in kokkos; do
+   for lib in kokkoscore; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -35506,7 +35609,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" kokkos; do
+  for i in "" kokkoscore; do
     if test -z "$i"; then
        continue
     fi
@@ -35643,7 +35746,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : Kokkos libraries and headers
 ## arg 3 : Kokkos_Core.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : kokkos
+## arg 5 : kokkoscore
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -35723,10 +35826,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "kokkos"; then
+if test -n "kokkoscore"; then
 
    found_framework=no
-   for lib in kokkos; do
+   for lib in kokkoscore; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -36021,7 +36124,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" kokkos; do
+  for i in "" kokkoscore; do
     if test -z "$i"; then
        continue
     fi
@@ -36060,8 +36163,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 fi
 
 if test "$HAVE_KOKKOS" = "yes"; then
-  DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
+  DEF_KOKKOS="#define HAVE_KOKKOS"
 fi
+
 
 
 
@@ -36324,19 +36428,30 @@ fi
 
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100) and Volta (GV100) architectures  now (APH 10/16/18)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100), Volta (GV100) and Ampere (A100) architectures  now (APH 10/16/18; JKH+MGM 12/10/21)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \) -a \( "$cuda_gencode" != "80" \); then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 60, 70 " "$LINENO" 5
+  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 60, 70, 80 " "$LINENO" 5
 fi
 
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
-#  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
+#  NOTE: -std=c++17 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++14"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++17"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-maxrregcount"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif [ "$i" == [0-9]* ]; then
+    # This is an integer.  Assume it was a value of a prior parameter (like -maxrregcount 128)
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "--expt-extended-lambda"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   else
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
@@ -36516,6 +36631,75 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
+##  --  defines for GPU builds  ------------------------------------------
+
+KOKKOS_USING_GPU=""
+DEF_KOKKOS_USING_GPU=""
+
+if test "$HAVE_KOKKOS" = "yes"; then
+
+## --------------
+## -- Begin Test for Kokkos GPU --
+
+cat > conftest-kokkos.cc <<EOF
+#include <Kokkos_Macros.hpp>
+#include <iostream>
+int
+main()
+{
+  int val = 0;
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  val += 1;
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  val += 2;
+#endif
+
+  std::cout << val << std::endl;
+
+  return 0;
+}
+EOF
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if Kokkos enabled a GPU or OpenMP" >&5
+$as_echo_n "checking if Kokkos enabled a GPU or OpenMP... " >&6; }
+$CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
+
+LOC=$(./conftest-kokkos)
+
+if test $LOC = 3; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: both" >&5
+$as_echo "both" >&6; }
+  KOKKOS_USING_GPU="yes"
+  DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 2; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: GPU" >&5
+$as_echo "GPU" >&6; }
+  KOKKOS_USING_GPU="yes"
+  DEF_KOKKOS_USING_GPU="#define KOKKOS_USING_GPU"
+
+elif test $LOC = 1; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: OpenMP" >&5
+$as_echo "OpenMP" >&6; }
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+  as_fn_error $? "The Kokkos library was not built with GPU or OpenMP support. One or both must be enabled if including Kokkos. " "$LINENO" 5
+
+fi
+
+rm -f conftest-kokkos.cc conftest-kokkos
+
+fi
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/gpu_testdefs.h"
 
 ##  --  search for visus  -------------------------------------------------
 ac_ext=cpp

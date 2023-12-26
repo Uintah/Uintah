@@ -41,31 +41,46 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
+#include <sci_defs/gpu_defs.h>
+
 #include <iosfwd>
 
 namespace Uintah {
-
 
 class IntVector {
 
 public:
 
-  inline  IntVector() {}
-  inline ~IntVector() {}
+  GPU_INLINE_FUNCTION IntVector() {}
+  GPU_INLINE_FUNCTION ~IntVector() {}
 
-  inline IntVector( const IntVector & copy )
+  GPU_INLINE_FUNCTION IntVector( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
     }
   }
 
-  inline IntVector& operator=( const IntVector & copy )
+  GPU_INLINE_FUNCTION IntVector& operator=( const IntVector & copy )
   {
     for (int indx = 0; indx < 3; indx++) {
       m_value[indx] = copy.m_value[indx];
     }
     return *this;
+  }
+
+  GPU_INLINE_FUNCTION IntVector( int x, int y, int z )
+  {
+    m_value[0] = x;
+    m_value[1] = y;
+    m_value[2] = z;
+  }
+
+  GPU_INLINE_FUNCTION IntVector( int v )
+  {
+    m_value[0] = v;
+    m_value[1] = v;
+    m_value[2] = v;
   }
 
   inline explicit IntVector( const Point & p )
@@ -76,13 +91,15 @@ public:
   }
 
   // Creates an IntVector from a string that looks like "[1, 2, 3]".
-  static IntVector fromString( const std::string & source ); 
+  static IntVector fromString( const std::string & source );
 
   inline bool operator==( const IntVector & a ) const
   {
-    return m_value[0] == a.m_value[0] && m_value[1] == a.m_value[1] && m_value[2] == a.m_value[2];
+    return (m_value[0] == a.m_value[0] &&
+            m_value[1] == a.m_value[1] &&
+            m_value[2] == a.m_value[2]);
   }
-  
+
   // Used to test for equality - if this < a and a < this, they are equal
   inline bool operator<( const IntVector & a ) const
   {
@@ -105,36 +122,25 @@ public:
 
   inline bool operator<=( const IntVector & a ) const
   {
-    return m_value[0] <= a.m_value[0] && m_value[1] <= a.m_value[1] && m_value[2] <= a.m_value[2];
+    return (m_value[0] <= a.m_value[0] &&
+            m_value[1] <= a.m_value[1] &&
+            m_value[2] <= a.m_value[2]);
   }
 
   inline bool operator!=( const IntVector& a ) const
   {
-    return m_value[0] != a.m_value[0] || m_value[1] != a.m_value[1] || m_value[2] != a.m_value[2];
-  }
-
-  inline IntVector( int x
-                  , int y
-                  , int z
-                  )
-  {
-    m_value[0] = x;
-    m_value[1] = y;
-    m_value[2] = z;
-  }
-
-  inline IntVector( int v )
-  {
-    m_value[0] = v;
-    m_value[1] = v;
-    m_value[2] = v;
+    return (m_value[0] != a.m_value[0] ||
+            m_value[1] != a.m_value[1] ||
+            m_value[2] != a.m_value[2]);
   }
 
   inline IntVector operator*( const IntVector & v ) const
   {
-    return IntVector(m_value[0] * v.m_value[0], m_value[1] * v.m_value[1], m_value[2] * v.m_value[2]);
+    return IntVector(m_value[0] * v.m_value[0],
+                     m_value[1] * v.m_value[1],
+                     m_value[2] * v.m_value[2]);
   }
-  
+
   inline IntVector operator*( const int a ) const
   {
     return IntVector(a * m_value[0], a * m_value[1], a * m_value[2]);
@@ -142,22 +148,28 @@ public:
 
   inline IntVector operator/( const IntVector & v ) const
   {
-    return IntVector(m_value[0] / v.m_value[0], m_value[1] / v.m_value[1], m_value[2] / v.m_value[2]);
+    return IntVector(m_value[0] / v.m_value[0],
+                     m_value[1] / v.m_value[1],
+                     m_value[2] / v.m_value[2]);
   }
 
   inline IntVector operator+( const IntVector & v ) const
   {
-    return IntVector(m_value[0] + v.m_value[0], m_value[1] + v.m_value[1], m_value[2] + v.m_value[2]);
+    return IntVector(m_value[0] + v.m_value[0],
+                     m_value[1] + v.m_value[1],
+                     m_value[2] + v.m_value[2]);
+  }
+
+  inline IntVector operator-( const IntVector & v ) const
+  {
+    return IntVector(m_value[0] - v.m_value[0],
+                     m_value[1] - v.m_value[1],
+                     m_value[2] - v.m_value[2]);
   }
 
   inline IntVector operator-() const
   {
     return IntVector(-m_value[0], -m_value[1], -m_value[2]);
-  }
-
-  inline IntVector operator-( const IntVector & v ) const
-  {
-    return IntVector(m_value[0] - v.m_value[0], m_value[1] - v.m_value[1], m_value[2] - v.m_value[2]);
   }
 
   inline IntVector& operator+=( const IntVector & v )
@@ -180,11 +192,11 @@ public:
   //           i(1)=i.y()
   //           i(2)=i.z()
   //   --tan
-  inline int  operator()( int i ) const { return m_value[i]; }
-  inline int& operator()( int i )       { return m_value[i]; }
+  GPU_INLINE_FUNCTION int  operator()( int i ) const { return m_value[i]; }
+  GPU_INLINE_FUNCTION int& operator()( int i )       { return m_value[i]; }
 
-  inline int  operator[]( int i ) const { return m_value[i]; }
-  inline int& operator[]( int i )       { return m_value[i]; }
+  GPU_INLINE_FUNCTION int  operator[]( int i ) const { return m_value[i]; }
+  GPU_INLINE_FUNCTION int& operator[]( int i )       { return m_value[i]; }
 
   inline int x() const { return m_value[0]; }
   inline int y() const { return m_value[1]; }
@@ -214,8 +226,7 @@ public:
   friend std::ostream& operator<<( std::ostream &, const Uintah::IntVector & );
 
 private:
-
-  int m_value[3];
+  int m_value[3] {0,0,0};
 
 }; // end class IntVector
 
@@ -268,12 +279,12 @@ inline IntVector Abs(const IntVector& v)
 */
 inline bool doesIntersect(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector &high2)
 {
-  return low1.x()<high2.x() && 
-         low1.y()<high2.y() && 
-         low1.z()<high2.z() &&    // intersect if low1 is less than high2 
-         high1.x()>low2.x() && 
-         high1.y()>low2.y() && 
-         high1.z()>low2.z();     // and high1 is greater than their low2
+  return low1.x()  < high2.x() &&
+         low1.y()  < high2.y() &&
+         low1.z()  < high2.z() &&  // intersect if low1 is less than high2
+         high1.x() > low2.x()  &&
+         high1.y() > low2.y()  &&
+         high1.z() > low2.z();     // and high1 is greater than their low2
 }
 
 // This will round the Vector v to the nearest integer

@@ -39,22 +39,32 @@ namespace Uintah {
     double  w, s, b;
     // diagonal term
     double p;
-    double& operator[](int index) {
-      ASSERTRANGE(index, 0, 3);
+
+    GPU_INLINE_FUNCTION void initialize(double a) {
+      w = a;
+      s = a;
+      b = a;
+      p = a;
+    }
+
+    GPU_INLINE_FUNCTION double& operator[](int index) {
+      // ASSERTRANGE(index, 0, 3);
       return (&w)[index];
     }
-    const double& operator[](int index) const {
-      ASSERTRANGE(index, 0, 3);
+
+    GPU_INLINE_FUNCTION const double& operator[](int index) const {
+      // ASSERTRANGE(index, 0, 3);
       return (&w)[index];
     }
-    
+
     // constructors
-    Stencil4(){}
-    inline Stencil4(double init) : w(init), s(init), b(init){}
+    GPU_INLINE_FUNCTION Stencil4() {}
+
+    GPU_INLINE_FUNCTION Stencil4(double init) :
+      w(init), s(init), b(init), p(init) {}
   };
-  
+
    std::ostream & operator << (std::ostream &out, const Uintah::Stencil4 &a);
-  
 }
 
 namespace Uintah {

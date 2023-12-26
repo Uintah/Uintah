@@ -27,10 +27,15 @@
 
 #include <Core/Util/RefCounted.h>
 #include <Core/Grid/Variables/Array3Data.h>
-#include <climits>
 #include <Core/Geometry/IntVector.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
+
+#include <climits>
+
+#if defined( KOKKOS_ENABLE_OPENMP )
+  #include <Core/Grid/Variables/KokkosViews.h>
+#endif
 
 #if SCI_ASSERTION_LEVEL >= 3
 // test the range and throw a more informative exception
@@ -71,52 +76,6 @@ WARNING
 ****************************************/
 
 namespace Uintah {
-
-#ifdef UINTAH_ENABLE_KOKKOS
-template <typename T>
-struct KokkosView3
-{
-  using view_type = Kokkos::View<T***, Kokkos::LayoutStride, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
-  using reference_type = typename view_type::reference_type;
-
-  template< typename IType, typename JType, typename KType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()(const IType & i, const JType & j, const KType & k ) const
-  { return m_view( i - m_i, j - m_j, k - m_k ); }
-
-  KokkosView3( const view_type & v, int i, int j, int k )
-    : m_view(v)
-    , m_i(i)
-    , m_j(j)
-    , m_k(k)
-  {}
-
-  KokkosView3() = default;
-
-  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
-  KokkosView3( const KokkosView3<U> & v)
-    : m_view(v.m_view)
-    , m_i(v.m_i)
-    , m_j(v.m_j)
-    , m_k(v.m_k)
-  {}
-
-  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
-  KokkosView3 & operator=( const KokkosView3<U> & v)
-  {
-    m_view = v.m_view;
-    m_i = v.m_i;
-    m_j = v.m_j;
-    m_k = v.m_k;
-    return *this;
-  }
-
-  view_type m_view;
-  int       m_i;
-  int       m_j;
-  int       m_k;
-};
-#endif //UINTAH_ENABLE_KOKKOS
 
 template<class T> class Array3Window : public RefCounted {
    public:
@@ -171,20 +130,21 @@ template<class T> class Array3Window : public RefCounted {
         return data->get(i-offset.x(), j-offset.y(), k-offset.z());
       }
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<T> getKokkosView() const
+#if defined( KOKKOS_ENABLE_OPENMP )
+      template< typename U = T >
+      inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
+      getKokkosView() const
       {
-        return KokkosView3<T>( Kokkos::subview( data->getKokkosData()
-                                              , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x() )
-                                              , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y() )
-                                              , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z() )
-                                              )
-                             , offset.x()
-                             , offset.y()
-                             , offset.z()
-                             );
+        return KokkosView3<U, Kokkos::HostSpace>( data->getKokkosData(), offset.x(), offset.y(), offset.z(), data );
       }
-#endif //UINTAH_ENABLE_KOKKOS
+
+      template< typename U = T >
+      inline typename std::enable_if<std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
+      getKokkosView() const
+      {
+        return KokkosView3<U, Kokkos::HostSpace>();
+      }
+#endif
 
       ///////////////////////////////////////////////////////////////////////
       // Return pointer to the data
@@ -294,7 +254,7 @@ template<class T> class Array3Window : public RefCounted {
    template<class T>
       Array3Window<T>::~Array3Window()
       {
-        if(data && data->removeReference())
+        if(data && data->removeReference())  // Race condition
         {
           delete data;
           data=0;

@@ -221,6 +221,7 @@ namespace Uintah{ namespace ArchesCore{
   //Helper specialization:
   template <>
   struct VariableHelper<Uintah::CCVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constCCVariable<double> ConstType;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
@@ -232,6 +233,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constCCVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constCCVariable<double> ConstType;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
@@ -243,6 +245,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCXVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCXVariable<double> ConstType;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCXVariable<double> YFaceType;
@@ -254,6 +257,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCXVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCXVariable<double> ConstType;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCXVariable<double> YFaceType;
@@ -265,6 +269,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCYVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCYVariable<double> ConstType;
     typedef Uintah::SFCYVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
@@ -276,6 +281,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCYVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCYVariable<double> ConstType;
     typedef Uintah::constSFCYVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
@@ -287,6 +293,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCZVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCZVariable<double> ConstType;
     typedef Uintah::SFCZVariable<double> XFaceType;
     typedef Uintah::SFCZVariable<double> YFaceType;
@@ -298,6 +305,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCZVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCZVariable<double> ConstType;
     typedef Uintah::constSFCZVariable<double> XFaceType;
     typedef Uintah::constSFCZVariable<double> YFaceType;
@@ -398,55 +406,16 @@ namespace Uintah{ namespace ArchesCore{
   };
 
 
-  //@brief Helper struct
-  struct SecondCentral{};
-  struct FourthCentral{};
-
-  /// @brief Functor for implementing various interpolation schemes.
-  struct OneDInterpolator{
-
-   OneDInterpolator( Array3<double>& i_u_interpolated, const Array3<double> &i_u, const int i_ioff,
-                     const int i_joff, const int i_koff ) :
-                     u_i(i_u_interpolated), u(i_u), ioff(i_ioff), joff(i_joff), koff(i_koff)
-    {}
-
-    void operator()(int i, int j, int k) const {
-      throw InvalidValue(
-        "Error: No implementation of this interpolation type",
-        __FILE__, __LINE__);
-    }
-
-    void operator()(const SecondCentral& op, int i, int j, int k) const {
-
-      u_i(i,j,k) = 0.5 * ( u(i,j,k) + u(i+ioff,j+joff,k+koff) );
-
-    }
-
-    void operator()(const FourthCentral& op, int i, int j, int k) const {
-
-      u_i(i,j,k) = (9./16.)*(u(i,j,k) + u(i+ioff,j+joff,k+koff))
-                 - (1./16.)*(u(i+2*ioff,j+2*joff,k+2*koff) + u(i-ioff,j-joff,k-koff)) ;
-
-    }
-
-  private:
-
-    Array3<double>& u_i;
-    const Array3<double>& u;
-    const int ioff, joff, koff;
-
-  };
-
-
   ///  @brief Generic interface to grid interpolators.
-  template <typename grid_T, typename grid_CT>
-  void doInterpolation( Uintah::BlockRange& range, grid_T& v_i, grid_CT& v,
+  template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+  void doInterpolation( ExecutionObject<ExecSpace, MemSpace> execObj,
+                        Uintah::BlockRange& range, grid_T& v_i, grid_CT& v,
                         const int &ioff, const int &joff, const int &koff,
                         unsigned int interpScheme ){
 
     if (interpScheme == FOURTHCENTRAL ){
 
-      Uintah::parallel_for( range, [&](int i, int j, int k) {
+      Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
 
         v_i(i,j,k) = (9./16.)*(v(i,j,k) + v(i+ioff,j+joff,k+koff))
                    - (1./16.)*(v(i+2*ioff,j+2*joff,k+2*koff) + v(i-ioff,j-joff,k-koff)) ;
@@ -455,7 +424,7 @@ namespace Uintah{ namespace ArchesCore{
 
     } else if ( interpScheme == SECONDCENTRAL ){
 
-      Uintah::parallel_for(range, [&](int i, int j, int k) {
+      Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
 
         v_i(i,j,k) = 0.5 * ( v(i,j,k) + v(i+ioff,j+joff,k+koff) );
 

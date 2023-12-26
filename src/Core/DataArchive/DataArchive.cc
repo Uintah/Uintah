@@ -554,28 +554,33 @@ DataArchive::queryVariables( vector<string>                         & names,
   d_lock.lock();
 
   rewind( d_indexFile ); // Start at beginning of file.
-  bool found = ProblemSpec::findBlock( "<variables>", d_indexFile );
+  bool found = ProblemSpec::findBlock( "<variables/>", d_indexFile );
 
   if( !found ) {
-    throw InternalError( "DataArchive::queryVariables:variables section not found", __FILE__, __LINE__ );
-  }
 
-  queryVariables( d_indexFile, names, num_matls, types );
+    rewind( d_indexFile ); // Start at beginning of file.
+    bool found = ProblemSpec::findBlock( "<variables>", d_indexFile );
 
-  // PIDX hack:
-  if( var_materials.size() == 0 ) {
-
-    for( unsigned int i = 0; i < num_matls.size(); i++ ) {
-
-      ConsecutiveRangeSet set;
-      for( int j = 0; j < num_matls[ i ]; j++ ) {
-        set.addInOrder( j );
-      }
-      var_materials[ names[ i ] ] = set;
+    if( !found ) {
+      throw InternalError( "DataArchive::queryVariables:variables section not found", __FILE__, __LINE__ );
     }
-  }
-  // end PIDX hack.
 
+    queryVariables( d_indexFile, names, num_matls, types );
+
+    // PIDX hack:
+    if( var_materials.size() == 0 ) {
+
+      for( unsigned int i = 0; i < num_matls.size(); i++ ) {
+
+        ConsecutiveRangeSet set;
+        for( int j = 0; j < num_matls[ i ]; j++ ) {
+          set.addInOrder( j );
+        }
+        var_materials[ names[ i ] ] = set;
+      }
+    }
+    // end PIDX hack.
+  }
 
   d_lock.unlock();
 

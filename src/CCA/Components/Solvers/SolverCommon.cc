@@ -37,10 +37,16 @@ SolverCommon::~SolverCommon()
 {
 }
 
-  //______________________________________________________________________
+//______________________________________________________________________
 //
 void SolverCommon::getComponents()
 {
+  m_scheduler = dynamic_cast<Scheduler*>( getPort("scheduler") );
+
+  if( !m_scheduler ) {
+    throw InternalError("dynamic_cast of 'm_scheduler' failed!", __FILE__, __LINE__);
+  }
+
   m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
 
   if( !m_application ) {
@@ -52,6 +58,13 @@ void SolverCommon::getComponents()
 //
 void SolverCommon::releaseComponents()
 {
+  // Clean up the solver - finialize the thirdparty libs
+  finialize();
+
+  releasePort( "scheduler" );
+
+  m_scheduler  = nullptr;
+
   releasePort( "application" );
 
   m_application  = nullptr;

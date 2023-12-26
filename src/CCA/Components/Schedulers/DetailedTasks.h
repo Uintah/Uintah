@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
 #include <CCA/Components/Schedulers/DetailedDependency.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -40,13 +39,7 @@
 
 #include <Core/Lockfree/Lockfree_Pool.hpp>
 
-
-#ifdef HAVE_CUDA
-  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-#endif
-
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 #include <map>
 #include <queue>
@@ -234,9 +227,9 @@ public:
     return m_task_priority_alg;
   }
 
-#ifdef HAVE_CUDA
+#if defined(KOKKOS_USING_GPU)
 
-  void addDeviceValidateRequiresCopies( DetailedTask * dtask );
+  void addDeviceValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
   void addDevicePerformGhostCopies( DetailedTask * dtask );
 
@@ -248,13 +241,13 @@ public:
 
   void addDeviceExecutionPending( DetailedTask * dtask );
 
-  void addHostValidateRequiresCopies( DetailedTask * dtask );
+  void addHostValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
   void addHostCheckIfExecutable( DetailedTask * dtask );
 
   void addHostReadyToExecute( DetailedTask * dtask );
 
-  bool getDeviceValidateRequiresCopiesTask( DetailedTask *& dtask );
+  bool getDeviceValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
 
   bool getDevicePerformGhostCopiesTask( DetailedTask *& dtask );
 
@@ -266,7 +259,7 @@ public:
 
   bool getDeviceExecutionPendingTask( DetailedTask *& dtask );
 
-  bool getHostValidateRequiresCopiesTask( DetailedTask *& dtask );
+  bool getHostValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
 
   bool getHostCheckIfExecutableTask( DetailedTask *& dtask );
 
@@ -373,6 +366,7 @@ private:
   TaskQueue  m_initial_ready_tasks;
   TaskPQueue m_mpi_completed_tasks;
   std::atomic<int> m_atomic_initial_ready_tasks_size { 0 };
+  std::atomic<int> atomic_task_to_debug_size { 0 };
   std::atomic<int> m_atomic_mpi_completed_tasks_size { 0 };
 
   // This "generation" number is to keep track of which InternalDependency
@@ -396,7 +390,7 @@ private:
   DetailedTasks& operator=(DetailedTasks &&)      = delete;
 
 
-#ifdef HAVE_CUDA
+#if defined(KOKKOS_USING_GPU)
 
   using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t
@@ -404,13 +398,13 @@ private:
                                  , std::allocator
                                  >;
 
-  TaskPool             device_validateRequiresCopies_pool{};
+  TaskPool             device_validateRequiresAndModifiesCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};
   TaskPool             device_validateGhostCopies_pool{};
   TaskPool             device_checkIfExecutable_pool{};
   TaskPool             device_readyToExecute_pool{};
   TaskPool             device_executionPending_pool{};
-  TaskPool             host_validateRequiresCopies_pool{};
+  TaskPool             host_validateRequiresAndModifiesCopies_pool{};
   TaskPool             host_checkIfExecutable_pool{};
   TaskPool             host_readyToExecute_pool{};
 

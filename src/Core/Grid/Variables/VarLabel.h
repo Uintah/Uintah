@@ -32,6 +32,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <Core/Grid/Ghost.h>
 
 
 namespace Uintah {
@@ -143,6 +144,11 @@ public:
 
   friend std::ostream & operator<<( std::ostream & out, const VarLabel & vl );
 
+  //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
+  inline int getMaxDeviceGhost() const {return m_max_device_ghost;}
+  inline void setMaxDeviceGhost(int val) const {m_max_device_ghost = val;}
+  inline Ghost::GhostType getMaxDeviceGhostType() const {return m_max_device_ghost_type;}
+  inline void setMaxDeviceGhostType (Ghost::GhostType val) const {m_max_device_ghost_type = val;}
 
 private:
 
@@ -167,6 +173,9 @@ private:
 
   // Allow this VarLabel to be computed multiple times in a TaskGraph without complaining.
   bool                        m_sched_reduction_task{true};
+
+  mutable int                 m_max_device_ghost{0};	//DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
+  mutable Ghost::GhostType    m_max_device_ghost_type{Ghost::None};
 
   // eliminate copy, assignment and move
   VarLabel( const VarLabel & )            = delete;

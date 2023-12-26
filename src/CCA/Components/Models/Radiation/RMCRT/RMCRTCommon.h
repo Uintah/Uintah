@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -54,6 +55,12 @@
 class MTRand;
 
 namespace Uintah{
+
+  // For the RMCRT slim version
+  struct Combined_RMCRT_Required_Vars {
+    float abskg;    //For now, let negative cellType indicate cellType status
+    float sigmaT4;
+  };
 
   class RMCRTCommon  {
 
@@ -123,6 +130,25 @@ namespace Uintah{
 
 
       //__________________________________
+      // For RMCRT slim
+      void sched_combineAbskgSigmaT4CellType( 
+                    const LevelP& level,
+                    SchedulerP& sched,
+                    Task::WhichDW temp_dw,
+                    const bool includeEC );
+
+      //__________________________________
+      // For RMCRT slim
+      template< class T>
+      void combineAbskgSigmaT4CellType( 
+                    const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+                    Task::WhichDW which_temp_dw );
+
+      //__________________________________
       //
       void reflect(double& fs,
                    IntVector& cur,
@@ -167,51 +193,39 @@ namespace Uintah{
       void sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                 SchedulerP& sched );
 
-      void carryForward_FineLevelLabels ( DetailedTask* dtask,
-                                          Task::CallBackEvent event,
-                                          const ProcessorGroup*,
-                                          const PatchSubset* patches,
+      template <typename ExecSpace, typename MemSpace>
+      void carryForward_FineLevelLabels ( const PatchSubset* patches,
                                           const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
-                                          void* old_TaskGpuDW,
-                                          void* new_TaskGpuDW,
-                                          void* stream,
-                                          int deviceID );
+                                          OnDemandDataWarehouse* old_dw,
+                                          OnDemandDataWarehouse* new_dw,
+                                          UintahParams& uintahParams,
+                                          ExecutionObject<ExecSpace, MemSpace>& execObj );
 
       void sched_carryForward_VarLabels ( const LevelP & level,
                                           SchedulerP   & sched,
                                           const std::vector< const VarLabel* > varLabels);
 
-      void carryForward_VarLabels(DetailedTask* dtask,
-                                  Task::CallBackEvent event,
-                                  const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw,
-                                  void* old_TaskGpuDW,
-                                  void* new_TaskGpuDW,
-                                  void* stream,
-                                  int deviceID,
-                                  const std::vector< const VarLabel* > varLabels);
+      template <typename ExecSpace, typename MemSpace>
+      void carryForward_VarLabels( const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   OnDemandDataWarehouse* old_dw,
+                                   OnDemandDataWarehouse* new_dw,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                   const std::vector< const VarLabel* > varLabels);
 
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
                                     const int tg_num  = -1 );
 
-      void carryForward_Var( DetailedTask* dtask,
-                             Task::CallBackEvent event,
-                             const ProcessorGroup*,
-                             const PatchSubset*,
+      template <typename ExecSpace, typename MemSpace>
+      void carryForward_Var( const PatchSubset*,
                              const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse*,
-                             void* old_TaskGpuDW,
-                             void* new_TaskGpuDW,
-                             void* stream,
-                             int deviceID,
+                             OnDemandDataWarehouse*,
+                             OnDemandDataWarehouse*,
+                             UintahParams& uintahParams,
+                             ExecutionObject<ExecSpace, MemSpace>& execObj,
                              const VarLabel* variable );
 
       //__________________________________
@@ -292,6 +306,9 @@ namespace Uintah{
       static const VarLabel* d_boundFluxLabel;
       static const VarLabel* d_radiationVolqLabel;
 
+      // For RMCRT slim
+      static const VarLabel* d_abskgSigmaT4CellTypeLabel;
+
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature
       static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficient
@@ -301,6 +318,63 @@ namespace Uintah{
 
 
   }; // class RMCRTCommon
+
+
+//______________________________________________________________________
+//
+template <typename ExecSpace, typename MemSpace>
+void
+RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           OnDemandDataWarehouse* old_dw,
+                                           OnDemandDataWarehouse* new_dw,
+                                           UintahParams& uintahParams,
+                                           ExecutionObject<ExecSpace, MemSpace>& execObj)
+{
+  // printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_FineLevelLabels" );
+
+  bool replaceVar = true;
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, execObj, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, execObj, replaceVar, nullptr );
+}
+
+
+//______________________________________________________________________
+//
+template <typename ExecSpace, typename MemSpace>
+void
+RMCRTCommon::carryForward_VarLabels(const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    OnDemandDataWarehouse* old_dw,
+                                    OnDemandDataWarehouse* new_dw,
+                                    UintahParams& uintahParams,
+                                    ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                    const std::vector< const VarLabel* > varLabels)
+{
+  // printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_VarLabels" );
+
+  bool replaceVar = true;
+  for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
+    new_dw->transferFrom(old_dw, *iter, patches, matls, execObj, replaceVar, nullptr );
+  }
+}
+
+
+//______________________________________________________________________
+template <typename ExecSpace, typename MemSpace>
+void
+RMCRTCommon::carryForward_Var ( const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
+                                UintahParams& uintahParams,
+                                ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                const VarLabel* variable )
+{
+  new_dw->transferFrom(old_dw, variable, patches, matls, execObj, true, nullptr);
+}
 
 } // namespace Uintah
 

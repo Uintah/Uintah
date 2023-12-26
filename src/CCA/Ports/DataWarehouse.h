@@ -36,18 +36,20 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/SoleVariableBase.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Variables/VarLabelMatlMemspace.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
-#include <sci_defs/cuda_defs.h>
-#ifdef HAVE_CUDA
+
+#include <sci_defs/gpu_defs.h>
+
+#if defined(KOKKOS_USING_GPU)
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
 #include <iosfwd>
-
 
 namespace Uintah {
 
@@ -89,6 +91,27 @@ WARNING
 
 ****************************************/
 
+typedef int atomicDataStatus;
+//    0                   1                   2                   3
+//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |    16-bit reference counter   |  unused     |U|S|D|V|A|V|C|A|A|
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+//left sixteen bits is a 16-bit integer reference counter.
+
+//Not allocated/Invalid = If the value is 0x00000000
+
+//Allocating                = bit 31 - 0x00000001
+//Allocated                 = bit 30 - 0x00000002
+//Copying in                = bit 29 - 0x00000004
+//Valid                     = bit 28 - 0x00000008
+//Awaiting ghost data       = bit 27 - 0x00000010
+//Valid with ghost cells    = bit 26 - 0x00000020
+//Deallocating              = bit 25 - 0x00000040
+//Superpatch                = bit 24 - 0x00000080
+//Unknown                   = bit 23 - 0x00000100
+
 class DataWarehouse : public RefCounted {
 
 public:
@@ -96,10 +119,6 @@ public:
 
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
-
-  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
-                                                       int matlIndex,
-                                                       const Level* ) const = 0;
 
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
@@ -109,6 +128,10 @@ public:
   // by reference to avoid ambiguity with other put overloaded methods.
   virtual void put(Variable*, const VarLabel*, int matlIndex,
                    const Patch*) = 0;
+
+  virtual void scrub( const VarLabel * label
+                    ,       int        matlIndex = -1
+                    , const void     * domain = nullptr) = 0;
 
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
@@ -149,13 +172,13 @@ public:
   virtual void doReserve() = 0;
 
   // Particle Variables
-  // changed way PS's were stored from ghost info to low-high range.
+  // Changed way PS's were stored from ghost info to low-high range.
   // we can still keep the getPS function API the same though to not annoy
   // everybody -- BJW, May 05
-  virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
-                                                 int matlIndex, const Patch*,
-                                                 IntVector low = IntVector(0,0,0),
-                                                 IntVector high = IntVector(0,0,0) ) = 0;
+  virtual ParticleSubset* createParticleSubset( particleIndex numParticles,
+                                                int matlIndex, const Patch*,
+                                                IntVector low = IntVector(0,0,0),
+                                                IntVector high = IntVector(0,0,0) ) = 0;
 
   virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
 
@@ -205,7 +228,6 @@ public:
   getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
   // Generic grid based variables
-
   virtual void get( constGridVariableBase& var,
                     const VarLabel* label, int matlIndex, const Patch* patch,
                     Ghost::GhostType gtype, int numGhostCells ) = 0;
@@ -215,7 +237,7 @@ public:
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
                                   Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
-//                                  const IntVector& boundaryLayer ) = 0;
+//                                const IntVector& boundaryLayer ) = 0;
 //                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
 
   virtual void allocateAndPut( GridVariableBase& var,
@@ -226,7 +248,7 @@ public:
   virtual void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
             bool replace = false) = 0;
 
-  // returns the constGridVariable for all patches on the level
+  // Returns the constGridVariable for all patches on the level
   virtual void getLevel( constGridVariableBase&,
                          const VarLabel*,
                          int matlIndex,
@@ -255,7 +277,7 @@ public:
   virtual void put(PerPatchBase&, const VarLabel*,
                    int matlIndex, const Patch*, bool replace = false) = 0;
 
-  // this is so we can get reduction information for regridding
+  // This is so we can get reduction information for regridding
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
 
   // Remove particles that are no longer relevant
@@ -277,11 +299,11 @@ public:
                             const PatchSubset*, const MaterialSubset*,
                             bool replace, const PatchSubset*) = 0;
 
-  //An overloaded version of transferFrom.  GPU transfers need a stream, and a
-  //stream is found in a detailedTask object.
-  virtual void transferFrom(DataWarehouse*, const VarLabel*,
-                            const PatchSubset*, const MaterialSubset*, void * detailedTask,
-                            bool replace, const PatchSubset*) = 0;
+  // An overloaded version of transferFrom.  GPU transfers need a stream, and a
+  // stream is found in a detailedTask object.
+//  virtual void transferFrom(DataWarehouse*, const VarLabel*,
+//                            const PatchSubset*, const MaterialSubset*, ExecutionObject& execObj,
+//                            bool replace, const PatchSubset*) = 0;
 
   virtual size_t emit(OutputContext&, const VarLabel* label,
                     int matlIndex, const Patch* patch) = 0;
@@ -295,16 +317,16 @@ public:
                         size_t bufferSize) = 0;
 #endif
 
-
   // Scrubbing
   enum ScrubMode {
     ScrubNone,
     ScrubComplete,
     ScrubNonPermanent
   };
+
   virtual ScrubMode setScrubbing(ScrubMode) = 0;
 
-      // For related datawarehouses
+  // For related datawarehouses
   virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW) = 0;
 
   // For the schedulers
@@ -329,14 +351,11 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
           const MaterialSubset* matls, int nComm) = 0;
 
-#ifdef HAVE_CUDA
+#if defined(KOKKOS_USING_GPU)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
-  GPUDataWarehouse* getGPUDW() const {
-    int i;
-    CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-    return d_gpuDWs[i];
-  }
+  GPUDataWarehouse* getGPUDW()      const { return d_gpuDWs[0]; }
 #endif
+
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
                  Scheduler* scheduler,
@@ -351,9 +370,10 @@ protected:
   // many previous time steps had taken place before the restart.
   int d_generation;
 
-#ifdef HAVE_CUDA
+#if defined(KOKKOS_USING_GPU)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
+
 private:
   DataWarehouse(const DataWarehouse&);
   DataWarehouse& operator=(const DataWarehouse&);

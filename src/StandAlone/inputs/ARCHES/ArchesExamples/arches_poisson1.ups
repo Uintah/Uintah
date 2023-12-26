@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<!-- Poisson1 using Arches. BoundaryConditions copied from orignal Poisson. 
+     New block ArchesExample added in CFD->Arches with attribute type=poisson1 
+     i.e. the component name. Poisson->delt from standalone ups added to 
+     Time->delt_init. Use sandbox as integrator. 
+     Check CCA/Components/Arches/ArchesExamples/Poisson1.h for more explaination   -->
+<Uintah_specification>
+  <Meta>
+    <title>Test Arches infrastructure using Poisson1 example</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>1</delt_max>
+    <delt_init>1e-2</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>10</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>arches_poisson1.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="phi"/>
+    <checkpoint cycle="1" interval="1"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 1. </value> 
+        </BCType> 
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[16,16,16]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>       0.000020      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <ArchesExample type ="poisson1"></ArchesExample>
+      <KokkosSolver>
+			<integrator>sandbox</integrator>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

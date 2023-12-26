@@ -48,7 +48,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(M_LIBRARY) $(PIDX_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(CUDA_LIBRARY) \
-          $(PIDX_LIBRARY)
+          $(PIDX_LIBRARY) $(KOKKOS_LIBRARY)
 endif
 
 ##############################################

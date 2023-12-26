@@ -44,6 +44,7 @@ endif
 
 PSELIBS :=                 \
         CCA/Ports          \
+        CCA/Components/Schedulers \
         Core/Disclosure    \
         Core/Exceptions    \
         Core/Geometry      \
@@ -92,15 +93,15 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
         $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
-ifneq ($(HAVE_CUDA),)
+ifeq ($(HAVE_CUDA),yes)
   LIBS :=  $(LIBS) $(CUDA_LIBRARY)
 endif
 
-ifneq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
-ifneq ($(HAVE_HYPRE),)
+ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 

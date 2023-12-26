@@ -28,6 +28,48 @@ SGSsigma::~SGSsigma(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &SGSsigma::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &SGSsigma::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &SGSsigma::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SGSsigma::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &SGSsigma::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &SGSsigma::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &SGSsigma::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &SGSsigma::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SGSsigma::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &SGSsigma::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SGSsigma::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 SGSsigma::problemSetup( ProblemSpecP& db ){
 
@@ -121,8 +163,8 @@ SGSsigma::register_initialize(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+template <typename ExecSpace, typename MemSpace>
+void SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
   CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
@@ -149,8 +191,8 @@ SGSsigma::register_timestep_init(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SGSsigma::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+template <typename ExecSpace, typename MemSpace> void
+SGSsigma::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){
 
   //CCVariable<double>& sigOper = tsk_info->get_field<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -195,8 +237,8 @@ SGSsigma::register_timestep_eval(
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
+template <typename ExecSpace, typename MemSpace>
+void SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   Vector Dx=patch->dCell();
   double dx=Dx.x(); double dy=Dx.y(); double dz=Dx.z();
@@ -330,6 +372,6 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   });
 
   ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,mu_sgc,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,mu_turb,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,mu_sgc,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,mu_turb,vol_fraction);
 }

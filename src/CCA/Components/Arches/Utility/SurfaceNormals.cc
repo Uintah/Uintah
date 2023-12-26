@@ -16,6 +16,48 @@ SurfaceNormals::~SurfaceNormals(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &SurfaceNormals::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &SurfaceNormals::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SurfaceNormals::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &SurfaceNormals::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &SurfaceNormals::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &SurfaceNormals::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &SurfaceNormals::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace SurfaceNormals::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 SurfaceNormals::problemSetup( ProblemSpecP& db ){
 }
@@ -59,25 +101,22 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
 
 }
 
-void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
-  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)
-  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1)
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>("volFraction");
 
-  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >("volFraction");
+  auto n_in_x = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("surf_in_normX");
+  auto n_in_y = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("surf_in_normY");
+  auto n_in_z = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("surf_in_normZ");
 
-  SFCXVariable<double>& n_in_x = tsk_info->get_field<SFCXVariable<double> >("surf_in_normX");
-  SFCYVariable<double>& n_in_y = tsk_info->get_field<SFCYVariable<double> >("surf_in_normY");
-  SFCZVariable<double>& n_in_z = tsk_info->get_field<SFCZVariable<double> >("surf_in_normZ");
+  auto n_out_x = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("surf_out_normX");
+  auto n_out_y = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("surf_out_normY");
+  auto n_out_z = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("surf_out_normZ");
 
-  SFCXVariable<double>& n_out_x = tsk_info->get_field<SFCXVariable<double> >("surf_out_normX");
-  SFCYVariable<double>& n_out_y = tsk_info->get_field<SFCYVariable<double> >("surf_out_normY");
-  SFCZVariable<double>& n_out_z = tsk_info->get_field<SFCZVariable<double> >("surf_out_normZ");
+  Uintah::BlockRange full_range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  Uintah::BlockRange full_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for(full_range, [&](int i, int j, int k){
+  Uintah::parallel_for( execObj, full_range, KOKKOS_LAMBDA( int i, int j, int k ){
     n_in_x(i,j,k) = 0.0;
     n_out_x(i,j,k) = 0.0;
     n_in_y(i,j,k) = 0.0;
@@ -87,26 +126,41 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
   });
 
   const double noise = 1e-10;
-  //X
-  Uintah::parallel_for(Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range), [&](int i, int j, int k){
+
+  // X-dimension
+
+  GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1)
+  Uintah::BlockRange fx_range( low_fx_patch_range, high_fx_patch_range );
+
+  Uintah::parallel_for( execObj, fx_range, KOKKOS_LAMBDA( int i, int j, int k ){
     n_out_x(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i-1,j,k) )
-                     / std::abs( vol_fraction(i,j,k) - vol_fraction(i-1,j,k) + noise);
+                     / abs( vol_fraction(i,j,k) - vol_fraction(i-1,j,k) + noise);
     n_in_x(i,j,k) = ( vol_fraction(i-1,j,k) - vol_fraction(i,j,k) ) /
-                    std::abs( vol_fraction(i-1,j,k) - vol_fraction(i,j,k) + noise);
+                    abs( vol_fraction(i-1,j,k) - vol_fraction(i,j,k) + noise);
   });
-  //Y
-  Uintah::parallel_for(Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range), [&](int i, int j, int k){
+
+  // Y-dimension
+
+  GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)
+  Uintah::BlockRange fy_range( low_fy_patch_range, high_fy_patch_range );
+
+  Uintah::parallel_for( execObj, fy_range, KOKKOS_LAMBDA( int i, int j, int k ){
     n_out_y(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) )
-                     / std::abs( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) + noise);
+                     / abs( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) + noise);
     n_in_y(i,j,k) = ( vol_fraction(i,j-1,k) - vol_fraction(i,j,k) ) /
-                    std::abs( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) + noise);
+                    abs( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) + noise);
   });
-  //Z
-  Uintah::parallel_for(Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range), [&](int i, int j, int k){
+
+  // Z-dimension
+
+  GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1)
+  Uintah::BlockRange fz_range( low_fz_patch_range, high_fz_patch_range );
+
+  Uintah::parallel_for( execObj, fz_range, KOKKOS_LAMBDA( int i, int j, int k ){
     n_out_z(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) )
-                     / std::abs( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) + noise);
+                     / abs( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) + noise);
     n_in_z(i,j,k) = ( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) ) /
-                    std::abs( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) + noise);
+                    abs( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) + noise);
   });
 
 }
@@ -139,25 +193,26 @@ SurfaceNormals::register_timestep_init( VIVec& variable_registry, const bool pac
 
 }
 
-void
-SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  SFCXVariable<double>& n_in_x = tsk_info->get_field<SFCXVariable<double> >("surf_in_normX");
-  SFCYVariable<double>& n_in_y = tsk_info->get_field<SFCYVariable<double> >("surf_in_normY");
-  SFCZVariable<double>& n_in_z = tsk_info->get_field<SFCZVariable<double> >("surf_in_normZ");
-  constSFCXVariable<double>& old_n_in_x = tsk_info->get_field<constSFCXVariable<double> >("surf_in_normX");
-  constSFCYVariable<double>& old_n_in_y = tsk_info->get_field<constSFCYVariable<double> >("surf_in_normY");
-  constSFCZVariable<double>& old_n_in_z = tsk_info->get_field<constSFCZVariable<double> >("surf_in_normZ");
+  auto n_in_x = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("surf_in_normX");
+  auto n_in_y = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("surf_in_normY");
+  auto n_in_z = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("surf_in_normZ");
+  auto old_n_in_x = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>("surf_in_normX");
+  auto old_n_in_y = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>("surf_in_normY");
+  auto old_n_in_z = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>("surf_in_normZ");
 
-  SFCXVariable<double>& n_out_x = tsk_info->get_field<SFCXVariable<double> >("surf_out_normX");
-  SFCYVariable<double>& n_out_y = tsk_info->get_field<SFCYVariable<double> >("surf_out_normY");
-  SFCZVariable<double>& n_out_z = tsk_info->get_field<SFCZVariable<double> >("surf_out_normZ");
-  constSFCXVariable<double>& old_n_out_x = tsk_info->get_field<constSFCXVariable<double> >("surf_out_normX");
-  constSFCYVariable<double>& old_n_out_y = tsk_info->get_field<constSFCYVariable<double> >("surf_out_normY");
-  constSFCZVariable<double>& old_n_out_z = tsk_info->get_field<constSFCZVariable<double> >("surf_out_normZ");
+  auto n_out_x = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("surf_out_normX");
+  auto n_out_y = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("surf_out_normY");
+  auto n_out_z = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("surf_out_normZ");
+  auto old_n_out_x = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>("surf_out_normX");
+  auto old_n_out_y = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>("surf_out_normY");
+  auto old_n_out_z = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>("surf_out_normZ");
 
-  Uintah::BlockRange full_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-  Uintah::parallel_for(full_range, [&](int i, int j, int k){
+  Uintah::BlockRange full_range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+
+  Uintah::parallel_for( execObj, full_range, KOKKOS_LAMBDA( int i, int j, int k ){
     n_in_x(i,j,k)  = old_n_in_x(i,j,k);
     n_out_x(i,j,k) = old_n_out_x(i,j,k);
     n_in_y(i,j,k)  = old_n_in_y(i,j,k);

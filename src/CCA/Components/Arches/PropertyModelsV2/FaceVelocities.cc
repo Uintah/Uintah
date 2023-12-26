@@ -25,6 +25,48 @@ TaskInterface( task_name, matl_index ){
 FaceVelocities::~FaceVelocities(){}
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &FaceVelocities::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &FaceVelocities::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &FaceVelocities::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &FaceVelocities::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &FaceVelocities::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &FaceVelocities::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &FaceVelocities::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace FaceVelocities::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void FaceVelocities::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
@@ -75,29 +117,26 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  SFCXVariable<double>& ucell_xvel = tsk_info->get_field<SFCXVariable<double> >("ucell_xvel");
-  SFCXVariable<double>& ucell_yvel = tsk_info->get_field<SFCXVariable<double> >("ucell_yvel");
-  SFCXVariable<double>& ucell_zvel = tsk_info->get_field<SFCXVariable<double> >("ucell_zvel");
-  ucell_xvel.initialize(0.0);
-  ucell_yvel.initialize(0.0);
-  ucell_zvel.initialize(0.0);
+  auto ucell_xvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
+  auto ucell_yvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
+  auto ucell_zvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
 
-  SFCYVariable<double>& vcell_xvel = tsk_info->get_field<SFCYVariable<double> >("vcell_xvel");
-  SFCYVariable<double>& vcell_yvel = tsk_info->get_field<SFCYVariable<double> >("vcell_yvel");
-  SFCYVariable<double>& vcell_zvel = tsk_info->get_field<SFCYVariable<double> >("vcell_zvel");
-  vcell_xvel.initialize(0.0);
-  vcell_yvel.initialize(0.0);
-  vcell_zvel.initialize(0.0);
+  auto vcell_xvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
+  auto vcell_yvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
+  auto vcell_zvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
 
-  SFCZVariable<double>& wcell_xvel = tsk_info->get_field<SFCZVariable<double> >("wcell_xvel");
-  SFCZVariable<double>& wcell_yvel = tsk_info->get_field<SFCZVariable<double> >("wcell_yvel");
-  SFCZVariable<double>& wcell_zvel = tsk_info->get_field<SFCZVariable<double> >("wcell_zvel");
-  wcell_xvel.initialize(0.0);
-  wcell_yvel.initialize(0.0);
-  wcell_zvel.initialize(0.0);
+  auto wcell_xvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
+  auto wcell_yvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
+  auto wcell_zvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
+  parallel_initialize( execObj, 0.0
+                     , ucell_xvel, ucell_yvel, ucell_zvel
+                     , vcell_xvel, vcell_yvel, vcell_zvel
+                     , wcell_xvel, wcell_yvel, wcell_zvel
+                     );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -111,34 +150,30 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 }
 
 //--------------------------------------------------------------------------------------------------
-void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
 
-  SFCXVariable<double>& ucell_xvel = tsk_info->get_field<SFCXVariable<double> >("ucell_xvel");
-  SFCXVariable<double>& ucell_yvel = tsk_info->get_field<SFCXVariable<double> >("ucell_yvel");
-  SFCXVariable<double>& ucell_zvel = tsk_info->get_field<SFCXVariable<double> >("ucell_zvel");
+  auto ucell_xvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
+  auto ucell_yvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
+  auto ucell_zvel = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
 
-  SFCYVariable<double>& vcell_xvel = tsk_info->get_field<SFCYVariable<double> >("vcell_xvel");
-  SFCYVariable<double>& vcell_yvel = tsk_info->get_field<SFCYVariable<double> >("vcell_yvel");
-  SFCYVariable<double>& vcell_zvel = tsk_info->get_field<SFCYVariable<double> >("vcell_zvel");
+  auto vcell_xvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
+  auto vcell_yvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
+  auto vcell_zvel = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
 
-  SFCZVariable<double>& wcell_xvel = tsk_info->get_field<SFCZVariable<double> >("wcell_xvel");
-  SFCZVariable<double>& wcell_yvel = tsk_info->get_field<SFCZVariable<double> >("wcell_yvel");
-  SFCZVariable<double>& wcell_zvel = tsk_info->get_field<SFCZVariable<double> >("wcell_zvel");
+  auto wcell_xvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
+  auto wcell_yvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
+  auto wcell_zvel = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
-  // initialize all velocities
-  ucell_xvel.initialize(0.0);
-  ucell_yvel.initialize(0.0);
-  ucell_zvel.initialize(0.0);
-  vcell_xvel.initialize(0.0);
-  vcell_yvel.initialize(0.0);
-  vcell_zvel.initialize(0.0);
-  wcell_xvel.initialize(0.0);
-  wcell_yvel.initialize(0.0);
-  wcell_zvel.initialize(0.0);
+  parallel_initialize( execObj, 0.0
+                     , ucell_xvel, ucell_yvel, ucell_zvel
+                     , vcell_xvel, vcell_yvel, vcell_zvel
+                     , wcell_xvel, wcell_yvel, wcell_zvel
+                     );
 
   // bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   // bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -154,9 +189,9 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
 
-  ArchesCore::doInterpolation( x_range, ucell_xvel, uVel, -1, 0, 0, m_int_scheme );
-  ArchesCore::doInterpolation( x_range, ucell_yvel, vVel, -1, 0, 0, m_int_scheme );
-  ArchesCore::doInterpolation( x_range, ucell_zvel, wVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, x_range, ucell_xvel, uVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, x_range, ucell_yvel, vVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, x_range, ucell_zvel, wVel, -1, 0, 0, m_int_scheme );
 
   //y-direction:
   low = patch->getCellLowIndex();
@@ -165,9 +200,9 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
-  ArchesCore::doInterpolation( y_range, vcell_xvel, uVel, 0, -1, 0, m_int_scheme );
-  ArchesCore::doInterpolation( y_range, vcell_yvel, vVel, 0, -1, 0, m_int_scheme );
-  ArchesCore::doInterpolation( y_range, vcell_zvel, wVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, y_range, vcell_xvel, uVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, y_range, vcell_yvel, vVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, y_range, vcell_zvel, wVel, 0, -1, 0, m_int_scheme );
 
   //z-direction:
   low = patch->getCellLowIndex();
@@ -176,8 +211,8 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
-  ArchesCore::doInterpolation( z_range, wcell_xvel, uVel, 0, 0, -1, m_int_scheme );
-  ArchesCore::doInterpolation( z_range, wcell_yvel, vVel, 0, 0, -1, m_int_scheme );
-  ArchesCore::doInterpolation( z_range, wcell_zvel, wVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, z_range, wcell_xvel, uVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, z_range, wcell_yvel, vVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, z_range, wcell_zvel, wVel, 0, 0, -1, m_int_scheme );
 
 }

@@ -26,6 +26,7 @@
 #define CORE_PARALLEL_PARALLEL_H
 
 #include <thread>
+#include <string>
 
 
 // Macros used to eliminate excess output on large parallel runs
@@ -50,7 +51,7 @@ class ProcessorGroup;
 
 CLASS
    Parallel
-   
+
 
 GENERAL INFORMATION
 
@@ -61,13 +62,13 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Parallel
 
 DESCRIPTION
-  
+
 ****************************************/
 
 class Parallel {
@@ -79,75 +80,136 @@ class Parallel {
           , Abort
       };
 
+      enum CpuThreadEnvironment {
+        PTHREADS = 0,
+        OPEN_MP_THREADS = 1
+      };
+
+      enum Kokkos_Policy {
+            Kokkos_Team_Policy
+          , Kokkos_Range_Policy
+          , Kokkos_MDRange_Policy
+          , Kokkos_MDRange_Reverse_Policy
+      };
+
       //////////
-      // Initializes MPI if necessary. 
+      // Initializes MPI if necessary.
       static void initializeManager( int& argc, char**& arg );
+
+      //////////
+      // Print the manager settings.
+      static void printManager();
 
       //////////
       // Check to see whether initializeManager has been called
       static bool isInitialized();
-      
+
       //////////
       // Shuts down and finalizes the MPI runtime in a safe manner
       static void finalizeManager( Circumstances cirumstances = NormalShutdown );
+
+
+      //////////
+      // Passes the specified exit code to std::exit()
+      static void exitAll( int code );
 
       //////////
       // Returns the root context ProcessorGroup
       static ProcessorGroup* getRootProcessorGroup();
 
       //////////
-      // Returns the MPI Rank of this process.  If this is not running under MPI,
-      // than 0 is returned.  Rank value is set after call to initializeManager();
-      static int getMPIRank();
-
-      //////////
-      // Returns the size of MPI_Comm
-      static int getMPISize();
-      
-      //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
 
       //////////
-      // Returns true if this process is to use an accelerator or co-processor (e.g. GPU, MIC, etc), false otherwise
+      // Gets the size of MPI_Comm
+      static int getMPISize();
+
+      //////////
+      // Gets the MPI Rank of this process.  If this is not running
+      // under MPI, than 0 is returned.  Rank value is set after call
+      // to initializeManager();
+      static int getMPIRank();
+
+      //////////
+      // Sets/Returns the type of CPU scheduler threads
+      static void setCpuThreadEnvironment( CpuThreadEnvironment threadType );
+      static CpuThreadEnvironment getCpuThreadEnvironment();
+
+      //////////
+      // Sets/Returns whether or not to explicitly use CPU schedulers
+      // overridding all other defaults.
+      static void setUsingCPU( bool state );
+      static bool usingCPU();
+
+      //////////
+      // Sets/Returns whether or not to use available accelerators or
+      // co-processors (e.g. GPU, MIC, etc)
+      static void setUsingDevice( bool state );
       static bool usingDevice();
 
       //////////
-      // Sets whether or not to use available accelerators or co-processors (e.g. GPU, MIC, etc)
-      static void setUsingDevice( bool state );
+      // Sets/Gets the name of the task name to time
+      static void        setTaskNameToTime( const std::string& taskNameToTime );
+      static std::string getTaskNameToTime();
 
       //////////
-      // Returns the number of threads that a processing element is allowed to use to compute its tasks.
-      static int getNumThreads();
+      // Sets/Gets the number of times the task name to time is
+      // expected to run
+      static void         setAmountTaskNameExpectedToRun( unsigned int num );
+      static unsigned int getAmountTaskNameExpectedToRun();
 
       //////////
-      // Returns the number of thread partitions that a processing element is allowed to use to compute its tasks.
-      static int getNumPartitions();
+      // Sets/Gets the number of threads that a processing element is
+      // allowed to use to compute its tasks.
+      static void setNumThreads( int num );
+      static int  getNumThreads();
 
       //////////
-      // Returns the number of threads per partition.
-      static int getThreadsPerPartition();
+      // Sets/Gets the number of thread partitions that a processing
+      // element is allowed to use to compute its tasks.
+      static void setNumPartitions( int num );
+      static int  getNumPartitions();
 
       //////////
-      // Returns the ID of the main thread, via std::this_thread::get_id()
+      // Sets/Gets the number of threads per OMP partition
+      static void setThreadsPerPartition( int num );
+      static int  getThreadsPerPartition();
+
+      //////////
+      // Gets the ID of the main thread, via std::this_thread::get_id()
       static std::thread::id getMainThreadID();
 
       //////////
-      // Sets the number of task runner threads to the value specified
-      static void setNumThreads( int num );
-      
-      //////////
-      // Sets the number of task runner OMP thread partitions to the value specified
-      static void setNumPartitions( int num );
+      // Sets/Gets the number of Kokkos instances per task
+      static void         setKokkosInstancesPerTask( unsigned int num );
+      static unsigned int getKokkosInstancesPerTask();
 
       //////////
-      // Sets the number of threads per OMP partition
-      static void setThreadsPerPartition( int num );
+      // Sets/Gets the number of Kokkos leagues that should be used for each loop
+      static void         setKokkosLeaguesPerLoop( unsigned int num );
+      static unsigned int getKokkosLeaguesPerLoop();
 
       //////////
-      // Passes the specified exit code to std::exit()
-      static void exitAll( int code );
+      // Sets/Gets the number of Kokkos teams to use within an SM for a loop
+      static void         setKokkosTeamsPerLeague( unsigned int num );
+      static unsigned int getKokkosTeamsPerLeague();
 
+      //////////
+      // Sets/Gets the Kokkos execution policy
+      static void          setKokkosPolicy( Kokkos_Policy policy );
+      static Kokkos_Policy getKokkosPolicy();
+
+      //////////
+      // Sets/Gets the Kokkos chuck size for Kokkos::RangePolicy &
+      // Kokkos::TeamPolicy
+      static void setKokkosChunkSize( int size );
+      static int  getKokkosChunkSize();
+
+      //////////
+      // Sets/Gets the Kokkos chuck size for Kokkos::MDRangePolicy
+      static void setKokkosTileSize( int isize, int jsize, int ksize );
+      static void getKokkosTileSize( int &isize, int &jsize, int &ksize );
 
    private:
 
@@ -160,8 +222,14 @@ class Parallel {
       Parallel( Parallel && )                 = delete;
       Parallel& operator=( Parallel && )      = delete;
 
+      static CpuThreadEnvironment s_cpu_thread_environment;
+
       static bool              s_initialized;
+      static bool              s_using_cpu;
       static bool              s_using_device;
+
+      static std::string       s_task_name_to_time;
+      static int               s_amount_task_name_expected_to_run;
       static int               s_num_threads;
       static int               s_num_partitions;
       static int               s_threads_per_partition;
@@ -170,6 +238,18 @@ class Parallel {
       static std::thread::id   s_main_thread_id;
       static ProcessorGroup*   s_root_context;
 
+      static int               s_kokkos_instances_per_task;
+      static int               s_kokkos_leagues_per_loop;
+      static int               s_kokkos_teams_per_league;
+
+      static Kokkos_Policy     s_kokkos_policy;
+      static int               s_kokkos_chunk_size;
+      static int               s_kokkos_tile_i_size;
+      static int               s_kokkos_tile_j_size;
+      static int               s_kokkos_tile_k_size;
+
+      static int               s_provided;
+      static int               s_required;
 };
 
 } // End namespace Uintah

@@ -9,10 +9,42 @@ TaskInterface( task_name, matl_index ) {
 BoundaryInfo::~BoundaryInfo(){
 }
 
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskInitializeFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace BoundaryInfo::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryInfo::problemSetup( ProblemSpecP& db ){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryInfo::create_local_labels(){
 
@@ -40,8 +72,8 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry , const bool p
 
 }
 
-void
-BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template <typename ExecSpace, typename MemSpace>
+void BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
 //
 //------------------------------------------------
@@ -61,8 +93,8 @@ BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry , const boo
 
 }
 
-void
-BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template <typename ExecSpace, typename MemSpace> void
+BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj){}
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------
@@ -75,5 +107,5 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 
 }
 
-void
-BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+template <typename ExecSpace, typename MemSpace>
+void BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}

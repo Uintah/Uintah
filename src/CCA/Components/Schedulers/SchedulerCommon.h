@@ -33,6 +33,7 @@
 #include <CCA/Components/Schedulers/RuntimeStatsEnum.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -294,6 +295,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // number of schedulers and subschedulers
     int m_num_schedulers {0};
 
+    virtual void setMaxGhostCellsCollectionPhase(bool val) {m_max_ghost_cell_collection_phase = val;}
+
   protected:
 
     void finalizeTimestep();
@@ -327,6 +330,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
     // method of getting data from an old to a new grid).
+protected:
     bool                                m_is_copy_data_timestep{false};
     bool                                m_is_init_timestep{false};
     bool                                m_is_restart_init_timestep{false};
@@ -440,6 +444,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};
+
+    bool m_max_ghost_cell_collection_phase{false}; //DS 06012020: GPU resize problems require max ghost cells for variables should be collected across tasks. To do this,
+                                                   //one has to call scheduleTimestep, scheduleInitialize etc to go through all tasks, but task should not be added into
+                                                   //the task graph during this collection phase. So return from addTask if m_max_ghost_cell_collection_phase == true
 
     // task-graph needs access to reduction task map, etc
     friend class TaskGraph;

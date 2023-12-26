@@ -370,11 +370,13 @@ public:
                                   const LevelP& level,
                                   const MaterialSet* matls );
 
-  void computeBCAreaHelper( const ProcessorGroup*,
-                            const PatchSubset* patches,
+  template <typename ExecSpace, typename MemSpace>
+  void computeBCAreaHelper( const PatchSubset* patches,
                             const MaterialSubset*,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
+                            OnDemandDataWarehouse* old_dw,
+                            OnDemandDataWarehouse* new_dw,
+                            UintahParams& uintahParams,
+                            ExecutionObject<ExecSpace, MemSpace>& execObj ,
                             const IntVector lo,
                             const IntVector hi );
 

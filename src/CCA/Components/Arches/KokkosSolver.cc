@@ -47,8 +47,9 @@
 #include <CCA/Components/Arches/SourceTermsV2/SourceTermFactoryV2.h>
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryConditionFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
+#include <CCA/Components/Arches/ArchesExamples/ExampleFactory.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
 using namespace Uintah;
 
@@ -131,6 +132,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory(m_arches));
   std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
   std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2(m_arches));
+  std::shared_ptr<ArchesExamples::ExampleFactory> ExampleFactoryF(scinew ArchesExamples::ExampleFactory(m_arches));
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -143,6 +145,8 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
   m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
   m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
+  if(db->findBlock("ArchesExample"))
+	  m_task_factory_map.insert(std::make_pair("ExampleFactory",ExampleFactoryF));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering and Building Tasks For: " << std::endl;
@@ -244,29 +248,48 @@ KokkosSolver::computeTimestep( const LevelP     & level
 
   if ( found_all_vars ){
 
-    Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep", this,
-                             &KokkosSolver::computeStableTimeStep);
+    auto taskDependencies = [&](Task* tsk) {
 
-    // Actually compute the dt based on CFD variables.
-    tsk->computes( m_delTLabel, level.get_rep() );
+      // Actually compute the dt based on CFD variables.
+      tsk->computes( m_delTLabel, level.get_rep() );
 
-    m_uLabel = VarLabel::find( uname );
-    m_vLabel = VarLabel::find( vname );
-    m_wLabel = VarLabel::find( wname );
-    m_rhoLabel = VarLabel::find( rhoname );
-    m_tot_muLabel = VarLabel::find( muname );
+      m_uLabel = VarLabel::find( uname );
+      m_vLabel = VarLabel::find( vname );
+      m_wLabel = VarLabel::find( wname );
+      m_rhoLabel = VarLabel::find( rhoname );
+      m_tot_muLabel = VarLabel::find( muname );
 
-    if ( level->getIndex() == m_archesLevelIndex ){
-      tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
-      tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
-      tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
-      tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
-      tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+      if ( level->getIndex() == m_archesLevelIndex ){
+        tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
+        tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
+        tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
+        tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
+        tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+      }
+
+      m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
+    };
+
+    //some race condition in kokkos::parallel_reduce. So combine all patches together in a single reduction task to avoid the multiple cpu threads calling parallel_reduce
+    //temp work around until the permanent solution
+    if ( Uintah::Parallel::usingDevice() ) {
+	  LoadBalancer * lb = sched->getLoadBalancer();
+	  //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos parallel_reduce %s %d\n", __FILE__, __LINE__);
+	  create_portable_tasks(taskDependencies, this,
+						  "KokkosSolver::computeStableTimeStep",
+						  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
+						  &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+						  &KokkosSolver::computeStableTimeStep<KOKKOS_DEFAULT_DEVICE_TAG>,
+						  sched, lb->getPerProcessorPatchSet(level), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
     }
-
-    m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
-
-    sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
+    else{
+      create_portable_tasks(taskDependencies, this,
+                          "KokkosSolver::computeStableTimeStep",
+                          &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
+                          &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+                          &KokkosSolver::computeStableTimeStep<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
+    }
 
   } else {
 
@@ -283,31 +306,38 @@ KokkosSolver::computeTimestep( const LevelP     & level
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
     }
 
-    m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init );
-    proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
+    auto taskDependencies = [&](Task* tsk) {
+      m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init );
+      proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
+      tsk->computes( m_delTLabel, level.get_rep() );
+    };
 
-    Task* tsk = scinew Task( "KokkosSolver::setTimeStep", this,
-                             &KokkosSolver::setTimeStep );
-
-    tsk->computes( m_delTLabel, level.get_rep() );
-
-    sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
+    create_portable_tasks(taskDependencies, this,
+                          "KokkosSolver::setTimeStep",
+                          &KokkosSolver::setTimeStep<UINTAH_CPU_TAG>,
+                          &KokkosSolver::setTimeStep<KOKKOS_OPENMP_TAG>,
+                          //&KokkosSolver::setTimeStep<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
   }
 
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
 void
-KokkosSolver::computeStableTimeStep( const ProcessorGroup *
-                                   , const PatchSubset    * patches
-                                   , const MaterialSubset *
-                                   ,       DataWarehouse  * old_dw
-                                   ,       DataWarehouse  * new_dw
+KokkosSolver::computeStableTimeStep( const PatchSubset                          * patches
+                                   , const MaterialSubset                       * matls
+                                   ,       OnDemandDataWarehouse                * old_dw
+                                   ,       OnDemandDataWarehouse                * new_dw
+                                   ,       UintahParams                         & uintahParams
+                                   ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                                    )
 {
 
   const Level* level = getLevel(patches);
+
+  double dt = m_dt_init;
 
   if ( level->getIndex() == m_archesLevelIndex ){
     for (int p = 0; p < patches->size(); p++) {
@@ -318,43 +348,28 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 
       Vector Dx = patch->dCell();
 
-      constSFCXVariable<double> u;
-      constSFCYVariable<double> v;
-      constSFCZVariable<double> w;
-      constCCVariable<double> rho;
-      constCCVariable<double> mu;
-
-      new_dw->get( u, m_uLabel, indx, patch, Ghost::None, 0 );
-      new_dw->get( v, m_vLabel, indx, patch, Ghost::None, 0 );
-      new_dw->get( w, m_wLabel, indx, patch, Ghost::None, 0 );
-      new_dw->get( rho, m_rhoLabel, indx, patch, Ghost::None, 0 );
-      new_dw->get( mu, m_tot_muLabel, indx, patch, Ghost::None, 0 );
-
-      double dt = m_dt_init;
+      auto u   = new_dw->getConstGridVariable<constSFCXVariable<double>, double, MemSpace>( m_uLabel     , indx, patch, Ghost::None, 0 );
+      auto v   = new_dw->getConstGridVariable<constSFCYVariable<double>, double, MemSpace>( m_vLabel     , indx, patch, Ghost::None, 0 );
+      auto w   = new_dw->getConstGridVariable<constSFCZVariable<double>, double, MemSpace>( m_wLabel     , indx, patch, Ghost::None, 0 );
+      auto rho = new_dw->getConstGridVariable<constCCVariable<double>,   double, MemSpace>( m_rhoLabel   , indx, patch, Ghost::None, 0 );
+      auto mu  = new_dw->getConstGridVariable<constCCVariable<double>,   double, MemSpace>( m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-      Uintah::parallel_reduce_min( range, [&]( int i, int j, int k, double & m_dt ) {
+      const double small_num = 1.e-10;
 
-        const double small_num = 1.e-10;
+      const double dx = Dx.x();
+      const double dy = Dx.y();
+      const double dz = Dx.z();
 
-        const double dx = Dx.x();
-        const double dy = Dx.y();
-        const double dz = Dx.z();
+      Uintah::parallel_reduce_min( execObj, range, KOKKOS_LAMBDA ( const int i, const int j, const int k, double & m_dt ) {
 
-        double denom_dt = std::fabs( u(i,j,k) ) / dx +
-                          std::fabs( v(i,j,k) ) / dy +
-                          std::fabs( w(i,j,k) ) / dz +
-                          mu(i,j,k) / rho(i,j,k) *
-                          ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
-                          small_num;
-
-#ifdef UINTAH_ENABLE_KOKKOS
-        m_dt = std::fmin( 1.0 / denom_dt, m_dt_init ); // m_dt reduced by Kokkos::parallel_reduce
-#else
-        m_dt = std::fmin( 1.0 / denom_dt, m_dt );      // m_dt reduced here
-#endif
-
+        m_dt = 1. / ( fabs( u(i,j,k) ) / dx +
+                      fabs( v(i,j,k) ) / dy +
+                      fabs( w(i,j,k) ) / dz +
+                      mu(i,j,k) / rho(i,j,k) *
+                      ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
+                      small_num);
       }, dt );
 
       new_dw->put(delt_vartype(dt), m_delTLabel, level);
@@ -365,12 +380,14 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 }
 
 //--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
 void
-KokkosSolver::setTimeStep( const ProcessorGroup *
-                         , const PatchSubset    * patches
-                         , const MaterialSubset *
-                         ,       DataWarehouse  * old_dw
-                         ,       DataWarehouse  * new_dw
+KokkosSolver::setTimeStep( const PatchSubset                          * patches
+                         , const MaterialSubset                       * matls
+                         ,       OnDemandDataWarehouse                * old_dw
+                         ,       OnDemandDataWarehouse                * new_dw
+                         ,       UintahParams                         & uintahParams
+                         ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                          )
 {
   const Level* level = getLevel(patches);
@@ -776,8 +793,8 @@ KokkosSolver::SSPRKSolve( const LevelP & level,
       packed_info.global, level, sched, matls, time_substep );
 
     // compute wall momentum closure
-    i_turb_model_fac->second->schedule_task_group("wall_momentum_closure",
-      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+    //i_turb_model_fac->second->schedule_task_group("wall_momentum_closure",
+    //  TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
 
     i_transport->second->schedule_task_group( "momentum_conv", TaskInterface::TIMESTEP_EVAL,
       packed_info.global, level, sched, matls, time_substep );
@@ -874,22 +891,28 @@ KokkosSolver::SandBox_initialize( const LevelP & level,
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  // initialize hypre objects
-  if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
-    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
-    press_tsk->sched_Initialize( level, sched );
+  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+    // initialize hypre objects
+    if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
+      press_tsk->sched_Initialize( level, sched );
+    }
+
+    i_prop_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
   }
-
-  i_prop_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
-
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
-
-  m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
-
+  else{//schedule examples if present
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+  }
 
 }
 
@@ -908,28 +931,41 @@ KokkosSolver::SandBox( const LevelP     & level
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
-                           i_util_fac->second->retrieve_task("[PressureEqn]"));
+  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
+                             i_util_fac->second->retrieve_task("[PressureEqn]"));
 
-  // ----------------- Time Integration ------------------------------------------------------------
-  i_prop_fac->second->schedule_task_group("all_tasks",
-    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+    // ----------------- Time Integration ------------------------------------------------------------
+    i_prop_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group("all_tasks",
-    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-  //m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
-  i_prop_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+    //m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
+    i_prop_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-  // Solve it - calling out to hypre external lib
-  press_tsk->solve(level, sched, time_substep);
+    // Solve it - calling out to hypre external lib
+    press_tsk->solve(level, sched, time_substep);
+  }
+  else{	//schedule examples if present
+    i_exam_fac->second->schedule_task_group("all_tasks",
+        TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+  }
 
 }

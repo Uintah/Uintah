@@ -59,8 +59,10 @@
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#include <sci_defs/gpu_defs.h>
+
+#if defined(KOKKOS_USING_GPU)
+#  include <CCA/Components/Schedulers/KokkosScheduler.h>
 #endif
 
 #include <Core/Exceptions/Exception.h>
@@ -73,7 +75,6 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
 
-#include <sci_defs/cuda_defs.h>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/uintah_defs.h>
@@ -103,6 +104,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <Core/Parallel/KokkosTools.h>
 
 #include <unistd.h>
 
@@ -146,6 +148,34 @@ static void usage( const std::string& message,
                    const std::string& badarg,
                    const std::string& progname )
 {
+
+#if defined(HAVE_KOKKOS)
+  std::string kokkosStr;
+
+#if defined(_OPENMP)
+  kokkosStr = "multi-threaded Kokkos ";
+#else
+  kokkosStr = "Kokkos ";
+#endif
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+  kokkosStr += "OpenMP ";
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA)
+  kokkosStr += "CUDA ";
+#elif defined(KOKKOS_ENABLE_HIP)
+  kokkosStr += "HIP ";
+#elif defined(KOKKOS_ENABLE_SYCL)
+  kokkosStr += "SYCL ";
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  kokkosStr += "OpenAcc ";
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  kokkosStr += "OpenMPTarget ";
+#endif
+  kokkosStr += "scheduler";
+#endif
+
   start();
 
   if (Uintah::Parallel::getMPIRank() == 0) {
@@ -159,41 +189,63 @@ static void usage( const std::string& message,
     std::cerr << "\n";
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
-    std::cerr << "-copy                : Copy from old uda when restarting\n";
-    std::cerr << "-d[ebug]             : List the debug streams\n";
-    std::cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
-    std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
-    std::cerr << "-gitDiff             : runs git diff <src/...../Packages/Uintah \n";
-    std::cerr << "-gitStatus           : runs git status & git log -1 <src/...../Packages/Uintah \n";
-#ifdef HAVE_CUDA
-    std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
-#endif
-    std::cerr << "-gpucheck            : returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
-    std::cerr << "                     : returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
-    std::cerr << "-h[elp]              : This usage information\n";
-    std::cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
-    std::cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
-    std::cerr << "-move                : Move from old uda when restarting\n";
-    std::cerr << "-nocopy              : Default: Don't copy or move old uda timestep when restarting\n";
-    std::cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
-    std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
-    std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-t <index>           : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
-    std::cerr << "-configCmd           : Display the configure command used to compile Uintah.\n";
-    std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
-    std::cerr << "-version             : Display git and configure information.\n";
-    std::cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
+    std::cerr << "-h[elp]                         : This usage information.\n";
+    std::cerr << "-d[ebug]                        : List the debug streams.\n";
 
+#if defined(HAVE_KOKKOS)
+    std::cerr << "-cpu                            : Use the CPU based MPI or Unified scheduler instead of the " << kokkosStr << ".\n";
+#endif
+
+#if defined(KOKKOS_USING_GPU)
+    std::cerr << "-gpu                            : Use available GPU devices, requires the " << kokkosStr << ".\n";
+    std::cerr << "-gpucheck                       : Checks if there is a GPU available for the " << kokkosStr << ".\n";
+    std::cerr << "-kokkos_instances_per_task <#>  : Number of Kokkos instances per task (default 1).\n";
+#endif
+
+#if defined(HAVE_KOKKOS)
+    std::cerr << "-kokkos_policy <policy>         : Kokkos Execution Policy - team, range, mdrange (default), or mdrange_rev.\n";
+    std::cerr << "-kokkos_leagues_per_loop <#>    : Kokkos TeamPolicy number of leagues (work items) per loop (default 1).\n";
+    std::cerr << "-kokkos_teams_per_league <#>    : Kokkos TeamPolicy number of teams (threads) per Kokkos TeamPolicy league (default 256/16).\n";
+    std::cerr << "-kokkos_chunk_size <#>          : Kokkos TeamPolicy and RangePolicy chunk size.\n";
+    std::cerr << "-kokkos_tile_size <# # #>       : Kokkos MDRangePolicy tile size.\n";
+#endif
+
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+    std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires the " << kokkosStr << " with the Partition Master.\n";
+    std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires the " << kokkosStr << " with the Partition Master.\n";
+#endif
+#if defined(_OPENMP)
+    std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires the multi-threaded Unified scheduler"
+#if defined(HAVE_KOKKOS)
+              << " or the " << kokkosStr
+#endif
+              << ".\n";
+#endif
+
+    std::cerr << "-layout NxMxO                   : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
+    std::cerr << "-local_filesystem               : If using MPI, use this flag if each node has a local disk.\n";
+    std::cerr << "-emit_taskgraphs                : Output taskgraph information.\n";
+    std::cerr << "-restart                        : Give the checkpointed uda directory as the input file.\n";
+    std::cerr << "-postProcessUda                 : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
+    std::cerr << "-uda_suffix <number>            : Make a new uda dir with <number> as the default suffix.\n";
+    std::cerr << "-t <index>                      : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file).\n";
+    std::cerr << "-gitDiff                        : runs git diff <src/...../Packages/Uintah.\n";
+    std::cerr << "-gitStatus                      : runs git status & git log -1 <src/...../Packages/Uintah.\n";
+    std::cerr << "-copy                           : Copy from old uda when restarting.\n";
+    std::cerr << "-move                           : Move from old uda when restarting.\n";
+    std::cerr << "-nocopy                         : Default: Don't copy or move old uda timestep when restarting.\n";
+    std::cerr << "-validate                       : Verifies the .ups file is valid and quits!.\n";
+    std::cerr << "-do_not_validate                : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
-    std::cerr << "\n";
-    std::cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
-    std::cerr << "-visit_connect           : Wait for a visit connection before executing the simulation\n";
-    std::cerr << "-visit_console           : Allow for console input while executing the simulation\n";
-    std::cerr << "-visit_comment <comment> : A comment about the simulation\n";
-    std::cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
-    std::cerr << "-visit_options <string>  : Optional args for the VisIt launch script\n";
-    std::cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
-    std::cerr << "-visit_ui <file>         : Use the named Qt GUI file instead of the default\n";
+    std::cerr << ".\n";
+    std::cerr << "-visit <filename>               : Create a VisIt .sim2 file and perform VisIt in-situ checks.\n";
+    std::cerr << "-visit_connect                  : Wait for a visit connection before executing the simulation.\n";
+    std::cerr << "-visit_console                  : Allow for console input while executing the simulation.\n";
+    std::cerr << "-visit_comment <comment>        : A comment about the simulation.\n";
+    std::cerr << "-visit_dir <directory>          : Top level directory for the VisIt installation.\n";
+    std::cerr << "-visit_options <string>         : Optional args for the VisIt launch script.\n";
+    std::cerr << "-visit_trace <file>             : Trace file for VisIt's Sim V2 function calls.\n";
+    std::cerr << "-visit_ui <file>                : Use the named Qt GUI file instead of the default.\n";
 #endif
     std::cerr << "\n\n";
   }
@@ -255,19 +307,19 @@ void sanityChecks()
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
   if (getenv("MALLOC_TRACE")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
   if (getenv("MALLOC_STRICT")) {
     printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
+    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured.\n");
     printf("ERROR:\n\n");
     Parallel::exitAll(1);
   }
@@ -309,12 +361,8 @@ int main( int argc, char *argv[], char *env[] )
   bool   show_version        = false;
   bool   validateUps         = true;
 
-  int    numPartitions       =  0;
-  int    numThreads          =  0;
   int    restartCheckpointIndex     = -1;
-  int    threadsPerPartition =  0;
   int    udaSuffix           = -1;
-
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
@@ -354,10 +402,11 @@ int main( int argc, char *argv[], char *env[] )
       quit();
     }
     else if (arg == "-nthreads") {
+#if defined(_OPENMP)
       if (++i == argc) {
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
-      numThreads = atoi(argv[i]);
+      int numThreads = atoi(argv[i]);
       if( numThreads < 1 ) {
         usage("Number of threads is too small", arg, argv[0]);
       }
@@ -366,12 +415,17 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
+#else
+      std::cout << "Not compiled with OpenMP support." << std::endl;
+      Parallel::exitAll(0);
+#endif
     }
     else if (arg == "-npartitions") {
+#if defined(USE_KOKKOS_PARTITION_MASTER)
       if (++i == argc) {
         usage("You must provide a number of thread partitions for -npartitions", arg, argv[0]);
       }
-      numPartitions = atoi(argv[i]);
+      int numPartitions = atoi(argv[i]);
       if( numPartitions < 1 ) {
         usage("Number of thread partitions is too small", arg, argv[0]);
       }
@@ -380,21 +434,28 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumPartitions( numPartitions );
+#else
+      std::cout << "Not compiled for Kokkos Partition Master (deprecated)." << std::endl;
+      Parallel::exitAll(0);
+#endif
     }
     else if (arg == "-nthreadsperpartition") {
+#if defined(USE_KOKKOS_PARTITION_MASTER)
       if (++i == argc) {
         usage("You must provide a number of threads per partition for -nthreadsperpartition", arg, argv[0]);
       }
-      threadsPerPartition = atoi(argv[i]);
+      int threadsPerPartition = atoi(argv[i]);
       if( threadsPerPartition < 1 ) {
         usage("Number of threads per partition is too small", arg, argv[0]);
       }
-#ifdef _OPENMP
       if( threadsPerPartition > omp_get_max_threads() ) {
         usage("Number of threads per partition must be <= omp_get_max_threads()", arg, argv[0]);
       }
-#endif
       Uintah::Parallel::setThreadsPerPartition(threadsPerPartition);
+#else
+      std::cout << "Not compiled for Kokkos Partition Master (deprecated)." << std::endl;
+      Parallel::exitAll(0);
+#endif
     }
     else if (arg == "-solver") {
       if (++i == argc) {
@@ -438,26 +499,201 @@ int main( int argc, char *argv[], char *env[] )
       restartFromScratch = false;
       restartRemoveOldDir = true;
     }
+    else if(arg == "-cpu") {
+#if defined(HAVE_KOKKOS)
+      Uintah::Parallel::setUsingCPU( true );
+#else
+      std::cout << "Ignoring '-cpu' flag as it is true by default." << std::endl;
+      // Parallel::exitAll(1);
+#endif
+    }
+
+    else if(arg == "-gpu") {
+#if defined(KOKKOS_USING_GPU)
+      Uintah::Parallel::setUsingDevice( true );
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
     else if (arg == "-gpucheck") {
-#ifdef HAVE_CUDA
-      int retVal = UnifiedScheduler::verifyAnyGpuActive();
-      if (retVal == 1) {
+#if defined(KOKKOS_USING_GPU)
+      if (KokkosScheduler::verifyAnyGpuActive()) {
         std::cout << "At least one GPU detected!" << std::endl;
       }
       else {
         std::cout << "No GPU detected!" << std::endl;
       }
-      Parallel::exitAll(retVal);
+      Parallel::exitAll(1);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
 #endif
-      std::cout << "No GPU detected!" << std::endl;
-      Parallel::exitAll(2); // If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
-      std::cout << "This doesn't run" << std::endl;
     }
-#ifdef HAVE_CUDA
-    else if(arg == "-gpu") {
-      Uintah::Parallel::setUsingDevice( true );
-    }
+
+    else if (arg == "-kokkos_instances_per_task") {
+#if defined(KOKKOS_USING_GPU)
+      int kokkos_instances_per_task = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos instances per task for -kokkos_instances_per_task.", arg, argv[0]);
+      }
+      kokkos_instances_per_task = atoi(argv[i]);
+      if( kokkos_instances_per_task < 1 ) {
+        usage("Number of Kokkos Instances per task is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+      Uintah::Parallel::setKokkosInstancesPerTask(kokkos_instances_per_task);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
 #endif
+    }
+
+    else if (arg == "-kokkos_policy") {
+#if defined(HAVE_KOKKOS)
+      Parallel::Kokkos_Policy kokkos_policy = Parallel::Kokkos_Team_Policy;
+      if (++i == argc) {
+        usage("You must provide the policy -kokkos_policy.", arg, argv[0]);
+      }
+
+      if( strcmp(argv[i], "team") == 0 )
+        kokkos_policy = Parallel::Kokkos_Team_Policy;
+      else if( strcmp(argv[i], "range") == 0 )
+        kokkos_policy = Parallel::Kokkos_Range_Policy;
+      else if( strcmp(argv[i], "mdrange") == 0 )
+        kokkos_policy = Parallel::Kokkos_MDRange_Policy;
+      else if( strcmp(argv[i], "mdrange_rev") == 0 )
+        kokkos_policy = Parallel::Kokkos_MDRange_Reverse_Policy;
+      else
+      {
+        usage("Unknown Kokkos policy", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+
+      Uintah::Parallel::setKokkosPolicy(kokkos_policy);
+#else
+      std::cout << "Not compiled for Kokkos Range Policy support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-kokkos_leagues_per_loop") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_leagues_per_loop = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy leagues (work items) per loop for -kokkos_leagues_per_loop.", arg, argv[0]);
+      }
+      kokkos_leagues_per_loop = atoi(argv[i]);
+      if( kokkos_leagues_per_loop < 1 ) {
+        usage("Number of Kokkos TeamPolicy leagues (work items) per loop is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+      Uintah::Parallel::setKokkosLeaguesPerLoop(kokkos_leagues_per_loop);
+#else
+      std::cout << "Not compiled for GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-kokkos_teams_per_league") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_teams_per_block = 0;
+      if (++i == argc) {
+        usage("You must provide a number of Kokkos TeamPolicy teams (threads) per legaue for -kokkos_teams_per_block.", arg, argv[0]);
+      }
+      kokkos_teams_per_block = atoi(argv[i]);
+      if( kokkos_teams_per_block < 1 ) {
+        usage("Number of Kokkos TeamPolicy teams (threads) per legaue is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+      Uintah::Parallel::setKokkosTeamsPerLeague(kokkos_teams_per_block);
+#else
+      std::cout << "Not compiled for GPU support" << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-kokkos_chunk_size") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_chunk_size = 0;
+      if (++i == argc) {
+        usage("You must provide the chunk size -kokkos_chunk_size.", arg, argv[0]);
+      }
+      kokkos_chunk_size = atoi(argv[i]);
+      if( kokkos_chunk_size < 1 ) {
+        usage("The Kokkos chunk size is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+
+      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_Team_Policy &&
+         Parallel::getKokkosPolicy() != Parallel::Kokkos_Range_Policy)
+        Parallel::setKokkosPolicy(Parallel::Kokkos_Range_Policy);
+      Parallel::setKokkosChunkSize(kokkos_chunk_size);
+#else
+      std::cout << "Not compiled for Kokkos GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+    else if (arg == "-kokkos_tile_size") {
+#if defined(HAVE_KOKKOS)
+      int kokkos_tile_isize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile i index size -kokkos_tile_size.", arg, argv[0]);
+      }
+      kokkos_tile_isize = atoi(argv[i]);
+      if( kokkos_tile_isize < 1 ) {
+        usage("The Kokkos tile isize is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+
+      int kokkos_tile_jsize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile j index size -kokkos_tile_size.", arg, argv[0]);
+      }
+      kokkos_tile_jsize = atoi(argv[i]);
+      if( kokkos_tile_jsize < 1 ) {
+        usage("The Kokkos tile jsize is too small.", arg, argv[0]);
+        Parallel::exitAll(0);
+      }
+
+      int kokkos_tile_ksize = 0;
+      if (++i == argc) {
+        usage("You must provide the tile k index size -kokkos_tile_size.", arg, argv[0]);
+      }
+      kokkos_tile_ksize = atoi(argv[i]);
+      if( kokkos_tile_ksize < 1 ) {
+        usage("The Kokkos tile ksize is too small.", arg, argv[0]);
+        Parallel::exitAll(1);
+      }
+
+      if(Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Policy &&
+         Parallel::getKokkosPolicy() != Parallel::Kokkos_MDRange_Reverse_Policy)
+        Parallel::setKokkosPolicy(Parallel::Kokkos_MDRange_Policy);
+
+      Parallel::setKokkosTileSize(kokkos_tile_isize,
+                                  kokkos_tile_jsize,
+                                  kokkos_tile_ksize);
+#else
+      std::cout << "Not compiled for Kokkos GPU support." << std::endl;
+      Parallel::exitAll(0);
+#endif
+    }
+
+    else if (arg == "-taskname_to_time") {
+      // A hidden command line option useful for timing GPU tasks by forcing this task name to
+      // wait until they can all be launched as a big group.  This helps time by avoiding
+      // any interleaving of other tasks in the way.
+      // This command line option must be paired with two additional arguments.
+      // The first being the name of the task
+      // The second being the amount of times that task is expected to run in a timestep.
+      i++;
+      std::string taskName = argv[i];
+      i++;
+      unsigned int amountTaskNameExpectedToRun = atoi(argv[i]);
+      Uintah::Parallel::setTaskNameToTime(taskName);
+      Uintah::Parallel::setAmountTaskNameExpectedToRun(amountTaskNameExpectedToRun);
+    }
     else if (arg == "-t") {
       if (i < argc - 1) {
         restartCheckpointIndex = atoi(argv[++i]);
@@ -660,7 +896,6 @@ int main( int argc, char *argv[], char *env[] )
       if( show_version ){
         quit();
       }
-
     }
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );
@@ -672,7 +907,8 @@ int main( int argc, char *argv[], char *env[] )
         std::cout << "SLEEPING FOR " << sleepTime
              << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
       }
-      std::cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
+      std::cout << "PID for rank " << Uintah::Parallel::getMPIRank()
+                << " (" << name << ") is " << getpid() << std::endl;
       std::cout.flush();
 
       struct timespec ts;
@@ -689,27 +925,32 @@ int main( int argc, char *argv[], char *env[] )
       ups = ProblemSpecReader().readInputFile( filename, validateUps );
     }
     catch( ProblemSetupException& err ) {
-      proc0cout << "\nERROR caught while parsing UPS file: " << filename << "\nDetails follow.\n"
-                << err.message() << "\n";
+      proc0cout << std::endl << "ERROR caught while parsing UPS file: "
+                << filename << std::endl
+                << "\nDetails follow." << std::endl
+                << err.message() << std::endl;
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
     }
     catch( ... ) {
-      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
-      // instead of a UPS file.
-      proc0cout   << "\n";
-      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+      // Bulletproofing.  Catches the case where a user accidentally
+      // specifies a UDA directory instead of a UPS file.
+      proc0cout << std::endl << "ERROR - Failed to parse UPS file: "
+                << filename << std::endl;
 
       if( validDir( filename ) ) {
-        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+        proc0cout << "ERROR - Note: '" << filename << "' is a directory! "
+                  << "Did you mistakenly specify a UDA instead of an UPS file?"
+                  << std::endl;
       }
-      proc0cout   << "\n";
+
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
     }
 
     if( onlyValidateUps ) {
-      std::cout << "\nValidation of .ups File finished... good bye.\n\n";
+      std::cout << std::endl << "Validation of .ups File finished... good bye."
+                << std::endl;
       ups = nullptr; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
       Parallel::exitAll( 0 );
@@ -826,6 +1067,10 @@ int main( int argc, char *argv[], char *env[] )
     simController->attachPort( "load balancer", loadBalancer );
     appComp->attachPort( "load balancer", loadBalancer );
 
+#ifdef HAVE_KOKKOS
+    Kokkos::initialize();
+#endif //HAVE_KOKKOS
+
     //__________________________________
     // Scheduler
     SchedulerCommon* scheduler =
@@ -837,6 +1082,7 @@ int main( int argc, char *argv[], char *env[] )
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
     loadBalancer->attachPort( "scheduler", scheduler );
+    solverComp->attachPort( "scheduler", scheduler );
 
     scheduler->setStartAddr( start_addr );
     scheduler->addReference();
@@ -922,11 +1168,17 @@ int main( int argc, char *argv[], char *env[] )
     }
 
     delete dataArchiver;
-    delete scheduler;
     delete loadBalancer;
     delete solver;
     delete application;
     delete simController;
+    delete scheduler;
+
+#ifdef HAVE_KOKKOS
+  Uintah::cleanupKokkosTools();
+  Kokkos::finalize();
+#endif //HAVE_KOKKOS
+
   }
 
   catch (ProblemSetupException& e) {

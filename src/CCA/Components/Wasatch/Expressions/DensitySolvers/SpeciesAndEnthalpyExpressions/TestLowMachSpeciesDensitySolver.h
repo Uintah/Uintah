@@ -1,7 +1,15 @@
 /*
  * The MIT License
  *
+<<<<<<< HEAD
  * Copyright (c) 2012-2023 The University of Utah
+=======
+<<<<<<< HEAD:src/Core/Grid/TaskStatus.h
+ * Copyright (c) 1997-2019 The University of Utah
+=======
+ * Copyright (c) 2012-2023 The University of Utah
+>>>>>>> master:src/CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h
+>>>>>>> master
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +32,27 @@
 #ifndef test_species_density_solver_h
 #define test_species_density_solver_h
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD:src/Core/Grid/TaskStatus.h
+#ifndef CORE_GRID_TASK_STATUS_H
+#define CORE_GRID_TASK_STATUS_H
+
+namespace Uintah {
+
+
+  enum CallBackEvent
+  {
+      CPU      // <- normal CPU task, happens when a GPU enabled task runs on CPU
+    , preGPU   // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
+    , GPU      // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
+    , postGPU  // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
+  };
+
+} //end namespace Uintah
+#endif //#ifndef CORE_GRID_TASK_STATUS_H
+=======
+>>>>>>> master
 #include <sci_defs/wasatch_defs.h>
 
 #ifndef HAVE_POKITT
@@ -43,3 +72,7 @@ void test_low_mach_species_density_solver( Uintah::ProblemSpecP& params,
 } // namespace WasatchCore
 
 #endif // test_species_density_solver_h
+<<<<<<< HEAD
+=======
+>>>>>>> master:src/CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/TestLowMachSpeciesDensitySolver.h
+>>>>>>> master

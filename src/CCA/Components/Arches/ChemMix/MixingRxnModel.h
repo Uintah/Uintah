@@ -43,6 +43,9 @@
 #include     <map>
 #include     <string>
 #include     <stdexcept>
+#include <sci_defs/gpu_defs.h>
+
+#define ALMOST_A_MAGIC_NUMBER 3
 
 
 /**
@@ -266,11 +269,15 @@ namespace Uintah {
         /** @brief Get the heat loss upper and lower bounds **/
         virtual const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size ) = 0;
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        virtual const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size )=0;
+#endif
+
         /** @brief Check to see if this table deals with heat loss **/
         virtual bool has_heat_loss() = 0;
 
         /** @brief Return the independent variable space for the reference point as specified in the input UPS **/
-        virtual std::vector<double> get_reference_iv() = 0;
+        virtual struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv() = 0;
 
       protected:
         int _index_1;
@@ -301,6 +308,16 @@ namespace Uintah {
 
         bool has_heat_loss(){ return false; };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double> hl_bounds;
+          hl_bounds.push_back(-1.0);
+          hl_bounds.push_back(1.0);
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size )
         {
           std::vector<double> hl_bounds;
@@ -309,7 +326,7 @@ namespace Uintah {
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
           throw InvalidValue("Error: Cannot return the reference values. Make sure you have identified your table properly (e.g., coal, rcce, standard_flamelet, etc... )",__FILE__,__LINE__);
         };
     };
@@ -374,6 +391,14 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double> hl_b;
+          return hl_b;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           //no heat loss
@@ -381,9 +406,9 @@ namespace Uintah {
           return hl_b;
         };
 
-        std::vector<double> get_reference_iv(){
-          std::vector<double> iv;
-          iv.push_back(_f_ref);
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv(1);
+          iv[0]=_f_ref;
           return iv;
         };
 
@@ -470,6 +495,18 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double> hl_bounds;
+
+          hl_bounds.push_back(iv_grids(0, 0));
+          hl_bounds.push_back(iv_grids(0, size(1)-1));
+
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           std::vector<double> hl_bounds;
@@ -480,10 +517,10 @@ namespace Uintah {
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
-          std::vector<double> iv;
-          iv.push_back(_f_ref);
-          iv.push_back(_hl_ref);
+       struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv(2);
+          iv[0]=_f_ref;
+          iv[1]=_hl_ref;
           return iv;
         };
 
@@ -614,21 +651,31 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double>  hl_bounds(2);
+          hl_bounds[0]=(iv_grids(1, 0));
+          hl_bounds[1]=(iv_grids(1, size(2)-1));
+
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
-          std::vector<double> hl_bounds;
-
-          hl_bounds.push_back(iv_grids[1][0]);
-          hl_bounds.push_back(iv_grids[1][size[2]-1]);
+          std::vector<double>  hl_bounds(2);
+          hl_bounds[0]=(iv_grids[1][0]);
+          hl_bounds[1]=(iv_grids[1][size[2]-1]);
 
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
-          std::vector<double> iv;
-          iv.push_back(_f_ref);
-          iv.push_back(_var_ref);
-          iv.push_back(_hl_ref);
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv(3);
+          iv[0]=_f_ref;
+          iv[1]=_var_ref;
+          iv[2]=_hl_ref;
 
           return iv;
         };
@@ -815,6 +862,17 @@ namespace Uintah {
 
         };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double>  hl_bounds(2);
+          hl_bounds[0]=(iv_grids(0, 0));
+          hl_bounds[1]=(iv_grids(0, size(1)-1));
+
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           std::vector<double> hl_bounds;
@@ -824,7 +882,7 @@ namespace Uintah {
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
 
           if ( _is_acidbase ){
             std::vector<double> iv(2);
@@ -834,9 +892,11 @@ namespace Uintah {
 
             this->transform(iv, 0.0);
 
-            std::cout << "IV=" << iv[0] << " " << iv[1] << std::endl;
+            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
 
-            return iv;
+            std::cout << "IV=" << iv_p[0] << " " << iv_p[1] << std::endl;
+
+            return iv_p;
           } else {
             std::vector<double> iv(3);
 
@@ -846,7 +906,9 @@ namespace Uintah {
 
             this->transform(iv, 0.0);
 
-            return iv;
+            struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
+
+            return iv_p;
           }
         };
 
@@ -980,7 +1042,13 @@ namespace Uintah {
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
         };
 
-        std::vector<double> get_reference_iv(){
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size ){
+          throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
+        };
+#endif
+
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
           std::vector<double> iv(2);
 
           iv[_fp_index] = _fp_ref;
@@ -988,7 +1056,8 @@ namespace Uintah {
 
           this->transform(iv, 0.0);
 
-          return iv;
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(iv.data(),iv.size());  //portable version
+          return iv_p;
         };
 
 
@@ -1217,6 +1286,17 @@ namespace Uintah {
 
         };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double>  hl_bounds(2);
+          hl_bounds[0]=(iv_grids(0, 0));
+          hl_bounds[1]=(iv_grids(0, size(1)-1));
+
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           std::vector<double> hl_bounds;
@@ -1226,7 +1306,7 @@ namespace Uintah {
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
           std::vector<double> iv(3);
 
           if ( _rcce_fp ){
@@ -1241,7 +1321,8 @@ namespace Uintah {
 
           this->transform(iv, 0.0);
 
-          return iv;
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(3);
+          return iv_p;
         };
 
       private:
@@ -1410,6 +1491,17 @@ namespace Uintah {
 
         bool inline has_heat_loss(){ return true; };
 
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+        inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
+        {
+          std::vector<double>  hl_bounds(2);
+          hl_bounds[0]=(iv_grids(0, 0));
+          hl_bounds[1]=(iv_grids(0, size(1)-1));
+
+          return hl_bounds;
+        };
+#endif
+
         const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           std::vector<double> hl_bounds;
@@ -1419,7 +1511,7 @@ namespace Uintah {
           return hl_bounds;
         };
 
-        std::vector<double> get_reference_iv(){
+        struct1DArray<double,ALMOST_A_MAGIC_NUMBER> get_reference_iv(){
           std::vector<double> iv(3);
 
           iv[_fp_index] = _fp_ref;
@@ -1428,7 +1520,8 @@ namespace Uintah {
 
           this->transform(iv, 0.0);
 
-          return iv;
+          struct1DArray<double,ALMOST_A_MAGIC_NUMBER> iv_p(3);
+          return iv_p;
         };
 
       private:

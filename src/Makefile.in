@@ -60,8 +60,8 @@ ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link
   ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
 
-  # Function to create a make rule to copy the original .cc file from the .../src/ tree
-  # to the .../binary/ tree and rename it with a .cu extension.
+  # Function to create a make rule to copy the original .cc file from the
+  # ../src/ tree to the .../binary/ tree and rename it with a .cu extension.
   #
   define make-cuda-target
     $(OBJTOP_ABS)/$(SRCDIR)/$1.cu : $(SRCTOP_ABS)/$(SRCDIR)/$1.cc
@@ -565,8 +565,10 @@ lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE) : $(CLEANLIBS)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Building libgpu_extra_link.$(SO_OR_A_FILE)..."
 	@$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   else
 	$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   endif
 
 endif

@@ -257,7 +257,7 @@ CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
-AC_TRY_LINK([$3],[$8],[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[$3]],[[$8]])],[
 eval $1_LIB_DIR='"$6"'
 
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
@@ -592,7 +592,7 @@ if test "$__extern_c" = "yes"; then
 }"
 fi
 
-AC_TRY_LINK($__sci_pound_includes,[$8],[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[$__sci_pound_includes]],[[$8]])],[
 
 if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
@@ -797,18 +797,29 @@ done
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100) and Volta (GV100) architectures  now (APH 10/16/18)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100), Volta (GV100) and Ampere (A100) architectures  now (APH 10/16/18; JKH+MGM 12/10/21)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \) -a \( "$cuda_gencode" != "80" \); then
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 30, 35, 50, 52, 60, 70] )
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 30, 35, 50, 52, 60, 70, 80] )
 fi  
   
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
-#  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
+#  NOTE: -std=c++17 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
   if test "$i" = "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++14"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-std=c++17"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "-maxrregcount"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif [[ "$i" == [0-9]* ]]; then
+    # This is an integer.  Assume it was a value of a prior parameter (like -maxrregcount 128)
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  elif test "$i" = "--expt-extended-lambda"; then
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
   else
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
@@ -1406,3 +1417,57 @@ AC_DEFUN([AX_CXX_COMPILE_STDCXX_11], [dnl
     AC_SUBST(HAVE_CXX11)
   fi
 ])
+
+# ===========================================================================
+#  https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_CHECK_COMPILE_FLAG(FLAG, [ACTION-SUCCESS], [ACTION-FAILURE], [EXTRA-FLAGS], [INPUT])
+#
+# DESCRIPTION
+#
+#   Check whether the given FLAG works with the current language's compiler
+#   or gives an error.  (Warnings, however, are ignored)
+#
+#   ACTION-SUCCESS/ACTION-FAILURE are shell commands to execute on
+#   success/failure.
+#
+#   If EXTRA-FLAGS is defined, it is added to the current language's default
+#   flags (e.g. CFLAGS) when the check is done.  The check is thus made with
+#   the flags: "CFLAGS EXTRA-FLAGS FLAG".  This can for example be used to
+#   force the compiler to issue an error when a bad flag is given.
+#
+#   INPUT gives an alternative input source to AC_COMPILE_IFELSE.
+#
+#   NOTE: Implementation based on AX_CFLAGS_GCC_OPTION. Please keep this
+#   macro in sync with AX_CHECK_{PREPROC,LINK}_FLAG.
+#
+# LICENSE
+#
+#   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
+#   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.  This file is offered as-is, without any
+#   warranty.
+
+#serial 6
+
+AC_DEFUN([AX_CHECK_COMPILE_FLAG],
+[AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
+AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
+AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
+  ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
+  _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $4 $1"
+  AC_COMPILE_IFELSE([m4_default([$5],[AC_LANG_PROGRAM()])],
+    [AS_VAR_SET(CACHEVAR,[yes])],
+    [AS_VAR_SET(CACHEVAR,[no])])
+  _AC_LANG_PREFIX[]FLAGS=$ax_check_save_flags])
+AS_VAR_IF(CACHEVAR,yes,
+  [m4_default([$2], :)],
+  [m4_default([$3], :)])
+AS_VAR_POPDEF([CACHEVAR])dnl
+])dnl AX_CHECK_COMPILE_FLAGS

@@ -54,7 +54,7 @@ else
           $(BLAS_LIBRARY)   \
 	        $(MPI_LIBRARY)    \
 	        $(XML2_LIBRARY)   \
-	        $(CUDA_LIBRARY)
+	        $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

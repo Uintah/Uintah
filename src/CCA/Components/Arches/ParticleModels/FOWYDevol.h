@@ -36,6 +36,16 @@ namespace Uintah{
     FOWYDevol<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
     ~FOWYDevol<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void create_local_labels();
@@ -71,13 +81,17 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   private:
 
@@ -129,6 +143,54 @@ namespace Uintah{
   FOWYDevol<T>::~FOWYDevol()
   {}
 
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskComputeBCsFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &FOWYDevol<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &FOWYDevol<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
   template <typename T>
   void FOWYDevol<T>::problemSetup( ProblemSpecP& db ){
     proc0cout << "WARNING: ParticleModels FOWYDevol needs to be made consistent with DQMOM models and use correct DW, use model at your own risk."
@@ -210,7 +272,8 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -244,7 +307,8 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+  template <typename ExecSpace, typename MemSpace> void
+  FOWYDevol<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
   //======TIME STEP EVALUATION:
   template <typename T>
@@ -283,7 +347,8 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void FOWYDevol<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
@@ -347,7 +412,7 @@ namespace Uintah{
         const double rateMax = std::max( fDrive / dt + clipVal, 0.0);
         const double zFact = std::min( std::max( fDrive/ initRawCoal/_v_hiT, 2.5e-5), 1.0-2.5e-5 );
         double einput = 1.0 - 2.0 * zFact;
-        const double z = std::sqrt(2.0) * erfinv( einput );
+        const double z = std::sqrt(2.0) * Arches::erfinv( einput );
 
         //rate of devolatilization dmVol/dt
         devolRate(i,j,k) = - std::min( _A * fDrive * std::exp(-(_Ta + z * _sigma)/ partTemp(i,j,k) ), rateMax );

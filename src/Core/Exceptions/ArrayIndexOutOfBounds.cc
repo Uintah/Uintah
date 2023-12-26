@@ -62,7 +62,7 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds& copy)
   : value(copy.value), lower(copy.lower), upper(copy.upper), msg(strdup(copy.msg))
 {
 }
-    
+
 ArrayIndexOutOfBounds::~ArrayIndexOutOfBounds()
 {
 }

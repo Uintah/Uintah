@@ -124,7 +124,7 @@ namespace WasatchCore {
       ConstUintahField val; // copy the value from this
       
       if (rkStage == 1) ainfo.newDW->allocateAndPut( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
-      else              ainfo.newDW->getModifiable ( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
+      else              ainfo.newDW->getModifiable( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
 
       const SpatialOps::GhostData gd( get_n_ghost<T>() );
       TPtr fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo,gd);

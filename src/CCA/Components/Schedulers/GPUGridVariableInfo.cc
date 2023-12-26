@@ -31,7 +31,7 @@
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
-  extern DebugStream gpu_stats;
+  extern DebugStream gpu_stats;  // from KokkosScheduler
 }
 
 using LabelPatchMatlLevelDW  = GpuUtilities::LabelPatchMatlLevelDw;
@@ -174,7 +174,8 @@ DeviceGridVariables::add( const Patch            * patchPointer
   }
 
   unsigned int totalVars;
-  unsigned int entrySize = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  unsigned int entrySize = ((m_bufferPadding - varMemSize % m_bufferPadding) % m_bufferPadding) + varMemSize;
+
   if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end() ) {
     DeviceInfo di;
     di.totalVars[dep->mapDataWarehouse()] = 1;
@@ -239,8 +240,8 @@ DeviceGridVariables::add( const Patch            * patchPointer
   LabelPatchMatlLevelDW lpmld(dep->m_var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   if (vars.find(lpmld) == vars.end()) {
 
-    unsigned int entrySize = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding)
-                              % UnifiedScheduler::bufferPadding) + varMemSize;
+    unsigned int entrySize = ((m_bufferPadding - varMemSize % m_bufferPadding) % m_bufferPadding) + varMemSize;
+
     if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end()) {
       DeviceInfo di;
       di.totalVars[dep->mapDataWarehouse()] = 1;

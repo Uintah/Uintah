@@ -253,9 +253,10 @@ compare( long64 a,
          double /* abs_tolerance */,
          double /* rel_tolerance */)
 {
-  if(std::isnan(a) || std::isnan(b)){
-    return false;
-  }
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a) || std::isnan(b)){
+//    return false;
+//  }
 
   return (a == b); // longs should use an exact comparison
 }
@@ -266,9 +267,10 @@ compare( int a, int b,
          double /* abs_tolerance */,
          double /* rel_tolerance */ )
 {
-  if(std::isnan(a) || std::isnan(b)){
-    return false;
-  }
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a) || std::isnan(b)){
+//    return false;
+//  }
 
   return (a == b); // int should use an exact comparison
 }
@@ -291,10 +293,11 @@ bool
 compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
 {
 //  if(std::isnan(a.length()) || std::isnan(b.length())){
-  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) || 
-     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
-    return false;
-  }
+//  Commenting out, integers can't be nan
+//  if(std::isnan(a.x()*a.x()+a.y()*a.y()+a.z()*a.z()) ||
+//     std::isnan(b.x()*b.x()+b.y()*b.y()+b.z()*b.z())){
+//    return false;
+//  }
 
   return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
          compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
@@ -1301,7 +1304,7 @@ buildPatchMap( LevelP                 level,
                       patch->getExtraHighIndex(basis,bl));
 
     serial_for( patchMap.range(), [&](int i, int j, int k) {
-      if (patchMap(i,j,k) != nullptr) {
+      if (patchMap.get(i,j,k) != nullptr) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
           cerr << "Patches " << patch->getID() << " and "
@@ -1320,12 +1323,12 @@ buildPatchMap( LevelP                 level,
 
         if (i >= in_low.x() && j >= in_low.y() && k >= in_low.z() &&
             i < in_high.x() && j < in_high.y() && k < in_high.z()) {
-          patchMap(i,j,k) = patch;
+          patchMap.get(i,j,k) = patch;
         }
       }
       else
       {
-        patchMap(i,j,k) = patch;
+        patchMap.get(i,j,k) = patch;
       }
     });
   }
@@ -2104,10 +2107,14 @@ main( int argc, char** argv )
             }
           });
 
-          Level::const_patch_iterator iter;
+//          Level::const_patch_iterator iter;
 
-          for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
-            const Patch* patch = *iter;
+//          for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+//            const Patch* patch = *iter;
+
+#pragma omp parallel for
+          for(int p=0; p<level->numPatches(); p++){
+            const Patch* patch = level->getPatch(p);
 
             ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, tstep);
 

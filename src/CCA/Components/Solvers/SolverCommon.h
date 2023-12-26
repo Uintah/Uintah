@@ -64,6 +64,8 @@ namespace Uintah {
                                
     virtual std::string getName() = 0;
 
+    virtual void finialize() = 0;  // Used to cleanup Thirdparty libs (Hypre)
+
     // SolverCommon does not require initialization... but we need an empty
     // routine to satisfy inheritance. 
     virtual void scheduleInitialize( const LevelP      & level,
@@ -75,10 +77,10 @@ namespace Uintah {
                                             const MaterialSet * matls) = 0;
 
   protected:
+    Scheduler            * m_scheduler    {nullptr};
     ApplicationInterface * m_application  {nullptr};
     
     const ProcessorGroup * m_myworld;
-
   };
   
 } // end namespace Uintah

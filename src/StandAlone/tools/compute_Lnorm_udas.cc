@@ -298,7 +298,7 @@ void compareFields(Norms<subtype>* norms,
   for( ; !iter.done(); iter++ ) {
     IntVector c = *iter;
 
-    const Patch* patch2 = cellToPatchMap2[c];
+    const Patch* patch2 = cellToPatchMap2.get(c);
 
     // find the number of occurances of the key (patch2) in the map
     int count = patch2_FieldMap.count(patch2);
@@ -387,7 +387,7 @@ void BuildCellToPatchMap(LevelP level,
     patchMap.rewindow(ex_low, ex_high);
 
     serial_for( patchMap.range(), [&](int i, int j, int k) {
-      if (patchMap(i,j,k)) {
+      if (patchMap.get(i,j,k)) {
         // in some cases, we can have overlapping patches, where an extra cell/node
         // overlaps an interior cell/node of another patch.  We prefer the interior
         // one.  (if there are two overlapping interior ones (nodes or face centers only),
@@ -399,10 +399,10 @@ void BuildCellToPatchMap(LevelP level,
         if (   i >= in_low[0] && j >= in_low[1] && k >= in_low[2]
             && i < in_high[0] && j < in_high[1] && k < in_high[2] )
         {
-          patchMap(i,j,k) = patch;
+          patchMap.get(i,j,k) = patch;
         }
       }else{
-        patchMap(i,j,k) = patch;     // insert patch into the array
+        patchMap.get(i,j,k) = patch;     // insert patch into the array
       }
     });  //patchMap
   } //level
@@ -816,10 +816,10 @@ main(int argc, char** argv)
         BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
 
         serial_for( cellToPatchMap1.range(), [&](int i, int j, int k) {
-          if ((cellToPatchMap1(i,j,k) == nullptr && cellToPatchMap2(i,j,k) != nullptr) ||
-              (cellToPatchMap2(i,j,k) == nullptr && cellToPatchMap1(i,j,k) != nullptr)) {
+          if ((cellToPatchMap1.get(i,j,k) == nullptr && cellToPatchMap2.get(i,j,k) != nullptr) ||
+              (cellToPatchMap2.get(i,j,k) == nullptr && cellToPatchMap1.get(i,j,k) != nullptr)) {
             cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
-            if (cellToPatchMap1(i,j,k) != nullptr) {
+            if (cellToPatchMap1.get(i,j,k) != nullptr) {
               cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase1 << " and not " << filebase2 << endl;
             }
             else {

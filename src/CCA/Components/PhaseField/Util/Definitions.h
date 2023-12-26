@@ -36,7 +36,6 @@
 #   define _DOXYARG(x)
 #endif
 
-#include <sci_defs/kokkos_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #include <Core/Grid/Patch.h>

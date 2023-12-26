@@ -96,8 +96,9 @@ namespace Uintah { namespace ArchesCore{
                           std::vector<std::string>& mod );
 
 
+    template <typename ExecSpace, typename MemSpace>
     void apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
-                   ArchesTaskInfoManager* tsk_info, const Patch* patch );
+                   ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
   private:
 
@@ -324,9 +325,6 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
 //--------------------------------------------------------------------------------------------------
 // BASE FUNCTOR
-template<typename  ExecutionSpace,typename MemorySpace> // THIS IS A PLACEHOLDER DEFINITION, It should be removed upon merging of the kokkos branch
-using ExecutionObject = std::iterator<ExecutionSpace,MemorySpace>;
-
 template <typename T>
 struct BCFunctors<T>::BaseFunctor {
 
@@ -342,29 +340,29 @@ public:
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-  template <typename ExecutionSpace, typename MemorySpace>
-  void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
+  template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace> execObj,
   std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter )
   {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MassFlow*              child   = dynamic_cast<BCFunctors<T>::MassFlow*            >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MMSalmgren*            child   = dynamic_cast<BCFunctors<T>::MMSalmgren*          >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::MMSshunn*              child   = dynamic_cast<BCFunctors<T>::MMSshunn*            >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::SecondaryVariableBC*   child   = dynamic_cast<BCFunctors<T>::SecondaryVariableBC* >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::VelocityBC*            child   = dynamic_cast<BCFunctors<T>::VelocityBC*          >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::PressureOutletBC*      child   = dynamic_cast<BCFunctors<T>::PressureOutletBC*          >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else if (BCFunctors<T>::SubGridInjector*       chile   = dynamic_cast<BCFunctors<T>::SubGridInjector*     >(this)){
-      child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
+      child->eval_bc( execObj, var_name, patch, tsk_info, bnd, bndIter );
     }else {
           throw InvalidValue("Portable Boundary condition not properly included in source code.",__FILE__,__LINE__);
     }
@@ -409,16 +407,17 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-  template <typename ES, typename MS>
-  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ){
 
     VariableHelper<T> var_help;
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     const BndCondSpec* spec = bnd->find(var_name);
 
@@ -428,10 +427,10 @@ public:
 
 
       // CCVariable or CC position in the staggered variable
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-        int im=i - iDir[0];
-        int jm=j - iDir[1];
-        int km=k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        int im=i - iDir_p[0];
+        int jm=j - iDir_p[1];
+        int km=k - iDir_p[2];
         var(i,j,k) = 2.0 * spec_value - var(im,jm,km);
       });
 
@@ -440,16 +439,16 @@ public:
       // Staggered Variable
       if ( dot == -1 ){
       // Normal face -
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
           var(i,j,k) = spec_value;
           var(im,jm,km) = spec_value;
         });
       } else if ( dot == 1 ){
       // Normal face +
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = spec_value;
         });
       } else {
@@ -473,16 +472,17 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const Vector Dx = patch->dCell();
     const double norm = iDir[0]+iDir[1]+iDir[2];
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
     if ( var_help.dir == ArchesCore::NODIR || dot == 0  ){
@@ -493,10 +493,10 @@ template <typename ES, typename MS>
 
       const double spec_value = bnd->find(var_name)->value;
 
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-        int im = i - iDir[0];
-        int jm = j - iDir[1];
-        int km = k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        int im = i - iDir_p[0];
+        int jm = j - iDir_p[1];
+        int km = k - iDir_p[2];
 
         var(i,j,k) = norm*dx * spec_value + var(im,jm,km);
 
@@ -505,22 +505,22 @@ template <typename ES, typename MS>
 
       // for staggered variables, only going to allow for zero gradient, one-sided for now
       if ( dot == -1 ){
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
-          int imm=i - 2*iDir[0];
-          int jmm=j - 2*iDir[1];
-          int kmm=k - 2*iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
+          int imm=i - 2*iDir_p[0];
+          int jmm=j - 2*iDir_p[1];
+          int kmm=k - 2*iDir_p[2];
 
           var(im,jm,km) = var(imm,jmm,kmm);
           var(i,j,k) = var(im,jm,km);
         });
       } else if ( dot == 1 ){
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
           var(i,j,k) = var(im,jm,km);
         });
       }
@@ -557,12 +557,12 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
-    T& var = tsk_info->get_field<T>(var_name);
-    constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
+    auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -570,25 +570,27 @@ template <typename ES, typename MS>
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
+
     const double bound_area = bnd->area;
     if ( dot == -1 ){
     // Normal face (-)  staggered variables
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
           const double rho_face = 0.5*(rho(i,j,k)+ rho(im,jm,km));
           var(i,j,k) = m_mdot / (rho_face * bound_area);
           var(im,jm,km) = var(i,j,k);
       });
     } else if ( dot == 1 ){
     // Normal face (+)  staggered variables
-      parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
           double rho_face = 0.5*(rho(i,j,k) + rho(im,jm,km));
-          var[*bndIter] = m_mdot / (rho_face * bound_area );
+          var(i,j,k) = m_mdot / (rho_face * bound_area );
       });
     } else {
       throw InvalidValue("Error: Trying to set a massflow rate for a non-normal velocoty", __FILE__, __LINE__);
@@ -624,18 +626,18 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     const double m_two_pi = 2.0*acos(-1.0);
     const double m_amp = 1.0;
 
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
+    auto x = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
-    constCCVariable<double>& y = tsk_info->get_field<constCCVariable<double> >(m_y_name);
+    auto y = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_y_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -643,26 +645,27 @@ template <typename ES, typename MS>
 
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
 
     if ( m_which_vel == "u" ){
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar or CCvariable
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
         });
       } else {
         // SFCX or SFCY or SFCZ variable
           if (dot == -1){
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
               // (-) faces  two cells at the begin of the domain
               // value are the same because we do not resolve extra cell (i=-1), and we set the BC at i = 0
 //                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
 //                                      * sin( m_two_pi * y[*bndIter] );
-                int im=i - iDir[0];
-                int jm=j - iDir[1];
-                int km=k - iDir[2];
+                int im=i - iDir_p[0];
+                int jm=j - iDir_p[1];
+                int km=k - iDir_p[2];
 
                 var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(im,jm,km) )
                                   * sin( m_two_pi * y(im,jm,km) );
@@ -672,7 +675,7 @@ template <typename ES, typename MS>
                                   * sin( m_two_pi * y(im,jm,km) );
             });
           } else {
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
                // (+) faces one cell at the end of the domain
                var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
@@ -683,17 +686,17 @@ template <typename ES, typename MS>
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
                               * cos( m_two_pi * y(i,j,k) );
         });
       } else {
       // SFCX or SFCY or SFCZ variable
         if (dot == -1){
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
             // (-) faces  two cells
 //                var[*bndIter] = 1.0  + m_amp * sin( m_two_pi * x[*bndIter] )
 //                                      * cos( m_two_pi * y[*bndIter] );
@@ -706,7 +709,7 @@ template <typename ES, typename MS>
           });
         } else {
           // (+) faces
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
                                   * cos( m_two_pi * y(i,j,k) );
 
@@ -744,8 +747,8 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc( ExecutionObject<ES,MS>& executionObject,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     //const double m_two_pi = 2.0*acos(-1.0);
@@ -763,9 +766,9 @@ template <typename ES, typename MS>
     time_d = time_d + factor*dt;
 
 
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
+    auto x = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
     VariableHelper<T> var_help;
     //IntVector iDir = patch->faceDirection( bnd->face );
@@ -775,7 +778,7 @@ template <typename ES, typename MS>
     const double z1 = std::exp(-m_k1 * time_d);
     if (var_help.dir == ArchesCore::NODIR ){
       // scalar or CCvariable
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) *x(i,j,k)); // x is cc value
         const double phi = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
         const double rho = 1.0/(phi/m_rho1 + (1.0- phi )/m_rho0);
@@ -813,20 +816,22 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     typedef typename VariableHelper<T>::ConstType CT;
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
-    CT& sec_var = tsk_info->get_field<CT>(m_sec_var_name);
+    auto sec_var = tsk_info->get_field<CT, const double, MemSpace>( m_sec_var_name);
 
-    parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-          int im=i - iDir[0];
-          int jm=j - iDir[1];
-          int km=k - iDir[2];
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
+
+    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+          int im=i - iDir_p[0];
+          int jm=j - iDir_p[1];
+          int km=k - iDir_p[2];
           double interp_sec_var = (sec_var(i,j,k) + sec_var(im,jm,km))/2.;
           var(i,j,k) = 2. * interp_sec_var - var(im,jm,km);
     });
@@ -862,8 +867,8 @@ public:
   void add_mod( std::vector<std::string>& master_mod ){}
 
 
-template <typename ES, typename MS>
-  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc
@@ -955,14 +960,14 @@ public:
 
   void add_mod( std::vector<std::string>& master_mod ){}
 
-template <typename ES, typename MS>
-  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
     //typedef typename VariableHelper<T>::ConstType CT;
-    T& var = tsk_info->get_field<T>(var_name);
-    constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name) ;
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
+    auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1006,45 +1011,54 @@ template <typename ES, typename MS>
     IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
+    const IntVector iDir_p(iDir[0],iDir[1],iDir[2]);
+    const IntVector offset_iDir_p(offset_iDir[0],offset_iDir[1],offset_iDir[2]);
+    const IntVector offset_p(offset[0],offset[1],offset[2]);
+
+    const double p_vel_value=m_vel_value;
+
     if ( parallel_dir ){
         //The face normal and the velocity are in parallel
         if (dot == -1) {
             //Face +
-           parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-                 int im=i - iDir[0];
-                 int jm=j - iDir[1];
-                 int km=k - iDir[2];
+           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+                 int im=i - iDir_p[0];
+                 int jm=j - iDir_p[1];
+                 int km=k - iDir_p[2];
                  const double interp_rho = 0.5*(rho(im,jm,km)+rho(i,j,k));
-                 var(im,jm,km) = interp_rho*m_vel_value;
+                 var(im,jm,km) = interp_rho*p_vel_value;
                  var(i,j,k) = var(im,jm,km);
             });
         } else {
             // Face -
-           parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-                 const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
-                  var(i,j,k) = interp_rho*m_vel_value;
+           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+                 int im=i - iDir_p[0];
+                 int jm=j - iDir_p[1];
+                 int km=k - iDir_p[2];
+                 const double interp_rho = 0.5*(rho(im,jm,km)+rho(i,j,k));
+                  var(i,j,k) = interp_rho*p_vel_value;
                   //var[*bndIter] = var[*bndIter-iDir];
            });
        }
     } else {
       //The face normal and the velocity are tangential
-        parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
-        int im=i - iDir[0];
-        int jm=j - iDir[1];
-        int km=k - iDir[2];
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        int im=i - iDir_p[0];
+        int jm=j - iDir_p[1];
+        int km=k - iDir_p[2];
 
-        int imo=i - offset_iDir[0];
-        int jmo=j - offset_iDir[1];
-        int kmo=k - offset_iDir[2];
+        int imo=i - offset_iDir_p[0];
+        int jmo=j - offset_iDir_p[1];
+        int kmo=k - offset_iDir_p[2];
 
-        int ipo=i + offset[0];
-        int jpo=j + offset[1];
-        int kpo=k + offset[2];
+        int ipo=i + offset_p[0];
+        int jpo=j + offset_p[1];
+        int kpo=k + offset_p[2];
 
         const double interp_rho =0.5*(0.5*(rho(im,jm,km)+rho(i,j,k)) +
                                       0.5*(rho(imo,jmo,kmo)+rho(ipo,jpo,kpo)));
 
-        var(i,j,k) = 2.*interp_rho*m_vel_value - var(im,jm,km);
+        var(i,j,k) = 2.*interp_rho*p_vel_value - var(im,jm,km);
 
       });
     }
@@ -1092,14 +1106,14 @@ public:
 
   }
 
-template <typename ES, typename MS>
-  void eval_bc(ExecutionObject<ES,MS>& executionObject, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+template <typename ExecSpace, typename MemSpace>
+  void eval_bc(ExecutionObject<ExecSpace, MemSpace>& execObj, std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    T& var = tsk_info->get_field<T>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    T& rhs = tsk_info->get_field<T>(m_phi_name+"_rhs");
+    auto rhs = tsk_info->get_field<T, double, MemSpace>(m_phi_name+"_rhs");
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1113,7 +1127,7 @@ template <typename ES, typename MS>
       area = m_area;
     }
 
-    parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
+    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
 
       rhs(i,j,k) += m_rho_phi_u * area;
 
@@ -1221,8 +1235,9 @@ void BCFunctors<T>::get_bc_modifies( std::vector<std::string>& varnames, WBCHelp
 
 // This function actually applies the BC to the variable(s)
 template <typename T>
+template <typename ExecSpace, typename MemSpace>
 void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
-                              ArchesTaskInfoManager* tsk_info, const Patch* patch ){
+                              ArchesTaskInfoManager* tsk_info, const Patch* patch, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();
 
@@ -1269,9 +1284,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
 
           // Actually applying the boundary condition here:
           if ( bc_fun != nullptr ){
-            //bc_fun->eval_bc<UintahSpaces::CPU, UintahSpaces::HostSpace>( *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
-            ExecutionObject<int,int> place_holder;
-            bc_fun->eval_bc(place_holder, *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
+            bc_fun->eval_bc(execObj, *i_eqn, patch, tsk_info, &bndSpec, cell_iter );
           } else {
             std::stringstream msg;
             msg << "Error: Boundary condition implementation not found." << " \n " <<

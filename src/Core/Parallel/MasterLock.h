@@ -25,7 +25,7 @@
 #ifndef CORE_PARALLEL_MASTERLOCK_H
 #define CORE_PARALLEL_MASTERLOCK_H
 
-#include <sci_defs/kokkos_defs.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <mutex>
 
@@ -37,8 +37,10 @@ namespace Uintah {
 
 class MasterLock
 {
-
-  // Specific to OpenMP- and std::thread-based implementations
+  // Specific to OpenMP- and std::thread-based implementations.
+  // To avoid mixing thread environment types (e.g. using mutexes in
+  // an OpenMP threaded environment), this class determines which kind
+  // of locking to use dependent on the parallel thread environment.
 
   // This lock can be used as follows:
   //
@@ -48,37 +50,56 @@ class MasterLock
   //
   // 2.) std::unique_lock<MasterLock>
   //
-  //       std::unique_lock is a general-purpose mutex ownership wrapper allowing deferred locking, time-constrained
-  //       attempts at locking, recursive locking, transfer of lock ownership, and use with condition variables.
+  //       std::unique_lock is a general-purpose mutex ownership
+  //       wrapper allowing deferred locking, time-constrained
+  //       attempts at locking, recursive locking, transfer of lock
+  //       ownership, and use with condition variables.
   //
   //      OR
   //
   // 3.) std::lock_guard<MasterLock>
   //
-  //       std::lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for
-  //       owning a mutex for the duration of a scoped block.
+  //       std::lock_guard is a mutex wrapper that provides a
+  //       convenient RAII-style mechanism for owning a mutex for the
+  //       duration of a scoped block.
 
 
   public:
-
-#if defined(_OPENMP) && defined(UINTAH_ENABLE_KOKKOS)
-
     // per OMP standard, a flush region without a list is implied for omp_{set/unset}_lock
-    void lock()   { omp_set_lock( &m_lock ); }
-    void unlock() { omp_unset_lock( &m_lock ); }
+    void lock()   {
+#if defined(_OPENMP)
+      if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
+        omp_set_lock( &m_lock );
+        m_mutex_used = false;
+        return;
+      }
+#endif
+      m_mutex.lock();
+      m_mutex_used = true;
+    }
 
-    MasterLock()  { omp_init_lock( &m_lock ); }
-    ~MasterLock() { omp_destroy_lock( &m_lock ); }
+    void unlock()   {
+#if defined(_OPENMP)
+      if (!m_mutex_used) {
+        omp_unset_lock( &m_lock );
+        return;
+      }
+#endif
+      m_mutex.unlock();
+    }
 
-#else
+    MasterLock()  {
+    // Initialize the locks (mutexes initialize themselves)
+#if defined(_OPENMP)
+      omp_init_lock( &m_lock );
+#endif
+    }
 
-    void lock()   { m_mutex.lock(); }
-    void unlock() { m_mutex.unlock(); }
-
-    MasterLock()  {}
-    ~MasterLock() {}
-
-#endif // UINTAH_ENABLE_KOKKOS
+    ~MasterLock()  {
+#if defined(_OPENMP)
+      omp_destroy_lock( &m_lock );
+#endif
+    }
 
   private:
 
@@ -88,16 +109,12 @@ class MasterLock
     MasterLock( MasterLock && )                 = delete;
     MasterLock& operator=( MasterLock && )      = delete;
 
-#if defined(_OPENMP) && defined(UINTAH_ENABLE_KOKKOS)
-
+#if defined(_OPENMP)
     omp_lock_t m_lock;
-
-#else
+#endif
 
     std::mutex m_mutex;
-
-#endif // UINTAH_ENABLE_KOKKOS
-
+    bool m_mutex_used{true};
 };
 
 } // end namespace Uintah

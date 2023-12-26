@@ -198,11 +198,13 @@ namespace Uintah{
                                 const bool pack_tasks );
 
     /** @brief Task callback **/
-    void do_task ( const ProcessorGroup* pc,
-                   const PatchSubset* patches,
+    template <typename ExecSpace, typename MemSpace>
+    void do_task ( const PatchSubset* patches,
                    const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw,
+                   OnDemandDataWarehouse* old_dw,
+                   OnDemandDataWarehouse* new_dw,
+                   UintahParams& uintahParams,
+                   ExecutionObject<ExecSpace, MemSpace>& execObj,
                    std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
                    std::vector<TaskInterface*> arches_task,
                    TaskInterface::TASK_TYPE type,

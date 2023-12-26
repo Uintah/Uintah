@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Schedulers/KokkosOpenMPScheduler.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -39,19 +40,23 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
-
-#ifdef UINTAH_ENABLE_KOKKOS
-  #include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#include <sci_defs/gpu_defs.h>
 
 #include <atomic>
 #include <cstring>
 #include <iomanip>
 
+#if defined(HAVE_KOKKOS)
+#else
+  namespace Kokkos {
+    namespace Profiling {
+      void pushRegion(const std::string& kName);
+      void popRegion ();
+    };
+};
+#endif
 
 using namespace Uintah;
-
 
 //______________________________________________________________________
 //
@@ -68,13 +73,14 @@ namespace {
   Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
+  Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
 
-  volatile int  g_num_tasks_done{0};
+  volatile int g_num_tasks_done{0};
 
   bool g_have_hypre_task{false};
   DetailedTask* g_HypreTask;
 
-}
+} // namespace
 
 
 //______________________________________________________________________
@@ -89,15 +95,18 @@ KokkosOpenMPScheduler::KokkosOpenMPScheduler( const ProcessorGroup   * myworld
 
 //______________________________________________________________________
 //
+KokkosOpenMPScheduler::~KokkosOpenMPScheduler()
+{
+}
+
+
+//______________________________________________________________________
+//
 void
 KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
                                    , const MaterialManagerP & materialManager
                                    )
 {
-
-  m_num_partitions        = Uintah::Parallel::getNumPartitions();
-  m_threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
-
   // Default taskReadyQueueAlg
   std::string taskQueueAlg = "";
 
@@ -154,7 +163,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   if (d_myworld->myRank() == 0) {
-    std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
+    std::cout << "WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
@@ -211,6 +220,10 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_detailed_tasks->initTimestep();
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
+
+  if( m_runtimeStats )
+    (*m_runtimeStats)[RuntimeStatsEnum::NumTasks] += m_num_tasks;
+
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
@@ -256,41 +269,93 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+  //---------------------------------------------------------------------------
+  // A bit of mess here. Four options:
+  // 1. Compiled without OpenMP - serial dispatch.
+  // 2. Compiled with OpenMP - parallel dispatch.
+  // 3. Compiled with OpenMP and Kokkos OpenMP front end with depreciated code.
 
-//---------------------------------------------------------------------------
+  // If compiled with OpenMP posssiby a parallel dispatch so get the
+  // associated variables that determines the dispatching.
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+  int num_partitions        = Uintah::Parallel::getNumPartitions();
+  int threads_per_partition = Uintah::Parallel::getThreadsPerPartition();
+#elif defined(_OPENMP)
+  int num_threads           = Uintah::Parallel::getNumThreads();
+#endif
 
-  while ( g_num_tasks_done < m_num_tasks ) {
+  while( g_num_tasks_done < m_num_tasks )
+  {
+    // Check the associated variables for a parallel dispatch request.
+#if defined(USE_KOKKOS_PARTITION_MASTER)
+    if( num_partitions > 1 || threads_per_partition > 1 )
+    {
+      Kokkos::Profiling::pushRegion("partition_master");
 
-#ifdef UINTAH_ENABLE_KOKKOS
+      // Task runner functor.
+      auto task_runner = [&] (int thread_id, int num_threads) {
 
-    auto task_worker = [&] ( int partition_id, int num_partitions ) {
+        // Each partition created executes this block of code
+        // A task_runner can run a serial task (threads_per_partition == 1) or
+        //   a Kokkos-based data parallel task (threads_per_partition  > 1)
+        this->runTasks( thread_id );
+      };
 
-      // Each partition created executes this block of code
-      // A task_worker can run either a serial task, e.g. threads_per_partition == 1
-      //       or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
+      // OpenMP Partition Master is deprecated in Kokkos. The
+      // parallelization is over the paritions.
+      Kokkos::OpenMP::partition_master( task_runner,
+                                        num_partitions,
+                                        threads_per_partition );
+    }
+    else
+#elif defined(_OPENMP)
+    if( num_threads > 0 )
+    {
+#if _OPENMP >= 201511
+      if (omp_get_max_active_levels() > 1)
+#else
+      if (omp_get_nested())
+#endif
+      {
+        Kokkos::Profiling::pushRegion("OpenMP Parallel");
+
+	omp_set_num_threads(num_threads);
+
+        #pragma omp parallel
+        {
+          // omp_get_num_threads() is not used so call runTasks directly
+          // task_runner(omp_get_thread_num(), omp_get_num_threads());
+
+          this->runTasks();
+        }
+      }
+      else
+      {
+        Kokkos::Profiling::pushRegion("runTasks");
+
+        this->runTasks();
+      }
+    }
+    else
+#endif // _OPENMP
+    {
+      Kokkos::Profiling::pushRegion("runTasks");
 
       this->runTasks();
+    }
 
-    }; //end task_worker
-
-    // Executes task_workers
-    Kokkos::OpenMP::partition_master( task_worker
-                                    , m_num_partitions
-                                    , m_threads_per_partition );
-
-#else // UINTAH_ENABLE_KOKKOS
-
-    this->runTasks();
-
-#endif // UINTAH_ENABLE_KOKKOS
+    Kokkos::Profiling::popRegion();
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+
       MPIScheduler::runTask( g_HypreTask, m_curr_iteration.load(std::memory_order_relaxed) );
       g_have_hypre_task = false;
     }
 
   } // end while ( g_num_tasks_done < m_num_tasks )
+
+  ASSERT(g_num_tasks_done == m_num_tasks);
 
 //---------------------------------------------------------------------------
 
@@ -335,7 +400,9 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   m_exec_timer.stop();
 
   // compute the net timings
-  MPIScheduler::computeNetRuntimeStats();
+  if( m_runtimeStats ) {
+    MPIScheduler::computeNetRuntimeStats();
+  }
 
   // only do on toplevel scheduler
   if (m_parent_scheduler == nullptr) {
@@ -357,6 +424,8 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                        )
 {
 
+  std::lock_guard<Uintah::MasterLock> task_consumed_guard(g_mark_task_consumed_mutex);
+
   // Update the count of tasks consumed by the scheduler.
   (*numTasksDone)++;
 
@@ -370,6 +439,21 @@ KokkosOpenMPScheduler::markTaskConsumed( volatile int          * numTasksDone
                                     << ", total phase " << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
+
+
+//______________________________________________________________________
+//
+void
+KokkosOpenMPScheduler::runTask( DetailedTask* dTask )
+{
+  if (dTask->getTask()->getType() == Task::Reduction) {
+    MPIScheduler::initiateReduction(dTask);
+  }
+  else {
+    MPIScheduler::runTask(dTask, m_curr_iteration.load(std::memory_order_relaxed));
+  }
+}
+
 
 //______________________________________________________________________
 //
@@ -407,7 +491,8 @@ KokkosOpenMPScheduler::runTasks()
          * If it is time to setup for a reduction task, then do so.
          *
          */
-        if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
+        if ((m_phase_sync_task[m_curr_phase] != nullptr) &&
+            (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
@@ -417,53 +502,51 @@ KokkosOpenMPScheduler::runTasks()
         /*
          * (1.2)
          *
-         * Run a CPU task that has its MPI communication complete. These tasks get in the external
-         * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
-         * which is called when a MPI message is delivered.
+         * Run a CPU task that has its MPI communication
+         * complete. These tasks get in the external ready queue
+         * automatically when their receive count hits 0 in
+         * DependencyBatch::received, which is called when a MPI
+         * message is delivered.
          *
          */
-        else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
-          readyTask = m_detailed_tasks->getNextExternalReadyTask();
-          if (readyTask != nullptr) {
-            havework = true;
-            markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+        else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
+          havework = true;
 
-            if ( readyTask->getTask()->getType() == Task::Hypre ) {
-              g_HypreTask = readyTask;
-              g_have_hypre_task = true;
-              return;
-            }
+          markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
 
-            break;
+          if ( readyTask->getTask()->getType() == Task::Hypre ) {
+            g_HypreTask = readyTask;
+            g_have_hypre_task = true;
+            return;
           }
+
+          break;
         }
 
         /*
          * (1.3)
          *
-         * If we have an internally-ready CPU task, initiate its MPI receives, preparing it for
-         * CPU external ready queue. The task is moved to the CPU external-ready queue in the
-         * call to task->checkExternalDepCount().
+         * If we have an internally-ready CPU task, initiate its MPI
+         * receives, preparing it for CPU external ready queue. The
+         * task is moved to the CPU external-ready queue in the call
+         * to task->checkExternalDepCount().
          *
          */
-        else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
-          initTask = m_detailed_tasks->getNextInternalReadyTask();
-          if (initTask != nullptr) {
-            if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-              DOUT(g_task_dbg, myRankThread() <<  " Task internal ready 1 " << *initTask);
-              m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
-              ASSERT(initTask->getRequires().size() == 0)
-              initTask = nullptr;
-            }
-            else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
-              initTask->markInitiated();
-              initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
-              initTask = nullptr;
-            }
-            else {
-              havework = true;
-              break;
-            }
+        else if ((initTask = m_detailed_tasks->getNextInternalReadyTask())) {
+          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+            DOUT(g_task_dbg, myRankThread() <<  " Task internal ready 1 " << *initTask);
+            m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
+            ASSERT(initTask->getRequires().size() == 0)
+            initTask = nullptr;
+          }
+          else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
+            initTask->markInitiated();
+            initTask->checkExternalDepCount();  // where tasks get added to external ready queue (no ext deps though)
+            initTask = nullptr;
+          }
+          else {
+            havework = true;
+            break;
           }
         }
 
@@ -525,8 +608,10 @@ KokkosOpenMPScheduler::myRankThread()
 {
   std::ostringstream out;
 
-#ifdef UINTAH_ENABLE_KOKKOS
-  out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::hardware_thread_id();
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::impl_hardware_thread_id();
+#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank() << "." << Kokkos::OpenMP::hardware_thread_id();
 #else
   out << Uintah::Parallel::getMPIRank();
 #endif

@@ -14,6 +14,48 @@ DSFT::~DSFT(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFT::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFT::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DSFT::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DSFT::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DSFT::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DSFT::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DSFT::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFT::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DSFT::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DSFT::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DSFT::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DSFT::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DSFT::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFT::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DSFT::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DSFT::problemSetup( ProblemSpecP& db ){
 
@@ -141,19 +183,23 @@ DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& filterRho = tsk_info->get_field< CCVariable<double> >("Filterrho");
-  SFCXVariable<double>& filterRhoU = tsk_info->get_field< SFCXVariable<double> >("Filterrhou");
-  SFCYVariable<double>& filterRhoV = tsk_info->get_field< SFCYVariable<double> >("Filterrhov");
-  SFCZVariable<double>& filterRhoW = tsk_info->get_field< SFCZVariable<double> >("Filterrhow");
-  filterRho.initialize(0.0);
-  filterRhoU.initialize(0.0);
-  filterRhoV.initialize(0.0);
-  filterRhoW.initialize(0.0);
+  auto filterRho = tsk_info->get_field< CCVariable<double>, double, MemSpace >("Filterrho");
+  auto filterRhoU = tsk_info->get_field< SFCXVariable<double>, double, MemSpace >("Filterrhou");
+  auto filterRhoV = tsk_info->get_field< SFCYVariable<double>, double, MemSpace >("Filterrhov");
+  auto filterRhoW = tsk_info->get_field< SFCZVariable<double>, double, MemSpace >("Filterrhow");
 
-  computeModel(patch, tsk_info);
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+    filterRho(i,j,k) = 0.0;
+    filterRhoU(i,j,k) = 0.0;
+    filterRhoV(i,j,k) = 0.0;
+    filterRhoW(i,j,k) = 0.0;
+  });
+
+  computeModel(patch, tsk_info, execObj);
 
 }
 
@@ -213,57 +259,99 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  this->computeModel(patch, tsk_info);
+template <typename ExecSpace, typename MemSpace>
+void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  this->computeModel(patch, tsk_info, execObj);
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
-  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
-  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
+  auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace >(m_u_vel_name);
+  auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace >(m_v_vel_name);
+  auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace >(m_w_vel_name);
+  auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_density_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
+  auto CCuVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_u_vel_name);
+  auto CCvVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_v_vel_name);
+  auto CCwVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_w_vel_name);
 
   const Vector Dx = patch->dCell();
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Uintah::BlockRange initrange( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& IsI = tsk_info->get_field< CCVariable<double> >( m_IsI_name );
-  CCVariable<double>& s11 = tsk_info->get_field< CCVariable<double> >( "s11" );
-  CCVariable<double>& s12 = tsk_info->get_field< CCVariable<double> >( "s12" );
-  CCVariable<double>& s13 = tsk_info->get_field< CCVariable<double> >( "s13" );
-  CCVariable<double>& s22 = tsk_info->get_field< CCVariable<double> >( "s22" );
-  CCVariable<double>& s23 = tsk_info->get_field< CCVariable<double> >( "s23" );
-  CCVariable<double>& s33 = tsk_info->get_field< CCVariable<double> >( "s33" );
+  auto IsI = tsk_info->get_field< CCVariable<double>, double, MemSpace >( m_IsI_name );
+  auto s11 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s11" );
+  auto s12 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s12" );
+  auto s13 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s13" );
+  auto s22 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s22" );
+  auto s23 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s23" );
+  auto s33 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "s33" );
 
-  CCVariable<double>& Beta11 = tsk_info->get_field< CCVariable<double> >( "Beta11" );
-  CCVariable<double>& Beta12 = tsk_info->get_field< CCVariable<double> >( "Beta12" );
-  CCVariable<double>& Beta13 = tsk_info->get_field< CCVariable<double> >( "Beta13" );
-  CCVariable<double>& Beta22 = tsk_info->get_field< CCVariable<double> >( "Beta22" );
-  CCVariable<double>& Beta23 = tsk_info->get_field< CCVariable<double> >( "Beta23" );
-  CCVariable<double>& Beta33 = tsk_info->get_field< CCVariable<double> >( "Beta33" );
+  auto Beta11 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta11" );
+  auto Beta12 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta12" );
+  auto Beta13 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta13" );
+  auto Beta22 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta22" );
+  auto Beta23 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta23" );
+  auto Beta33 = tsk_info->get_field< CCVariable<double>, double, MemSpace >( "Beta33" );
 
-  IsI.initialize(0.0);
-  s11.initialize(0.0);
-  s12.initialize(0.0);
-  s13.initialize(0.0);
-  s22.initialize(0.0);
-  s23.initialize(0.0);
-  s33.initialize(0.0);
-  Beta11.initialize(0.0);
-  Beta12.initialize(0.0);
-  Beta13.initialize(0.0);
-  Beta22.initialize(0.0);
-  Beta23.initialize(0.0);
-  Beta33.initialize(0.0);
+  auto filterRho = tsk_info->get_field< CCVariable<double>, double, MemSpace >("Filterrho");
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  auto rhoBC = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoBC");
+
+  auto filterRhoU = tsk_info->get_field< SFCXVariable<double>, double, MemSpace >("Filterrhou");
+  auto filterRhoV = tsk_info->get_field< SFCYVariable<double>, double, MemSpace >("Filterrhov");
+  auto filterRhoW = tsk_info->get_field< SFCZVariable<double>, double, MemSpace >("Filterrhow");
+
+  auto rhoUU = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoUU");
+  auto rhoVV = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoVV");
+  auto rhoWW = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoWW");
+  auto rhoUV = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoUV");
+  auto rhoUW = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoUW");
+  auto rhoVW = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoVW");
+  auto rhoU = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoU");
+  auto rhoV = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoV");
+  auto rhoW = tsk_info->get_field< CCVariable<double>, double, MemSpace >("rhoW");
+
+  //init all at once
+  Uintah::parallel_for(execObj, initrange, KOKKOS_LAMBDA(int i, int j, int k){
+    IsI(i, j, k) = 0.0;
+	s11(i, j, k) = 0.0;
+	s12(i, j, k) = 0.0;
+	s13(i, j, k) = 0.0;
+	s22(i, j, k) = 0.0;
+	s23(i, j, k) = 0.0;
+	s33(i, j, k) = 0.0;
+
+	Beta11(i, j, k) = 0.0;
+	Beta12(i, j, k) = 0.0;
+	Beta13(i, j, k) = 0.0;
+	Beta22(i, j, k) = 0.0;
+	Beta23(i, j, k) = 0.0;
+	Beta33(i, j, k) = 0.0;
+
+	filterRho(i, j, k) = 0.0;
+
+	rhoBC(i, j, k) = rho(i,j,k);
+
+	filterRhoU(i, j, k) = 0.0;
+	filterRhoV(i, j, k) = 0.0;
+	filterRhoW(i, j, k) = 0.0;
+
+    rhoUU(i, j, k) = 0.0;
+    rhoVV(i, j, k) = 0.0;
+    rhoWW(i, j, k) = 0.0;
+    rhoUV(i, j, k) = 0.0;
+    rhoUW(i, j, k) = 0.0;
+    rhoVW(i, j, k) = 0.0;
+    rhoU(i, j, k) = 0.0;
+    rhoV(i, j, k) = 0.0;
+    rhoW(i, j, k) = 0.0;
+
+  });
+
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
     double uep = 0.0;
     double uwp = 0.0;
@@ -337,7 +425,7 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   });
 
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     Beta11(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s11(i,j,k);
     Beta22(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s22(i,j,k);
     Beta33(i,j,k) = rho(i,j,k)*IsI(i,j,k)*s33(i,j,k);
@@ -348,39 +436,24 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   ArchesCore::BCFilter bcfilter;
-  bcfilter.apply_zero_neumann(patch,Beta11,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta22,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta33,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta12,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta13,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta11,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta22,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta33,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta12,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta13,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,Beta23,vol_fraction);
 
   // Filter rho
-  CCVariable<double>& filterRho = tsk_info->get_field< CCVariable<double> >("Filterrho");
-  filterRho.initialize(0.0);
-
 
   // this need to be fixed (??)
   //filterRho.copy(ref_rho);
 
-  CCVariable<double>& rhoBC = tsk_info->get_field< CCVariable<double> >("rhoBC");
-
-  rhoBC.initialize(0.0);
-  Uintah::parallel_for(range, [&](int i, int j, int k){
-      rhoBC(i,j,k) = rho(i,j,k);
-  });
-  bcfilter.apply_BC_rho( patch, rhoBC, rho, vol_fraction);
-  m_Filter.applyFilter( rho, filterRho, range, vol_fraction);
+  bcfilter.apply_BC_rho( patch, rhoBC, rho, vol_fraction, execObj);
+  m_Filter.applyFilter( rho, filterRho, range, vol_fraction, execObj);
 
   //m_Filter.applyFilter(rho,filterRho,range,vol_fraction);
 
   // filter rho*ux...
-  SFCXVariable<double>& filterRhoU = tsk_info->get_field< SFCXVariable<double> >("Filterrhou");
-  SFCYVariable<double>& filterRhoV = tsk_info->get_field< SFCYVariable<double> >("Filterrhov");
-  SFCZVariable<double>& filterRhoW = tsk_info->get_field< SFCZVariable<double> >("Filterrhow");
-  filterRhoU.initialize(0.0);
-  filterRhoV.initialize(0.0);
-  filterRhoW.initialize(0.0);
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -394,7 +467,7 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
 
   Uintah::BlockRange range_u(low, patch->getCellHighIndex() );
-  m_Filter.applyFilter(uVel,filterRhoU,rho,vol_fraction,range_u);
+  m_Filter.applyFilter<constSFCXVariable<double>>(uVel,filterRhoU,rho,vol_fraction,range_u, execObj);
   if ( yminus ){
     low = patch->getCellLowIndex()+IntVector(0,1,0);
   } else {
@@ -402,7 +475,7 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
 
   Uintah::BlockRange range_v(low, patch->getCellHighIndex() );
-  m_Filter.applyFilter(vVel,filterRhoV,rho,vol_fraction,range_v);
+  m_Filter.applyFilter<constSFCYVariable<double>>(vVel,filterRhoV,rho,vol_fraction,range_v, execObj);
 
   if ( zminus ){
     low = patch->getCellLowIndex()+IntVector(0,0,1);
@@ -410,35 +483,16 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     low = patch->getCellLowIndex();
   }
   Uintah::BlockRange range_w(low, patch->getCellHighIndex() );
-  m_Filter.applyFilter(wVel,filterRhoW,rho,vol_fraction,range_w);
+  m_Filter.applyFilter<constSFCZVariable<double>>(wVel,filterRhoW,rho,vol_fraction,range_w, execObj);
 
-  bcfilter.apply_BC_rhou(patch,filterRhoU,uVel,rho,vol_fraction);
-  bcfilter.apply_BC_rhou(patch,filterRhoV,vVel,rho,vol_fraction);
-  bcfilter.apply_BC_rhou(patch,filterRhoW,wVel,rho,vol_fraction);
-  bcfilter.apply_BC_filter_rho(patch,filterRho,rhoBC,vol_fraction);
+  bcfilter.apply_BC_rhou<SFCXVariable<double>>(patch,filterRhoU,uVel,rho,vol_fraction, execObj);
+  bcfilter.apply_BC_rhou<SFCYVariable<double>>(patch,filterRhoV,vVel,rho,vol_fraction, execObj);
+  bcfilter.apply_BC_rhou<SFCZVariable<double>>(patch,filterRhoW,wVel,rho,vol_fraction, execObj);
+  bcfilter.apply_BC_filter_rho(patch,filterRho,rhoBC,vol_fraction, execObj);
 
   // Compute rhouiuj at cc
-  CCVariable<double>& rhoUU = tsk_info->get_field< CCVariable<double> >("rhoUU");
-  CCVariable<double>& rhoVV = tsk_info->get_field< CCVariable<double> >("rhoVV");
-  CCVariable<double>& rhoWW = tsk_info->get_field< CCVariable<double> >("rhoWW");
-  CCVariable<double>& rhoUV = tsk_info->get_field< CCVariable<double> >("rhoUV");
-  CCVariable<double>& rhoUW = tsk_info->get_field< CCVariable<double> >("rhoUW");
-  CCVariable<double>& rhoVW = tsk_info->get_field< CCVariable<double> >("rhoVW");
-  CCVariable<double>& rhoU = tsk_info->get_field< CCVariable<double> >("rhoU");
-  CCVariable<double>& rhoV = tsk_info->get_field< CCVariable<double> >("rhoV");
-  CCVariable<double>& rhoW = tsk_info->get_field< CCVariable<double> >("rhoW");
 
-  rhoUU.initialize(0.0);
-  rhoVV.initialize(0.0);
-  rhoWW.initialize(0.0);
-  rhoUV.initialize(0.0);
-  rhoUW.initialize(0.0);
-  rhoVW.initialize(0.0);
-  rhoU.initialize(0.0);
-  rhoV.initialize(0.0);
-  rhoW.initialize(0.0);
-
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     rhoUU(i,j,k) = rho(i,j,k)*CCuVel(i,j,k)*CCuVel(i,j,k);
     rhoVV(i,j,k) = rho(i,j,k)*CCvVel(i,j,k)*CCvVel(i,j,k);
     rhoWW(i,j,k) = rho(i,j,k)*CCwVel(i,j,k)*CCwVel(i,j,k);
@@ -450,15 +504,15 @@ DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     rhoW(i,j,k) = rho(i,j,k)*CCwVel(i,j,k);
   });
 
-  bcfilter.apply_zero_neumann(patch,rhoUU,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoVV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoWW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoUV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoUW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoVW,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoV,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoU,vol_fraction);
-  bcfilter.apply_zero_neumann(patch,rhoW,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoUU,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoVV,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoWW,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoUV,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoUW,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoVW,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoV,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoU,vol_fraction);
+  bcfilter.apply_zero_neumann(execObj,patch,rhoW,vol_fraction);
 }
 
 } //namespace Uintah

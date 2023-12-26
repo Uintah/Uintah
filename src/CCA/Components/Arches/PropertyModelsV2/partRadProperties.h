@@ -10,6 +10,9 @@
 #endif
 #include <CCA/Components/Arches/ChemMixV2/ClassicTable.h>
 
+#define DEP_VAR_SIZE 2
+#define IND_VAR_SIZE 2
+
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 //
 // /** 
@@ -44,6 +47,16 @@ namespace Uintah{
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     void register_initialize( VIVec& variable_registry , const bool pack_tasks);
@@ -56,15 +69,17 @@ namespace Uintah{
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep , const bool packed_tasks){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info){}
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info);
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info);
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
-    
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
 
     void create_local_labels();
@@ -149,7 +164,7 @@ namespace Uintah{
       double _constAsymmFact;
       double _Qabs;
 
-      Interp_class*  myTable;
+      Interp_class<DEP_VAR_SIZE>*  myTable;
 
        // coal optics data members
       double _rawCoalReal;
@@ -161,7 +176,7 @@ namespace Uintah{
       int _ncomp;
       
      int _nIVs;  /// number of independent variables for table lookup
-     int _nDVs;  /// number of dependent variables for table lookup
+     int _nDVs{0};  /// number of dependent variables for table lookup
 
       double _absorption_modifier;
       double _scattering_modifier;

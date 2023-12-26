@@ -243,11 +243,12 @@ private:
               const double value = spec->value;
 
               const int mysize = cell_iter.size();
-              auto this_iter = cell_iter.get_ref_to_iterator();
+              ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> cpuExeobj; //using temporary exeObj with CPU space. Remove while porting the task
+              auto this_iter = cell_iter.get_ref_to_iterator(cpuExeobj);
 
               for ( int i = 0; i < mysize; i++ ){
-                IntVector c = this_iter[i];
-                src[this_iter[i]] = value*area/vol;
+                IntVector c = IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2]);
+                src[IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2])] = value*area/vol;
               }
 
             } else if ( spec->bcType == CUSTOM ){
@@ -273,16 +274,17 @@ private:
               double vol = DX[i0]*DX[i1]*DX[zeroi];
 
               const int mysize = cell_iter.size();
-              auto this_iter = cell_iter.get_ref_to_iterator();
+              ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> cpuExeobj; //using temporary exeObj with CPU space. Remove while porting the task
+              auto this_iter = cell_iter.get_ref_to_iterator(cpuExeobj);
 
               for ( int i = 0; i < mysize; i++ ){
-                IntVector lookup_c = this_iter[i] - ijk;
+                IntVector lookup_c = IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2]) - ijk;
                 lookup_c[zeroi] = 0;
 
                 auto ptr = _storage.find(IntVector(lookup_c));
                 if ( ptr != _storage.end() ){
                   double value = ptr->second;
-                  src[this_iter[i]] = value*area/vol;
+                  src[IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2])] = value*area/vol;
                 }
 
               }

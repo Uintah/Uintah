@@ -1,0 +1,263 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!--  
+kokkos_rmcrt_bm1_DO version derived by removing some part from StandAlone/inputs/ARCHES/RMCRT/methane_rmcrt.ups
+This input is same as kokkos_rmcrt_bm1_DO.ups except that the boundary conditions have non zero values.
+These non zero BC values give hypre iterations. (kokkos_rmcrt_bm1_DO has 0 hypre iterations).
+Another deviation from kokkos_rmcrt_bm1_DO is non zero PhysicalConstants - optional, but make more sense. 
+Need to verify physics. 
+ -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches Methane Plume Multi Patch Run with RMCRT Radiation</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <!--  needed for rmcrt -->
+  <AMR type="StaticGridML">
+    <useLockStep> true </useLockStep>
+  </AMR>
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.35</timestep_multiplier>
+    <max_Timesteps>2</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>methane_1m.uda</filebase>
+    <outputTimestepInterval>0</outputTimestepInterval>
+    <save label="pressurePS" levels="-1"/>
+    <save label="CCVelocity" levels="-1"/>
+    <save label="uVelocitySPBC" levels="-1"/>
+    <save label="vVelocitySPBC" levels="-1"/>
+    <save label="wVelocitySPBC" levels="-1"/>
+    <save label="viscosityCTS" levels="-1"/>
+    <save label="cellType" levels="-1"/>
+    <save label="mixture_fraction" levels="-1"/>
+    <save label="enthalpy_rmcrt" levels="-1"/>
+    <save label="areaFraction" levels="-1"/>
+    <save label="density" table_lookup="true" levels="-1"/>
+    <save label="temperature" table_lookup="true" levels="-1"/>
+    <!-- radiation properties -->
+    <save label="abskg" levels="-1"/>
+    <save label="radiation_temperature" levels="-1"/>
+    <save label="radiationVolq"  levels="-1"/>
+    <save label="sigmaT4"/>
+    <save label="cellType"/>
+    <save label="RMCRTboundFlux" levels="-1"/>
+    <save label="divQ_rmcrt" levels="-1"/>       
+    <checkpoint cycle="0" interval="0.00"/>
+    <compression>gzip</compression> 
+  </DataArchiver>
+  <Grid doAMR="true">
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="coflow">
+        <BCType label="co-flow inlet" var="MassFlowInlet">
+          <value>1.204</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Neumann">
+          <value>298</value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType label="y- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy_do" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType label="y+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType label="z- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType label="z+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="coarse">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[4,4,4]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+    <Level>
+      <Box label="fine">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[16,16,16]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <PhysicalConstants>
+    <gravity>         [-9.8,0,0]  </gravity>
+    <reference_point> [-1,-1,-1]  </reference_point>
+    <viscosity>       0.000020  </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <BoundaryConditions/>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!--______________________________________________________________________ -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <!-- enthalpy using RMCRT -->
+        <Eqn label="enthalpy_rmcrt" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0"/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <src label="divQ_rmcrt">
+            <weight>1 </weight>
+          </src>
+        </Eqn> 
+        <Sources>
+          <src label="divQ_rmcrt" type="rmcrt_radiation">
+            <calc_frequency>1</calc_frequency>
+            <absorptionCoeffs>
+              <gas_absk> abskg </gas_absk>           <!-- Used in the intensity calculation -->
+            </absorptionCoeffs>
+            <RMCRT>
+              <randomSeed>        true      </randomSeed>
+              <nDivQRays>          1          </nDivQRays>
+              <!-- <nFluxRays>          5         </nFluxRays> -->
+              <Threshold>         0.05       </Threshold>
+              <solveBoundaryFlux> false      </solveBoundaryFlux>
+              <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+              <algorithm type="dataOnion">
+                <haloCells>           [4,4,4]  </haloCells>
+                <ROI_extents type="patch_based"/>
+              </algorithm>
+            </RMCRT>
+          </src>
+        </Sources>
+
+      </TransportEqns>
+
+
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="abskg">
+          <calculator type="burns_christon">
+          </calculator>
+        </model>
+      </PropertyModelsV2>
+      <!--__________________________________-->
+
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>64.804</temperature>
+          <density>1.18</density>
+        </table>
+      </Properties>
+      <!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75   </maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

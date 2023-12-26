@@ -40,18 +40,18 @@ class DetailedTask;
 
 CLASS
    KokkosOpenMPScheduler
-   
+
 
 GENERAL INFORMATION
    KokkosOpenMPScheduler.h
 
-   Alan Humphrey, John Holmen
+   Alan Humphrey, John Holmen, Brad Peterson
    Scientific Computing and Imaging Institute
    University of Utah
 
-   
+
 KEYWORDS
-   Task Scheduler, Multi-threaded MPI, OpenMP
+   Task Scheduler, Multi-threaded MPI, OpenMP, CPU
 
 DESCRIPTION
    A multi-threaded scheduler that uses a combination of MPI + OpenMP. This relies
@@ -63,13 +63,13 @@ DESCRIPTION
    This scheduler is designed primarily for use on the many-core Intel Xeon Phi
    architecture, specifically KNL and KNH, but should also work well on any
    multi-core CPU node with hyper-threading
-  
+
 WARNING
    This scheduler is EXPERIMENTAL and undergoing extensive development.
    Not all tasks/components are Kokkos-enabled and/or thread-safe
-   
+
    Requires MPI_THREAD_MULTIPLE support.
-  
+
 ****************************************/
 
 
@@ -80,9 +80,10 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     KokkosOpenMPScheduler( const ProcessorGroup  * myworld,
                            KokkosOpenMPScheduler * parentScheduler = nullptr );
 
-    virtual ~KokkosOpenMPScheduler(){};
+    virtual ~KokkosOpenMPScheduler();
 
-    virtual void problemSetup( const ProblemSpecP & prob_spec, const MaterialManagerP & materialManager );
+    virtual void problemSetup( const ProblemSpecP & prob_spec,
+                               const MaterialManagerP & materialManager );
 
     virtual SchedulerP createSubScheduler();
 
@@ -94,7 +95,6 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
     static std::string myRankThread();
 
-
   private:
 
     // eliminate copy, assignment and move
@@ -104,6 +104,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     KokkosOpenMPScheduler& operator=( KokkosOpenMPScheduler && )      = delete;
 
     void markTaskConsumed( volatile int * numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
+
+    void runTask( DetailedTask* readyTask );
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>             m_phase_tasks;
@@ -121,13 +123,8 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
     int               m_num_phases{0};
     int               m_abort_point{0};
     bool              m_abort{false};
-
-    // OMP-specific
-    int               m_num_partitions{0};
-    int               m_threads_per_partition{0};
-
 };
 
 } // namespace Uintah
-   
+
 #endif // CCA_COMPONENTS_SCHEDULERS_KOKKOSOPENMPSCHEDULER_H

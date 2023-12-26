@@ -26,7 +26,7 @@ if [ "$OS" = "Linux" ]; then
 
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
-     '--enable-optimize=-O3 -mfpmath=sse' \\"
+     '--enable-optimize=-O3 -fno-ipa-cp-clone -mfpmath=sse' \\"
 
   #_________________
   #  machine specific variables

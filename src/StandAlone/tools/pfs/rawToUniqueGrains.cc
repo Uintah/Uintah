@@ -673,7 +673,7 @@ bool ReadAuxFile(const string auxFileName, map<int,double>& data)
     cout.precision(17);
     
     // bullet proofing
-    if(isnormal(intensity) ==0 || isnormal(scalar == 0 ) ){
+    if( intensity == 0 || isnormal(scalar) ){
       ostringstream warn;
       warn << "ERROR: auxFile: either the intensity (" << intensity << ") or scalar (" << scalar << ") is not a number\n";
       throw InternalError(warn.str(), __FILE__, __LINE__);

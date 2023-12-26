@@ -22,13 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-// GPU Grid Variable: in host & device code (HOST_DEVICE == __host__ __device__)
-
 #ifndef UINTAH_GRID_VARIABLES_GPUGRIDVARIABLE_H
 #define UINTAH_GRID_VARIABLES_GPUGRIDVARIABLE_H
 
 #include <Core/Grid/Variables/GPUGridVariableBase.h>
-#include <sci_defs/cuda_defs.h>
+
+#include <cstdio>
 
 namespace Uintah {
   
@@ -36,47 +35,47 @@ namespace Uintah {
 
     public:
 
-      HOST_DEVICE virtual ~GPUArray3(){};
+      GPU_INLINE_FUNCTION virtual ~GPUArray3(){};
 
-      HOST_DEVICE const T& operator[](const int3& idx) const
+      GPU_INLINE_FUNCTION const T& operator[](const int3& idx) const
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds( idx);
 #endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE T& operator[](const int3& idx)
+      GPU_INLINE_FUNCTION T& operator[](const int3& idx)
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds( idx);
 #endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE const T&
+      GPU_INLINE_FUNCTION const T&
       operator()(const int& x, const int& y, const int& z) const
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds3(x,y,z);
 #endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE T& operator()(const int& x, const int& y, const int& z)
+      GPU_INLINE_FUNCTION T& operator()(const int& x, const int& y, const int& z)
       {  //get data from global index
-#if SCI_CUDA_ASSERTION_LEVEL >= 3
+#if SCI_KOKKOS_ASSERTION_LEVEL >= 3
         checkBounds3(x,y,z);
 #endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE const T& operator()(const int& x, const int& y, const int& z, const int& m) const { //get data from global index
+      GPU_INLINE_FUNCTION const T& operator()(const int& x, const int& y, const int& z, const int& m) const { //get data from global index
         CHECK_INSIDE3(x,y,z,d_offset, d_size)
         return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
       }
 
-      HOST_DEVICE T& operator()(const int& x, const int& y, const int& z, const int& m) { //get data from global index
+      GPU_INLINE_FUNCTION T& operator()(const int& x, const int& y, const int& z, const int& m) { //get data from global index
         CHECK_INSIDE3(x,y,z,d_offset, d_size)
         //TODO: Get materials working with the offsets.
         //return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
@@ -84,49 +83,49 @@ namespace Uintah {
       }
 
 
-      HOST_DEVICE T* getPointer() const {
+      GPU_INLINE_FUNCTION T* getPointer() const {
         return d_data;
       }
 
 
-      HOST_DEVICE void copyZSliceData(const GPUArray3& copyFromVar);
+      GPU_INLINE_FUNCTION void copyZSliceData(const GPUArray3& copyFromVar);
 
 
-      HOST_DEVICE size_t getMemSize() const
+      GPU_INLINE_FUNCTION size_t getMemSize() const
       {
         return d_size.x * d_size.y * d_size.z * sizeof(T);
       }
       
-      HOST_DEVICE int3 getLowIndex() const
+      GPU_INLINE_FUNCTION int3 getLowIndex() const
       {
         return make_int3(d_offset.x, d_offset.y, d_offset.z);
       }
-      HOST_DEVICE int3 getHighIndex() const
+      GPU_INLINE_FUNCTION int3 getHighIndex() const
       {
         return make_int3(d_offset.x+d_size.x, d_offset.y+d_size.y, d_offset.z+d_size.z);
       }
       
-       HOST_DEVICE int3 getLowIndex()
+       GPU_INLINE_FUNCTION int3 getLowIndex()
       {
         return make_int3(d_offset.x, d_offset.y, d_offset.z);
       }
-      HOST_DEVICE int3 getHighIndex()
+      GPU_INLINE_FUNCTION int3 getHighIndex()
       {
         return make_int3(d_offset.x+d_size.x, d_offset.y+d_size.y, d_offset.z+d_size.z);
       }
 
     protected:
 
-      HOST_DEVICE GPUArray3() {};
+      GPU_INLINE_FUNCTION GPUArray3() {};
 
-      HOST_DEVICE void setOffsetSizePtr(const int3& offset, const int3& size, void* &ptr) const
+      GPU_INLINE_FUNCTION void setOffsetSizePtr(const int3& offset, const int3& size, void* &ptr) const
       {
         d_offset = offset;
         d_size = size;
         d_data = (T*)ptr;
       }
 
-      HOST_DEVICE void getOffsetSizePtr(int3& offset, int3& size, void* &ptr) const
+      GPU_INLINE_FUNCTION void getOffsetSizePtr(int3& offset, int3& size, void* &ptr) const
       {
         offset = d_offset;
         size = d_size;
@@ -144,12 +143,12 @@ namespace Uintah {
       mutable int3  d_offset;  //offset from global index to local index
       mutable int3  d_size;    //size of local storage 
 
-      HOST_DEVICE GPUArray3& operator=(const GPUArray3&);
-      HOST_DEVICE GPUArray3(const GPUArray3&);
+      GPU_INLINE_FUNCTION GPUArray3& operator=(const GPUArray3&);
+      GPU_INLINE_FUNCTION GPUArray3(const GPUArray3&);
       
       //__________________________________
       //
-      HOST_DEVICE void checkBounds( const int3& idx){
+      GPU_INLINE_FUNCTION void checkBounds( const int3& idx){
          int3 Lo = getLowIndex();  
          int3 Hi = getHighIndex();                                             
          if (idx.x < Lo.x || idx.y < Lo.y || idx.z < Lo.z ||                                    
@@ -161,7 +160,7 @@ namespace Uintah {
 
       //__________________________________
       //    const version
-      HOST_DEVICE void checkBounds( const int3& idx) const{
+      GPU_INLINE_FUNCTION void checkBounds( const int3& idx) const{
          int3 Lo = getLowIndex();  
          int3 Hi = getHighIndex();                                             
          if (idx.x < Lo.x || idx.y < Lo.y || idx.z < Lo.z ||                                    
@@ -172,13 +171,13 @@ namespace Uintah {
       }
       //__________________________________
       //
-      HOST_DEVICE void checkBounds3(const int& x, const int& y, const int& z ){
+      GPU_INLINE_FUNCTION void checkBounds3(const int& x, const int& y, const int& z ){
         int3 idx = make_int3(x,y,z);
         checkBounds(idx);
       }
       //__________________________________
       //    const version
-      HOST_DEVICE void checkBounds3(const int& x, const int& y, const int& z )const {
+      GPU_INLINE_FUNCTION void checkBounds3(const int& x, const int& y, const int& z )const {
         int3 idx = make_int3(x,y,z);
         checkBounds(idx);
       }
@@ -188,50 +187,51 @@ namespace Uintah {
 
   template<class T> class GPUGridVariable: public GPUGridVariableBase, public GPUArray3<T> {
 
-      friend class UnifiedScheduler;  // allow Scheduler access
+    friend class KokkosScheduler;   // allow scheduler access
+    friend class UnifiedScheduler;  // allow scheduler access
 
     public:
 
-      HOST_DEVICE GPUGridVariable() {}
-      HOST_DEVICE virtual ~GPUGridVariable() {}
+      GPU_INLINE_FUNCTION GPUGridVariable() {}
+      GPU_INLINE_FUNCTION virtual ~GPUGridVariable() {}
 
-      HOST_DEVICE virtual size_t getMemSize()
+      GPU_INLINE_FUNCTION virtual size_t getMemSize()
       {
         return GPUArray3<T>::getMemSize();
       }
       
-      HOST_DEVICE virtual int3 getLowIndex()
+      GPU_INLINE_FUNCTION virtual int3 getLowIndex()
       {
         return GPUArray3<T>::getLowIndex();
       }
       
-      HOST_DEVICE virtual int3 getHighIndex()
+      GPU_INLINE_FUNCTION virtual int3 getHighIndex()
       {
         return GPUArray3<T>::getHighIndex();
       }
-      HOST_DEVICE virtual int3 getLowIndex() const
+      GPU_INLINE_FUNCTION virtual int3 getLowIndex() const
       {
         return GPUArray3<T>::getLowIndex();
       }
       
-      HOST_DEVICE virtual int3 getHighIndex() const
+      GPU_INLINE_FUNCTION virtual int3 getHighIndex() const
       {
         return GPUArray3<T>::getHighIndex();
       }
     
 
-      HOST_DEVICE void* getVoidPointer() const {
+      GPU_INLINE_FUNCTION void* getVoidPointer() const {
         return GPUArray3<T>::d_data;
       }
 
     private:
 
-      HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) const
+      GPU_INLINE_FUNCTION virtual void getArray3(int3& offset, int3& size, void* &ptr) const
       {
         GPUArray3<T>::getOffsetSizePtr(offset, size, ptr);
       }
 
-      HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const
+      GPU_INLINE_FUNCTION virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const
       {
         GPUArray3<T>::setOffsetSizePtr(offset, size, ptr);
       }

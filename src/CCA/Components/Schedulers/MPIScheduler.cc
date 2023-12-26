@@ -25,6 +25,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SendState.h>
@@ -45,12 +46,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
-
-#ifdef UINTAH_ENABLE_KOKKOS
-#  include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
 
 #include <cstring>
 #include <iomanip>
@@ -115,9 +111,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   : SchedulerCommon(myworld)
   , m_parent_scheduler{parentScheduler}
 {
-#ifdef UINTAH_ENABLE_KOKKOS
-  Kokkos::initialize();
-#endif //UINTAH_ENABLE_KOKKOS
 
   if (g_time_out) {
     char filename[64];
@@ -158,10 +151,6 @@ MPIScheduler::~MPIScheduler()
     m_avg_stats.close();
     m_max_stats.close();
   }
-
-#ifdef UINTAH_ENABLE_KOKKOS
-  Kokkos::finalize();
-#endif //UINTAH_ENABLE_KOKKOS
 
 }
 
@@ -918,7 +907,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       printTaskLevels( d_myworld, g_task_level, dtask );
     }
 
-    // ARS - FIXME CHECK THE WAREHOUSE
+    // ARS - FIX ME - Check the warehouse
     OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
     if (!abort && dw && dw->abortTimeStep()) {
       // TODO - abort might not work with external queue...

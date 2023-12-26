@@ -7,7 +7,7 @@
 
 namespace Uintah{
 
-  class SurfaceVolumeFractionCalc : TaskInterface {
+  class SurfaceVolumeFractionCalc : public TaskInterface {
 
   public:
 
@@ -16,6 +16,16 @@ namespace Uintah{
     ~SurfaceVolumeFractionCalc(){};
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
+
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -29,13 +39,17 @@ namespace Uintah{
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep, const bool packed_tasks ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){};
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){};
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     void create_local_labels();
 

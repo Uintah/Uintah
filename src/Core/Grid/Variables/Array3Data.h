@@ -31,11 +31,11 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sci_defs/kokkos_defs.h>
+#include <sci_defs/gpu_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
+  #include <Core/Grid/Variables/KokkosViews.h>
+#endif //HAVE_KOKKOS
 
 namespace Uintah {
 
@@ -65,10 +65,13 @@ namespace Uintah {
 
    ****************************************/
 
-#ifdef UINTAH_ENABLE_KOKKOS
 template <typename T>
-using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
-#endif //UINTAH_ENABLE_KOKKOS
+class Array3Data;
+
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+  template <typename T, typename MemSpace>
+  using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+#endif
 
   template<class T> class Array3Data : public RefCounted {
     public:
@@ -111,11 +114,11 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<K
         return d_data;
       }
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosData<T> getKokkosData() const {
-        return KokkosData<T>(d_data, d_size.x(), d_size.y(), d_size.z());
+#if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
+      inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
+        return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
       }
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 
     private:

@@ -14,6 +14,48 @@ DensityRK::~DensityRK(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityRK::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityRK::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DensityRK::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityRK::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityRK::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityRK::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityRK::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityRK::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DensityRK::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityRK::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityRK::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityRK::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityRK::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityRK::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityRK::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DensityRK::problemSetup( ProblemSpecP& db ){
 
@@ -93,11 +135,11 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rhoRK = tsk_info->get_field<CCVariable<double> >( m_label_densityRK );
-  rhoRK.initialize(0.0);
+  auto rhoRK = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_densityRK );
+  parallel_initialize(execObj,0.0,rhoRK);
 
 }
 
@@ -110,24 +152,27 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
   register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
-  register_variable( m_label_densityRK, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+  register_variable( m_label_densityRK, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constCCVariable<double>& old_rho = tsk_info->get_field<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
-  CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >( m_label_density );
-  CCVariable<double>& rhoRK = tsk_info->get_field<CCVariable<double> >( m_label_densityRK );
+  auto old_rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_density, ArchesFieldContainer::OLDDW );
+  auto rho = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_density );
+  auto rhoRK = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_densityRK );
 
   const int time_substep = tsk_info->get_time_substep();
 
-  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  const double alpha =_alpha[time_substep];
+  const double beta = _beta[time_substep];
 
-    rhoRK(i,j,k) = _alpha[time_substep] * old_rho(i,j,k) + _beta[time_substep] * rho(i,j,k);
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+
+    rhoRK(i,j,k) = alpha * old_rho(i,j,k) +  beta * rho(i,j,k);
 
     rho(i,j,k)  = rhoRK(i,j,k); // I am copy density guess in density
 

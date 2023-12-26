@@ -402,7 +402,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   for (int i = 0; i < grid->numLevels(); i++) {
     task->requires(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
   }
-  
+
   // These are the application reduction variables. An application may
   // also request that the time step be recomputed, aborted, and/or the
   // simulation end early.
@@ -411,12 +411,16 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // in a requires and activate the variable it will be tested.
   for (auto & var : m_appReductionVars) {
     const VarLabel* label = var.second->getLabel();
-    
-    if( scheduler->getComputedVars().find( label ) != scheduler->getComputedVars().end() ) {
+
+    if( scheduler->getComputedVars().find( label ) !=
+        scheduler->getComputedVars().end() ) {
       activateReductionVariable(var.first, true);
-      
+
       task->requires(Task::NewDW, label);
       task->computes(label);
+    }
+    else {
+      activateReductionVariable(var.first, false);
     }
   }
 
@@ -427,10 +431,14 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // subsequent test.
   if( m_outputIfInvalidNextDelTFlag ) {
     activateReductionVariable(outputTimeStep_name, true);
+  } else {
+    activateReductionVariable(outputTimeStep_name, false);
   }
 
   if( m_checkpointIfInvalidNextDelTFlag ) {
     activateReductionVariable(checkpointTimeStep_name, true);
+  } else {
+    activateReductionVariable(outputTimeStep_name, false);
   }
 
   // The above three tasks are on a per proc basis any rank can make
@@ -488,7 +496,7 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
   }
 
   if (d_myworld->nRanks() > 1) {
-    new_dw->reduceMPI(m_delTLabel, 0, 0, -1);
+    new_dw->reduceMPI(m_delTLabel, nullptr, nullptr, -1);
   }
 
   // Get the reduced next delta T
@@ -508,11 +516,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
 
   // If delta T has been changed and if requested, for that change
   // output or checkpoint. Must be done before the reduction call.
-  if (validDelT & m_outputIfInvalidNextDelTFlag) {
+  if (m_outputIfInvalidNextDelTFlag &&
+      validDelT & m_outputIfInvalidNextDelTFlag) {
     setReductionVariable(new_dw, outputTimeStep_name, true);
   }
 
-  if (validDelT & m_checkpointIfInvalidNextDelTFlag) {
+  if (m_checkpointIfInvalidNextDelTFlag &&
+      validDelT & m_checkpointIfInvalidNextDelTFlag) {
     setReductionVariable(new_dw, checkpointTimeStep_name, true);
   }
 
@@ -532,11 +542,13 @@ ApplicationCommon::reduceSystemVars( const ProcessorGroup * pg,
   if (patches->size() != 0) {
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
-    if (!isBenignReductionVariable(outputTimeStep_name)) {
+    if (m_outputIfInvalidNextDelTFlag &&
+        !isBenignReductionVariable(outputTimeStep_name)) {
       m_output->setOutputTimeStep(true, grid);
     }
 
-    if (!isBenignReductionVariable(checkpointTimeStep_name)) {
+    if (m_checkpointIfInvalidNextDelTFlag &&
+        !isBenignReductionVariable(checkpointTimeStep_name)) {
       m_output->setCheckpointTimeStep(true, grid);
     }
   }
@@ -607,7 +619,10 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
                            &ApplicationCommon::updateSystemVars);
 
   task->setType(Task::OncePerProc);
-  
+
+  // This task really should be last as the simulation time gets
+  // updated. Without the requires it could be first.
+  task->requires(Task::NewDW, m_delTLabel);
   task->computes(m_timeStepLabel);
   task->computes(m_simulationTimeLabel);
 
@@ -627,12 +642,13 @@ ApplicationCommon::updateSystemVars( const ProcessorGroup *,
                                            DataWarehouse  * /*old_dw*/,
                                            DataWarehouse  * new_dw )
 {  
-  // If recomputing a time step do not update the time step or the simulation time.
+  // If recomputing a time step do not update the time step or the
+  // simulation time.
   if ( !getReductionVariable( recomputeTimeStep_name ) ) {
     // Store the time step so it can be incremented at the top of the
     // time step where it is over written.
     new_dw->put(timeStep_vartype(m_timeStep), m_timeStepLabel);
-    
+
     // Update the simulation time.
     m_simTime += m_delT;
 
@@ -757,10 +773,15 @@ ApplicationCommon::prepareForNextTimeStep()
   // what time step they are on and get the delta T that will be used.
   incrementTimeStep();
 
-  // Get the delta that will be used for the time step.
-  delt_vartype delt_var;
-  m_scheduler->getLastDW()->get( delt_var, m_delTLabel );
-  m_delT = delt_var;
+  // Get the current simulation time that will be used for the time step.
+  simTime_vartype simTimeVar;
+  m_scheduler->getLastDW()->get( simTimeVar,  m_simulationTimeLabel );
+  m_simTime = simTimeVar;
+
+  // Get the delta time that will be used for the time step.
+  delt_vartype delTVar;
+  m_scheduler->getLastDW()->get( delTVar, m_delTLabel );
+  m_delT = delTVar;
 
   // Clear the time step based reduction variables.
   for ( auto & var : m_appReductionVars ) {

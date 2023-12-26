@@ -95,8 +95,9 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
       d_resSumLabel.push_back(  VarLabel::create("residualSum_"+ std::to_string(cg_n_iter),   sum_vartype::getTypeDescription()));
 
 
+  proc0cout << __FUNCTION__ << "  " << __LINE__
+	    << " SCHEDULING CUSTOM SOLVE derekx\n";
 
-  proc0cout << " SCHEDULING CUSTOM SOLVE derekx\n";
   std::string taskname("linSolver::initialize_preconditioner_" + std::to_string(level->getID()));
   if (level->hasFinerLevel() == false){  // only create labels first time through ( hhighest level) 
   sched_buildAMatrix( sched, patches, matls);
@@ -121,7 +122,9 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
     tskc->computes(d_precMLabel[i]);
   }
 
-  proc0cout << " SCHEDULING CUSTOM SOLVE  on COARSE LEVEL derekx\n";
+  proc0cout << __FUNCTION__ << "  " << __LINE__
+	    << " SCHEDULING CUSTOM SOLVE on the COARSE LEVEL derekx\n";
+
   sched->addTask(tskc, patches, matls);
 }
 
@@ -315,6 +318,9 @@ void linSolver::sched_customSolve(SchedulerP& sched, const MaterialSet* matls,
                const VarLabel*  xLabel,     Task::WhichDW modifies_x,
                const VarLabel*  bLabel,     Task::WhichDW b_dw,
                const VarLabel*  guess, Task::WhichDW guess_dw, int rk_step, LevelP fineLevel ){
+
+  proc0cout << __FUNCTION__ << "  " << __LINE__
+	    << " SCHEDULING CUSTOM SOLVE derek\n";
 
 //sched_PreconditionerConstruction( sched,  matls, patches,nullptr);  
 

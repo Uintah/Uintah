@@ -844,7 +844,7 @@
   <!--  Scheduler Options               -->
 
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP'">
+                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified KokkosOpenMP Kokkos'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren
                                                  LeastChildren

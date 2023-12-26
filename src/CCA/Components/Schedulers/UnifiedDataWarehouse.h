@@ -97,7 +97,7 @@ DESCRIPTION
  * Scrub counters may be preserved when a strategy is developed to vacate variables from device memory if
          problems can fit in host memory but not in device memory.
  * Having knowledge of which memory spaces can communicate with which, and what bandwidth speeds
-         (a host to device copy over a CUDA device may go through a slower PCIe bus but a faster device from
+         (a host to device copy over a GPU device may go through a slower PCIe bus but a faster device from
          host over NVLINK may go MUCH faster).
  * Possibly allow for MPI calls to pull and push data straight from GPUs (if that approach ends up being
          more efficient overall).
@@ -117,10 +117,6 @@ public:
 
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::exists() not implemented yet\n"); }
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) { printf("UnifiedDataWarehouse::exists() not implemented yet\n"); }
-
-  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
-                   int matlIndex,
-                   const Level* ) { printf("UnifiedDataWarehouse::getReductionVariable() not implemented yet\n"); return nullptr;}
 
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
@@ -159,9 +155,9 @@ public:
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
                                                  IntVector high = IntVector(0,0,0) ) = 0;
-  
+
   virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
-  
+
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
@@ -259,7 +255,7 @@ public:
        int matlIndex, const Patch*, bool replace = false) = 0;
 
   // this is so we can get reduction information for regridding
-  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
+  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatlMemoryspace<Level> >& vars ) const = 0;
 
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;
@@ -278,12 +274,6 @@ public:
 
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
           const PatchSubset*, const MaterialSubset*,
-                            bool replace, const PatchSubset*) = 0;
-
-  //An overloaded version of transferFrom.  GPU transfers need a stream, and a
-  //stream is found in a detailedTask object.
-  virtual void transferFrom(DataWarehouse*, const VarLabel*,
-                            const PatchSubset*, const MaterialSubset*, void * detailedTask,
                             bool replace, const PatchSubset*) = 0;
 
   virtual size_t emit(OutputContext&, const VarLabel* label,
@@ -334,14 +324,6 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
     const MaterialSubset* matls, int nComm) = 0;
 
-  #ifdef HAVE_CUDA
-    GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
-    GPUDataWarehouse* getGPUDW() const {
-      int i;
-      CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-      return d_gpuDWs[i];
-    }
-  #endif
   protected:
     DataWarehouse( const ProcessorGroup* myworld,
        Scheduler* scheduler,
@@ -356,9 +338,6 @@ public:
     // many previous time steps had taken place before the restart.
     int d_generation;
 
-  #ifdef HAVE_CUDA
-    std::vector<GPUDataWarehouse*> d_gpuDWs;
-  #endif
   private:
     DataWarehouse(const DataWarehouse&);
     DataWarehouse& operator=(const DataWarehouse&);

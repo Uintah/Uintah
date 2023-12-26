@@ -15,6 +15,16 @@ public:
     Diffusion<T>( std::string task_name, int matl_index );
     ~Diffusion<T>();
 
+    TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskInitializeFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
+
+    TaskAssignedExecutionSpace loadTaskRestartInitFunctionPointers();
+  
+    TaskAssignedExecutionSpace loadTaskTimestepInitFunctionPointers();
+
     void problemSetup( ProblemSpecP& db );
 
     //Build instructions for this (Diffusion) class.
@@ -35,6 +45,18 @@ public:
 
     };
 
+    template <typename ExecSpace, typename MemSpace>
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
+    template <typename ExecSpace, typename MemSpace>
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
+    template <typename ExecSpace, typename MemSpace>
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
+
+    template <typename ExecSpace, typename MemSpace>
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
 protected:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
@@ -44,14 +66,6 @@ protected:
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
-
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
-
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
-
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
-
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 
@@ -83,6 +97,53 @@ private:
   template <typename T>
   Diffusion<T>::~Diffusion()
   {
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskComputeBCsFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskInitializeFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                       , &Diffusion<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Diffusion<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Diffusion<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Diffusion<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Diffusion<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskEvalFunctionPointers()
+  {
+    return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                       , &Diffusion<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Diffusion<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Diffusion<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Diffusion<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Diffusion<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                       );
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskTimestepInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  template <typename T>
+  TaskAssignedExecutionSpace Diffusion<T>::loadTaskRestartInitFunctionPointers()
+  {
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -156,18 +217,17 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
       if ( m_do_diff[ieqn] ){
-        FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_dflux");
-        FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_dflux");
-        FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
-        x_flux.initialize(0.0);
-        y_flux.initialize(0.0);
-        z_flux.initialize(0.0);
+        parallel_initialize(execObj, 0.0, x_flux,y_flux,z_flux);
       }
     }
   }
@@ -199,9 +259,10 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    CT& eps = tsk_info->get_field<CT>(m_eps_name);
+    auto eps = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
 
     Vector Dx = patch->dCell();
 
@@ -209,22 +270,20 @@ private:
 
       if ( m_do_diff[ieqn] ){
 
-        FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_dflux");
-        FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_dflux");
-        FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
-        CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+        auto phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
 
-        x_flux.initialize(0.0);
-        y_flux.initialize(0.0);
-        z_flux.initialize(0.0);
+        parallel_initialize(execObj,0.0, x_flux,y_flux,z_flux);
 
-        CT& D = tsk_info->get_field<CT>(m_D_name);
+        auto D = tsk_info->get_field<CT, const double, MemSpace>(m_D_name);
 
-        // x - Direction
+         //x - Direction
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange xrange(low_fx_patch_range, high_fx_patch_range);
-        Uintah::parallel_for( xrange, [&](int i, int j, int k){
+        Uintah::parallel_for(execObj, xrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afx  = ( eps(i,j,k) + eps(i-1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -236,7 +295,7 @@ private:
         // y - Direction
         GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange yrange(low_fy_patch_range, high_fy_patch_range);
-        Uintah::parallel_for( yrange, [&](int i, int j, int k){
+        Uintah::parallel_for(execObj, yrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afy  = ( eps(i,j,k) + eps(i,j-1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -248,7 +307,7 @@ private:
         // z - Direction
         GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(1,0);
         Uintah::BlockRange zrange(low_fz_patch_range, high_fz_patch_range);
-        Uintah::parallel_for( zrange, [&](int i, int j, int k){
+        Uintah::parallel_for(execObj, zrange, KOKKOS_LAMBDA (int i, int j, int k){
 
           const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
 
@@ -272,7 +331,8 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void Diffusion<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   }
 

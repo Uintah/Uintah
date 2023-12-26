@@ -225,7 +225,8 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/TurbulenceModels    \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
-           $(SRCDIR)/WallHTModels
+           $(SRCDIR)/WallHTModels        \
+           $(SRCDIR)/ArchesExamples
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -62,7 +62,7 @@ double MakeReal(double value)
     if (c == FP_PINF) is_inf = 1;
     if (c == FP_NINF) is_inf = -1;
 #else
-#  if defined( _AIX ) || defined( __PGI )
+#  if defined( _AIX ) || defined( __PGI_COMMENT_OUT )
     is_inf  = isinf(value);
 #  else
     is_inf  = std::isinf(value);

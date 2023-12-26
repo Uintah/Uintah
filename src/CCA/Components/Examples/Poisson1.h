@@ -86,6 +86,14 @@ WARNING
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                           SchedulerP&);
 
+    template <typename ExecSpace, typename MemSpace>
+    void timeAdvance( const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      OnDemandDataWarehouse* old_dw,
+                      OnDemandDataWarehouse* new_dw,
+                      UintahParams& uintahParams,
+                      ExecutionObject<ExecSpace, MemSpace>& execObj );
+
   private:
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, 
@@ -99,12 +107,6 @@ WARNING
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
-                               
-    void timeAdvance(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
                      
     double delt_;
     SimpleMaterial* mymat_;

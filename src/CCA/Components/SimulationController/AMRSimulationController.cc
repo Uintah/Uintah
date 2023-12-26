@@ -45,8 +45,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#if defined(KOKKOS_USING_GPU)
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <sci_defs/gperftools_defs.h>
@@ -144,11 +144,11 @@ AMRSimulationController::run()
 
   // ____________________________________________________________________
   // Begin the zero time step. Which is either initialization or restart.
-  
+
   // Start the wall timer for the initialization time step
   m_wall_timers.TimeStep.reset( true );
 
-  
+
   //---------------------------------------------------------------------
   // The order of the setup is important. See the individual component
   // setup calls for more details.
@@ -184,7 +184,7 @@ AMRSimulationController::run()
   finalSetup();
 
   // Once the grid is set up pass it on to the GPU.
-#ifdef HAVE_CUDA
+#if defined(KOKKOS_USING_GPU)
   GpuUtilities::assignPatchesToGpus( m_current_gridP );
 #endif
 
@@ -200,7 +200,7 @@ AMRSimulationController::run()
 
   // ____________________________________________________________________
   // End the zero time step. Which is either initialization or restart.
-  
+
 #ifndef DISABLE_SCI_MALLOC
   AllocatorSetDefaultTagLineNumber( m_application->getTimeStep() );
 #endif
@@ -208,9 +208,9 @@ AMRSimulationController::run()
   // Set the timer for the main loop. This timer is sync'ed with the
   // simulation time to get a measurement of the simulation to wall time.
   m_wall_timers.TimeStep.reset( true );
-    
+
   double walltime = m_wall_timers.GetWallTime();
-  
+
   // The main loop where the specified application problem is solved.
   while( !m_application->isLastTimeStep( walltime ) ) {
 
@@ -226,7 +226,7 @@ AMRSimulationController::run()
 
     // Get the wall time if is needed, otherwise ignore it.
     double predictedWalltime;
-  
+
     // The predicted time is a best guess at what the wall time will be
     // when the time step is finished. It is currently used only for
     // outputting and checkpointing. Both of which typically take much
@@ -244,12 +244,12 @@ AMRSimulationController::run()
     else {
       m_output->maybeLastTimeStep(false);
     }
-    
+
     // Set the current wall time for this rank (i.e. this value is
     // sync'd across all ranks). The Data Archive uses it for
     // determining when to output or checkpoint.
     m_output->setElapsedWallTime( walltime );
-    
+
     // Get the next output checkpoint time step. This step is not done
     // in m_output->beginOutputTimeStep because the original values
     // are needed to compare with if there is a timestep restart so it
@@ -262,19 +262,19 @@ AMRSimulationController::run()
 
     // Reset the runtime performance stats.
     ResetStats();
-    
+
     // Reset memory use tracking variable.
     m_scheduler->resetMaxMemValue();
-    
+
     // Clear the task monitoring.
     m_scheduler->clearTaskMonitoring();
-    
+
     // Increment (by one) the current time step number so components
     // know what time step they are on and get the delta T that will
     // be used.
     m_application->prepareForNextTimeStep();
 
-    // Ready for the next time step. 
+    // Ready for the next time step.
 
 #ifdef USE_GPERFTOOLS
     if (gheapprofiler.active()){
@@ -283,7 +283,7 @@ AMRSimulationController::run()
       HeapProfilerDump(heapename);
     }
 #endif
-     
+
     if (dbg_barrier.active()) {
       for (int i = 0; i < 5; ++i) {
         m_barrier_times[i] = 0;
@@ -297,7 +297,7 @@ AMRSimulationController::run()
 
       // If not the first time step or restarting check for regridding
       if ((!first || m_restarting) && m_regridder->needsToReGrid(m_current_gridP)) {
-        
+
         proc0cout << " Need to regrid for next time step "
                   << m_application->getTimeStep() << " "
                   << "at current sim time " << m_application->getSimTime()
@@ -328,7 +328,7 @@ AMRSimulationController::run()
         totalFine *= m_current_gridP->getLevel(i)->getRefinementRatioMaxDim();
       }
     }
-     
+
     if (dbg_dwmem.active()) {
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set (so
       // usually in optimized mode this will not be run.)
@@ -374,7 +374,7 @@ AMRSimulationController::run()
 
     if (m_recompile_taskgraph || first) {
 
-      // Recompile taskgraph, re-assign BCs, reset recompile flag.      
+      // Recompile taskgraph, re-assign BCs, reset recompile flag.
       if (m_recompile_taskgraph) {
         m_current_gridP->assignBCS(m_grid_ps, m_loadBalancer);
         m_current_gridP->performConsistencyCheck();
@@ -399,7 +399,7 @@ AMRSimulationController::run()
 
     // Execute the current time step, restarting if necessary.
     executeTimeStep( totalFine );
-      
+
     // If debugging, output the barrier times.
     if (dbg_barrier.active()) {
       m_barrier_timer.reset( true );
@@ -419,13 +419,14 @@ AMRSimulationController::run()
         DOUT(dbg_barrier, mesg.str())
       }
     }
-   
-    // ARS - CAN THIS BE SCHEDULED??
+
+    // ARS - CAN THIS TASK BE SCHEDULED??
     m_output->writeto_xml_files( m_current_gridP );
 
-    // ARS - FIX ME - SCHEDULE INSTEAD
+    // ARS - FIX ME - Schedule instead, setup but not used. Crash in
+    // some cases.
     ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, false );
-    
+
     CheckInSitu(  nullptr, nullptr, nullptr, nullptr, nullptr, false );
 
     // Update the profiler weights
@@ -435,16 +436,16 @@ AMRSimulationController::run()
     if (first) {
       m_scheduler->setRestartInitTimestep( false );
       m_application->setRestartTimeStep( false );
-      
+
       first = false;
     }
 
     // The wall time is needed at the top of the loop in the while
     // conditional. So get it here.
     walltime = m_wall_timers.GetWallTime();
-    
+
   } // end while main time loop (time is not up, etc)
-  
+
   // m_ups->releaseDocument();
 
 #ifdef USE_GPERFTOOLS
@@ -473,7 +474,7 @@ AMRSimulationController::doInitialTimeStep()
   m_scheduler->mapDataWarehouse(Task::NewDW, 1);
   m_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
   m_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
-  
+
   Timers::Simple taskGraphTimer;          // Task graph time
 
   if (m_restarting) {
@@ -501,10 +502,12 @@ AMRSimulationController::doInitialTimeStep()
     }
 
     // Report all of the stats before doing any possible in-situ work
-    // as that effects the lap timer for the time steps.
+    // as that effects the lap timer for the time steps. Crash in some
+    // cases.
     // ScheduleReportStats( true );
-    
+
     // If compiled with VisIt check the in-situ status for work.
+    // Crash in some cases.
     // ScheduleCheckInSitu( true );
 
     taskGraphTimer.reset( true );
@@ -539,7 +542,7 @@ AMRSimulationController::doInitialTimeStep()
   else /* if (!m_restarting) */ {
     // for dynamic lb's, set up initial patch config
     m_loadBalancer->possiblyDynamicallyReallocate( m_current_gridP, LoadBalancer::INIT_LB );
-    
+
     m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
@@ -547,7 +550,7 @@ AMRSimulationController::doInitialTimeStep()
 
     do {
       proc0cout << "\nCompiling initialization taskgraph." << std::endl;
-      
+
       // Initialize the system var (time step and simulation
       // time). Must be done before all other application tasks as
       // they may need these values.
@@ -563,7 +566,7 @@ AMRSimulationController::doInitialTimeStep()
           // So we can initially regrid
           m_regridder->scheduleInitializeErrorEstimate(m_current_gridP->getLevel(i));
           m_application->scheduleInitialErrorEstimate(m_current_gridP->getLevel(i), m_scheduler);
-          
+
           // We don't use error estimates if we don't make another
           // level, so don't dilate.
           if (i < m_regridder->maxLevels() - 1) {
@@ -575,11 +578,11 @@ AMRSimulationController::doInitialTimeStep()
       // Compute the next time step.
       scheduleComputeStableTimeStep();
 
-      // ARS COMMENT THESE TASKS WILL BE SCHEDULED FOR EACH
+      // ARS - COMMENT THESE TASKS WILL BE SCHEDULED FOR EACH
       // LEVEL. THAT MAY OR MAY NOT BE REASONABLE.
-      
-      // NOTE ARS - FIXME before the output so the values can be saved.
-      // Monitoring tasks must be scheduled last!!
+
+      // ARS - Schedule before the output so the values can be
+      // saved.  Otherwise monitoring tasks must be scheduled last!!
       for (int i = 0; i < m_current_gridP->numLevels(); i++) {
         m_scheduler->scheduleTaskMonitoring(m_current_gridP->getLevel(i));
       }
@@ -591,13 +594,20 @@ AMRSimulationController::doInitialTimeStep()
 
       m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, recompile );
 
-      // Report all of the stats before doing any possible in-situ work
-      // as that effects the lap timer for the time steps.
+      // Report all of the stats before doing any possible in-situ
+      // work as that effects the lap timer for the time steps. Crash
+      // in some cases.
       // ScheduleReportStats( true );
-    
-      // If compiled with VisIt check the in-situ status for work.
+
+      // If compiled with VisIt check the in-situ status for
+      // work. Crash in some cases.
       // ScheduleCheckInSitu( true );
-    
+
+      //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
+#if defined(KOKKOS_USING_GPU)
+      collectGhostCells();
+#endif
+
       taskGraphTimer.reset( true );
       m_scheduler->compile();
       taskGraphTimer.stop();
@@ -625,11 +635,12 @@ AMRSimulationController::doInitialTimeStep()
     m_output->writeto_xml_files( m_current_gridP );
   }
 
-  // ARS - FIX ME - SCHEDULE INSTEAD
+  // ARS - FIX ME - Schedule instead, setup but not used. Crash in
+  // some cases.
   ReportStats( nullptr, nullptr, nullptr, nullptr, nullptr, true );
-  
+
   CheckInSitu( nullptr, nullptr, nullptr, nullptr, nullptr, true );
-  
+
 } // end doInitialTimeStep()
 
 //______________________________________________________________________
@@ -648,7 +659,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     m_visitSimData->imageGenerate = tg_index;
   }
 #endif
-  
+
    // Execute at least once.
   while (!success) {
     m_application->setDelTForAllLevels( m_scheduler, m_current_gridP, totalFine );
@@ -661,7 +672,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
         static bool reported = false;
 
         if( !reported )
-          
+
           proc0cout << "The ability to recompute a time step is turned on. "
             "This will affect the data warehouse scrubbing for all time steps "
             "regardless if a time step is recomputed or not. "
@@ -695,7 +706,7 @@ AMRSimulationController::executeTimeStep( int totalFine )
     else {
       int iteration =
         (m_last_recompile_timeStep == m_application->getTimeStep()) ? 0 : 1;
-      
+
       m_scheduler->execute(tg_index, iteration);
     }
 
@@ -726,13 +737,13 @@ AMRSimulationController::executeTimeStep( int totalFine )
       // This should be a for the previous time step.
       // m_output->setOutputTimeStep( true, m_current_gridP );
       // m_output->setCheckpointTimeStep( true, m_current_gridP );
-      
+
       success = true;
     }
     else {
       success = true;
     }
-  } 
+  }
 }
 
 //______________________________________________________________________
@@ -749,20 +760,20 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   if (!initialTimeStep) {
     proc0cout << "______________________________________________________________________\n";
   }
-    
+
   GridP oldGrid   = m_current_gridP;
   m_current_gridP = m_regridder->regrid( oldGrid.get_rep(), m_application->getTimeStep() );
-  
+
   if (dbg_barrier.active()) {
     m_barrier_timer.reset( true );
     Uintah::MPI::Barrier(d_myworld->getComm());
     m_barrier_times[0] += m_barrier_timer().seconds();
   }
-  
+
   regriddingTimer.stop();
 
   m_runtime_stats[ RegriddingTime ] += regriddingTimer().seconds();
-  
+
   m_application->setRegridTimeStep( false );
 
   int lbstate = initialTimeStep ? LoadBalancer::INIT_LB : LoadBalancer::REGRID_LB;
@@ -770,7 +781,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   if (m_current_gridP != oldGrid) {
 
     m_application->setRegridTimeStep( true );
-     
+
     m_loadBalancer->possiblyDynamicallyReallocate(m_current_gridP, lbstate);
 
     if (dbg_barrier.active()) {
@@ -778,7 +789,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
       Uintah::MPI::Barrier(d_myworld->getComm());
       m_barrier_times[1] += m_barrier_timer().seconds();
     }
-    
+
     m_current_gridP->assignBCS( m_grid_ps, m_loadBalancer );
     m_current_gridP->performConsistencyCheck();
 
@@ -821,7 +832,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
       m_scheduler->scheduleAndDoDataCopy( m_current_gridP );
       schedulerTimer.stop();
     }
-    
+
     proc0cout << "Done regridding for next time step "
               << m_application->getTimeStep() << " "
               << "at current sim time " << m_application->getSimTime() << ", "
@@ -830,21 +841,86 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
               << " seconds, "
               << "regridding took " << regriddingTimer().seconds()
               << " seconds";
-      
+
     if (!initialTimeStep) {
       proc0cout << ", scheduling and copying took "
                 << schedulerTimer().seconds() << " seconds";
     }
 
     proc0cout << "." << std::endl;
-    
+
     retVal = true;
   } // grid != oldGrid
 
   if (!initialTimeStep)
     proc0cout << "______________________________________________________________________\n";
-  
+
   return retVal;
+}
+
+//______________________________________________________________________
+//
+// DS 04202020: Resizing GPU variables is no longer a problem since
+// the fix in UnifiedScheduler allocates variables with max ghost cell
+// values.  The max ghost cells values for variables across tasks are
+// computed in SchedulerCommon::addTask, which is invoked during
+// schedulerInit, scheduleTimestep etc.  But still the problem occurs
+// sometimes especially while using multiple taskgraphs.  e.g.,
+// Consider two taskgraphs: init and main. A GPU task in init task
+// graph computes a variable on GPU, but is not use by any other task
+// in init.  So the max ghost cells computed during init task graph is
+// 0 and the GPU memory is allocated.
+
+// Now a GPU task in the main task graph uses the same variable with
+// ghost cell 1, but the allocation was already done with ghost cells
+// = 0 and we get this error.  Hence here we call scheduleTimeAdvance
+// etc.to look up future tasks and compute max ghost values across
+// init and main task graphs and seems to work for Arches
+//  **** Few possible problems: ****
+
+// 1. The fix seems to work for Arches, but still may fail while using
+//    sub scheduler such as Poisson2.
+
+// 2. The fix is not tested with components other than Arches and also
+//    for AMR problems and might fail. As of now calling only
+//    scheduleTimeAdvance, scheduleFinalizeTimestep and
+//    scheduleComputeStableTimeStep. We might have to call more
+//    functions depending on the need.
+
+// 3. collectGhostCells MUST be called AFTER init task graph in
+//    compiled, but BEFORE task graph is executed. Some tasks in main
+//    task graph of Arches are dependent on some setup done during
+//    compilation of init task graph (WBCHelper of Arches), so
+//    scheduleTimeAdvance must be called after scheduleInit.  But also
+//    we dont want to execute main tasks during initialization. So
+//    call collectGhostCells after init task graph is compiled. That
+//    way, even if new tasks are added in task graph, corresponding
+//    DetailedTasks are not created and not executed when
+//    scheduler->execute() is called. Also it is important to call
+//    collectGhostCells before executing init tasks so that the
+//    scheduler gets the up to date information about ghost cells. If
+//    the logic causes problem in future, we might have to explicitly
+//    delete extra tasks added.
+
+void
+AMRSimulationController::collectGhostCells()
+{
+  // Disable the scheduling of tasks by the scheduler.
+  m_scheduler->setMaxGhostCellsCollectionPhase(true);
+
+  for (int i = 0; i < m_current_gridP->numLevels(); i++) {
+    m_application->scheduleTimeAdvance(m_current_gridP->getLevel(i),
+                                       m_scheduler);
+
+    m_application->scheduleFinalizeTimestep(m_current_gridP->getLevel(i),
+                                            m_scheduler);
+  }
+
+  // Compute the next time step.
+  scheduleComputeStableTimeStep();
+
+  // Re-enable the scheduling of tasks by the scheduler.
+  m_scheduler->setMaxGhostCellsCollectionPhase(false);
 }
 
 //______________________________________________________________________
@@ -859,7 +935,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   proc0cout << "Compiling taskgraph(s)" << "..." << std::endl;
 
   m_output->recompile( m_current_gridP );
-  
+
   m_last_recompile_timeStep = m_application->getTimeStep();
 
   m_scheduler->initialize( 1, totalFine );
@@ -871,7 +947,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   m_scheduler->mapDataWarehouse( Task::NewDW, totalFine );
   m_scheduler->mapDataWarehouse( Task::CoarseOldDW, 0 );
   m_scheduler->mapDataWarehouse( Task::CoarseNewDW, totalFine );
-  
+
   int my_rank = d_myworld->myRank();
   if (m_do_multi_taskgraphing) {
     for (int i = 0; i < m_current_gridP->numLevels(); i++) {
@@ -946,29 +1022,30 @@ AMRSimulationController::compileTaskGraph( int totalFine )
 
   // Compute the next time step.
   scheduleComputeStableTimeStep();
-  
-  // NOTE ARS - FIXME before the output so the values can be saved.
-  // Monitoring tasks must be scheduled last!!
+
+  // ARS - Schedule before the output so the values can be saved.
+  // Otherwise monitoring tasks must be scheduled last!!
   for (int i = 0; i < m_current_gridP->numLevels(); i++) {
     m_scheduler->scheduleTaskMonitoring(m_current_gridP->getLevel(i));
   }
-  
-  // Output tasks
-  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
-
-  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
 
   // Update the system var (time step and simulation time). Must be
-  // done after the output and after scheduleComputeStableTimeStep.
+  // scheduled after scheduleComputeStableTimeStep and before the output.
   m_application->scheduleUpdateSystemVars( m_current_gridP,
                                            m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                            m_scheduler );
 
-  // Report all of the stats before doing any possible in-situ work
-  // as that effects the lap timer for the time steps.
+  // Output tasks
+  m_output->finalizeTimeStep( m_current_gridP, m_scheduler, true );
+  m_output->sched_allOutputTasks( m_current_gridP, m_scheduler, true );
+
+  // Report all of the stats before doing any possible in-situ work as
+  // that effects the lap timer for the time steps. Crash in some
+  // cases.
   // ScheduleReportStats( false );
 
-  // If compiled with VisIt check the in-situ status for work.
+  // If compiled with VisIt check the in-situ status for work. Crash
+  // in some cases.
   // ScheduleCheckInSitu( false );
 
   m_scheduler->compile();
@@ -978,7 +1055,7 @@ AMRSimulationController::compileTaskGraph( int totalFine )
   m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
   proc0cout << "Done with taskgraph compile (" << taskGraphTimer().seconds() << " seconds)" << std::endl;
-  
+
 } // end compileTaskGraph()
 
 //______________________________________________________________________
@@ -1009,7 +1086,7 @@ AMRSimulationController::subCycleCompile( int startDW,
     coarseStartDW = startDW;
     numCoarseSteps = 0;
   }
-  
+
   ASSERT(dwStride > 0 && numLevel < m_current_gridP->numLevels())
     m_scheduler->clearMappings();
   m_scheduler->mapDataWarehouse(Task::OldDW, startDW);
@@ -1050,7 +1127,7 @@ AMRSimulationController::subCycleCompile( int startDW,
   // in time as well, so all the coarsens go in order, and then the
   // refineInterfaces
   if (m_application->isAMR() && (step < numCoarseSteps -1 || numLevel == 0)) {
-    
+
     for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
       if (i == 0) {
         continue;
@@ -1078,10 +1155,10 @@ AMRSimulationController::subCycleExecute( int startDW,
                                           int levelNum,
                                           bool rootCycle )
 {
-  // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
+  // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate
   // timestep work, and 1 for the errorEstimate and stableTimeStep, where n
   // is the number of levels.
-  
+
   // amrout << "Start AMRSimulationController::subCycleExecute, level=" << numLevel << '\n';
 
   // We are on (the fine) level numLevel
@@ -1092,7 +1169,7 @@ AMRSimulationController::subCycleExecute( int startDW,
   else {
     numSteps = m_current_gridP->getLevel(levelNum)->getRefinementRatioMaxDim();
   }
-  
+
   int newDWStride = dwStride/numSteps;
 
   DataWarehouse::ScrubMode oldScrubbing =
@@ -1101,7 +1178,7 @@ AMRSimulationController::subCycleExecute( int startDW,
 
   int curDW = startDW;
   for (int step = 0; step < numSteps; step++) {
-  
+
     if (step > 0) {
       curDW += newDWStride; // can't increment at the end, or the FINAL tg for L0 will use the wrong DWs
     }
@@ -1118,7 +1195,7 @@ AMRSimulationController::subCycleExecute( int startDW,
     m_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
     m_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing);                               // CoarseOldDW
     m_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // CoarseNewDW
-    
+
     // we need to unfinalize because execute finalizes all new DWs,
     // and we need to write into them still (even if we finalized only
     // the NewDW in execute, we will still need to write into that DW)
@@ -1126,25 +1203,25 @@ AMRSimulationController::subCycleExecute( int startDW,
 
     // iteration only matters if it's zero or greater than 0
     int iteration = curDW + (m_last_recompile_timeStep == m_application->getTimeStep() ? 0 : 1);
-    
+
     DOUT(dbg, d_myworld->myRank() << "   Executing TG on level " << levelNum
                                   << " with old DW " << curDW << "=" << m_scheduler->get_dw(curDW)->getID()
                                   << " and new " << curDW + newDWStride << "="
                                   << m_scheduler->get_dw(curDW + newDWStride)->getID()
                                   << " CO-DW: " << startDW << " CNDW " << startDW + dwStride
                                   << " on iteration " << iteration);
-    
+
     m_scheduler->execute(levelNum, iteration);
-    
+
     if (levelNum + 1 < m_current_gridP->numLevels()) {
       ASSERT(newDWStride > 0);
       subCycleExecute(curDW, newDWStride, levelNum + 1, false);
     }
- 
+
     if (m_application->isAMR() && m_current_gridP->numLevels() > 1 &&
         (step < numSteps-1 || levelNum == 0)) {
       // Since the execute of the intermediate is time-based,
-      // execute the intermediate TG relevant to this level, if we are in the 
+      // execute the intermediate TG relevant to this level, if we are in the
       // middle of the subcycle or at the end of level 0.
       // the end of the cycle will be taken care of by the parent level sybcycle
       m_scheduler->clearMappings();
@@ -1167,7 +1244,7 @@ AMRSimulationController::subCycleExecute( int startDW,
       m_scheduler->get_dw(curDW+newDWStride)->unfinalize();
       m_scheduler->execute(levelNum+m_current_gridP->numLevels(), iteration);
     }
-    
+
     if (curDW % dwStride != 0) {
       //the currentDW(old datawarehouse) should no longer be needed - in the case of NonPermanent OldDW scrubbing
       m_scheduler->get_dw(curDW)->clear();

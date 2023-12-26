@@ -41,6 +41,7 @@
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Parallel/TaskDeclaration.h>
 
 //-- Debug Stream --//
 #include <Core/Util/DebugStream.h>
@@ -907,22 +908,28 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
     IntVector hi;
     level->findInteriorCellIndexRange(lo,hi);
 
-    Task* tsk = scinew Task( "WBCHelper::computeBCAreaHelper", this,
-                             &WBCHelper::computeBCAreaHelper, lo, hi );
+  auto TaskDependencies = [&](Task* tsk) {
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
       tsk->computes( iter->second );
     }
+   };
 
-    sched->addTask( tsk, level->eachPatch(), matls );
+    create_portable_tasks(TaskDependencies, this,
+                          "WBCHelper::computeBCAreaHelper",
+                          &WBCHelper::computeBCAreaHelper<UINTAH_CPU_TAG>,
+                          &WBCHelper::computeBCAreaHelper<KOKKOS_OPENMP_TAG>,
+                          //&WBCHelper::computeBCAreaHelper<KOKKOS_DEFAULT_DEVICE_TAG>,
+                          sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT, lo, hi);
 }
 
-
-void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
-                          const PatchSubset* patches,
+template <typename ExecSpace, typename MemSpace>
+void WBCHelper::computeBCAreaHelper( const PatchSubset* patches,
                           const MaterialSubset*,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
+                          OnDemandDataWarehouse* old_dw,
+                          OnDemandDataWarehouse* new_dw,
+                          UintahParams& uintahParams,
+                          ExecutionObject<ExecSpace, MemSpace>& execObj ,
                           const IntVector lo,
                           const IntVector hi ){
   for (int p = 0; p < patches->size(); p++) {
@@ -966,7 +973,7 @@ void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
           Uintah::ListOfCellsIterator& grid_iter = get_uintah_extra_bnd_mask( bndmap_iter->second,
                                                                    patch->getID() );
           double area = 0.;
-          for ( grid_iter.reset(); !grid_iter.done(); grid_iter++ ){ // No parallel_for needed
+          for ( grid_iter.reset(); !grid_iter.done(); grid_iter++ ){ // No parallel_for_unstructured needed
 
             //exclude edge cells
             if ( (*grid_iter)[i] != -1 && (*grid_iter)[i] != hi[i] ){

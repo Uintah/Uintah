@@ -26,42 +26,37 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 #define CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 
-#include <sci_defs/cuda_defs.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <CCA/Components/Schedulers/UnifiedScheduler.h> //For myRankThread()
+#include <sci_defs/gpu_defs.h>
+
 #include <map>
 #include <queue>
 
 namespace Uintah {
 
-class GPUStreamPool;
-
-class GPUMemoryPool;
+class Task;
 
 class GPUMemoryPool {
 
 public:
 
-  struct gpuMemoryPoolDevicePtrValue {
-    unsigned int timestep;
-    size_t       size;
-  };
+  // Memory pools.
+
+  // Item device and address is the key in the memory in use pool.
   struct gpuMemoryPoolDevicePtrItem {
 
     unsigned int  device_id;
     void*         ptr;
-
 
     gpuMemoryPoolDevicePtrItem(unsigned int device_id, void* ptr) {
       this->device_id = device_id;
       this->ptr = ptr;
     }
 
-    //This so it can be used in an STL map
+    // Less than operator so it can be used in an STL map.
     bool operator<(const gpuMemoryPoolDevicePtrItem& right) const {
       if (this->device_id < right.device_id) {
         return true;
-      } else if ((this->device_id == right.device_id) && (this->ptr < right.ptr)) {
+      } else if (this->device_id == right.device_id && this->ptr < right.ptr) {
         return true;
       } else {
         return false;
@@ -69,24 +64,34 @@ public:
     }
   };
 
-  struct gpuMemoryPoolDeviceSizeValue {
-    void * ptr;
+  // The value is the memory size in the memory in use pool.
+  struct gpuMemoryPoolDevicePtrValue {
+    unsigned int timestep; // Not currently used.
+    size_t       size;
+
+    gpuMemoryPoolDevicePtrValue(unsigned int timestep, size_t size) {
+      this->timestep = timestep;
+      this->size = size;
+    }
   };
 
+  // Item device and size is the key in the memory unused pool.
   struct gpuMemoryPoolDeviceSizeItem {
 
     unsigned int  device_id;
-    size_t        deviceSize;
+    size_t        size;
 
-    gpuMemoryPoolDeviceSizeItem(unsigned int device_id, size_t deviceSize) {
+    gpuMemoryPoolDeviceSizeItem(unsigned int device_id, size_t size) {
      this->device_id = device_id;
-     this->deviceSize = deviceSize;
+     this->size = size;
     }
-    //This so it can be used in an STL map
+
+    // Less than operator so it can be used in an STL map.
     bool operator<(const gpuMemoryPoolDeviceSizeItem& right) const {
       if (this->device_id < right.device_id) {
         return true;
-      } else if ((this->device_id == right.device_id) && (this->deviceSize < right.deviceSize)) {
+      } else if (this->device_id == right.device_id &&
+                 this->size < right.size) {
         return true;
       } else {
         return false;
@@ -94,36 +99,35 @@ public:
     }
   };
 
-  static void* allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize);
+  // The value is the memory address in the memory unused pool.
+  struct gpuMemoryPoolDeviceSizeValue {
+    void * ptr;
 
-  static bool freeCudaSpaceFromPool(unsigned int device_id, void* addr);
+    gpuMemoryPoolDeviceSizeValue(void* ptr) {
+      this->ptr = ptr;
+    }
+  };
 
-  static void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
+  static void* allocateMemoryFromPool(unsigned int device_id,
+                                      size_t memSize,
+                                      const char *name = nullptr);
 
-  static void freeCudaStreamsFromPool();
+  static bool reclaimMemoryIntoPool(unsigned int device_id, void* addr);
 
-  static cudaStream_t* getCudaStreamFromPool( int device );
+  static void freeMemoryFromPool();
 
 private:
 
-  //For a given device and address, holds the timestep
-  static std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue> *gpuMemoryPoolInUse;
+  // Memory pools.
+  // For a given device and address, holds the timestep and size.
+  static std::multimap<gpuMemoryPoolDevicePtrItem,
+                       gpuMemoryPoolDevicePtrValue> *gpuMemoryPoolInUse;
 
-  static std::multimap<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
-
-  // thread shared data, needs lock protection when accessed
-
-  //Operations within the same stream are ordered (FIFO) and cannot overlap.
-  //Operations in different streams are unordered and can overlap
-  //For this reason we let each task own a stream, as we want one task to be able to run
-  //if it is ready to do work even if another task is not yet ready.  It also enables us
-  //to easily determine when a computed variable is "valid" because when that task's stream
-  //completes, then we can infer the variable is ready to go.  More about how a task claims a
-  //stream can be found in DetailedTasks.cc
-  static std::map <unsigned int, std::queue<cudaStream_t*> > * s_idle_streams;
-
+  // For a given device and size, holds the address.
+  static std::multimap<gpuMemoryPoolDeviceSizeItem,
+                       gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
 };
 
-} //end namespace
+} // namespace Uintah
 
 #endif // CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H

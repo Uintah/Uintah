@@ -15,8 +15,6 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
-#include <sci_defs/kokkos_defs.h>
-
 //===========================================================================
 
 using namespace std;

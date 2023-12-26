@@ -78,6 +78,8 @@ protected:
   //! If doing AMR do the regridding
   bool doRegridding( bool initialTimeStep );
 
+  void collectGhostCells();
+
   void compileTaskGraph( int totalFine );
 
   //! Recursively schedule refinement, coarsening, and time

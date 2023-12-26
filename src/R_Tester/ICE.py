@@ -123,7 +123,7 @@ DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
               ]
 #__________________________________
 
-ADDTL_PATH=["absolutePath=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+ADDTL_PATH=["absolutePat=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
                                                                    # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________

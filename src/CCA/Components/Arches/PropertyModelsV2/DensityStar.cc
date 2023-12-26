@@ -14,6 +14,54 @@ DensityStar::~DensityStar(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DensityStar::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::initialize<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DensityStar::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::eval<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DensityStar::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>    // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityStar::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DensityStar::problemSetup( ProblemSpecP& db ){
 
@@ -41,11 +89,11 @@ DensityStar::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rhoStar = tsk_info->get_field<CCVariable<double> >( m_label_densityStar );
-  rhoStar.initialize(0.0);
+  auto rhoStar = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_densityStar );
+  parallel_initialize(execObj,0.0,rhoStar);
 
 }
 
@@ -61,12 +109,16 @@ DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+DensityStar::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rhoStar = tsk_info->get_field<CCVariable<double> >( m_label_densityStar );
-  constCCVariable<double>& old_rho = tsk_info->get_field<constCCVariable<double> >( m_label_density );
-  rhoStar.copyData(old_rho);
+  auto rhoStar = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_densityStar );
+  auto old_rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_density );
+
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+  Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
+    rhoStar(i,j,k)=old_rho(i,j,k);
+  });
 
 }
 
@@ -87,15 +139,15 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  constSFCXVariable<double>& xmom = tsk_info->get_field<constSFCXVariable<double> >(ArchesCore::default_uMom_name);
-  constSFCYVariable<double>& ymom = tsk_info->get_field<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
-  constSFCZVariable<double>& zmom = tsk_info->get_field<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
+  auto xmom = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
+  auto ymom = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
+  auto zmom = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
 
-  CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >( m_label_density );
-  CCVariable<double>& rhoStar = tsk_info->get_field<CCVariable<double> >( m_label_densityStar );
+  auto rho = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_density );
+  auto rhoStar = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_densityStar );
 
   const double dt = tsk_info->get_dt();
 
@@ -105,22 +157,22 @@ DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_TB = DX.x()*DX.y();
   const double vol       = DX.x()*DX.y()*DX.z();
 
-  double check_guess_density = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
-                                      area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
-                                      area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
-    if (rhoStar(i,j,k) < 0) {
-      check_guess_density = 1;
-    }
-  });
+  double check_guess_density_out = 0;
+  Uintah::parallel_reduce_sum( execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& check_guess_density)
+  {
+	rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
+									  area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
+									  area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
+    check_guess_density += (rhoStar(i,j,k) < 0);
 
-  if (check_guess_density > 0){
-    std::cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
+  }, check_guess_density_out);
+
+  if (check_guess_density_out > 0){
+    std::cout << __FUNCTION__ << " NOTICE: Negative density guess(es) occurred. Reverting to old density."<< std::endl ;
   } else {
-    Uintah::parallel_for( range, [&](int i, int j, int k){
+    Uintah::parallel_for(execObj,range, KOKKOS_LAMBDA(int i, int j, int k){
       rho(i,j,k)  = rhoStar(i,j,k); // I am copy density guess in density
     });
   }

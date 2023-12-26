@@ -13,6 +13,54 @@ DensityPredictor::~DensityPredictor(){
 }
 
 //--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskInitializeFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
+                                     , &DensityPredictor::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DensityPredictor::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DensityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
+                                     , &DensityPredictor::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DensityPredictor::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DensityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskTimestepInitFunctionPointers()
+{
+  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
+                                     , &DensityPredictor::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DensityPredictor::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityPredictor::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DensityPredictor::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>            // Task supports Kokkos builds
+                                     );
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace DensityPredictor::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 DensityPredictor::problemSetup( ProblemSpecP& db ){
 
@@ -56,9 +104,8 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
+template <typename ExecSpace, typename MemSpace>
+void DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
   rho.initialize( 0.0 );
@@ -75,8 +122,8 @@ DensityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace> void
+DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
   rho.initialize( 0.0 );
@@ -109,8 +156,8 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& rho_guess = tsk_info->get_field<CCVariable<double> >( "new_densityGuess");
   CCVariable<double>& rho_guess_a = tsk_info->get_field<CCVariable<double> >( "densityGuess");

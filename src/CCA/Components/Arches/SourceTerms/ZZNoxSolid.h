@@ -158,7 +158,7 @@ struct ComputNOSource{
        ComputNOSource(constCCVariable<double>& _devol, 
                       constCCVariable<double>& _oxi, 
                       CCVariable<double>& _NO_src) :
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
                            devol(_devol.getKokkosView()),
                            oxi(_oxi.getKokkosView()),
                            NO_src(_NO_src.getKokkosView())
@@ -174,7 +174,7 @@ struct ComputNOSource{
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
    KokkosView3<const double> devol;
    KokkosView3<const double> oxi;
    KokkosView3<double>  NO_src;
