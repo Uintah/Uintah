@@ -41,6 +41,7 @@ SRCS := \
         $(SRCDIR)/jacquie.cc           \
         $(SRCDIR)/jim1.cc              \
         $(SRCDIR)/jim2.cc              \
+        $(SRCDIR)/aveColorDisp.cc      \
         $(SRCDIR)/DOP.cc               \
         $(SRCDIR)/PIC.cc               \
         $(SRCDIR)/POL.cc               \

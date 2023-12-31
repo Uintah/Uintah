@@ -54,6 +54,7 @@
 #include <StandAlone/tools/puda/geocosm.h>
 #include <StandAlone/tools/puda/geocosmtets.h>
 #include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/aveColorDisp.h>
 #include <StandAlone/tools/puda/DOP.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
@@ -92,6 +93,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -aveColorDisp\n";
   cerr << "  -geocosm             (See geocosm.cc for details on using this option.)\n";
   cerr << "  -geocosmtets\n";
   cerr << "  -DOP\n";
@@ -209,6 +211,8 @@ main( int argc, char *argv[] )
       clf.do_geocosmtets = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
+    } else if(s == "-aveColorDisp"){
+      clf.do_aveColorDisp = true;
     } 
     else if(s == "-DOP"){
       clf.do_DOP = true;
@@ -447,6 +451,10 @@ main( int argc, char *argv[] )
 
     if( clf.do_jim2 ){
       jim2( da, clf );
+    }
+
+    if( clf.do_aveColorDisp ){
+      aveColorDisp( da, clf );
     }
 
     if( clf.do_DOP ){

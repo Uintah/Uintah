@@ -45,6 +45,7 @@ namespace Uintah {
     bool do_jacquie;
     bool do_jim1;
     bool do_jim2;
+    bool do_aveColorDisp;
     bool do_contactStress;
     bool do_geocosm;
     bool do_geocosmtets;
@@ -90,6 +91,7 @@ namespace Uintah {
       do_jacquie       = false;
       do_jim1          = false;
       do_jim2          = false;
+      do_aveColorDisp  = false;
       do_contactStress = false;
       do_geocosm       = false;
       do_geocosmtets   = false;
