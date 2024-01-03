@@ -3,6 +3,10 @@ add_library( CCA_Components_SimulationController
         AMRSimulationController.cc
     )
 
+if( HAVE_VISIT )
+    set( VISIT_INTERFACE VisIt_libsim )
+endif()
+
 target_link_libraries( CCA_Components_SimulationController
     PUBLIC
         CCA_Components_DataArchiver
@@ -17,6 +21,7 @@ target_link_libraries( CCA_Components_SimulationController
         Core_Parallel
         Core_Util
         ${GPERFTOOLS_LIBRARIES} # for gperftools if active
+        ${VISIT_INTERFACE}
     )
 
 target_include_directories( CCA_Components_SimulationController

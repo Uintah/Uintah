@@ -6,6 +6,7 @@ if ( HAVE_VISIT )
         visit_libsim_customUI.cc
         visit_libsim_database.cc
         ../interfaces/warehouseInterface.cc
+        ../interfaces/utils.cc
         )
 
     target_link_libraries( VisIt_libsim
@@ -13,7 +14,9 @@ if ( HAVE_VISIT )
           CCA_Ports
           Core_DataArchive
           Core_Grid
+          Core_OS
           Core_Parallel
+          CCA_Components_Schedulers
           Core_Util
           VISIT::VISIT
         )

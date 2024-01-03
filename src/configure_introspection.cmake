@@ -260,6 +260,7 @@ else()
         "\n\t\tVISIT_DIR=[path to visit installation]"
         "\n\twith the location of the VisIt installation"
         )
+    unset( HAVE_VISIT )
 endif()
 ##----------------------------- VISIT --------------------------------
 
