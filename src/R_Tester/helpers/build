@@ -42,8 +42,8 @@ if [ "$OS" = "Linux" ]; then
      --enable-ice \\
      --enable-mpm \\
      --enable-ray-scatter \\
-     --enable-wasatch \\
-     --enable-wasatch_3p \\"
+#     --enable-wasatch \\
+#     --enable-wasatch_3p \\"
 
     if [ "$LOGNAME" == "gpu_rt" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
