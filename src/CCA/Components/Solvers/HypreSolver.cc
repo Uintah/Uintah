@@ -1423,7 +1423,7 @@ namespace Uintah {
                           "Hypre:Matrix solve (SFCX)",
                           &HypreStencil7<GridVarType>::template solve<UINTAH_CPU_TAG>,
                           &HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
-                          &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_HOST_TAG>,
+                          // &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_HOST_TAG>,
                           // &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_DEVICE_TAG>,
                           &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_DEVICE_TAG>,
                           sched, patches, matls, TASKGRAPH::DEFAULT, handle);
