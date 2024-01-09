@@ -214,13 +214,13 @@ static void usage( const std::string& message,
     std::cerr << "-npartitions <#>                : Number of OpenMP thread partitions per MPI process, requires the " << kokkosStr << " with the Partition Master.\n";
     std::cerr << "-nthreadsperpartition <#>       : Number of OpenMP threads per thread partition, requires the " << kokkosStr << " with the Partition Master.\n";
 #endif
-#if defined(_OPENMP)
+// #if !defined(HAVE_KOKKOS) || defined(_OPENMP)
     std::cerr << "-nthreads <#>                   : Number of threads per MPI process, requires the multi-threaded Unified scheduler"
 #if defined(HAVE_KOKKOS)
               << " or the " << kokkosStr
 #endif
               << ".\n";
-#endif
+// #endif
 
     std::cerr << "-layout NxMxO                   : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem               : If using MPI, use this flag if each node has a local disk.\n";
@@ -402,7 +402,7 @@ int main( int argc, char *argv[], char *env[] )
       quit();
     }
     else if (arg == "-nthreads") {
-#if defined(_OPENMP)
+// #if !defined(HAVE_KOKKOS) || defined(_OPENMP)
       if (++i == argc) {
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
@@ -415,10 +415,10 @@ int main( int argc, char *argv[], char *env[] )
                "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
-#else
-      std::cout << "Not compiled with OpenMP support." << std::endl;
-      Parallel::exitAll(0);
-#endif
+// #else
+//       std::cout << "Not compiled with OpenMP support." << std::endl;
+//       Parallel::exitAll(0);
+// #endif
     }
     else if (arg == "-npartitions") {
 #if defined(USE_KOKKOS_PARTITION_MASTER)
