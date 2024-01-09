@@ -132,6 +132,8 @@ RMCRTCommon::~RMCRTCommon()
   VarLabel::destroy( d_boundFluxLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
+  VarLabel::destroy( d_abskgSigmaT4CellTypeLabel );
+
   // This prevents double deletion
   if(d_destructorCount == 0 ){
   
