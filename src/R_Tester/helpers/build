@@ -73,7 +73,8 @@ if [ "$OS" = "Linux" ]; then
 
     ENV="     CC=mpicc \\
      CXX=mpic++ \\
-     F77=gfortran"
+     F77=gfortran \\
+     CXXFLAGS='-fopenmp'"
   fi
 fi
 
