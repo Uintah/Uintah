@@ -43,6 +43,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/TaskStatus.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Level.h>
@@ -91,7 +92,7 @@ typedef std::map<int,TreePtr> TreeMap;
   tcsh: setenv SCI_DEBUG WASATCH_TASKS:-
   bash: export SCI_DEBUG=WASATCH_TASKS:-
 
- To enable multiple debug flags, put quotation marks around the flags and use a comma 
+ To enable multiple debug flags, put quotation marks around the flags and use a comma
  to separate them (no spaces after commas)
   tcsh: setenv SCI_DEBUG "WASATCH_TASKS:+ WASATCH_FIELDS:+"
   bash: export SCI_DEBUG="WASATCH_TASKS:+,WASATCH_FIELDS:+"
@@ -139,7 +140,7 @@ namespace WasatchCore{
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
     void execute( Uintah::DetailedTask* dtask,
-                  Uintah::Task::CallBackEvent event,
+                  Uintah::CallBackEvent event,
                   const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
                   const Uintah::MaterialSubset* const,
@@ -636,7 +637,7 @@ namespace WasatchCore{
 
   void
   TreeTaskExecute::execute( Uintah::DetailedTask* dtask,
-                            Uintah::Task::CallBackEvent event,
+                            Uintah::CallBackEvent event,
                             const Uintah::ProcessorGroup* const pg,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,
@@ -659,7 +660,7 @@ namespace WasatchCore{
 
     ExecMutex lock; // thread-safe
 
-    const bool isGPUTask = (event == Uintah::Task::GPU);
+    const bool isGPUTask = (event == Uintah::GPU);
 
     // preventing postGPU / preGPU callbacks to execute the tree again
     for( int ip=0; ip<patches->size(); ++ip ){

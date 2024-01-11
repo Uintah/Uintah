@@ -78,10 +78,10 @@ namespace WasatchCore{
     struct FieldInfo
     {
       std::string varname;
-      
+
       Expr::Tag solnVarTag;
       Expr::Tag rhsTag;
-      
+
       FieldInfo( const std::string& name,
                  Expr::Tag varTag,
                  Expr::Tag rhsVarTag )
@@ -107,10 +107,10 @@ namespace WasatchCore{
     YVolFields     yVolFields_;     ///< the y-volume fields being solved by this time integrator.
     ZVolFields     zVolFields_;     ///< the z-volume fields being solved by this time integrator.
     ParticleFields particleFields_; ///< the particle fields being solved by this time integrator.
-    
+
     GraphHelper* const solnGraphHelper_;
-    GraphHelper* const postProcGraphHelper_;      
-    
+    GraphHelper* const postProcGraphHelper_;
+
     const TimeIntegrator timeInt_; ///< Multistage time integrator coefs
 
     std::list< TaskInterface* > taskInterfaceList_;    ///< all of the TaskInterface objects managed here
@@ -126,14 +126,14 @@ namespace WasatchCore{
     /**
      *  \brief the call-back for Uintah to execute this.
      */
-    void update_variables( Uintah::Task::CallBackEvent event, 
-                           const Uintah::ProcessorGroup* const,
-                           const Uintah::PatchSubset* const,
-                           const Uintah::MaterialSubset* const,
-                           Uintah::DataWarehouse* const,
-                           Uintah::DataWarehouse* const,
-                           void* stream,
-                           const int rkStage );
+    // void update_variables( Uintah::CallBackEvent event,
+    //                        const Uintah::ProcessorGroup* const,
+    //                        const Uintah::PatchSubset* const,
+    //                        const Uintah::MaterialSubset* const,
+    //                        Uintah::DataWarehouse* const,
+    //                        Uintah::DataWarehouse* const,
+    //                        void* stream,
+    //                        const int rkStage );
 
   public:
 
@@ -196,7 +196,7 @@ namespace WasatchCore{
                        Uintah::SchedulerP& sched,
                        const int rkStage,
                        const std::set<std::string>& ioFieldSet );
-    
+
     /**
      *  \brief schedule the tasks associated with this TimeStepper
      *
