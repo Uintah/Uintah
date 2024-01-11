@@ -55,7 +55,7 @@ namespace Uintah {
 
   int visit_BroadcastIntCallback   ( int *value, int sender );
   int visit_BroadcastStringCallback( char  *str, int len, int sender );
-  void visit_SlaveProcessCallback();
+  void visit_WorkerProcessCallback();
 
   void visit_ControlCommandCallback( const char *cmd,
                                      const char *args, void *cbdata );

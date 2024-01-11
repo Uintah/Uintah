@@ -876,7 +876,7 @@ void visit_Initialize( visit_simulation_data *sim )
   }
 
   if( Parallel::usingMPI() )
-    VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
+    VisItSetWorkerProcessCallback(visit_WorkerProcessCallback);
 
   // Register command callback
   VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);

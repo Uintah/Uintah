@@ -247,10 +247,10 @@ int visit_BroadcastStringCallback(char *str, int len, int sender)
 
 
 //---------------------------------------------------------------------
-// visit_BroadcastSlaveCommand
+// visit_BroadcastWorkerCommand
 //     Helper function for ProcessVisItCommand
 //---------------------------------------------------------------------
-void visit_BroadcastSlaveCommand(int *command)
+void visit_BroadcastWorkerCommand(int *command)
 {
   MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
 
@@ -260,13 +260,13 @@ void visit_BroadcastSlaveCommand(int *command)
 
 
 //---------------------------------------------------------------------
-// visit_SlaveProcessCallback
+// visit_WorkerProcessCallback
 //     Callback involved in command communication.
 //---------------------------------------------------------------------
-void visit_SlaveProcessCallback()
+void visit_WorkerProcessCallback()
 {
   int command = VISIT_COMMAND_PROCESS;
-  visit_BroadcastSlaveCommand(&command);
+  visit_BroadcastWorkerCommand(&command);
 }
 
 
@@ -510,26 +510,26 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
       if(success)
       {
         command = VISIT_COMMAND_SUCCESS;
-        visit_BroadcastSlaveCommand(&command);
+        visit_BroadcastWorkerCommand(&command);
 
         return 1;
       }
       else
       {
         command = VISIT_COMMAND_FAILURE;
-        visit_BroadcastSlaveCommand(&command);
+        visit_BroadcastWorkerCommand(&command);
 
         return 0;
       }
     }
     else
     {
-      // Note: only through the SlaveProcessCallback callback
+      // Note: only through the WorkerProcessCallback callback
       // above can the rank 0 process send a VISIT_COMMAND_PROCESS
       // instruction to the non-rank 0 processes.
       while(1)
       {
-        visit_BroadcastSlaveCommand(&command);
+        visit_BroadcastWorkerCommand(&command);
 
         switch(command)
         {
