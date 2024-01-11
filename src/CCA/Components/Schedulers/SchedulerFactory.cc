@@ -142,19 +142,19 @@ SchedulerFactory::create( const ProblemSpecP   & ps
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
-#if !defined(_OPENMP)
-  // "-nthreads" was given in the command line or a multi-threaded
-  // scheduler was specified in UPS file, but Uintah was not
-  // built with OpenMP.
-  if ((scheduler == "Kokkos" || scheduler == "KokkosOpenMP") &&
-      Uintah::Parallel::getNumThreads() > 0) {
-    std::string error = "\nERROR<Scheduler>: "
-      "To use a multi-threaded scheduler, Uintah must be built with OpenMP.\n";
-    throw ProblemSetupException(error, __FILE__, __LINE__);
-  }
-#endif
-
 #if defined(HAVE_KOKKOS)
+  #if !defined(_OPENMP)
+    // "-nthreads" was given in the command line or a multi-threaded
+    // scheduler was specified in UPS file, but Uintah was not
+    // built with OpenMP.
+    if ((scheduler == "Kokkos" || scheduler == "KokkosOpenMP") &&
+        Uintah::Parallel::getNumThreads() > 0) {
+      std::string error = "\nERROR<Scheduler>: "
+        "To use a Kokkos multi-threaded scheduler, "
+        "Uintah must be built with OpenMP.\n";
+      throw ProblemSetupException(error, __FILE__, __LINE__);
+    }
+  #endif
 #else
   // A Kokkos scheduler specified in the UPS file, but Uintah was not
   // built with Kokkos.
