@@ -170,7 +170,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                         "Poisson1::timeAdvance",
                         &Poisson1::timeAdvance<UINTAH_CPU_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
-                        &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>,
+                        // &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG>,
                         // &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
