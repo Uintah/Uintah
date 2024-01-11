@@ -139,6 +139,8 @@ namespace WasatchCore{
     PatchTreeTaskMap patchTreeMap_;
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
+    // JAMES FIX ME - needs to be updated so that
+    // TreeTaskExecute::execute follows the portable task construct.
     void execute( Uintah::DetailedTask* dtask,
                   Uintah::CallBackEvent event,
                   const Uintah::ProcessorGroup* const,
@@ -272,7 +274,9 @@ namespace WasatchCore{
     hasPressureExpression_ = false;
     hasBeenScheduled_ = false;
 
-    Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
+    // JAMES FIX ME - needs to be updated so that
+    // TreeTaskExecute::execute follows the portable task construct.
+    Uintah::Task* tsk = nullptr; //scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
@@ -635,6 +639,8 @@ namespace WasatchCore{
 
   //------------------------------------------------------------------
 
+  // JAMES FIX ME - needs to be updated so that
+  // TreeTaskExecute::execute follows the portable task construct.
   void
   TreeTaskExecute::execute( Uintah::DetailedTask* dtask,
                             Uintah::CallBackEvent event,
