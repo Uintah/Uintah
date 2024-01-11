@@ -645,7 +645,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
           }
 
           for (int ix=0; ix<_nQn_part; ix++){
-            asymm(i,j,k) += (scatkt[0](i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt[0](i,j,k))*scatQuad[ix] ;
+            asymm[0](i,j,k) += (scatkt[0](i,j,k) < 1e-8) ? 0.0 :  (Char_mass[ix](i,j,k)*_charAsymm+RC_mass[ix](i,j,k)*_rawCoalAsymm+_ash_mass_v[ix]*_ashAsymm)/(total_mass[ix]*scatkt[0](i,j,k))*scatQuad[ix] ;
           }
         });
       }
