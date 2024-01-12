@@ -96,6 +96,10 @@ public:
     return m_instances.size();
   }
 
+  int getDeviceID() const {
+    return deviceID;
+  }
+
 private:
   std::vector<ExecSpace> m_instances;
   int deviceID{0};

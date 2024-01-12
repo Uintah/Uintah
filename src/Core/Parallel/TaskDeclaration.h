@@ -63,7 +63,7 @@ template < typename TaskFunctor
          , typename ExecSpace4, typename MemSpace4
          , typename ExecSpace5, typename MemSpace5
          , typename... Args >
-void create_portable_tasks(       TaskFunctor   taskFunctor
+Task* create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
                           , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
@@ -189,9 +189,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
     taskFunctor(task);
   }
 
-  if ( task ) {
+  if ( sched && task ) {
     sched->addTask( task, patches, matls, tg_num );
   }
+
+  return task;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -203,7 +205,7 @@ template < typename TaskFunctor
          , typename ExecSpace3, typename MemSpace3
          , typename ExecSpace4, typename MemSpace4
          , typename... Args >
-void create_portable_tasks(       TaskFunctor   taskFunctor
+Task* create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
                           , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
@@ -312,9 +314,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
     taskFunctor(task);
   }
 
-  if ( task ) {
+  if ( sched && task ) {
     sched->addTask( task, patches, matls, tg_num );
   }
+
+  return task;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -325,7 +329,7 @@ template < typename TaskFunctor
          , typename ExecSpace2, typename MemSpace2
          , typename ExecSpace3, typename MemSpace3
          , typename... Args >
-void create_portable_tasks(       TaskFunctor   taskFunctor
+Task* create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
                           , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
@@ -417,9 +421,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
     taskFunctor(task);
   }
 
-  if ( task ) {
+  if ( sched && task ) {
     sched->addTask( task, patches, matls, tg_num );
   }
+
+  return task;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -429,7 +435,7 @@ template < typename TaskFunctor
          , typename ExecSpace1, typename MemSpace1
          , typename ExecSpace2, typename MemSpace2
          , typename... Args >
-void create_portable_tasks(       TaskFunctor   taskFunctor
+Task* create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
                           , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
@@ -504,9 +510,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
     taskFunctor(task);
   }
 
-  if ( task ) {
+  if ( sched && task ) {
     sched->addTask( task, patches, matls, tg_num );
   }
+
+  return task;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -515,7 +523,7 @@ template < typename TaskFunctor
          , typename TaskObject
          , typename ExecSpace1, typename MemSpace1
          , typename... Args >
-void create_portable_tasks(       TaskFunctor   taskFunctor
+Task* create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
                           , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
@@ -567,9 +575,11 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
     taskFunctor(task);
   }
 
-  if ( task ) {
+  if ( sched && task ) {
     sched->addTask( task, patches, matls, tg_num );
   }
+
+  return task;
 }
 
 } // end namespace Uintah
