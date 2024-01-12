@@ -50,6 +50,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
+#include <Core/Parallel/Portability.h>
 #include <sci_defs/gpu_defs.h>
 
 //-- Wasatch includes --//
@@ -141,17 +142,13 @@ namespace WasatchCore{
     /** \brief main execution driver - the callback function exposed to Uintah. */
     // JAMES FIX ME - needs to be updated so that
     // TreeTaskExecute::execute follows the portable task construct.
-    void execute( Uintah::DetailedTask* dtask,
-                  Uintah::CallBackEvent event,
-                  const Uintah::ProcessorGroup* const,
-                  const Uintah::PatchSubset* const,
-                  const Uintah::MaterialSubset* const,
-                  Uintah::DataWarehouse* const,
-                  Uintah::DataWarehouse* const,
-                  void* old_TaskGpuDW,
-                  void* new_TaskGpuDW,
-                  void* stream,  // for GPU tasks, this is the associated stream
-                  int deviceID,
+    template <typename ExecSpace, typename MemSpace>
+    void execute( const Uintah::PatchSubset*,
+                  const Uintah::MaterialSubset*,
+                        Uintah::DataWarehouse*,
+                        Uintah::DataWarehouse*,
+                        Uintah::UintahParams& uintahParams,
+                        Uintah::ExecutionObject<ExecSpace, MemSpace>& execObj,
                   const int rkStage);
 
 # ifdef HAVE_CUDA
@@ -276,7 +273,24 @@ namespace WasatchCore{
 
     // JAMES FIX ME - needs to be updated so that
     // TreeTaskExecute::execute follows the portable task construct.
-    Uintah::Task* tsk = nullptr; //scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
+    auto TaskDependencies = [&](Uintah::Task* task) { };
+
+    Uintah::Task* tsk = nullptr;
+
+    // WHY DOES THIS NOT WORK????
+
+    /* 
+    create_portable_tasks(TaskDependencies, this,
+			    taskName,
+			    &TreeTaskExecute::execute<UINTAH_CPU_TAG>,
+			    // &TreeTaskExecute::execute<KOKKOS_OPENMP_TAG>,
+			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_HOST_TAG>,
+			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
+			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
+			    nullptr, nullptr, nullptr, TASKGRAPH::DEFAULT, rkStage);
+    */
+    // Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute<UINTAH_CPU_TAG>, rkStage );
+
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
@@ -641,18 +655,14 @@ namespace WasatchCore{
 
   // JAMES FIX ME - needs to be updated so that
   // TreeTaskExecute::execute follows the portable task construct.
+  template <typename ExecSpace, typename MemSpace>
   void
-  TreeTaskExecute::execute( Uintah::DetailedTask* dtask,
-                            Uintah::CallBackEvent event,
-                            const Uintah::ProcessorGroup* const pg,
-                            const Uintah::PatchSubset* const patches,
-                            const Uintah::MaterialSubset* const materials,
-                            Uintah::DataWarehouse* const oldDW,
-                            Uintah::DataWarehouse* const newDW,
-                            void* old_TaskGpuDW,
-                            void* new_TaskGpuDW,
-                            void* stream,
-                            int deviceID,
+  TreeTaskExecute::execute( const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                                  Uintah::DataWarehouse* oldDW,
+                                  Uintah::DataWarehouse* newDW,
+                                  Uintah::UintahParams& uintahParams,
+                                  Uintah::ExecutionObject<ExecSpace, MemSpace>& execObj,
                             const int rkStage )
   {
     //
@@ -666,7 +676,7 @@ namespace WasatchCore{
 
     ExecMutex lock; // thread-safe
 
-    const bool isGPUTask = (event == Uintah::GPU);
+    const bool isGPUTask = (uintahParams.getCallBackEvent() == Uintah::GPU);
 
     // preventing postGPU / preGPU callbacks to execute the tree again
     for( int ip=0; ip<patches->size(); ++ip ){
@@ -686,7 +696,7 @@ namespace WasatchCore{
 
         // set the device index passed from Uintah to the Expression tree
         // Currently it is not yet fixed as the callback is not providing deviceID
-        tree->set_device_index( deviceID, *fml_);
+        tree->set_device_index( execObj.getDeviceId(), *fml_);
       }
 #     endif
 
@@ -708,7 +718,7 @@ namespace WasatchCore{
               newDW->getParticleSubset(material, patch) :
               ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : nullptr ) : nullptr );
 
-          AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
+          AllocInfo ainfo( oldDW, newDW, material, patch, pset, uintahParams.getProcessorGroup(), isGPUTask );
           fml_->allocate_fields( ainfo );
 
           if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
