@@ -51,6 +51,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 
+#include <sci_defs/gpu_defs.h>
 
 /**
  * \file    BCHelper.cc
@@ -380,34 +381,34 @@ namespace WasatchCore {
     
     // pack the interior-cells spatial mask
     myBndIters.svolInteriorCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboInteriorBndSOIter);
-#   ifdef HAVE_CUDA
+#   ifdef KOKKOS_USING_GPU
     myBndIters.svolInteriorCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     // pack the extra-cells spatial mask
     myBndIters.svolExtraCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboExtraBndSOIter);
-#   ifdef HAVE_CUDA
+#   ifdef KOKKOS_USING_GPU
     myBndIters.svolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow xwindow = WasatchCore::get_memory_window_for_masks<XVolField>( patch );
     const SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcMinus,bcPlus);
     myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
-#   ifdef HAVE_CUDA
+#   ifdef KOKKOS_USING_GPU
     myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow ywindow = WasatchCore::get_memory_window_for_masks<YVolField>( patch );
     const SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcMinus,bcPlus);
     myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
-#   ifdef HAVE_CUDA
+#   ifdef KOKKOS_USING_GPU
     myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
     const SpatialOps::MemoryWindow zwindow = WasatchCore::get_memory_window_for_masks<ZVolField>( patch );
     const SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcMinus,bcPlus);
     myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
-#   ifdef HAVE_CUDA
+#   ifdef KOKKOS_USING_GPU
     myBndIters.zvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
   }

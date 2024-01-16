@@ -31,6 +31,8 @@
 #include <spatialops/Nebo.h>
 #include <expression/Expression.h>
 
+#include <sci_defs/gpu_defs.h>
+
 /**
  *  \ingroup	Expressions
  *  \class  	TabPropsEvaluator
@@ -209,7 +211,9 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-# ifdef HAVE_CUDA
+
+#ifdef KOKKOS_USING_GPU
+
   if (indepVars_.size() > 5) throw std::invalid_argument( "Unsupported dimensionality for interpolant in TabPropsEvaluator" );
   
   std::vector<const double *> indep( indepVars_.size(), NULL );
@@ -221,7 +225,9 @@ evaluate()
   else{
     evaluator_.gpu_value(indep, result.field_values(GPU_INDEX), result.window_with_ghost().glob_npts());
   }
-# else
+
+#else
+
   switch( indepVars_.size() ){
     case 1:{
       if( doDerivative_ ){

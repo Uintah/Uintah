@@ -31,6 +31,7 @@
 #include "RadPropsEvaluator.h"
 #include <radprops/Particles.h>
 
+#include <sci_defs/gpu_defs.h>
 
 template< typename FieldT >
 RadPropsEvaluator<FieldT>::
@@ -80,7 +81,7 @@ evaluate()
 {
   FieldT& result = this->value();
 
-# ifdef HAVE_CUDA
+#ifdef KOKKOS_USING_GPU
 
   std::vector<const double *> molefracs( indepVars_.size(), NULL );
   for( size_t i=0; i<indepVars_.size(); ++i ){
@@ -88,7 +89,7 @@ evaluate()
   }
   greyGas_->gpu_mixture_coeffs(result.field_values(GPU_INDEX), molefracs, temp_->field_ref().field_values(GPU_INDEX),  result.window_with_ghost().glob_npts(), RadProps::EFF_ABS_COEFF);
 
-# else
+#else
 
   typedef typename FieldT::const_iterator Iterator;
   typedef std::vector<Iterator> IVarIter;
@@ -114,7 +115,7 @@ evaluate()
     // for now, we only pull out the effective radiative coefficient
     greyGas_->mixture_coeffs( *iprop, ivarsPoint, *itemp, RadProps::EFF_ABS_COEFF );
   }
-# endif // HAVE_CUDA
+#endif
 }
 
 //--------------------------------------------------------------------
