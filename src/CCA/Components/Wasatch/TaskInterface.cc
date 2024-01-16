@@ -51,7 +51,6 @@
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Parallel/Portability.h>
-#include <sci_defs/gpu_defs.h>
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"
@@ -68,6 +67,8 @@
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
+
+#include <sci_defs/gpu_defs.h>
 
 #include <stdexcept>
 #include <fstream>
@@ -142,6 +143,7 @@ namespace WasatchCore{
     /** \brief main execution driver - the callback function exposed to Uintah. */
     // JAMES FIX ME - needs to be updated so that
     // TreeTaskExecute::execute follows the portable task construct.
+#ifdef KOKKOS_USING_GPU
     template <typename ExecSpace, typename MemSpace>
     void execute( const Uintah::PatchSubset*,
                   const Uintah::MaterialSubset*,
@@ -151,7 +153,16 @@ namespace WasatchCore{
                         Uintah::ExecutionObject<ExecSpace, MemSpace>& execObj,
                   const int rkStage);
 
-# ifdef HAVE_CUDA
+#else
+    void execute( const Uintah::ProcessorGroup*,
+                  const Uintah::PatchSubset*,
+                  const Uintah::MaterialSubset*,
+                        Uintah::DataWarehouse*,
+                        Uintah::DataWarehouse*,
+                  const int rkStage);
+#endif
+
+#ifdef KOKKOS_USING_GPU
 
     /**
      *  \class GPULoadBalancer
@@ -275,28 +286,27 @@ namespace WasatchCore{
     // TreeTaskExecute::execute follows the portable task construct.
     auto TaskDependencies = [&](Uintah::Task* task) { };
 
-    Uintah::Task* tsk = nullptr;
-
+#ifdef KOKKOS_USING_GPU
     // WHY DOES THIS NOT WORK????
-
-    /* 
-    create_portable_tasks(TaskDependencies, this,
-			    taskName,
-			    &TreeTaskExecute::execute<UINTAH_CPU_TAG>,
-			    // &TreeTaskExecute::execute<KOKKOS_OPENMP_TAG>,
-			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_HOST_TAG>,
-			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
-			    // &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
-			    nullptr, nullptr, nullptr, TASKGRAPH::DEFAULT, rkStage);
-    */
-    // Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute<UINTAH_CPU_TAG>, rkStage );
+    Uintah::Task* tsk =
+      create_portable_tasks(TaskDependencies, this,
+                            taskName,
+                            &TreeTaskExecute::execute<UINTAH_CPU_TAG>,
+                            &TreeTaskExecute::execute<KOKKOS_OPENMP_TAG>,
+                            // &TreeTaskExecute::execute<KOKKOS_DEFAULT_HOST_TAG>,
+                            &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
+                            // &TreeTaskExecute::execute<KOKKOS_DEFAULT_DEVICE_TAG>,
+                            nullptr, nullptr, nullptr, TASKGRAPH::DEFAULT, rkStage);
+#else
+    Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
+#endif
 
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
       TreePtr tree = vt.second;
 
-#     ifdef HAVE_CUDA
+#ifdef KOKKOS_USING_GPU
       const bool isHomogeneous = tree->is_homogeneous_gpu();
       bool gpuTurnedOff = !isHomogeneous;
       if( !(isHomogeneous && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
@@ -312,7 +322,7 @@ namespace WasatchCore{
       if( !gpuTurnedOff && Uintah::Parallel::usingDevice() && taskName != "initialization" ){
         tsk->usesDevice( true );
       }
-#     endif
+#endif
 
       if( !hasPressureExpression_ ){
         if( tree->computes_field( TagNames::self().pressure ) && taskName != "initialization" ){
@@ -353,13 +363,13 @@ namespace WasatchCore{
       // force Uintah to manage all fields:
       if( lockAllFields ) tree->lock_fields(*fml_);
 
-#     ifdef HAVE_CUDA
+#ifdef KOKKOS_USING_GPU
       // For Heterogeneous case only
       if( taskName != "initialization" && tree->is_homogeneous_gpu() && Uintah::Parallel::usingDevice() ){
         // For a heterogeneous task, restore the GPU runnable property for the expressions.
         if (gpuTurnedOff) tree->restore_gpu_runnable();
       }
-#     endif
+#endif
 
       PatchInfoMap::const_iterator ipim = patchInfoMap.find(patchID);
       assert( ipim != patchInfoMap.end() );
@@ -655,6 +665,7 @@ namespace WasatchCore{
 
   // JAMES FIX ME - needs to be updated so that
   // TreeTaskExecute::execute follows the portable task construct.
+#ifdef KOKKOS_USING_GPU
   template <typename ExecSpace, typename MemSpace>
   void
   TreeTaskExecute::execute( const Uintah::PatchSubset* patches,
@@ -664,6 +675,15 @@ namespace WasatchCore{
                                   Uintah::UintahParams& uintahParams,
                                   Uintah::ExecutionObject<ExecSpace, MemSpace>& execObj,
                             const int rkStage )
+#else
+  void
+  TreeTaskExecute::execute( const Uintah::ProcessorGroup* pg,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                                  Uintah::DataWarehouse* oldDW,
+                                  Uintah::DataWarehouse* newDW,
+                            const int rkStage )
+#endif
   {
     //
     // execute on each patch
@@ -676,8 +696,13 @@ namespace WasatchCore{
 
     ExecMutex lock; // thread-safe
 
-    const bool isGPUTask = (uintahParams.getCallBackEvent() == Uintah::GPU);
+#ifdef KOKKOS_USING_GPU
+    const ProcessorGroup* pg = uintahParams.getProcessorGroup();
 
+    const bool isGPUTask = (uintahParams.getCallBackEvent() == Uintah::GPU);
+#else
+    const bool isGPUTask = false;
+#endif
     // preventing postGPU / preGPU callbacks to execute the tree again
     for( int ip=0; ip<patches->size(); ++ip ){
 
@@ -687,7 +712,7 @@ namespace WasatchCore{
       ASSERT( iptm != patchTreeMap_.end() );
       const TreePtr tree = iptm->second.tree;
 
-#     ifdef HAVE_CUDA
+#ifdef KOKKOS_USING_GPU
       if( isGPUTask ){ // homogeneous GPU task
         dbg_tasks << endl
             << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
@@ -698,7 +723,7 @@ namespace WasatchCore{
         // Currently it is not yet fixed as the callback is not providing deviceID
         tree->set_device_index( execObj.getDeviceId(), *fml_);
       }
-#     endif
+#endif
 
       const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
@@ -718,7 +743,7 @@ namespace WasatchCore{
               newDW->getParticleSubset(material, patch) :
               ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : nullptr ) : nullptr );
 
-          AllocInfo ainfo( oldDW, newDW, material, patch, pset, uintahParams.getProcessorGroup(), isGPUTask );
+          AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
           fml_->allocate_fields( ainfo );
 
           if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
