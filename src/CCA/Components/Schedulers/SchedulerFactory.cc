@@ -133,9 +133,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps
 
   // "-nthreads" was not given in the command line but a
   // multi-threaded scheduler was specified in UPS file.
-  if ((scheduler == "Unified" ||
-       scheduler == "Kokkos" || scheduler == "KokkosOpenMP")
-      && Uintah::Parallel::getNumThreads() < 1) {
+  if (scheduler == "Unified" && Uintah::Parallel::getNumThreads() < 1) {
     std::string error = "\nERROR<Scheduler>: "
       "Add '-nthreads <n>' to the sus command line if "
       "'Unified' is specified in the input file.\n";
