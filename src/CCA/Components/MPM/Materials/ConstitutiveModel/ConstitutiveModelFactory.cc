@@ -44,7 +44,7 @@
 #endif
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Kayenta.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ProgramBurn.h>
@@ -73,9 +73,9 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/MaxwellWeichert.h>
 
 // Geomaterials
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
 
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
@@ -251,9 +251,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
   }
-  else if (cm_type == "diamm"){
-    return(scinew Diamm(child,flags));
-  }
+//  else if (cm_type == "diamm"){
+//    return(scinew Diamm(child,flags));
+//  }
 #endif
 
   else if (cm_type ==  "mw_visco_elastic"){
@@ -305,6 +305,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew MaxwellWeichert(child,flags));
   }
 
+#if 0
   else if (cm_type == "HypoplasticB") {
 	  return(scinew HypoplasticB(child, flags));
   }
@@ -322,6 +323,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 		  return(scinew QADamage(child, flags, false, false));
 	  }
   }
+#endif
 
   else
     throw ProblemSetupException("Unknown Material Type R ("+cm_type+")", __FILE__, __LINE__);

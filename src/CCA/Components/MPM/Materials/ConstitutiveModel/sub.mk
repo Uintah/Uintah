@@ -70,7 +70,6 @@ SRCS   += \
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
-       $(SRCDIR)/Diamm.cc                      \
        $(SRCDIR)/HypoElasticFortran.cc         \
        $(SRCDIR)/Kayenta.cc
 endif
@@ -79,8 +78,8 @@ SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
         $(SRCDIR)/PortableTongeRamesh \
         $(SRCDIR)/ArenaSoilBanerjeeBrannon \
-        $(SRCDIR)/ViscoElastic \
-	$(SRCDIR)/QuocAnh \
+        $(SRCDIR)/ViscoElastic
+#	$(SRCDIR)/QuocAnh \
 #        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)

@@ -30,9 +30,6 @@
 #include <cstring>
 
 using namespace Uintah;
-using namespace std;
-
-typedef unsigned char byte;
 
 // forwared function declarations
 void usage( char *prog_name );
@@ -48,13 +45,13 @@ with the file geometry piece type, after processing with pfs2, to generate geome
 int main(int argc, char *argv[])
 {
   // Establish physical size of the image
-  vector<double> X(3);
+  std::vector<double> X(3);
   X[0]=1.;
   X[1]=1.;
   X[2]=1.;
 
   // image resolution
-  vector<int> res(3);
+  std::vector<int> res(3);
   res[0]=256;
   res[1]=256;
   res[2]=256;
@@ -64,20 +61,20 @@ int main(int argc, char *argv[])
   double dy=X[1]/((double) res[1]);
   double dz=X[2]/((double) res[2]);
   if(dx!=dy || dx!=dz || dy !=dz){
-    cerr << "WARNING:  Subsequent code assumes that voxel dimensions are equal\n";
+    std::cerr << "WARNING:  Subsequent code assumes that voxel dimensions are equal\n";
   }
 
   // Open file containing sphere center locations and radii
-  string spherefile_name = "spheres.txt";
-  ifstream fp(spherefile_name.c_str());
+  std::string spherefile_name = "spheres.txt";
+  std::ifstream fp(spherefile_name.c_str());
   if(!fp.is_open()){
-     cout << "FATAL ERROR : Failed opening spheres.txt file" << endl;
+    std::cout << "FATAL ERROR : Failed opening spheres.txt file" << std::endl;
      exit(0);
   }
 
   // Read data from file
   double xc, yc, zc, r;
-  vector<double> xcen,ycen,zcen,rad;
+  std::vector<double> xcen,ycen,zcen,rad;
   while(fp >> xc >> yc >> zc >> r){
    xcen.push_back(xc);
    ycen.push_back(yc);
@@ -87,7 +84,7 @@ int main(int argc, char *argv[])
 
   // make room to store the image
   int nsize = res[0]*res[1]*res[2];
-  byte* pimg = scinew byte[nsize];
+  unsigned char* pimg = scinew unsigned char[nsize];
 
   // Initialize pimg to zero
   for(int n=0;n<nsize;n++){
@@ -103,12 +100,12 @@ int main(int argc, char *argv[])
     // find a conservative estimate of how many cells make up the sphere radius
     int rc = static_cast<int>(rad[ns]/dx)+2;
     // determine the bounding box that contains the sphere
-    int bbx_min = max(0,ic-rc);
-    int bbx_max = min(res[0],ic+rc);
-    int bby_min = max(0,jc-rc);
-    int bby_max = min(res[1],jc+rc);
-    int bbz_min = max(0,kc-rc);
-    int bbz_max = min(res[2],kc+rc);
+    int bbx_min = std::max(0,ic-rc);
+    int bbx_max = std::min(res[0],ic+rc);
+    int bby_min = std::max(0,jc-rc);
+    int bby_max = std::min(res[1],jc+rc);
+    int bbz_min = std::max(0,kc-rc);
+    int bbz_max = std::min(res[2],kc+rc);
   
    // Loop over all voxels of the image to determine which are "inside" the sphere
    for(int i=bbx_min;i<bbx_max;i++){
@@ -128,13 +125,13 @@ int main(int argc, char *argv[])
   }
 
   // Write image data to a file
-  string f_name = "spheres.raw";
+  std::string f_name = "spheres.raw";
   FILE* dest = fopen(f_name.c_str(), "wb");
   if(dest==0){
-    cout << "FATAL ERROR : Failed opening points file" << endl;
+    std::cout << "FATAL ERROR : Failed opening points file" << std::endl;
     exit(0);
   }
-  fwrite(pimg, sizeof(byte), nsize, dest);
+  fwrite(pimg, sizeof(unsigned char), nsize, dest);
 
   // clean up image data
   delete [] pimg;
@@ -144,10 +141,10 @@ int main(int argc, char *argv[])
 //
 void usage( char *prog_name )
 {
-  cout << "Usage: " << prog_name << " [-b] [-B] [-cyl <args>] infile \n";
-  cout << "-b,B: binary output \n";
-  cout << "-cyl: defines a cylinder within the geometry \n";
-  cout << "args = xbot ybot zbot xtop ytop ztop radius \n";
+  std::cout << "Usage: " << prog_name << " [-b] [-B] [-cyl <args>] infile \n";
+  std::cout << "-b,B: binary output \n";
+  std::cout << "-cyl: defines a cylinder within the geometry \n";
+  std::cout << "args = xbot ybot zbot xtop ytop ztop radius \n";
   exit( 1 );
 }
 
