@@ -78,6 +78,10 @@
 // getting ready for debugstream
 #include <Core/Util/DebugStream.h>
 
+// JAMES FIX ME - needs to be used so that
+// TreeTaskExecute::execute follows the portable task construct.
+//#define USE_PORTABLE_TASK
+
 using std::endl;
 
 typedef Expr::ExpressionTree::TreeList TreeList;
@@ -143,7 +147,7 @@ namespace WasatchCore{
     /** \brief main execution driver - the callback function exposed to Uintah. */
     // JAMES FIX ME - needs to be updated so that
     // TreeTaskExecute::execute follows the portable task construct.
-#ifdef KOKKOS_USING_GPU
+#if defined(KOKKOS_USING_GPU) || defined(USE_PORTABLE_TASK)
     template <typename ExecSpace, typename MemSpace>
     void execute( const Uintah::PatchSubset*,
                   const Uintah::MaterialSubset*,
@@ -284,10 +288,11 @@ namespace WasatchCore{
 
     // JAMES FIX ME - needs to be updated so that
     // TreeTaskExecute::execute follows the portable task construct.
+#if defined(KOKKOS_USING_GPU) || defined(USE_PORTABLE_TASK)
     auto TaskDependencies = [&](Uintah::Task* task) { };
 
-#ifdef KOKKOS_USING_GPU
     // WHY DOES THIS NOT WORK????
+    // candidate template ignored: couldn't infer template argument 
     Uintah::Task* tsk =
       create_portable_tasks(TaskDependencies, this,
                             taskName,
@@ -665,7 +670,7 @@ namespace WasatchCore{
 
   // JAMES FIX ME - needs to be updated so that
   // TreeTaskExecute::execute follows the portable task construct.
-#ifdef KOKKOS_USING_GPU
+#if defined(KOKKOS_USING_GPU) || defined(USE_PORTABLE_TASK)
   template <typename ExecSpace, typename MemSpace>
   void
   TreeTaskExecute::execute( const Uintah::PatchSubset* patches,
@@ -696,8 +701,8 @@ namespace WasatchCore{
 
     ExecMutex lock; // thread-safe
 
-#ifdef KOKKOS_USING_GPU
-    const ProcessorGroup* pg = uintahParams.getProcessorGroup();
+#if defined(KOKKOS_USING_GPU) || defined(USE_PORTABLE_TASK)
+    const Uintah::ProcessorGroup* pg = uintahParams.getProcessorGroup();
 
     const bool isGPUTask = (uintahParams.getCallBackEvent() == Uintah::GPU);
 #else
