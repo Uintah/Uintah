@@ -1,9 +1,11 @@
-#!/bin/bash 
+#!/bin/bash
 
-source $(dirname $0)/../bashFunctions
+helpersPath=$( dirname "${BASH_SOURCE[0]}" | sed 's/parallelTarUdas.*//g')
+source "${helpersPath}"/bashFunctions
+
 #
 #______________________________________________________________________
-#  This script tars/untars, in parallel, each timestep in the uda and inside of the checkpoints 
+#  This script tars/untars, in parallel, each timestep in the uda and inside of the checkpoints
 #  directory.
 #
 #  Usage:
@@ -11,14 +13,14 @@ source $(dirname $0)/../bashFunctions
 #          -np:                 [int]        10       Number of processors used.
 #          -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
 #          -create              blank         X       create new archives
-#          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+#          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred.
 #          -extract             blank                 extract timestep archieves
 #          -continueTarring     blank                 continue tarring if previous attempts failed
 #          -uda                 [dir name]            uda name
 #          -help:                                     Display this option summary
 #
 #______________________________________________________________________
-
+!
 main()
 {
 
@@ -29,13 +31,13 @@ main()
 
   #__________________________________
   # defaults
-  nproc="10"
+  declare -i nproc=10
   allTimesteps="Y"
   continueTarring="N"
   deleteOrgTimesteps="N"
-  MAKE=make
+  MAKE="make"
   OS="Linux"
-  FIND=find
+  FIND="find"
   recordName="ptar_record"
   user=$(whoami)
 
@@ -58,6 +60,12 @@ main()
     -allTimesteps|--allTimesteps)
         shift
         ans=$( echo "$1" | tr "[:lower:]" "[:upper:]" ) # upper case trick
+
+        if [[ "$ans" != "N" && "$ans" != "Y" ]]; then
+          echo "  --allTimesteps [y/n] option missing or invalid."
+          usage
+        fi
+
         allTimesteps=$ans
         ;;
     -uda|--uda)
@@ -76,7 +84,7 @@ main()
         ;;
     -continueTarring|--continueTarring)
         continueTarring="Y"
-        ;;    
+        ;;
     -help|--help|-h)
         usage
         ;;
@@ -92,11 +100,7 @@ main()
   #__________________________________
   # Inputs Bulletproofing:
 
-  isInteger ${nproc}
-
-  if [[ "$?" != "0" ]]; then
-    end_die "Error: the -np option is not an integer ($nproc)"
-  fi
+  isInteger "${nproc}" || end_die "Error: the -np option is not an integer ($nproc)"
 
   if [[ $createExtract == "" ]]; then
     echo -e "\n Error: you must specify either -create or -extract"
@@ -109,7 +113,7 @@ main()
 
   # The uda directory name cannot contain ":" or " "
 
-  rc=$(echo "${uda}" | grep --count [\:\|\ ])
+  rc=$(echo "$uda" | grep --count [\:\|\ ])
 
   if [[ "$rc" != "0" ]];  then
     echo "  ERROR: the uda directory name cannot contain a colon : or whitespace"
@@ -119,7 +123,7 @@ main()
   fi
 
   #__________________________________
-  pTarfulldir=$( readlink -f ${0} )
+  pTarfulldir=$( readlink -f "${0}" )
   pTardir=$( dirname "${pTarfulldir}" )
 
   if [[ $( echo "${uda}" | cut -c1) != "/" ]]; then
@@ -142,7 +146,7 @@ main()
 
   which unpigz >& /dev/null                      # is the parallel version of gunzip installed?
   rc=$?
-  
+
   if [[ $createExtract == "extract" ]]; then
     if [[ "$rc" = "0" ]]; then
       TAR="tar  --use-compress-program 'unpigz' -xf"
@@ -179,12 +183,12 @@ main()
   validateTarredFilesDir ${continueTarring}
 
   if [[ ! -d "${STAMP_DIR}" ]]; then
-  
+
     # Didn't have permissions to make the directory... so place it in tmp
     printf "\n \t %s \n"  "WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
 
     STAMP_DIR=/tmp/.tarred_files_$(basename "${uda}")_${user}
-    export STAMP_DIR 
+    export STAMP_DIR
 
     printf " \t %s \n"  "Placing it in ${STAMP_DIR} instead."
     validateTarredFilesDir ${continueTarring}
@@ -228,7 +232,7 @@ main()
   echo "Uda:  ${uda}"                     >> "${PTAR_RECORD}"
   echo ""                                 >> "${PTAR_RECORD}"
 
-  cd "${uda}"
+  cd "$uda" || end_die "  ERROR: failed to cd $uda"
 
   #__________________________________
   # make a sorted list of directories to tar/untar
@@ -261,13 +265,13 @@ main()
   #__________________________________
   # Some uda have _hundreds_ of timesteps.
   # You must break up the list of files into smaller files
-  let nLines=$nproc*10
+  (( nLines=nproc*10 ))
 
   split --lines=$nLines --suffix-length=3 --numeric-suffixes "${PTAR_FILES}" "${PTAR_FILES}".
 
-  chmod ug+rw "${PTAR_FILES}"* 
+  chmod ug+rw "${PTAR_FILES}"*
 
-  #______________________________________________________________________ 
+  #______________________________________________________________________
   # Now tar the directories
   echo
   echo -n "Starting at: " | tee -a "${PTAR_RECORD}"
@@ -277,11 +281,11 @@ main()
   for X in "${PTAR_FILES}".*; do
     PTAR_FILES_N="$X"
     export PTAR_FILES_N
-    $MAKE  -s -f ${pTardir}/pTarUda_driver_${OS} -j ${nproc} | tee -a "${PTAR_RECORD}" 
+    $MAKE  -s -f "$pTardir"/pTarUda_driver_${OS} -j "$nproc" | tee -a "${PTAR_RECORD}"
   done
 
   # remove the .tarred/stamp directory
-  $MAKE  -s -f ${pTardir}/pTarUda_driver_${OS} clean | tee -a "${PTAR_RECORD}"
+  $MAKE  -s -f "$pTardir"/pTarUda_driver_${OS} clean | tee -a "${PTAR_RECORD}"
 
   echo | tee -a "${PTAR_RECORD}"
   echo -n "Ending at: " | tee -a "${PTAR_RECORD}"
@@ -300,12 +304,12 @@ cat <<EOF
           -np:                 [int]        10       Number of processores used.
           -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
           -create              blank         X       create new archives
-          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred.
           -extract             blank                 extract timestep archieves
           -continueTarring     blank                 continue tarring if previous attempts failed
           -uda                 [dir name]            uda name
           -help:                                     Display this option summary
-       By default the original timestep directories are not deleted. 
+       By default the original timestep directories are not deleted.
 EOF
   exit 0
 }
@@ -315,7 +319,7 @@ EOF
 validateTarredFilesDir()
 {
   continueTarring=$1
-  
+
   if [[ -d "${STAMP_DIR}" ]]; then
     echo ""
     echo "  WARNING: The previous attempt at tarring/untarring the directores was interrupted."
@@ -325,19 +329,19 @@ validateTarredFilesDir()
     echo "            It is possible, though unlikely, that some of the directories listed"
     echo "            did not complete successfully."
     echo ""
-    
+
     if [[ "${continueTarring}" == "Y" ]]; then
       return
     fi
-    
+
     echo "  Do you wish to continue tarring/untarring the remaining directories? (y/n)"
     echo "  If not, manually remove the following directory and run this script again:"
     echo "           $STAMP_DIR"
     echo ""
     echo -n " Please answer y/n: "
-    read answer
+    read -n 1 answer            # read 1 char
     echo ""
-     if [[ "${answer}" != "y" ]]; then
+     if [[ "$answer" != "y" ]]; then
       echo "Goodbye."
       echo ""
       exit 1
