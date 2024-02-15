@@ -132,6 +132,7 @@ WARNING
    ParticleCreator* getParticleCreator();
 
    double getInitialDensity() const;
+   bool    getIsPistonMaterial() const;
 
    // Get the specific heats at room temperature
    double getInitialCp() const;
@@ -199,6 +200,7 @@ WARNING
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
    bool   d_allTriGeometry = false;
    bool   d_allFileGeometry = false;
+   bool   d_isPistonMaterial;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

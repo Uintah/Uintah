@@ -23,8 +23,10 @@
  */
 
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
+#include <vector>
 
 using namespace Uintah;
+using namespace std;
 
 Contact::Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps)
   : lb(Mlb), flag(MFlag), d_matls(ps)
@@ -37,4 +39,41 @@ Contact::~Contact()
 
 void Contact::setContactMaterialAttributes()
 {
+}
+
+// find velocity from table of values
+Vector Contact::findValFromProfile(double t,
+                               vector<pair<double, Vector> > profile) const
+{
+  int smin = 0;
+  int smax = (int)(profile.size())-1;
+  double tmin = profile[0].first;
+  double tmax = profile[smax].first;
+  if(t<=tmin) {
+      return profile[0].second;
+  }
+  else if(t>=tmax) {
+      return profile[smax].second;
+  }
+  else {
+      // bisection search on table
+      // could probably speed this up by keeping copy of last successful
+      // search, and looking at that point and a couple to the right
+      //
+      while (smax>smin+1) {
+          int smid = (smin+smax)/2;
+          if(d_vel_profile[smid].first<t){
+            smin = smid;
+          }
+          else{
+            smax = smid;
+          }
+      }
+      double l  = (profile[smin+1].first-profile[smin].first);
+      double xi = (t-profile[smin].first)/l;
+      double vx = xi*profile[smin+1].second[0]+(1-xi)*profile[smin].second[0];
+      double vy = xi*profile[smin+1].second[1]+(1-xi)*profile[smin].second[1];
+      double vz = xi*profile[smin+1].second[2]+(1-xi)*profile[smin].second[2];
+      return Vector(vx,vy,vz);
+    }
 }

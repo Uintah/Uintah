@@ -22,35 +22,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __CONTACT_H__
-#define __CONTACT_H__
+// Penalty.h
 
-#include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <cmath>
+#ifndef __PENALTY_H__
+#define __PENALTY_H__
+
+#include <CCA/Components/MPM/Materials/Contact/Contact.h>
+#include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h> 
+#include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/MaterialManagerP.h>
+
 
 namespace Uintah {
-
-  class DataWarehouse;
-  class MPMLabel;
-  class MPMFlags;
-  class ProcessorGroup;
-  class Patch;
-  class VarLabel;
-  class Task;
-
 /**************************************
 
 CLASS
-   Contact
+   PenaltyContact
    
    Short description...
 
 GENERAL INFORMATION
 
-   Contact.h
+   PenaltyContact.h
 
    Steven G. Parker
    Department of Computer Science
@@ -60,71 +58,66 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Contact_Model
+   Contact_Model_Penalty
 
 DESCRIPTION
-   Long description...
+  One of the derived Contact classes.  This particular
+  version is used to apply Coulombic frictional contact.
   
 WARNING
-
+  
 ****************************************/
 
-  class Contact {
+      class PenaltyContact : public Contact {
+      private:
+         
+         // Prevent copying of this class
+         // copy constructor
+         PenaltyContact(const PenaltyContact &con);
+         PenaltyContact& operator=(const PenaltyContact &con);
+         
+         MaterialManagerP    d_materialManager;
+         
+         // Coefficient of friction
+         double d_mu;
+         // Nodal volume fraction that must occur before contact is applied
+         double d_vol_const;
+         double d_sepFac;
+         int NGP;
+         int NGN;
+
       public:
          // Constructor
-         Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,
-                 ProblemSpecP ps);
-         virtual ~Contact();
+         PenaltyContact(const ProcessorGroup* myworld,
+                         ProblemSpecP& ps, MaterialManagerP& d_sS,MPMLabel* lb,
+                         MPMFlags* MFlag);
+         
+         // Destructor
+         virtual ~PenaltyContact();
 
-         Vector findValFromProfile(double t,
-                        std::vector< std::pair<double, Vector> > profile) const;
-
-         virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+         virtual void outputProblemSpec(ProblemSpecP& ps);
 
          // Basic contact methods
          virtual void exMomInterpolated(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw) = 0;
+                                        DataWarehouse* new_dw);
          
          virtual void exMomIntegrated(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw) = 0;
+                                      DataWarehouse* new_dw);
          
          virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls) = 0;
-         
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
+
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls) = 0;
-
-         // Enable setting material attributes (isRigid, needsNormals, etc)
-         // based on the chosen contact model
-         virtual void setContactMaterialAttributes();
-
-      protected:
-         MPMLabel* lb;
-         MPMFlags* flag;
-         int    d_oneOrTwoStep;
-
-         // For use with Specified and PenaltyRigid contact
-         std::vector< std::pair<double, Vector> > d_vel_profile;
-         std::vector< std::pair<double, Vector> > d_rot_profile;
-         std::vector< std::pair<double, Vector> > d_ori_profile;
-
-         ContactMaterialSpec d_matls;
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
       };
-      
-      inline bool compare(double num1, double num2) {
-            //double EPSILON=1.e-20;
-            double EPSILON=1.e-14;
-            return (fabs(num1-num2) <= EPSILON);
-      }
-
 } // End namespace Uintah
 
-#endif // __CONTACT_H__
+#endif /* __PENALTY_H__ */

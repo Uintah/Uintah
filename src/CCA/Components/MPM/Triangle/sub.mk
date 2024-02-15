@@ -21,34 +21,33 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
+# 
+# 
+# 
+# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/MPM/Core
+SRCDIR := CCA/Components/MPM/Triangle
 
-SRCS     += \
-	$(SRCDIR)/MPMBoundCond.cc      \
-	$(SRCDIR)/MPMDiffusionLabel.cc \
-	$(SRCDIR)/MPMFlags.cc          \
-	$(SRCDIR)/MPMLabel.cc          \
-	$(SRCDIR)/ImpMPMLabel.cc       \
-	$(SRCDIR)/ShellMPMLabel.cc     \
-	$(SRCDIR)/CZLabel.cc           \
-	$(SRCDIR)/TriangleLabel.cc     \
-	$(SRCDIR)/AMRMPMLabel.cc       \
-	$(SRCDIR)/HydroMPMLabel.cc     \
-	$(SRCDIR)/ImpMPMFlags.cc
+SRCS += \
+	$(SRCDIR)/Triangle.cc \
+	$(SRCDIR)/TriangleTasks.cc \
+	$(SRCDIR)/TriangleMaterial.cc
 
 PSELIBS := \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
+	CCA/Components/MPM/Core      \
+	CCA/Components/MPM/Materials \
+	Core/Datatypes               \
+	Core/Disclosure              \
+	Core/Exceptions              \
+	Core/Geometry                \
+	Core/GeometryPiece           \
+	Core/Grid                    \
+	Core/Math                    \
+	Core/Parallel                \
+	Core/ProblemSpec             \
 	Core/Util           
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

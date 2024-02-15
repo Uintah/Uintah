@@ -110,10 +110,6 @@ DESCRIPTION
     SpecifiedBodyFrictionContact(const SpecifiedBodyFrictionContact &con);
     SpecifiedBodyFrictionContact& operator=(const SpecifiedBodyFrictionContact &con);
          
-    Vector findVelFromProfile(double t) const;
-    Vector findValFromProfile(double t, 
-                        std::vector< std::pair<double, Vector> > profile) const;
-    
     MaterialManagerP d_materialManager;
     double    d_stop_time;
     Vector    d_vel_after_stop;
@@ -125,9 +121,6 @@ DESCRIPTION
     int       d_excludeMatl;
     std::string    d_filename;
     IntVector d_direction;
-    std::vector< std::pair<double, Vector> > d_vel_profile;
-    std::vector< std::pair<double, Vector> > d_rot_profile;
-    std::vector< std::pair<double, Vector> > d_ori_profile;
 
   protected:
     Output*                m_output      {nullptr};

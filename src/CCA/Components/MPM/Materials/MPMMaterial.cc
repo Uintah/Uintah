@@ -130,6 +130,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("specific_heat",d_specificHeat);
   ps->getWithDefault("linear_thermal_expansion_coef",
                                      d_thermalExpCoeff, 0.);
+  ps->getWithDefault("PistonMaterial", d_isPistonMaterial, false);
   
   // Also use for Darcy momentum exchange model
   ps->get("permeability", d_permeability);
@@ -319,6 +320,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("PistonMaterial",      d_isPistonMaterial);
   mpm_ps->appendElement("is_force_transmitting_material",
                        d_is_force_transmitting_material);
   mpm_ps->appendElement("is_active",d_is_active);
@@ -417,6 +419,11 @@ ParticleCreator* MPMMaterial::getParticleCreator()
 double MPMMaterial::getInitialDensity() const
 {
   return d_density;
+}
+
+bool MPMMaterial::getIsPistonMaterial() const
+{
+  return d_isPistonMaterial;
 }
 
 double MPMMaterial::getInitialCp() const

@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/CZLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/TriangleLabel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -34,6 +35,9 @@
 #include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZoneTasks.h>
+#include <CCA/Components/MPM/Triangle/Triangle.h>
+#include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
+#include <CCA/Components/MPM/Triangle/TriangleTasks.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -118,6 +122,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 {
   flags = scinew MPMFlags(myworld);
 
+  TriL = scinew TriangleLabel();
   Cl = scinew CZLabel();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -125,6 +130,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   thermalContactModel = nullptr;
   heatConductionModel = nullptr;
   cohesiveZoneTasks   = nullptr;
+  triangleTasks       = nullptr;
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
@@ -146,6 +152,7 @@ SerialMPM::~SerialMPM()
   delete d_switchCriteria;
   delete Cl;
   delete cohesiveZoneTasks;
+  delete triangleTasks;
 
   MPMPhysicalBCFactory::clean();
 
@@ -303,6 +310,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   contactModel->setContactMaterialAttributes();
 
+  triangleTasks = scinew TriangleTasks(m_materialManager, flags, m_output);
+
+  triangleTasks->triangleProblemSetup(restart_mat_ps, flags);
+
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
   cohesiveZoneTasks->cohesiveZoneProblemSetup(restart_mat_ps, flags);
@@ -371,6 +382,12 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   for (unsigned int i = 0; i < m_materialManager->getNumMatls( "CZ" );i++) {
     CZMaterial* mat = (CZMaterial*) m_materialManager->getMaterial( "CZ", i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+
+  for(unsigned int i = 0;i< m_materialManager->getNumMatls("Triangle");i++){
+    TriangleMaterial* mat = (TriangleMaterial *)
+                              m_materialManager->getMaterial("Triangle", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
@@ -510,6 +527,16 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
+  int numTriangleM = m_materialManager->getNumMatls("Triangle");
+  if(numTriangleM>0){
+   TriangleMaterial* ls_matl = (TriangleMaterial *)
+                              m_materialManager->getMaterial("Triangle", 0);
+   Triangle* ls = ls_matl->getTriangle();
+   ls->scheduleInitialize(level, sched, m_materialManager);
+
+   schedulePrintTriangleCount(level, sched);
+  }
+
   unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
   for(unsigned int m = 0; m < numCZM; m++){
     CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
@@ -639,6 +666,41 @@ void SerialMPM::totalParticleCount(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
+void SerialMPM::schedulePrintTriangleCount(const LevelP& level,
+                                           SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printTriangleCount",
+                        this, &SerialMPM::printTriangleCount);
+  t->requires(Task::NewDW, TriL->triangleCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "Triangle" ));
+}
+
+//______________________________________________________________________
+void SerialMPM::printTriangleCount(const ProcessorGroup* pg,
+                                   const PatchSubset*,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, TriL->triangleCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total triangles" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero triangles were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
 void SerialMPM::schedulePrintCZCount(const LevelP& level,
                                          SchedulerP& sched)
 {
@@ -649,6 +711,7 @@ void SerialMPM::schedulePrintCZCount(const LevelP& level,
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "CZ" ));
 }
+
 //______________________________________________________________________
 //
 void SerialMPM::printCZCount(const ProcessorGroup* pg,
@@ -765,10 +828,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = m_materialManager->allMaterials( "MPM" );
   const MaterialSet* cz_matls = m_materialManager->allMaterials( "CZ" );
+  const MaterialSet* triangle_matls=m_materialManager->allMaterials("Triangle");
   const MaterialSet* all_matls = m_materialManager->allMaterials();
 
   const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);;
   const MaterialSubset*  cz_matls_sub = (cz_matls ? cz_matls->getUnion() : nullptr);
+  const MaterialSubset* triangle_matls_sub =
+                        (triangle_matls ? triangle_matls->getUnion() : nullptr);
 
   scheduleComputeCurrentParticleSize(     sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
@@ -776,8 +842,19 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     d_fluxBC->scheduleApplyExternalScalarFlux(sched, patches, matls);
   }
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  if(flags->d_useTriangles){
+    triangleTasks->scheduleComputeTriangleForces(sched, patches, mpm_matls_sub,
+                                                        triangle_matls_sub,
+                                                        all_matls);
+  }
   if(flags->d_computeNormals){
-    scheduleComputeNormals(               sched, patches, matls);
+    if(flags->d_useTriangles){
+      triangleTasks->scheduleComputeNormalsTri(  sched, patches, mpm_matls_sub,
+                                                          triangle_matls_sub,
+                                                          all_matls);
+    } else {
+      scheduleComputeNormals(             sched, patches, matls);
+    }
   }
   if(flags->d_useLogisticRegression){
     scheduleFindSurfaceParticles(         sched, patches, matls);
@@ -835,18 +912,26 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
-
-  if(flags->d_computeScaleFactor){
-    scheduleComputeParticleScaleFactor(   sched, patches, matls);
-  }
-  if(flags->d_doGranularMPM){ //MJ
-    scheduleGranularMPM(                  sched, patches, matls);
+  if(flags->d_useTriangles){
+    triangleTasks->scheduleUpdateTriangles(sched, patches, mpm_matls_sub,
+                                                          triangle_matls_sub,
+                                                          all_matls);
   }
 
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                sched, patches, matls);
+  if(flags->d_computeScaleFactor){
+    scheduleComputeParticleScaleFactor(   sched, patches, matls);
+    if(flags->d_useTriangles){
+      triangleTasks->scheduleComputeTriangleScaleFactor(sched, patches,
+                                                                triangle_matls);
+    }
+  }
   if(flags->d_refineParticles){
     scheduleAddParticles(                 sched, patches, matls);
+  }
+  if(flags->d_RefineTriangles){
+    triangleTasks->scheduleRefineTriangles(sched, patches, triangle_matls);
   }
 
   if(d_analysisModules.size() != 0){
@@ -858,7 +943,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-  SerialMPM::scheduleParticleRelocation(   sched, level,  matls, cz_matls);
+ SerialMPM::scheduleParticleRelocation(   sched, level,  matls, cz_matls,
+                                                                triangle_matls);
 
   //__________________________________
   //  on the fly analysis
@@ -877,7 +963,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
                                             const LevelP      & level,
                                             const MaterialSet * matls,
-                                            const MaterialSet * cz_matls)
+                                            const MaterialSet * cz_matls,
+                                            const MaterialSet * tri_matls)
 {
 
 
@@ -913,6 +1000,23 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
   }
 
   //__________________________________
+  // If needed concatenate the labels and matls that are passed into
+  // the ParticleRelocate
+  if(flags->d_useTriangles){
+
+    //update the mss
+    const MaterialSubset*  mss  = tri_matls->getSubset(0);
+    new_mss->addSubset( mss );
+
+    // update the labels
+    int numLabels = triangleTasks->d_triangleState_preReloc.size();
+    for( int i=0; i<numLabels; i++){
+      old_labels.push_back(triangleTasks->d_triangleState_preReloc[i]);
+      new_labels.push_back(triangleTasks->d_triangleState[i] );
+    }
+  }
+
+  //__________________________________
   //  create a new material set containing the
   //  the updated matlSubset.
   MaterialSet* newMatlSet = scinew MaterialSet();
@@ -931,8 +1035,6 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
     delete newMatlSet;
   }
 }
-
-
 
 //______________________________________________________________________
 //
@@ -4921,7 +5023,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
-      new_dw->getModifiable(pTempNew,   lb->pTemperatureLabel_preReloc,pset);
+      new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();

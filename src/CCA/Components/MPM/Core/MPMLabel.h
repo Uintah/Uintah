@@ -141,6 +141,8 @@ namespace Uintah {
       const VarLabel* gPositionF0Label;
       const VarLabel* gPositionF1Label;
       const VarLabel* gExternalForceLabel;
+      const VarLabel* gLSContactForceLabel;
+      const VarLabel* gInContactMatlLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
