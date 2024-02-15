@@ -120,6 +120,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed         = false;
   d_reductionVars->centerOfMass        = false;
   d_reductionVars->sumTransmittedForce = false;
+  d_reductionVars->externalforce       = false;
 
   //******* Hydro-mechanical coupling MPM
   d_coupledflow = false;
@@ -181,6 +182,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   d_reductionVars->accStrainEnergy= dataArchive->isLabelSaved("AccStrainEnergy");
   d_reductionVars->volDeformed    = dataArchive->isLabelSaved("TotalVolumeDeformed");
   d_reductionVars->centerOfMass   = dataArchive->isLabelSaved("CenterOfMassPosition");
+  d_reductionVars->externalforce  = dataArchive->isLabelSaved("SumExternalForce");
  
   if (!mpm_flag_ps)
     return;

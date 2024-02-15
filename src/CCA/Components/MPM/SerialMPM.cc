@@ -1098,6 +1098,27 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   t->computes(lb->pExtForceLabel_preReloc);
   t->computes(lb->pExternalHeatRateLabel_preReloc);
 
+  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
+  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  reduction_mss->add( global_mss->get(0) );
+
+  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
+
+  if( nMatls > 1 ){  // ignore for single matl problems
+    for (unsigned int m = 0; m < nMatls; m++ ) {
+      reduction_mss->add( mpm_mss->get(m) );
+    }
+  }
+
+  reduction_mss->addReference();
+
+    cout << "here#" << endl;
+  if(flags->d_reductionVars->externalforce){
+    cout << "HERE!" << endl;
+    t->computes(lb->SumExternalForceLabel, reduction_mss, Task::OutOfDomain);
+  }
+
   sched->addTask(t, patches, matls);
 }
 
@@ -4106,7 +4127,7 @@ void SerialMPM::computeCurrentParticleSize(const ProcessorGroup* ,
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
-                                   const MaterialSubset*,
+                                   const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
@@ -4157,13 +4178,16 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     }
   }
 
-
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing MPM::applyExternalLoads");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+
+    map<int,Vector> zeroV = initializeMap(Vector(0.));
+    map<int,Vector> sumExtForce = zeroV;
+    Vector allMatls_sumExtForce(0.0,0.0,0.0);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl =
@@ -4273,6 +4297,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
               } else {
                pExternalForce_new[idx]+=pbc->getForceVector(px[idx],force,time);
               }
+              allMatls_sumExtForce += pExternalForce_new[idx];
+              sumExtForce[dwi]     += pExternalForce_new[idx];
             } // loadCurveID >=0
            }  // loop over elements of the IntVector
           }
@@ -4335,6 +4361,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                             lb,flags,pExternalForce_new);
       }
     } // matl loop
+    if( flags->d_reductionVars->externalforce ){
+      new_dw->put( sumvec_vartype(allMatls_sumExtForce), 
+                   lb->SumExternalForceLabel, nullptr, -1);
+
+      new_dw->put_sum_vartype( sumExtForce, lb->SumExternalForceLabel, matls);
+    }
   }  // patch loop
 }
 

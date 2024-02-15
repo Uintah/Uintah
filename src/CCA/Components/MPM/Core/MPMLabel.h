@@ -199,6 +199,7 @@ namespace Uintah {
       const VarLabel* RigidReactionForceLabel;
       const VarLabel* RigidReactionTorqueLabel;
       const VarLabel* TotalLocalizedParticleLabel;
+      const VarLabel* SumExternalForceLabel;
 
       const VarLabel* pCellNAPIDLabel;
 

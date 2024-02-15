@@ -517,6 +517,9 @@ MPMLabel::MPMLabel()
   TotalLocalizedParticleLabel = VarLabel::create("TotalLocalizedParticle",
                                    sumlong_vartype::getTypeDescription());
 
+  SumExternalForceLabel = VarLabel::create( "SumExternalForce",
+                                 sumvec_vartype::getTypeDescription() );
+
 
   // for assigning particle ids
   pCellNAPIDLabel =
@@ -709,6 +712,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(RigidReactionTorqueLabel);
   VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
+  VarLabel::destroy(SumExternalForceLabel);
 
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
