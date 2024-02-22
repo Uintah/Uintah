@@ -836,8 +836,8 @@ UnifiedScheduler::runTasks( int thread_id )
         MPIScheduler::initiateReduction(readyTask);
       }
       else {
-	// run CPU task.
-	runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
+        // run CPU task.
+        runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
       }
     }
     else {

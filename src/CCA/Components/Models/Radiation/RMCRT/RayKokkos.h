@@ -114,7 +114,7 @@ namespace Uintah{
 
     int    regionLo[3];          // Never use these regionLo/Hi in the kernel
     int    regionHi[3];          // They vary on every patch and must
-				 // be passed into the kernel
+                                 // be passed into the kernel
     int    refinementRatio[3];
     //int    index;                // level index
     //bool   hasFinerLevel;
@@ -364,7 +364,7 @@ namespace Uintah{
       // const VarLabel* d_boundFluxFiltLabel;
 
       bool      m_use_virtual_ROI {false};  // Use virtual ROI set in
-					    // environment variable VIR_ROI
+                                            // environment variable VIR_ROI
       IntVector m_virtual_ROI {IntVector(0,0,0)};
 
       //__________________________________

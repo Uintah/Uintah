@@ -401,7 +401,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
       {
         Kokkos::Profiling::pushRegion("OpenMP Parallel");
 
-	omp_set_num_threads(num_threads);
+        omp_set_num_threads(num_threads);
 
         #pragma omp parallel
         {

@@ -57,7 +57,7 @@ namespace Uintah {
    class InputContext {
    public:
       InputContext(int fd, const char* filename, long cur)
-	 : fd(fd), filename(filename), cur(cur)
+         : fd(fd), filename(filename), cur(cur)
       {
       }
       ~InputContext() {}

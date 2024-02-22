@@ -89,7 +89,7 @@ class UnifiedScheduler : public MPIScheduler  {
     virtual ~UnifiedScheduler();
 
     virtual void problemSetup( const ProblemSpecP & prob_spec,
-			       const MaterialManagerP & materialManager );
+                               const MaterialManagerP & materialManager );
 
     virtual SchedulerP createSubScheduler();
 

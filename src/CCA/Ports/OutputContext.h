@@ -59,7 +59,7 @@ namespace Uintah {
    class OutputContext {
    public:
       OutputContext(int fd, const char* filename, long cur, ProblemSpecP varnode, bool outputDoubleAsFloat = false)
-	: fd(fd), filename(filename), cur(cur), varnode(varnode), outputDoubleAsFloat(outputDoubleAsFloat)
+        : fd(fd), filename(filename), cur(cur), varnode(varnode), outputDoubleAsFloat(outputDoubleAsFloat)
       {
       }
       ~OutputContext() {}

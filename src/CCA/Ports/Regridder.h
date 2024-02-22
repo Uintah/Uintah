@@ -114,7 +114,7 @@ WARNING
 
     //! Schedules task to dilate existing error flags
     virtual void scheduleDilation(const LevelP& level,
-				  const bool isLockstepAMR) = 0;
+                                  const bool isLockstepAMR) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid) = 0;

@@ -195,7 +195,7 @@ ProfileDriver::outputError( const GridP currentGrid )
 
       if(d_myworld->myRank()==0 && g_profile_stats.active())
       {
-	g_profile_stats << "Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << std::endl;
+        g_profile_stats << "Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << std::endl;
       }
     }
   }
@@ -269,7 +269,7 @@ ProfileDriver::outputError( const GridP currentGrid )
 
         if(proc==maxLocm)
         {
-	  if(d_myworld->myRank()==0 && g_profile_stats.active())
+          if(d_myworld->myRank()==0 && g_profile_stats.active())
           {
             g_profile_stats << "    level: " << l << " region: " << regions[r] << " measured:" << measured_sum[l][r] << " predicted:" << predicted_sum[l][r] << std::endl;
           }

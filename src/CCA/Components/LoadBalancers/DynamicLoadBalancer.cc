@@ -892,12 +892,12 @@ DynamicLoadBalancer::needRecompile( const GridP & grid )
     do_check = true;
   }
   else if (m_lb_interval != 0 &&
-	   simTime >= m_last_lb_simTime + m_lb_interval) {
+           simTime >= m_last_lb_simTime + m_lb_interval) {
     m_last_lb_simTime = simTime;
     do_check = true;
   }
   else if ((simTime == 0 && d_collectParticles == true) ||
-	   m_check_after_restart) {
+           m_check_after_restart) {
     // do AFTER initialization time step too (no matter how much init
     // regridding), so we can compensate for new particles
     do_check = true;

@@ -109,12 +109,12 @@ GPUMemoryPool::allocateMemoryFromPool(unsigned int device_id,
       // Allocate the memory.
       std::string label;
       if(name == nullptr)
-	label = std::string("device");
+        label = std::string("device");
       else
-	label = std::string(name);
+        label = std::string(name);
 
       addr =
-	Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
+        Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(label, memSize);
 
       if (gpu_stats.active()) {
         cerrLock.lock();

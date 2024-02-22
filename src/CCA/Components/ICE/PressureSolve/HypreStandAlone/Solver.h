@@ -146,8 +146,8 @@ class Solver {
                              const HYPRE_SStructGrid& grid,
                              const HYPRE_SStructStencil& stencil);
   void makeUnderlyingIdentity(const Counter level,
-			      const HYPRE_SStructStencil& stencil,
-			      const Box& coarseUnderFine);
+                              const HYPRE_SStructStencil& stencil,
+                              const Box& coarseUnderFine);
   void makeLinearSystem(const Hierarchy& hier,
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);

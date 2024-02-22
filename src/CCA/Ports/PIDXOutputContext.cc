@@ -292,7 +292,7 @@ PIDXOutputContext::initialize( const string       & filename,
                                const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
-			             PIDX_point     dim,
+                                     PIDX_point     dim,
                                const int            typeOutput )
 {
   if(dbgPIDX.active())

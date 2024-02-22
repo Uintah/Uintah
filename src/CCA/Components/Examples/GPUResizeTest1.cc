@@ -78,7 +78,7 @@ void GPUResizeTest1::problemSetup( const ProblemSpecP & params
                            ,       GridP        & /*grid*/
                            )
 {
-  ProblemSpecP GPUResizeTest = params->findBlock("Poisson");	//not chaning ups file format
+  ProblemSpecP GPUResizeTest = params->findBlock("Poisson");    //not chaning ups file format
 
   GPUResizeTest->require("delt", delt_);
 
@@ -312,8 +312,8 @@ void GPUResizeTest1::timeAdvance1( const PatchSubset* patches,
       newphi(i, j, k) = (1. / 6)
           * ( phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
               phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) +
-			  phi(i + 2, j, k) + phi(i - 2, j, k) + phi(i, j + 2, k) +
-			  phi(i, j - 2, k) + phi(i, j, k + 2) + phi(i, j, k - 2) );
+                          phi(i + 2, j, k) + phi(i - 2, j, k) + phi(i, j + 2, k) +
+                          phi(i, j - 2, k) + phi(i, j, k + 2) + phi(i, j, k - 2) );
 
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;

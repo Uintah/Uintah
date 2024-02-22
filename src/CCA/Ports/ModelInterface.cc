@@ -33,7 +33,7 @@
 using namespace Uintah;
 
 ModelInterface::ModelInterface(const ProcessorGroup* myworld,
-			       const MaterialManagerP materialManager)
+                               const MaterialManagerP materialManager)
   : UintahParallelComponent(myworld), m_materialManager(materialManager)
 {
 }

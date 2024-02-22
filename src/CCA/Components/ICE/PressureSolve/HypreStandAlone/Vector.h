@@ -165,11 +165,11 @@ class Vector : public Error {
       }
       Counter newLen  = len;
       if (newLen != _len) {
-        _len	= newLen;
+        _len    = newLen;
         if (_data) {
           DELETE_BRACKET(_data);
         }
-        _data	= scinew VAR [_len];
+        _data   = scinew VAR [_len];
       }
       if (fillPtr) _data = fillPtr;
     }

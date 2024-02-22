@@ -150,8 +150,8 @@ public:
   /// Reads the problem spec file for the LoadBalancer section, and looks 
   /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
   virtual void problemSetup( ProblemSpecP & pspec,
-			     GridP & grid,
-			     const MaterialManagerP & materialManager );
+                             GridP & grid,
+                             const MaterialManagerP & materialManager );
 
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet

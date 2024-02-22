@@ -131,7 +131,7 @@ void PortableDependencyTest::scheduleTask1Computes( const LevelP     & level
                                                   )
 {
   auto TaskDependencies = [&](Task* task) {
-	task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+        task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   };
 

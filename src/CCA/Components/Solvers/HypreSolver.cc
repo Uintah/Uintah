@@ -322,8 +322,8 @@ namespace Uintah {
         char *name =
           abi::__cxa_demangle(typeid(ExecSpace).name(), 0, 0, &status);
 
-	if( std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value &&
-	   !std::is_same<ExecSpace, Kokkos::OpenMP>::value) {
+        if( std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value &&
+           !std::is_same<ExecSpace, Kokkos::OpenMP>::value) {
           if(hypre_gpu == false) {
             printf("######  Error at file %s, line %d: "
                    "ExecSpace of HypreSolver task in Uintah is %s, "

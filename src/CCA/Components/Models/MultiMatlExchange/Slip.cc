@@ -917,10 +917,10 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
 
         H(gm,sm) = A_V / (Beta_t * meanFreePath[gm][c] * vol_frac_CC[sm][c]);  // The viscosity does not appear here because it's taken out of lambda
 
-	 if(H(gm,sm) > h(gm,sm)) {
-	   H(gm,sm) = h(gm,sm);
-	 }
-	 H(sm,gm) = H(gm,sm);
+         if(H(gm,sm) > h(gm,sm)) {
+           H(gm,sm) = h(gm,sm);
+         }
+         H(sm,gm) = H(gm,sm);
       }  // if a surface cell
 
       //__________________________________

@@ -89,10 +89,10 @@ namespace {
       // generic xmlNodes before they get to this portion of the code,
       // and this is why we need to do this test.)
       if( node->type == XML_ATTRIBUTE_NODE || node->type == XML_TEXT_NODE ) {
-	error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->parent->line << ")";
+        error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->parent->line << ")";
       }
       else {
-	error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->line << ")";
+        error << "See file: " << (const char *)( node->doc->URL ) << " (line #" << node->line << ")";
       }
     }
     else {
@@ -1259,7 +1259,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
         fdtag->childReqs_   = commonTag->childReqs_;
 
-	std::list<TagP>::iterator temp = iter;
+        std::list<TagP>::iterator temp = iter;
         iter++;
         needForwardDeclResolution.erase( temp );
       }
@@ -2146,57 +2146,57 @@ ProblemSpecReader::readInputFile( const std::string & filename,
     while( !done ) {
       result = fgets( line1, LINE_LENGTH, the_xml_file );
       if( result == nullptr ) {
-	done = true;
+        done = true;
       }
       else {
-	length = strlen( result );
-	if( length >= LINE_LENGTH-2 ) {
-	  throw ProblemSetupException( "Line too long... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
-	}
+        length = strlen( result );
+        if( length >= LINE_LENGTH-2 ) {
+          throw ProblemSetupException( "Line too long... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+        }
 
-	std::string node_name = line1;
-	collapse( node_name );
-	if( node_name == "<Patch>" ) {
+        std::string node_name = line1;
+        collapse( node_name );
+        if( node_name == "<Patch>" ) {
 
-	  result = fgets( line2, LINE_LENGTH, the_xml_file );
-	  result = fgets( line3, LINE_LENGTH, the_xml_file );
+          result = fgets( line2, LINE_LENGTH, the_xml_file );
+          result = fgets( line3, LINE_LENGTH, the_xml_file );
 
-	  std::string proc = line3;
-	  collapse( proc );
+          std::string proc = line3;
+          collapse( proc );
 
-	  if( proc.substr( 0, 6 ) == "<proc>" ) {
+          if( proc.substr( 0, 6 ) == "<proc>" ) {
 
-	    std::vector<char>   separators;
-	    separators.push_back( '<' );
-	    separators.push_back( '>' );
-	    std::vector<std::string> pieces = split_string( proc, separators );
-	    std::string num_str = pieces[3];
+            std::vector<char>   separators;
+            separators.push_back( '<' );
+            separators.push_back( '>' );
+            std::vector<std::string> pieces = split_string( proc, separators );
+            std::string num_str = pieces[3];
 
-	    int num = atoi( num_str.c_str() );
+            int num = atoi( num_str.c_str() );
 
-	    if( num == patches[ 1 ] ) { /// QWERTY FIXME actually search the vector...
+            if( num == patches[ 1 ] ) { /// QWERTY FIXME actually search the vector...
 
-	      std::vector<char> temp_line1( line1, line1 + length );
-	      my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
+              std::vector<char> temp_line1( line1, line1 + length );
+              my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
 
-	      length = strlen( line2 );
-	      std::vector<char> temp_line2( line2, line2 + length );
-	      my_xml_data.insert( my_xml_data.end(), temp_line2.begin(), temp_line2.end() );
+              length = strlen( line2 );
+              std::vector<char> temp_line2( line2, line2 + length );
+              my_xml_data.insert( my_xml_data.end(), temp_line2.begin(), temp_line2.end() );
 
-	      length = strlen( line3 );
-	      std::vector<char> temp_line3( line3, line3 + length );
-	      my_xml_data.insert( my_xml_data.end(), temp_line3.begin(), temp_line3.end() );
-	    }
+              length = strlen( line3 );
+              std::vector<char> temp_line3( line3, line3 + length );
+              my_xml_data.insert( my_xml_data.end(), temp_line3.begin(), temp_line3.end() );
+            }
 
-	  }
-	  else {
-	    throw ProblemSetupException( "Did not find <proc>... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
-	  }
-	}
-	else {
-	  std::vector<char> temp_line1( line1, line1 + length );
-	  my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
-	}
+          }
+          else {
+            throw ProblemSetupException( "Did not find <proc>... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+          }
+        }
+        else {
+          std::vector<char> temp_line1( line1, line1 + length );
+          my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
+        }
       }
     } // end while()
 

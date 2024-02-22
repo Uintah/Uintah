@@ -187,12 +187,12 @@ public:
                                   );
   // Double
   virtual std::map<int,double> get_sum_vartypeD( const VarLabel       * label
-					       , const MaterialSubset * matls
-						 );
+                                               , const MaterialSubset * matls
+                                                 );
   // Vector
   virtual std::map<int,Vector> get_sum_vartypeV( const VarLabel       * label
-					       , const MaterialSubset * matls
-						 );
+                                               , const MaterialSubset * matls
+                                                 );
 
   // Put a map filled with reductionVars
   // C++ doesn't allow templated Virtual methods
