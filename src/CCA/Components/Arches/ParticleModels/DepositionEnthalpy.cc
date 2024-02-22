@@ -261,39 +261,39 @@ void DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
           d_energy_ash = 0;
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
             if (container_flux_ind[pp]==0) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==1) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==2) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==3) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==4) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
             } else {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_temperature = pT[c+_d[container_flux_ind[pp]]];//K
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
             }

@@ -226,8 +226,8 @@ ShrinkageRate::computeModel( const ProcessorGroup * pc,
     // Parallel Loop
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for( range, [&](int i, int j, int k) {
-    	//shr_rate(i,j,k) = size_rate(i,j,k)*weight(i,j,k)/m_scaling_const_length;
-    	shr_rate(i,j,k) = size_rate(i,j,k);
+        //shr_rate(i,j,k) = size_rate(i,j,k)*weight(i,j,k)/m_scaling_const_length;
+        shr_rate(i,j,k) = size_rate(i,j,k);
     });
     
   }//end patch loop

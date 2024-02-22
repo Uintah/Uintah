@@ -411,43 +411,43 @@ void DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
             if (container_flux_ind[pp]==0) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               //
               flux_impact = std::abs(imp_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==1) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               //
               flux_impact = std::abs(imp_x[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==2) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               //
               flux_impact = std::abs(imp_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==3) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               //
               flux_impact = std::abs(imp_y[c+_fd[container_flux_ind[pp]]]);
             } else if (container_flux_ind[pp]==4) {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
               //
               flux_impact = std::abs(imp_z[c+_fd[container_flux_ind[pp]]]);
             } else {
-	            particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
-	            particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
+                    particle_diameter = dp[c+_d[container_flux_ind[pp]]];//m
+                    particle_volume = M_PI/6.*particle_diameter*particle_diameter*particle_diameter;//m^3
               particle_density = rhop[c+_d[container_flux_ind[pp]]];
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
               //
@@ -465,8 +465,8 @@ void DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
             d_velocity += d_flow;
             // The total cell surface area exposed to radiation:
             total_area_face += area_face[container_flux_ind[pp]];
-	          env_flow_rate += d_flow; // m^3 / s * dp
-	          env_flow_rate_d += d_flow * particle_diameter; // m^3 / s
+                  env_flow_rate += d_flow; // m^3 / s * dp
+                  env_flow_rate_d += d_flow * particle_diameter; // m^3 / s
 
             // particle that reach the walls but not are deposited
             const double ash_frac2 = _mass_ash[n]/mp; //fraction of ash in particle without  _retained_deposit_factor

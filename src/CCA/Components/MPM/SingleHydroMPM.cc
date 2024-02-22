@@ -4293,7 +4293,7 @@ void SingleHydroMPM::InterpolateParticleToGridFilter(const ProcessorGroup*,
             new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
             constParticleVariable<double> pPorePressure;
-            NCVariable<double>		      gPorePressure;
+            NCVariable<double>                gPorePressure;
             new_dw->get(pPorePressure, Hlb->pPorePressureLabel_preReloc, pset);
             new_dw->allocateAndPut(gPorePressure, Hlb->gPorePressureFilterLabel, dwi, patch);
             gPorePressure.initialize(0.0);

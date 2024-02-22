@@ -26,12 +26,12 @@
  */
 
 // C++ headers
-#include <cstring>					// memcpy
-#include <cmath>					// sqrt
-#include <algorithm>				// min, max
+#include <cstring>                                      // memcpy
+#include <cmath>                                        // sqrt
+#include <algorithm>                            // min, max
 #include <complex>
-#include <sstream>					// std::cerr, std::cout, std::endl
-#include <stdexcept>				// std::runtime_error
+#include <sstream>                                      // std::cerr, std::cout, std::endl
+#include <stdexcept>                            // std::runtime_error
 #include <iostream>
 #include <fstream>              // ifstream
 #include <iomanip>                              // std::setw, std::setprecision
@@ -41,7 +41,7 @@
 #include <stdio.h>              // printf()
 
 // Posix Headers
-#include <unistd.h>				// getpid()
+#include <unistd.h>                             // getpid()
 
 // PTR headers
 #include "MersenneTwister.h"    // MTRand class
@@ -55,7 +55,7 @@
 // GFMS headers (Granular Flow Multi Stage)
 #include "GFMS_full.h" 
 
-namespace PTR	// Portable TongeRamesh
+namespace PTR   // Portable TongeRamesh
 {
   std::string getHistVarName(const int histVarNum){
     std::string histVarName("unknown");
@@ -764,7 +764,7 @@ namespace PTR	// Portable TongeRamesh
   {
     flawDistributionData flawDistData;
     flawDistData.numCrackFamilies = (int)std::floor(flawDistArray[0]+0.5);
-	flawDistData.meanFlawSize     = flawDistArray[1];
+        flawDistData.meanFlawSize     = flawDistArray[1];
     flawDistData.flawDensity      = flawDistArray[2];
     flawDistData.stdFlawSize      = flawDistArray[3];
     if(fabs(flawDistArray[4]) < 0.1){
@@ -777,16 +777,16 @@ namespace PTR	// Portable TongeRamesh
       flawDistData.type = "unknown";
     }
     flawDistData.minFlawSize = flawDistArray[5];
-	flawDistData.maxFlawSize = flawDistArray[6];
-	flawDistData.exponent    = flawDistArray[7];
-	flawDistData.randomizeDist = std::fabs(flawDistArray[8])>0.1;
-	flawDistData.randomSeed    = (int)std::floor(flawDistArray[9]+0.5);
+        flawDistData.maxFlawSize = flawDistArray[6];
+        flawDistData.exponent    = flawDistArray[7];
+        flawDistData.randomizeDist = std::fabs(flawDistArray[8])>0.1;
+        flawDistData.randomSeed    = (int)std::floor(flawDistArray[9]+0.5);
     flawDistData.randomMethod  = (int)std::floor(flawDistArray[10]+0.5);
-	flawDistData.binBias       = flawDistArray[11];
-	flawDistData.useEtaField = false;
+        flawDistData.binBias       = flawDistArray[11];
+        flawDistData.useEtaField = false;
     flawDistData.etaFilename = "N/A";
-	flawDistData.useSizeField = false;
-	flawDistData.sizeFilename = "N/A";
+        flawDistData.useSizeField = false;
+        flawDistData.sizeFilename = "N/A";
     return flawDistData;
   }
   
@@ -800,32 +800,32 @@ namespace PTR	// Portable TongeRamesh
                        CMData *eosData
                        ){
     // Flags:
-	flags->useDamage                  = std::fabs(matParamArray[0])>0.1;
-	flags->usePlasticity              = std::fabs(matParamArray[1])>0.1;
-	flags->useGranularPlasticity      = std::fabs(matParamArray[2])>0.1;
-	flags->useOldStress               = std::fabs(matParamArray[3])>0.1;
-	flags->artificialViscosity        = std::fabs(matParamArray[4])>0.1;
-	flags->artificialViscosityHeating = std::fabs(matParamArray[5])>0.1;
-	// Unused flags:
+        flags->useDamage                  = std::fabs(matParamArray[0])>0.1;
+        flags->usePlasticity              = std::fabs(matParamArray[1])>0.1;
+        flags->useGranularPlasticity      = std::fabs(matParamArray[2])>0.1;
+        flags->useOldStress               = std::fabs(matParamArray[3])>0.1;
+        flags->artificialViscosity        = std::fabs(matParamArray[4])>0.1;
+        flags->artificialViscosityHeating = std::fabs(matParamArray[5])>0.1;
+        // Unused flags:
     flags->implicit        = false;
-	flags->with_color      = false;
-	flags->doErosion       = false;
-	flags->allowNoTension  = false;
-	flags->allowNoShear    = false;
+        flags->with_color      = false;
+        flags->doErosion       = false;
+        flags->allowNoTension  = false;
+        flags->allowNoShear    = false;
     flags->setStressToZero = false;
 
     // ModelData:
     initialData->Bulk        = matParamArray[6];
-	initialData->tauDev      = matParamArray[7];
+        initialData->tauDev      = matParamArray[7];
     initialData->rho_orig    = matParamArray[8];
     initialData->FlowStress  = matParamArray[9];
-	initialData->K           = matParamArray[10];
-	initialData->Alpha       = matParamArray[11];
-	initialData->timeConstant= matParamArray[12];
+        initialData->K           = matParamArray[10];
+        initialData->Alpha       = matParamArray[11];
+        initialData->timeConstant= matParamArray[12];
 
     // flawDistributionData:
     flawDistData->numCrackFamilies = (int)std::floor(matParamArray[13]+0.5);
-	flawDistData->meanFlawSize     = matParamArray[14];
+        flawDistData->meanFlawSize     = matParamArray[14];
     flawDistData->flawDensity      = matParamArray[15];
     flawDistData->stdFlawSize      = matParamArray[16];
     if(fabs(matParamArray[17]) < 0.1){
@@ -838,41 +838,41 @@ namespace PTR	// Portable TongeRamesh
       flawDistData->type = "unknown";
     }
     flawDistData->minFlawSize = matParamArray[18];
-	flawDistData->maxFlawSize = matParamArray[19];
-	flawDistData->exponent    = matParamArray[20];
-	flawDistData->randomizeDist = std::fabs(matParamArray[21])>0.1;
-	flawDistData->randomSeed    = (int)std::floor(matParamArray[22]+0.5);
+        flawDistData->maxFlawSize = matParamArray[19];
+        flawDistData->exponent    = matParamArray[20];
+        flawDistData->randomizeDist = std::fabs(matParamArray[21])>0.1;
+        flawDistData->randomSeed    = (int)std::floor(matParamArray[22]+0.5);
     flawDistData->randomMethod  = (int)std::floor(matParamArray[23]+0.5);
-	flawDistData->binBias       = matParamArray[24];
-	flawDistData->useEtaField = false;
+        flawDistData->binBias       = matParamArray[24];
+        flawDistData->useEtaField = false;
     flawDistData->etaFilename = "N/A";
-	flawDistData->useSizeField = false;
-	flawDistData->sizeFilename = "N/A";
+        flawDistData->useSizeField = false;
+        flawDistData->sizeFilename = "N/A";
     // Brittle Damage data
     brittle_damage->printDamage = false;
-	brittle_damage->KIc         = matParamArray[25];
-	brittle_damage->mu          = matParamArray[26];
-	brittle_damage->phi         = matParamArray[27];
-	brittle_damage->cgamma      = matParamArray[28];
-	brittle_damage->alpha       = matParamArray[29];
-	brittle_damage->criticalDamage = matParamArray[30];
-	brittle_damage->maxDamage      = matParamArray[31];
+        brittle_damage->KIc         = matParamArray[25];
+        brittle_damage->mu          = matParamArray[26];
+        brittle_damage->phi         = matParamArray[27];
+        brittle_damage->cgamma      = matParamArray[28];
+        brittle_damage->alpha       = matParamArray[29];
+        brittle_damage->criticalDamage = matParamArray[30];
+        brittle_damage->maxDamage      = matParamArray[31];
     brittle_damage->usePlaneStrain = std::fabs(matParamArray[32])>0.1;
-	brittle_damage->maxDamageInc   = matParamArray[33];
+        brittle_damage->maxDamageInc   = matParamArray[33];
     brittle_damage->useDamageTimestep = std::fabs(matParamArray[34])>0.1;
     brittle_damage->useOldStress      = flags->useOldStress;
-	brittle_damage->dt_increaseFactor = matParamArray[35];
+        brittle_damage->dt_increaseFactor = matParamArray[35];
     brittle_damage->incInitialDamage  = std::fabs(matParamArray[36])>0.1;
     brittle_damage->doFlawInteraction = std::fabs(matParamArray[37])>0.1;
     // granularPlasticityData
     gpData->timeConstant = matParamArray[38];
-	gpData->JGP_loc      = matParamArray[39];
-	gpData->A            = matParamArray[40];
-	gpData->B            = matParamArray[41];
+        gpData->JGP_loc      = matParamArray[39];
+        gpData->A            = matParamArray[40];
+        gpData->B            = matParamArray[41];
     gpData->yeildSurfaceType = std::fabs(matParamArray[42] + 0.5);
-	gpData->Pc           = matParamArray[43];
-	gpData->alpha_e      = matParamArray[44];
-	gpData->Pe           = matParamArray[45];
+        gpData->Pc           = matParamArray[43];
+        gpData->alpha_e      = matParamArray[44];
+        gpData->Pe           = matParamArray[45];
     gpData->GPModelType  = std::fabs(matParamArray[46]-1.0)<0.1 ? PTR::SingleSurface : PTR::TwoSurface ;
     // new and imporved model
     // It would be better to unpack these using:
@@ -920,7 +920,7 @@ namespace PTR	// Portable TongeRamesh
   }
   // int checkmatparams(const double matParamArray[PTR_NUM_MAT_PARAMS]);
 
-  double artificialBulkViscosity(	double Dkk, 
+  double artificialBulkViscosity(       double Dkk, 
                                     double c_bulk, 
                                     double rho,
                                     double dx,
@@ -941,7 +941,7 @@ namespace PTR	// Portable TongeRamesh
 
   // Compute the value and derivitive of the gp yeild function in the
   // Rendulic plane
-  double calc_yeildFunc_g_gs_gp(	const granularPlasticityData gpData,
+  double calc_yeildFunc_g_gs_gp(        const granularPlasticityData gpData,
                                     const double sigma_s,
                                     const double sigma_p,
                                     double *gs, 
@@ -985,40 +985,40 @@ namespace PTR	// Portable TongeRamesh
                             const double parentDamage,
                             const PState state)
   {
-	double Dw = wingDamage;
+        double Dw = wingDamage;
 
-	// Grechka and Kachanov 2006 softening for two sets of flaws:
-	double shear_0 = state.initialShearModulus;
-	double bulk_0 =  state.initialBulkModulus;
-	double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
-	double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
+        // Grechka and Kachanov 2006 softening for two sets of flaws:
+        double shear_0 = state.initialShearModulus;
+        double bulk_0 =  state.initialBulkModulus;
+        double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
+        double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
 
-	double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
-	double Z_r = Z_n/(1-0.5*nu_0);
-	double Z_c = -Z_n/8.0;
+        double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
+        double Z_r = Z_n/(1-0.5*nu_0);
+        double Z_c = -Z_n/8.0;
 
-	double mat_s_1111 = 1/E_0;
-	double mat_s_2222 = 1/E_0;
-	double mat_s_3333 = 1/E_0;
-	double mat_s_1212 = (1+nu_0)/(2*E_0);
-	double mat_s_1122 = -nu_0/E_0;
-	double mat_s_1133 = -nu_0/E_0;
-	double mat_s_2233 = -nu_0/E_0;
+        double mat_s_1111 = 1/E_0;
+        double mat_s_2222 = 1/E_0;
+        double mat_s_3333 = 1/E_0;
+        double mat_s_1212 = (1+nu_0)/(2*E_0);
+        double mat_s_1122 = -nu_0/E_0;
+        double mat_s_1133 = -nu_0/E_0;
+        double mat_s_2233 = -nu_0/E_0;
 
-	// Add the compliance from the wing cracks:
-	double prefactor = 0.25*Z_r*Dw;
-	mat_s_2222 += prefactor*(4.0 - 2.0*nu_0);
-	mat_s_1212 += prefactor*(1.0);
+        // Add the compliance from the wing cracks:
+        double prefactor = 0.25*Z_r*Dw;
+        mat_s_2222 += prefactor*(4.0 - 2.0*nu_0);
+        mat_s_1212 += prefactor*(1.0);
 
-	// Add the coupling term
-	mat_s_1122 += Z_c * Dw;
-	mat_s_2233 += Z_c * Dw;
+        // Add the coupling term
+        mat_s_1122 += Z_c * Dw;
+        mat_s_2233 += Z_c * Dw;
 
-	// Elastic properties of the inclusion
-	double kappa = (3-nu_0)/(1+nu_0); // Plane Stress
+        // Elastic properties of the inclusion
+        double kappa = (3-nu_0)/(1+nu_0); // Plane Stress
 
-	// For Plane strain
-	if(brittle_damage.usePlaneStrain) {
+        // For Plane strain
+        if(brittle_damage.usePlaneStrain) {
       // Invert the stiffness matrix (only the upper 9 elements need to be inverted
       // to calculate the full 3D damaged stiffness matrix
       Matrix3x3 s_upper(mat_s_1111, mat_s_1122, mat_s_1133,
@@ -1034,29 +1034,29 @@ namespace PTR	// Portable TongeRamesh
       mat_s_1122 = -c_upper.get(0,1)/denom_red;
 
       kappa = 3-4*nu_0;
-	}
+        }
 
 
-	//  ---------- Compute the stress in the Ellipse using Junwei's update ----------
+        //  ---------- Compute the stress in the Ellipse using Junwei's update ----------
 
-	// Define the ellipse: These equations need to be corrected for three
-	// dimensional flaw densities
-	double eta2d = pow(eta3d, 2.0/3.0);
-	double ea = 1.4416*sqrt(0.5/eta2d);
-	double eb = 1/(M_PI*ea*eta2d);
+        // Define the ellipse: These equations need to be corrected for three
+        // dimensional flaw densities
+        double eta2d = pow(eta3d, 2.0/3.0);
+        double ea = 1.4416*sqrt(0.5/eta2d);
+        double eb = 1/(M_PI*ea*eta2d);
 
-	double c = 0.5*(ea+eb)*sqrt(M_PI*eta2d);
-	double d = 0.5*(ea-eb)*sqrt(M_PI*eta2d);
+        double c = 0.5*(ea+eb)*sqrt(M_PI*eta2d);
+        double d = 0.5*(ea-eb)*sqrt(M_PI*eta2d);
 
-	// Solve for the complex material properties g1 and g2: (equation 6.9.2 Green and Zerna)
-	double aa = mat_s_2222;
-	double bb = -2.0*(mat_s_1122 + 2.0*mat_s_1212);
-	double cc = mat_s_1111;
+        // Solve for the complex material properties g1 and g2: (equation 6.9.2 Green and Zerna)
+        double aa = mat_s_2222;
+        double bb = -2.0*(mat_s_1122 + 2.0*mat_s_1212);
+        double cc = mat_s_1111;
 
-	double descriminant = bb*bb - 4*aa*cc;
+        double descriminant = bb*bb - 4*aa*cc;
 
 
-	if(descriminant>0) {
+        if(descriminant>0) {
       // There are 2 real roots so g1 and g2 are real:
       double ap1 = (-bb+sqrt(descriminant))/(2.0*aa);
       double ap2 = (-bb-sqrt(descriminant))/(2.0*aa);
@@ -1150,7 +1150,7 @@ namespace PTR	// Portable TongeRamesh
         incStress[1] = matrixStress[1];
         incStress[2] = 0.0;
       }
-	} else {
+        } else {
       // The roots are complex and should be complex conjegutes of
       // eachother.
       std::complex<double> ap1,ap2;
@@ -1307,13 +1307,13 @@ namespace PTR	// Portable TongeRamesh
         incStress[1] = matrixStress[1];
         incStress[2] = 0.0;
       }
-	} // End of if(descriminant>0)
+        } // End of if(descriminant>0)
   }
 
 
   // Compute the damage growth, returns damage at the end of the
   // increment.
-  double calculateDamageGrowth(	const BrittleDamageData brittle_damage,
+  double calculateDamageGrowth( const BrittleDamageData brittle_damage,
                                 const Matrix3x3 stress,
                                 const double N[],
                                 const double s[],
@@ -1646,7 +1646,7 @@ namespace PTR	// Portable TongeRamesh
 
         // Compute the changes in energy:
         double del_Thermal = state->specificHeat * delT * rho_orig *
-          eos->computeIsentropicTemperatureRate(	pTemperature, 
+          eos->computeIsentropicTemperatureRate(        pTemperature, 
                                                 rho_orig,
                                                 state->density,
                                                 (JGP - pGPJ_old)*invDelT/(JGP)
@@ -1668,9 +1668,9 @@ namespace PTR	// Portable TongeRamesh
             p_new = flags.useDamage ?
               computePressure(eos, identity * cbrt(JEL), (*state), pDamage_new) :
               computePressure(eos, identity*cbrt(JEL), (*state), 0);
-						
+                                                
             del_Thermal = state->specificHeat * delT * rho_orig *
-              eos->computeIsentropicTemperatureRate(	pTemperature, 
+              eos->computeIsentropicTemperatureRate(    pTemperature, 
                                                     rho_orig,
                                                     state->density,
                                                     (JGP - pGPJ_old)*invDelT/(JGP)
@@ -1831,76 +1831,76 @@ namespace PTR	// Portable TongeRamesh
                          const PState state,
                          const double currentDamage)
   {
-	double J = F.determinant();
+        double J = F.determinant();
 
-	double damageFactor = calculateBulkPrefactor(currentDamage, state, J);
+        double damageFactor = calculateBulkPrefactor(currentDamage, state, J);
 
-	double P_hat = J*eos->computePressure(state);
+        double P_hat = J*eos->computePressure(state);
 
-	return P_hat*damageFactor;
+        return P_hat*damageFactor;
   }
 
-  double calculateBulkPrefactor(	const double currentDamage,
+  double calculateBulkPrefactor(        const double currentDamage,
                                     const PState state,
                                     const double J
                                     )
   {
-	double shear_0 = state.initialShearModulus;
-	double bulk_0 =  state.initialBulkModulus;
-	double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
-	double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
+        double shear_0 = state.initialShearModulus;
+        double bulk_0 =  state.initialBulkModulus;
+        double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
+        double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
 
-	double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
-	double Z_c = -Z_n/8.0;
+        double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
+        double Z_c = -Z_n/8.0;
 
-	double inv_prefactor = 1 + bulk_0 * (Z_n + 4*Z_c) * currentDamage;
+        double inv_prefactor = 1 + bulk_0 * (Z_n + 4*Z_c) * currentDamage;
 
     return 1/inv_prefactor;
   }
 
   // Compute the shear modulus from the current damage level:
-  double calculateShearPrefactor(	const double currentDamage,
+  double calculateShearPrefactor(       const double currentDamage,
                                     const PState state
                                     )
   {
-	double shear_0 = state.initialShearModulus;
-	double bulk_0 =  state.initialBulkModulus;
-	double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
-	double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
+        double shear_0 = state.initialShearModulus;
+        double bulk_0 =  state.initialBulkModulus;
+        double nu_0 = (3*bulk_0-2*shear_0)/(6*bulk_0+2*shear_0);
+        double E_0 = 9*bulk_0*shear_0/(3*bulk_0+shear_0);
 
-	double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
-	double Z_r = Z_n/(1-0.5*nu_0);
-	double Z_c = -Z_n/8.0;
+        double Z_n = 16 * (1-nu_0*nu_0)/(3*E_0);
+        double Z_r = Z_n/(1-0.5*nu_0);
+        double Z_c = -Z_n/8.0;
 
-	double inv_prefactor = 1 + shear_0 * 2.0/15.0 * (3*Z_r + 2*Z_n - 4*Z_c) * currentDamage;
+        double inv_prefactor = 1 + shear_0 * 2.0/15.0 * (3*Z_r + 2*Z_n - 4*Z_c) * currentDamage;
 
-	return 1/inv_prefactor;
+        return 1/inv_prefactor;
   }
 
-  double computeStableTimeStep(	const ModelData initialData,
+  double computeStableTimeStep( const ModelData initialData,
                                 const Vector3 pVelocity,
                                 const Vector3 dx,
                                 const double pMass,
                                 const double pVolume)
   {
-	// This is only called for the initial timestep - all other timesteps
-	// are computed as a side-effect of computeStressTensor
-	double c_dil = 0.0;
-	Vector3 WaveSpeed(1.e-12);
+        // This is only called for the initial timestep - all other timesteps
+        // are computed as a side-effect of computeStressTensor
+        double c_dil = 0.0;
+        Vector3 WaveSpeed(1.e-12);
 
-	double mu   = initialData.tauDev;
-	double bulk = initialData.Bulk;
+        double mu   = initialData.tauDev;
+        double bulk = initialData.Bulk;
 
 
-	if(pMass > 0) {
+        if(pMass > 0) {
       c_dil = sqrt((bulk + 4.*mu/3.)*pVolume/pMass);
-	} else {
+        } else {
       c_dil = 0.0;
-	}
-	WaveSpeed[0] = dx.x()/std::max(c_dil+fabs(pVelocity.x()),WaveSpeed.x());
-	WaveSpeed[1] = dx.y()/std::max(c_dil+fabs(pVelocity.y()),WaveSpeed.y());
-	WaveSpeed[2] = dx.z()/std::max(c_dil+fabs(pVelocity.z()),WaveSpeed.z());
-	return WaveSpeed.min();
+        }
+        WaveSpeed[0] = dx.x()/std::max(c_dil+fabs(pVelocity.x()),WaveSpeed.x());
+        WaveSpeed[1] = dx.y()/std::max(c_dil+fabs(pVelocity.y()),WaveSpeed.y());
+        WaveSpeed[2] = dx.z()/std::max(c_dil+fabs(pVelocity.z()),WaveSpeed.z());
+        return WaveSpeed.min();
   }
 
   void ComputeStressTensorInnerLoop(
@@ -3013,7 +3013,7 @@ namespace PTR	// Portable TongeRamesh
     if (flags.artificialViscosity) {
       double c_bulk = sqrt(state.bulkModulus/rho_cur);
       double Dkk = pDeformRate.trace();
-      *p_q_out = artificialBulkViscosity(	Dkk, c_bulk,
+      *p_q_out = artificialBulkViscosity(       Dkk, c_bulk,
                                         rho_cur, dx_ave,
                                         artificialViscosity);
       // Include the heating from artificial viscosity:
@@ -3362,4 +3362,4 @@ namespace PTR	// Portable TongeRamesh
 
   } // end postAdvectionFixup()
 
-}	// End namespace PTR
+}       // End namespace PTR

@@ -69,8 +69,8 @@ double USE_ERROR=0.5, SAVE_FOR_ERROR=1;    //these are values - 1st - when 'use'
 double CHGEPSINTOL=10e-9;
 double ADDTOLYIELD=0.8;
 double SUCTIONTOL=0.00000001;
-double TINY=1e-14;		//value used for example in checking whether we are not dividing by zero in CalcStressElast, volumetric strain must be also larger then tiny
-double PMIN=0.0001;			// value of minimum mean stress to calculate K in CalcStressElast
+double TINY=1e-14;              //value used for example in checking whether we are not dividing by zero in CalcStressElast, volumetric strain must be also larger then tiny
+double PMIN=0.0001;                     // value of minimum mean stress to calculate K in CalcStressElast
 int USE_NICE_SCHEME=0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,10 +341,10 @@ void MohrCoulomb::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("SpecVol",UI[12]);  // meridional yld prof param
   cm_ps->appendElement("PhiB",UI[13]);  // Fredlund shear angle, c=c+suction*tan(phib)
   cm_ps->appendElement("Usetransition",UI[14]); // undrained shear strength transition
-  cm_ps->appendElement("A1",UI[15]);	// water influence parameter
-  cm_ps->appendElement("B1",UI[16]);	// water influence parameter
-  cm_ps->appendElement("W",UI[17]);	// water content
-  cm_ps->appendElement("beta_rate",UI[18]);	// strain rate influence parameter
+  cm_ps->appendElement("A1",UI[15]);    // water influence parameter
+  cm_ps->appendElement("B1",UI[16]);    // water influence parameter
+  cm_ps->appendElement("W",UI[17]);     // water content
+  cm_ps->appendElement("beta_rate",UI[18]);     // strain rate influence parameter
   cm_ps->appendElement("strain_ref",UI[19]); // shear strain rate reference
   cm_ps->appendElement("shear_strain_rate",UI[20]); // shear strain rate
   cm_ps->appendElement("Usemodul",UI[21]); // modul with strain rate
@@ -500,7 +500,7 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     new_dw->get(pvolume_new,         lb->pVolumeLabel_preReloc,    pset);
-    new_dw->get(pxnew,	             lb->pXLabel_preReloc,         pset);
+    new_dw->get(pxnew,               lb->pXLabel_preReloc,         pset);
 
     std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -516,7 +516,7 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
                                  lb->pDeformationMeasureLabel_preReloc,  pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
-	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+        std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
@@ -600,46 +600,46 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
       }
       svarg[38] = n;
 
-	  // Compute Ko
-	  double s_xx = sigarg[0];
-	  double s_yy = sigarg[1];
-	  double s_xy = sigarg[3];
+          // Compute Ko
+          double s_xx = sigarg[0];
+          double s_yy = sigarg[1];
+          double s_xy = sigarg[3];
 
-	  svarg[39] = s_xx;
-	  svarg[40] = s_yy;
-	  svarg[45] = s_xy;
-	  double Ko = s_xx / s_yy;
-	  svarg[41] = Ko;
+          svarg[39] = s_xx;
+          svarg[40] = s_yy;
+          svarg[45] = s_xy;
+          double Ko = s_xx / s_yy;
+          svarg[41] = Ko;
 
-	  // SHear strain and shear strain rate
-	  double shear_strain_local = 0;
-	  double strain11 = svarg[28];
-	  double strain22 = svarg[29];
-	  double strain33 = svarg[30];
-	  double strain12 = svarg[31];
-	  double strain23 = svarg[32];
-	  double strain13 = svarg[33];
+          // SHear strain and shear strain rate
+          double shear_strain_local = 0;
+          double strain11 = svarg[28];
+          double strain22 = svarg[29];
+          double strain33 = svarg[30];
+          double strain12 = svarg[31];
+          double strain23 = svarg[32];
+          double strain13 = svarg[33];
 
-	  double e11 = Dlocal[0];
-	  double e22 = Dlocal[1];
-	  double e33 = Dlocal[2];
-	  double e12 = Dlocal[3];
-	  double e23 = Dlocal[4];
-	  double e13 = Dlocal[5];
-	  double shear_strain_rate = UI[20];
+          double e11 = Dlocal[0];
+          double e22 = Dlocal[1];
+          double e33 = Dlocal[2];
+          double e12 = Dlocal[3];
+          double e23 = Dlocal[4];
+          double e13 = Dlocal[5];
+          double shear_strain_rate = UI[20];
 
-	  double Use_regular = UI[42];
-	  double tFE = UI[43];
-	  double tShear = UI[44];
+          double Use_regular = UI[42];
+          double tFE = UI[43];
+          double tShear = UI[44];
 
-	  strain11 += e11 * dt;
-	  strain22 += e22 * dt;
-	  strain33 += e33 * dt;
-	  strain12 += e12 * dt;
-	  strain23 += e23 * dt;
-	  strain13 += e13 * dt;
+          strain11 += e11 * dt;
+          strain22 += e22 * dt;
+          strain33 += e33 * dt;
+          strain12 += e12 * dt;
+          strain23 += e23 * dt;
+          strain13 += e13 * dt;
 
-//	  shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + 
+//        shear_strain_local = 1.0 / 2.0*sqrt(2 * (pow((strain11 - strain22), 2.0) + 
 //                                                 pow((strain11 - strain33), 2.0) + 
 //                                                 pow((strain22 - strain33), 2.0)) +
 //                                            3.0*(pow(strain12, 2.0) + pow(strain13, 2.0) + pow(strain23, 2.0)));  
@@ -652,14 +652,14 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
           shear_strain_rate = 0.5*sqrt(2.0*(((e11 - e22)*(e11 - e22)) + (e11 - e33)*(e11 - e33) + (e22 - e33)*(e22 - e33)) +
                                        3.0*(e12*e12 + e13*e13 + e23*e23));
 
-	  svarg[28] = strain11;
-	  svarg[29] = strain22;
-	  svarg[30] = strain33;
-	  svarg[31] = strain12;
-	  svarg[32] = strain23;
-	  svarg[33] = strain13;
-	
-	  /*
+          svarg[28] = strain11;
+          svarg[29] = strain22;
+          svarg[30] = strain33;
+          svarg[31] = strain12;
+          svarg[32] = strain23;
+          svarg[33] = strain13;
+        
+          /*
 // Non local 
   double n_nonlocal = UI[46];
   double l_nonlocal = UI[47];
@@ -677,22 +677,22 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
   double r2 = 0;
 
   for (ParticleSubset::iterator iter1 = pset->begin();
-	  iter1 != pset->end(); iter1++) {
-	  particleIndex idx1 = *iter1;
+          iter1 != pset->end(); iter1++) {
+          particleIndex idx1 = *iter1;
 
-	  rx = pxnew[idx1].x() - pxnew[idx].x();
-	  ry = pxnew[idx1].y() - pxnew[idx].y();
-	  rz = pxnew[idx1].z() - pxnew[idx].z();
+          rx = pxnew[idx1].x() - pxnew[idx].x();
+          ry = pxnew[idx1].y() - pxnew[idx].y();
+          rz = pxnew[idx1].z() - pxnew[idx].z();
 
-	  r2 = rx * rx + ry * ry + rz * rz;
+          r2 = rx * rx + ry * ry + rz * rz;
 
-	  if (r2 <= (9*domain_nonlocal)) {
+          if (r2 <= (9*domain_nonlocal)) {
 
-		  weight = sqrt(r2)*exp(-r2/domain_nonlocal)/domain_nonlocal;
-	  }
-	  Up += shear_strain_local * weight*pvolume_new[idx1];
-	  Up1 += shear_strain_rate * weight*pvolume_new[idx1];
-	  Down += (weight*pvolume_new[idx1]);
+                  weight = sqrt(r2)*exp(-r2/domain_nonlocal)/domain_nonlocal;
+          }
+          Up += shear_strain_local * weight*pvolume_new[idx1];
+          Up1 += shear_strain_rate * weight*pvolume_new[idx1];
+          Down += (weight*pvolume_new[idx1]);
   }
 
   double shear_strain_nonlocal = 0;
@@ -709,10 +709,10 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
 
   if (Use_regular > 0)
   {
-	  if (shear_strain_nonlocal > elastic_strain) {
-		  shear_strain_nonlocal = shear_strain_nonlocal * tFE / tShear;
-		  shear_strain_rate_nonlocal = shear_strain_rate_nonlocal * tFE / tShear;
-	  }
+          if (shear_strain_nonlocal > elastic_strain) {
+                  shear_strain_nonlocal = shear_strain_nonlocal * tFE / tShear;
+                  shear_strain_rate_nonlocal = shear_strain_rate_nonlocal * tFE / tShear;
+          }
   }
 
   svarg[24] = shear_strain_local;
@@ -740,86 +740,86 @@ void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
       // ROTATE pstress_new: S=R*tensorSig*R^T
       pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
-	  /*
-	// Non local stress
-	  double n_nonlocal = UI[46];
-	  double l_nonlocal = UI[47];
+          /*
+        // Non local stress
+          double n_nonlocal = UI[46];
+          double l_nonlocal = UI[47];
 
-	  double domain_nonlocal = l_nonlocal * l_nonlocal;
-	  double Up0 = 0;
-	  double Up1 = 0;
-	  double Up2 = 0;
-	  double Up3 = 0;
-	  double Up4 = 0;
-	  double Up5 = 0;
-	  double Down = 0;
-	  //double Uptest = 0;
+          double domain_nonlocal = l_nonlocal * l_nonlocal;
+          double Up0 = 0;
+          double Up1 = 0;
+          double Up2 = 0;
+          double Up3 = 0;
+          double Up4 = 0;
+          double Up5 = 0;
+          double Down = 0;
+          //double Uptest = 0;
 
-	  double weight = 0;
-	  double rx = 0;
-	  double ry = 0;
-	  double rz = 0;
-	  double r2 = 0;
+          double weight = 0;
+          double rx = 0;
+          double ry = 0;
+          double rz = 0;
+          double r2 = 0;
 
-	  double s11 = pstress_new[idx](0,0);
-	  double s22 = pstress_new[idx](1,1);
-	  double s33 = pstress_new[idx](2,2);
-	  double s12 = pstress_new[idx](0,1);
-	  double s23 = pstress_new[idx](1,2);
-	  double s13 = pstress_new[idx](2,0);
+          double s11 = pstress_new[idx](0,0);
+          double s22 = pstress_new[idx](1,1);
+          double s33 = pstress_new[idx](2,2);
+          double s12 = pstress_new[idx](0,1);
+          double s23 = pstress_new[idx](1,2);
+          double s13 = pstress_new[idx](2,0);
 
-	  for (ParticleSubset::iterator iter1 = pset->begin();
-		  iter1 != pset->end(); iter1++) {
-		  particleIndex idx1 = *iter1;
+          for (ParticleSubset::iterator iter1 = pset->begin();
+                  iter1 != pset->end(); iter1++) {
+                  particleIndex idx1 = *iter1;
 
-		  rx = pxnew[idx1].x() - pxnew[idx].x();
-		  ry = pxnew[idx1].y() - pxnew[idx].y();
-		  rz = pxnew[idx1].z() - pxnew[idx].z();
+                  rx = pxnew[idx1].x() - pxnew[idx].x();
+                  ry = pxnew[idx1].y() - pxnew[idx].y();
+                  rz = pxnew[idx1].z() - pxnew[idx].z();
 
-		  r2 = rx * rx + ry * ry + rz * rz;
+                  r2 = rx * rx + ry * ry + rz * rz;
 
-		  if (r2 <= (9*domain_nonlocal)) {
+                  if (r2 <= (9*domain_nonlocal)) {
 
-			  weight = sqrt(r2)*exp(-r2/domain_nonlocal)/domain_nonlocal;
-		  }
-		  Up0 += s11 * weight*pvolume_new[idx1];
-		  Up1 += s22 * weight*pvolume_new[idx1];
-		  Up2 += s33 * weight*pvolume_new[idx1];
-		  Up3 += s12 * weight*pvolume_new[idx1];
-		  Up4 += s23 * weight*pvolume_new[idx1];
-		  Up5 += s13 * weight*pvolume_new[idx1];
-		  Down += (weight*pvolume_new[idx1]);
+                          weight = sqrt(r2)*exp(-r2/domain_nonlocal)/domain_nonlocal;
+                  }
+                  Up0 += s11 * weight*pvolume_new[idx1];
+                  Up1 += s22 * weight*pvolume_new[idx1];
+                  Up2 += s33 * weight*pvolume_new[idx1];
+                  Up3 += s12 * weight*pvolume_new[idx1];
+                  Up4 += s23 * weight*pvolume_new[idx1];
+                  Up5 += s13 * weight*pvolume_new[idx1];
+                  Down += (weight*pvolume_new[idx1]);
 
-		 //Uptest += idx1 * weight*pvolume_new[idx1];
+                 //Uptest += idx1 * weight*pvolume_new[idx1];
 
-		 //cerr << weight << ' ' << r2 << ' ' << domain_nonlocal << endl;
+                 //cerr << weight << ' ' << r2 << ' ' << domain_nonlocal << endl;
 
-	  }
+          }
 
-	  double Snonlocal[6];
-	  Snonlocal[0] = (1 - n_nonlocal)*s11 + (n_nonlocal*Up0/Down);
-	  Snonlocal[1] = (1 - n_nonlocal)*s22 + (n_nonlocal*Up1/Down);
-	  Snonlocal[2] = (1 - n_nonlocal)*s33 + (n_nonlocal*Up2/Down);
-	  Snonlocal[3] = (1 - n_nonlocal)*s12 + (n_nonlocal*Up3/Down);
-	  Snonlocal[4] = (1 - n_nonlocal)*s23 + (n_nonlocal*Up4/Down);
-	  Snonlocal[5] = (1 - n_nonlocal)*s13 + (n_nonlocal*Up5/Down);
+          double Snonlocal[6];
+          Snonlocal[0] = (1 - n_nonlocal)*s11 + (n_nonlocal*Up0/Down);
+          Snonlocal[1] = (1 - n_nonlocal)*s22 + (n_nonlocal*Up1/Down);
+          Snonlocal[2] = (1 - n_nonlocal)*s33 + (n_nonlocal*Up2/Down);
+          Snonlocal[3] = (1 - n_nonlocal)*s12 + (n_nonlocal*Up3/Down);
+          Snonlocal[4] = (1 - n_nonlocal)*s23 + (n_nonlocal*Up4/Down);
+          Snonlocal[5] = (1 - n_nonlocal)*s13 + (n_nonlocal*Up5/Down);
 
-	  //double test;
+          //double test;
       //test = (1 - n_nonlocal) * idx + (n_nonlocal * Uptest / Down);
 
       //cerr << n_nonlocal << ' ' << Uptest << ' ' << Down << endl;
-	  //cerr << test << ' ' << idx <<endl;
+          //cerr << test << ' ' << idx <<endl;
 
-	  pstress_new[idx](0,0) = Snonlocal[0];
-	  pstress_new[idx](1,2) = Snonlocal[1];
-	  pstress_new[idx](2,2) = Snonlocal[2];
-	  pstress_new[idx](0,1) = Snonlocal[3];
-	  pstress_new[idx](1,0) = Snonlocal[3];
-	  pstress_new[idx](1,2) = Snonlocal[4];
-	  pstress_new[idx](2,1) = Snonlocal[4];
-	  pstress_new[idx](2,0) = Snonlocal[5];
-	  pstress_new[idx](0,2) = Snonlocal[5];
-	  */
+          pstress_new[idx](0,0) = Snonlocal[0];
+          pstress_new[idx](1,2) = Snonlocal[1];
+          pstress_new[idx](2,2) = Snonlocal[2];
+          pstress_new[idx](0,1) = Snonlocal[3];
+          pstress_new[idx](1,0) = Snonlocal[3];
+          pstress_new[idx](1,2) = Snonlocal[4];
+          pstress_new[idx](2,1) = Snonlocal[4];
+          pstress_new[idx](2,0) = Snonlocal[5];
+          pstress_new[idx](0,2) = Snonlocal[5];
+          */
 
       c_dil = sqrt(USM/rho_cur);
 
@@ -877,8 +877,8 @@ void MohrCoulomb::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model
-	std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
-	std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+        std::vector<constParticleVariable<double> > ISVs(d_NINSV+1);
+        std::vector<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
@@ -1004,12 +1004,12 @@ MohrCoulomb::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("SpecVol",UI[12],0.0);  // meridional yld prof param (dim. less)
   ps->getWithDefault("PhiB",UI[13],0.0);  //
     ps->getWithDefault("Usetransition",UI[14],0.0); // undrained shear strength transition
-  ps->getWithDefault("A1",UI[15],0.0); 	// water influence parameter
-  ps->getWithDefault("B1",UI[16],0.0); 	// water influence parameter
-  ps->getWithDefault("W",UI[17],0.0); 	// water content
-  ps->getWithDefault("beta_rate",UI[18],0.0); 	// strain rate influence parameter
-  ps->getWithDefault("strain_ref",UI[19],0.0); 	// strain rate influence parameter
-  ps->getWithDefault("shear_strain_rate",UI[20],0.0); 	// strain rate influence parameter
+  ps->getWithDefault("A1",UI[15],0.0);  // water influence parameter
+  ps->getWithDefault("B1",UI[16],0.0);  // water influence parameter
+  ps->getWithDefault("W",UI[17],0.0);   // water content
+  ps->getWithDefault("beta_rate",UI[18],0.0);   // strain rate influence parameter
+  ps->getWithDefault("strain_ref",UI[19],0.0);  // strain rate influence parameter
+  ps->getWithDefault("shear_strain_rate",UI[20],0.0);   // strain rate influence parameter
   ps->getWithDefault("Usemodul",UI[21],0.0);
   ps->getWithDefault("m_modul",UI[22],0.0);
   ps->getWithDefault("nuy",UI[23],0.0);
@@ -1043,8 +1043,8 @@ MohrCoulomb::getInputParameters(ProblemSpecP& ps)
 
     ps->getWithDefault("s_xy",UI[45],0.0);
 
-	ps->getWithDefault("n_nonlocalMC", UI[46], 0.0);
-	ps->getWithDefault("l_nonlocal", UI[47], 0.0);
+        ps->getWithDefault("n_nonlocalMC", UI[46], 0.0);
+        ps->getWithDefault("l_nonlocal", UI[47], 0.0);
 }
 
 void
@@ -1110,10 +1110,10 @@ MohrCoulomb::initializeLocalMPMLabels()
   ISVNames.push_back("tShear");
     ISVNames.push_back("s_xy");
 
-	ISVNames.push_back("n_nonlocalMC");
-	ISVNames.push_back("l_nonlocal");
+        ISVNames.push_back("n_nonlocalMC");
+        ISVNames.push_back("l_nonlocal");
 
-	
+        
 
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
@@ -1187,11 +1187,11 @@ double nuy=UI[23];
 double Phi=UI[3]; //friction angle [degrees]
 double Psi=UI[4]; //dilation angle [degrees, at the moment unused, assumed Phi]
 int Flavour=int(UI[5]);
-	double a1=UI[15];
-	double b1=UI[16];
-	double W=UI[17];
-	double beta_rate=UI[18];
-	double strain_ref=UI[19];
+        double a1=UI[15];
+        double b1=UI[16];
+        double W=UI[17];
+        double beta_rate=UI[18];
+        double strain_ref=UI[19];
     
     double Use_softening=UI[34];
     double St=UI[35];
@@ -1242,12 +1242,12 @@ double Usetransition=UI[14];
 if (Usetransition>0)
 {
 
-	if(shear_strain_rate_nonlocal >strain_ref){
-	    c=St*a1*pow(W,-b1)*pow(shear_strain_rate_nonlocal /strain_ref,beta_rate);
-	}
-	    else{
-	    c=St*a1*pow(W,-b1);
-	    }
+        if(shear_strain_rate_nonlocal >strain_ref){
+            c=St*a1*pow(W,-b1)*pow(shear_strain_rate_nonlocal /strain_ref,beta_rate);
+        }
+            else{
+            c=St*a1*pow(W,-b1);
+            }
 }
 
 // Shear strength linear with depth

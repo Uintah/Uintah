@@ -552,28 +552,28 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
 #ifdef MHdeleteBadF
       if(pDefGrad[idx].MaxAbsElem()>1.0e2){
-		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient component: [F] = "<<pDefGrad[idx]<<endl;
-		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
-		  Identity.polarDecompositionRMB(tensorU, tensorR);
+                  pLocalized_new[idx]=-999;
+                  cout<<"Large deformation gradient component: [F] = "<<pDefGrad[idx]<<endl;
+                  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else if(pDefGrad[idx].Determinant()<1.0e-3){
-		  pLocalized_new[idx]=-999;
-		  cout<<"Small deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
-		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
-		  Identity.polarDecompositionRMB(tensorU, tensorR);
+                  pLocalized_new[idx]=-999;
+                  cout<<"Small deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
+                  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e5){
-	  	  pLocalized_new[idx]=-999;
-	  	  cout<<"Large deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
-	  	  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
-	  	  Identity.polarDecompositionRMB(tensorU, tensorR);
+          else if(pDefGrad[idx].Determinant()>1.0e5){
+                  pLocalized_new[idx]=-999;
+                  cout<<"Large deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
+                  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else{
-		  pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+                  pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
       }
 #else
-	  pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+          pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
 #endif
       // Compute the unrotated symmetric part of the velocity gradient
       D = (tensorR.Transpose())*(D*tensorR);
@@ -684,28 +684,28 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       } // ==========================================================================================
 
       // Use polar decomposition to compute the rotation and stretch tensors.  These checks prevent
-	  // failure of the polar decomposition algorithm if [F_new] has some extreme values.
+          // failure of the polar decomposition algorithm if [F_new] has some extreme values.
 #ifdef MHdeleteBadF
       if(pDefGrad_new[idx].MaxAbsElem()>1.0e16){
-		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad_new[idx]<<endl;
-		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
-		  Identity.polarDecompositionRMB(tensorU, tensorR);
+                  pLocalized_new[idx]=-999;
+                  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad_new[idx]<<endl;
+                  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else if(pDefGrad_new[idx].Determinant()<1.0e-16){
-		  pLocalized_new[idx]=-999;
-		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
-		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
-		  Identity.polarDecompositionRMB(tensorU, tensorR);
+                  pLocalized_new[idx]=-999;
+                  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
+                  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad_new[idx].Determinant()>1.0e16){
-		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
-		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
-		  Identity.polarDecompositionRMB(tensorU, tensorR);
+          else if(pDefGrad_new[idx].Determinant()>1.0e16){
+                  pLocalized_new[idx]=-999;
+                  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
+                  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+                  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else{
-		  pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
+                  pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
       }
 #else
       pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
@@ -721,20 +721,20 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       double bulk,
              shear;
 
-		 
+                 
 #ifdef MHdisaggregationStiffness
-	  // Compute the wave speed for the particle based on the reduced stiffness, which
-	  // is computed when the value of P3 is sent to computeElasticProperties.
-		if(d_cm.Use_Disaggregation_Algorithm){
-	    computeElasticProperties(pStressQS_new[idx],pep_new[idx],pP3[idx],bulk,shear);
-		} else {
-	    computeElasticProperties(bulk,shear); // High pressure bulk and shear moduli.
-		}
+          // Compute the wave speed for the particle based on the reduced stiffness, which
+          // is computed when the value of P3 is sent to computeElasticProperties.
+                if(d_cm.Use_Disaggregation_Algorithm){
+            computeElasticProperties(pStressQS_new[idx],pep_new[idx],pP3[idx],bulk,shear);
+                } else {
+            computeElasticProperties(bulk,shear); // High pressure bulk and shear moduli.
+                }
 #else
-	  computeElasticProperties(bulk,shear); // High pressure bulk and shear moduli.
+          computeElasticProperties(bulk,shear); // High pressure bulk and shear moduli.
 #endif
-		
-			 
+                
+                         
       double rho_cur = pmass[idx]/pvolume[idx];
              c_dil = sqrt((bulk+four_third*shear)/rho_cur);
 
@@ -831,12 +831,12 @@ double bulk, shear;
 
 #ifdef MHdisaggregationStiffness
 if(d_cm.Use_Disaggregation_Algorithm){
-	computeElasticProperties(sigma_n,ep_n,P3,bulk,shear);
+        computeElasticProperties(sigma_n,ep_n,P3,bulk,shear);
 }
 else{
-	computeElasticProperties(bulk,shear);
+        computeElasticProperties(bulk,shear);
 }
-#else	   
+#else      
 computeElasticProperties(bulk,shear);
 #endif
 
@@ -942,9 +942,9 @@ void Arenisca3::computeElasticProperties(double & bulk,
   // dependent poisson ratio, which is used to adjust the shear modulus along with the
   // bulk modulus.  The high pressure limit has nu=G1+G2;
   //if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
-//	  // High pressure bulk modulus:
-//	  double nu = d_cm.G1+d_cm.G2;
-//	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+//        // High pressure bulk modulus:
+//        double nu = d_cm.G1+d_cm.G2;
+//        shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
   //}
   
 } //===================================================================
@@ -952,109 +952,109 @@ void Arenisca3::computeElasticProperties(double & bulk,
 // [shear,bulk] = computeElasticProperties(stress, ep)
 void Arenisca3::computeElasticProperties(const Matrix3 stress,
                                          const Matrix3 ep,
-										 const double& P3,
+                                                                                 const double& P3,
                                          double & bulk,
                                          double & shear)
 {
 // Compute the nonlinear elastic tangent stiffness as a function of the pressure
 // plastic strain, and fluid parameters.
-	double  b0 = d_cm.B0,
-			b1 = d_cm.B1,
-			b2 = d_cm.B2,
-			b3 = d_cm.B3,
-			b4 = d_cm.B4,
-			g0 = d_cm.G0,
-			I1 = stress.Trace(),
-			evp = ep.Trace();
+        double  b0 = d_cm.B0,
+                        b1 = d_cm.B1,
+                        b2 = d_cm.B2,
+                        b3 = d_cm.B3,
+                        b4 = d_cm.B4,
+                        g0 = d_cm.G0,
+                        I1 = stress.Trace(),
+                        evp = ep.Trace();
 
 // ..........................................................Undrained
 // The low pressure bulk and shear moduli are also used for the tensile response.
-	bulk = b0;
-	shear = g0;
-	// To be thermodynamically consistent, the shear modulus in an isotropic model
-	// must be constant, but the bulk modulus can depend on pressure.  However, this
-	// leads to a Poisson's ratio that approaches 0.5 at high pressures, which is
-	// inconsistent with experimental data for the Poisson's ratio, inferred from the 
-	// Young's modulus.  Induced anisotropy is likely the cause of the discrepency, 
-	// but it may be better to allow the shear modulus to vary so the Poisson's ratio
-	// remains reasonable.
-	//
-	// If the user has specified a nonzero value of G1 and G2, the shear modulus will
-	// vary with pressure so the drained Poisson's ratio transitions from G1 to G1+G2 as 
-	// the bulk modulus varies from B0 to B0+B1.  The fluid model further affects the 
-	// bulk modulus, but does not alter the shear modulus, so the pore fluid does
-	// increase the Poisson's ratio.  
-	if(evp <= 0.0){
+        bulk = b0;
+        shear = g0;
+        // To be thermodynamically consistent, the shear modulus in an isotropic model
+        // must be constant, but the bulk modulus can depend on pressure.  However, this
+        // leads to a Poisson's ratio that approaches 0.5 at high pressures, which is
+        // inconsistent with experimental data for the Poisson's ratio, inferred from the 
+        // Young's modulus.  Induced anisotropy is likely the cause of the discrepency, 
+        // but it may be better to allow the shear modulus to vary so the Poisson's ratio
+        // remains reasonable.
+        //
+        // If the user has specified a nonzero value of G1 and G2, the shear modulus will
+        // vary with pressure so the drained Poisson's ratio transitions from G1 to G1+G2 as 
+        // the bulk modulus varies from B0 to B0+B1.  The fluid model further affects the 
+        // bulk modulus, but does not alter the shear modulus, so the pore fluid does
+        // increase the Poisson's ratio.  
+        if(evp <= 0.0){
 #ifdef MHfastfcns
-		// Elastic-plastic coupling
-		if (evp < 0.0){bulk = bulk - b3*fasterexp(b4/evp);}
-		
-		
-		// Pressure dependence
-		if (I1 < 0.0){
-			double expb2byI1 = fasterexp(b2/I1);
-			bulk = bulk + b1*expb2byI1;
-			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
-				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
-				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
-			}
-		}
+                // Elastic-plastic coupling
+                if (evp < 0.0){bulk = bulk - b3*fasterexp(b4/evp);}
+                
+                
+                // Pressure dependence
+                if (I1 < 0.0){
+                        double expb2byI1 = fasterexp(b2/I1);
+                        bulk = bulk + b1*expb2byI1;
+                        if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
+                                double nu = d_cm.G1 + d_cm.G2*expb2byI1;
+                                shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+                        }
+                }
 #else
-		if (I1 < 0.0){
-			double expb2byI1 = exp(b2/I1);
-			bulk = bulk + b1*expb2byI1;
-			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
-				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
-				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
-			}
-		}
-		// Elastic-plastic coupling
-		if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
-#endif	
-	}
-	
+                if (I1 < 0.0){
+                        double expb2byI1 = exp(b2/I1);
+                        bulk = bulk + b1*expb2byI1;
+                        if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
+                                double nu = d_cm.G1 + d_cm.G2*expb2byI1;
+                                shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+                        }
+                }
+                // Elastic-plastic coupling
+                if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
+#endif  
+        }
+        
 #ifdef MHdisaggregationStiffness
 
-	if(d_cm.Use_Disaggregation_Algorithm){
+        if(d_cm.Use_Disaggregation_Algorithm){
 #ifdef MHfastfcns
-		double fac = fasterexp(-(P3+evp));
+                double fac = fasterexp(-(P3+evp));
 #else
-	    double fac = exp(-(P3+evp));
+            double fac = exp(-(P3+evp));
 #endif
-		double scale = max(fac,0.00001);
-		bulk = bulk*scale;
-		shear = shear*scale;
-	}
+                double scale = max(fac,0.00001);
+                bulk = bulk*scale;
+                shear = shear*scale;
+        }
 #endif
 
 // In  compression, or with fluid effects if the strain is more compressive
 // than the zero fluid pressure volumetric strain:
-	if (evp <= ev0 && Kf!=0.0){// ..........................................................Undrained
-		// Compute the porosity from the strain using Homel's simplified model, and
-		// then use this in the Biot-Gassmann formula to compute the bulk modulus.
+        if (evp <= ev0 && Kf!=0.0){// ..........................................................Undrained
+                // Compute the porosity from the strain using Homel's simplified model, and
+                // then use this in the Biot-Gassmann formula to compute the bulk modulus.
 
-		// The dry bulk modulus, taken as the low pressure limit of the nonlinear
-		// formulation:
-		double Kd = b0;
+                // The dry bulk modulus, taken as the low pressure limit of the nonlinear
+                // formulation:
+                double Kd = b0;
 #ifdef MHfastfcns
-		if (evp < 0.0){Kd = b0 - b3*fasterexp(b4/evp);}
-		// Current unloaded porosity (phi):
-		double C2 = fasterexp(evp*Km/C1)*phi_i;
-		double phi = C2/(-fasterexp(evp*Kf/C1)*(phi_i-1.0) + C2);
+                if (evp < 0.0){Kd = b0 - b3*fasterexp(b4/evp);}
+                // Current unloaded porosity (phi):
+                double C2 = fasterexp(evp*Km/C1)*phi_i;
+                double phi = C2/(-fasterexp(evp*Kf/C1)*(phi_i-1.0) + C2);
 #else
-		if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
-		// Current unloaded porosity (phi):
-		double C2 = exp(evp*Km/C1)*phi_i;
-		double phi = C2/(-exp(evp*Kf/C1)*(phi_i-1.0) + C2);
+                if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
+                // Current unloaded porosity (phi):
+                double C2 = exp(evp*Km/C1)*phi_i;
+                double phi = C2/(-exp(evp*Kf/C1)*(phi_i-1.0) + C2);
 #endif
-		// Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
-		// current porosity.  This introduces some error since the Kd term is a
-		// function of the initial porosity, but since large strains would also
-		// modify the bulk modulus through damage
-		double oneminusKdbyKm = 1.0 - Kd / Km;
-		bulk = Kd + oneminusKdbyKm*oneminusKdbyKm/((oneminusKdbyKm - phi)/Km + (1.0/Kf - 1.0/Km)*phi);
-	}
-	
+                // Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
+                // current porosity.  This introduces some error since the Kd term is a
+                // function of the initial porosity, but since large strains would also
+                // modify the bulk modulus through damage
+                double oneminusKdbyKm = 1.0 - Kd / Km;
+                bulk = Kd + oneminusKdbyKm*oneminusKdbyKm/((oneminusKdbyKm - phi)/Km + (1.0/Kf - 1.0/Km)*phi);
+        }
+        
 } //===================================================================
 
 // [sigma_trial] = computeTrialStress(sigma_old,d_e,K,G)
@@ -1074,7 +1074,7 @@ Matrix3 Arenisca3::computeTrialStress(const Matrix3& sigma_old,  // old stress
 // [nsub] = computeStepDivisions(X,Zeta,ep,sigma_n,sigma_trial)
 int Arenisca3::computeStepDivisions(const double& X,
                                     const double& Zeta,
-									const double& P3,
+                                                                        const double& P3,
                                     const Matrix3& ep,
                                     const Matrix3& sigma_n,
                                     const Matrix3& sigma_trial)
@@ -1082,7 +1082,7 @@ int Arenisca3::computeStepDivisions(const double& X,
 // compute the number of step divisions (substeps) based on a comparison
 // of the trial stress relative to the size of the yield surface, as well
 // as change in elastic properties between sigma_n and sigma_trial.
-	
+        
   int nmax = ceil(d_cm.subcycling_characteristic_number);
   
   // Compute change in bulk modulus:
@@ -1094,9 +1094,9 @@ int Arenisca3::computeStepDivisions(const double& X,
   // Compute trial stress increment relative to yield surface size:
   Matrix3 d_sigma = sigma_trial - sigma_n;
   double size = 0.5*(d_cm.PEAKI1 - X);
-	
+        
   if (d_cm.STREN > 0.0){
-	  size = min(size,d_cm.STREN);
+          size = min(size,d_cm.STREN);
   }  
   int n_yield = ceil(1.0e-4*d_sigma.Norm()/size);
 
@@ -1107,15 +1107,15 @@ int Arenisca3::computeStepDivisions(const double& X,
   if (nsub>d_cm.subcycling_characteristic_number){
 #ifdef MHdebug
     cout<<"\nstepDivide out of range."<<endl;
-	cout<<"P3 = "<<P3<<endl;
-	cout<<"d_sigma.Norm() = "<<d_sigma.Norm()<<endl;
-	cout<<"X = "<<X<<endl;
-	cout<<"size = "<<size<<endl;
-	cout<<"n_yield = "<<n_yield<<endl;
-	cout<<"bulk_n = "<<bulk_n<<endl;
-	cout<<"bulk_trial = "<<bulk_trial<<endl;
-	cout<<"n_bulk = "<<n_bulk<<endl;
-	cout<<"nsub = "<<nsub<<" > "<< d_cm.subcycling_characteristic_number<<endl;
+        cout<<"P3 = "<<P3<<endl;
+        cout<<"d_sigma.Norm() = "<<d_sigma.Norm()<<endl;
+        cout<<"X = "<<X<<endl;
+        cout<<"size = "<<size<<endl;
+        cout<<"n_yield = "<<n_yield<<endl;
+        cout<<"bulk_n = "<<bulk_n<<endl;
+        cout<<"bulk_trial = "<<bulk_trial<<endl;
+        cout<<"n_bulk = "<<n_bulk<<endl;
+        cout<<"nsub = "<<nsub<<" > "<< d_cm.subcycling_characteristic_number<<endl;
 #endif
     nsub = -1;
   }
@@ -1163,7 +1163,7 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 // Computes the updated stress state for a substep that may be either elastic, plastic, or
 // partially elastic.   Returns an integer flag 0/1 for a good/bad update.
   int     substepFlag,
-		  returnFlag;
+                  returnFlag;
 
 // (1)  Compute the elastic properties based on the stress and plastic strain at
 // the start of the substep.  These will be constant over the step unless elastic-plastic
@@ -1215,29 +1215,29 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
     // returnFlag would be != 0 if there was an error in the nonHardeningReturn call, but
     // there are currently no tests in that function that could detect such an error.
     returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-									I1_old,rJ2_old,S_old,
-									d_e,X_old,Zeta_old,coher,bulk,shear,
-									I1_0,rJ2_0,S_0,d_ep_0);
-	if (returnFlag!=0){
+                                                                        I1_old,rJ2_old,S_old,
+                                                                        d_e,X_old,Zeta_old,coher,bulk,shear,
+                                                                        I1_0,rJ2_0,S_0,d_ep_0);
+        if (returnFlag!=0){
 #ifdef MHdebug
-		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+                cout << "1344: failed nonhardeningReturn in substep "<< endl;
 #endif
-		goto failedSubstep;
-	}
+                goto failedSubstep;
+        }
 
-	// If there is no porosity (p3=0) and no fluid effects (Kf=0) then the nonhardening
-	// return will be the solution
-	if ( (d_cm.p3_crush_curve == 0.0)&&(d_cm.fluid_B0==0.0) ){
+        // If there is no porosity (p3=0) and no fluid effects (Kf=0) then the nonhardening
+        // return will be the solution
+        if ( (d_cm.p3_crush_curve == 0.0)&&(d_cm.fluid_B0==0.0) ){
         Zeta_new = Zeta_old,
-		X_new = X_old;
-		sigma_new = one_third*I1_0*Identity + S_0;
-		ep_new = ep_old + d_ep_0;
-		
-		goto successfulSubstep;
-	}
-	
+                X_new = X_old;
+                sigma_new = one_third*I1_0*Identity + S_0;
+                ep_new = ep_old + d_ep_0;
+                
+                goto successfulSubstep;
+        }
+        
     double d_evp_0 = d_ep_0.Trace();
-	
+        
 // (6) Iterate to solve for plastic volumetric strain consistent with the updated
 //     values for the cap (X) and isotropic backstress (Zeta).  Use a bisection method
 //     based on the multiplier eta,  where  0<eta<1
@@ -1248,7 +1248,7 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
            d_evp;
     int i = 0,
         imax = 93;  // imax = ceil(-10.0*log(TOL)); // Update this if TOL changes
-	
+        
     double dZetadevp = computedZetadevp(Zeta_old,evp_old);
     
 // (7) Update Internal State Variables based on Last Non-Hardening Return:
@@ -1266,7 +1266,7 @@ updateISV:
 // (8) Check if the updated yield surface encloses trial stres.  If it does, there is too much
 //     plastic strain for this iteration, so we adjust the bisection parameters and recompute
 //     the state variable update.
-	
+        
     if( computeYieldFunction(I1_trial,rJ2_trial,X_new,Zeta_new,coher,limitParameters)!=1 ){
       eta_out = eta_mid;
       if( i >= imax ){
@@ -1296,15 +1296,15 @@ updateISV:
     Matrix3 S_new,
             d_ep_new;
     returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-									I1_old,rJ2_old,S_old,
-									d_e,X_new,Zeta_new,coher,bulk,shear,
-									I1_new,rJ2_new,S_new,d_ep_new);
-	if (returnFlag!=0){
+                                                                        I1_old,rJ2_old,S_old,
+                                                                        d_e,X_new,Zeta_new,coher,bulk,shear,
+                                                                        I1_new,rJ2_new,S_new,d_ep_new);
+        if (returnFlag!=0){
 #ifdef MHdebug
-		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+                cout << "1344: failed nonhardeningReturn in substep "<< endl;
 #endif
-		goto failedSubstep;
-	}
+                goto failedSubstep;
+        }
 
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
@@ -1385,14 +1385,14 @@ updateISV:
 // coher = max(coher - d_ep_new.Norm()/d_cm.failure_strain);
 //  //
 //  returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-//								  I1_old,rJ2_old,S_old,
-//								  d_e,X_new,Zeta_new,coher,bulk,shear,
-//								  I1_new,rJ2_new,S_new,d_ep_new);
+//                                                                I1_old,rJ2_old,S_old,
+//                                                                d_e,X_new,Zeta_new,coher,bulk,shear,
+//                                                                I1_new,rJ2_new,S_new,d_ep_new);
 //  if (returnFlag!=0){
 //#ifdef MHdebug
-//	  cout << "1344: failed nonhardeningReturn in substep "<< endl;
+//        cout << "1344: failed nonhardeningReturn in substep "<< endl;
 //#endif
-//	  goto failedSubstep;
+//        goto failedSubstep;
   
   
   
@@ -1525,30 +1525,30 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
 
   const int nmax = 19;  // If this is changed, more entries may need to be added to sinV cosV.
   int n = 0,
-	  returnFlag = 0,   // error flag = 0 for successful return.
+          returnFlag = 0,   // error flag = 0 for successful return.
       interior;
 
 // (1) Define an interior point, (I1_0 = Zeta, also, J2_0 = 0 but no need to  create this variable.)
   double  I1_0,
-		  I1trialMinusZeta = I1_trial-Zeta;
-				
+                  I1trialMinusZeta = I1_trial-Zeta;
+                                
 
 // It may be better to use an interior point at the center of the yield surface, rather than at zeta, in particular
 // when PEAKI1=0.  Picking the midpoint between PEAKI1 and X would be problematic when the user has specified
 // some no porosity condition (e.g. p0=-1e99)
   if( I1trialMinusZeta>= coher*d_cm.PEAKI1 ){ // Trial is past vertex
-	  double lTrial = sqrt(I1trialMinusZeta*I1trialMinusZeta + rJ2_trial*rJ2_trial),
-			 lYield = 0.5*(coher*d_cm.PEAKI1 - X);
-	  I1_0 = Zeta + coher*d_cm.PEAKI1 - min(lTrial,lYield);
+          double lTrial = sqrt(I1trialMinusZeta*I1trialMinusZeta + rJ2_trial*rJ2_trial),
+                         lYield = 0.5*(coher*d_cm.PEAKI1 - X);
+          I1_0 = Zeta + coher*d_cm.PEAKI1 - min(lTrial,lYield);
   }
   else if( (I1trialMinusZeta < coher*d_cm.PEAKI1)&&(I1trialMinusZeta > X) ){ // Trial is above yield surface
-	  I1_0 = I1_trial;
+          I1_0 = I1_trial;
   }
   else if( I1trialMinusZeta <= X ){ // Trial is past X, use yield midpoint as interior point
-	  I1_0 = Zeta + 0.5*(coher*d_cm.PEAKI1 + X);
+          I1_0 = Zeta + 0.5*(coher*d_cm.PEAKI1 + X);
   }
   else { // Shouldn't get here
-	  I1_0 = Zeta;
+          I1_0 = Zeta;
   }
 
 // (2) Transform the trial and interior points as follows where beta defines the degree
@@ -1604,7 +1604,7 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     n = max(n-4,0);  //
     // (5) Test for convergence:
     while ( (interior==0)&&(n < nmax) ){
-		k++;
+                k++;
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
       //
@@ -1626,9 +1626,9 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
   }
 
   if (k>=10*nmax){
-	  returnFlag = 1;
+          returnFlag = 1;
 #ifdef MHdebug
-	  cout<<"k >= 10*nmax, nonHardening return failed."<<endl;
+          cout<<"k >= 10*nmax, nonHardening return failed."<<endl;
 #endif
   }
   
@@ -1658,7 +1658,7 @@ void Arenisca3::transformedBisection(double& z_0,
                                      const double& r_trial,
                                      const double& X,
                                      const double& Zeta,
-									 const double& coher,
+                                                                         const double& coher,
                                      const double limitParameters[4],
                                      const double& r_to_rJ2
                                     )
@@ -1703,7 +1703,7 @@ int Arenisca3::transformedYieldFunction(const double& z,
                                         const double& r,
                                         const double& X,
                                         const double& Zeta,
-										const double& coher,
+                                                                                const double& coher,
                                         const double limitParameters[4],
                                         const double& r_to_rJ2
                                        )
@@ -1715,7 +1715,7 @@ int Arenisca3::transformedYieldFunction(const double& z,
 
 // Untransformed values:
   double I1  = sqrt_three*z,
-		 rJ2 = r_to_rJ2*r;
+                 rJ2 = r_to_rJ2*r;
   int    YIELD = computeYieldFunction(I1,rJ2,X,Zeta,coher,limitParameters);
   return YIELD;
 } //===================================================================
@@ -1725,8 +1725,8 @@ int Arenisca3::computeYieldFunction(const double& I1,
                                     const double& rJ2,
                                     const double& X,
                                     const double& Zeta,
-									const double& coher,
-									const double limitParameters[4]
+                                                                        const double& coher,
+                                                                        const double limitParameters[4]
                                    )
 {
   // Evaluate the yield criteria and return:
@@ -1747,10 +1747,10 @@ int Arenisca3::computeYieldFunction(const double& I1,
 // --------------------------------------------------------------------
   // Read input parameters to specify strength model
   double  Ff,
-		  a1 = limitParameters[0],
-		  a2 = limitParameters[1],
-		  a3 = limitParameters[2],
-		  a4 = limitParameters[3];
+                  a1 = limitParameters[0],
+                  a2 = limitParameters[1],
+                  a3 = limitParameters[2],
+                  a4 = limitParameters[3];
   
 #ifdef MHfastfcns
   Ff = a1 - a3*fasterexp(a2*I1mZ) - a4*I1mZ;
@@ -1876,112 +1876,112 @@ void Arenisca3::computeLimitParameters(double limitParameters[4], const double& 
 } //===================================================================
 
 void Arenisca3::checkInputParameters(){
-	
+        
   if(d_cm.PEAKI1<0.0){
-	ostringstream warn;
+        ostringstream warn;
     warn << "PEAKI1 must be nonnegative. PEAKI1 = "<<d_cm.PEAKI1<<endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.FSLOPE<0.0){
-	  ostringstream warn;
-	  warn << "FSLOPE must be nonnegative. FSLOPE = "<<d_cm.FSLOPE<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "FSLOPE must be nonnegative. FSLOPE = "<<d_cm.FSLOPE<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.FSLOPE<d_cm.YSLOPE){
-	  ostringstream warn;
-	  warn << "FSLOPE must be greater than YSLOPE. FSLOPE = "<<d_cm.FSLOPE<<", YSLOPE = "<<d_cm.YSLOPE<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "FSLOPE must be greater than YSLOPE. FSLOPE = "<<d_cm.FSLOPE<<", YSLOPE = "<<d_cm.YSLOPE<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.BETA_nonassociativity <= 0.0){
-	ostringstream warn;
+        ostringstream warn;
     warn << "BETA_nonassociativity must be positive. BETA_nonassociativity = "<<d_cm.BETA_nonassociativity<<endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.B0<=0.0){
-	ostringstream warn;
+        ostringstream warn;
     warn << "B0 must be positive. B0 = "<<d_cm.B0<<endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.B1<0.0){
-	  ostringstream warn;
-	  warn << "B1 must be nonnegative. B1 = "<<d_cm.B1<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "B1 must be nonnegative. B1 = "<<d_cm.B1<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.B2<0.0){
-	  ostringstream warn;
-	  warn << "B2 must be nonnegative. B2 = "<<d_cm.B2<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "B2 must be nonnegative. B2 = "<<d_cm.B2<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.G0<=0.0){
-	  ostringstream warn;
-	  warn << "G0 must be positive. G0 = "<<d_cm.G0<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "G0 must be positive. G0 = "<<d_cm.G0<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.p0_crush_curve>=0.0){
-	  ostringstream warn;
-	  warn << "p0 must be negative. p0 = "<<d_cm.p0_crush_curve<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "p0 must be negative. p0 = "<<d_cm.p0_crush_curve<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.p1_crush_curve<=0.0){
-	  ostringstream warn;
-	  warn << "p1 must be positive. p1 = "<<d_cm.p1_crush_curve<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "p1 must be positive. p1 = "<<d_cm.p1_crush_curve<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.p3_crush_curve<0.0){
-	  ostringstream warn;
-	  warn << "p3 must be positive. p3 = "<<d_cm.p3_crush_curve<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "p3 must be positive. p3 = "<<d_cm.p3_crush_curve<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.CR>=1||d_cm.CR<=0.0){
-	  ostringstream warn;
-	  warn << "CR must be 0<CR<1. CR = "<<d_cm.CR<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "CR must be 0<CR<1. CR = "<<d_cm.CR<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.fluid_B0<0.0){
-	  ostringstream warn;
-	  warn << "fluid_b0 must be >=0. fluid_b0 = "<<d_cm.fluid_B0<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "fluid_b0 must be >=0. fluid_b0 = "<<d_cm.fluid_B0<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.fluid_pressure_initial<0.0){
-	  ostringstream warn;
-	  warn << "Negative pfi not supported. fluid_pressure_initial = "<<d_cm.fluid_pressure_initial<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "Negative pfi not supported. fluid_pressure_initial = "<<d_cm.fluid_pressure_initial<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.fluid_B0<0.0&&(d_cm.B0==0.0||d_cm.B1==0.0)){
-	  ostringstream warn;
-	  warn << "B0 and B1 must be positive to use fluid model."<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "B0 and B1 must be positive to use fluid model."<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.T1_rate_dependence<0.0){
-	  ostringstream warn;
-	  warn << "T1 must be nonnegative. T1 = "<<d_cm.T1_rate_dependence<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "T1 must be nonnegative. T1 = "<<d_cm.T1_rate_dependence<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.T2_rate_dependence<0.0){
-	  ostringstream warn;
-	  warn << "T2 must be nonnegative. T2 = "<<d_cm.T2_rate_dependence<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "T2 must be nonnegative. T2 = "<<d_cm.T2_rate_dependence<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if( (d_cm.T1_rate_dependence>0.0||d_cm.T2_rate_dependence>0.0)
     !=(d_cm.T1_rate_dependence>0.0&&d_cm.T2_rate_dependence>0.0)  ){
-	  ostringstream warn;
-	  warn << "For rate dependence both T1 and T2 must be positive. T1 = "<<d_cm.T1_rate_dependence<<", T2 = "<<d_cm.T2_rate_dependence<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "For rate dependence both T1 and T2 must be positive. T1 = "<<d_cm.T1_rate_dependence<<", T2 = "<<d_cm.T2_rate_dependence<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.subcycling_characteristic_number<1){
-	  ostringstream warn;
-	  warn << "subcycling characteristic number should be > 1. Default = 256"<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "subcycling characteristic number should be > 1. Default = 256"<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.Use_Disaggregation_Algorithm&&d_cm.fluid_B0!=0.0){
-	  ostringstream warn;
-	  warn << "Disaggregation algorithm not supported with fluid model"<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "Disaggregation algorithm not supported with fluid model"<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   if(d_cm.Use_Disaggregation_Algorithm&&d_cm.PEAKI1!=0.0){
-	  ostringstream warn;
-	  warn << "Disaggregation algorithm not supported with PEAKI1 > 0.0"<<endl;
-	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          ostringstream warn;
+          warn << "Disaggregation algorithm not supported with PEAKI1 > 0.0"<<endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 }
 

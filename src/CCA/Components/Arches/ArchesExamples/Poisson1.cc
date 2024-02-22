@@ -80,7 +80,7 @@ void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   //arches bc
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-	double val = i_bc->second.find("Phi")->value;
+        double val = i_bc->second.find("Phi")->value;
     const bool on_this_patch = i_bc->second.has_patch(patch->getID());
     if ( on_this_patch ){
       //Handle cell type first
@@ -178,12 +178,12 @@ Poisson1::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   //arches bc
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-	const bool on_this_patch = i_bc->second.has_patch(patch->getID());
-	if ( on_this_patch ){
-	  Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-	  parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator(execObj),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
-		newphi(i,j,k) = phi(i,j,k);
-	  });
-	}
+        const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+        if ( on_this_patch ){
+          Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+          parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator(execObj),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+                newphi(i,j,k) = phi(i,j,k);
+          });
+        }
   }
 }

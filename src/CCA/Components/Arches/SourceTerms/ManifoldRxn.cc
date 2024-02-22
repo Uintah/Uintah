@@ -13,7 +13,7 @@ using namespace std;
 using namespace Uintah;
 
 ManifoldRxn::ManifoldRxn( std::string src_name, ArchesLabel* field_labels,
-			  vector<std::string> req_label_names, std::string type )
+                          vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );

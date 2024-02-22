@@ -162,9 +162,9 @@ void DensityStar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   double check_guess_density_out = 0;
   Uintah::parallel_reduce_sum( execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& check_guess_density)
   {
-	rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
-									  area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
-									  area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
+        rhoStar(i,j,k)   = rho(i,j,k) - ( area_EW * ( xmom(i+1,j,k) - xmom(i,j,k) ) +
+                                                                          area_NS * ( ymom(i,j+1,k) - ymom(i,j,k) )+
+                                                                          area_TB * ( zmom(i,j,k+1) - zmom(i,j,k) )) * dt / vol;
     check_guess_density += (rhoStar(i,j,k) < 0);
 
   }, check_guess_density_out);

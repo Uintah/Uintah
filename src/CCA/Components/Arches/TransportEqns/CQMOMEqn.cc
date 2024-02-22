@@ -499,7 +499,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
+                             DataWarehouse* new_dw,
                             int timeSubStep )
 {
   //patch loop

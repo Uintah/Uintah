@@ -13,7 +13,7 @@ using namespace std;
 using namespace Uintah;
 
 BrownSoot::BrownSoot( std::string src_name, ArchesLabel* field_labels,
-		      vector<std::string> req_label_names, std::string type )
+                      vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
 
@@ -44,7 +44,7 @@ BrownSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Ns_label",             m_Ns_name,               "Ns");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
   db->getWithDefault("oh_label",             m_OH_name,               "OH");
-  db->getWithDefault("co2_label",	         m_CO2_name,		      "CO2");
+  db->getWithDefault("co2_label",                m_CO2_name,                  "CO2");
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("density_label",        m_rho_name,              "density");
   db->getWithDefault("temperature_label",    m_temperature_name,      "radiation_temperature");
@@ -219,7 +219,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
     const double Eot = 52.3E6;          ///< Ea: soot formation, J/kmol
     //const double Aos = 108500;          ///< preexponential: soot oxidation: (K^0.5)*kg/m2/atm/s
     //const double Eos = 164.5E6;         ///< Ea: soot oxidation, J/kmol
-    //const double Ags = 4.1536E9;	      ///< preexponential: soot gasification (1/s/atm^0.54)
+    //const double Ags = 4.1536E9;            ///< preexponential: soot gasification (1/s/atm^0.54)
     //const double Egs = 148E6;           ///< Ea: soot gasification, J/kmol
 
     const double Ao2  = 0.798;                     ///< kg*K^0.5/Pa/m2/s
@@ -298,7 +298,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
           double rfs = kfs * abs(rhoYt);                                               ///< soot formation rate (kg/m3*s)
 
           //double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/abs(T));  ///< soot oxidation rate (kg/m3*s)
-          //double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));	         ///< soot gasification rate kg/m3*s
+          //double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));             ///< soot gasification rate kg/m3*s
 
           double ros = pow(abs(T), -0.5)*( Ao2*P*XO2*exp(-Eo2/Rgas/T) +           ///< soot oxidation rate (kg/m3/s)
                                            Aoh*P*XOH ) * SA;

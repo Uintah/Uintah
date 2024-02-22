@@ -393,7 +393,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
       ProblemSpecP db_sp = db->findBlock("StateProperties");
       // It is going to look in StateProperties to see if density is constant
       for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	    db_p.get_rep() != nullptr;
+            db_p.get_rep() != nullptr;
             db_p = db_p->findNextBlock("model")){
 
         std::string d_type;

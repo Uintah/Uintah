@@ -76,7 +76,7 @@ namespace Uintah{
   KokkosSolver( MaterialManagerP& materialManager,
                 const ProcessorGroup* myworld,
                 SolverInterface* solver,
-		ApplicationCommon* arches );
+                ApplicationCommon* arches );
 
   virtual ~KokkosSolver();
 

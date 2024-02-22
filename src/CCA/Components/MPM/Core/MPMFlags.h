@@ -131,7 +131,7 @@ class Output;
     bool        d_coupledflow_contact;                         // Contact formulation for fluid
     double      d_waterdampingCoeff;
     double      d_soliddampingCoeff;
-    bool		d_PorePressureFilter;						 // Pore Water Pressure filter option
+    bool                d_PorePressureFilter;                                            // Pore Water Pressure filter option
 
    //********** Start Reactive Flow Section *********************
     bool        d_doScalarDiffusion;

@@ -146,7 +146,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
   m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
   if(db->findBlock("ArchesExample"))
-	  m_task_factory_map.insert(std::make_pair("ExampleFactory",ExampleFactoryF));
+          m_task_factory_map.insert(std::make_pair("ExampleFactory",ExampleFactoryF));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering and Building Tasks For: " << std::endl;
@@ -273,14 +273,14 @@ KokkosSolver::computeTimestep( const LevelP     & level
     //some race condition in kokkos::parallel_reduce. So combine all patches together in a single reduction task to avoid the multiple cpu threads calling parallel_reduce
     //temp work around until the permanent solution
     if ( Uintah::Parallel::usingDevice() ) {
-	  LoadBalancer * lb = sched->getLoadBalancer();
-	  //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos parallel_reduce %s %d\n", __FILE__, __LINE__);
-	  create_portable_tasks(taskDependencies, this,
-						  "KokkosSolver::computeStableTimeStep",
-						  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
-						  &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
-						  &KokkosSolver::computeStableTimeStep<KOKKOS_DEFAULT_DEVICE_TAG>,
-						  sched, lb->getPerProcessorPatchSet(level), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
+          LoadBalancer * lb = sched->getLoadBalancer();
+          //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos parallel_reduce %s %d\n", __FILE__, __LINE__);
+          create_portable_tasks(taskDependencies, this,
+                                                  "KokkosSolver::computeStableTimeStep",
+                                                  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
+                                                  &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+                                                  &KokkosSolver::computeStableTimeStep<KOKKOS_DEFAULT_DEVICE_TAG>,
+                                                  sched, lb->getPerProcessorPatchSet(level), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
     }
     else{
       create_portable_tasks(taskDependencies, this,
@@ -893,7 +893,7 @@ KokkosSolver::SandBox_initialize( const LevelP & level,
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+  if(i_exam_fac==m_task_factory_map.end()){     //schedule default sandbox if there are no examples.
     // initialize hypre objects
     if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
       PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
@@ -933,7 +933,7 @@ KokkosSolver::SandBox( const LevelP     & level
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+  if(i_exam_fac==m_task_factory_map.end()){     //schedule default sandbox if there are no examples.
     PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
                              i_util_fac->second->retrieve_task("[PressureEqn]"));
 
@@ -957,7 +957,7 @@ KokkosSolver::SandBox( const LevelP     & level
     // Solve it - calling out to hypre external lib
     press_tsk->solve(level, sched, time_substep);
   }
-  else{	//schedule examples if present
+  else{ //schedule examples if present
     i_exam_fac->second->schedule_task_group("all_tasks",
         TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 

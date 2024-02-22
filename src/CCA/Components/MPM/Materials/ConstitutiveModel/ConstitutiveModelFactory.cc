@@ -313,20 +313,20 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
 else if (cm_type == "HypoplasticB") {
-	  return(scinew HypoplasticB(child, flags));
+          return(scinew HypoplasticB(child, flags));
   }
 
   else if (cm_type == "MohrCoulomb") {
-	  return(scinew MohrCoulomb(child, flags));
+          return(scinew MohrCoulomb(child, flags));
   }
 
   else if (cm_type == "QADamage") {
-	  if (flags->d_integrator_type == "explicit") {
-		  return(scinew QADamage(child, flags, false, false));
-	  }
-	  else if (flags->d_integrator_type == "implicit") {
-		  return(scinew QADamage(child, flags, false, false));
-	  }
+          if (flags->d_integrator_type == "explicit") {
+                  return(scinew QADamage(child, flags, false, false));
+          }
+          else if (flags->d_integrator_type == "implicit") {
+                  return(scinew QADamage(child, flags, false, false));
+          }
   }
 
   else

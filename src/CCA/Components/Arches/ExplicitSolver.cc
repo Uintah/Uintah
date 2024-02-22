@@ -2896,10 +2896,10 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             residual[idx] -= mass_srcs[iii][idx];
           }
 
-	  // Add intrusion mass sources to the residual
+          // Add intrusion mass sources to the residual
           if ( d_boundaryCondition->is_using_new_intrusion() ){
             residual[idx] -= (mass_src_intrusion[idx]/vol)*volFraction[idx];
-	  }
+          }
 
           if ( d_solvability ){
             residual[idx] += vol_integral*dt/vol;

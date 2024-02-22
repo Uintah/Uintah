@@ -51,13 +51,13 @@ namespace Uintah {
     bool d_useModifiedEOS;
   public:
     struct CMData {   //_________________________________________modified here
-      double E_t;						// transverse modulus
-      double Y_t;						// transverse cohesive strength
-      double E_a;					  // axial modulus
-      double nu_at;			  	// axial-transverse poisson ratio
-      double nu_t;					// transverse poisson ratio
-      double G_at;					// axial-transverse shear modulus
-      double mu_fiber;			// inter-fiber friction coefficient
+      double E_t;                                               // transverse modulus
+      double Y_t;                                               // transverse cohesive strength
+      double E_a;                                         // axial modulus
+      double nu_at;                             // axial-transverse poisson ratio
+      double nu_t;                                      // transverse poisson ratio
+      double G_at;                                      // axial-transverse shear modulus
+      double mu_fiber;                  // inter-fiber friction coefficient
       double crimp_stretch; // stretch to uncrimp fibers
       double crimp_ratio;   // ratio of uncrimped to initial tensile modulus.
       double phi_0;         // initial micro porosity in fiber bundle
@@ -107,34 +107,34 @@ namespace Uintah {
 
     // Basis function for transverse isotropy B3(n)_ijpq
     double B1(const Vector& n, // fiber direction
-		      const int& i,    // index
-		      const int& j,    // index
-		      const int& p,    // index
-		      const int& q);    // index
+                      const int& i,    // index
+                      const int& j,    // index
+                      const int& p,    // index
+                      const int& q);    // index
     // Basis function for transverse isotropy B3(n)_ijpq
     double B2(const Vector& n, // fiber direction
-		      const int& i,    // index
-		      const int& j,    // index
-		      const int& p,    // index
-		      const int& q);    // index
+                      const int& i,    // index
+                      const int& j,    // index
+                      const int& p,    // index
+                      const int& q);    // index
     // Basis function for transverse isotropy B3(n)_ijpq
     double B3(const Vector& n, // fiber direction
-		      const int& i,    // index
-		      const int& j,    // index
-		      const int& p,    // index
-		      const int& q);    // index
+                      const int& i,    // index
+                      const int& j,    // index
+                      const int& p,    // index
+                      const int& q);    // index
     // Basis function for transverse isotropy B3(n)_ijpq
     double B4(const Vector& n, // fiber direction
-		      const int& i,    // index
-		      const int& j,    // index
-		      const int& p,    // index
-		      const int& q);    // index
+                      const int& i,    // index
+                      const int& j,    // index
+                      const int& p,    // index
+                      const int& q);    // index
     // Basis function for transverse isotropy B3(n)_ijpq
     double B5(const Vector& n, // fiber direction
-		      const int& i,    // index
-		      const int& j,    // index
-		      const int& p,    // index
-		      const int& q);    // index
+                      const int& i,    // index
+                      const int& j,    // index
+                      const int& p,    // index
+                      const int& q);    // index
 
     // estimates porosity assuming no matrix compression.
     double computePorosity(const double& J);
@@ -144,13 +144,13 @@ namespace Uintah {
 
     // compute bulk modulus based on scale Trans Isotropic elastic properties.
     double computeBulkModulus(const double& J,      // volumetric stretch
-    		                      const double& stretch // fiber stretch
+                                      const double& stretch // fiber stretch
     );
 
     // cubic blending function
     double smoothStep(const double& x,
-    		const double& xmin,
-    		const double& xmax);
+                const double& xmin,
+                const double& xmax);
 
   public:
     // constructors

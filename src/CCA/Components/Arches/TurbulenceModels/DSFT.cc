@@ -317,27 +317,27 @@ void DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   //init all at once
   Uintah::parallel_for(execObj, initrange, KOKKOS_LAMBDA(int i, int j, int k){
     IsI(i, j, k) = 0.0;
-	s11(i, j, k) = 0.0;
-	s12(i, j, k) = 0.0;
-	s13(i, j, k) = 0.0;
-	s22(i, j, k) = 0.0;
-	s23(i, j, k) = 0.0;
-	s33(i, j, k) = 0.0;
+        s11(i, j, k) = 0.0;
+        s12(i, j, k) = 0.0;
+        s13(i, j, k) = 0.0;
+        s22(i, j, k) = 0.0;
+        s23(i, j, k) = 0.0;
+        s33(i, j, k) = 0.0;
 
-	Beta11(i, j, k) = 0.0;
-	Beta12(i, j, k) = 0.0;
-	Beta13(i, j, k) = 0.0;
-	Beta22(i, j, k) = 0.0;
-	Beta23(i, j, k) = 0.0;
-	Beta33(i, j, k) = 0.0;
+        Beta11(i, j, k) = 0.0;
+        Beta12(i, j, k) = 0.0;
+        Beta13(i, j, k) = 0.0;
+        Beta22(i, j, k) = 0.0;
+        Beta23(i, j, k) = 0.0;
+        Beta33(i, j, k) = 0.0;
 
-	filterRho(i, j, k) = 0.0;
+        filterRho(i, j, k) = 0.0;
 
-	rhoBC(i, j, k) = rho(i,j,k);
+        rhoBC(i, j, k) = rho(i,j,k);
 
-	filterRhoU(i, j, k) = 0.0;
-	filterRhoV(i, j, k) = 0.0;
-	filterRhoW(i, j, k) = 0.0;
+        filterRhoU(i, j, k) = 0.0;
+        filterRhoV(i, j, k) = 0.0;
+        filterRhoW(i, j, k) = 0.0;
 
     rhoUU(i, j, k) = 0.0;
     rhoVV(i, j, k) = 0.0;

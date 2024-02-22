@@ -9,10 +9,10 @@ namespace Uintah { namespace ArchesCore {
   FILTER get_filter_from_string( const std::string & value );
 
   struct BCFilter {
-	template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
+        template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
     void apply_BC_filter_rho( const Patch* patch, grid_T& var,
-    		                  grid_T& rho, grid_CT& vol_fraction,
-	                          ExecutionObject<ExecSpace, MemSpace>& execObj){
+                                  grid_T& rho, grid_CT& vol_fraction,
+                                  ExecutionObject<ExecSpace, MemSpace>& execObj){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
@@ -35,8 +35,8 @@ namespace Uintah { namespace ArchesCore {
 
     template <typename ExecSpace, typename MemSpace, typename grid_T, typename grid_CT>
     void apply_BC_rho( const Patch* patch, grid_T& var,
-             		        grid_CT& rho,
- 			                grid_CT& vol_fraction,
+                                grid_CT& rho,
+                                        grid_CT& vol_fraction,
                             ExecutionObject<ExecSpace, MemSpace>& execObj){
 
 
@@ -93,8 +93,8 @@ namespace Uintah { namespace ArchesCore {
     //Need to pass extra HostV_T (type on host)  to be used by VariableHelper. VariableHelper can not use KokkosView3
     template <typename HostV_T, typename T, typename CT, typename grid_CT, typename ExecSpace, typename MemSpace>
     void apply_BC_rhou( const Patch* patch, T& var, CT& vel,
-    		            grid_CT& rho, grid_CT& vol_fraction,
-						ExecutionObject<ExecSpace, MemSpace>& execObj){
+                            grid_CT& rho, grid_CT& vol_fraction,
+                                                ExecutionObject<ExecSpace, MemSpace>& execObj){
 
       std::vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
@@ -251,7 +251,7 @@ namespace Uintah { namespace ArchesCore {
   //Need to pass extra HostV_T (type on host)  to be used by VariableHelper. VariableHelper can not use KokkosView3
   template <typename HostV_T, typename V_T, typename grid_T, typename grid_CT, typename ExecSpace, typename MemSpace>
   void applyFilter(V_T& var, grid_T& Fvar, grid_CT& rho,
-		           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
+                           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
   {
   ArchesCore::VariableHelper<HostV_T> helper;
   const int i_n = helper.ioff;
@@ -303,7 +303,7 @@ namespace Uintah { namespace ArchesCore {
   // scalar filter
   template <typename V_T, typename grid_T, typename grid_CT, typename ExecSpace, typename MemSpace>
   void applyFilter(V_T& var, grid_T& Fvar,
-		           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
+                           grid_CT& eps, BlockRange range, ExecutionObject<ExecSpace, MemSpace>& execObj)
   {
 
   localW wl(w);
@@ -323,12 +323,12 @@ namespace Uintah { namespace ArchesCore {
   }
 
   struct localW{
-	localW(double  a[][3][3]){
+        localW(double  a[][3][3]){
       for(int i=0; i<3; i++)
         for(int j=0; j<3; j++)
-   	      for(int k=0; k<3; k++)
+              for(int k=0; k<3; k++)
             w[i][j][k] = a[i][j][k];
-	}
+        }
     double w[3][3][3];
   };
 

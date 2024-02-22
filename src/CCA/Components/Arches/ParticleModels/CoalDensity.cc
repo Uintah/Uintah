@@ -191,7 +191,7 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-	      const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+              const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
         const double initAsh = _ash_mf * massDry;
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
@@ -213,8 +213,8 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-	    const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
-	    rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
+            const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
+            rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
       });
     }
   }
@@ -284,7 +284,7 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-	      const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+              const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
         const double initAsh = _ash_mf * massDry;
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
@@ -304,8 +304,8 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-	    const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
-	    rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
+            const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
+            rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
       });
     }
   }

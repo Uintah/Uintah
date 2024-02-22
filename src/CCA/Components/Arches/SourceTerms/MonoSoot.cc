@@ -42,7 +42,7 @@ MonoSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Ns_label",             m_Ns_name,               "Ns");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
   db->getWithDefault("oh_label",             m_OH_name,               "OH");
-  db->getWithDefault("co2_label",	           m_CO2_name,		          "CO2");
+  db->getWithDefault("co2_label",                  m_CO2_name,                    "CO2");
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("h2o_label",            m_H_name,                "H");
   db->getWithDefault("h2o_label",            m_H2_name,               "H2");

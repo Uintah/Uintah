@@ -64,7 +64,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskRestartInitFunctionP
 void ConstantStateProperties::problemSetup( ProblemSpecP& db ){
 
   for ( ProblemSpecP db_prop = db->findBlock("const_property");
-	db_prop.get_rep() != nullptr;
+        db_prop.get_rep() != nullptr;
         db_prop = db_prop->findNextBlock("const_property") ){
 
     std::string label;

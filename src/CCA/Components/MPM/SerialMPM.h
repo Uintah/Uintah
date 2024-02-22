@@ -551,7 +551,7 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
-/////MJ												  
+/////MJ                                                                                           
  virtual void scheduleGranularMPM(SchedulerP&, const PatchSet*, 
                                                   const MaterialSet*);
 

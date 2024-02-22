@@ -26,7 +26,7 @@ const double Cs   = pow(6.0/(M_PI*rhos),1.0/3.0); ///< Soot particle diameter co
 
 double
 Combination(int r,
-    	      int k)
+              int k)
 {
     /// Function computes statistical combination of r and k
     double rfact       = 1.0;
@@ -276,9 +276,9 @@ SurfaceGrowth(double Temp,
 
 double
 SootCoagulation(double Temp,
-        		    double Press,
-		            std::vector<double> Moments,
-		            int r,
+                            double Press,
+                            std::vector<double> Moments,
+                            int r,
                 double d,
                 double time_step)
 {
@@ -298,10 +298,10 @@ SootCoagulation(double Temp,
     double temp_time  = time_step;
     double total_time = 0;
     double Ca       = (3.0-3.0*d)+(3.0*d-2.0)*Cd;
-    double Dg 		  = pow(6.0*kB*Temp/(Press*M_PI),1.0/3.0);    		  ///< average gas molecular diameter (m)
-    double lambdaG 	= kB*Temp/(pow(2.0,0.5)*M_PI*pow(Dg,2.0)*Press);	///< gas mean free path 		    (m)
-    double Kc		= 2.0*kB*Temp/(3.0*Visc);
-    double Kcprime	= 2.514*lambdaG/(Cs*Ca);
+    double Dg             = pow(6.0*kB*Temp/(Press*M_PI),1.0/3.0);                ///< average gas molecular diameter (m)
+    double lambdaG      = kB*Temp/(pow(2.0,0.5)*M_PI*pow(Dg,2.0)*Press);        ///< gas mean free path                     (m)
+    double Kc           = 2.0*kB*Temp/(3.0*Visc);
+    double Kcprime      = 2.514*lambdaG/(Cs*Ca);
     double Kf = 2.2*pow(Ca*Cs,2.0)*pow(M_PI*kB*Temp/2.0,0.5);
     std::vector<double> temp_Moments(6);
     for(int i=0; i<6;i++) temp_Moments[i] = Moments[i];
@@ -314,12 +314,12 @@ SootCoagulation(double Temp,
     
       if (r==0) {
         RateC = -1.0*Kc*(pow(temp_Moments[0],2.0)+MoMIC(1.0/3.0,temp_Moments)*MoMIC(-1.0/3.0,temp_Moments)+
-    	  		    Kcprime*(MoMIC(-1.0/3.0,temp_Moments)*temp_Moments[0]+MoMIC(-2.0/3.0,temp_Moments)*MoMIC(1.0/3.0,temp_Moments)));
+                            Kcprime*(MoMIC(-1.0/3.0,temp_Moments)*temp_Moments[0]+MoMIC(-2.0/3.0,temp_Moments)*MoMIC(1.0/3.0,temp_Moments)));
       }
       else {
         for (int k=1;k<r;k++){
-    	    RateC = RateC+Combination(r,k)*(2.0*temp_Moments[k]*temp_Moments[r-k]+MoMIC(k+1.0/3.0,temp_Moments)*MoMIC(r-k-1.0/3.0,temp_Moments)+MoMIC(k-1.0/3.0,temp_Moments)*MoMIC(r-k+1.0/3.0,temp_Moments)+Kcprime*(MoMIC(k-1.0/3.0,temp_Moments)*temp_Moments[r-k]+temp_Moments[k]*MoMIC(r-k-1.0/3.0,temp_Moments)+MoMIC(k+1.0/3.0,temp_Moments)*MoMIC(r-k-2.0/3.0,temp_Moments)+MoMIC(k-2.0/3.0,temp_Moments)*MoMIC(r-k+1.0/3.0,temp_Moments)));
-    	  }
+            RateC = RateC+Combination(r,k)*(2.0*temp_Moments[k]*temp_Moments[r-k]+MoMIC(k+1.0/3.0,temp_Moments)*MoMIC(r-k-1.0/3.0,temp_Moments)+MoMIC(k-1.0/3.0,temp_Moments)*MoMIC(r-k+1.0/3.0,temp_Moments)+Kcprime*(MoMIC(k-1.0/3.0,temp_Moments)*temp_Moments[r-k]+temp_Moments[k]*MoMIC(r-k-1.0/3.0,temp_Moments)+MoMIC(k+1.0/3.0,temp_Moments)*MoMIC(r-k-2.0/3.0,temp_Moments)+MoMIC(k-2.0/3.0,temp_Moments)*MoMIC(r-k+1.0/3.0,temp_Moments)));
+          }
         RateC = 0.5*Kc*RateC;
       }
     
@@ -330,7 +330,7 @@ SootCoagulation(double Temp,
       }
       else {
           for (int k=1;k<r;k++) {
-    	      RateF = RateF+Combination(r,k)*fm_coag_grid(0.5,k,r-k,temp_Moments);
+              RateF = RateF+Combination(r,k)*fm_coag_grid(0.5,k,r-k,temp_Moments);
           }
           RateF = 0.5*Kf*RateF;
       }
@@ -364,7 +364,7 @@ SootSurfaceCoagulation( double Temp,
     // Compute the Knudsen number for regime determination
     const double Ca = (3.0-3.0*d)+(3.0*d-2.0)*Cd;
     double Dg = pow(6.0*kB*Temp/(Press*M_PI),1.0/3.0);
-    //double Dp 	 = Cs*Ca*pow(Moments[1]/Moments[0],1.0/3.0);       ///< average particle diameter		(m)
+    //double Dp          = Cs*Ca*pow(Moments[1]/Moments[0],1.0/3.0);       ///< average particle diameter               (m)
     double lambdaG = kB*Temp/(pow(2.0,0.5)*M_PI*pow(Dg,2.0)*Press);
     //double Kn = lambdaG/Dp; // knudsen number unused?
 
@@ -449,7 +449,7 @@ MoMICSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("PAH4_label",           m_PAH4_name,             "PAH4");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
   db->getWithDefault("oh_label",             m_OH_name,               "OH");
-  db->getWithDefault("co2_label",	           m_CO2_name,		          "CO2");
+  db->getWithDefault("co2_label",                  m_CO2_name,                    "CO2");
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("h_label",              m_H_name,                "H");
   db->getWithDefault("h2_label",             m_H2_name,               "H2");

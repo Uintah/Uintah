@@ -183,8 +183,8 @@ namespace Uintah {
         STENCIL5_1D(0);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       }
@@ -194,8 +194,8 @@ namespace Uintah {
         STENCIL5_1D(1);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
       }
@@ -205,8 +205,8 @@ namespace Uintah {
         STENCIL5_1D(2);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
       }
@@ -293,7 +293,7 @@ namespace Uintah {
         STENCIL3_1D(dir);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+        const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
         flux(IJK_) = afc * u(IJK_) * phi_ave;
       });
@@ -443,8 +443,8 @@ namespace Uintah {
         STENCIL5_1D(dir);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       });
@@ -590,7 +590,7 @@ namespace Uintah {
         STENCIL3_1D(0);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+        const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
         flux_x(IJK_) = afc * u(IJK_) * phi_ave;
       }
@@ -600,7 +600,7 @@ namespace Uintah {
         STENCIL3_1D(1);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+        const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
         flux_y(IJK_) = afc * v(IJK_) * phi_ave;
       }
@@ -610,7 +610,7 @@ namespace Uintah {
         STENCIL3_1D(2);
 
         const double afc = eps(IJK_) * eps(IJK_M_);
-	const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+        const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
         flux_z(IJK_) = afc * w(IJK_) * phi_ave;
       }
@@ -997,8 +997,8 @@ namespace Uintah {
         STENCIL5_1D(0);
 
         const double afc =  eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
       }
@@ -1008,8 +1008,8 @@ namespace Uintah {
         STENCIL5_1D(1);
 
         const double afc =  eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
       }
@@ -1019,8 +1019,8 @@ namespace Uintah {
         STENCIL5_1D(2);
 
         const double afc =  eps(IJK_) * eps(IJK_M_);
-	const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+        const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+        const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
         flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
       }
@@ -1137,7 +1137,7 @@ namespace Uintah {
           STENCIL3_1D(0);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+          const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
           flux_x(IJK_) = afc * u(IJK_) * phi_ave;
         }
@@ -1147,7 +1147,7 @@ namespace Uintah {
           STENCIL3_1D(1);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+          const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
           flux_y(IJK_) = afc * v(IJK_) * phi_ave;
         }
@@ -1157,7 +1157,7 @@ namespace Uintah {
           STENCIL3_1D(2);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
+          const double phi_ave = (phi(IJK_) + phi(IJK_M_)) / 2.0;
 
           flux_z(IJK_) = afc * w(IJK_) * phi_ave;
         }
@@ -1474,8 +1474,8 @@ namespace Uintah {
           STENCIL5_1D(0);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+          const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+          const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
           flux_x(IJK_) = afc * u(IJK_) * (phi_c1 + phi_c2);
         }
@@ -1485,8 +1485,8 @@ namespace Uintah {
           STENCIL5_1D(1);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+          const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+          const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
           flux_y(IJK_) = afc * v(IJK_) * (phi_c1 + phi_c2);
         }
@@ -1496,8 +1496,8 @@ namespace Uintah {
           STENCIL5_1D(2);
 
           const double afc = eps(IJK_) * eps(IJK_M_);
-	  const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
-	  const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
+          const double phi_c1 = c1 * (phi(IJK_)    + phi(IJK_M_));
+          const double phi_c2 = c2 * (phi(IJK_MM_) + phi(IJK_P_));
 
           flux_z(IJK_) = afc * w(IJK_) * (phi_c1 + phi_c2);
         }

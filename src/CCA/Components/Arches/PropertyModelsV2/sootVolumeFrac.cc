@@ -61,8 +61,8 @@ void
 sootVolumeFrac::problemSetup(  Uintah::ProblemSpecP& db )
 {
   db->getAttribute("label", _fvSoot);
-  db->getWithDefault( "density_label" ,          _den_label_name,    "density"	  );
-  db->getWithDefault( "Ysoot_label"   ,          _Ys_label_name ,    "Ysoot"	  );
+  db->getWithDefault( "density_label" ,          _den_label_name,    "density"    );
+  db->getWithDefault( "Ysoot_label"   ,          _Ys_label_name ,    "Ysoot"      );
   db->getWithDefault( "soot_density", _rho_soot, 1950.0);
 }
 

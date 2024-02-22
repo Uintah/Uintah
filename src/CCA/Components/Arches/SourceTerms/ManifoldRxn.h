@@ -15,7 +15,7 @@ class ManifoldRxn: public SourceTermBase {
 public: 
 
   ManifoldRxn( std::string srcName,  ArchesLabel* field_labels,
-	       std::vector<std::string> reqLabelNames, std::string type );
+               std::vector<std::string> reqLabelNames, std::string type );
 
   ~ManifoldRxn();
   /** @brief Interface for the inputfile and set constants */ 
