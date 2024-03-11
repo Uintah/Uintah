@@ -257,6 +257,7 @@
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
+        <MotionInDirection               spec="OPTIONAL VECTOR" />
         <linear_thermal_expansion_coef   spec="OPTIONAL DOUBLE 'positive'"/>
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />

@@ -3077,6 +3077,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gSp_vol[c]        /= gmass[c];
       }
 
+      // Restriction motion of material to a user-specified direction
+      Vector motionIn = mpm_matl->getMotionInDirection();
+      if(motionIn.length()>1.e-8){
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                          !iter.done();iter++){
+          IntVector c = *iter;
+  
+          double velDot = Dot(gvelocity[c],motionIn);
+          gvelocity[c] = velDot*motionIn;
+        }
+      }
+
       if (flags->d_doScalarDiffusion) {
         for (NodeIterator iter=patch->getExtraNodeIterator();
              !iter.done(); ++iter) {
@@ -3617,14 +3629,16 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
 {
   for (int p=0; p < patches->size(); ++p) {
     const Patch*  patch = patches->get(p);
-    printTask(patches, patch, cout_doing, "Doing MPM::computeAndIntegrateDiffusion");
+    printTask(patches, patch, cout_doing, 
+                                     "Doing MPM::computeAndIntegrateDiffusion");
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     Ghost::GhostType  gnone = Ghost::None;
     for (unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); ++m) {
-      MPMMaterial*  mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+      MPMMaterial*  mpm_matl = 
+                       (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -3743,6 +3757,20 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         allMatls_totalMass += mass[c];
         STF[dwi]           +=externalforce[c];
         allMatls_STF       +=externalforce[c];
+      }
+
+      // Restriction motion of material to a user-specified direction
+      Vector motionIn = mpm_matl->getMotionInDirection();
+      if(motionIn.length()>1.e-8){
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                          !iter.done();iter++){
+          IntVector c = *iter;
+  
+          double accDot = Dot(acceleration[c],motionIn);
+          acceleration[c] = accDot*motionIn;
+          double velStarDot = Dot(velocity_star[c],motionIn);
+          velocity_star[c] = velStarDot*motionIn;
+        }
       }
 
       if(mpm_matl->getIsFTM()){
@@ -3902,6 +3930,21 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                                                 iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
+      }
+
+      // Restriction motion of material to a user-specified direction
+      Vector motionIn = mpm_matl->getMotionInDirection();
+      if(motionIn.length()>1.e-8){
+
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                          !iter.done();iter++){
+          IntVector c = *iter;
+  
+          double accDot = Dot(gacceleration[c],motionIn);
+          gacceleration[c] = accDot*motionIn;
+          double velStarDot = Dot(gvelocity_star[c],motionIn);
+          gvelocity_star[c] = velStarDot*motionIn;
+        }
       }
     } // matl loop
   }  // patch loop

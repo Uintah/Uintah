@@ -132,7 +132,8 @@ WARNING
    ParticleCreator* getParticleCreator();
 
    double getInitialDensity() const;
-   bool    getIsPistonMaterial() const;
+   bool   getIsPistonMaterial() const;
+   Vector getMotionInDirection() const;
 
    // Get the specific heats at room temperature
    double getInitialCp() const;
@@ -201,6 +202,7 @@ WARNING
    bool   d_allTriGeometry = false;
    bool   d_allFileGeometry = false;
    bool   d_isPistonMaterial;
+   Vector d_motionInDirection;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
