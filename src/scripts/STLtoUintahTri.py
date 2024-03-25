@@ -15,9 +15,18 @@ import argparse
 #  This script converts a STL file into a Uintah.tri and Uintah.pts files
 #  so they can be read in.  This works for either binary or ascii files.
 #
-#  Dependencies:  python-vtk6
+#  python Dependencies:  python-vtk and numpy
+#
 #  Example Usage:
-#  python /scripts/STLtoUintahTri.py -i classRoomRotated.stl -u classRoomRotated -s 0.01
+#       python /scripts/STLtoUintahTri.py -i classRoomRotated.stl -u classRoomRotated -s 0.01
+# 
+#
+#    -i,  --stlfile,   Name of the STL file to convert
+#    -u,  --uintah,    Prefix name of the uintah pts and tri files
+#
+#  OPTIONS:
+#    -z,  --zerolower, Set the lower bounds to be 0,0,0
+#    -s,  --scale,     Scale the vertices by this factor
 #______________________________________________________________________
 
 class STL2UintahTri(object):
