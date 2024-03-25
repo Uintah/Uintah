@@ -50,8 +50,8 @@
       <ADD_HEAT                         spec="OPTIONAL NO_DATA" >
        <add_heat_matls                  spec="REQUIRED STRING" />
        <add_heat_coeff                  spec="REQUIRED STRING" />
-       <add_heat_t_start                spec="REQUIRED DOUBLE" />
-       <add_heat_t_final                spec="REQUIRED DOUBLE" />
+       <add_heat_t_start                spec="REQUIRED DOUBLE 'positive'" />
+       <add_heat_t_final                spec="REQUIRED DOUBLE 'positive'" />
       </ADD_HEAT>
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
 
@@ -137,9 +137,8 @@
         <include href="solver_spec.xml" section="Solver/Parameters" />
       </ImplicitSolver>
 
-      <max_iteration_equilibration      spec="OPTIONAL INTEGER 'positive'" /> <!-- FIXME: what is default? -->
-      <solution                         spec="OPTIONAL NO_DATA"
-                                          attribute1="technique REQUIRED STRING 'EqForm'" />
+      <max_iteration_equilibration      spec="OPTIONAL INTEGER 'positive'" />
+
       <TimeStepControl                  spec="OPTIONAL NO_DATA" >
         <Scheme_for_delT_calc           spec="REQUIRED STRING 'aggressive, conservative'" />
         <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1'" />

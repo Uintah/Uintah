@@ -615,22 +615,22 @@
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
           <compressionBitrate spec="OPTIONAL DOUBLE" />
           <idxIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use IDX I/O -->
-            <partitionCount     spec="OPTIONAL VECTOR" />
-            <idxBlockSize       spec="OPTIONAL INTEGER" />
-            <idxBlockCount      spec="OPTIONAL INTEGER" />
+            <partitionCount   spec="OPTIONAL VECTOR" />
+            <idxBlockSize     spec="OPTIONAL INTEGER" />
+            <idxBlockCount    spec="OPTIONAL INTEGER" />
           </idxIo>
           <rawIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use RAW I/O -->
             <restructureBoxSize spec="OPTIONAL VECTOR" />
-            <pipeSize           spec="OPTIONAL INTEGER" />
+            <pipeSize         spec="OPTIONAL INTEGER" />
           </rawIo>
         </checkpoint>
         <visIO                spec="OPTIONAL NO_DATA">
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
           <compressionBitrate spec="OPTIONAL DOUBLE" />
           <idxIo              spec="OPTIONAL NO_DATA">
-            <partitionCount     spec="OPTIONAL VECTOR" />
-            <idxBlockSize       spec="OPTIONAL INTEGER" />
-            <idxBlockCount      spec="OPTIONAL INTEGER" />
+            <partitionCount   spec="OPTIONAL VECTOR" />
+            <idxBlockSize     spec="OPTIONAL INTEGER" />
+            <idxBlockCount    spec="OPTIONAL INTEGER" />
           </idxIo>
           <rawIo              spec="OPTIONAL NO_DATA">
             <restructureBoxSize spec="OPTIONAL VECTOR" />
@@ -688,7 +688,7 @@
                RHS += area*value
                so that value = rho*phi*velocity
                If area is not specified, then area = cell face area respectively -->
-          <area             spec="OPTIONAL DOUBLE"/>
+          <area       spec="OPTIONAL DOUBLE"/>
 
         </BCType>
       </InteriorFace>
@@ -721,16 +721,16 @@
 
         <!--__________________________________-->
 
-        <BCType             spec="MULTIPLE NO_DATA"
-                              attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom,
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
-                                                                     Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
-                              attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'"
-                              attribute5="value     OPTIONAL STRING" >
+        <BCType       spec="MULTIPLE NO_DATA"
+                        attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
+                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom,
+                                                               VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
+                                                               Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                        attribute3="label     REQUIRED STRING "
+                        attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'"
+                        attribute5="value     OPTIONAL STRING" >
 
-          <value            spec="OPTIONAL STRING"/>
+          <value      spec="OPTIONAL STRING"/>
 
           <include href="arches_spec.xml" section="BCType" excludeSectionTag="true" />
         </BCType>
@@ -771,9 +771,7 @@
   <!--______________________________________________________________________-->
 
   <CFD                 spec="OPTIONAL NO_DATA" >
-
-    <CanAddICEMaterial spec="OPTIONAL BOOLEAN" />            <!-- FIXME: This belongs in CFD/ICE -->
-    <cfl               spec="OPTIONAL INTEGER 'positive'" />
+    <cfl               spec="OPTIONAL DOUBLE '0,1'" />
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
     <include href="arches_spec.xml" section="CFD/ARCHES" />
@@ -891,8 +889,8 @@
     </TaskMonitoring>
 
     <VarTracker           spec="OPTIONAL NO_DATA">
-      <start_time         spec="REQUIRED DOUBLE"  />
-      <end_time           spec="REQUIRED DOUBLE"  />
+      <start_time         spec="REQUIRED DOUBLE 'positive'"  />
+      <end_time           spec="REQUIRED DOUBLE 'positive'"  />
       <level              spec="OPTIONAL INTEGER" />
       <start_index        spec="REQUIRED VECTOR"  />
       <end_index          spec="REQUIRED VECTOR"  />
