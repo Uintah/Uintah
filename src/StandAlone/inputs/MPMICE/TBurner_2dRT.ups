@@ -217,8 +217,7 @@
 
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
         <advection type="SecondOrder" useCompatibleFluxes="true"/>
-        <ClampSpecificVolume>     true          </ClampSpecificVolume>
-        <solution technique="EqForm"/>
+        <ClampSpecificVolume> true </ClampSpecificVolume>
        </ICE>
     </CFD>
 
