@@ -1,5 +1,16 @@
+
 #______________________________________________________________________
 #  This file contains commonly used bash functions
+
+
+#______________________________________________________________________
+#  echo to stderr
+echoerr()
+{
+  echo "$@" 1>&2;
+}
+
+
 #______________________________________________________________________
 # Print a message to stderr and exit with error code 1
 
@@ -11,16 +22,36 @@ end_die ()
   exit 1
 }
 
+
+#______________________________________________________________________
+# exit with an error message if file or directory does not exist
+# If there are 2 inputs the user can specify a warning message s thrown
+pathExists()
+{
+  flag="EXIT"
+
+  if [[ $# -eq 2 ]]; then
+    flag=$( tr [:upper:] "$2" )
+  fi
+
+  if [[ -e $( realpath "$1" 2> /dev/null) ]]; then
+    realpath "$1"
+
+  elif [[ "$flag" == "EXIT" ]]; then
+    echoerr "    ERROR: ($1) Directory/file does not exist. Now exiting"
+    exit 1
+  else
+    echo "    WARNING: ($1) Directory/file does not exist."
+  fi
+  return 0
+}
+
 #______________________________________________________________________
 # Print a message to stderr and exit with error code 1 if command not found.
 
 commandExists ()
 {
-  which "$1" >& /dev/null
-
-  if [[ "$?" != "0" ]]; then
-    end_die " The command: (${1}) was not found, now exiting"
-  fi
+  which "$1" >& /dev/null ||  end_die " The command: (${1}) was not found, now exiting"
 }
 
 #______________________________________________________________________
@@ -42,7 +73,7 @@ function cleanUp()
   echo -e "\nThe directory (${1}) will be removed (${2}."
 
   if [[ ${2} == "now" ]]; then
-    /bin/rm -rf ${1}
+    /bin/rm -rf "${1}"
   fi
 
   if [[ ${2} != "now" ]]; then
