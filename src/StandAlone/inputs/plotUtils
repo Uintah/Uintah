@@ -1,0 +1,122 @@
+
+
+#______________________________________________________________________
+#  This file contains commonly used bash functions for the plotting
+#  scripts
+#______________________________________________________________________
+
+
+# source the file containing common functions
+#  src/scripts/bashFunctions
+
+myPath="$( realpath "$0" | xargs dirname )"
+scriptsPath=$( echo "$myPath" | awk -F 'StandAlone/' '{ print $1"scripts"}' )
+
+source  "$scriptsPath/bashFunctions"
+
+
+#______________________________________________________________________
+#   function:  Parses an uda outputfile for meta data
+parseMetaData()
+{
+  local udaOut="$1"
+  local -n array="$2"
+
+  array[procs]=$(   awk -F: '/Parallel/&&/processes/ {printf "%i", $2}' "$udaOut" )
+  array[threads]=$( grep "threads per MPI process" "$udaOut" | awk '{print $2}' )
+  array[machine]=$( grep Machine    "$udaOut" | cut -d":" -f 2 )
+  array[date]=$(    grep -m1 Date   "$udaOut" | cut -d" " -f2-8,10 )
+  array[uda]=$(     grep "DataArchiver created" "$udaOut" | awk '{print $3}' )
+}
+
+#______________________________________________________________________
+#     function:  defines the gnuplot terminal
+setTerminal()
+{
+  local hardcopy="$1"     # uppercase
+  local gpFile="$2"
+  local fname="$3"
+
+  if [[ "$hardcopy" == "Y" ]]; then
+    echo "  Generating the postscript file named ($fname)"
+
+    /bin/rm "$gpFile"
+    cat > "$gpFile" << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "$fname"
+fin
+  else
+    echo "  Using a X11 terminal"
+    cat > "$gpFile" << fin
+set terminal x11 enhanced font "clean,12"  size 1024,768
+fin
+  fi
+
+}
+
+#______________________________________________________________________
+#       functon:  prune all timesteps down to TSlo  -> TShigh
+pruneTimesteps()
+{
+  local tsRange="$1"
+  local outFile="$2"
+
+  if [[ "$tsRange" == ":" ]]; then
+    return
+  fi
+
+  tsLo=$( echo "$tsRange" | cut -d":" -f1 )
+  tsHi=$( echo "$tsRange" | cut -d":" -f2 )
+
+  # prune data file if this is requested
+  if [ -n "$tsLo" ] && [ -n "$tsHi" ]; then
+    echo "  Only timesteps $tsLo -> $tsHi are shown."
+
+    awk -v tsLo="$tsLo" -v tsHi="$tsHi" \
+        '{ if ( $1 >= tsLo && $1 <= tsHi ) print }' \
+         "$outFile" > data.pruned
+
+    cp data.pruned data
+  fi
+}
+
+
+#______________________________________________________________________
+#   function:  Create a pdf from the postscript file
+create_pdf()
+{
+  local hardcopy="$1"      # uppercase
+  local base="$2"
+
+  if [ "$hardcopy" == "Y" ]; then
+
+    commandExists ps2pdf
+
+    psFile="$base.ps"
+    echo "  Converting PostScript files to PDF"
+    ps2pdf "$psFile"
+    /bin/rm "$psFile"
+
+    mv "$base.pdf" ../.
+  fi
+}
+
+#______________________________________________________________________
+#   function:   enable all the error trapping
+enableTrapping(){
+  set -o errtrace
+  set -o errexit
+  #set -o nounset
+  trap traperr ERR
+}
+
+
+#______________________________________________________________________
+traperr() {
+  echo "ERROR: ${BASH_SOURCE[1]} at about ${BASH_LINENO[0]}"
+  exit
+}
+
+#______________________________________________________________________
+
