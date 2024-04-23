@@ -1,0 +1,265 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+  <Meta>
+      <title>SI-20240328-01</title>
+      <info>
+      -
+      - 200/400 um resolution
+      </info>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+  <Time>
+      <maxTime>4.0e-3</maxTime>
+      <initTime>0.0</initTime>
+      <delt_min>1.e-9</delt_min>
+      <delt_max>2.6e-5</delt_max>
+      <timestep_multiplier>.3</timestep_multiplier>
+  </Time>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator> fast_cpdi</interpolator>
+      <cpdi_lcrit>              0.9      </cpdi_lcrit>
+      <withColor>               true     </withColor>
+      <use_load_curves>         true    </use_load_curves>
+      <DoExplicitHeatConduction>false    </DoExplicitHeatConduction>
+      <artificial_damping_coeff> 0.0     </artificial_damping_coeff>
+      <XPIC2>                    false   </XPIC2>
+      <boundary_traction_faces>  [zplus]</boundary_traction_faces>
+  </MPM>
+
+  <DataArchiver>
+      <filebase>Screw2D.uda</filebase>
+      <outputInterval>1.0e-4</outputInterval>
+      <save label="p.x"></save>
+      <save label="p.mass"></save>
+      <save label="p.color"></save>
+      <save label="p.displacement"></save>
+      <save label="p.volume"></save>
+      <save label="p.velocity"></save>
+      <save label="p.externalforce"></save>
+      <save label="p.scalefactor"></save>
+      <save label="p.deformationMeasure"></save>
+      <save label = "p.localizedMPM"/>
+      <save label="p.stress"></save>
+      <save label="KineticEnergy"></save>
+      <save label="g.velocity"></save>
+      <save label="RigidReactionForce"/>
+      <save label="BndyForce_zplus"></save>
+      <checkpoint interval="1.0e-4" cycle="2"></checkpoint>
+  </DataArchiver>
+
+  <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <MPM>
+      <material name = "Screw">
+        <density>4.42e3</density>
+        <thermal_conductivity>1.0</thermal_conductivity>
+        <specific_heat>1.004e-5</specific_heat>
+        <constitutive_model type="rigid">
+          <bulk_modulus> 1.08e11 </bulk_modulus>
+          <shear_modulus> 4.15e10 </shear_modulus>
+        </constitutive_model>
+        <geom_object>
+          <union>
+            <box>
+              <min>[0.0012, -0.152, 0.0004]</min>
+              <max>[0.0032,  0.152, 0.0480]</max>
+            </box>
+            <cylinder label = "T1">
+               <bottom>[.0012,-0.152,.0012]</bottom>
+               <top>   [.0012, 0.152,.0012]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T2">
+               <bottom>[.0012,-0.152,.0052]</bottom>
+               <top>   [.0012, 0.152,.0052]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T3">
+               <bottom>[.0012,-0.152,.0092]</bottom>
+               <top>   [.0012, 0.152,.0092]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T4">
+               <bottom>[.0012,-0.152,.0132]</bottom>
+               <top>   [.0012, 0.152,.0132]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T5">
+               <bottom>[.0012,-0.152,.0172]</bottom>
+               <top>   [.0012, 0.152,.0172]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T6">
+               <bottom>[.0012,-0.152,.0212]</bottom>
+               <top>   [.0012, 0.152,.0212]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T7">
+               <bottom>[.0012,-0.152,.0252]</bottom>
+               <top>   [.0012, 0.152,.0252]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T8">
+               <bottom>[.0012,-0.152,.0292]</bottom>
+               <top>   [.0012, 0.152,.0292]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T9">
+               <bottom>[.0012,-0.152,.0332]</bottom>
+               <top>   [.0012, 0.152,.0332]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T10">
+               <bottom>[.0012,-0.152,.0372]</bottom>
+               <top>   [.0012, 0.152,.0372]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T11">
+               <bottom>[.0012,-0.152,.0412]</bottom>
+               <top>   [.0012, 0.152,.0412]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+            <cylinder label = "T12">
+               <bottom>[.0012,-0.152,.0452]</bottom>
+               <top>   [.0012, 0.152,.0452]</top>
+               <radius> .0008 </radius>
+            </cylinder>
+          </union>
+          <res>[2,1,2]</res>
+          <velocity>[0.0,0.0,0.0]</velocity>
+          <temperature>0</temperature>
+          <color>0</color>
+        </geom_object>
+      </material>
+
+      <material name = "Arenisca-WP1-Foam-model-15PCF-LS-model">
+        <!--  Taken from "Lifespans Alfonso Sims\Trauma\T-1-A3 ASTMF543 Pullout\2_Simulation Input Files\T-1-A3-LS-D4530-20231020-02-15PCF-Arenisca\T-1-A3-LS-D4530-20231020-02-15PCF-Arenisca.ups"  -->
+        <density>240.</density> <!-- kg/m^3 -->
+        <constitutive_model type="Arenisca3">
+          <PEAKI1>8.0e9</PEAKI1>
+          <FSLOPE>0.010</FSLOPE>
+          <STREN>0.0</STREN>
+          <YSLOPE>0.0</YSLOPE>
+          <BETA_nonassociativity>1.0</BETA_nonassociativity>
+          <B0>123.0e6</B0>
+          <B1>0.0</B1>
+          <B2>0.0</B2>
+          <B3>0.0</B3>
+          <B4>0.0</B4>
+          <G0>33.0e6</G0>
+          <G1>0.0</G1>
+          <G2>0.0</G2>
+          <G3>0.0</G3>
+          <G4>0.0</G4>
+          <p0_crush_curve>-1.0e7</p0_crush_curve>
+          <p1_crush_curve>3.8e-8</p1_crush_curve>
+          <p2_crush_curve>0.0</p2_crush_curve>
+          <p3_crush_curve>1.75</p3_crush_curve>
+          <CR>0.5</CR>
+          <fluid_B0>0.0</fluid_B0>
+          <fluid_pressure_initial>0.0</fluid_pressure_initial>
+          <T1_rate_dependence> 0.0 </T1_rate_dependence>
+          <T2_rate_dependence> 0.0 </T2_rate_dependence>
+          <subcycling_characteristic_number>1</subcycling_characteristic_number>
+        </constitutive_model>
+
+            <!-- Scaled x1000  -->
+            <!-- <failure_mean> 5.145e6      </failure_mean> 
+            <failure_std>  5.145e4      </failure_std>  -->
+<!--
+        <erosion algorithm = "ZeroStress"/>
+        <damage_model type="Threshold">
+            <failure_mean> 5.145e9      </failure_mean> 
+            <failure_std>  5.145e7      </failure_std> 
+            <failure_distrib>gauss     </failure_distrib>
+            <failure_criteria>MaximumPrincipalStress</failure_criteria>
+        </damage_model>
+-->
+      <thermal_conductivity>1.0</thermal_conductivity>
+      <specific_heat>1.004e-5</specific_heat>
+        <geom_object>
+          <difference>
+            <box>
+              <min>[-0.152, -0.152, 0.0]  </min>
+              <max>[ 0.0,    0.152, 0.072]</max>
+            </box>
+            <box>
+              <min>[-0.002, -0.152, 0.048]  </min>
+              <max>[ 0.0,    0.152, 0.072]</max>
+            </box>
+          </difference>
+          <res>[2,1,2]</res>
+          <velocity>[0.0,0.0,0.0]</velocity>
+          <temperature>0</temperature>
+          <color>1</color>
+        </geom_object>
+      </material>
+
+      <contact>
+        <type>specified_friction</type>
+        <filename>ScrewVel.txt</filename>
+        <master_material>0</master_material>
+        <materials>[0,1]</materials>
+        <mu>0.2</mu>
+      </contact>
+
+    </MPM>
+  </MaterialProperties>
+
+  <Grid>
+      <Level>
+          <Box label="1">
+              <lower>[-0.0152,-0.0002,0.00]</lower>
+              <upper>[ 0.0048, 0.0002,0.0724]</upper>
+              <extraCells>[1,1,1]</extraCells>
+              <patches>[2,1,16]</patches>
+          </Box>
+          <spacing>[400.0e-6, 400.0e-6, 400.0e-6]</spacing>
+      </Level>
+      <BoundaryConditions>
+        <Face side="x-">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+        <Face side="x+">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+        <Face side="y-">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+        <Face side="y+">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+        <Face side="z-">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+        <Face side="z+">
+            <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+        </Face>
+    </BoundaryConditions>
+  </Grid>
+
+  <!--
+  <DataAnalysis>
+      <Module name="particleExtract">
+      <material>Box-with-tapped-M5-hole</material>
+      <samplingFrequency> 750000 </samplingFrequency>
+      <timeStart>          0   </timeStart>
+      <timeStop>          100  </timeStop>
+      <colorThreshold>
+        99
+      </colorThreshold>
+      <Variables>
+        <analyze label="p.color"/>
+        <analyze label="p.displacement"/>
+      </Variables>
+    </Module>
+  </DataAnalysis>
+  -->
+
+</Uintah_specification>

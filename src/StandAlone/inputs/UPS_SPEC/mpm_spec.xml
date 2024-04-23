@@ -251,7 +251,7 @@
 
 
         <erosion                         spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear'">
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear, PreserveStress'">
           <char_time                         spec="OPTIONAL DOUBLE" />
         </erosion>
 
