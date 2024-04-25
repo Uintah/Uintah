@@ -995,7 +995,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Find if the particle has failed/localized
       double tepla = 0.0;
       
-      bool doErosion = matl->getErosionModel()->d_doEorsion;
+      bool doErosion = matl->getErosionModel()->d_doErosion;
       
       if (doErosion) {
 
