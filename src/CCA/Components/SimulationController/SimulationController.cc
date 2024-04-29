@@ -758,11 +758,11 @@ SimulationController::ReportStats( const ProcessorGroup *
       int           max_highwater_rank = m_runtime_stats.getRankForMaximum( SCIMemoryHighwater );
 
       if (avg_memused == max_memused && avg_highwater == max_highwater) {
-        message << "Memory Use=" << std::setw(8)
+        message << "Memory Used=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
         if (avg_highwater) {
-          message << "    Highwater Memory Use=" << std::setw(8)
+          message << "    Highwater Memory Used=" << std::setw(8)
                   << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
         }
       }
@@ -786,11 +786,11 @@ SimulationController::ReportStats( const ProcessorGroup *
       double  memused   = m_runtime_stats[SCIMemoryUsed];
       double  highwater = m_runtime_stats[SCIMemoryHighwater];
 
-      message << "Memory Use=" << std::setw(8)
+      message << "Memory Used=" << std::setw(8)
               << ProcessInfo::toHumanUnits((unsigned long) memused );
 
       if (highwater) {
-        message << "    Highwater Memory Use=" << std::setw(8)
+        message << "    Highwater Memory Used=" << std::setw(8)
                 << ProcessInfo::toHumanUnits((unsigned long) highwater);
       }
 
