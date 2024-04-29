@@ -80,11 +80,12 @@ namespace Uintah {
                                   ParticleVariable<Matrix3>       & pVelGrad );
                                        
                                
-    bool d_doEorsion = false;
+    bool d_doErosion = false;
 
     enum  erosionAlgo { ZeroStress,     // set stress tensor to zero
                         AllowNoTension, // retain compressive mean stress after failue
                         AllowNoShear,   // retain mean stress after failure - no deviatoric stress
+                        PreserveStress, // retain stress after failure
                         none };
 
     erosionAlgo d_algo  = erosionAlgo::none;
