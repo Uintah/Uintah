@@ -44,7 +44,7 @@ main()
 
   #__________________________________
   # parse inputs
-  hardcopy="n"
+  hardcopy="N"
   tsRange=":"
   out="null"
 
@@ -80,7 +80,7 @@ main()
   #__________________________________
   # Make a copy of the output file and remove
   # the extra spaces
-  /usr/bin/rm -rf scraps
+  /bin/rm -rf scraps >& /dev/null
   mkdir scraps >&/dev/null
 
   cat "$out" | tr -s ' ' >& scraps/out.clean
@@ -144,6 +144,8 @@ if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
   exit
 }
 
+E_records=0                                 # default for max memory
+
 #  Data file columns
 #     1        2          3            4            5          6    7      8
 # timestep elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax
@@ -152,6 +154,7 @@ stats 'data' using 3 name "B" nooutput;
 stats 'data' using 4 name "C" nooutput;
 stats 'data' using 7 name "D" nooutput;
 stats 'data' using 8 name "E" nooutput;
+#show variables all                          # debugging
 
 set multiplot
 set size 1.0,0.33 # for three plots
@@ -160,14 +163,15 @@ set grid xtics ytics
 
 
 #__________________________________ TOP
+#     Time related
 set size   1.0, 0.33
 set origin 0.0, 0.66
 
 set title "${metaData[date]}, ${metaData[machine]}, ${metaData[procs]} MPI ranks, ${metaData[threads]} Threads, uda: ${metaData[uda]}"
 
 set xlabel "Elaspsed Time [s]" offset 0,+0.5
-set ylabel 'Delt'           textcolor lt 1
-set y2label 'Physical Time' textcolor lt 2
+set ylabel 'Delt'           textcolor lt 1 offset +2,0
+set y2label 'Physical Time' textcolor lt 2 offset -2,0
 set y2tics
 set autoscale xfix
 
@@ -177,11 +181,12 @@ plot 'data' using 2:6           t 'Delt' with lines,\
      'data' using 2:5 axes x1y2 t 'Physical Time' with lines
 
 #__________________________________ Middle
+#     Mean time per timestep
 set origin 0.0,0.33
 set title ''
 set xlabel "Timestep" offset 0,+0.5
-set ylabel 'Mean Time/timestep' textcolor lt 1
-set y2label 'Time per timestep [sec]'     textcolor lt 2
+set ylabel 'Mean Time/timestep'           textcolor lt 1  
+set y2label 'Time per timestep [sec]'     textcolor lt 2  
 set y2tics
 set autoscale xfix
 
@@ -194,24 +199,39 @@ set yrange[ 0:ymax]
 set y2range[0:ymax]
 
 plot 'data' using 1:3           t 'meanTime/timestep' with lines, \
-     'data' using 1:4 axes x1y2 t 'time/timestep' with lines
+     'data' using 1:4 axes x1y2 t 'time/timestep'     with lines
 
 
 #__________________________________Bottom
+#     Memory plots
 set origin 0.0,0.0
 set title ''
 set xlabel "Elapsed Time [s]" offset 0,+0.5
 set ylabel  "Ave memory usage [MB]"     textcolor lt 1
-set y2label 'Max memory usage [MB]'     textcolor lt 2
+set yrange[ D_min - D_stddev:D_max + D_stddev]
+
 set autoscale xfix
 
-set yrange[ D_min - D_stddev:E_max + E_stddev]
-set y2range[D_min - D_stddev:E_max + E_stddev]
+if( E_records ){                              # if the outputfile contains max memory stats
+  set yrange[ D_min - D_stddev:E_max + E_stddev]
+  set y2label 'Max memory usage [MB]'     textcolor lt 2
+  set y2range[D_min - D_stddev:E_max + E_stddev]
 
-plot 'data' using 2:7   t 'ave' with lines, \
-     'data' using 2:8   t 'max' with lines
+  plot 'data' using 2:7   t 'ave' with lines, \
+       'data' using 2:8   t 'max' with lines
+} 
+else{                                       #  if the outputfile doesn't contain max stats
+  unset y2label
+  set link y2
+    
+  plot 'data' using 2:7   t 'ave' with lines
+}
+
 set nomultiplot
-pause -1 "  Hit return to exit"
+
+if ( "$hardcopy" eq "N") {
+  pause -1 "  Hit return to exit"
+}
 fin
 #______________________________________________________________________
 
