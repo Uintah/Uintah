@@ -46,6 +46,8 @@
 #define cast_uint32_t (uint32_t)
 #endif
 
+#define LOGTEN_TWO 3.321928
+
 #endif // __CAST_H_
 /*=====================================================================*
  *                   Copyright (C) 2011 Paul Mineiro                   *
@@ -106,7 +108,7 @@ typedef __m128i v4si;
 
 #define v4sfl(x) ((const v4sf) { (x), (x), (x), (x) })
 #define v2dil(x) ((const v4si) { (x), (x) })
-#define v4sil(x) v2dil((((unsigned long long) (x)) << 32) | (x))
+#define v4sil(x) v2dil((((long long) (x)) << 32) | (x))
 
 typedef union { v4sf f; float array[4]; } v4sfindexer;
 #define v4sf_index(_findx, _findi)      \
@@ -235,7 +237,7 @@ vfastpow2 (const v4sf p)
   const v4sf c_1_49012907 = v4sfl (1.49012907f);
   union { v4si i; v4sf f; } v = {
     v4sf_to_v4si (
-      v4sfl (1 << 23) *
+      v4sfl (1 << 23) * 
       (clipp + c_121_2740838 + c_27_7280233 / (c_4_84252568 - z) - c_1_49012907 * z)
     )
   };
@@ -317,7 +319,7 @@ vfasterexp (const v4sf p)
 
 #include <stdint.h>
 
-static inline float
+static inline float 
 fastlog2 (float x)
 {
   union { float f; uint32_t i; } vx = { x };
@@ -325,9 +327,12 @@ fastlog2 (float x)
   float y = vx.i;
   y *= 1.1920928955078125e-7f;
 
-  return y - 124.22551499f
+  return (y - 124.22551499f
            - 1.498030302f * mx.f
-           - 1.72587999f / (0.3520887068f + mx.f);
+	       - 1.72587999f / (0.3520887068f + mx.f))/ LOGTEN_TWO;
+
+
+
 }
 
 static inline float
@@ -336,13 +341,23 @@ fastlog (float x)
   return 0.69314718f * fastlog2 (x);
 }
 
-static inline float
+static inline float 
 fasterlog2 (float x)
 {
   union { float f; uint32_t i; } vx = { x };
   float y = vx.i;
   y *= 1.1920928955078125e-7f;
+  
+  float tmp = y - 126.94269504f;
+
+  float l10 = tmp/0.30103;
+
+
+  std::cerr << "x: " << x << " log2: " << tmp << " log10: " << l10 << std::endl;
+
   return y - 126.94269504f;
+
+
 }
 
 static inline float
@@ -372,7 +387,7 @@ vfastlog2 (v4sf x)
   const v4sf c_0_3520087068 = v4sfl (0.3520887068f);
 
   return y - c_124_22551499
-           - c_1_498030302 * mx.f
+           - c_1_498030302 * mx.f 
            - c_1_725877999 / (c_0_3520087068 + mx.f);
 }
 
@@ -384,7 +399,7 @@ vfastlog (v4sf x)
   return c_0_69314718 * vfastlog2 (x);
 }
 
-static inline v4sf
+static inline v4sf 
 vfasterlog2 (v4sf x)
 {
   union { v4sf f; v4si i; } vx = { x };
@@ -490,7 +505,7 @@ fastererfc (float x)
   return 2.0f / (1.0f + fasterpow2 (k * x));
 }
 
-// fasterf: not actually faster than erff(3) on newer machines!
+// fasterf: not actually faster than erff(3) on newer machines! 
 // ... although vectorized version is interesting
 //     and fastererf is very fast
 
@@ -517,7 +532,7 @@ fastinverseerf (float x)
 
   float xsq = x * x;
 
-  return invk * fastlog2 ((1.0f + x) / (1.0f - x))
+  return invk * fastlog2 ((1.0f + x) / (1.0f - x)) 
        + x * (a - b * xsq) / (c - d * xsq);
 }
 
@@ -579,7 +594,7 @@ vfastinverseerf (v4sf x)
 
   v4sf xsq = x * x;
 
-  return invk * vfastlog2 ((v4sfl (1.0f) + x) / (v4sfl (1.0f) - x))
+  return invk * vfastlog2 ((v4sfl (1.0f) + x) / (v4sfl (1.0f) - x)) 
        + x * (a - b * xsq) / (c - d * xsq);
 }
 
@@ -647,17 +662,17 @@ fastlgamma (float x)
   float logterm = fastlog (x * (1.0f + x) * (2.0f + x));
   float xp3 = 3.0f + x;
 
-  return - 2.081061466f
-         - x
-         + 0.0833333f / xp3
-         - logterm
+  return - 2.081061466f 
+         - x 
+         + 0.0833333f / xp3 
+         - logterm 
          + (2.5f + x) * fastlog (xp3);
 }
 
 static inline float
 fasterlgamma (float x)
 {
-  return - 0.0810614667f
+  return - 0.0810614667f 
          - x
          - fasterlog (x)
          + (0.5f + x) * fasterlog (1.0f + x);
@@ -698,9 +713,9 @@ vfastlgamma (v4sf x)
   v4sf xp3 = c_3_0 + x;
 
   return - c_2_081061466
-         - x
-         + c_0_0833333 / xp3
-         - logterm
+         - x 
+         + c_0_0833333 / xp3 
+         - logterm 
          + (c_2_5 + x) * vfastlog (xp3);
 }
 
@@ -1022,7 +1037,7 @@ vfastlambertw (v4sf x)
   v4sf xexpminusw = x * expminusw;
   v4sf pexpminusw = xexpminusw - minusw;
 
-  return (v4sfl (2.0f) * xexpminusw - minusw * (v4sfl (4.0f) * xexpminusw - minusw * pexpminusw)) /
+  return (v4sfl (2.0f) * xexpminusw - minusw * (v4sfl (4.0f) * xexpminusw - minusw * pexpminusw)) / 
          (v4sfl (2.0f) + pexpminusw * (v4sfl (2.0f) - minusw));
 }
 
@@ -1301,7 +1316,7 @@ vfastersigmoid (const v4sf x)
 // inaccurate for |x| >> 1000
 //
 // WARNING: fastsinfull, fastcosfull, and fasttanfull can be slower than
-// libc calls on older machines (!) and on newer machines are only
+// libc calls on older machines (!) and on newer machines are only 
 // slighly faster.  however:
 //   * vectorized versions are competitive
 //   * faster full versions are competitive
