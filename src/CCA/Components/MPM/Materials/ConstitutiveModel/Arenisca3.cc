@@ -75,7 +75,7 @@
 #include <cstdio>
 
 #ifdef MHfastfcns
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/fastapproximatefunctions.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/fastonebigheader.h>
 #endif
 
 using std::cerr;
