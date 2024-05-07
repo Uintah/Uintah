@@ -130,6 +130,9 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);    // Rate dependence parameter
   ps->getWithDefault("subcycling_characteristic_number",d_cm.subcycling_characteristic_number, 256);    // allowable subcycles
   ps->getWithDefault("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm, false);
+  ps->getWithDefault("TOL_computeSubstep",d_cm.TOL_cS, 1.0e-4); // bisection convergence tolerance on eta 
+  ps->getWithDefault("TOL_transBisection",d_cm.TOL_tB, 1.0e-6);
+  ps->getWithDefault("NSUB_COEFF",d_cm.nsub_coeff, 1.0);
   ps->get("PEAKI1IDIST",wdist.WeibDist);        // For variability
   WeibullParser(wdist);                         // For variability
   proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;  // For variability
@@ -156,10 +159,10 @@ Arenisca3::~Arenisca3()
   VarLabel::destroy(peakI1IDistLabel_preReloc); // For variability
   VarLabel::destroy(pAreniscaFlagLabel);
   VarLabel::destroy(pAreniscaFlagLabel_preReloc);
-  VarLabel::destroy(pScratchDouble1Label);
-  VarLabel::destroy(pScratchDouble1Label_preReloc);
-  VarLabel::destroy(pScratchDouble2Label);
-  VarLabel::destroy(pScratchDouble2Label_preReloc);
+//  VarLabel::destroy(pScratchDouble1Label);
+//  VarLabel::destroy(pScratchDouble1Label_preReloc);
+//  VarLabel::destroy(pScratchDouble2Label);
+//  VarLabel::destroy(pScratchDouble2Label_preReloc);
   VarLabel::destroy(pPorePressureLabel);
   VarLabel::destroy(pPorePressureLabel_preReloc);
   VarLabel::destroy(pepLabel);               //Plastic Strain Tensor
@@ -172,8 +175,8 @@ Arenisca3::~Arenisca3()
   VarLabel::destroy(pCapXLabel_preReloc);
   VarLabel::destroy(pStressQSLabel);
   VarLabel::destroy(pStressQSLabel_preReloc);
-  VarLabel::destroy(pScratchMatrixLabel);
-  VarLabel::destroy(pScratchMatrixLabel_preReloc);
+//  VarLabel::destroy(pScratchMatrixLabel);
+//  VarLabel::destroy(pScratchMatrixLabel_preReloc);
   VarLabel::destroy(pZetaLabel);
   VarLabel::destroy(pZetaLabel_preReloc);
   VarLabel::destroy(pP3Label);          // Modified p3 for initial disaggregation strain.
@@ -276,8 +279,8 @@ void Arenisca3::initializeCMData(const Patch* patch,
                             pep;             // Plastic Strain Tensor
 
   new_dw->allocateAndPut(pAreniscaFlag,   pAreniscaFlagLabel,   pset);
-  new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
-  new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
+//  new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
+//  new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
   new_dw->allocateAndPut(pPorePressure,   pPorePressureLabel,   pset);
   new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset);
   new_dw->allocateAndPut(pep,             pepLabel,             pset);
@@ -286,7 +289,7 @@ void Arenisca3::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pCapX,           pCapXLabel,           pset);
   new_dw->allocateAndPut(pZeta,           pZetaLabel,           pset);
   new_dw->allocateAndPut(pP3,             pP3Label,             pset);
-  new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
+//  new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
 
   constParticleVariable<double> pVolume, pMass;
   new_dw->get(pVolume, lb->pVolumeLabel, pset);
@@ -295,8 +298,8 @@ void Arenisca3::initializeCMData(const Patch* patch,
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
     pAreniscaFlag[*iter] = 0;
-    pScratchDouble1[*iter] = 0;
-    pScratchDouble2[*iter] = 0;
+//    pScratchDouble1[*iter] = 0;
+//    pScratchDouble2[*iter] = 0;
     pPorePressure[*iter] = d_cm.fluid_pressure_initial;
     peakI1IDist[*iter] = d_cm.PEAKI1;
     pevp[*iter] = 0.0;
@@ -305,7 +308,7 @@ void Arenisca3::initializeCMData(const Patch* patch,
     if(d_cm.Use_Disaggregation_Algorithm){pP3[*iter] = log(pVolume[*iter]*(matl->getInitialDensity())/pMass[*iter]);}
     else{pP3[*iter] = d_cm.p3_crush_curve;}
     pCapX[*iter] = computeX(0.0,pP3[*iter]);
-    pScratchMatrix[*iter].set(0.0);
+//    pScratchMatrix[*iter].set(0.0);
     pep[*iter].set(0.0);
   }
 
@@ -460,8 +463,8 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);  // For variability
     old_dw->get(pLocalized,      lb->pLocalizedMPMLabel,       pset); //initializeCMData()
     old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
-    old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
-    old_dw->get(pScratchDouble2, pScratchDouble2Label,         pset); //initializeCMData()
+//    old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
+//    old_dw->get(pScratchDouble2, pScratchDouble2Label,         pset); //initializeCMData()
     old_dw->get(pPorePressure,   pPorePressureLabel,           pset); //initializeCMData()
     old_dw->get(pmass,           lb->pMassLabel,               pset);
     old_dw->get(pevp,            pevpLabel,                    pset); //initializeCMData()
@@ -471,7 +474,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pP3,             pP3Label,                     pset); //initializeCMData()
     old_dw->get(pParticleID,     lb->pParticleIDLabel,         pset);
     old_dw->get(pvelocity,       lb->pVelocityLabel,           pset);
-    old_dw->get(pScratchMatrix,  pScratchMatrixLabel,          pset); //initializeCMData()
+//    old_dw->get(pScratchMatrix,  pScratchMatrixLabel,          pset); //initializeCMData()
     old_dw->get(pep,             pepLabel,                     pset); //initializeCMData()
     old_dw->get(pDefGrad,        lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress_old,     lb->pStressLabel,             pset); //initializeCMData()
@@ -496,8 +499,8 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     // Allocate particle variables used in ComputeStressTensor
     ParticleVariable<double>  p_q,
                               pdTdt,
-                              pScratchDouble1_new,
-                              pScratchDouble2_new,
+                              //pScratchDouble1_new,
+                              //pScratchDouble2_new,
                               pPorePressure_new,
                               pevp_new,
                               peve_new,
@@ -510,15 +513,15 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(p_q,                 lb->p_qLabel_preReloc,         pset);
     new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel,                pset);
-    new_dw->allocateAndPut(pScratchDouble1_new, pScratchDouble1Label_preReloc, pset);
-    new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
+//    new_dw->allocateAndPut(pScratchDouble1_new, pScratchDouble1Label_preReloc, pset);
+//    new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
     new_dw->allocateAndPut(pPorePressure_new,   pPorePressureLabel_preReloc,   pset);
     new_dw->allocateAndPut(pevp_new,            pevpLabel_preReloc,            pset);
     new_dw->allocateAndPut(peve_new,            peveLabel_preReloc,            pset);
     new_dw->allocateAndPut(pCapX_new,           pCapXLabel_preReloc,           pset);
     new_dw->allocateAndPut(pZeta_new,           pZetaLabel_preReloc,           pset);
     new_dw->allocateAndPut(pP3_new,             pP3Label_preReloc,             pset);
-    new_dw->allocateAndPut(pScratchMatrix_new,  pScratchMatrixLabel_preReloc,  pset);
+//    new_dw->allocateAndPut(pScratchMatrix_new,  pScratchMatrixLabel_preReloc,  pset);
     new_dw->allocateAndPut(pep_new,             pepLabel_preReloc,             pset);
     new_dw->allocateAndPut(pStress_new,         lb->pStressLabel_preReloc,     pset);
     new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
@@ -540,9 +543,9 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       pLocalized_new[idx] = pLocalized[idx];
 
       //Set scratch parameters to old values
-      pScratchDouble1_new[idx] = pScratchDouble1[idx];
-      pScratchDouble2_new[idx] = pScratchDouble2[idx];
-      pScratchMatrix_new[idx]  = pScratchMatrix[idx];
+//      pScratchDouble1_new[idx] = pScratchDouble1[idx];
+//      pScratchDouble2_new[idx] = pScratchDouble2[idx];
+//      pScratchMatrix_new[idx]  = pScratchMatrix[idx];
 
       // Compute the symmetric part of the velocity gradient
       Matrix3 D = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*.5;
@@ -1102,7 +1105,8 @@ int Arenisca3::computeStepDivisions(const double& X,
 
   // nsub is the maximum of the two values.above.  If this exceeds allowable,
   // throw warning and delete particle.
-  int nsub = max(n_bulk,n_yield);
+//  int nsub = max(n_bulk,n_yield);
+  int nsub = ceil(d_cm.nsub_coeff*max(n_bulk,n_yield));
  
   if (nsub>d_cm.subcycling_characteristic_number){
 #ifdef MHdebug
@@ -1200,12 +1204,12 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 // (5) Compute non-hardening return to initial yield surface:
 //     [sigma_0,d_e_p,0] = (nonhardeningReturn(sigma_trial,sigma_old,X_old,Zeta_old,K,G)
     double  I1_0,       // I1 at stress update for non-hardening return
-            rJ2_0,      // rJ2 at stress update for non-hardening return
-            TOL = 1e-4; // bisection convergence tolerance on eta (if changed, change imax)
+            rJ2_0;      // rJ2 at stress update for non-hardening return
     Matrix3 S_0,        // S (deviator) at stress update for non-hardening return
             d_ep_0;     // increment in plastic strain for non-hardening return
 
     Matrix3 S_old;
+    int imax = ceil(-10.0*log(d_cm.TOL_cS)); // Update this if TOL_cS changes
     double I1_old,
            J2_old,
            rJ2_old,
@@ -1246,9 +1250,8 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
            eta_in = 0.0,
            eta_mid,
            d_evp;
-    int i = 0,
-        imax = 93;  // imax = ceil(-10.0*log(TOL)); // Update this if TOL changes
-        
+    int i = 0;
+
     double dZetadevp = computedZetadevp(Zeta_old,evp_old);
     
 // (7) Update Internal State Variables based on Last Non-Hardening Return:
@@ -1271,7 +1274,7 @@ updateISV:
       eta_out = eta_mid;
       if( i >= imax ){
         // solution failed to converge within the allowable iterations, which means
-        // the solution requires a plastic strain that is less than TOL*d_evp_0
+        // the solution requires a plastic strain that is less than TOL_cS*d_evp_0
         // In this case we are near the zero porosity limit, so the response should
         // be that of no porosity. By setting eta_out=eta_in, the next step will
         // converge with the cap position of the previous iteration.  In this case,
@@ -1310,12 +1313,12 @@ updateISV:
 //      would indicate that the cap apex has moved past the trial stress, indicating
 //      too much plastic strain in the return.
 
-    //if(fabs(I1_trial - I1_new)>(d_cm.B0*TOL) && Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
+    //if(fabs(I1_trial - I1_new)>(d_cm.B0*TOL_cS) && Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
     if(Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
       eta_out = eta_mid;
       if( i >= imax ){
         // solution failed to converge within the allowable iterations, which means
-        // the solution requires a plastic strain that is less than TOL*d_evp_0
+        // the solution requires a plastic strain that is less than TOL_cS*d_evp_0
         // In this case we are near the zero porosity limit, so the response should
         // be that of no porosity. By setting eta_out=eta_in, the next step will
         // converge with the cap position of the previous iteration.  In this case,
@@ -1332,7 +1335,7 @@ updateISV:
     ep_new = ep_old + d_ep_new;
 
     // Check for convergence
-    if( fabs(eta_out-eta_in) < TOL ){ // Solution is converged
+    if( fabs(eta_out-eta_in) < d_cm.TOL_cS ){ // Solution is converged
       sigma_new = one_third*I1_new*Identity + S_new;
 
     // If out of range, scale back isotropic plastic strain.
@@ -1658,7 +1661,7 @@ void Arenisca3::transformedBisection(double& z_0,
                                      const double& r_trial,
                                      const double& X,
                                      const double& Zeta,
-                                                                         const double& coher,
+                                     const double& coher,
                                      const double limitParameters[4],
                                      const double& r_to_rJ2
                                     )
@@ -1674,15 +1677,14 @@ void Arenisca3::transformedBisection(double& z_0,
 
 
 // (1) initialize bisection
-  double eta_out = 1.0,  // This is for the accerator.  Must be > TOL
+  double eta_out = 1.0,  // This is for the accerator.  Must be > TOL_tB
          eta_in  = 0.0,
          eta_mid,
-         TOL = 1.0e-6,
          r_test,
          z_test;
 
 // (2) Test for convergence
-  while (eta_out-eta_in > TOL){
+  while (eta_out-eta_in > d_cm.TOL_tB){
 
 // (3) Transformed test point
     eta_mid = 0.5*(eta_out+eta_in);
@@ -2025,8 +2027,8 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   // Important to keep from and to lists in same order!
   from.push_back(peakI1IDistLabel);  // For variability
   from.push_back(pAreniscaFlagLabel);
-  from.push_back(pScratchDouble1Label);
-  from.push_back(pScratchDouble2Label);
+//  from.push_back(pScratchDouble1Label);
+//  from.push_back(pScratchDouble2Label);
   from.push_back(pPorePressureLabel);
   from.push_back(pepLabel);
   from.push_back(pevpLabel);
@@ -2035,11 +2037,11 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pZetaLabel);
   from.push_back(pP3Label);
   from.push_back(pStressQSLabel);
-  from.push_back(pScratchMatrixLabel);
+//  from.push_back(pScratchMatrixLabel);
   to.push_back(  peakI1IDistLabel_preReloc);  // For variability
   to.push_back(  pAreniscaFlagLabel_preReloc);
-  to.push_back(  pScratchDouble1Label_preReloc);
-  to.push_back(  pScratchDouble2Label_preReloc);
+//  to.push_back(  pScratchDouble1Label_preReloc);
+//  to.push_back(  pScratchDouble2Label_preReloc);
   to.push_back(  pPorePressureLabel_preReloc);
   to.push_back(  pepLabel_preReloc);
   to.push_back(  pevpLabel_preReloc);
@@ -2048,7 +2050,7 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(  pZetaLabel_preReloc);
   to.push_back(  pP3Label_preReloc);
   to.push_back(  pStressQSLabel_preReloc);
-  to.push_back(  pScratchMatrixLabel_preReloc);
+//  to.push_back(  pScratchMatrixLabel_preReloc);
 }
 
 void Arenisca3::addInitialComputesAndRequires(Task* task,
@@ -2063,8 +2065,8 @@ void Arenisca3::addInitialComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   task->computes(peakI1IDistLabel,     matlset);  // For variability
   task->computes(pAreniscaFlagLabel,   matlset);
-  task->computes(pScratchDouble1Label, matlset);
-  task->computes(pScratchDouble2Label, matlset);
+//  task->computes(pScratchDouble1Label, matlset);
+//  task->computes(pScratchDouble2Label, matlset);
   task->computes(pPorePressureLabel,   matlset);
   task->computes(pepLabel,             matlset);
   task->computes(pevpLabel,            matlset);
@@ -2073,7 +2075,7 @@ void Arenisca3::addInitialComputesAndRequires(Task* task,
   task->computes(pZetaLabel,           matlset);
   task->computes(pP3Label,             matlset);
   task->computes(pStressQSLabel,       matlset);
-  task->computes(pScratchMatrixLabel,  matlset);
+//  task->computes(pScratchMatrixLabel,  matlset);
 }
 
 void Arenisca3::addComputesAndRequires(Task* task,
@@ -2088,8 +2090,8 @@ void Arenisca3::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, peakI1IDistLabel,       matlset, Ghost::None);  // For variability
   task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, pAreniscaFlagLabel,     matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble1Label,   matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble2Label,   matlset, Ghost::None);
+//  task->requires(Task::OldDW, pScratchDouble1Label,   matlset, Ghost::None);
+//  task->requires(Task::OldDW, pScratchDouble2Label,   matlset, Ghost::None);
   task->requires(Task::OldDW, pPorePressureLabel,     matlset, Ghost::None);
   task->requires(Task::OldDW, pepLabel,               matlset, Ghost::None);
   task->requires(Task::OldDW, pevpLabel,              matlset, Ghost::None);
@@ -2098,13 +2100,13 @@ void Arenisca3::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pZetaLabel,             matlset, Ghost::None);
   task->requires(Task::OldDW, pP3Label,               matlset, Ghost::None);
   task->requires(Task::OldDW, pStressQSLabel,         matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchMatrixLabel,    matlset, Ghost::None);
+//  task->requires(Task::OldDW, pScratchMatrixLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
   task->computes(peakI1IDistLabel_preReloc,         matlset);  // For variability
   task->computes(lb->pLocalizedMPMLabel_preReloc,   matlset);
   task->computes(pAreniscaFlagLabel_preReloc,       matlset);
-  task->computes(pScratchDouble1Label_preReloc,     matlset);
-  task->computes(pScratchDouble2Label_preReloc,     matlset);
+//  task->computes(pScratchDouble1Label_preReloc,     matlset);
+//  task->computes(pScratchDouble2Label_preReloc,     matlset);
   task->computes(pPorePressureLabel_preReloc,       matlset);
   task->computes(pepLabel_preReloc,                 matlset);
   task->computes(pevpLabel_preReloc,                matlset);
@@ -2113,7 +2115,7 @@ void Arenisca3::addComputesAndRequires(Task* task,
   task->computes(pZetaLabel_preReloc,               matlset);
   task->computes(pP3Label_preReloc,                 matlset);
   task->computes(pStressQSLabel_preReloc,           matlset);
-  task->computes(pScratchMatrixLabel_preReloc,      matlset);
+//  task->computes(pScratchMatrixLabel_preReloc,      matlset);
 }
 
 //T2D: Throw exception that this is not supported
@@ -2184,15 +2186,15 @@ void Arenisca3::initializeLocalMPMLabels()
   pAreniscaFlagLabel_preReloc = VarLabel::create("p.AreniscaFlag+",
                                 ParticleVariable<int>::getTypeDescription());
   //pScratchDouble1
-  pScratchDouble1Label = VarLabel::create("p.ScratchDouble1",
-                                          ParticleVariable<double>::getTypeDescription());
-  pScratchDouble1Label_preReloc = VarLabel::create("p.ScratchDouble1+",
-                                  ParticleVariable<double>::getTypeDescription());
+//  pScratchDouble1Label = VarLabel::create("p.ScratchDouble1",
+//                          ParticleVariable<double>::getTypeDescription());
+//  pScratchDouble1Label_preReloc = VarLabel::create("p.ScratchDouble1+",
+//                          ParticleVariable<double>::getTypeDescription());
   //pScratchDouble2
-  pScratchDouble2Label = VarLabel::create("p.ScratchDouble2",
-                                          ParticleVariable<double>::getTypeDescription());
-  pScratchDouble2Label_preReloc = VarLabel::create("p.ScratchDouble2+",
-                                  ParticleVariable<double>::getTypeDescription());
+//  pScratchDouble2Label = VarLabel::create("p.ScratchDouble2",
+//                          ParticleVariable<double>::getTypeDescription());
+//  pScratchDouble2Label_preReloc = VarLabel::create("p.ScratchDouble2+",
+//                          ParticleVariable<double>::getTypeDescription());
   //pPorePressure
   pPorePressureLabel = VarLabel::create("p.PorePressure",
                                         ParticleVariable<double>::getTypeDescription());
@@ -2234,10 +2236,10 @@ void Arenisca3::initializeLocalMPMLabels()
   pStressQSLabel_preReloc = VarLabel::create("p.StressQS+",
                             ParticleVariable<Matrix3>::getTypeDescription());
   //pScratchMatrix
-  pScratchMatrixLabel = VarLabel::create("p.ScratchMatrix",
-                                         ParticleVariable<Matrix3>::getTypeDescription());
-  pScratchMatrixLabel_preReloc = VarLabel::create("p.ScratchMatrix+",
-                                 ParticleVariable<Matrix3>::getTypeDescription());
+//  pScratchMatrixLabel = VarLabel::create("p.ScratchMatrix",
+//                         ParticleVariable<Matrix3>::getTypeDescription());
+//  pScratchMatrixLabel_preReloc = VarLabel::create("p.ScratchMatrix+",
+//                         ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 // For variability:

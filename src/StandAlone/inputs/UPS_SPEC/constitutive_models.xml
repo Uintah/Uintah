@@ -741,6 +741,10 @@
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
   <!--______________________________________________________________________ -->
   <!-- The following are for the Arenisca model -->
+    <TOL_computeSubstep               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
+    <TOL_transBisection               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
+    <NSUB_COEFF                       spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
+    <FSLOPE                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
     <Use_Disaggregation_Algorithm     spec="OPTIONAL BOOLEAN" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
     <FSLOPE                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4" />
     <FSLOPE_p                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca" />

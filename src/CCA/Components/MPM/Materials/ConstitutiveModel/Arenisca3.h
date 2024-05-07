@@ -84,6 +84,9 @@ namespace Uintah {
       double T2_rate_dependence;
       double subcycling_characteristic_number;
       bool Use_Disaggregation_Algorithm;
+      double TOL_cS;
+      double TOL_tB;
+      double nsub_coeff;
     };
 
     const VarLabel* pAreniscaFlagLabel;          //0: ok, 1: pevp<-p3
