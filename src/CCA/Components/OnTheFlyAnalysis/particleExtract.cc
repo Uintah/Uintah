@@ -497,7 +497,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          fprintf(fp,    "%E\t %E\t %E\t %E",tv.now, px[idx].x(),px[idx].y(),px[idx].z());
+          fprintf(fp,    "%E   %E   %E   %E",tv.now, px[idx].x(),px[idx].y(),px[idx].z());
 
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is
