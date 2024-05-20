@@ -49,7 +49,7 @@
 //----------DEFINE SECTION----------
 #define MHdebug       // Prints errors messages when particles are deleted or subcycling fails
 #define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
-//#define MHfastfcns  // Use fast approximate exp(), log() and pow() in deep loops.
+#define MHfastfcns  // Use fast approximate exp(), log() and pow() in deep loops.
                       // This may cause large errors when evaluating exp(x) for large x.  Use with caution!
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
