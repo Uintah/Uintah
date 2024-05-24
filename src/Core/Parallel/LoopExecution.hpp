@@ -403,7 +403,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
@@ -412,7 +413,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
@@ -428,7 +430,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
@@ -440,7 +443,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
@@ -679,7 +683,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+			{rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
 
@@ -688,7 +693,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+			{rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
 
@@ -704,7 +710,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+			{rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
 
@@ -716,7 +723,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+			{rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
 
@@ -838,7 +846,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
@@ -847,7 +856,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
@@ -863,7 +873,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
@@ -876,7 +887,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
@@ -1142,7 +1154,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+		        {rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
 
@@ -1151,7 +1164,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+		        {rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
 
@@ -1167,7 +1181,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+		        {rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
 
@@ -1180,7 +1195,8 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+		        {rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
 
@@ -1309,7 +1325,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_tile,  j_tile,  k_tile});
 
@@ -1319,7 +1336,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin0, rbegin1, rbegin2},
+        mdRangePolicy(instanceObject,
+		      {rbegin0, rbegin1, rbegin2},
                       {rend0,   rend1,   rend2},
                       {i_size,  j_size,  k_size});
 
@@ -1336,7 +1354,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     if(i_tile > 0 || j_tile > 0 || k_tile > 0)
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_tile,  j_tile,  i_tile});
 
@@ -1349,7 +1368,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
     else
     {
       Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-        mdRangePolicy({rbegin2, rbegin1, rbegin0},
+        mdRangePolicy(instanceObject,
+		      {rbegin2, rbegin1, rbegin0},
                       {rend2,   rend1,   rend0},
                       {k_size,  j_size,  i_size});
 
@@ -1615,7 +1635,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+		        {rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_tile,  j_tile,  k_tile});
 
@@ -1625,7 +1646,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin0, rbegin1, rbegin2},
+          mdRangePolicy(instanceObject,
+		        {rbegin0, rbegin1, rbegin2},
                         {rend0,   rend1,   rend2},
                         {i_size,  j_size,  k_size});
 
@@ -1642,7 +1664,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       if(i_tile > 0 || j_tile > 0 || k_tile > 0)
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+		        {rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_tile,  j_tile,  i_tile});
 
@@ -1655,7 +1678,8 @@ parallel_reduce_min(ExecutionObject<ExecSpace, MemSpace>& execObj,
       else
       {
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int>
-          mdRangePolicy({rbegin2, rbegin1, rbegin0},
+          mdRangePolicy(instanceObject,
+		        {rbegin2, rbegin1, rbegin0},
                         {rend2,   rend1,   rend0},
                         {k_size,  j_size,  i_size});
 
