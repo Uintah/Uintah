@@ -49,7 +49,7 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-ZeroOrder::ZeroOrder(const ProcessorGroup* myworld, 
+ZeroOrder::ZeroOrder(const ProcessorGroup* myworld,
                      const MaterialManagerP& materialManager,
                      const ProblemSpecP& params,
                      const ProblemSpecP& prob_spec)
@@ -59,14 +59,14 @@ ZeroOrder::ZeroOrder(const ProcessorGroup* myworld,
   mymatls = 0;
   Ilb = scinew ICELabel();
   d_saveConservedVars = scinew saveConservedVars();
-  
+
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel   = VarLabel::create("F",
                                        CCVariable<double>::getTypeDescription());
   delFLabel              = VarLabel::create("delF",
                                        CCVariable<double>::getTypeDescription());
-                     
+
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                             sum_vartype::getTypeDescription() );
   totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
@@ -83,9 +83,10 @@ ZeroOrder::~ZeroOrder()
   VarLabel::destroy(delFLabel);
   VarLabel::destroy(totalMassBurnedLabel);
   VarLabel::destroy(totalHeatReleasedLabel);
-    
-  if(mymatls && mymatls->removeReference())
+
+  if(mymatls && mymatls->removeReference()){
     delete mymatls;
+  }
 }
 //______________________________________________________________________
 //
@@ -94,7 +95,7 @@ void ZeroOrder::problemSetup(GridP&,
 {
   ProblemSpecP ZO_ps = d_params->findBlock("ZeroOrder");
   ZO_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
-  
+
   ZO_ps->require("ThresholdPressure", d_threshold_pressure);
   ZO_ps->require("fromMaterial",fromMaterial);
   ZO_ps->require("toMaterial",  toMaterial);
@@ -105,19 +106,14 @@ void ZeroOrder::problemSetup(GridP&,
 
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
-  ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != nullptr; child = child->findNextBlock("save") ){
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    
-    if (var_attr["label"] == "totalMassBurned"){
-      d_saveConservedVars->mass  = true;
-    }
-    if (var_attr["label"] == "totalHeatReleased"){
-      d_saveConservedVars->energy = true;
-    }
+  if ( m_output->isLabelSaved( "totalMassBurned" ) ){
+    d_saveConservedVars->mass  = true;
   }
-  
+
+  if ( m_output->isLabelSaved( "totalHeatReleased" ) ){
+    d_saveConservedVars->energy = true;
+  }
+
   matl0 = m_materialManager->parseAndLookupMaterial(ZO_ps, "fromMaterial");
   matl1 = m_materialManager->parseAndLookupMaterial(ZO_ps, "toMaterial");
 
@@ -131,7 +127,7 @@ void ZeroOrder::problemSetup(GridP&,
   m.push_back(matl1->getDWIndex());
 
   mymatls->addAll_unique(m);            // elimiate duplicate entries
-  mymatls->addReference(); 
+  mymatls->addReference();
 }
 //______________________________________________________________________
 //
@@ -140,27 +136,27 @@ void ZeroOrder::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","ZeroOrder");
   ProblemSpecP ZO_ps = model_ps->appendChild("ZeroOrder");
-  
-  ZO_ps->appendElement("ThresholdPressure",d_threshold_pressure);
-  ZO_ps->appendElement("ThresholdVolFrac", d_threshold_volFrac);
-  ZO_ps->appendElement("fromMaterial",fromMaterial);
-  ZO_ps->appendElement("toMaterial",toMaterial);
+
+  ZO_ps->appendElement("ThresholdPressure", d_threshold_pressure);
+  ZO_ps->appendElement("ThresholdVolFrac",  d_threshold_volFrac);
+  ZO_ps->appendElement("fromMaterial",      fromMaterial);
+  ZO_ps->appendElement("toMaterial",        toMaterial);
   ZO_ps->appendElement("G",    d_G);
   ZO_ps->appendElement("b",    d_b);
   ZO_ps->appendElement("E0",   d_E0);
   ZO_ps->appendElement("rho0", d_rho0);
-  
+
 }
 
 //______________________________________________________________________
-//     
+//
 void ZeroOrder::scheduleInitialize(SchedulerP&,
                                    const LevelP&)
 {
   // None necessary...
 }
 //______________________________________________________________________
-//      
+//
 void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
                                               const LevelP&)
 {
@@ -168,13 +164,13 @@ void ZeroOrder::scheduleComputeStableTimeStep(SchedulerP&,
 }
 
 //______________________________________________________________________
-//     
+//
 void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
                                             const LevelP& level)
 {
-  Task* t = scinew Task("ZeroOrder::computeModelSources", this, 
+  Task* t = scinew Task("ZeroOrder::computeModelSources", this,
                         &ZeroOrder::computeModelSources);
-  cout_doing << "ZeroOrder::scheduleComputeModelSources "<<  endl;  
+  cout_doing << "ZeroOrder::scheduleComputeModelSources "<<  endl;
 
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -205,14 +201,14 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(Ilb->modelMass_srcLabel);
   t->modifies(Ilb->modelMom_srcLabel);
   t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifies(Ilb->modelVol_srcLabel);
 
   if(d_saveConservedVars->mass ){
     t->computes(ZeroOrder::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
     t->computes(ZeroOrder::totalHeatReleasedLabel);
-  } 
+  }
   sched->addTask(t, level->eachPatch(), mymatls);
 
   if (one_matl->removeReference())
@@ -220,7 +216,7 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
 }
 //______________________________________________________________________
 //
-void ZeroOrder::computeModelSources(const ProcessorGroup*, 
+void ZeroOrder::computeModelSources(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
                                     DataWarehouse* old_dw,
@@ -239,10 +235,10 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
   int m1 = matl1->getDWIndex(); /* product material */
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
- 
+
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);  
-    
+    const Patch* patch = patches->get(p);
+
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  ZeroOrder" << endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
@@ -265,17 +261,17 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
-            
+
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    Ghost::GhostType  gn  = Ghost::None;    
-   
+    Ghost::GhostType  gn  = Ghost::None;
+
     //__________________________________
     // Reactant data
-    old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0); 
-    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0); 
-    new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0); 
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0); 
+    old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0);
+    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0);
+    new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
@@ -283,7 +279,7 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
     delF.initialize(0.);
 
     //__________________________________
-    // Product Data, 
+    // Product Data,
     new_dw->get(prodRho,       Ilb->rho_CCLabel,   m1,patch,gn, 0);
 
     //__________________________________
@@ -291,44 +287,52 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
 
     // Get the specific heat, this is the value from the input file
-    double cv_rct = -1.0; 
+    double cv_rct = -1.0;
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_materialManager->getMaterial(m0));
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_materialManager->getMaterial(m0));
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     } else if(ice_matl){
-      cv_rct = ice_matl->getSpecificHeat();  
+      cv_rct = ice_matl->getSpecificHeat();
     }
+
+    //__________________________________
+    //
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){          
+
+      if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){
+
         //__________________________________
         // Insert Burn Model Here
         double burnedMass;
         double F = prodRho[c]/(rctRho[c]+prodRho[c]);
+
         if(F >= 0.0 && F < 1.0){
           delF[c] = d_G*pow(press_CC[c],d_b);
         }
         delF[c]*=delT;
         Fr[c] = F;
+
         double rctMass = rctRho[c]*cell_vol;
         double prdMass = prodRho[c]*cell_vol;
+
         burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
 
         // Prevent burning a whole cell in a timestep (this is to maintain stability)
         burnedMass = min(burnedMass, 0.2*d_rho0*cell_vol);
 
         //__________________________________
-        // conservation of mass, momentum and energy                           
+        // conservation of mass, momentum and energy
         mass_src_0[c]   -= burnedMass;
         mass_src_1[c]   += burnedMass;
         totalBurnedMass += burnedMass;
-           
+
         Vector momX        = rctvel_CC[c] * burnedMass;
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
 
-        double energyX   = cv_rct*rctTemp[c]*burnedMass; 
+        double energyX   = cv_rct*rctTemp[c]*burnedMass;
         double releasedHeat = burnedMass * d_E0;
         energy_src_0[c]   -= energyX;
         energy_src_1[c]   += energyX + releasedHeat;
@@ -338,7 +342,7 @@ void ZeroOrder::computeModelSources(const ProcessorGroup*,
         sp_vol_src_0[c] -= createdVolx;
         sp_vol_src_1[c] += createdVolx;
       }  // if (pressure)
-    }  // cell iterator  
+    }  // cell iterator
 
     //__________________________________
     //  set symetric BC

@@ -286,16 +286,12 @@ void DDT1::problemSetup(GridP&,
 
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
-  ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != nullptr; child = child->findNextBlock("save")) {
-    map<string,string> var_attr;
-    child->getAttributes(var_attr);
-    if (var_attr["label"] == "totalMassBurned"){
-      d_saveConservedVars->mass  = true;
-    }
-    if (var_attr["label"] == "totalHeatReleased"){
-      d_saveConservedVars->energy = true;
-    }
+  if ( m_output->isLabelSaved( "totalMassBurned" ) ){
+    d_saveConservedVars->mass  = true;
+  }
+
+  if ( m_output->isLabelSaved( "totalHeatReleased" ) ){
+    d_saveConservedVars->energy = true;
   }
   
   problemSetup_BulletProofing( d_prob_spec );
