@@ -32,62 +32,62 @@ namespace Uintah {
 
   class RateConstant;
   class RateModel;
-  
+
   class ICELabel;
 
   /**************************************
-     
+
      CLASS
      SolidReactionModel
-     
+
      A generalized Rate Model class that very much borrows
      from the factory model idiom for rate expression composition.
-     
+
      GENERAL INFORMATION
-     
+
      SolidReactionModel.h
-     
+
      Joseph R. Peterson
      Department of Chemistry
      University of Utah
-     
-     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)     
-          
+
+     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
      KEYWORDS
      SolidReactionModel
-     
+
      DESCRIPTION
      Long description...
-     
+
      WARNING
-     
+
      ****************************************/
-    
+
     class SolidReactionModel : public ModelInterface {
     public:
       SolidReactionModel(const ProcessorGroup* d_myworld,
                          const MaterialManagerP& materialManager,
                          const ProblemSpecP& params,
                          const ProblemSpecP& prob_spec);
-      
+
       virtual ~SolidReactionModel();
-      
+
       virtual void problemSetup(GridP& grid, const bool isRestart);
-      
+
       virtual void outputProblemSpec(ProblemSpecP& ps);
-        
+
       virtual void scheduleInitialize(SchedulerP&,
                                       const LevelP& level);
 
       virtual void scheduleRestartInitialize(SchedulerP&,
                                              const LevelP& level){};
-      
+
       virtual void scheduleComputeStableTimeStep(SchedulerP& sched,
                                                  const LevelP& level);
-      
+
       virtual void scheduleComputeModelSources(SchedulerP&,
                                                  const LevelP& level);
-                
+
     private:
 
       void computeModelSources(const ProcessorGroup*,
@@ -99,25 +99,27 @@ namespace Uintah {
       // Functions
       SolidReactionModel(const SolidReactionModel&);
       SolidReactionModel& operator=(const SolidReactionModel&);
-      
+
       // Innards
-      RateConstant *rateConstant {nullptr};  // k(T)
-      RateModel    *rateModel {nullptr};     // f(a)
-      const Material* reactant {nullptr};
-      const Material* product {nullptr};
+      RateConstant *rateConstant {nullptr};     // k(T)
+      RateModel    *rateModel    {nullptr};     // f(a)
+
+      const Material* reactant  {nullptr};
+      const Material* product   {nullptr};
+
       std::string fromMaterial;
       std::string toMaterial;
-      double d_E0;                 // Enthalpy change for reaction in J/kg
-       
-      ICELabel *Ilb;               // Used to get handles on temperature, pressure, etc.
-      MaterialSet *mymatls;        // All the materials referenced by this model
+      double d_E0;                            // Enthalpy change for reaction in J/kg
+
+      ICELabel *Ilb;                          // Used to get handles on temperature, pressure, etc.
+      MaterialSet *mymatls;                   // All the materials referenced by this model
 
       // Variables used for tracking the Reaction
       const VarLabel* reactedFractionLabel;   // Fraction of reactant in cell
       const VarLabel* delFLabel;              // Change of fraction of reactant during timestep
-      const VarLabel* totalMassBurnedLabel;  
+      const VarLabel* totalMassBurnedLabel;
       const VarLabel* totalHeatReleasedLabel;
- 
+
       // flags for the conservation test
       struct saveConservedVars{
         bool onOff;
