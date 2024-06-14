@@ -248,7 +248,7 @@ void TracerParticles::problemSetup( GridP&,
         GeometryPieceFactory::create( geo_obj_ps, pieces );
       }
     }
-  } 
+  }
 
   //__________________________________
   //  Initialization: Read in the geometry pieces
@@ -628,7 +628,7 @@ void TracerParticles::sched_restartInitializeHACK( SchedulerP   & sched,
   t->computes( pDispLabel,     d_matl_mss );
   t->computes( pVelocityLabel, d_matl_mss );
   t->computes( pIDLabel,       d_matl_mss );
-  
+
   //__________________________________
   //      clone Q_CC vars
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
@@ -690,7 +690,7 @@ void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
   t->modifies( pDispLabel,     d_matl_mss );
   t->modifies( pVelocityLabel, d_matl_mss );
   t->modifies( pIDLabel,       d_matl_mss );
-  
+
   //__________________________________
   //    clone variables
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
@@ -899,7 +899,7 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
 {
 
   if( which == TracerParticles::computesVar){
-  //      
+  //
     for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
       std::shared_ptr<scalar> S = d_scalars[i];
 
@@ -914,13 +914,13 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
       //__________________________________
       //  Initialize coefficient used in exponential decay model
       if( S->withExpDecayModel ){
-      
+
         int id = patch->getID();
 
         proc0cout_eq(id, 0)
                 << "________________________TracerParticles\n"
-                << "  Coefficient c1: " << S->c1 << "\n";        
-      
+                << "  Coefficient c1: " << S->c1 << "\n";
+
         CCVariable<double> c2;
         new_dw->allocateAndPut( c2, S->expDecayCoefLabel, indx, patch, d_gn, 0);
 
@@ -936,7 +936,7 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
           const Level* level = patch->getLevel();
           PassiveScalar::readTable( patch, level, S->c2_filename, c2 );
         }
-        
+
         proc0cout_eq(id, 0)
               << "  Coefficient c3: " << S->c3 << "\n"
               << "__________________________________\n";
@@ -951,14 +951,14 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
         }
       }  // exp decay
     }  // scalars loop
-  } 
-  
+  }
+
   //__________________________________
   //        modify variables
   if( which == TracerParticles::modifiesVar){
-    
+
     const bool replace {true};
-    
+
     for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
       std::shared_ptr<scalar> S = d_scalars[i];
 
@@ -978,8 +978,8 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
 
         proc0cout_eq(id, 0)
                 << "________________________TracerParticles\n"
-                << "  Coefficient c1: " << S->c1 << "\n";      
-      
+                << "  Coefficient c1: " << S->c1 << "\n";
+
         CCVariable<double> c2;
 
         new_dw->getModifiable( c2, S->expDecayCoefLabel, indx, patch, d_gn, 0);
@@ -1110,7 +1110,7 @@ void TracerParticles::initializeTask(const ProcessorGroup *,
                               pX,  pDisp, pVel, pID, nPPC );
 
     initializeScalarVars(  pset, patch, indx, new_dw, TracerParticles::computesVar);
-    
+
     initializeCloneVars(  pset, patch, indx, new_dw);
 
   }  // patches
@@ -1374,7 +1374,10 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
     t->modifies( S->label_preReloc,           d_matl_mss );
-    t->modifies( S->totalDecayLabel_preReloc, d_matl_mss );
+
+    if (S->withExpDecayModel ){
+      t->modifies( S->totalDecayLabel_preReloc, d_matl_mss );
+    }
   }
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -1557,15 +1560,17 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
 
+    t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+    t->requires( Task::OldDW, S->label,   d_matl_mss, d_gn, 0 );
+
+    t->computes( S->label_preReloc,       d_matl_mss );
+
     if ( S->withExpDecayModel ){
-      t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-      t->requires( Task::OldDW, S->label,             d_matl_mss, d_gn, 0 );
       t->requires( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
       t->requires( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
 
       t->computes( S->totalDecayLabel_preReloc, d_matl_mss );
       t->computes( S->expDecayCoefLabel,         d_matl_mss );
-      t->computes( S->label_preReloc,            d_matl_mss );
     }
   }
 
@@ -1634,21 +1639,34 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
     for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
       std::shared_ptr<scalar> S = d_scalars[i];
 
+      delt_vartype delT;
+      old_dw->get( delT, Ilb->delTLabel, level);
+
+      constParticleVariable<double> s_old;
+      ParticleVariable<double>      s;
+
+      old_dw->get(            s_old, S->label,          matlIndx, patch );
+      new_dw->allocateAndPut( s,     S->label_preReloc, pset );
+
+      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        s[idx] = -9;
+
+        IntVector c;
+        if ( !patch->findCell( pX[idx],c ) ) {
+
+          DOUTR(true, " setParticleVars, pX: " << pX[idx] << " cell: " << c << " patch: " << patch->getID() );
+          continue;
+        }
+        s[idx] = s_old[idx];
+      }
+
       if ( S->withExpDecayModel ){
-        delt_vartype delT;
-        old_dw->get( delT, Ilb->delTLabel, level);
-
-        constParticleVariable<double>  s_old;
         constParticleVariable<double>  totalDecay_old;
-
-        ParticleVariable<double> s;
         ParticleVariable<double> totalDecay;
 
-        old_dw->get( s_old,          S->label,           matlIndx, patch );
-        old_dw->get( totalDecay_old, S->totalDecayLabel, matlIndx, patch );
-
-        new_dw->allocateAndPut( s,          S->label_preReloc,            pset );
-        new_dw->allocateAndPut( totalDecay, S->totalDecayLabel_preReloc,  pset );
+        old_dw->get(            totalDecay_old, S->totalDecayLabel, matlIndx, patch );
+        new_dw->allocateAndPut( totalDecay,     S->totalDecayLabel_preReloc,  pset );
 
                             // exponential decay coefficient
         constCCVariable<double> c2;
@@ -1662,22 +1680,19 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
         //
         for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
           particleIndex idx = *iter;
-
-          s[idx]          = -9;
           totalDecay[idx] = -9;
 
           IntVector c;
           if ( !patch->findCell( pX[idx],c ) ) {
 
-            DOUTR(true, " setParticleVars, pX: " << pX[idx] << " cell: " << c << " patch: " << patch->getID() );
             continue;
           }
           double exposure = c2[c] * delT;
           totalDecay[idx] = totalDecay_old[idx] + exposure;
-          s[idx]          = s_old[idx] * exp( -(c1 * c2[c] + c3) * delT );
+          s[idx]         *= exp( -(c1 * c2[c] + c3) * delT );
         }
-      }
-    }
+      }  // with exponential decay
+    }  // d_scalars
   }  // patches
 }
 
