@@ -114,7 +114,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>CouettePoiseuille-YZ.uda</filebase>
-      <outputInterval>0.1</outputInterval>
+      <outputTimestepInterval> 25 </outputTimestepInterval>   <!--RT -->
+ <!-- <outputInterval>0.1</outputInterval> -->
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
       <save label = "delP_Dilatate"/>
