@@ -723,7 +723,7 @@
 
         <BCType       spec="MULTIPLE NO_DATA"
                         attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, slip, Custom,
+                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, FreeSlipWall, LODI, computeFromDensity, Sine, slip, Custom,
                                                                VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
                                                                Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                         attribute3="label     REQUIRED STRING "

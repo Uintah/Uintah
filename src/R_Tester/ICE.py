@@ -93,12 +93,14 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                                                                      9, "All", ["exactComparison"])
               ]
 
-DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]),
-                   ("Poiseuille_ZX",      "CouettePoiseuille/ZX.ups", 1, "All", ["exactComparison"]),
-                   ("Poiseuille_YZ",      "CouettePoiseuille/YZ.ups", 1, "All", ["exactComparison"]),
-                   ("rayleigh_dx",        "rayleigh_dx.ups",          1, "All", ["exactComparison"]),
-                   ("rayleigh_dy",        "rayleigh_dy.ups",          1, "All", ["exactComparison"]),
-                   ("rayleigh_dz",        "rayleigh_dz.ups",          1, "All", ["exactComparison"])
+DIFFUSION  = [     ("Poiseuille_XY", "CouettePoiseuille/XY.ups",     1, "All", ["exactComparison"]),         
+                   ("Poiseuille_ZX", "CouettePoiseuille/ZX.ups",     1, "All", ["exactComparison"]),         
+                   ("Poiseuille_YZ", "CouettePoiseuille/YZ.ups",     1, "All", ["exactComparison"]),         
+                   ("Poiseuille_XY_freeSlip", "CouettePoiseuille/XY_freeSlip.ups", 
+                                                                     1, "All", ["exactComparison"]),
+                   ("rayleigh_dx",   "rayleigh_dx.ups",              1, "All", ["exactComparison"]),         
+                   ("rayleigh_dy",   "rayleigh_dy.ups",              1, "All", ["exactComparison"]),         
+                   ("rayleigh_dz",   "rayleigh_dz.ups",              1, "All", ["exactComparison"])          
               ]
 
 LODI        = [    ("Lodi_pulse",        "Lodi_pulse.ups",         8, "All", ["exactComparison"])

@@ -226,7 +226,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
       Vector C2 = Vector(1.0) - C1;
 
-      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+      int pDir = patch->getFaceAxes(face)[0];  //principal dir.
 
       IntVector offset = patch->faceDirection(face);
 
@@ -236,7 +236,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         f_cell =  f_cell - offset;
         A[f_cell].p += A[f_cell][face];
 
-        A[f_cell][face] = C2[P_dir] * A[f_cell][face];
+        A[f_cell][face] = C2[pDir] * A[f_cell][face];
 
         A[f_cell].p -= A[f_cell][face];
       }
@@ -370,7 +370,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
       Vector C2 = Vector(1.0) - C1;
 
-      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+      int pDir = patch->getFaceAxes(face)[0];  //principal dir.
 
       cout << " using linear Interpolation for impDelP " << endl;;
 
@@ -378,8 +378,8 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         IntVector f_cell = *cIter;
         IntVector f_adj  = f_cell - offset;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-        imp_delP[f_cell] =  C2[P_dir] * imp_delP_coarse[c_cell] +
-                            C1[P_dir] * imp_delP[f_adj];
+        imp_delP[f_cell] =  C2[pDir] * imp_delP_coarse[c_cell] +
+                            C1[pDir] * imp_delP[f_adj];
       }
 
 #endif
@@ -393,7 +393,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
  Function~  get_rho_micro--
  Purpose~  This handles all the logic of getting rho_micro on the faces
     a) when using lodi bcs get rho_micro for all ice and mpm matls
-    b) with gravity != 0 get rho_micro on P_dir faces, for all ICE matls
+    b) with gravity != 0 get rho_micro on pDir faces, for all ICE matls
     c) during initialization only get rho_micro for ice_matls, you can't
        get rho_micro for mpm_matls
  ---------------------------------------------------------------------  */
@@ -445,12 +445,12 @@ void get_rho_micro(std::vector<CCVariable<double> >& rho_micro,
       IntVector lo = iter_tmp.begin();
       IntVector hi = iter_tmp.end();
 
-      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+      int pDir = patch->getFaceAxes(face)[0];  //principal dir.
       if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
-        hi[P_dir] += 2;
+        hi[pDir] += 2;
       }
       if(face==Patch::xplus || face==Patch::yplus || face==Patch::zplus){
-        lo[P_dir] -= 2;
+        lo[pDir] -= 2;
       }
       CellIterator iterLimits(lo,hi);
 
@@ -514,18 +514,18 @@ void HydrostaticPressureAdjustment(CCVariable<double>& press_CC,
     // at the cell-center of cell 0,0,0
     Vector press_ref_pt = gridMin + 1.5*dx_L0;
 
-    int p_dir = patch->getFaceAxes(face)[0];     // normal  face direction
+    int pDir = patch->getFaceAxes(face)[0];     // normal  face direction
 
     //__________________________________
     //Neumann
     bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann" || bc_kind=="symmetry");
 
-    if ((gravity[p_dir] != 0 && Neumann_BC) ){
+    if ((gravity[pDir] != 0 && Neumann_BC) ){
 
       cout_BC_CC << "         HydrostaticPressureAdjustment:  Face: "<< patch->getFaceName(face) << " BC kind: " << bc_kind << endl;
 
       Vector faceDir    = patch->faceDirection(face).asVector();
-      double grav       = gravity[p_dir] * (double)faceDir[p_dir];
+      double grav       = gravity[pDir] * (double)faceDir[pDir];
       IntVector oneCell = patch->faceDirection(face);
 
       for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) {
@@ -535,7 +535,7 @@ void HydrostaticPressureAdjustment(CCVariable<double>& press_CC,
         double rho_L = rho_micro[surroundingMatl_indx][L];
         double rho_micro_brack = (rho_L + rho_R)/2.0;
 
-        press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack;
+        press_CC[R] += grav * cell_dx[pDir] * rho_micro_brack;
       }
     }
     //__________________________________
@@ -824,9 +824,9 @@ void setBC(CCVariable<double>& var_CC,
         Vector gravity = globalVars->d_gravity;
         Material *matl = materialManager->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-        int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
+        int pDir =  patch->getFaceAxes(face)[0];  // principal direction
 
-        if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl
+        if (gravity[pDir] != 0 && desc == "Temperature" && ice_matl
              && isNotInitialTimeStep) {
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
@@ -875,15 +875,15 @@ void setBC(CCVariable<double>& var_CC,
  Function~  setBC--
  Purpose~   Takes care vector boundary condition
  ---------------------------------------------------------------------  */
-void setBC(CCVariable<Vector>& var_CC,
-           const string& desc,
-           const Patch* patch,
-           MaterialManagerP& materialManager,
-           const int mat_id,
-           DataWarehouse* ,
-           customBC_globalVars* globalVars,
-           customBC_localVars* localVars,
-           const bool isNotInitialTimeStep)
+void setBC(CCVariable<Vector>     & var_CC,
+           const string           & desc,
+           const Patch            * patch,
+           MaterialManagerP       & materialManager,
+           const int                mat_id,
+           DataWarehouse          * ,
+           customBC_globalVars    * globalVars,
+           customBC_localVars     * localVars,
+           const bool               isNotInitialTimeStep)
 {
  if(patch->hasBoundaryFaces() == false){
     return;
@@ -955,6 +955,11 @@ void setBC(CCVariable<Vector>& var_CC,
         //  Symmetry
         else if ( bc_kind == "symmetry" ) {
           nCells += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
+        }
+        //__________________________________
+        //  freeSlipWall
+        else if ( bc_kind == "FreeSlipWall" ) {
+          nCells += setFreeSlipWallBC_CC( patch, face, var_CC, bound_ptr);
         }
         //__________________________________
         //  Custom Boundary Conditions
@@ -1131,22 +1136,51 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
  Tangent components Neumann = 0
  Normal components = -variable[Interior]
  ---------------------------------------------------------------------  */
- int setSymmetryBC_CC( const Patch* patch,
-                       const Patch::FaceType face,
-                       CCVariable<Vector>& var_CC,
-                       Iterator& bound_ptr)
+int setSymmetryBC_CC( const Patch           * patch,
+                      const Patch::FaceType   face,
+                      CCVariable<Vector>    & var_CC,
+                      Iterator              & bound_ptr)
 {
-   IntVector oneCell = patch->faceDirection(face);
-   int P_dir = patch->getFaceAxes(face)[0];  // principal direction
-   IntVector sign = IntVector(1,1,1);
-   sign[P_dir] = -1;
+  IntVector offset = patch->faceDirection(face);
+  int pDir = patch->getFaceAxes(face)[0];  // principal direction
 
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
-     var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
-   }
-   int nCells = bound_ptr.size();
-   return nCells;
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+    IntVector c = *bound_ptr;
+    IntVector adjCell  = c;
+    adjCell[pDir] -= offset[pDir];
+
+    var_CC[c]        = var_CC[adjCell];
+    var_CC[c][pDir] *= -1.0;
+  }
+  int nCells = bound_ptr.size();
+  return nCells;
+}
+
+/* ---------------------------------------------------------------------
+ Function~  setFreeSlipBC_CC--
+    Tangent components Neumann = 0
+    Normal components = 0
+ ---------------------------------------------------------------------  */
+int setFreeSlipWallBC_CC( const Patch      *  patch,
+                     const Patch::FaceType   face,
+                     CCVariable<Vector>   &  var_CC,
+                     Iterator             &  bound_ptr)
+{
+  IntVector offset = patch->faceDirection(face);
+  int pDir = patch->getFaceAxes(face)[0];  // principal direction
+
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+    IntVector c = *bound_ptr;
+    IntVector adjCell  = c;
+    adjCell[pDir] -= offset[pDir];
+
+    var_CC[c]       = var_CC[adjCell];
+    var_CC[c][pDir] = 0.0;
+ }
+
+ int nCells = bound_ptr.size();
+ return nCells;
 }
 
 
@@ -1204,13 +1238,13 @@ void BC_bulletproofing(const ProblemSpecP & prob_spec,
     }
 
     // tag each face if it's been specified
-    if(side == "x-") tagFace_minus.x(1);
-    if(side == "y-") tagFace_minus.y(1);
-    if(side == "z-") tagFace_minus.z(1);
+    if(side == "x-") { tagFace_minus.x(1); }
+    if(side == "y-") { tagFace_minus.y(1); }
+    if(side == "z-") { tagFace_minus.z(1); }
 
-    if(side == "x+") tagFace_plus.x(1);
-    if(side == "y+") tagFace_plus.y(1);
-    if(side == "z+") tagFace_plus.z(1);
+    if(side == "x+") { tagFace_plus.x(1); }
+    if(side == "y+") { tagFace_plus.y(1); }
+    if(side == "z+") { tagFace_plus.z(1); }
 
     // loop over all BCTypes for that face
     for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {

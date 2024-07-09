@@ -125,6 +125,16 @@ namespace Uintah {
                       DataWarehouse* new_dw,
                       const bool isNotInitialTimeStep);
 
+  int setSymmetryBC_CC( const Patch         * patch,
+                       const Patch::FaceType  face,
+                       CCVariable<Vector>   & var_CC,               
+                       Iterator             & bound_ptr);
+
+
+  int setFreeSlipWallBC_CC( const Patch     * patch,
+                       const Patch::FaceType  face,
+                       CCVariable<Vector>   & var_CC,               
+                       Iterator             & bound_ptr);
   //__________________________________
   //    SPECIFC VOLUME
    void setSpecificVolBC(CCVariable<double>& sp_vol,
@@ -153,10 +163,7 @@ namespace Uintah {
              const Patch* patch,    
              const int mat_id);
 
-  int setSymmetryBC_CC( const Patch* patch,
-                       const Patch::FaceType face,
-                       CCVariable<Vector>& var_CC,               
-                       Iterator& bound_ptr);
+
 
   template<class T>
   int setDirichletBC_FC( const Patch* patch,
@@ -285,6 +292,12 @@ void setBC(T& vel_FC,
           //__________________________________
           // Dirichlet
           else if (bc_kind == "Dirichlet") {  
+            nCells += setDirichletBC_FC<T>( patch, face, vel_FC, bound_ptr, value);
+          }
+          //__________________________________
+          // Dirichlet
+          else if (bc_kind == "FreeSlipWall") {  
+            value = 0.0;
             nCells += setDirichletBC_FC<T>( patch, face, vel_FC, bound_ptr, value);
           }
           //__________________________________
