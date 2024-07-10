@@ -168,6 +168,7 @@ namespace Uintah {
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;
+    bool d_useBodyForce;
     bool d_with_color;
     bool d_doScalarDiffusion;
     bool d_artificial_viscosity;

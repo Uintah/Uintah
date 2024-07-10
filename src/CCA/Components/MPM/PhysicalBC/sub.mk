@@ -43,6 +43,7 @@ SRCS     += \
         $(SRCDIR)/MPMPhysicalBCFactory.cc  \
         $(SRCDIR)/PolynomialData.cc        \
         $(SRCDIR)/PressureBC.cc            \
+        $(SRCDIR)/BodyForce.cc             \
         $(SRCDIR)/ScalarFluxBC.cc          \
         $(SRCDIR)/TorqueBC.cc
 
