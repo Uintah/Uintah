@@ -34,8 +34,8 @@ ID=$(date +%m%d%y)
 
 MACHINE=$(hostname)
 
-if [ "$MACHINE" == "uintah-build" ]; then
-  COMMON_GROUP="users"
+if [ "$MACHINE" == "lscad5" ]; then
+  COMMON_GROUP="lifespans"
   BUILD_DIR=/home/${LOGNAME}/"$OS"
   TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
   SCRIPT_DIR=/home/${LOGNAME}/scripts
@@ -52,31 +52,9 @@ if [ "$MACHINE" == "uintah-build" ]; then
 
   PUBLIC_HTML=/home/${LOGNAME}/public_html
   HTMLLOG=${PUBLIC_HTML}/Uintah.html
-  RT_URL=http://uintah-build.chpc.utah.edu/~$LOGNAME
-
-#  export TEST_COMPONENTS="ARCHES Examples ICE IMPM Models MPMICE MPM UCF Wasatch"
-
-  if [ "$LOGNAME" == "gpu_rt" ]; then
-    names=( "t.harman@utah.edu" )
-    IFS=""    # used to elimnate spaces between array elements
-    DEFAULT_MAIL_TO=${names[*]}
-    export TEST_COMPONENTS="Examples ARCHES"
-    IFS=" "
-  fi
-
-  if [ "$LOGNAME" == "kokkos_rt" ]; then
+  RT_URL=http://lscad5/~$LOGNAME 
   
-    export TEST_COMPONENTS="Examples ARCHES"
-    WHICH_TESTS="NIGHTLYTESTS"
-    DO_DBG="0"
-    GIT_branch="kokkos_dev"
-    
-    names=("jeremy.thornock@utah.edu," "t.harman@utah.edu" )
-    IFS=""    # used to elimnate spaces between array elements
-    DEFAULT_MAIL_TO=${names[*]}
-    IFS=" "
-  fi
-
+  export TEST_COMPONENTS="MPM"
 fi
 
 #______________________________________________________________________

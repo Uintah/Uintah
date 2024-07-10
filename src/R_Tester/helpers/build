@@ -26,54 +26,19 @@ if [ "$OS" = "Linux" ]; then
 
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
-     '--enable-optimize=-O3 -fno-ipa-cp-clone -mfpmath=sse' \\"
+     '--enable-optimize=-O3 -march=native' \\"
 
   #_________________
   #  machine specific variables
-  if [ "$MACHINE" == "uintah-build" ]; then
+  if [ "$MACHINE" == "lscad5" ]; then
 
-    COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
-     --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
-     --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-     --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
-     --with-boost=/usr/local/boost-1.65.1 \\
-     --enable-arches \\
-     --enable-examples \\
-     --enable-ice \\
-     --enable-mpm \\
-     --enable-ray-scatter \\
-     --enable-wasatch \\
-     --enable-wasatch_3p \\"
+    COMMON="      --with-mpi-include=/usr/lib/x86_64-linux-gnu/openmpi\\
+     --with-mpi-lib=/usr/lib/x86_64-linux-gnu/openmpi/lib\\
+     --enable-mpm \\"
 
-    if [ "$LOGNAME" == "gpu_rt" ]; then
-      COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
-      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
-      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
-      --with-boost=/usr/local/boost-1.65.1 \\
-      --with-cuda=/usr \\
-      --enable-gencode=52 \\
-      --enable-ray-scatter \\
-      --enable-examples \\
-      --enable-arches \\"
-      # execute a script (R_tester/modifySrc) that modifies src files
-      MODIFY_SRC="true"
-    fi
-
-    if [ "$LOGNAME" == "kokkos_rt" ]; then
-      COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
-      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
-      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --with-petsc=/usr/local/petsc-3.10.5/opt-shared \\
-     --with-boost=/usr/local/boost-1.65.1 \\
-      --enable-examples \\
-      --enable-arches \\
-      --enable-ray-scatter \\"
-    fi
-
-    ENV="     CC=mpicc \\
-     CXX=mpic++ \\
-     F77=gfortran"
+    ENV="     CC=/usr/bin/mpicc \\
+     CXX=/usr/bin/mpic++ \\
+     F77=/usr/bin/gfortran"
   fi
 fi
 
