@@ -45,6 +45,7 @@
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <use_body_force                     spec="OPTIONAL BOOLEAN" />
       <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
@@ -116,6 +117,16 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <body_force                 spec="MULTIPLE NO_DATA" >
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED VECTOR" />
+            </time_point>
+          </load_curve>
+        </body_force>
         <torque                 spec="MULTIPLE NO_DATA" >
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />

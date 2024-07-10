@@ -87,7 +87,7 @@ WARNING
 
       // Get the load
       inline T getLoad(int index) {
-        return ((index < (int) d_time.size()) ? d_load[index] : 0);
+        return ((index < (int) d_time.size()) ? d_load[index] : T(0));
       }
 
       // Get the load curve id

@@ -27,7 +27,6 @@
 
 using namespace Uintah;
 
-
 //______________________________________________________________________
 //
 // Construct a load curve from the problem spec

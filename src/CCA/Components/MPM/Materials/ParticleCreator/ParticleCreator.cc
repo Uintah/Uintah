@@ -32,6 +32,7 @@
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
+#include <CCA/Components/MPM/PhysicalBC/BodyForce.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
@@ -111,6 +112,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
+  d_useBodyForce = flags->d_useBodyForce;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
@@ -197,7 +199,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
-      if (d_useLoadCurves) {
+      if (d_useLoadCurves && !d_useBodyForce) {
         // if it is a surface particle
         if (pvars.psurface[pidx]==1) {
           Vector areacomps;
@@ -213,6 +215,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
+      } else if (d_useLoadCurves && d_useBodyForce){
+        Vector areacomps;
+        pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
       }
       count++;
     }
@@ -220,7 +225,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   }
   return numParticles;
 }
-
 
 // Get the LoadCurveID applicable for this material point
 // WARNING : Should be called only once per particle during a simulation 
@@ -249,6 +253,14 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
       if (tbc->flagMaterialPoint(pp, dxpp)
        && (tbc->loadCurveMatl()==dwi || tbc->loadCurveMatl()==-99)) {
          ret(k) = tbc->loadCurveID();
+         k++;
+      }
+    }
+    else if (bcs_type == "BodyForce") {
+      BodyForce* bfbc =
+        dynamic_cast<BodyForce*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (bfbc->loadCurveMatl()==dwi) {
+         ret(k) = bfbc->loadCurveID();
          k++;
       }
     }

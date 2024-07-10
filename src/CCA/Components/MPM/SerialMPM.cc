@@ -44,6 +44,7 @@
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <CCA/Components/MPM/PhysicalBC/BodyForce.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -1081,6 +1082,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
   if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
+    t->requires(Task::OldDW,    lb->pMassLabel,               Ghost::None);
     t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
     if(flags->d_keepPressBCNormalToSurface){
       t->requires(Task::OldDW,  lb->pDeformationMeasureLabel, Ghost::None);
@@ -1113,9 +1115,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
   reduction_mss->addReference();
 
-    cout << "here#" << endl;
   if(flags->d_reductionVars->externalforce){
-    cout << "HERE!" << endl;
     t->computes(lb->SumExternalForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
@@ -4184,11 +4184,13 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
+  std::vector<Vector> forceVecPerPart;
   std::vector<double> torquePerPart;
   std::vector<double> fluxPerPart;
   std::vector<PressureBC*> pbcP;
   std::vector<TorqueBC*> TBC;
   std::vector<HeatFluxBC*> HFBC;
+  std::vector<BodyForce*> BFBC;
 
   if (flags->d_useLoadCurves) {
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -4209,6 +4211,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Calculate the force per particle at current time
         torquePerPart.push_back(tbc->torquePerParticle(time));
+      } else if (bcs_type == "BodyForce") {
+
+        BodyForce* bfbc =
+          dynamic_cast<BodyForce*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        BFBC.push_back(bfbc);
+
+        // Calculate the specific force per particle at current time
+        forceVecPerPart.push_back(bfbc->forcePerParticle(time));
       } else if (bcs_type == "HeatFlux") {
 
         HeatFluxBC* hfbc =
@@ -4241,6 +4251,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       // Get the particle data
       constParticleVariable<Point>   px;
       constParticleVariable<Matrix3> psize;
+      constParticleVariable<double>  pmass;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector>       pExternalForce_new;
       ParticleVariable<double>       pExternalHeatRate_new;
@@ -4265,9 +4276,11 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
         bool do_TorqueBCs  =false;
+        bool do_BodyForce  =false;
         bool do_HeatFluxBCs=false;
         int numPressureLCs = 0;
         int numTorqueLCs   = 0;
+        int numBodyForces  = 0;
         int numHeatFluxLCs = 0;
         old_dw->get(px,    lb->pXLabel,    pset);
         for (int ii = 0;
@@ -4280,11 +4293,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           } else if (bcs_type == "Torque") {
             do_TorqueBCs=true;
             numTorqueLCs++;
+          } else if (bcs_type == "BodyForce") {
+            do_BodyForce=true;
+            numBodyForces++;
           } else if (bcs_type == "HeatFlux") {
             do_HeatFluxBCs=true;
             numHeatFluxLCs++;
           }
-        }
+        } // Loop over physical BCs
 
         // Get the load curve data
         constParticleVariable<IntVector> pLoadCurveID;
@@ -4375,6 +4391,25 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
               double torque = torquePerPart[loadCurveIndex-numPressureLCs];
 
               pExternalForce_new[idx]+=tbc->getForceVector(px[idx],torque,time);
+            } // loadCurveID >=0
+           }  // loop over elements of the IntVector
+          }
+        }
+
+        if(do_BodyForce){
+          old_dw->get(pmass,    lb->pMassLabel,    pset);
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+           particleIndex idx = *iter;
+           for(int k=0;k<3;k++){
+            int loadCurveIndex = pLoadCurveID[idx](k)-1;
+            if (loadCurveIndex >= 0) {
+              //BodyForce* bfbc = BFBC[loadCurveIndex];
+              Vector acc = forceVecPerPart[loadCurveIndex];
+              //cout << "loadCurveIndex = " << loadCurveIndex << endl;
+              //cout << "acc = " << acc << endl;
+
+              pExternalForce_new[idx]+=pmass[idx]*acc;
             } // loadCurveID >=0
            }  // loop over elements of the IntVector
           }
