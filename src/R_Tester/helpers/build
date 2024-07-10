@@ -10,7 +10,7 @@
 
 export OS
 mode=$1 # dbg or opt
-MACHINE=`hostname`
+MACHINE=$(hostname -s)
 MODIFY_SRC="false"
 
 #__________________________________

@@ -35,7 +35,7 @@ ID=$(date +%m%d%y)
 #__________________________________
 # Machine specific variables
 
-MACHINE=$(hostname)
+MACHINE=$(hostname -s)
 
 if [ "$MACHINE" == "lscad5" ]; then
   COMMON_GROUP="lifespans"
@@ -285,7 +285,7 @@ TITLE=$(date)
 
 echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> "${HTMLLOG}"
 date +'%r %D' >> "${HTMLLOG}"
-echo "Regression Tester results from $(hostname)" >> "${HTMLLOG}"
+echo "Regression Tester results from $(hostname -s)" >> "${HTMLLOG}"
 echo "Architecture: ${OS}" >> "${HTMLLOG}"
 echo "" >> "${HTMLLOG}"
 echo "Using build: ${BUILDROOT}" >> "${HTMLLOG}"
