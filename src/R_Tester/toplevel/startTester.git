@@ -24,7 +24,7 @@ COMMON_GROUP=""                                     # common group the developer
 CHECKPOINTS=""                                      # path to the checkpoints directory
 MPIRUN_PATH=""                                      # non-system path to mpirun
 GIT_url="https://github.com/Uintah/Uintah.git"      # url for github
-GIT_branch="master"                                 # github branch name
+GIT_branch="yoyodyne"                               # github branch name
 OUTPUT_HTML="yes"
 
 ID=$(date +%m%d%y)
