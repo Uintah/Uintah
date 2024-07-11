@@ -4,9 +4,8 @@
 # to differentiate among the build names & even directories
 COMPILE="yes"                                       # yes/no for compiling uintah
 
-names=("sloan@lifespans.net" "james.guilkey@utah.edu" "t.harman@utah.edu" )
-IFS=""    # used to elimnate spaces between array elements
-DEFAULT_MAIL_TO=${names[*]}
+
+DEFAULT_MAIL_TO="sloan@lifespans.net,james.guilkey@utah.edu,t.harman@utah.edu"
 
 DO_DBG="1"                                          # compile and run debug tests
 DO_OPT="1"                                          # compile and run optimized tests
