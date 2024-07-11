@@ -116,9 +116,6 @@ void SlipExch::sched_initialize( SchedulerP&,
                                  const LevelP& level)
 {
   printSchedule( level, dbgExch, "SlipExch::sched_initialize" );
-  const MaterialSet* ice_matls = d_matlManager->allMaterials( "ICE" );
-  const MaterialSet* mpm_matls = d_matlManager->allMaterials( "MPM" );
-  const MaterialSet* all_matls = d_matlManager->allMaterials();
 }
 
 //______________________________________________________________________
