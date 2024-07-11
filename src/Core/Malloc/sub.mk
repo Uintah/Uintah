@@ -34,7 +34,8 @@ SRCDIR   := Core/Malloc
 
 SRCS     += $(SRCDIR)/Allocator.cc \
             $(SRCDIR)/AllocOS.cc   \
-            $(SRCDIR)/malloc.cc
+            $(SRCDIR)/malloc.cc    \
+            $(SRCDIR)/new.cc
 
 PSELIBS := 
 LIBS := $(Z_LIBRARY)
