@@ -26,7 +26,6 @@
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Component.h>
-#include <CCA/Components/ICE/SpecificHeatModel/NASAPolynomial.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -59,9 +58,6 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
     }
     else if (cv_model == "Component"){
       return(scinew ComponentCv(cv_ps));
-    }
-    else if (cv_model == "NASAPolynomial"){
-      return(scinew NASAPolynomialCv(cv_ps));
     }
     else if (cv_model == "Polynomial"){
       return(scinew PolynomialCv(cv_ps));
