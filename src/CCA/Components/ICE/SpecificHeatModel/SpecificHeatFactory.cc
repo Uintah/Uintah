@@ -31,9 +31,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+
 
 using namespace Uintah;
 using namespace std;
@@ -55,15 +53,20 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
     if(!cv_ps->getAttribute("type",cv_model)){
       throw ProblemSetupException("No model for specific_heat", __FILE__, __LINE__);
     }
+
     if (cv_model == "Debye"){
       return(scinew DebyeCv(cv_ps));
-    }else if (cv_model == "Component"){
+    }
+    else if (cv_model == "Component"){
       return(scinew ComponentCv(cv_ps));
-    }else if (cv_model == "NASAPolynomial"){
+    }
+    else if (cv_model == "NASAPolynomial"){
       return(scinew NASAPolynomialCv(cv_ps));
-    }else if (cv_model == "Polynomial"){
+    }
+    else if (cv_model == "Polynomial"){
       return(scinew PolynomialCv(cv_ps));
-    }else{
+    }
+    else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown specific heat model ("<< cv_model << " )\n"
          << "Valid models are:\n"
@@ -76,4 +79,4 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
   }
   return 0;
 }
-        
+

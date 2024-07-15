@@ -31,18 +31,21 @@
 using namespace Uintah;
 
 const double kb = 1.3806503e-23; // Boltzmann constant (m^2*kg/s^2*K)
-
+//______________________________________________________________________
+//
 DebyeCv::DebyeCv(ProblemSpecP& ps)
  : SpecificHeat(ps)
 {
   ps->require("Atoms",d_N);
   ps->require("DebyeTemperature",d_T_D);
 }
-
+//______________________________________________________________________
+//
 DebyeCv::~DebyeCv()
 {
 }
-
+//______________________________________________________________________
+//
 void DebyeCv::outputProblemSpec(ProblemSpecP& ice_ps)
 {
   ProblemSpecP cvmodel = ice_ps->appendChild("SpecificHeatModel");
@@ -51,19 +54,22 @@ void DebyeCv::outputProblemSpec(ProblemSpecP& ice_ps)
   cvmodel->appendElement("DebyeTemperature", d_T_D);
 }
 
+//______________________________________________________________________
+//
 double DebyeCv::getSpecificHeat(double T)
 {
-  double Trat = T/d_T_D;
+  double Trat    = T/d_T_D;
   double invTrat = d_T_D/T;
-  double preIntegralFactor = 9.0*kb*d_N*Trat*Trat*Trat;
+  double preIntegralFactor = 9.0 * kb * d_N * Trat * Trat * Trat;
 
   // Riemann sum on integral (for now... this should be replaced with a Riemann Zeta Function w/ n=1)
   double dx = invTrat / 1000.0;
   double integralFactor = 0.0;
-  for(double x = 1.0e-12; x <= invTrat; x += dx)
-  {
+
+  for(double x = 1.0e-12; x <= invTrat; x += dx){
     double eToX = std::exp(x);
     double toAdd = dx * (x*x*x*x*eToX)/((eToX-1.0)*(eToX-1.0));
+
     if(std::isnan(toAdd) || std::isinf(toAdd)) {
        std::cerr << "Integral portion of Debye Cv was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
        continue;
@@ -74,24 +80,29 @@ double DebyeCv::getSpecificHeat(double T)
   return preIntegralFactor * integralFactor;
 }
 
+//______________________________________________________________________
+//
 double DebyeCv::getGamma(double T)
 {
   return 1.4;  // this should be the input file value
 }
 
+//______________________________________________________________________
+//
 double DebyeCv::getInternalEnergy(double T)
 {
-  double Trat = T/d_T_D;
+  double Trat    = T/d_T_D;
   double invTrat = d_T_D/T;
-  double preIntegralFactor = 9.0*kb*d_N*Trat*Trat*Trat;
+  double preIntegralFactor = 9.0 * kb * d_N * Trat * Trat * Trat;
 
   // Riemann sum on integral (for now... this should be replaced with a Riemann Zeta Function w/ n=1)
   double dx = invTrat / 1000.0;
   double integralFactor = 0.0;
-  for(double x = 1.0e-12; x <= invTrat; x += dx)
-  {
+
+  for(double x = 1.0e-12; x <= invTrat; x += dx){
     double eToX = std::exp(x);
     double toAdd = dx * (x*x*x)/((eToX-1.0));
+
     if(std::isnan(toAdd) || std::isinf(toAdd)) {
        std::cerr << "Integral portion of Debye U was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
        continue;

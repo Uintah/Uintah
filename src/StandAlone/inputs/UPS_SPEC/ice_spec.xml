@@ -241,7 +241,7 @@
 
         </EOS>
         <SpecificHeatModel    spec="OPTIONAL NO_DATA"
-                              attribute1="type REQUIRED STRING 'Debye Component Polynomial NASAPolynomial'" >
+                              attribute1="type REQUIRED STRING 'Debye Component Polynomial" >
           <Atoms              spec="REQUIRED INTEGER 'positive'" need_applies_to='type Debye' />
           <DebyeTemperature   spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Debye' />
 
@@ -256,10 +256,10 @@
           <XH                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
           <XH2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
 
-          <MaxOrder           spec="REQUIRED INTEGER 'positive'" need_applies_to='type Polynomial NASAPolynomial'/>
-          <Tmin               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial NASAPolynomial' />
-          <Tmax               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial NASAPolynomial' />
-          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES"   need_applies_to='type Polynomial NASAPolynomial'/>
+          <MaxOrder           spec="REQUIRED INTEGER 'positive'" need_applies_to='type Polynomial'/>
+          <Tmin               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial' />
+          <Tmax               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial' />
+          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES"   need_applies_to='type Polynomial'/>
         </SpecificHeatModel>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />

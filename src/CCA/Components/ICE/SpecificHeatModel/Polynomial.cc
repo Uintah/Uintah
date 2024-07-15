@@ -40,7 +40,6 @@ PolynomialCv::PolynomialCv(ProblemSpecP& ps)
   ps->getWithDefault("Tmax", d_Tmax, 1.0e6);
   ps->getWithDefault("Tmin", d_Tmin, 0.0);
 
-
   // check order and find that many blocks
   if(d_maxOrder < 0) {
     throw new ProblemSetupException("Polynomial order must be >= 0", __FILE__, __LINE__);
@@ -48,34 +47,41 @@ PolynomialCv::PolynomialCv(ProblemSpecP& ps)
 
   ps->require("coefficient", d_coefficient);
 }
-
+//______________________________________________________________________
+//
 PolynomialCv::~PolynomialCv()
 {
 }
 
+//______________________________________________________________________
+//
 void PolynomialCv::outputProblemSpec(ProblemSpecP &ice_ps)
 {
   ProblemSpecP cvmodel = ice_ps->appendChild("SpecificHeatModel");
   cvmodel->setAttribute("type", "Polynomial");
-  cvmodel->appendElement("MaxOrder", d_maxOrder);
-  cvmodel->appendElement("Tmin", d_Tmin);
-  cvmodel->appendElement("Tmax", d_Tmax);
+  cvmodel->appendElement("MaxOrder",  d_maxOrder);
+  cvmodel->appendElement("Tmin",      d_Tmin);
+  cvmodel->appendElement("Tmax",      d_Tmax);
   cvmodel->appendElement("coefficient", d_coefficient);
-
 }
 
+//______________________________________________________________________
+//
 double PolynomialCv::getSpecificHeat(double T)
 {
   // clamp values
   double t = T;
-  if(T < d_Tmin)
+  if(T < d_Tmin){
     t = d_Tmin;
-  if(T > d_Tmax)
+  }
+  if(T > d_Tmax){
     t = d_Tmax;
+  }
 
   // Calculate contributions
   double sum = d_coefficient[0];
   double x = 1.0;
+  
   for(int i = 1; i <= d_maxOrder; i++) {
     x   *= t;                     // add in a factor of x
     sum += d_coefficient[i] * x;  // a_i * x**i
@@ -85,11 +91,15 @@ double PolynomialCv::getSpecificHeat(double T)
   return x/sum;
 }
 
+//______________________________________________________________________
+//
 double PolynomialCv::getGamma(double T)
 {
   return 1.4;  // this should be the input file value
 }
 
+//______________________________________________________________________
+//
 double PolynomialCv::getInternalEnergy(double T)
 {
 

@@ -31,11 +31,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/ICE/SpecificHeatModel
 
-SRCS     += $(SRCDIR)/SpecificHeatFactory.cc    \
-	    $(SRCDIR)/SpecificHeat.cc           \
-            $(SRCDIR)/Debye.cc                  \
-            $(SRCDIR)/Component.cc              \
-            $(SRCDIR)/NASAPolynomial.cc         \
+SRCS     += $(SRCDIR)/SpecificHeatFactory.cc   \
+	     $(SRCDIR)/SpecificHeat.cc          \
+            $(SRCDIR)/Debye.cc                 \
+            $(SRCDIR)/Component.cc             \
             $(SRCDIR)/Polynomial.cc       
 
 PSELIBS := \

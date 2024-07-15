@@ -36,6 +36,8 @@ const double R  = 8.3144621;     // Gas Constant (J/mol*K)
 const double upperbound = 1.0 + 1.0e-12;
 const double lowerbound = 1.0 - 1.0e-12;
 
+//______________________________________________________________________
+//
 ComponentCv::ComponentCv(ProblemSpecP& ps)
  : SpecificHeat(ps)
 {
@@ -51,45 +53,64 @@ ComponentCv::ComponentCv(ProblemSpecP& ps)
   ps->getWithDefault("XH",  d_fractionH,  0.0);
 
   // Sum mole fractions and check for ~1.0
-  d_sum = d_fractionCO2 + d_fractionH2O + d_fractionCO + d_fractionH2 + d_fractionO2 + d_fractionN2 + d_fractionOH + d_fractionNO + d_fractionO + d_fractionH;
-  if(d_sum > upperbound || d_sum < lowerbound  ) 
+  d_sum = d_fractionCO2 
+        + d_fractionH2O 
+        + d_fractionCO 
+        + d_fractionH2 
+        + d_fractionO2 
+        + d_fractionN2 
+        + d_fractionOH 
+        + d_fractionNO 
+        + d_fractionO 
+        + d_fractionH;
+
+  if(d_sum > upperbound || d_sum < lowerbound  ){
     throw new ProblemSetupException("Sum of fractions of constituents must add to 1.", __FILE__, __LINE__);
+  }
 
   // compute some saved values
-  d_gamma       = 1.6*(d_fractionO + d_fractionH) + 1.4*(d_fractionNO+d_fractionOH+d_fractionO2+d_fractionN2+d_fractionH2+d_fractionCO) 
-                + 1.3*(d_fractionCO2+d_fractionH2O);
-  d_massPerMole = d_fractionCO2*44.01 + d_fractionH2O*18.01428 + d_fractionCO*28.01 + d_fractionH2*1.00794 + d_fractionO2*31.9988 
-                + d_fractionN2 * 28.0134 + d_fractionOH*17.00734 + d_fractionNO*30.0061 + d_fractionO*15.9994 + d_fractionH*1.00794;
+  d_gamma       = 1.6 * (d_fractionO  + d_fractionH)
+                + 1.4 * (d_fractionNO + d_fractionOH + d_fractionO2 + d_fractionN2 + d_fractionH2+d_fractionCO)
+                + 1.3 * (d_fractionCO2+d_fractionH2O);
 
-  if(d_gamma <= 0.0)
+  d_massPerMole = d_fractionCO2*44.01 + d_fractionH2O*18.01428 + d_fractionCO*28.01 + d_fractionH2*1.00794 + d_fractionO2*31.9988
+                 + d_fractionN2 * 28.0134 + d_fractionOH*17.00734 + d_fractionNO*30.0061 + d_fractionO*15.9994 + d_fractionH*1.00794;
+
+  if(d_gamma <= 0.0){
     throw new ProblemSetupException("Gamma must be >= 0.", __FILE__, __LINE__);
+  }
 
-  if(d_massPerMole <= 0.0)
+  if(d_massPerMole <= 0.0){
     throw new ProblemSetupException("Mass Per Mole of Atmosphere must be >= 0.", __FILE__, __LINE__);
+  }
 }
-
+//______________________________________________________________________
+//
 ComponentCv::~ComponentCv()
 {
 }
 
+//______________________________________________________________________
+//
 void ComponentCv::outputProblemSpec(ProblemSpecP& ice_ps)
 {
   ProblemSpecP cvmodel = ice_ps->appendChild("SpecificHeatModel");
   cvmodel->setAttribute("type", "Component");
   cvmodel->appendElement("XCO2", d_fractionCO2);
   cvmodel->appendElement("XH2O", d_fractionH2O);
-  cvmodel->appendElement("XCO", d_fractionCO);
-  cvmodel->appendElement("XH2", d_fractionH2);
-  cvmodel->appendElement("XO2", d_fractionO2);
-  cvmodel->appendElement("XN2", d_fractionN2);
-  cvmodel->appendElement("XOH", d_fractionOH);
-  cvmodel->appendElement("XNO", d_fractionNO);
-  cvmodel->appendElement("XO", d_fractionO);
-  cvmodel->appendElement("XH", d_fractionH);
+  cvmodel->appendElement("XCO",  d_fractionCO);
+  cvmodel->appendElement("XH2",  d_fractionH2);
+  cvmodel->appendElement("XO2",  d_fractionO2);
+  cvmodel->appendElement("XN2",  d_fractionN2);
+  cvmodel->appendElement("XOH",  d_fractionOH);
+  cvmodel->appendElement("XNO",  d_fractionNO);
+  cvmodel->appendElement("XO",   d_fractionO);
+  cvmodel->appendElement("XH",   d_fractionH);
 
 }
 
-
+//______________________________________________________________________
+//
 double ComponentCv::getSpecificHeat(double T)
 {
   double cpMolar = 0.0;
@@ -111,7 +132,7 @@ double ComponentCv::getSpecificHeat(double T)
   // Add contributions of each gas
   if(T<=1000.0) {
   // Low temperature constants //
-    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals, 
+    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
     //                 McGraw-Hill Publishing, 1988, p. 131.
     cpMolar += d_fractionCO2*(0.24008e1+0.87351e-2*T-0.66071e-5*T2+0.20022e-8*T3+0.63274e-15*T4);
     cpMolar += d_fractionH2O*(0.40701e1-0.11084e-2*T+0.41521e-5*T2-0.29637e-8*T3+0.80702e-12*T4);
@@ -119,8 +140,9 @@ double ComponentCv::getSpecificHeat(double T)
     cpMolar += d_fractionH2 *(0.30574e1+0.26765e-2*T-0.58099e-5*T2+0.55210e-8*T3-0.18123e-11*T4);
     cpMolar += d_fractionO2 *(0.36256e1-0.18782e-2*T+0.70555e-5*T2-0.67635e-8*T3+0.21556e-11*T4);
     cpMolar += d_fractionN2 *(0.36748e1-0.12082e-2*T+0.23240e-5*T2-0.63218e-9*T3-0.22577e-12*T4);
-  } else { // High temperature constants // 
-    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals, 
+  }
+  else { // High temperature constants //
+    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
     //                 McGraw-Hill Publishing, 1988, p. 131.
     cpMolar += d_fractionCO2*(0.44608e1+0.30982e-2*T-0.12393e-5*T2+0.22741e-9*T3-0.15526e-13*T4);
     cpMolar += d_fractionH2O*(0.27168e1+0.29451e-2*T-0.80224e-6*T2+0.10227e-9*T3-0.48472e-14*T4);
@@ -144,28 +166,31 @@ double ComponentCv::getSpecificHeat(double T)
   return 1000.0 * (cvMolar * R)/ d_massPerMole;
 }
 
+//______________________________________________________________________
+//
 double ComponentCv::getGamma(double T)
 {
   return d_gamma;
 }
-
+//______________________________________________________________________
+//
 double ComponentCv::getInternalEnergy(double T)
 {
   double hMolar = 0.0;
 
   // Clamp minimum to 300 because of fitting forms
-  if(T < 300.0)
+  if(T < 300.0){
     T = 300.0;
-  // Clamp maximum to 5000 because of fitting form
-  if(T > 5000.0)
-    T = 5000.0;
+  }
 
+  // Clamp maximum to 5000 because of fitting form
+  if(T > 5000.0){
+    T = 5000.0;
+  }
   // reused temperatures
   double T2 = T*T;
   double T3 = T2*T;
   double T4 = T3*T;
-
-
 
   // Add contributions of each gas
   if(T<=1000.0) {
@@ -178,7 +203,8 @@ double ComponentCv::getInternalEnergy(double T)
     hMolar += T * d_fractionH2 *(0.30574e1+0.26765e-2*T/2.0-0.58099e-5*T2/3.0+0.55210e-8*T3/4.0-0.18123e-11*T4/5.0 - 0.98890e3/T);
     hMolar += T * d_fractionO2 *(0.36256e1-0.18782e-2*T/2.0+0.70555e-5*T2/3.0-0.67635e-8*T3/4.0+0.21556e-11*T4/5.0 - 0.10475e4/T);
     hMolar += T * d_fractionN2 *(0.36748e1-0.12082e-2*T/2.0+0.23240e-5*T2/3.0-0.63218e-9*T3/4.0-0.22577e-12*T4/5.0 - 0.10612e4/T);
-  } else { // High temperature constants //
+  }
+  else { // High temperature constants //
     // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
     //                 McGraw-Hill Publishing, 1988, p. 131.
     hMolar += T * d_fractionCO2*(0.44608e1+0.30982e-2*T/2.0-0.12393e-5*T2/3.0+0.22741e-9*T3/4.0-0.15526e-13*T4/5.0 - 0.48961e5/T);
@@ -202,6 +228,6 @@ double ComponentCv::getInternalEnergy(double T)
 
   // the factor of 10^3 if to convert g->kg
   return 1000.0 * (uMolar * R)/ d_massPerMole;
-  
+
 }
 

@@ -26,7 +26,6 @@
 #define _SPECIFICHEATFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/MaterialManagerP.h>
 
 namespace Uintah {
 
@@ -35,12 +34,11 @@ namespace Uintah {
 
   class SpecificHeatFactory
   {
-  public:
-    SpecificHeatFactory();
-    ~SpecificHeatFactory();
+    public:
+      SpecificHeatFactory();
+      ~SpecificHeatFactory();
 
-
-    static SpecificHeat* create(ProblemSpecP& ps);
+      static SpecificHeat* create(ProblemSpecP& ps);
 
   };
 
