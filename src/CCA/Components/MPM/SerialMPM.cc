@@ -4417,6 +4417,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
               //cout << "acc = " << acc << endl;
 
               pExternalForce_new[idx]+=pmass[idx]*acc;
+              allMatls_sumExtForce += pExternalForce_new[idx];
+              sumExtForce[dwi]     += pExternalForce_new[idx];
             } // loadCurveID >=0
            }  // loop over elements of the IntVector
           }
