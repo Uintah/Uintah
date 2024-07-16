@@ -152,6 +152,7 @@ SerialMPM::~SerialMPM()
   delete flags;
   delete d_switchCriteria;
   delete Cl;
+  delete TriL;
   delete cohesiveZoneTasks;
   delete triangleTasks;
 
@@ -1059,7 +1060,8 @@ void SerialMPM::scheduleComputeCurrentParticleSize(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
@@ -1102,7 +1104,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
   const MaterialSubset* global_mss = t->getGlobalMatlSubset();
   const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
-  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  MaterialSubset* reduction_mss    = scinew MaterialSubset();
   reduction_mss->add( global_mss->get(0) );
 
   unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
@@ -1120,8 +1122,13 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
+  
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
+  }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
