@@ -46,6 +46,7 @@ PSELIBS := \
        $(SRCDIR)/Materials             \
        $(SRCDIR)/SpecificHeatModel     \
        $(SRCDIR)/TurbulenceModel       \
+       $(SRCDIR)/ViscosityModel        \
        $(SRCDIR)/WallShearStressModel  \
        CCA/Components/Application      \
        CCA/Components/Models           \
@@ -86,6 +87,7 @@ SUBDIRS := \
 	$(SRCDIR)/EOS               \
 	$(SRCDIR)/Materials         \
 	$(SRCDIR)/SpecificHeatModel \
+       $(SRCDIR)/ViscosityModel \
 	$(SRCDIR)/TurbulenceModel   \
 	$(SRCDIR)/WallShearStressModel
 

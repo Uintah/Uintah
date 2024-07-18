@@ -29,15 +29,13 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/ICE/Materials
+SRCDIR   := CCA/Components/ICE/ViscosityModel
 
-SRCS += \
-        $(SRCDIR)/ICEMaterial.cc
+SRCS     += $(SRCDIR)/ViscosityFactory.cc   \
+	     $(SRCDIR)/Viscosity.cc          \
+            $(SRCDIR)/Sutherland.cc    
 
 PSELIBS := \
-	CCA/Components/ICE/EOS \
-	CCA/Components/ICE/SpecificHeatModel \
-       CCA/Components/ICE/ViscosityModel \
 	Core/Disclosure     \
 	Core/Exceptions     \
 	Core/Geometry       \

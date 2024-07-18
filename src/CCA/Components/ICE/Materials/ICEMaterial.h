@@ -26,6 +26,7 @@
 #define __ICE_MATERIAL_H__
 
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 
 #include <CCA/Ports/DataWarehouseP.h>
@@ -65,7 +66,11 @@ class ICEMaterial : public Material {
     // Get the associated specific heat model.  
     // If there is none specified, this will return a null (0) pointer
     SpecificHeat* getSpecificHeatModel() const;
-
+    
+    // Get the associated dynamic viscosity model.  
+    // If there is none specified, this will return a null (0) pointer
+    Viscosity* getDynViscosityModel() const;
+    
     double getGamma()               const;
     double getDynViscosity()        const;
     double getSpeedOfSound()        const;
@@ -88,12 +93,13 @@ class ICEMaterial : public Material {
                          DataWarehouse* new_dw);
 
   private:
-    EquationOfState *d_eos;
-    SpecificHeat    *d_cvModel;           // Specific heat model
+    EquationOfState *d_eos               {nullptr};
+    SpecificHeat    *d_cvModel           {nullptr};     // Specific heat model
+    Viscosity       *d_dynViscosityModel {nullptr};     // Model for the dynamic viscosity
 
-    double  d_dynViscosity;                // dynamic viscosity
+    double  d_dynViscosity;                   // dynamic viscosity coefficient
     double  d_gamma;
-    bool    d_isSurroundingMatl;             // defines which matl is the background matl.
+    bool    d_isSurroundingMatl;              // defines which matl is the background matl.
     bool    d_includeFlowWork;
     double  d_specificHeat;
     double  d_thermalConductivity;

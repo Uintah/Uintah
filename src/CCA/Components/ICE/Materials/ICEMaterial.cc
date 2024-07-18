@@ -27,6 +27,8 @@
 
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
+#include <CCA/Components/ICE/ViscosityModel/ViscosityFactory.h>
+
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -58,20 +60,26 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
   }
 
-  ProblemSpecP cvModel_ps = ps->findBlock("SpecificHeatModel");
-  d_cvModel = nullptr;
-  if( cvModel_ps != nullptr ) {
-    proc0cout << "Creating Specific heat model." << endl;
-    d_cvModel = SpecificHeatFactory::create( ps );
-  }
+
   
   //__________________________________
-  // Thermodynamic Transport Properties
+  // Constant Thermodynamic Transport Properties
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",       d_specificHeat);
   ps->require("dynamic_viscosity",   d_dynViscosity);
   ps->require("gamma",               d_gamma);
   ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
+
+
+  //__________________________________
+  //    Variable thermodynamic properties
+  d_cvModel = SpecificHeatFactory::create( ps );
+  
+  //__________________________________
+  //    Variable Transport properties
+  d_dynViscosityModel = ViscosityFactory::create( ps );
+
+
 
   //__________________________________
   //  Misc. Flags
@@ -141,11 +149,19 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",       d_specificHeat);
+  ice_ps->appendElement("dynamic_viscosity",   d_dynViscosity);
+  ice_ps->appendElement("gamma",               d_gamma);
+  
+  //__________________________________
+  //    Thermotransport models
   if( d_cvModel != nullptr ) {
     d_cvModel->outputProblemSpec( ice_ps );
   }
-  ice_ps->appendElement("dynamic_viscosity",   d_dynViscosity);
-  ice_ps->appendElement("gamma",               d_gamma);
+
+  if( d_dynViscosityModel != nullptr ) {
+    d_dynViscosityModel->outputProblemSpec( ice_ps );
+  }
+
   ice_ps->appendElement("isSurroundingMatl",   d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",     d_includeFlowWork);
   ice_ps->appendElement("tiny_rho",            d_tiny_rho);
@@ -164,9 +180,14 @@ EquationOfState * ICEMaterial::getEOS() const
   return d_eos;
 }
 
-SpecificHeat *ICEMaterial::getSpecificHeatModel() const
+SpecificHeat * ICEMaterial::getSpecificHeatModel() const
 {
   return d_cvModel;
+}
+
+Viscosity * ICEMaterial::getDynViscosityModel() const
+{
+  return d_dynViscosityModel;
 }
 
 double ICEMaterial::getGamma() const

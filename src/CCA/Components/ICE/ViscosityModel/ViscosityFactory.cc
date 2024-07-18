@@ -22,57 +22,48 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Component.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
+#include <CCA/Components/ICE/ViscosityModel/ViscosityFactory.h>
+#include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
+#include <CCA/Components/ICE/ViscosityModel/Sutherland.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 
 
 using namespace Uintah;
 using namespace std;
 
-SpecificHeatFactory::SpecificHeatFactory()
+ViscosityFactory::ViscosityFactory()
 {
 }
 
-SpecificHeatFactory::~SpecificHeatFactory()
+ViscosityFactory::~ViscosityFactory()
 {
 }
-
-SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
+//______________________________________________________________________
+//
+Viscosity* ViscosityFactory::create( ProblemSpecP& ps )
 {
-  ProblemSpecP cv_ps = ps->findBlock("SpecificHeatModel");
+  ProblemSpecP vm_ps = ps->findBlock("dynamicViscosityModel");
 
-  if(cv_ps){
-    std::string cv_model;
-    if(!cv_ps->getAttribute("type",cv_model)){
-      throw ProblemSetupException("No model for specific_heat", __FILE__, __LINE__);
+  if(vm_ps){
+    std::string vm_model;
+    if(!vm_ps->getAttribute("type",vm_model)){
+      throw ProblemSetupException("No model for dynamic viscosity", __FILE__, __LINE__);
     }
 
-    proc0cout << "Creating Specific heat model (" << cv_model << ")"<< endl;
-    if (cv_model == "Debye"){
-      return(scinew DebyeCv(cv_ps));
-    }
-    else if (cv_model == "Component"){
-      return(scinew ComponentCv(cv_ps));
-    }
-    else if (cv_model == "Polynomial"){
-      return(scinew PolynomialCv(cv_ps));
+    proc0cout << "Creating dynamic viscosit model (" << vm_model << ")"<< endl;
+    
+    if (vm_model == "Sutherland"){
+      return(scinew Sutherland(vm_ps));
     }
     else{
       ostringstream warn;
-      warn << "ERROR ICE: Unknown specific heat model ("<< cv_model << " )\n"
+      warn << "ERROR ICE: Unknown viscosity model ("<< vm_model << " )\n"
          << "Valid models are:\n"
-         << " Debye\n"
-         << " Component\n"
-         << " Polynomial\n" << endl;
+         << " Sutherland\n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
-  return nullptr;
+  return 0;
 }
 

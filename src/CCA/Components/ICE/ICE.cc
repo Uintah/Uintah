@@ -32,6 +32,7 @@
 #include <CCA/Components/ICE/TurbulenceModel/TurbulenceFactory.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
@@ -2416,12 +2417,12 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
       if(cvModel != 0) {
         CellIterator iter = patch->getExtraCellIterator();
         cvModel->computeSpecificHeat( iter, Temp_CC[indx], cv[indx]);
-        
-        
+
+
         for (;!iter.done();iter++){
           IntVector c = *iter;
           gamma[indx][c] = cvModel->getGamma(Temp_CC[indx][c]);
-          
+
         }
       }
 
@@ -2551,28 +2552,39 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
       int indx = ice_matl->getDWIndex();
 
       constCCVariable<double> temp_CC;
-      CCVariable<double> viscosity;
+      CCVariable<double> dynViscosity;
       CCVariable<double> thermalCond;
       CCVariable<double> gamma;
       CCVariable<double> cv;
 
       old_dw->get( temp_CC, lb->temp_CCLabel, indx,patch,m_gn,0 );
 
-      new_dw->allocateAndPut( thermalCond, lb->thermalCondLabel,  indx, patch );
-      new_dw->allocateAndPut( viscosity,   lb->viscosityLabel,    indx, patch );
-      new_dw->allocateAndPut( cv,          lb->specific_heatLabel,indx, patch );
-      new_dw->allocateAndPut( gamma,       lb->gammaLabel,        indx, patch );
+      new_dw->allocateAndPut( thermalCond,  lb->thermalCondLabel,  indx, patch );
+      new_dw->allocateAndPut( dynViscosity, lb->viscosityLabel,    indx, patch );
+      new_dw->allocateAndPut( cv,           lb->specific_heatLabel,indx, patch );
+      new_dw->allocateAndPut( gamma,        lb->gammaLabel,        indx, patch );
 
-      viscosity.initialize  ( ice_matl->getDynViscosity());
+      //__________________________________
+      //    Transport Prpoerties
+      dynViscosity.initialize( ice_matl->getDynViscosity() );
       thermalCond.initialize( ice_matl->getThermalConductivity());
+
+      Viscosity *viscModel = ice_matl->getDynViscosityModel();
+
+       CellIterator iter = patch->getExtraCellIterator();
+      if ( viscModel ){
+        viscModel->computeDynViscosity( iter, temp_CC, dynViscosity);
+      }
+
+      //__________________________________
+      //  Thermo properties
       gamma.initialize  (     ice_matl->getGamma());
       cv.initialize(          ice_matl->getSpecificHeat());
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
 
-      if(cvModel != 0) {
-        CellIterator iter = patch->getExtraCellIterator();
+      if( cvModel ) {
         cvModel->computeSpecificHeat( iter, temp_CC, cv);
-        
+
         for(;!iter.done();iter++) {
           IntVector c = *iter;
           gamma[c] = cvModel->getGamma(temp_CC[c]);
