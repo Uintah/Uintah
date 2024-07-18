@@ -56,28 +56,36 @@ void DebyeCv::outputProblemSpec(ProblemSpecP& ice_ps)
 
 //______________________________________________________________________
 //
-double DebyeCv::getSpecificHeat(double T)
+template< class CCVar>
+void DebyeCv::computeSpecificHeat_impl( CellIterator      & iter,
+                                        CCVar             & temp_CC,
+                                        CCVariable<double>& cv)
 {
-  double Trat    = T/d_T_D;
-  double invTrat = d_T_D/T;
-  double preIntegralFactor = 9.0 * kb * d_N * Trat * Trat * Trat;
 
-  // Riemann sum on integral (for now... this should be replaced with a Riemann Zeta Function w/ n=1)
-  double dx = invTrat / 1000.0;
-  double integralFactor = 0.0;
+  for (;!iter.done();iter++) {
+    IntVector c = *iter;
 
-  for(double x = 1.0e-12; x <= invTrat; x += dx){
-    double eToX = std::exp(x);
-    double toAdd = dx * (x*x*x*x*eToX)/((eToX-1.0)*(eToX-1.0));
+    double Trat    = temp_CC[c]/d_T_D;
+    double invTrat = d_T_D/temp_CC[c];
+    double preIntegralFactor = 9.0 * kb * d_N * Trat * Trat * Trat;
 
-    if(std::isnan(toAdd) || std::isinf(toAdd)) {
-       std::cerr << "Integral portion of Debye Cv was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
-       continue;
+    // Riemann sum on integral (for now... this should be replaced with a Riemann Zeta Function w/ n=1)
+    double dx = invTrat / 1000.0;
+    double integralFactor = 0.0;
+
+    for(double x = 1.0e-12; x <= invTrat; x += dx){
+      double eToX = std::exp(x);
+      double toAdd = dx * (x*x*x*x*eToX)/((eToX-1.0)*(eToX-1.0));
+
+      if(std::isnan(toAdd) || std::isinf(toAdd)) {
+         std::cerr << "Integral portion of Debye Cv was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
+         continue;
+      }
+      integralFactor += toAdd;
     }
-    integralFactor += toAdd;
-  }
 
-  return preIntegralFactor * integralFactor;
+    cv[c] = preIntegralFactor * integralFactor;
+  }
 }
 
 //______________________________________________________________________

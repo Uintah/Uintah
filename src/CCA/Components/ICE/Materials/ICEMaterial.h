@@ -66,15 +66,15 @@ class ICEMaterial : public Material {
     // If there is none specified, this will return a null (0) pointer
     SpecificHeat* getSpecificHeatModel() const;
 
-    double getGamma() const;
-    double getViscosity() const;
-    double getSpeedOfSound() const;
-    bool   isSurroundingMatl() const;
-    bool   getIncludeFlowWork() const;
-    double getSpecificHeat() const;
+    double getGamma()               const;
+    double getDynViscosity()        const;
+    double getSpeedOfSound()        const;
+    bool   isSurroundingMatl()      const;
+    bool   getIncludeFlowWork()     const;
+    double getSpecificHeat()        const;
     double getThermalConductivity() const;
-    double getInitialDensity() const;
-    double getTinyRho() const;
+    double getInitialDensity()      const;
+    double getTinyRho()             const;
 
     void initializeCells(CCVariable<double>& rhom,
                          CCVariable<double>& rhC,
@@ -89,15 +89,15 @@ class ICEMaterial : public Material {
 
   private:
     EquationOfState *d_eos;
-    SpecificHeat    *d_cvModel;   // Specific heat model
+    SpecificHeat    *d_cvModel;           // Specific heat model
 
-    double d_viscosity;
-    double d_gamma;
-    bool d_isSurroundingMatl; // defines which matl is the background matl.
-    bool d_includeFlowWork;
-    double d_specificHeat;
-    double d_thermalConductivity;
-    double d_tiny_rho;
+    double  d_dynViscosity;                // dynamic viscosity
+    double  d_gamma;
+    bool    d_isSurroundingMatl;             // defines which matl is the background matl.
+    bool    d_includeFlowWork;
+    double  d_specificHeat;
+    double  d_thermalConductivity;
+    double  d_tiny_rho;
 
     std::vector<GeometryObject*> d_geom_objs;
 

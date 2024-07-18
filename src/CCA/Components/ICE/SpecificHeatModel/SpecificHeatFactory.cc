@@ -68,7 +68,6 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
          << "Valid models are:\n"
          << " Debye\n"
          << " Component\n"
-         << " NASAPolynomial\n"
          << " Polynomial\n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }

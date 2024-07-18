@@ -69,7 +69,7 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
   // Thermodynamic Transport Properties
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",       d_specificHeat);
-  ps->require("dynamic_viscosity",   d_viscosity);
+  ps->require("dynamic_viscosity",   d_dynViscosity);
   ps->require("gamma",               d_gamma);
   ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
 
@@ -144,7 +144,7 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   if( d_cvModel != nullptr ) {
     d_cvModel->outputProblemSpec( ice_ps );
   }
-  ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
+  ice_ps->appendElement("dynamic_viscosity",   d_dynViscosity);
   ice_ps->appendElement("gamma",               d_gamma);
   ice_ps->appendElement("isSurroundingMatl",   d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",     d_includeFlowWork);
@@ -179,9 +179,9 @@ double ICEMaterial::getTinyRho() const
   return d_tiny_rho;
 }
 
-double ICEMaterial::getViscosity() const
+double ICEMaterial::getDynViscosity() const
 {
-  return d_viscosity;
+  return d_dynViscosity;
 }
 
 bool ICEMaterial::isSurroundingMatl() const
@@ -247,11 +247,20 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   vol_frac_CC.initialize(0.);
   speedSound.initialize(0.);
   IveBeenHere.initialize(-9);
+  
+
 
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
     GeometryPieceP piece = d_geom_objs[obj]->getPiece();
-    // Box b1 = piece->getBoundingBox();
-    // Box b2 = patch->getBox();
+    Box bb_gp    = piece->getBoundingBox();
+    Box bb_patch = patch->getBox();
+    
+    //if( ! bb_gp.overlaps(bb_patch) ){
+    //  continue;
+    //}
+    
+    string name = piece->getName();
+    cout << "geomPiece: " << name << " bb_gp: " << bb_gp << " bb_patch: " << bb_patch<< " overlaps " << bb_gp.overlaps(bb_patch) << endl;
 
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
 
@@ -296,7 +305,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         IntVector c = *iter;
         rho_CC[c] = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
       }
-    } else {
+    } 
+    else {
 
       IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
       Vector dxpp     = patch->dCell()/ppc;
@@ -320,6 +330,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             }
           }
         }
+
+       if(name == "Hotspot") {
+       //  cout << c << " IveBeenHere[c]: " << IveBeenHere[c] << " count: " << count << endl;
+       }
         //__________________________________
         // For single materials with more than one object 
         if(numMatls == 1)  {

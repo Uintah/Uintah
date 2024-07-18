@@ -59,36 +59,42 @@ void PolynomialCv::outputProblemSpec(ProblemSpecP &ice_ps)
 {
   ProblemSpecP cvmodel = ice_ps->appendChild("SpecificHeatModel");
   cvmodel->setAttribute("type", "Polynomial");
-  cvmodel->appendElement("MaxOrder",  d_maxOrder);
-  cvmodel->appendElement("Tmin",      d_Tmin);
-  cvmodel->appendElement("Tmax",      d_Tmax);
+  cvmodel->appendElement("MaxOrder",    d_maxOrder);
+  cvmodel->appendElement("Tmin",        d_Tmin);
+  cvmodel->appendElement("Tmax",        d_Tmax);
   cvmodel->appendElement("coefficient", d_coefficient);
 }
 
 //______________________________________________________________________
 //
-double PolynomialCv::getSpecificHeat(double T)
-{
-  // clamp values
-  double t = T;
-  if(T < d_Tmin){
-    t = d_Tmin;
-  }
-  if(T > d_Tmax){
-    t = d_Tmax;
-  }
+template< class CCVar>
+void PolynomialCv::computeSpecificHeat_impl( CellIterator      & iter,       
+                                             CCVar             & temp_CC,
+                                             CCVariable<double>& cv)
+{  
+  for (;!iter.done();iter++) {
+    IntVector c = *iter;
+    
+    // clamp values
+    double temp = temp_CC[c];
+    if( temp_CC[c] < d_Tmin ){
+      temp = d_Tmin;
+    }
+    if( temp_CC[c] > d_Tmax ){
+      temp = d_Tmax;
+    }
 
-  // Calculate contributions
-  double sum = d_coefficient[0];
-  double x = 1.0;
-  
-  for(int i = 1; i <= d_maxOrder; i++) {
-    x   *= t;                     // add in a factor of x
-    sum += d_coefficient[i] * x;  // a_i * x**i
-  }
+    // Calculate contributions
+    double sum = d_coefficient[0];
+    double x = 1.0;
 
-  // do the final divide
-  return x/sum;
+    for(int i = 1; i <= d_maxOrder; i++) {
+      x   *= temp;                  // add in a factor of x
+      sum += d_coefficient[i] * x;  // a_i * x**i
+    }
+    // do the final divide
+    cv[c] = x/sum;
+  }
 }
 
 //______________________________________________________________________
@@ -107,4 +113,3 @@ double PolynomialCv::getInternalEnergy(double T)
 
   return -999.0;
 }
-

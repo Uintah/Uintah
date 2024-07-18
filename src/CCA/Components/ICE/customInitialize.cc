@@ -424,7 +424,7 @@ void customInitialization(const Patch* patch,
     if( whichMethod == "mms_1" ){
       double t = 0.0;
       double A = cib->mms_vars.A;
-      double nu = ice_matl->getViscosity();
+      double nu = ice_matl->getDynViscosity();
       double cv = ice_matl->getSpecificHeat();
       double gamma = ice_matl->getGamma();
       double p_ref = 101325;
@@ -551,7 +551,7 @@ void customInitialization(const Patch* patch,
       double halfChanHeight  =  cib->powerLaw2_vars.halfChanHeight;
       const Level* level = patch->getLevel();
 
-      double visc      = ice_matl->getViscosity();
+      double visc      = ice_matl->getDynViscosity();
       double rho       = ice_matl->getInitialDensity();
       double Re_tau    = cib->powerLaw2_vars.Re_tau;
       double u_tau     = ( visc * Re_tau/(rho * halfChanHeight) ) ;
@@ -595,7 +595,7 @@ void customInitialization(const Patch* patch,
 
     if ( whichMethod == "DNS_Moser" ){
 
-      double visc  =  ice_matl->getViscosity();
+      double visc  =  ice_matl->getDynViscosity();
       double rho   =  ice_matl->getInitialDensity();
       double nu    =  visc / rho;
 

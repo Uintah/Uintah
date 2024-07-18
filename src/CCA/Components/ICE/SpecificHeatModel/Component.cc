@@ -53,15 +53,15 @@ ComponentCv::ComponentCv(ProblemSpecP& ps)
   ps->getWithDefault("XH",  d_fractionH,  0.0);
 
   // Sum mole fractions and check for ~1.0
-  d_sum = d_fractionCO2 
-        + d_fractionH2O 
-        + d_fractionCO 
-        + d_fractionH2 
-        + d_fractionO2 
-        + d_fractionN2 
-        + d_fractionOH 
-        + d_fractionNO 
-        + d_fractionO 
+  d_sum = d_fractionCO2
+        + d_fractionH2O
+        + d_fractionCO
+        + d_fractionH2
+        + d_fractionO2
+        + d_fractionN2
+        + d_fractionOH
+        + d_fractionNO
+        + d_fractionO
         + d_fractionH;
 
   if(d_sum > upperbound || d_sum < lowerbound  ){
@@ -111,61 +111,70 @@ void ComponentCv::outputProblemSpec(ProblemSpecP& ice_ps)
 
 //______________________________________________________________________
 //
-double ComponentCv::getSpecificHeat(double T)
+template< class CCVar>
+void ComponentCv::computeSpecificHeat_impl( CellIterator      & iter,
+                                            CCVar             & temp_CC,
+                                            CCVariable<double>& cv)
 {
-  double cpMolar = 0.0;
 
-  // Clamp minimum to 300 because of fitting forms
-  if(T < 300.0)
-    T = 300.0;
-  // Clamp maximum to 5000 because of fitting form
-  if(T > 5000.0)
-    T = 5000.0;
+  for (;!iter.done();iter++) {
+    IntVector c = *iter;
 
-  // reused temperatures
-  double T2 = T*T;
-  double T3 = T2*T;
-  double T4 = T3*T;
+    double T = temp_CC[c];
+
+    // Clamp minimum to 300 because of fitting forms
+    if(T < 300.0){
+      T = 300.0;
+    }
+
+    // Clamp maximum to 5000 because of fitting form
+    if(T > 5000.0){
+      T = 5000.0;
+    }
+
+    // reused temperatures
+    double T2 = T*T;
+    double T3 = T2*T;
+    double T4 = T3*T;
+
+    double cpMolar = 0.0;
+    // Add contributions of each gas
+    if(T<=1000.0) {
+    // Low temperature constants //
+      // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
+      //                 McGraw-Hill Publishing, 1988, p. 131.
+      cpMolar += d_fractionCO2*(0.24008e1+0.87351e-2*T-0.66071e-5*T2+0.20022e-8*T3+0.63274e-15*T4);
+      cpMolar += d_fractionH2O*(0.40701e1-0.11084e-2*T+0.41521e-5*T2-0.29637e-8*T3+0.80702e-12*T4);
+      cpMolar += d_fractionCO *(0.37101e1-0.16191e-2*T+0.36924e-5*T2-0.20320e-8*T3+0.23953e-12*T4);
+      cpMolar += d_fractionH2 *(0.30574e1+0.26765e-2*T-0.58099e-5*T2+0.55210e-8*T3-0.18123e-11*T4);
+      cpMolar += d_fractionO2 *(0.36256e1-0.18782e-2*T+0.70555e-5*T2-0.67635e-8*T3+0.21556e-11*T4);
+      cpMolar += d_fractionN2 *(0.36748e1-0.12082e-2*T+0.23240e-5*T2-0.63218e-9*T3-0.22577e-12*T4);
+    }
+    else { // High temperature constants //
+      // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
+      //                 McGraw-Hill Publishing, 1988, p. 131.
+      cpMolar += d_fractionCO2*(0.44608e1+0.30982e-2*T-0.12393e-5*T2+0.22741e-9*T3-0.15526e-13*T4);
+      cpMolar += d_fractionH2O*(0.27168e1+0.29451e-2*T-0.80224e-6*T2+0.10227e-9*T3-0.48472e-14*T4);
+      cpMolar += d_fractionCO *(0.29841e1+0.14891e-2*T-0.57900e-6*T2+0.10365e-9*T3-0.69354e-14*T4);
+      cpMolar += d_fractionH2 *(0.31002e1+0.51119e-3*T+0.52644e-7*T2-0.34910e-10*T3+0.36945e-14*T4);
+      cpMolar += d_fractionO2 *(0.36220e1+0.73618e-3*T-0.19652e-6*T2+0.36202e-10*T3-0.28946e-14*T4);
+      cpMolar += d_fractionN2 *(0.28963e1+0.15155e-2*T-0.57235e-6*T2+0.99807e-10*T3-0.65224e-14*T4);
+    }
+
+    // Same over entire temperature range
+    cpMolar += d_fractionOH *(0.29106e1+0.95932e-3*T-0.19442e-6*T2+0.13757e-10*T3+0.14225e-15*T4);
+    cpMolar += d_fractionNO *(0.31890e1+0.13382e-2*T-0.52899e-6*T2+0.95919e-10*T3-0.64848e-14*T4);
+    cpMolar += d_fractionO  *(0.25421e1-0.27551e-4*T-0.31028e-8*T2+0.45511e-11*T3-0.43681e-15*T4);
+    cpMolar += d_fractionH  *(0.25);
 
 
+    // Here gamma is approximated with monotomics == 1.6, diatomics == 1.4 and triatomics == 1.3
+    double cvMolar = cpMolar / d_gamma;
 
-  // Add contributions of each gas
-  if(T<=1000.0) {
-  // Low temperature constants //
-    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
-    //                 McGraw-Hill Publishing, 1988, p. 131.
-    cpMolar += d_fractionCO2*(0.24008e1+0.87351e-2*T-0.66071e-5*T2+0.20022e-8*T3+0.63274e-15*T4);
-    cpMolar += d_fractionH2O*(0.40701e1-0.11084e-2*T+0.41521e-5*T2-0.29637e-8*T3+0.80702e-12*T4);
-    cpMolar += d_fractionCO *(0.37101e1-0.16191e-2*T+0.36924e-5*T2-0.20320e-8*T3+0.23953e-12*T4);
-    cpMolar += d_fractionH2 *(0.30574e1+0.26765e-2*T-0.58099e-5*T2+0.55210e-8*T3-0.18123e-11*T4);
-    cpMolar += d_fractionO2 *(0.36256e1-0.18782e-2*T+0.70555e-5*T2-0.67635e-8*T3+0.21556e-11*T4);
-    cpMolar += d_fractionN2 *(0.36748e1-0.12082e-2*T+0.23240e-5*T2-0.63218e-9*T3-0.22577e-12*T4);
+    // the factor of 10^3 if to convert g->kg
+    cv[c] = 1000.0 * (cvMolar * R)/ d_massPerMole;
   }
-  else { // High temperature constants //
-    // Constants from: Heywood, J.B. Internal Combustion Engine Fundamentals,
-    //                 McGraw-Hill Publishing, 1988, p. 131.
-    cpMolar += d_fractionCO2*(0.44608e1+0.30982e-2*T-0.12393e-5*T2+0.22741e-9*T3-0.15526e-13*T4);
-    cpMolar += d_fractionH2O*(0.27168e1+0.29451e-2*T-0.80224e-6*T2+0.10227e-9*T3-0.48472e-14*T4);
-    cpMolar += d_fractionCO *(0.29841e1+0.14891e-2*T-0.57900e-6*T2+0.10365e-9*T3-0.69354e-14*T4);
-    cpMolar += d_fractionH2 *(0.31002e1+0.51119e-3*T+0.52644e-7*T2-0.34910e-10*T3+0.36945e-14*T4);
-    cpMolar += d_fractionO2 *(0.36220e1+0.73618e-3*T-0.19652e-6*T2+0.36202e-10*T3-0.28946e-14*T4);
-    cpMolar += d_fractionN2 *(0.28963e1+0.15155e-2*T-0.57235e-6*T2+0.99807e-10*T3-0.65224e-14*T4);
-  }
-
-  // Same over entire temperature range
-  cpMolar += d_fractionOH *(0.29106e1+0.95932e-3*T-0.19442e-6*T2+0.13757e-10*T3+0.14225e-15*T4);
-  cpMolar += d_fractionNO *(0.31890e1+0.13382e-2*T-0.52899e-6*T2+0.95919e-10*T3-0.64848e-14*T4);
-  cpMolar += d_fractionO  *(0.25421e1-0.27551e-4*T-0.31028e-8*T2+0.45511e-11*T3-0.43681e-15*T4);
-  cpMolar += d_fractionH  *(0.25);
-
-
-  // Here gamma is approximated with monotomics == 1.6, diatomics == 1.4 and triatomics == 1.3
-  double cvMolar = cpMolar / d_gamma;
-
-  // the factor of 10^3 if to convert g->kg
-  return 1000.0 * (cvMolar * R)/ d_massPerMole;
 }
-
 //______________________________________________________________________
 //
 double ComponentCv::getGamma(double T)

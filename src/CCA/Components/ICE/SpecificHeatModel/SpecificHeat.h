@@ -25,7 +25,10 @@
 #ifndef _SPECIFICHEAT_H_
 #define _SPECIFICHEAT_H_
 
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
 
 namespace Uintah {
 
@@ -42,11 +45,21 @@ public:
 
   virtual void outputProblemSpec(ProblemSpecP& ice_ps) = 0;
 
-  virtual double getSpecificHeat(double T) = 0;
+  
 
   virtual double getGamma(double T) = 0;
 
   virtual double getInternalEnergy(double T) = 0;
+  
+  virtual void
+  computeSpecificHeat(CellIterator        & iter,
+                      CCVariable<double>  & temp_CC,
+                      CCVariable<double>  & cv) = 0;
+             
+  virtual void
+  computeSpecificHeat(CellIterator             & iter,
+                      constCCVariable<double>  & temp_CC,
+                      CCVariable<double>       & cv) = 0;
 
 protected:
 };

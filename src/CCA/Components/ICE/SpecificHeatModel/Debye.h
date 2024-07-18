@@ -38,7 +38,7 @@ namespace Uintah {
 //  'Zur Theorie der spezifischen Waerme' by Peter Debye, Annalen der Physik, 1912, 39(4): 789
 //
 // And for English versions, check any standard physical chemistry or solid-state physics textbook.
-// 
+//
 
 class DebyeCv : public SpecificHeat {
 public:
@@ -47,15 +47,37 @@ public:
 
   virtual void outputProblemSpec(ProblemSpecP& ice_ps);
 
-  virtual double getSpecificHeat(double T);
 
   virtual double getGamma(double T);
 
   virtual double getInternalEnergy(double T);
+  //__________________________________
+  //        Wrappers around the implentation
+  virtual void
+  computeSpecificHeat(CellIterator        & iter,
+                      CCVariable<double>  & temp_CC,
+                      CCVariable<double>  & cv)
+  {
+    computeSpecificHeat_impl<CCVariable<double>>( iter, temp_CC, cv);
+  }
+
+  virtual void
+  computeSpecificHeat(CellIterator             & iter,
+                      constCCVariable<double>  & temp_CC,
+                      CCVariable<double>       & cv)
+  {
+    computeSpecificHeat_impl<constCCVariable<double>>( iter, temp_CC, cv);
+  }
 
 protected:
   double d_T_D; // Debye Temperature
-  double d_N;   // Number of atoms in a molecule 
+  double d_N;   // Number of atoms in a molecule
+
+  template< class CCVar>
+  void computeSpecificHeat_impl( CellIterator      & iter,
+                                 CCVar             & temp_CC,
+                                 CCVariable<double>& cv);
+
 };
 
 }

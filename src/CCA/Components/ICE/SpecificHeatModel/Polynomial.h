@@ -27,7 +27,6 @@
 
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
 #include <vector>
 
 //  A generalized Polynomial form for specific heat that asymptotes to a upper bound
@@ -48,18 +47,36 @@
 namespace Uintah {
 
 class PolynomialCv : public SpecificHeat {
+                            
 public:
   PolynomialCv(ProblemSpecP& ps);
   ~PolynomialCv();
 
   virtual void outputProblemSpec(ProblemSpecP& ice_ps);
 
-  virtual double getSpecificHeat(double T);
-
   virtual double getGamma(double T);
 
   virtual double getInternalEnergy(double T);
 
+  //__________________________________
+  //        Wrappers around the implentation
+  virtual void
+  computeSpecificHeat(CellIterator        & iter,
+                      CCVariable<double>  & temp_CC,
+                      CCVariable<double>  & cv)
+  {
+    computeSpecificHeat_impl<CCVariable<double>>( iter, temp_CC, cv);       
+  }
+             
+  virtual void
+  computeSpecificHeat(CellIterator             & iter,
+                      constCCVariable<double>  & temp_CC,
+                      CCVariable<double>       & cv)
+  {
+    computeSpecificHeat_impl<constCCVariable<double>>( iter, temp_CC, cv);   
+  }
+  
+  
 protected:
   
   double d_Tmin;  // Clamp minimum temperature; default 0
@@ -68,8 +85,11 @@ protected:
   int d_maxOrder;                    // Maximum order of the polynomial
   std::vector<double> d_coefficient; // Coefficient to each monomer order with order=index
 
+  template< class CCVar>
+  void computeSpecificHeat_impl( CellIterator       & iter,       
+                                 CCVar              & temp_CC,
+                                 CCVariable<double> & cv);
 };
-
 }
 
 #endif /* _POLYNOMIALSPECIFICHEAT_H_ */

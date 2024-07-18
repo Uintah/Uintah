@@ -807,7 +807,7 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
       d_surroundingMatl_indx = ice_matl->getDWIndex();
     }
 
-    if(ice_matl->getViscosity() > 0.0){
+    if(ice_matl->getDynViscosity() > 0.0){
       d_viscousFlow = true;
     }
   }
@@ -2155,7 +2155,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
         // stability constraint due to diffusion
         //  I C E  O N L Y
         double thermalCond_test = ice_matl->getThermalConductivity();
-        double viscosity_test   = ice_matl->getViscosity();
+        double viscosity_test   = ice_matl->getDynViscosity();
 
         if (thermalCond_test !=0 || viscosity_test !=0) {
 
@@ -2352,10 +2352,10 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
       gamma[indx].initialize( ice_matl->getGamma());
       cv[indx].initialize(    ice_matl->getSpecificHeat());
-      viscosity.initialize  ( ice_matl->getViscosity());
+      viscosity.initialize  ( ice_matl->getDynViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
 
-      if(ice_matl->getViscosity() > 0.0){
+      if(ice_matl->getDynViscosity() > 0.0){
         d_viscousFlow = true;
       }
     }
@@ -2414,10 +2414,14 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
       if(cvModel != 0) {
-        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        CellIterator iter = patch->getExtraCellIterator();
+        cvModel->computeSpecificHeat( iter, Temp_CC[indx], cv[indx]);
+        
+        
+        for (;!iter.done();iter++){
           IntVector c = *iter;
           gamma[indx][c] = cvModel->getGamma(Temp_CC[indx][c]);
-          cv[indx][c]    = cvModel->getSpecificHeat(Temp_CC[indx][c]);
+          
         }
       }
 
@@ -2559,16 +2563,18 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
       new_dw->allocateAndPut( cv,          lb->specific_heatLabel,indx, patch );
       new_dw->allocateAndPut( gamma,       lb->gammaLabel,        indx, patch );
 
-      viscosity.initialize  ( ice_matl->getViscosity());
+      viscosity.initialize  ( ice_matl->getDynViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
       gamma.initialize  (     ice_matl->getGamma());
       cv.initialize(          ice_matl->getSpecificHeat());
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
 
       if(cvModel != 0) {
-        for(CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
+        CellIterator iter = patch->getExtraCellIterator();
+        cvModel->computeSpecificHeat( iter, temp_CC, cv);
+        
+        for(;!iter.done();iter++) {
           IntVector c = *iter;
-          cv[c] = cvModel->getSpecificHeat(temp_CC[c]);
           gamma[c] = cvModel->getGamma(temp_CC[c]);
         }
       }
@@ -4017,7 +4023,7 @@ void ICE::viscousShearStress(const ProcessorGroup *,
 
         //__________________________________
         //  compute the shear stress terms
-        double viscosity_test = ice_matl->getViscosity();
+        double viscosity_test = ice_matl->getDynViscosity();
 
         if(viscosity_test != 0.0) {
           CCVariable<double>        tot_viscosity;     // total viscosity
