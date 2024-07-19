@@ -20,14 +20,16 @@ Setting up a new RT machine
 Create a user, i.e. rt
 and login at that user.
 
+sudo useradd --gid <primary group>  --shell /bin/bash --password  <XXX> --home-dir /home/rt --create-home rt
+
 
 __________________________________
 
-- create a ~/scripts directory and copy
+- create a ~/scripts directory and copy.  This assumes you already have a copy of uintah on the computer
 
-  src/R_Tester/helpers/cleanup 
-  src/R_Tester/toplevel/startTester
-
+  cp <X>/src/R_Tester/toplevel/cleanup scripts/
+  cp <X>/src/R_Tester/toplevel/startTester.git scripts/
+  cp <X>/src/R_Tester/toplevel/checkout_scripts scripts/
 to it.
 
 __________________________________
@@ -62,8 +64,9 @@ __________________________________
 - Create a nightly cronjob
 crontab -e
 # m h  dom mon dow   command
-10 1 * * *      $HOME/scripts/cleanup
-30 1 * * *      $HOME/scripts/startTester -j 8 -sendmail
+10 0 * * *      $HOME/scripts/cleanup
+28 0 * * *      $HOME/scripts/checkout_scripts $HOME/scripts > $HOME/cronout 2>&1
+30 0 * * *      $HOME/scripts/startTester.git -j 8 -sendmail >> $HOME/cronout 2>&1
 
 __________________________________
 
