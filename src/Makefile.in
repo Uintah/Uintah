@@ -108,6 +108,7 @@ ifeq ($(BUILD_ICE),yes)
 	$(ICE_DIR)/WallShearStressModel \
 	$(ICE_DIR)/EOS                  \
 	$(ICE_DIR)/SpecificHeatModel    \
+	$(ICE_DIR)/ViscosityModel       \
 	$(ICE_DIR)/Core
 endif
 
