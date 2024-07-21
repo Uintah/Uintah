@@ -173,7 +173,7 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
-      if (d_useLoadCurves) {
+      if (d_useLoadCurves && !d_useBodyForce) {
         // if it is a surface particle
         if (pvars.psurface[pidx]==1) {
           Vector areacomps;
@@ -189,6 +189,9 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
+      } else if (d_useLoadCurves && d_useBodyForce){
+        Vector areacomps;
+        pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
       }
       count++;
     }
