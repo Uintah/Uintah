@@ -405,6 +405,7 @@
       <freq                      spec="OPTIONAL VECTOR"/>
       <linearInitialize          spec="OPTIONAL BOOLEAN"/>
       <scalar                    spec="OPTIONAL DOUBLE"/>
+      <decayRate                 spec="OPTIONAL DOUBLE"/>
       <maxScalar                 spec="OPTIONAL DOUBLE"/>
       <sinusoidalInitialize      spec="OPTIONAL BOOLEAN"/>
       <slope                     spec="OPTIONAL VECTOR"/>
