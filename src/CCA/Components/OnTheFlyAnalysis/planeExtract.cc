@@ -350,7 +350,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
 
    //  find udaPath, timestep and levelIndex for creating directories
    const string udaPath    = m_output->getOutputLocation();
-   const string levelIndex = to_string( level->getIndex() );
+   const string levelIndx = "L-" + to_string( level->getIndex()  );
 
    ostringstream tname;
    tname << "t" << std::setw(5) << std::setfill('0') << tv.timeStep;
@@ -375,7 +375,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       // loop over each plane
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
 
-        string relativePath = d_planes[p]->name + "/" + timestep + "/" + levelIndex;
+        string relativePath = d_planes[p]->name + "/" + timestep + "/" + levelIndx;
 
         createDirectory( 0777, udaPath,  relativePath );
 
