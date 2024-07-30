@@ -362,7 +362,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     mat_ps->getAttribute("index",index);
 
     // create a new ICE material and initalize it
-    ICEMaterial *mat = scinew ICEMaterial(mat_ps, m_materialManager, isRestart);
+    ICEMaterial *mat = scinew ICEMaterial(mat_ps, m_materialManager, isRestart, grid);
     if ( index != "" ){
       m_materialManager->registerMaterial( "ICE", mat, std::stoi(index));
     }
@@ -637,6 +637,8 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 
   ProblemSpecP root = root_ps->getRootNode();
 
+  //__________________________________
+  //      Materials
   ProblemSpecP mat_ps = root->findBlockWithOutAttribute( "MaterialProperties" );
 
   if( mat_ps == nullptr ) {
@@ -773,12 +775,12 @@ void ICE::scheduleInitialize(const LevelP & level,
  Purpose:   Set variables that are normally set during the initialization
             phase, but get wiped clean when you restart
 _____________________________________________________________________*/
-void ICE::scheduleRestartInitialize(const LevelP & level,
+void ICE::scheduleRestartInitialize(const LevelP & levelP,
                                     SchedulerP   & sched)
 {
   if (d_impICE){
     const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-    m_solver->scheduleRestartInitialize(level, sched, ice_matls);
+    m_solver->scheduleRestartInitialize(levelP, sched, ice_matls);
   }
 
   //__________________________________
@@ -787,7 +789,7 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
                                           m_iter != d_models.end(); m_iter++){
       ModelInterface* model = *m_iter;
-      model->scheduleRestartInitialize(sched, level);
+      model->scheduleRestartInitialize(sched, levelP);
     }
   }
 
@@ -795,7 +797,7 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
   // dataAnalysis
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
     AnalysisModule* am = *iter;
-    am->scheduleRestartInitialize( sched, level);
+    am->scheduleRestartInitialize( sched, levelP);
   }
 
   //__________________________________
@@ -811,6 +813,19 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
     if(ice_matl->getDynViscosity() > 0.0){
       d_viscousFlow = true;
     }
+
+    //__________________________________
+    //    dynamic viscosity models
+    std::vector<Viscosity*>  viscModels;
+    viscModels = ice_matl->getDynViscosityModels();
+
+    for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
+      Viscosity* viscModel = *iter;
+      const Level * level = levelP.get_rep();
+      viscModel->initialize( level );
+      d_viscousFlow = true;
+    }
+
   }
 
   //__________________________________
@@ -2156,9 +2171,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
         // stability constraint due to diffusion
         //  I C E  O N L Y
         double thermalCond_test = ice_matl->getThermalConductivity();
-        double viscosity_test   = ice_matl->getDynViscosity();
 
-        if (thermalCond_test !=0 || viscosity_test !=0) {
+        if (thermalCond_test !=0 || d_viscousFlow ) {
 
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
@@ -2338,29 +2352,6 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
     vol_frac_sum.initialize(0.0);
 //  delP_initialGuess.initialize(0.0);
 
-    //__________________________________
-    //  Thermo and transport properties
-    for (unsigned int m = 0; m < numMatls; m++ ) {
-      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-      int indx= ice_matl->getDWIndex();
-      CCVariable<double> viscosity;
-      CCVariable<double> thermalCond;
-
-      new_dw->allocateAndPut( viscosity,    lb->viscosityLabel,    indx,patch );
-      new_dw->allocateAndPut( thermalCond,  lb->thermalCondLabel,  indx,patch );
-      new_dw->allocateAndPut( cv[indx],     lb->specific_heatLabel,indx,patch );
-      new_dw->allocateAndPut( gamma[indx],  lb->gammaLabel,        indx,patch );
-
-      gamma[indx].initialize( ice_matl->getGamma());
-      cv[indx].initialize(    ice_matl->getSpecificHeat());
-      viscosity.initialize  ( ice_matl->getDynViscosity());
-      thermalCond.initialize( ice_matl->getThermalConductivity());
-
-      if(ice_matl->getDynViscosity() > 0.0){
-        d_viscousFlow = true;
-      }
-    }
-
     // --------bulletproofing
     if (grav.length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
       throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
@@ -2390,7 +2381,8 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
     double p_ref = getRefPress();
     press_CC.initialize(p_ref);
-
+                                                      // why are we creating arrays?  -Todd
+    // loop over matls
     for (unsigned int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
       int indx = ice_matl->getDWIndex();
@@ -2401,7 +2393,8 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
                                 press_CC, numALLMatls, patch, new_dw);
 
       // if specified, overide the initialization
-      customInitialization( patch,rho_CC[indx], Temp_CC[indx],vel_CC[indx], press_CC,
+      customInitialization( patch, rho_CC[indx], Temp_CC[indx],
+                            vel_CC[indx], press_CC,
                             ice_matl, d_customInitialize_basket);
 
       setBC( rho_CC[indx],     "Density",     patch, m_materialManager, indx, new_dw, isNotInitialTimeStep );
@@ -2413,11 +2406,45 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
              "rho_micro","Pressure", patch, m_materialManager, 0, new_dw,
              isNotInitialTimeStep);
 
+      //__________________________________
+      //  Transport properties
+
+      CCVariable<double> dynViscosity;
+      CCVariable<double> thermalCond;
+
+      new_dw->allocateAndPut( dynViscosity, lb->viscosityLabel,    indx,patch );
+      new_dw->allocateAndPut( thermalCond,  lb->thermalCondLabel,  indx,patch );
+
+      dynViscosity.initialize( ice_matl->getDynViscosity() );
+      thermalCond.initialize ( ice_matl->getThermalConductivity() );
+
+      std::vector<Viscosity*>  viscModels;
+      viscModels = ice_matl->getDynViscosityModels();
+
+      for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
+        Viscosity* viscModel = *iter;
+        viscModel->initialize( level );
+        viscModel->computeDynViscosity( patch, Temp_CC[indx], dynViscosity);
+        d_viscousFlow = true;
+      }
+
+      if(ice_matl->getDynViscosity() > 0.0){
+        d_viscousFlow = true;
+      }
+
+      //__________________________________
+      //  Thermodynamic properties
+
+      new_dw->allocateAndPut( cv[indx],     lb->specific_heatLabel,indx,patch );
+      new_dw->allocateAndPut( gamma[indx],  lb->gammaLabel,        indx,patch );
+
+      gamma[indx].initialize( ice_matl->getGamma());
+      cv[indx].initialize(    ice_matl->getSpecificHeat());
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
-      if(cvModel != 0) {
+
+      if( cvModel ) {
         CellIterator iter = patch->getExtraCellIterator();
         cvModel->computeSpecificHeat( iter, Temp_CC[indx], cv[indx]);
-
 
         for (;!iter.done();iter++){
           IntVector c = *iter;
@@ -2426,6 +2453,8 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
         }
       }
 
+
+      //
       for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
@@ -2435,9 +2464,9 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
         vol_frac_sum[c] += vol_frac_CC[indx][c];
 
         double dp_drho, dp_de, c_2, press_tmp;
-        ice_matl->getEOS()->computePressEOS(rho_micro[indx][c],gamma[indx][c],
-                                          cv[indx][c], Temp_CC[indx][c], press_tmp,
-                                          dp_drho, dp_de);
+        ice_matl->getEOS()->computePressEOS( rho_micro[indx][c],gamma[indx][c],
+                                             cv[indx][c], Temp_CC[indx][c], press_tmp,
+                                             dp_drho, dp_de);
 
         if( !d_customInitialize_basket->doesComputePressure){
           press_CC[c] = press_tmp;
@@ -2446,6 +2475,8 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
         c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
         speedSound[indx][c] = sqrt(c_2);
       }
+
+
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       ostringstream warn, base;
@@ -2484,6 +2515,7 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
       }
     }   // numMatls
 
+    //__________________________________
     // make sure volume fractions sum to 1
     if(!d_with_mpm)
     {
@@ -2566,14 +2598,15 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
 
       //__________________________________
       //    Transport Prpoerties
-      dynViscosity.initialize( ice_matl->getDynViscosity() );
       thermalCond.initialize( ice_matl->getThermalConductivity());
+      dynViscosity.initialize( ice_matl->getDynViscosity() );
 
-      Viscosity *viscModel = ice_matl->getDynViscosityModel();
+      std::vector<Viscosity*>  viscModels;
+      viscModels = ice_matl->getDynViscosityModels();
 
-       CellIterator iter = patch->getExtraCellIterator();
-      if ( viscModel ){
-        viscModel->computeDynViscosity( iter, temp_CC, dynViscosity);
+      for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
+        Viscosity* viscModel = *iter;
+        viscModel->computeDynViscosity( patch, temp_CC, dynViscosity);
       }
 
       //__________________________________
@@ -2583,6 +2616,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
 
       if( cvModel ) {
+      CellIterator iter = patch->getExtraCellIterator();            // get rid of passing the iterator -Todd
         cvModel->computeSpecificHeat( iter, temp_CC, cv);
 
         for(;!iter.done();iter++) {
@@ -4035,9 +4069,7 @@ void ICE::viscousShearStress(const ProcessorGroup *,
 
         //__________________________________
         //  compute the shear stress terms
-        double viscosity_test = ice_matl->getDynViscosity();
-
-        if(viscosity_test != 0.0) {
+        if( d_viscousFlow ) {
           CCVariable<double>        tot_viscosity;     // total viscosity
           CCVariable<double>        viscosity;         // total *OR* molecular viscosity;
           constCCVariable<double>   molecularVis;      // molecular viscosity

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
-<!--______________________________________________________________________-->
+  <!--________________________________________________________________________________________________________-->
 
 <BoundaryConditions  spec="REQUIRED NO_DATA" >
 
@@ -37,7 +37,7 @@
 
  </BoundaryConditions>
 
-  <!--__________________________________-->
+  <!--________________________________________________________________________________________________________-->
   <CFD>
     <ICE                                spec="OPTIONAL NO_DATA" >
       <advection                        spec="REQUIRED NO_DATA"
@@ -71,8 +71,7 @@
       </wallShearStress>
 
 
-      <!--__________________________________-->
-
+      <!--________________________________________________________________________________________________________-->
       <customInitialization             spec="OPTIONAL NO_DATA" >
         <manufacturedSolution           spec="OPTIONAL NO_DATA"
                                         attribute1="type  REQUIRED STRING 'mms_1 mms_2 mms_3'">
@@ -154,7 +153,7 @@
     </ICE>
   </CFD>
 
-  <!--__________________________________-->
+  <!--________________________________________________________________________________________________________-->
 
   <AMR>
     <ICE                                spec="OPTIONAL NO_DATA" >
@@ -171,7 +170,7 @@
     </ICE>
   </AMR>
 
-  <!--__________________________________-->
+  <!--________________________________________________________________________________________________________-->
 
   <MaterialProperties>
     <ICE                      spec="OPTIONAL NO_DATA" >
@@ -180,6 +179,20 @@
                                 attribute2="index OPTIONAL INTEGER" >
 
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
+
+        <dynamicViscosityModels spec="OPTIONAL NO_DATA" >
+
+          <Model                        spec="MULTIPLE NO_DATA"
+                                          attribute1="name REQUIRED STRING 'Sutherland  SpongeLayer'" >
+
+            <maxDynamicViscosity        spec="REQUIRED DOUBLE"  need_applies_to="name SpongeLayer"/>
+            <box                        spec="MULTIPLE"         need_applies_to="name SpongeLayer"/>
+            <a                          spec="REQUIRED DOUBLE"  need_applies_to="name Sutherland"/>
+            <b                          spec="REQUIRED DOUBLE"  need_applies_to="name Sutherland"/>
+          </Model>
+        </dynamicViscosityModels>
+        <!--__________________________________-->
+
         <EOS                  spec="REQUIRED NO_DATA"
                                 attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater, KumariDass'" >
           <!--  TST  -->
@@ -272,6 +285,7 @@
       </material>
     </ICE>
 
+    <!--________________________________________________________________________________________________________-->
     <!--ICE and MPMICE related -->
     <exchange_properties           spec="OPTIONAL NO_DATA" >
       <Model                          spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'slip'" >

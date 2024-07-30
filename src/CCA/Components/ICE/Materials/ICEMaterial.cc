@@ -42,7 +42,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-//#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
+//#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc
 
 using namespace std;
 using namespace Uintah;
@@ -50,7 +50,8 @@ using namespace Uintah;
 // Constructor
 ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
                           MaterialManagerP & materialManager,
-                          const bool         isRestart ) :
+                          const bool         isRestart,
+                          GridP            & grid) :
   Material( ps )
 {
   //__________________________________
@@ -61,7 +62,7 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
   }
 
 
-  
+
   //__________________________________
   // Constant Thermodynamic Transport Properties
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -74,17 +75,17 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
   //__________________________________
   //    Variable thermodynamic properties
   d_cvModel = SpecificHeatFactory::create( ps );
-  
+
   //__________________________________
   //    Variable Transport properties
-  d_dynViscosityModel = ViscosityFactory::create( ps );
+  d_dynViscosityModels = ViscosityFactory::create( ps, grid );
 
 
 
   //__________________________________
   //  Misc. Flags
   d_isSurroundingMatl = false;
-  d_includeFlowWork   = true;  
+  d_includeFlowWork   = true;
   ps->get("isSurroundingMatl",  d_isSurroundingMatl);
   ps->get("includeFlowWork",    d_includeFlowWork);
 
@@ -96,7 +97,7 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
-  geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double)); 
+  geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
   try{
     geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction", GeometryObject::Double));
    }
@@ -131,11 +132,15 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
 ICEMaterial::~ICEMaterial()
 {
   delete d_eos;
-  
+
   if( d_cvModel ){
     delete d_cvModel;
   }
-  
+
+  for( auto iter  = d_dynViscosityModels.begin(); iter != d_dynViscosityModels.end(); iter++){
+    delete *iter;
+  }
+
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
@@ -148,24 +153,32 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
 
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
-  ice_ps->appendElement("specific_heat",       d_specificHeat);
-  ice_ps->appendElement("dynamic_viscosity",   d_dynViscosity);
-  ice_ps->appendElement("gamma",               d_gamma);
-  
-  //__________________________________
-  //    Thermotransport models
-  if( d_cvModel != nullptr ) {
-    d_cvModel->outputProblemSpec( ice_ps );
-  }
-
-  if( d_dynViscosityModel != nullptr ) {
-    d_dynViscosityModel->outputProblemSpec( ice_ps );
-  }
-
   ice_ps->appendElement("isSurroundingMatl",   d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",     d_includeFlowWork);
   ice_ps->appendElement("tiny_rho",            d_tiny_rho);
-    
+
+  //__________________________________
+  //    Thermo property models
+  ice_ps->appendElement("specific_heat",       d_specificHeat);
+  ice_ps->appendElement("gamma",               d_gamma);
+
+  if( d_cvModel != nullptr ) {
+    d_cvModel->outputProblemSpec( ice_ps );
+  }
+  //__________________________________
+  //    Transport property models
+  ice_ps->appendElement("dynamic_viscosity",   d_dynViscosity);
+
+  if ( d_dynViscosityModels.size() != 0 ) {
+    ProblemSpecP vModel_ps = ice_ps->appendChild("dynamicViscosityModels");
+    for( auto iter  = d_dynViscosityModels.begin(); iter != d_dynViscosityModels.end(); iter++){
+      Viscosity* vModel = *iter;
+      vModel->outputProblemSpec( vModel_ps );
+    }
+  }
+
+  //__________________________________
+  //    Geometry object for this material
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
     (*it)->outputProblemSpec(ice_ps);
@@ -185,9 +198,9 @@ SpecificHeat * ICEMaterial::getSpecificHeatModel() const
   return d_cvModel;
 }
 
-Viscosity * ICEMaterial::getDynViscosityModel() const
+std::vector<Viscosity *> ICEMaterial::getDynViscosityModels() const
 {
-  return d_dynViscosityModel;
+  return d_dynViscosityModels;
 }
 
 double ICEMaterial::getGamma() const
@@ -230,12 +243,12 @@ double ICEMaterial::getInitialDensity() const
   return d_geom_objs[0]->getInitialData_double("density");
 }
 
-/* --------------------------------------------------------------------- 
+/* ---------------------------------------------------------------------
  Function~  ICEMaterial::initializeCells--
- Purpose~ Initialize material dependent variables 
+ Purpose~ Initialize material dependent variables
  Notes:  This is a tricky little routine.  ICE needs rho_micro, Temp_CC
  speedSound defined everywhere for all materials even if the mass is 0.0.
- 
+
  We need to accomodate the following scenarios where the number designates
  a material and * represents a high temperature
  ____________________           ____________________
@@ -259,7 +272,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 {
   CCVariable<int> IveBeenHere;
   new_dw->allocateTemporary(IveBeenHere, patch);
-  
+
   // Zero the arrays so they don't get wacky values
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(0.);
@@ -268,18 +281,18 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   vol_frac_CC.initialize(0.);
   speedSound.initialize(0.);
   IveBeenHere.initialize(-9);
-  
+
 
 
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
     GeometryPieceP piece = d_geom_objs[obj]->getPiece();
     Box bb_gp    = piece->getBoundingBox();
     Box bb_patch = patch->getBox();
-    
+
     //if( ! bb_gp.overlaps(bb_patch) ){
     //  continue;
     //}
-    
+
     string name = piece->getName();
     cout << "geomPiece: " << name << " bb_gp: " << bb_gp << " bb_patch: " << bb_patch<< " overlaps " << bb_gp.overlaps(bb_patch) << endl;
 
@@ -314,7 +327,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       cout << "ppc_tot = " << ppc_tot << endl;
       cout << "numPts = " << numPts << endl;
       IntVector cell_idx;
-      
+
       for (int ii = 0; ii < numPts; ++ii) {
         Point p = points->at(ii);
         patch->findCell(p,cell_idx);
@@ -326,7 +339,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         IntVector c = *iter;
         rho_CC[c] = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
       }
-    } 
+    }
     else {
 
       IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
@@ -356,7 +369,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
        //  cout << c << " IveBeenHere[c]: " << IveBeenHere[c] << " count: " << count << endl;
        }
         //__________________________________
-        // For single materials with more than one object 
+        // For single materials with more than one object
         if(numMatls == 1)  {
           if ( count > 0 ) {
             vol_frac_CC[c]= 1.0;
@@ -367,15 +380,15 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
             IveBeenHere[c]= 1;
           }
-        }   
+        }
 
         //__________________________________
         //  Multiple matls
         if (numMatls > 1 ) {
 
           double ups_volFrac = d_geom_objs[obj]->getInitialData_double("volumeFraction");
-          if( ups_volFrac == -1.0 ) {    
-            vol_frac_CC[c] += count/totalppc;  // there can be contributions from multiple objects 
+          if( ups_volFrac == -1.0 ) {
+            vol_frac_CC[c] += count/totalppc;  // there can be contributions from multiple objects
           } else {
             vol_frac_CC[c] = ups_volFrac * count/(totalppc);
           }
@@ -387,7 +400,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             rho_micro[c]  = d_geom_objs[obj]->getInitialData_double("density");
             rho_CC[c]     = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
             temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
-            IveBeenHere[c]= obj; 
+            IveBeenHere[c]= obj;
           }
           if(IveBeenHere[c] != -9 && count > 0){
             // This cell HAS been hit but another object has values to
@@ -398,14 +411,14 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             rho_micro[c]  = d_geom_objs[obj]->getInitialData_double("density");
             rho_CC[c]     = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
             temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
-            IveBeenHere[c]= obj; 
+            IveBeenHere[c]= obj;
           }
           if(IveBeenHere[c] != -9 && count == 0){
             // This cell has been initialized, the current object doesn't
             // occupy this cell, so don't screw with it.  All bases are
             // covered.
           }
-        }    
+        }
       }  // Loop over domain
     }
   }  // Loop over geom_objects

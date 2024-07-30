@@ -33,7 +33,8 @@ SRCDIR   := CCA/Components/ICE/ViscosityModel
 
 SRCS     += $(SRCDIR)/ViscosityFactory.cc   \
 	     $(SRCDIR)/Viscosity.cc          \
-            $(SRCDIR)/Sutherland.cc    
+            $(SRCDIR)/Sutherland.cc         \
+            $(SRCDIR)/SpongeLayer.cc
 
 PSELIBS := \
 	Core/Disclosure     \

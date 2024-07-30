@@ -31,16 +31,17 @@
 using namespace Uintah;
 //______________________________________________________________________
 //    Cengel, Y., and Cimbala, J., "Fluid Mechanics Fundamentals and Applications, Third edition"
-//    , McGraw-Hill Publishing, 2014, pg 53.  
+//    , McGraw-Hill Publishing, 2014, pg 53.
 //______________________________________________________________________
-//
-Sutherland::Sutherland(ProblemSpecP& ps)
+
+Sutherland::Sutherland( ProblemSpecP& ps)
  : Viscosity(ps)
 {
   ps->getWithDefault("a", d_a, 0.0);
   ps->getWithDefault("b", d_b, 0.0);
-  
+
 }
+
 //______________________________________________________________________
 //
 Sutherland::~Sutherland()
@@ -49,23 +50,24 @@ Sutherland::~Sutherland()
 
 //______________________________________________________________________
 //
-void Sutherland::outputProblemSpec(ProblemSpecP& ice_ps)
+void Sutherland::outputProblemSpec(ProblemSpecP& vModels_ps)
 {
-  ProblemSpecP cvmodel = ice_ps->appendChild("ViscosityModel");
-  cvmodel->setAttribute("type", "Component");
-  cvmodel->appendElement("a", d_a);
-  cvmodel->appendElement("b", d_b);
+  ProblemSpecP vModel = vModels_ps->appendChild("Model");
+  vModel->setAttribute("name", "Sutherland");
+
+  vModel->appendElement("a", d_a);
+  vModel->appendElement("b", d_b);
 
 }
 
 //______________________________________________________________________
-//    
+//
 template< class CCVar>
-void Sutherland::computeDynViscosity_impl( CellIterator       & iter,
-                                           CCVar              & temp_CC,    
-                                           CCVariable<double> & mu) 
+void Sutherland::computeDynViscosity_impl( const Patch        * patch,
+                                           CCVar              & temp_CC,
+                                           CCVariable<double> & mu)
 {
-
+  CellIterator iter=patch->getCellIterator();
   for (;!iter.done();iter++) {
     IntVector c = *iter;
 

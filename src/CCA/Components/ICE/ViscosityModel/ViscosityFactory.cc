@@ -25,6 +25,7 @@
 #include <CCA/Components/ICE/ViscosityModel/ViscosityFactory.h>
 #include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
 #include <CCA/Components/ICE/ViscosityModel/Sutherland.h>
+#include <CCA/Components/ICE/ViscosityModel/SpongeLayer.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -41,29 +42,44 @@ ViscosityFactory::~ViscosityFactory()
 }
 //______________________________________________________________________
 //
-Viscosity* ViscosityFactory::create( ProblemSpecP& ps )
+std::vector<Viscosity*> ViscosityFactory::create( ProblemSpecP & ps,
+                                                  const GridP        & grid )
 {
-  ProblemSpecP vm_ps = ps->findBlock("dynamicViscosityModel");
+  ProblemSpecP dvm_ps = ps->findBlock("dynamicViscosityModels");
 
-  if(vm_ps){
-    std::string vm_model;
-    if(!vm_ps->getAttribute("type",vm_model)){
-      throw ProblemSetupException("No model for dynamic viscosity", __FILE__, __LINE__);
-    }
+  std::vector<Viscosity*> models;
 
-    proc0cout << "Creating dynamic viscosit model (" << vm_model << ")"<< endl;
-    
-    if (vm_model == "Sutherland"){
-      return(scinew Sutherland(vm_ps));
-    }
-    else{
-      ostringstream warn;
-      warn << "ERROR ICE: Unknown viscosity model ("<< vm_model << " )\n"
-         << "Valid models are:\n"
-         << " Sutherland\n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  if(dvm_ps){
+
+    for( ProblemSpecP   model_ps = dvm_ps->findBlock( "Model" );
+                        model_ps != nullptr;
+                        model_ps = model_ps->findNextBlock( "Model" ) ) {
+
+      std::string vm_model;
+      if(!model_ps->getAttribute("name",vm_model)){
+        throw ProblemSetupException("No model for dynamic viscosity", __FILE__, __LINE__);
+      }
+
+      proc0cout << "Creating dynamic viscosity model (" << vm_model << ")"<< endl;
+
+      if (vm_model == "Sutherland"){
+        models.push_back ( scinew Sutherland(model_ps) );
+      }
+      else if ( vm_model == "SpongeLayer" ) {
+        models.push_back ( scinew SpongeLayer( model_ps, grid) );
+      }
+
+      else{
+        ostringstream warn;
+        warn << "ERROR ICE: Unknown viscosity model ("<< vm_model << " )\n"
+           << "Valid models are:\n"
+           << " Sutherland\n"
+           << " SpongeLayer\n" << endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
     }
   }
-  return 0;
+
+  return models;
 }
 

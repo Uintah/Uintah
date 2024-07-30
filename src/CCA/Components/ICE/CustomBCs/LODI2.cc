@@ -855,8 +855,7 @@ void computeLi(std::vector<CCVariable<Vector> >& L,
       //  compute Li one cell in from
       // the face
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-      for(CellIterator iter=patch->getFaceIterator(face, MEC); 
-          !iter.done();iter++) {
+      for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
         IntVector c = *iter - offset;
         IntVector r  = c + R_offset;
         IntVector l  = c + L_offset;

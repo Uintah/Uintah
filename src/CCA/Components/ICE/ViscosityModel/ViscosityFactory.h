@@ -25,8 +25,9 @@
 #ifndef ICE_VISCOSITYFACTORY_H
 #define ICE_VISCOSITYFACTORY_H
 
+#include <Core/Grid/GridP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
+#include <vector>
 namespace Uintah {
 
   class Viscosity;
@@ -37,7 +38,8 @@ namespace Uintah {
       ViscosityFactory();
       ~ViscosityFactory();
 
-      static Viscosity* create(ProblemSpecP& ps);
+      static std::vector<Viscosity*> create( ProblemSpecP& ps,
+                                             const GridP & grid);
 
   };
 

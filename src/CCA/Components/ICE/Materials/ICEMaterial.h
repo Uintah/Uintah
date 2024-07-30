@@ -37,7 +37,7 @@
 namespace Uintah {
   class EquationOfState;
   class GeometryObject;
- 
+
 /**************************************
 
 GENERAL INFORMATION
@@ -50,11 +50,13 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 ****************************************/
- 
+
 class ICEMaterial : public Material {
   public:
-    ICEMaterial(ProblemSpecP&, 
-                MaterialManagerP& materialManager, const bool isRestart);
+    ICEMaterial( ProblemSpecP     & ps,
+                 MaterialManagerP & materialManager,
+                 const bool         isRestart ,
+                 GridP            & grid);
 
     ~ICEMaterial();
 
@@ -63,14 +65,15 @@ class ICEMaterial : public Material {
 
     EquationOfState* getEOS() const;
 
-    // Get the associated specific heat model.  
+    // Get the associated specific heat model.
     // If there is none specified, this will return a null (0) pointer
     SpecificHeat* getSpecificHeatModel() const;
-    
-    // Get the associated dynamic viscosity model.  
+
+    // Get the associated dynamic viscosity models.
     // If there is none specified, this will return a null (0) pointer
-    Viscosity* getDynViscosityModel() const;
-    
+    // There can be more than one model per material
+    std::vector<Viscosity*> getDynViscosityModels() const;
+
     double getGamma()               const;
     double getDynViscosity()        const;
     double getSpeedOfSound()        const;
@@ -83,19 +86,21 @@ class ICEMaterial : public Material {
 
     void initializeCells(CCVariable<double>& rhom,
                          CCVariable<double>& rhC,
-                         CCVariable<double>& temp, 
+                         CCVariable<double>& temp,
                          CCVariable<double>& ss,
-                         CCVariable<double>& volf,  
+                         CCVariable<double>& volf,
                          CCVariable<Vector>& vCC,
                          CCVariable<double>& press,
                          int numMatls,
-                         const Patch* patch, 
+                         const Patch* patch,
                          DataWarehouse* new_dw);
 
   private:
     EquationOfState *d_eos               {nullptr};
     SpecificHeat    *d_cvModel           {nullptr};     // Specific heat model
-    Viscosity       *d_dynViscosityModel {nullptr};     // Model for the dynamic viscosity
+
+    std::vector<Viscosity*>
+                    d_dynViscosityModels {nullptr};     // Model for the dynamic viscosity
 
     double  d_dynViscosity;                   // dynamic viscosity coefficient
     double  d_gamma;
@@ -110,7 +115,7 @@ class ICEMaterial : public Material {
     // Prevent copying of this class
     // copy constructor
     ICEMaterial(const ICEMaterial &icem);
-    ICEMaterial& operator=(const ICEMaterial &icem);        
+    ICEMaterial& operator=(const ICEMaterial &icem);
 
 };
 } // End namespace Uintah

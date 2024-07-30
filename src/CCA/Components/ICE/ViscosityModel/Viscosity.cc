@@ -29,7 +29,12 @@
 
 using namespace Uintah;
 
-Viscosity::Viscosity(ProblemSpecP& ps)
+Viscosity::Viscosity( ProblemSpecP& ps)
+{
+}
+
+Viscosity::Viscosity( ProblemSpecP & boxps,
+                      const GridP  & grid )
 {
 }
 

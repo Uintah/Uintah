@@ -25,7 +25,7 @@
 #ifndef ICE_VISCOSITY_H
 #define ICE_VISCOSITY_H
 
-
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -40,25 +40,31 @@ class Patch;
 
 class Viscosity {
 public:
-  Viscosity(ProblemSpecP& ps);
+            // constructors
+  Viscosity( ProblemSpecP& ps);
+
+  Viscosity( ProblemSpecP & boxps,
+             const GridP  & grid );
+
+            // destructor
   virtual ~Viscosity();
 
-  virtual void outputProblemSpec(ProblemSpecP& ice_ps) = 0;
-
-  
   virtual void
-  computeDynViscosity(CellIterator        & iter,
+  outputProblemSpec(ProblemSpecP& vModels_ps) = 0;
+
+            // methods compute the viscosity
+  virtual void
+  computeDynViscosity(const Patch         * patch,
                       CCVariable<double>  & temp_CC,
                       CCVariable<double>  & mu) = 0;
-             
+
   virtual void
-  computeDynViscosity(CellIterator             & iter,
+  computeDynViscosity(const Patch              * patch,
                       constCCVariable<double>  & temp_CC,
                       CCVariable<double>       & mu) = 0;
-                      
 
-  void spongeLayer( const Patch        * patch,
-                    CCVariable<double> & mu );
+  virtual void
+  initialize (const Level * level ) = 0;
 
 protected:
 };

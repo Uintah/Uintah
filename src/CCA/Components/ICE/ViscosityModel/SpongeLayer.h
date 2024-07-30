@@ -22,24 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef ICE_VISCOSITY_SUTHERLAND_H
-#define ICE_VISCOSITY_SUTHERLAND_H
+
+#ifndef ICE_VISCOSITY_SPONGELAYER_H
+#define iCE_VISCOSITY_SPONGELAYER_H
 
 #include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Iterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <string>
 
 namespace Uintah {
-//______________________________________________________________________
-//    Cengel, Y., and Cimbala, J., "Fluid Mechanics Fundamentals and Applications, Third edition"
-//    , McGraw-Hill Publishing, 2014, pg 53.
-//______________________________________________________________________
 
+class CellIterator;
+class Box;
 
-class Sutherland : public Viscosity {
+//______________________________________________________________________
+//
+
+class SpongeLayer: public Viscosity {
 public:
-  Sutherland( ProblemSpecP& ps);
-  ~Sutherland();
+
+  SpongeLayer(ProblemSpecP & sl_ps,
+              const GridP  & grid);
+
+  ~SpongeLayer();
+
 
   virtual void outputProblemSpec(ProblemSpecP& vModels_ps);
 
@@ -62,21 +73,38 @@ public:
   }
 
   virtual void
-  initialize (const Level * level ){};
+  initialize (const Level * level );
 
 protected:
 
-  double d_a;           // constants    air 1.458E-6 kg/(m s K^0.5) for air
-  double d_b;           //              air 110.4 K
+  //______________________________________________________________________
+  // Returns a cell iterator over Sponge layer cells on this patch
+  CellIterator getCellIterator(const Patch* patch) const ;
+
+
+  //______________________________________________________________________
+  //  Returns the cell index nearest to the point
+  IntVector findCell( const Level * level,
+                      const Point & p);
+  //______________________________________________________________________
+  //
+  std::string getExtents_string() const;
+
+  std::string getName() const {return m_SL_name;};
+
+  void print();
 
   template< class CCVar>
-  void computeDynViscosity_impl( const Patch       * patch,
-                                 CCVar             & temp_CC,
-                                 CCVariable<double>& mu);
+  void
+  computeDynViscosity_impl( const Patch       * patch,
+                            CCVar             & temp_CC,
+                            CCVariable<double>& mu);
 
+  IntVector m_lowIndx;                  // low index of sponge layer
+  IntVector m_highIndx;                 // high index of sponge layer
+  Box m_box;                            // box of the sponge layer
+  double    m_maxDynViscosity;          // max dynamic viscosity
+  std::string m_SL_name{"notSet"};
 };
-
-}
-
-#endif /* ICE_VISCOSITY_SUTHERLAND_H */
-
+}  // end namespace Uintah
+#endif
