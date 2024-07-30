@@ -6,9 +6,10 @@
 <Uintah_specification>
 
    <Meta>
-       <title>Pulse Test</title>
-   </Meta>
+       <title> pressure pulse BC test with sponge layers</title>
+   </Meta>    
    <SimulationComponent type="ice" />
+   <Solver type="hypre" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -28,24 +29,17 @@
     <Grid>
     <BoundaryConditions>
 
-      <LODI>
-        <press_infinity>  101325.0  </press_infinity>
-        <sigma>           0.27      </sigma>
-        <material>       atmosphere </material>
-        <Li_scale>       1.0        </Li_scale>
-      </LODI>
-
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "LODI">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "LODI">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "LODI">
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "LODI">
+        <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
@@ -53,34 +47,34 @@
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "LODI">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "LODI">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "LODI">
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "LODI">
+        <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-      </Face>
-
+      </Face> 
+      
       <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "LODI">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "LODI">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "LODI">
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "LODI">
+        <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
@@ -88,22 +82,23 @@
         </BCType>
       </Face>
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "LODI">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "LODI">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "LODI">
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "LODI">
+        <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-      </Face>
+      </Face> 
+
       <Face side = "z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
@@ -112,7 +107,7 @@
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-
+ 
     </BoundaryConditions>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -126,13 +121,12 @@
               <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
-    </Grid>
-
+    </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>pulse_Lodi_Li_scale_1.0.uda</filebase>
+      <filebase>pulse_2d_Neumann.uda</filebase>
       <outputInterval> 4e-5  </outputInterval>
       <outputInitTimestep/>
       <save label="vel_CC"/>
@@ -143,10 +137,8 @@
       <save label="TotalMass"/>
       <save label="TotalMomentum"/>
       <save label="mom_L_ME_CC"/>
+      <save label="viscous_src_CC"/>
       <save label="viscosity"/>
-      <save label="Li1"/>
-      <save label="Li5"/>
-      
       <checkpoint interval="4e-5" cycle="1"/>
    </DataArchiver>
 
@@ -157,7 +149,7 @@
          <cfl>0.2</cfl>
        <ICE>
         <advection type = "SecondOrder" />
-
+        
         <customInitialization>
           <gaussianTemperature>
             <origin>     [0.5,0.5,0]  </origin>
@@ -166,8 +158,8 @@
             <spread_y>   0.1          </spread_y>
           </gaussianTemperature>
         </customInitialization>
-
-    <!--
+        
+    <!--    
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound> 0.01 </knob_for_speedSound>
@@ -191,11 +183,11 @@
         </ImplicitSolver>
     -->
 
-      </ICE>
+      </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->
+    <!--____________________________________________________________________-->   
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
        <reference_pressure> 101325 </reference_pressure>
@@ -208,24 +200,57 @@
          <material name="atmosphere">
            <EOS type = "ideal_gas"/>
           <dynamic_viscosity>     0.0    </dynamic_viscosity>
-
+          
+          
           <dynamicViscosityModels>
             <Model name = "Sutherland">
               <a>  1.458E-6 </a>
               <b>  110.4    </b>
             </Model>
+
+            <Model name = "SpongeLayer">
+              <maxDynamicViscosity> 1 </maxDynamicViscosity>
+              <box label="sponge-xminus">                    
+                <min>  [0.0, 0.0,-2.0]  </min>
+                <max>  [0.1, 1.0, 2.0]  </max>
+              </box>
+            </Model>
+            
+            <Model name = "SpongeLayer">
+              <maxDynamicViscosity> 1 </maxDynamicViscosity>
+              <box label="sponge-xplus">                       
+                <min>  [0.9, 0.0,-2.0]  </min>
+                <max>  [1.0, 1.0, 2.0]  </max>
+              </box>
+            </Model>
+            
+            <Model name = "SpongeLayer">
+              <maxDynamicViscosity> 1 </maxDynamicViscosity>
+              <box label="sponge-yminus">                       
+                <min>  [0.0, 0.0,-2.0]  </min>
+                <max>  [1.0, 0.1, 2.0]  </max>
+              </box>
+            </Model>
+            
+            <Model name = "SpongeLayer">
+              <maxDynamicViscosity> 1 </maxDynamicViscosity>
+              <box label="sponge-yplus">                       
+                <min>  [0.0, 0.9,-2.0]  </min>
+                <max>  [1.0, 1.0, 2.0]  </max>
+              </box>
+            </Model>
           </dynamicViscosityModels>
-
-
+          
+          
           <thermal_conductivity>  0.0    </thermal_conductivity>
           <specific_heat>         652.9  </specific_heat>
           <gamma>                 1.289  </gamma>
 
            <geom_object>
-             <box label="Whole grid">
+             <box label="Whole grid">                       
                <min>  [-2.0,-2.0,-2.0]  </min>
                <max>  [2.0,2.0,2.0]     </max>
-             </box>
+             </box>                                         
              <res>          [2,2,2]                </res>
              <velocity>     [0.0,0.0,0.0]          </velocity>
              <density>      1.7899909957225715000  </density>
