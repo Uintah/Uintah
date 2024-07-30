@@ -87,7 +87,6 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
-                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"]),  # dat file comparsion not working on restart
                    ("stagnationPoint",    "stagnationPoint.ups",     8, "All", ["exactComparison"]),
                    ("naturalConvection",  "naturalConvectionCavity_dx.ups",
                                                                      9, "All", ["exactComparison"])
@@ -103,7 +102,11 @@ DIFFUSION  = [     ("Poiseuille_XY", "CouettePoiseuille/XY.ups",     1, "All", [
                    ("rayleigh_dz",   "rayleigh_dz.ups",              1, "All", ["exactComparison"])          
               ]
 
-LODI        = [    ("Lodi_pulse",        "Lodi_pulse.ups",         8, "All", ["exactComparison"])
+BOUND_CONDS = [    ("Lodi_pulse",        "Lodi_pulse.ups",           8, "All", ["exactComparison"]),
+                   ("viscousSpongeLayers","viscousSpongeLayers_pulse.ups",
+                                                                    16, "All", ["exactComparison"]),
+                   ("constantPress_BC",   "constantPress_BC.ups",   8,  "All", ["exactComparison", "no_restart"]),  # dat file comparsion not working on restart
+
               ]
 
 
@@ -125,17 +128,17 @@ DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
               ]
 #__________________________________
 
-ADDTL_PATH=["absolutePat=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
+ADDTL_PATH=["absolutePath=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
                                                                    # syntax:  (relativePath=<path> or absolutePath=<path>)
 
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS LODI NIGHTLYTESTS
+#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS BOUND_CONDS NIGHTLYTESTS
 #__________________________________
 # returns the list
 
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + LODI + INITIALIZE
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + BOUND_CONDS + INITIALIZE
 
 def getTestList(me) :
   if me ==  "AMRTESTS":
@@ -148,8 +151,8 @@ def getTestList(me) :
     TESTS = INITIALIZE
   elif me == "LOCALTESTS":
     TESTS = NIGHTLYTESTS
-  elif me == "LODI":
-    TESTS = LODI
+  elif me == "BOUND_CONDS":
+    TESTS = BOUND_CONDS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
   elif me == "BUILDBOTTESTS":

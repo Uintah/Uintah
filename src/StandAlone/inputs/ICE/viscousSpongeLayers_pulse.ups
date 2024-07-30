@@ -139,7 +139,7 @@
       <save label="mom_L_ME_CC"/>
       <save label="viscous_src_CC"/>
       <save label="viscosity"/>
-      <checkpoint interval="4e-5" cycle="1"/>
+      <checkpoint interval="3e-5" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

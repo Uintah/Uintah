@@ -147,7 +147,7 @@
       <save label="Li1"/>
       <save label="Li5"/>
       
-      <checkpoint interval="4e-5" cycle="1"/>
+      <checkpoint interval="3e-5" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
