@@ -110,6 +110,8 @@ namespace Uintah {
     return false;
   }
   
+  //______________________________________________________________________
+  //
   template <class T>
   bool getIteratorBCValue( const Patch* patch,
                           const Patch::FaceType face,
@@ -153,6 +155,7 @@ namespace Uintah {
     return false;
   }
   
+  //______________________________________________________________________
   /**
    *  \author Tony Saad
    *  \date   August 29, 2013
@@ -190,7 +193,8 @@ namespace Uintah {
     return foundBC;
   }
   
-  
+  //______________________________________________________________________
+  //
   void
   getBCKind( const Patch* patch,
              const Patch::FaceType face,
