@@ -893,27 +893,3 @@ Matrix3::eigen(Uintah::Vector& eval, Matrix3& evec)
   }
 
 }
-namespace Uintah {
-  MPI_Datatype makeMPI_Matrix3()
-  {
-    ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
-
-    MPI_Datatype mpitype;
-    Uintah::MPI::Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
-    Uintah::MPI::Type_commit(&mpitype);
-
-    return mpitype;
-  }
-
-  const TypeDescription* fun_getTypeDescription(Matrix3*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
-                                  &makeMPI_Matrix3);
-    }
-    return td;
-  }
-
-} // End namespace Uintah
-

@@ -100,28 +100,3 @@ void swapbytes( Uintah::Int130& s){
 }
 
 } // namespace Uintah
-
-namespace Uintah {
-MPI_Datatype makeMPI_Int130()
-{
-   ASSERTEQ(sizeof(Int130), sizeof(int)*400);
-
-   MPI_Datatype mpitype;
-   Uintah::MPI::Type_vector(1, 400, 400, MPI_SHORT, &mpitype);
-   Uintah::MPI::Type_commit(&mpitype);
-
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(Int130*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription(TypeDescription::Int130, "Int130", true,
-                                &makeMPI_Int130);
-  }
-  return td;
-}
-
-} // End namespace Uintah
-

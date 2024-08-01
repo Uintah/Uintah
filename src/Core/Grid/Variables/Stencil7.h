@@ -74,10 +74,9 @@ namespace Uintah {
   };
 
   std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
-}
 
-namespace Uintah {
-   void swapbytes( Uintah::Stencil7& );
+  void swapbytes( Uintah::Stencil7& );
+
 } // namespace Uintah
 
 #endif

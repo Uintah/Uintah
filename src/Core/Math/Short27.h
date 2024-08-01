@@ -78,17 +78,7 @@ inline short & Short27::operator [] (int i)
   return s[i];
 }
 
-} // End namespace Uintah
-
-// Added for compatibility with core types
-#include <Core/Datatypes/TypeName.h>
-
-namespace Uintah {
-
-              void                    swapbytes( Uintah::Short27 & s );
-  template<>  const std::string       find_type_name( Uintah::Short27 * );
-              const TypeDescription * get_type_description( Uintah::Short27 * );
-
+void  swapbytes( Uintah::Short27 & s );
 
 } // namespace Uintah
 

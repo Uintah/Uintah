@@ -61,11 +61,13 @@ template <class T> const std::string find_type_name(T*)
 template<class T, class S> const std::string find_type_name( std::pair<T,S> *);
 
 
- class IntVector;
- class Vector;
- class Point;
-
+class IntVector;
+class Vector;
+class Point;
+class Int130;
+class Short27;
 class Matrix;
+class Matrix3;
 class NrrdData;
 class Field;
 
@@ -83,11 +85,13 @@ template<> const std::string find_type_name(unsigned long long*);
 template<> const std::string find_type_name(char*);
 template<> const std::string find_type_name(unsigned char*);
 template<> const std::string find_type_name(bool*);
- template<> const std::string find_type_name(Vector*);
+template<> const std::string find_type_name(Vector*);
 template<> const std::string find_type_name(IntVector*);
- template<> const std::string find_type_name(Point*);
-
+template<> const std::string find_type_name(Point*);
 template<> const std::string find_type_name(std::string*);
+template<> const std::string find_type_name(Matrix3*);
+template<> const std::string find_type_name(Short27*);
+template<> const std::string find_type_name(Int130*);
 
 template<> const std::string find_type_name(LockingHandle<Matrix> *);
 template<> const std::string find_type_name(LockingHandle<NrrdData> *);

@@ -34,45 +34,20 @@ using namespace Uintah;
 
 namespace Uintah {
 
-  static MPI_Datatype makeMPI_Stencil7()
-  {
-    ASSERTEQ(sizeof(Stencil7), sizeof(double)*7);
-    MPI_Datatype mpitype;
-    Uintah::MPI::Type_vector(1, 7, 7, MPI_DOUBLE, &mpitype);
-    Uintah::MPI::Type_commit(&mpitype);
-    return mpitype;
-  }
-  
-  const TypeDescription* fun_getTypeDescription(Stencil7*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Stencil7,
-                                  "Stencil7", true, 
-                                  &makeMPI_Stencil7);
-    }
-    return td;
-  }
-  
   std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a) {
-    out << "A.p: " << a.p << " A.w: " << a.w << " A.e: " << a.e << " A.s: " << a.s 
+    out << "A.p: " << a.p << " A.w: " << a.w << " A.e: " << a.e << " A.s: " << a.s
         << " A.n: " << a.n << " A.b: " << a.b << " A.t: " << a.t;
     return out;
   }
 
-
-}
-
-namespace Uintah {
-
-void swapbytes( Stencil7& a) {
-  SWAP_8(a.p);
-  SWAP_8(a.e);
-  SWAP_8(a.w);
-  SWAP_8(a.n);
-  SWAP_8(a.s);
-  SWAP_8(a.t);
-  SWAP_8(a.b);
-}
+  void swapbytes( Stencil7& a) {
+    SWAP_8(a.p);
+    SWAP_8(a.e);
+    SWAP_8(a.w);
+    SWAP_8(a.n);
+    SWAP_8(a.s);
+    SWAP_8(a.t);
+    SWAP_8(a.b);
+  }
 
 } // namespace Uintah

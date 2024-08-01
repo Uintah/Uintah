@@ -43,17 +43,20 @@ namespace Uintah{
 
 using std::string;
 
-class Vector;
 class IntVector;
-class Point;
-class NrrdData;
 class Matrix;
+class Matrix3;
+class NrrdData;
+class Point;
+class Short27;
+class Vector;
+
 
 
 //////////
 // Template function specializations for built-in types
 
-//////////
+//__________________________________
 // Floating-point types
 template<> const string find_type_name(float*)
 {
@@ -73,7 +76,7 @@ template<> const string find_type_name(long double*)
   return name;
 }
 
-//////////
+//__________________________________
 // Integer types
 template<> const string find_type_name(short*)
 {
@@ -123,8 +126,9 @@ template<> const string find_type_name(unsigned long long*)
   return name;
 }
 
-//////////
-// Character types
+//__________________________________
+//
+// Character and string types
 template<> const string find_type_name(char*)
 {
   static const string name = "char";
@@ -137,7 +141,14 @@ template<> const string find_type_name(unsigned char*)
   return name;
 }
 
-//////////
+template<> const string find_type_name(string*)
+{
+  static const string name = "string";
+  return name;
+}
+
+//__________________________________
+//
 // Boolean type
 template<> const string find_type_name(bool*)
 {
@@ -145,8 +156,15 @@ template<> const string find_type_name(bool*)
   return name;
 }
 
-//////////
+//__________________________________
+//
 // Template function specializations for some primitives
+template<> const string find_type_name(Point*)
+{
+  static const string name = "Point";
+  return name;
+}
+
 template<> const string find_type_name(Vector*)
 {
   static const string name = "Vector";
@@ -159,21 +177,26 @@ template<> const string find_type_name(IntVector*)
   return name;
 }
 
-template<> const string find_type_name(Point*)
+template<> const string find_type_name(Matrix3*)
 {
-  static const string name = "Point";
+  static const string name = "Matrix3";
   return name;
 }
 
-
-template<> const string find_type_name(string*)
+template<> const string find_type_name(Short27*)
 {
-  static const string name = "string";
+  static const string name = "Short27";
   return name;
 }
 
+template<> const string find_type_name(Int130*)
+{
+  static const string name = "Int130";
+  return name;
+}
 
-
+//______________________________________________________________________
+//
 template<> const string find_type_name(LockingHandle<Matrix> *)
 {
   static const string name = string("LockingHandle") + FTNS + string("Matrix") + FTNE;

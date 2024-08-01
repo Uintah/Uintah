@@ -28,9 +28,7 @@
 #include <sci_defs/compile_defs.h> // for STATIC_BUILD
 
 #include <inttypes.h>
-
 #include <cfloat>
-
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -57,19 +55,9 @@ typedef int64_t long64;
  const TypeDescription* fun_getTypeDescription(Point*);
  const TypeDescription* fun_getTypeDescription(Vector*);
  const TypeDescription* fun_getTypeDescription(IntVector*);
-
-// THIS IS A GUESS -> Because of the order of instantiation of
-// templates by the IBM xlC compiler, we can not declare the
-// fun_getTypeDescription(Stencil7*) in Stencil7.h (where it probably
-// should be.)  Instead we have to put it here.  I believe this is
-// true for Matrix3 too.  However, both the fun_getTypeDescription of
-// Matrix3 and Stencil7 are inplemented in their respective .cc files.
-
-// since these are defined in Math/Grid, and declared here, we need to export them correctly
  const TypeDescription* fun_getTypeDescription(Matrix3*);
  const TypeDescription* fun_getTypeDescription(Short27*);
  const TypeDescription* fun_getTypeDescription(Int130*);
-
  const TypeDescription* fun_getTypeDescription(Stencil7*);
  const TypeDescription* fun_getTypeDescription(Stencil4*);
  

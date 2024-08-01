@@ -76,18 +76,8 @@ inline int & Int130::operator [] (int i)
   return s[i];
 }
 
+void  swapbytes( Uintah::Int130 & s );
+
 } // End namespace Uintah
-
-// Added for compatibility with core types
-#include <Core/Datatypes/TypeName.h>
-
-namespace Uintah {
-
-              void                    swapbytes( Uintah::Int130 & s );
-  template<>  const std::string       find_type_name( Uintah::Int130 * );
-              const TypeDescription * get_type_description( Uintah::Int130 * );
-
-
-} // namespace Uintah
 
 #endif  // __INT130_H__

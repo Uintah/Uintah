@@ -67,28 +67,3 @@ void swapbytes( Uintah::Short27& s){
 }
 
 } // namespace Uintah
-
-namespace Uintah {
-MPI_Datatype makeMPI_Short27()
-{
-   ASSERTEQ(sizeof(Short27), sizeof(short)*27);
-
-   MPI_Datatype mpitype;
-   Uintah::MPI::Type_vector(1, 27, 27, MPI_SHORT, &mpitype);
-   Uintah::MPI::Type_commit(&mpitype);
-
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(Short27*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription(TypeDescription::Short27, "Short27", true,
-                                &makeMPI_Short27);
-  }
-  return td;
-}
-
-} // End namespace Uintah
-
