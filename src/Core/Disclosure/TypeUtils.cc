@@ -29,6 +29,12 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/Stencil4.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Math/Int130.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
 
