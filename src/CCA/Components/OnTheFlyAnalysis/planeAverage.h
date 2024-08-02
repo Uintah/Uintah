@@ -110,7 +110,7 @@ ______________________________________________________________________*/
       //___________________________________
       //  MPI user defined function for computing max for Uintah::Point
       //  we need this so each plane location has a non-zero value
-      static void MPI_OP_point( Point * in,
+      static void MPI_maxPoint( Point * in,
                                 Point * inOut,
                                 int   * len,
                                 MPI_Datatype * type)
@@ -144,10 +144,6 @@ ______________________________________________________________________*/
         //__________________________________
         void set_nPlanes(const int in) { nPlanes = in; }
         int  get_nPlanes() { return nPlanes; }
-
-        //__________________________________
-        //
-        void set_fileDesc(const std::string in) { fileDesc = in; }
 
         //__________________________________
         void getPlanarWeight( std::vector<double> & a,
@@ -199,28 +195,30 @@ ______________________________________________________________________*/
         //__________________________________
         void ReduceCC_pos( const int rank )
         {
-          MPI_Datatype  mpitype;
-          Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-          Uintah::MPI::Type_commit( &mpitype );
 
-          MPI_Op opt_point;
-          MPI_Op_create( (MPI_User_function*) MPI_OP_point, 1, &opt_point );
+          Point *P = nullptr;
+          const TypeDescription* td = fun_getTypeDescription( P );
+          MPI_Datatype Point_type = td->getMPIType();
+
+          MPI_Op max_point;
+          MPI_Op_create( (MPI_User_function*) MPI_maxPoint, 1, &max_point );
 
           const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
 
           if( rank == rootRank ){
-            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, mpitype, opt_point, rootRank, com );
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &CC_pos.front(), nPlanes, Point_type, max_point, rootRank, com );
           } else {
-            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, mpitype, opt_point, rootRank, com );
+            Uintah::MPI::Reduce(  &CC_pos.front(), 0,            nPlanes, Point_type, max_point, rootRank, com );
           }
-          MPI_Op_free( &opt_point );
+          MPI_Op_free( &max_point );
         }
 
         //__________________________________
         //  common file header
         void printHeader(  FILE* & fp,
                            const Level* level,
-                           const double simTime )
+                           const double simTime,
+                           const std::string fileDesc)
         {
           int L_index = level->getIndex();
           BBox b;
@@ -240,8 +238,17 @@ ______________________________________________________________________*/
           fprintf( fp, "# Level interior CC index range:  " );
           fprintf( fp, "# [%i %i %i] [%i %i %i] \n", lo.x(), lo.y(), lo.z(), hi.x(), hi.y(), hi.z() );
           fprintf( fp, "# Simulation time: %16.15E \n", simTime );
-        }
 
+          fprintf( fp,"# Plane location (x,y,z)           Average\n" );
+          fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
+
+          if( weightType == NCELLS ){
+            fprintf( fp,"______________nCells\n" );
+          }
+          else if( weightType == MASS ){
+            fprintf( fp,"______________weight\n" );
+          }
+        }
 
         //__________________________________
         //   VIRTUAL FUNCTIONS
@@ -252,14 +259,17 @@ ______________________________________________________________________*/
 
         // virtual templated functions are not allowed in C++11
         // instantiate the various types
-        virtual void getPlanarAve( std::vector<double>& ave ){}
-        virtual void getPlanarAve( std::vector<Vector>& ave ){}
+        virtual void getPlanarAve( std::vector<double>  & ave ){}
+        virtual void getPlanarAve( std::vector<Vector>  & ave ){}
+        virtual void getPlanarAve( std::vector<Matrix3> & ave ){}
 
-        virtual  void getPlanarSum( std::vector<double>& sum ){}
-        virtual  void getPlanarSum( std::vector<Vector>& sum ){}
+        virtual  void getPlanarSum( std::vector<double> & sum ){}
+        virtual  void getPlanarSum( std::vector<Vector> & sum ){}
+        virtual  void getPlanarSum( std::vector<Matrix3>& sum ){}
 
         virtual  void setPlanarSum( std::vector<double> & sum ){}
         virtual  void setPlanarSum( std::vector<Vector> & sum ){}
+        virtual  void setPlanarSum( std::vector<Matrix3> & sum ){}
 
         virtual  void zero_all_vars(){}
 
@@ -358,16 +368,7 @@ ______________________________________________________________________*/
                            const Level* level,
                            const double simTime )
         {
-          printHeader(fp, level, simTime);
-
-          fprintf( fp,"# Plane location x,y,z           Average\n" );
-          fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
-          if( weightType == NCELLS ){
-            fprintf( fp,"___________nCells\n" );
-          }
-          else if( weightType == MASS ){
-            fprintf( fp,"___________weight___________\n" );
-          }
+          printHeader(fp, level, simTime, fileDesc);
 
           // loop over each plane, compute the ave and write to file
           for ( unsigned i =0; i< sum.size(); i++ ){
@@ -475,9 +476,9 @@ ______________________________________________________________________*/
         // broadcast the value.
         void ReduceBcastVar( const int rank )
         {
-          MPI_Datatype  Vector_type;
-          Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &Vector_type);
-          Uintah::MPI::Type_commit( &Vector_type );
+          Vector *V = nullptr;
+          const TypeDescription* td = fun_getTypeDescription( V );
+          MPI_Datatype Vector_type = td->getMPIType();
 
           MPI_Op vector_add;
           MPI_Op_create( (MPI_User_function*) plusEqualVector, 1, &vector_add );
@@ -501,17 +502,7 @@ ______________________________________________________________________*/
                            const Level* level,
                            const double simTime )
         {
-          printHeader(fp, level, simTime);
-
-          fprintf( fp,"# Plane location (x,y,z)           Average\n" );
-          fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
-
-          if( weightType == NCELLS ){
-            fprintf( fp,"_______________nCells\n" );
-          }
-          else if( weightType == MASS ){
-            fprintf( fp,"_________________weight\n" );
-          }
+          printHeader(fp, level, simTime, fileDesc);
 
           // loop over each plane, compute the ave and write to file
           for ( unsigned i =0; i< sum.size(); i++ ){
@@ -532,6 +523,166 @@ ______________________________________________________________________*/
           }
         }
         ~planarVar_Vector(){}
+    };
+
+    //______________________________________________________________________
+    //  Class that holds the planar quantities      Matrix3
+    class planarVar_Matrix3: public planarVarBase{
+
+      //___________________________________
+      //  MPI user defined function for computing sum for Uintah::Matrix3
+      static void plusEqualMatrix3( Matrix3 * in,
+                                    Matrix3 * inOut,
+                                    int  * len,
+                                    MPI_Datatype * type)
+      {
+        for (auto l=0; l< *len; l++){
+          for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+              inOut[l](i,j) += in[l](i,j);
+            }
+          }
+        }
+      }
+
+      //__________________________________
+      private:
+        std::vector<Matrix3> sum;
+        std::vector<Matrix3> ave;
+
+      public:
+
+        planarVar_Matrix3()
+        {
+          fileDesc = "";
+
+          for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+              char a[50];
+              sprintf(a, "ave.%i%i_______________", i+1,j+1);
+
+              fileDesc += a;
+            }
+          }
+          fileDesc.erase( fileDesc.length()-15 );         // remove the last dashed lines
+        }
+
+        //__________________________________
+        // this makes a deep copy
+        virtual std::shared_ptr<planarVarBase> clone() const {
+          return std::make_shared<planarVar_Matrix3>(*this);
+        }
+
+        //__________________________________
+        void reserve()
+        {
+          Matrix3 zero(0.);
+          CC_pos.resize( nPlanes, Point(-DBL_MAX,-DBL_MAX,-DBL_MAX) );
+          ave.resize(    nPlanes, Matrix3(0.0) );
+          sum.resize(    nPlanes, Matrix3(0.0) );
+          weight.resize( nPlanes, 0 );
+          nCells.resize( nPlanes, 0 );
+        }
+        //__________________________________
+        void getPlanarSum( std::vector<Matrix3> & me ) { me = sum; }
+        void setPlanarSum( std::vector<Matrix3> & me ) { sum = me; }
+
+        //__________________________________
+        void getPlanarAve( std::vector<Matrix3> & ave )
+        {
+          ave.resize( nPlanes, Matrix3(-9) );
+
+          for ( unsigned i =0; i< sum.size(); i++ ){
+            if( weightType == NCELLS ){
+              ave[i] = sum[i]/nCells[i];
+            }
+            else if( weightType == MASS ){
+              ave[i] = sum[i]/weight[i];
+            }
+            else{   // weightType == NONE
+              ave[i] = sum[i];
+            }
+          }
+        }
+
+        //__________________________________
+        void zero_all_vars()
+        {
+          for(unsigned i=0; i<sum.size(); i++ ){
+            CC_pos[i] = Point( -DBL_MAX,-DBL_MAX,-DBL_MAX );
+            ave[i]    = Matrix3(0.0);
+            sum[i]    = Matrix3(0.0);
+            weight[i] = 0;
+            nCells[i] = 0;
+          }
+        }
+
+        //__________________________________
+        // Reduce the sum over all ranks and
+        // broadcast the value.
+        void ReduceBcastVar( const int rank )
+        {
+          Matrix3 *m = nullptr;
+          const TypeDescription* td = fun_getTypeDescription( m );
+          MPI_Datatype  Matrix3_type = td->getMPIType();
+
+          MPI_Op matrix3_add;
+          MPI_Op_create( (MPI_User_function*) plusEqualMatrix3, 1, &matrix3_add );
+
+          const MPI_Comm com = planeAverage::d_my_MPI_COMM_WORLD;  // readability
+
+          if( rank == rootRank ){
+            Uintah::MPI::Reduce(  MPI_IN_PLACE, &sum.front(), nPlanes, Matrix3_type, matrix3_add, rootRank, com );
+          } else {
+            Uintah::MPI::Reduce(  &sum.front(), 0,            nPlanes, Matrix3_type, matrix3_add, rootRank, com );
+          }
+          MPI_Op_free( &matrix3_add );
+
+          // broadcast the sum to all ranks
+          Uintah::MPI::Bcast( &sum.front(), nPlanes, Matrix3_type, rootRank, com);
+        }
+
+        //__________________________________
+        //    print to file pointer ave
+        void fprintAve( FILE* & fp, const Matrix3 avg)
+        {
+          for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+              fprintf( fp, "%15.14E ", avg(i,j));
+            }
+          }
+        }
+
+        //__________________________________
+        void printAverage( FILE* & fp,
+                           const Level* level,
+                           const double simTime )
+        {
+          printHeader(fp, level, simTime, fileDesc);
+
+          // loop over each plane, compute the ave and write to file
+          for ( unsigned p =0; p< sum.size(); p++ ){
+
+            fprintf( fp, "%15.14E  %15.14E  %15.14E ", CC_pos[p].x(), CC_pos[p].y(), CC_pos[p].z() );
+
+            if( weightType == NCELLS ){
+              Matrix3 avg = sum[p]/nCells[p];
+              fprintAve( fp, avg );
+              fprintf( fp, " %i\n", nCells[p] );
+            }
+
+            else if( weightType == MASS ){
+              Matrix3 avg = sum[p]/weight[p];
+              fprintAve( fp, avg );
+              fprintf( fp, "%15.14E\n", weight[p] );
+            }
+
+            else{   // weightType == NONE
+              fprintAve( fp, sum[p] );
+            }
+          }
+        }
+        ~planarVar_Matrix3(){}
     };
 
     // For each level there's a vector of planeVarBases
@@ -699,8 +850,8 @@ ______________________________________________________________________*/
     // Flag: has this rank has executed this task on this level
     std::vector< std::vector< bool > > d_progressVar;
     enum taskNames { INITIALIZE=0, ZERO=1, SUM=2, N_TASKS=3 };
-    
-    MaterialSubset* d_matl_subSet;    
+
+    MaterialSubset* d_matl_subSet;
 
   };
 }

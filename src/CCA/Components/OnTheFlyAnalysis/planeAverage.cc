@@ -97,7 +97,7 @@ planeAverage::~planeAverage()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
-  
+
   if(d_matl_subSet && d_matl_subSet->removeReference()) {
     delete d_matl_subSet;
   }
@@ -154,7 +154,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   d_matl_set->addReference();
 
   //__________________________________
-  //  Plane orientation
+  //    Plane orientation
   string orient;
   m_module_spec->require("planeOrientation", orient);
   if ( orient == "XY" ){
@@ -168,7 +168,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   }
 
   //__________________________________
-  //  OPTIONAL weighting label
+  //    OPTIONAL weighting label
   map<string,string> attribute;
   ProblemSpecP w_ps = m_module_spec->findBlock( "weight" );
 
@@ -180,7 +180,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
   if ( d_parse_ups_variables ) {                        // the MeanTurbFluxes module defines the planarVars
     //__________________________________
-    //  Now loop over all the variables to be analyzed
+    //    Now loop over all the variables to be analyzed
 
     std::vector< std::shared_ptr< planarVarBase >  >planarVars;
 
@@ -189,7 +189,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
       var_spec->getAttributes( attribute );
 
       //__________________________________
-      // Read in the variable name
+      //  Read in the variable name
       string labelName = attribute["label"];
       VarLabel* label = VarLabel::find( labelName, "ERROR planeAverage::problemSetup <analyze>");
 
@@ -239,9 +239,10 @@ void planeAverage::problemSetup(const ProblemSpecP&,
          baseType != TypeDescription::SFCZVariable ){
          throwException = true;
       }
-      // CC Variables, only Doubles and Vectors
-      if(baseType != TypeDescription::CCVariable &&
+      // CC Variables, only Doubles, Vectors and Matrix3
+      if(baseType != TypeDescription::CCVariable  &&
          subType  != TypeDescription::double_type &&
+         subType  != TypeDescription::Matrix3     &&
          subType  != TypeDescription::Vector  ){
         throwException = true;
       }
@@ -262,7 +263,7 @@ void planeAverage::problemSetup(const ProblemSpecP&,
 
       //__________________________________
       //  populate the vector of averages
-      // double
+      //        double
       if( subType == TypeDescription::double_type ) {
         planarVar_double* me = new planarVar_double();
         me->label      = label;
@@ -275,9 +276,21 @@ void planeAverage::problemSetup(const ProblemSpecP&,
         planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
 
       }
-      // Vectors
+      //        Vectors
       if( subType == TypeDescription::Vector ) {
         planarVar_Vector* me = new planarVar_Vector();
+        me->label      = label;
+        me->matl       = matl;
+        me->level      = level;
+        me->baseType   = baseType;
+        me->subType    = subType;
+        me->weightType = weight;
+
+        planarVars.push_back( std::shared_ptr<planarVarBase>(me) );
+      }
+      //        Matrix3
+      if( subType == TypeDescription::Matrix3 ) {
+        planarVar_Matrix3* me = new planarVar_Matrix3();
         me->label      = label;
         me->matl       = matl;
         me->level      = level;
@@ -527,9 +540,20 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
     // bulletproofing
     if( label == nullptr ){
       string name = label->getName();
-      throw InternalError("planeAverage: scheduleDoAnalysis label not found: "
+      throw InternalError("planeAverage: sched_computePlanarSums label not found: "
                          + name , __FILE__, __LINE__);
     }
+
+   if( sched->getComputedVars().find( label ) == sched->getComputedVars().end() ) {
+      ostringstream warn;
+      warn << "ERROR:AnalysisModule:planeAverage: ("<<label->getName() << ") "
+           << " was not found in the DataWarehouse.  "
+           << "Verify that you've enabled the models or feature that computes it.\n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+
+    }
+
+
 
     MaterialSubset* matSubSet = scinew MaterialSubset();
     matSubSet->add( planarVars[i]->matl );
@@ -612,6 +636,10 @@ void planeAverage::computePlanarSums(const ProcessorGroup * pg,
             }
             case TypeDescription::Vector: {             // CC Vector
               planarSum_Q< constCCVariable<Vector>, Vector > ( new_dw, analyzeVar, patch, iter );
+              break;
+            }
+            case TypeDescription::Matrix3: {            // CC Matrix3
+              planarSum_Q< constCCVariable<Matrix3>, Matrix3 > ( new_dw, analyzeVar, patch, iter );
               break;
             }
             default:
