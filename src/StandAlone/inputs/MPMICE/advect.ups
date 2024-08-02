@@ -327,7 +327,7 @@
 
             <constants>
               <diffusivity>    0.0   </diffusivity>
-              <decayConstant>  100  </decayConstant>
+              <rateOfChange0>  100  </rateOfChange0>
             </constants>
 
             <initialization>
@@ -350,7 +350,7 @@
 
             <constants>
               <diffusivity>   0.0   </diffusivity>
-              <decayConstant> 0.0   </decayConstant>
+              <rateOfChange0> 0.0   </rateOfChange0>
             </constants>
 
             <exponentialDecay>
