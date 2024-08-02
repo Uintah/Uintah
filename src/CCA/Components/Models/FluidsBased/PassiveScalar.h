@@ -189,7 +189,7 @@ WARNING
       interiorRegion(GeometryPieceP piece, ProblemSpecP&);
       GeometryPieceP piece;
       double value;
-      double decayRate;  // dscalar_dt (rate at which scalar is added in region)
+      double rateOfChange;  // dscalar_dt (rate at which scalar is added in region)
       double clampValue;
     };
 
@@ -212,8 +212,8 @@ WARNING
       std::vector<Region*> regions;
       std::vector<interiorRegion*> interiorRegions;
 
-      double decayConstant;          // constant decay
-      double decayRate;              // constant decayRate
+      double rateOfChange0;          // constant decay
+      double rateOfChange1;          // constant decayRate
       double diff_coeff;
       double refineCriteria;
 

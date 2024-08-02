@@ -423,8 +423,8 @@
           <constants                   spec="OPTIONAL NO_DATA" >
             <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
             <diffusivity               spec="OPTIONAL DOUBLE" />
-            <decayConstant             spec="OPTIONAL DOUBLE" />
-            <decayRate                 spec="OPTIONAL DOUBLE" />
+            <rateOfChange0             spec="OPTIONAL DOUBLE" />
+            <rateOfChange1             spec="OPTIONAL DOUBLE" />
           </constants>
 
           <exponentialDecay            spec="OPTIONAL NO_DATA" >

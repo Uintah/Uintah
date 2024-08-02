@@ -141,9 +141,9 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
   : piece(piece)
 {
   value = 0.0;
-  ps->require(       "scalar",      value );
-  ps->getWithDefault("decayRate",   decayRate,  0.0);
-  ps->getWithDefault("maxScalar" ,  clampValue, DBL_MAX );
+  ps->require(       "scalar",       value );
+  ps->getWithDefault("rateOfChange", rateOfChange,  0.0);
+  ps->getWithDefault("maxScalar" ,   clampValue, DBL_MAX );
 }
 
 
@@ -215,8 +215,8 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
     throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
   }
 
-  const_ps->getWithDefault( "decayConstant",           d_scalar->decayConstant,  0.0);
-  const_ps->getWithDefault( "decayRate",               d_scalar->decayRate, 0.0);
+  const_ps->getWithDefault( "rateOfChange0",           d_scalar->rateOfChange0,  0.0);
+  const_ps->getWithDefault( "rateOfChange1",           d_scalar->rateOfChange1, 0.0);
   const_ps->getWithDefault( "diffusivity",             d_scalar->diff_coeff, 0.0);
   const_ps->getWithDefault( "AMR_Refinement_Criteria", d_scalar->refineCriteria,1e100);
 
@@ -349,8 +349,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   scalar_ps->appendElement( "reinitializeDomain", "false" );              // the user must manually override 
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
-  const_ps->appendElement( "decayConstant",            d_scalar->decayConstant );
-  const_ps->appendElement( "decayRate",                d_scalar->decayRate );
+  const_ps->appendElement( "rateOfChange0",            d_scalar->rateOfChange0 );
+  const_ps->appendElement( "rateOfChange1",            d_scalar->rateOfChange1 );
   const_ps->appendElement( "diffusivity",              d_scalar->diff_coeff );
   const_ps->appendElement( "AMR_Refinement_Criteria",  d_scalar->refineCriteria );
 
@@ -396,9 +396,9 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
       ProblemSpecP geom_ps = int_ps->appendChild("geom_object");
       (*itr)->piece->outputProblemSpec( geom_ps );
 
-      geom_ps->appendElement( "scalar",   (*itr)->value );
-      geom_ps->appendElement( "decayRate",(*itr)->decayRate );
-      geom_ps->appendElement( "maxScalar",(*itr)->clampValue );
+      geom_ps->appendElement( "scalar",      (*itr)->value );
+      geom_ps->appendElement( "rateOfChange",(*itr)->rateOfChange );
+      geom_ps->appendElement( "maxScalar",   (*itr)->clampValue );
     }
   }
 }
@@ -893,13 +893,13 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     }
     //__________________________________
     //  Linear decay
-    const double decayConstant = d_scalar->decayConstant;
-    const double decayRate     = d_scalar->decayRate;
-    if ( decayConstant != 0 || decayRate !=0 ){
+    const double rateOfChange0 = d_scalar->rateOfChange0;
+    const double rateOfChange1 = d_scalar->rateOfChange1;
+    if ( rateOfChange0 != 0 || rateOfChange1 !=0 ){
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        f_src[c] -= delT * (decayConstant + decayRate*f_old[c]);
+        f_src[c] -= delT * (rateOfChange0 + rateOfChange1*f_old[c]);
 
 #if 0
         if( c == IntVector(3,3,3) ){
@@ -946,8 +946,8 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     for(vector<interiorRegion*>::iterator iter = d_scalar->interiorRegions.begin();
                                           iter != d_scalar->interiorRegions.end(); iter++){
       interiorRegion* region = *iter;
-      double decayRate = region->decayRate;
-      double clamp     = region->clampValue;
+      double rateOfChange = region->rateOfChange;
+      double clamp        = region->clampValue;
       
       double value     = region-> value;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -956,7 +956,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
         Point p = patch->cellPosition(c);
 
         if(region->piece->inside(p)) {
-          f_src[c] = value + decayRate * delT;
+          f_src[c] = value + rateOfChange * delT;
 
           double f_test = f_old[c] + f_src[c];
 
