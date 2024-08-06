@@ -191,7 +191,7 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   d_scalar->diffusionCoef_CCLabel    = VarLabel::create( fullName +"_diffCoef",     td_CCdouble);
   d_scalar->Q_src_CCLabel            = VarLabel::create( fullName +"_src",          td_CCdouble);
   d_scalar->expDecayCoefLabel        = VarLabel::create( fullName +"_expDecayCoef", td_CCdouble);
-  d_scalar->RemovedScalarLabel       = VarLabel::create( "RemovedScalar", td_CCdouble);
+  d_scalar->RemovedScalarLabel       = VarLabel::create( fullName +"RemovedScalar", td_CCdouble);
 
   d_scalar->mag_grad_Q_CCLabel       = VarLabel::create( "mag_grad_"+fullName,  td_CCdouble);
   d_scalar->sum_Q_CCLabel            = VarLabel::create( "totalSum_"+fullName,  sum_vartype::getTypeDescription());
