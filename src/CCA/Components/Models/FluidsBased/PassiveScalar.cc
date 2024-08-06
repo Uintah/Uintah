@@ -81,6 +81,7 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy( d_scalar->mag_grad_Q_CCLabel );
   VarLabel::destroy( d_scalar->sum_Q_CCLabel );
   VarLabel::destroy( d_scalar->expDecayCoefLabel );
+  VarLabel::destroy( d_scalar->RemovedScalarLabel );
 
   delete Ilb;
 
@@ -142,7 +143,7 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 {
   value = 0.0;
   ps->require(       "scalar",       value );
-  ps->getWithDefault("rateOfChange", rateOfChange,  0.0);
+  ps->getWithDefault("rateOfChangeInterior", rateOfChangeInterior,  0.0);
   ps->getWithDefault("maxScalar" ,   clampValue, DBL_MAX );
 }
 
@@ -186,11 +187,11 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
-
   d_scalar->Q_CCLabel                = VarLabel::create( fullName,                  td_CCdouble);
   d_scalar->diffusionCoef_CCLabel    = VarLabel::create( fullName +"_diffCoef",     td_CCdouble);
   d_scalar->Q_src_CCLabel            = VarLabel::create( fullName +"_src",          td_CCdouble);
   d_scalar->expDecayCoefLabel        = VarLabel::create( fullName +"_expDecayCoef", td_CCdouble);
+  d_scalar->RemovedScalarLabel       = VarLabel::create( "RemovedScalar", td_CCdouble);
 
   d_scalar->mag_grad_Q_CCLabel       = VarLabel::create( "mag_grad_"+fullName,  td_CCdouble);
   d_scalar->sum_Q_CCLabel            = VarLabel::create( "totalSum_"+fullName,  sum_vartype::getTypeDescription());
@@ -397,7 +398,7 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
       (*itr)->piece->outputProblemSpec( geom_ps );
 
       geom_ps->appendElement( "scalar",      (*itr)->value );
-      geom_ps->appendElement( "rateOfChange",(*itr)->rateOfChange );
+      geom_ps->appendElement( "rateOfChangeInterior",(*itr)->rateOfChangeInterior);
       geom_ps->appendElement( "maxScalar",   (*itr)->clampValue );
     }
   }
@@ -510,6 +511,7 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
     t->computes( d_scalar->expDecayCoefLabel );
   }
   t->computes(d_scalar->Q_CCLabel);
+  t->computes(d_scalar->RemovedScalarLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 
@@ -569,9 +571,11 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 
     //__________________________________
     // Passive Scalar
-    CCVariable<double> f;
+    CCVariable<double> f,RS;
     new_dw->allocateAndPut(f, d_scalar->Q_CCLabel, indx, patch);
+    new_dw->allocateAndPut(RS, d_scalar->RemovedScalarLabel, indx, patch);
     f.initialize(0);
+    RS.initialize(0);
 
     //__________________________________
     //  Uniform initialization scalar field in a region
@@ -837,6 +841,8 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
 
   t->requires( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
   t->requires( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
+  t->requires( Task::OldDW, d_scalar->RemovedScalarLabel,    gn, 0 );
+  t->computes( d_scalar->RemovedScalarLabel );
 
   if ( d_withExpDecayModel ){
     t->requires( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
@@ -869,14 +875,19 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     printTask(patches, patch, dout_models_ps, msg);
 
     constCCVariable<double> f_old;
+    constCCVariable<double> RemovedScalarOld;
     constCCVariable<double> diff_coeff;
     CCVariable<double>  f_src;
+    CCVariable<double>  RemovedScalar;
 
     int indx = d_matl->getDWIndex();
     old_dw->get(f_old,      d_scalar->Q_CCLabel,             indx, patch, gac,1);
     new_dw->get(diff_coeff, d_scalar->diffusionCoef_CCLabel, indx, patch, gac,1);
 
     new_dw->allocateAndPut(f_src, d_scalar->Q_src_CCLabel,indx, patch);
+
+    old_dw->get(RemovedScalarOld,         d_scalar->RemovedScalarLabel,indx, patch, gn,0);
+    new_dw->allocateAndPut(RemovedScalar, d_scalar->RemovedScalarLabel,indx, patch);
 
     f_src.initialize(0.0);
 
@@ -899,7 +910,9 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        f_src[c] -= delT * (rateOfChange0 + rateOfChange1*f_old[c]);
+        double removedScalar = delT * (rateOfChange0 + rateOfChange1*f_old[c]);
+        f_src[c] -= removedScalar;
+        RemovedScalar[c] = RemovedScalarOld[c] + removedScalar;
 
 #if 0
         if( c == IntVector(3,3,3) ){
@@ -946,7 +959,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     for(vector<interiorRegion*>::iterator iter = d_scalar->interiorRegions.begin();
                                           iter != d_scalar->interiorRegions.end(); iter++){
       interiorRegion* region = *iter;
-      double rateOfChange = region->rateOfChange;
+      double rateOfChangeInterior = region->rateOfChangeInterior;
       double clamp        = region->clampValue;
       
       double value     = region-> value;
@@ -956,13 +969,14 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
         Point p = patch->cellPosition(c);
 
         if(region->piece->inside(p)) {
-          f_src[c] = value + rateOfChange * delT;
+          f_src[c] = value + rateOfChangeInterior * delT;
 
           double f_test = f_old[c] + f_src[c];
 
           if (f_test > clamp ){
             f_src[c] = clamp - f_old[c];
           }
+          RemovedScalar[c] = 0.;
         }
       } // Over cells
     }  //interiorRegions

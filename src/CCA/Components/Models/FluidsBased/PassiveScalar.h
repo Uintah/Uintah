@@ -189,7 +189,7 @@ WARNING
       interiorRegion(GeometryPieceP piece, ProblemSpecP&);
       GeometryPieceP piece;
       double value;
-      double rateOfChange;  // dscalar_dt (rate at which scalar is added in region)
+      double rateOfChangeInterior;  // dscalar_dt (rate at which scalar is added in region)
       double clampValue;
     };
 
@@ -208,6 +208,7 @@ WARNING
       VarLabel* diffusionCoef_CCLabel;
       VarLabel* sum_Q_CCLabel;
       VarLabel* expDecayCoefLabel;
+      VarLabel* RemovedScalarLabel;
 
       std::vector<Region*> regions;
       std::vector<interiorRegion*> interiorRegions;
