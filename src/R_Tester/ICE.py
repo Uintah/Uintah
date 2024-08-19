@@ -45,6 +45,18 @@ chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
                                 ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :logWindProfile" ),
                                 ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile2")
                                ] )
+                               
+impVortices_smag_ups      = modUPS2( the_dir,                   \
+                                  "impVortices_turb.ups",         \
+                               [( "update", "/Uintah_specification/DataArchiver/filebase :impVortex_Smag.uda" ),
+                                ( "delete", "/Uintah_specification/CFD/ICE/turbulence[@model='Germano']" )
+                               ] )
+                               
+impVortices_dyn_ups      = modUPS2( the_dir,                    \
+                                  "impVortices_turb.ups",         \
+                               [( "update", "/Uintah_specification/DataArchiver/filebase :impVortex_dynamic.uda" ),
+                                ( "delete", "/Uintah_specification/CFD/ICE/turbulence[@model='Smagorinsky']" )
+                               ] )
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #
@@ -123,6 +135,10 @@ INITIALIZE =  [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
                   ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
               ]
 
+TURBULENCE =  [   ("impVortices_smag",    impVortices_smag_ups,    16, "All", ["exactComparison"]),
+                  ("impVortices_dyn",     impVortices_dyn_ups,     16, "All", ["exactComparison"])
+              ]
+
 DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo2 junk junkw"]),
                   ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo junk junkw"])
               ]
@@ -134,11 +150,11 @@ ADDTL_PATH=["absolutePath=/bin","relativePath tools/pfs"]           # preprocess
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS BOUND_CONDS NIGHTLYTESTS
+#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS BOUND_CONDS NIGHTLYTESTS TURBULENCE
 #__________________________________
 # returns the list
 
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + BOUND_CONDS + INITIALIZE
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + BOUND_CONDS + INITIALIZE + TURBULENCE
 
 def getTestList(me) :
   if me ==  "AMRTESTS":
@@ -155,6 +171,8 @@ def getTestList(me) :
     TESTS = BOUND_CONDS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "TURBULENCE":
+    TESTS = TURBULENCE
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
