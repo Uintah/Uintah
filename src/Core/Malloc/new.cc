@@ -41,7 +41,7 @@
 
 #ifdef MALLOC_TRACE
 #  include "MallocTraceOff.h"
-#endif 
+#endif
 
 #include <Core/Malloc/AllocPriv.h>
 #include <new>
@@ -52,16 +52,19 @@ using namespace Uintah;
 // These stubs are needed when your code uses these functions but
 // DISABLE_SCI_MALLOC is set.
 namespace Uintah {
-
+//______________________________________________________________________
+//
 const
 char*
 AllocatorSetDefaultTagNew( const char* /*tag*/ ) {
   return "AllocatorSetDefaultTagNew::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
 }
-
+//______________________________________________________________________
+//
 void
 AllocatorResetDefaultTagNew() {}
-
+//______________________________________________________________________
+//
 const char*
 AllocatorSetDefaultTag( const char* /*tag*/ ) {
   return "AllocatorSetDefaultTag::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
@@ -74,7 +77,8 @@ void AllocatorResetDefaultTagLineNumber() {}
 } // end namespace Uintah
 
 #ifndef MALLOC_TRACE
-
+//______________________________________________________________________
+//
 void*
 operator
 new( size_t size, Uintah::Allocator*, const char*, int )
@@ -87,7 +91,8 @@ new( size_t size, Uintah::Allocator*, const char*, int )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void*
 operator
 new[]( size_t size, Uintah::Allocator*, const char*, int )
@@ -101,14 +106,16 @@ new[]( size_t size, Uintah::Allocator*, const char*, int )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void
 operator
 delete(void* ptr, Uintah::Allocator*, const char*, int)
 {
   free(ptr);
 }
-
+//______________________________________________________________________
+//
 void
 operator
 delete[](void* ptr, Uintah::Allocator*, const char*, int)
@@ -128,7 +135,8 @@ static const char* default_new_array_tag = "Unknown - operator new[]";
 int default_tag_line_number = 0;
 
 namespace Uintah {
-
+//______________________________________________________________________
+//
 const
 char*
 AllocatorSetDefaultTagNew( const char* tag )
@@ -138,14 +146,16 @@ AllocatorSetDefaultTagNew( const char* tag )
   default_new_array_tag=tag;
   return old;
 }
-
+//______________________________________________________________________
+//
 void
 AllocatorResetDefaultTagNew()
 {
   default_new_tag = "Unknown - operator new";
   default_new_array_tag = "Unknown - operator new[]";
 }
-
+//______________________________________________________________________
+//
 const
 char*
 AllocatorSetDefaultTag( const char* tag )
@@ -153,14 +163,16 @@ AllocatorSetDefaultTag( const char* tag )
   AllocatorSetDefaultTagMalloc( tag );
   return AllocatorSetDefaultTagNew( tag );
 }
-
+//______________________________________________________________________
+//
 void
 AllocatorResetDefaultTag()
 {
   AllocatorResetDefaultTagMalloc();
   AllocatorResetDefaultTagNew();
 }
-
+//______________________________________________________________________
+//
 int
 AllocatorSetDefaultTagLineNumber( int line_number )
 {
@@ -168,23 +180,25 @@ AllocatorSetDefaultTagLineNumber( int line_number )
   default_tag_line_number = line_number;
   return old_num;
 }
-
+//______________________________________________________________________
+//
 void
-AllocatorResetDefaultTagLineNumber() 
+AllocatorResetDefaultTagLineNumber()
 {
   default_tag_line_number = 0;
 }
 
 } // end namespace Uintah
-
+//______________________________________________________________________
+//
 void*
 operator
-new( size_t size ) throw( std::bad_alloc )
+new( size_t size )
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
   }
-   
+
   void *mem = default_allocator->alloc( size, default_new_tag, default_tag_line_number );
 #ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++) {
@@ -193,15 +207,16 @@ new( size_t size ) throw( std::bad_alloc )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void*
 operator
-new[]( size_t size ) throw( std::bad_alloc )
+new[]( size_t size )
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
   }
-  
+
   void* mem = default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
 #ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++) {
@@ -210,10 +225,11 @@ new[]( size_t size ) throw( std::bad_alloc )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void*
 operator
-new( size_t size, const std::nothrow_t& ) throw()
+new( size_t size, const std::nothrow_t& ) noexcept
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -226,15 +242,16 @@ new( size_t size, const std::nothrow_t& ) throw()
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void*
 operator
-new[]( size_t size, const std::nothrow_t& ) throw()
+new[]( size_t size, const std::nothrow_t& ) noexcept
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
   }
-  
+
   void * mem = default_allocator->alloc( size, "unknown - nothrow operator new[]", default_tag_line_number );
 #ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++) {
@@ -243,10 +260,11 @@ new[]( size_t size, const std::nothrow_t& ) throw()
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void
 operator
-delete(void* ptr) throw()
+delete(void* ptr) noexcept
 {
   //  printf("delete called %p\n", ptr);
   if( !default_allocator ) {
@@ -254,10 +272,11 @@ delete(void* ptr) throw()
   }
   default_allocator->free(ptr);
 }
-
+//______________________________________________________________________
+//
 void
 operator
-delete[](void* ptr) throw()
+delete[](void* ptr) noexcept
 {
   //  printf("delete [] called %p\n", ptr);
   if( !default_allocator ) {
@@ -265,7 +284,8 @@ delete[](void* ptr) throw()
   }
   default_allocator->free(ptr);
 }
-
+//______________________________________________________________________
+//
 void*
 operator
 new( size_t size, Allocator* a, const char* tag, int linenum )
@@ -284,7 +304,8 @@ new( size_t size, Allocator* a, const char* tag, int linenum )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void*
 operator
 new[]( size_t size, Allocator* a, const char* tag, int linenum )
@@ -303,7 +324,8 @@ new[]( size_t size, Allocator* a, const char* tag, int linenum )
 #endif
   return mem;
 }
-
+//______________________________________________________________________
+//
 void
 operator
 delete( void* ptr, Allocator* a, const char* tag, int linenum )
@@ -316,7 +338,8 @@ delete( void* ptr, Allocator* a, const char* tag, int linenum )
   }
   a->free( ptr );
 }
-
+//______________________________________________________________________
+//
 void
 operator
 delete[]( void* ptr, Allocator* a, const char* tag, int linenum )
@@ -332,6 +355,6 @@ delete[]( void* ptr, Allocator* a, const char* tag, int linenum )
 
 #ifdef MALLOC_TRACE
 #  include "MallocTraceOn.h"
-#endif 
+#endif
 
 #endif // ifdef DISABLE_SCI_MALLOC
