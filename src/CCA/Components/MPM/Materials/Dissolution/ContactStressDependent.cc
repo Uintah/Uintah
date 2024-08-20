@@ -105,6 +105,9 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
    int numMatls = d_materialManager->getNumMatls("MPM");
    ASSERTEQ(numMatls, matls->size());
 
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
   if(d_phase=="dissolution" || d_phase=="dissolution_and_precipitation"){
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -156,6 +159,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       }
     }
 
+   //cout << "d_TCF = " << d_timeConversionFactor << endl;
+
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
@@ -174,7 +179,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                         * 8.0*3.1536e19*d_timeConversionFactor;
       // Limit the dissolution rate to take no more than 1% of a cell width
       // in a single timestep
-      double limit = 0.01*dx.x();
+      double limit = 0.01*dx.x()/delT;
 //      int numNodesMBRGT0 = 0;
 //      double mBRSum = 0.;
 //      double normtrac_mean = 0.;
@@ -215,6 +220,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             // Limit burn rate to 1% of a cell width in a single timestep
             double slowBurn = 1.0;
             if(localSurfRate > limit){
+//               cout << "lSR = " << localSurfRate << ", limit = " << limit << endl;
                slowBurn = limit/localSurfRate;
             }
             double areaRatio = gSurfaceArea[md][c]/area;
@@ -273,6 +279,7 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
   z_matl->add(0);
   z_matl->addReference();
 
+  t->requires(Task::OldDW, lb->delTLabel );
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
