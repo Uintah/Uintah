@@ -22,7 +22,7 @@
        <delt_init>          1.0e-4      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps>  100 </max_Timesteps> 
+       <max_Timesteps>  1000 </max_Timesteps> 
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
@@ -126,6 +126,27 @@
       <save label="viscous_src_CC"/>
       <save label="total_viscosity_CC"/>
       <save label="turb_viscosity_CC"/>
+      
+      <save label="mean_press_CC"/>
+      <save label="mean_vel_CC"/>
+      <save label="mean_temp_CC"/>
+
+      <save label="variance_vel_CC"/>
+      <save label="variance_press_CC"/>
+      <save label="variance_temp_CC"/>
+      <save label="covariance_vel_CC"/>
+      <save label="covariance_temp_CC"/>
+      <save label="covariance_press_CC"/>
+      
+      <save label="sum_Qu_Qv_Qw_vel_CC"/>
+      <save label="sum_Qu_Qv_Qw_press_CC"/>
+      <save label="sum_Qu_Qv_Qw_temp_CC"/>
+      
+      <save label="mean_Qu_Qv_Qw_vel_CC"/>
+      <save label="mean_Qu_Qv_Qw_press_CC"/>
+      <save label="mean_Qu_Qv_Qw_temp_CC"/>
+      
+      
       <checkpoint timestepInterval="15" cycle="1"/>
    </DataArchiver>
    
@@ -144,11 +165,11 @@
 
         <!--__________________________________-->
         <!--   Both models are uncommented since they are needed by the RT -->
-        
+        <!--
         <turbulence model = "Smagorinsky">           
           <model_constant>      0.1   </model_constant>                           
         </turbulence>
-                
+        -->        
         <turbulence model = "Germano">                 
           <model_constant>      0.1  </model_constant>
           <filter_width>        1.0   </filter_width>
@@ -230,6 +251,18 @@
     <DataAnalysis>
        <Module name="vorticity">
         <material>atmosphere</material>
+      </Module>
+      
+      <Module name = "turbulentFluxes">
+    <!--<monitorCell>  [125, 125, 0]    </monitorCell> -->
+        <material>       Atmosphere </material>
+        <timeStart>      0.001      </timeStart>
+        <timeStop>       100        </timeStop>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"/>
+          <analyze label="vel_CC"    fluidVelocityLabel="true" />
+        </Variables>
       </Module>
   </DataAnalysis>
 

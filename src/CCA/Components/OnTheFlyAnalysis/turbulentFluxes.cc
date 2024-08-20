@@ -67,7 +67,7 @@ turbulentFluxes::turbulentFluxes( const ProcessorGroup  * myworld,
   : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_stopTime    = DBL_MAX;
-  m_monitorCell = IntVector(0,0,0);
+  m_monitorCell = IntVector(-9,-9,-9);
 }
 
 //______________________________________________________________________
