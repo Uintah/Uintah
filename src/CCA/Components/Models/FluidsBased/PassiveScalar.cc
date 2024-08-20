@@ -347,7 +347,7 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   scalar_ps->setAttribute( "name", d_scalar->name );
 
   scalar_ps->appendElement( "test_conservation",  d_runConservationTask );
-  scalar_ps->appendElement( "reinitializeDomain", "false" );              // the user must manually override 
+  scalar_ps->appendElement( "reinitializeDomain", "false" );              // the user must manually override
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
   const_ps->appendElement( "rateOfChange0",            d_scalar->rateOfChange0 );
@@ -363,7 +363,7 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
     ProblemSpecP c2_ps = exp_ps->appendChild("c2");
 
                     // read c2 from table
-    if( d_decayCoef == variable){    
+    if( d_decayCoef == variable){
       c2_ps->setAttribute( "type", "variable" );
       c2_ps->appendElement( "filename", d_scalar->c2_filename );
     }
@@ -755,7 +755,7 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
       proc0cout_cmp( id, 0)
               << "________________________PassiveScalar\n"
               << "  Coefficient c1: " << d_scalar->c1 << "\n";
-              
+
 
       CCVariable<double> c2;
       new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
@@ -769,7 +769,7 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
       else{
         readTable( patch, level, d_scalar->c2_filename, c2 );
       }
-      
+
       proc0cout_cmp( id, 0)
               << "  Coefficient c3: " << d_scalar->c3 << "\n"
               << "__________________________________\n";
@@ -889,6 +889,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     old_dw->get(RemovedScalarOld,         d_scalar->RemovedScalarLabel,indx, patch, gn,0);
     new_dw->allocateAndPut(RemovedScalar, d_scalar->RemovedScalarLabel,indx, patch);
 
+    RemovedScalar.initialize(0.0);     // We need a method to only initialize in the extraCells. -Todd
     f_src.initialize(0.0);
 
     //__________________________________
@@ -910,9 +911,10 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
+
         double removedScalar = delT * (rateOfChange0 + rateOfChange1*f_old[c]);
-        f_src[c] -= removedScalar;
         RemovedScalar[c] = RemovedScalarOld[c] + removedScalar;
+        f_src[c] -= removedScalar;
 
 #if 0
         if( c == IntVector(3,3,3) ){
@@ -961,7 +963,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       interiorRegion* region = *iter;
       double rateOfChangeInterior = region->rateOfChangeInterior;
       double clamp        = region->clampValue;
-      
+
       double value     = region-> value;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
