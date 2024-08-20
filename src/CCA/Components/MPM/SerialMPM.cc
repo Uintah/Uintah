@@ -160,6 +160,10 @@ SerialMPM::~SerialMPM()
   delete burialHistory;
   delete cohesiveZoneTasks;
   delete tracerTasks;
+  delete TriL;
+  delete TraL;
+  delete LSl;
+  delete Cl;
 
   MPMPhysicalBCFactory::clean();
 

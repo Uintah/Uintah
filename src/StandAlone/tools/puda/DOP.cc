@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2023 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,11 +66,23 @@ Uintah::DOP( DataArchive * da, CommandLineFlags & clf )
       
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
-  ostringstream fnum;
+  int dir = clf.dir;
   string filename("Time_DOP.dat");
+  if(dir==-1){
+    filename="Time_DOP_x.dat";
+  } else if (dir==1){
+    filename="Time_DOP+x.dat";
+  } else if(dir==-2){
+    filename="Time_DOP_y.dat";
+  } else if (dir==2){
+    filename="Time_DOP+y.dat";
+  } else if(dir==-3){
+    filename="Time_DOP_z.dat";
+  } else if (dir==3){
+    filename="Time_DOP+z.dat";
+  }
   ofstream outfile(filename.c_str());
 
-  int dir = clf.dir;
   double comp = (double) abs(dir);
   double sign = (double) (dir/comp);
   for(unsigned long t=clf.time_step_lower;

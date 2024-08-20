@@ -136,6 +136,7 @@ TriangleLabel::~TriangleLabel()
   VarLabel::destroy(triClayLabel_preReloc);
   VarLabel::destroy(triMassDispLabel);
   VarLabel::destroy(triCementThicknessLabel);
+  VarLabel::destroy(triCementThicknessLabel_preReloc);
   VarLabel::destroy(triMassDispLabel_preReloc);
   VarLabel::destroy(triNearbyMatsLabel);
   VarLabel::destroy(triNearbyMatsLabel_preReloc);
