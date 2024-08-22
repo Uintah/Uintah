@@ -36,9 +36,6 @@
 
 #define DEBUG
 
-// return std:cout if rank 0 and the x == Y
-#define proc0cout_cmp(X,Y) if( isProc0_macro && X == Y) std::cout
-
 //______________________________________________________________________
 //    TO DO:
 
@@ -867,14 +864,14 @@ void turbulentFluxes::set_firstSumTimestep(Qvar_ptr Q,
   //
   static int count = 0;
 
-  proc0cout_cmp(count, 0) << "________________________DataAnalysis: TurbulentFluxes\n"
+  proc0cout_eq(count, 0) << "________________________DataAnalysis: TurbulentFluxes\n"
                           << " Started computing the variance & covariance for:\n";
   Q->isStatEnabled = true;
   Q->firstSumTimestep = curr_timestep;
   Q->print();
 
   count ++;
-  proc0cout_cmp(count, (int) m_Qvars.size()) << "________________________DataAnalysis: TurbulentFluxes\n";
+  proc0cout_eq(count, (int) m_Qvars.size()) << "________________________DataAnalysis: TurbulentFluxes\n";
 
 
 }

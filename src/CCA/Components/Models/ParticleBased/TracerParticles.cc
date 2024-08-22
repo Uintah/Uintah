@@ -60,9 +60,6 @@ using std::endl;
 //  - Optimization:  Read in the variable decay coefficient from the passive scalar
 //    model if it's running.
 //
-#define proc0cout_eq(X,Y) if( isProc0_macro && X == Y) std::cout
-#define proc0cout_gt(X,Y) if( isProc0_macro && X >= Y) std::cout
-#define proc0cout_lt(X,Y) if( isProc0_macro && X <= Y) std::cout
 
 Dout dout_models_tp("Models_tracerParticles", "Models::TracerParticles", "Models::TracerParticles debug stream", false);
 //______________________________________________________________________

@@ -54,7 +54,7 @@
 using namespace Uintah;
 using namespace std;
 
-#define proc0cout_cmp(X,Y) if( isProc0_macro && X == Y) std::cout
+
 Dout dout_models_ps("MODELS_DOING_COUT", "Models::PassiveScalar", "Models::PassiveScalar debug stream", false);
 //______________________________________________________________________
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld,
@@ -419,7 +419,7 @@ void PassiveScalar::readTable( const Patch * patch,
     throw ProblemSetupException("ERROR: PassiveScalar::readTable: Unable to open the input file: " + filename, __FILE__, __LINE__);
   }
 
-  proc0cout_cmp(patch->getID(), 0)
+  proc0cout_eq(patch->getID(), 0)
         << "  Reading in table ("<< filename <<") for variable coefficient c2\n";
 
 
@@ -547,7 +547,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 
       int id = patch->getID();
 
-      proc0cout_cmp( id, 0)
+      proc0cout_eq( id, 0)
               << "________________________PassiveScalar\n"
               << "  Coefficient c1: " << d_scalar->c1 << "\n";
 
@@ -557,14 +557,14 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 
       if (d_decayCoef == constant){
         c2.initialize( d_scalar->c2 );
-        proc0cout_cmp( id, 0)
+        proc0cout_eq( id, 0)
               << "  Coefficient c2: " << d_scalar->c2 << "\n";
       }
       else{
         readTable( patch, level, d_scalar->c2_filename, c2 );
       }
 
-       proc0cout_cmp( id, 0)
+       proc0cout_eq( id, 0)
               << "  Coefficient c3: " << d_scalar->c3 << "\n"
               << "__________________________________\n";
     }
@@ -752,7 +752,7 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
       int indx = d_matl->getDWIndex();
       int id   = patch->getID();
 
-      proc0cout_cmp( id, 0)
+      proc0cout_eq( id, 0)
               << "________________________PassiveScalar\n"
               << "  Coefficient c1: " << d_scalar->c1 << "\n";
 
@@ -763,14 +763,14 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
 
       if (d_decayCoef == constant){
         c2.initialize( d_scalar->c2 );
-        proc0cout_cmp( id, 0)
+        proc0cout_eq( id, 0)
               << "  Coefficient c2: " << d_scalar->c2 << "\n";
       }
       else{
         readTable( patch, level, d_scalar->c2_filename, c2 );
       }
 
-      proc0cout_cmp( id, 0)
+      proc0cout_eq( id, 0)
               << "  Coefficient c3: " << d_scalar->c3 << "\n"
               << "__________________________________\n";
     }

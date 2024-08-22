@@ -39,6 +39,9 @@
 
 #define proc0cout if( isProc0_macro ) std::cout
 #define proc0cerr if( isProc0_macro ) std::cerr
+#define proc0cout_eq(X,Y) if( isProc0_macro && X == Y) std::cout
+#define proc0cout_ge(X,Y) if( isProc0_macro && X >= Y) std::cout
+#define proc0cout_le(X,Y) if( isProc0_macro && X <= Y) std::cout
 
 #define MAX_THREADS     64
 #define MAX_HALO_DEPTH  5
