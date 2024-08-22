@@ -726,7 +726,7 @@
                         attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
                         attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, FreeSlipWall, LODI, computeFromDensity, Sine, slip, Custom,
                                                                VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
-                                                               Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                                                               Swirl, ScalarSwirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logLawProfile'"
                         attribute3="label     REQUIRED STRING "
                         attribute4="type      OPTIONAL STRING 'int, velocity, handoff,MMS_almgren,PressureOutlet'"
                         attribute5="value     OPTIONAL STRING" >

@@ -1,27 +1,45 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
+    <!--__________________________________-->
+    <!--        domain initialization     -->
 
-     <powerLawProfile>
-       <verticalDir>   1           </verticalDir>
-       <exponent>      0.21        </exponent>
-       <profileHeight> 0.25        </profileHeight>
-       <U_infinity>    [4.32, 0, 0]</U_infinity>
-     </powerLawProfile>
+     <initialization type="powerLawProfile">
+       <powerLawProfile>
+         <verticalDir>   1           </verticalDir>
+         <exponent>      0.21        </exponent>
+         <profileHeight> 0.25        </profileHeight>
+         <U_infinity>    [4.32, 0, 0]</U_infinity>
+       </powerLawProfile>
+     </initialization>
 
-    <powerLawProfile2>
-       <verticalDir>      1      </verticalDir>
-       <principalDir>     0      </principalDir>
-       <Re_tau>           395    </Re_tau>
-       <halfChannelHeight> 0.25  </halfChannelHeight>
-    </powerLawProfile2>
+    <initialization type="powerLawProfile2">
+      <powerLawProfile2>
+        <verticalDir>      1      </verticalDir>
+        <principalDir>     0      </principalDir>
+        <Re_tau>           395    </Re_tau>
+        <halfChannelHeight> 0.25  </halfChannelHeight>
+      </powerLawProfile2>
+    </initialization>
 
-    <inletVelocity type="logWindProfile">
+    <initialization type="logLawProfile">
+      <logLawProfile>
+        <verticalDir>      1            </verticalDir>
+        <principalFlowDir> 0            </principalFlowDir>
+        <frictionVel>       [4.32,0,0]  </frictionVel>
+        <roughness>          0.01          </roughness>
+        <vonKarmanConstant>  0.4        </vonKarmanConstant>
+      </logLawProfile>
+    </initialization>
+
+    <!--__________________________________-->
+    <!--        Inlet velocity BCs        -->
+
+    <inletVelocity type="logLawProfile">
       <verticalDirection> 1           </verticalDirection>
-      <exponent>          0.21        </exponent>
-      <roughness>         2           </roughness>
+      <roughness>         0.5           </roughness>
       <material>          atmosphere  </material>
     </inletVelocity>
-    
+
     <inletVelocity type="powerLawProfile">
       <verticalDirection> 1           </verticalDirection>
       <exponent>          0.21        </exponent>

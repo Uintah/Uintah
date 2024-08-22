@@ -158,7 +158,7 @@ namespace Uintah {
   }
   //__________________________________
   //
-  else if( bc_kind == "logWindProfile" ){
+  else if( bc_kind == "logLawProfile" ){
   
     double inv_K       = 1.0/gv->vonKarman;
     double frictionVel = bc_value;

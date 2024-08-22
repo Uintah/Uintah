@@ -44,9 +44,9 @@ namespace Uintah {
             customized initialization.  All of the inputs are stuffed into
             the customInitialize_basket.
 _____________________________________________________________________*/
-void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
+void customInitialization_problemSetup( const ProblemSpecP     & cfd_ice_ps,
                                         customInitialize_basket* cib,
-                                        GridP& grid)
+                                        GridP                  & grid)
 {
   //__________________________________
   //  search the ICE problem spec for
@@ -62,7 +62,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");
     if( vortices_ps ) {
       cib->vortex_vars = vortices();
-      cib->whichMethod.push_back( "vortices" ) ;
+      cib->whichMethod.push_back( method::m_vortices ) ;
       cib->doesComputePressure = true;
 
       for( ProblemSpecP vortex_ps = vortices_ps->findBlock( "vortex" ); vortex_ps != nullptr; vortex_ps = vortex_ps->findNextBlock( "vortex" ) ) {
@@ -91,7 +91,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP vortexPairs_ps= c_init_ps->findBlock("vortexPairs");
     if( vortexPairs_ps ) {
       cib->vortexPairs_vars = vortexPairs();
-      cib->whichMethod.push_back( "vortexPairs" ) ;
+      cib->whichMethod.push_back( method::m_vortexPairs ) ;
 
       double strength;
       double nPairs;
@@ -111,7 +111,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //
     ProblemSpecP gaussTemp_ps= c_init_ps->findBlock("gaussianTemperature");
     if(gaussTemp_ps){
-      cib->whichMethod.push_back( "gaussianTemp" );
+      cib->whichMethod.push_back( method::m_gaussTemperature );
       cib->gaussTemp_vars = gaussTemp();
 
       gaussTemp_ps->require("amplitude", cib->gaussTemp_vars.amplitude);
@@ -131,14 +131,16 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
 
       std::string whichMethod = whichmms["type"];
 
-      cib->whichMethod.push_back( whichMethod );
-
       if( whichMethod == "mms_1" ) {
+        cib->whichMethod.push_back( method::m_MMS1 );
+
         cib->doesComputePressure = true;
         cib->mms_vars = mms();
         mms_ps->require("A", cib->mms_vars.A);
       }
       if( whichMethod == "mms_3" ) {
+        cib->whichMethod.push_back( method::m_MMS3 );
+
         cib->doesComputePressure = false;
         cib->mms_vars = mms();
         mms_ps->require("angle", cib->mms_vars.angle);
@@ -150,7 +152,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
 
     if( cf_ps ) {
-      cib->whichMethod.push_back( "counterflow" );
+      cib->whichMethod.push_back( method::m_counterFlow );
       cib->doesComputePressure = true;
       cib->counterflow_vars = counterflow();
 
@@ -159,13 +161,38 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
 
       grid->getLength(cib->counterflow_vars.domainLength, "minusExtraCells");
     }
+    //_______________________________________________
+    //  Channel Flow initialized with loglaw velocity profile
+    //  u = U_star * (1/vonKarman) * log( (y - y0)/roughness)
+    ProblemSpecP logL_ps= c_init_ps->findBlock("logLawProfile");
+    if(logL_ps) {
+      cib->whichMethod.push_back( method::m_logLaw );
+      cib->logLaw_vars = logLawProfile();
+
+      int vDir =-9;
+
+      logL_ps->require( "verticalDir",       vDir );
+      logL_ps->require( "principalFlowDir",  cib->common_vars.principalDir );
+      logL_ps->require( "frictionVel",       cib->logLaw_vars.frictionVel );
+      logL_ps->require( "roughness",         cib->logLaw_vars.roughness );
+      logL_ps->get(     "vonKarmanConstant", cib->logLaw_vars.vonKarman );
+      cib->common_vars.verticalDir = vDir;
+
+      BBox b;
+      grid->getInteriorSpatialRange(b);
+      double d = b.min()(vDir);
+
+      logL_ps->get( "d", d );      // default value is the domain floor
+      cib->logLaw_vars.d = d;
+
+    }  // logLaw inputs
 
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
     //  in the x & y plane
     ProblemSpecP pL_ps= c_init_ps->findBlock("powerLawProfile");
     if(pL_ps) {
-      cib->whichMethod.push_back( "powerLaw" );
+      cib->whichMethod.push_back( method::m_powerLaw );
       cib->powerLaw_vars = powerLaw();
 
       int vDir = -9;
@@ -178,8 +205,8 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       BBox b;
       grid->getInteriorSpatialRange(b);
       cib->common_vars.domain = b;
-                  // 
-      double profileHeight = b.max()(vDir);     
+                  //
+      double profileHeight = b.max()(vDir);
       pL_ps->get( "profileHeight", profileHeight );
       cib->powerLaw_vars.profileHeight = profileHeight;
 
@@ -190,7 +217,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //  in the x & y plane
     ProblemSpecP pL2_ps= c_init_ps->findBlock("powerLawProfile2");
     if(pL2_ps) {
-      cib->whichMethod.push_back( "powerLaw2" );
+      cib->whichMethod.push_back( method::m_powerLaw2 );
       cib->powerLaw2_vars = powerLaw2();
 
       double halfChannelHeight = -9;
@@ -225,7 +252,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //  Flow is assumed to be from x- to x+
     ProblemSpecP dns_ps= c_init_ps->findBlock("DNS_Moser");
     if(dns_ps) {
-      cib->whichMethod.push_back( "DNS_Moser" );
+      cib->whichMethod.push_back( method::m_DNS_Moser );
 
       cib->DNS_Moser_vars = DNS_Moser();
       cib->common_vars    = common();
@@ -255,13 +282,16 @@ void customInitialization(const Patch* patch,
   // reverse iterator
   for(auto rit = cib->whichMethod.rbegin(); rit != cib->whichMethod.rend(); ++rit) {
 
-    std::string whichMethod = *rit;
+    int patchID = patch->getID();
+    proc0cout_eq(patchID,0) << "__________________________________ ICE:customInitialization\n";
+
+    method whichMethod = *rit;
     //_______________________________________________
     //  multiple vortices
     // See "Boundary Conditions for Direct Simulations of Compressible Viscous
     //     Flows" by Poinsot & LeLe pg 121
 
-    if ( whichMethod == "vortices" ){
+    if ( whichMethod == method::m_vortices ){
       for (int v = 0; v<(int) cib->vortex_vars.origin.size(); v++) {
 
         Point origin = cib->vortex_vars.origin[v];    // vortex origin
@@ -313,7 +343,7 @@ void customInitialization(const Patch* patch,
 
     //__________________________________
     //  Vortex Pairs
-    if ( whichMethod == "vortexPairs" ){
+    if ( whichMethod == method::m_vortexPairs ){
       double vortexAmp = cib->vortexPairs_vars.strength;
       double nPairs    = cib->vortexPairs_vars.nPairs;
 
@@ -355,9 +385,10 @@ void customInitialization(const Patch* patch,
 
       }
     } // vortices
+
     //_______________________________________________
     // gaussian Temperature
-    if( whichMethod == "gaussianTemp" ){
+    if( whichMethod == method::m_gaussTemperature ){
 
       double amp = cib->gaussTemp_vars.amplitude;
       Point origin     = cib->gaussTemp_vars.origin;
@@ -366,6 +397,9 @@ void customInitialization(const Patch* patch,
 
       double x0 = origin.x();
       double y0 = origin.y();
+
+      proc0cout_eq(patchID, 0) << "   GaussianTemperaure:\n";
+      proc0cout_eq(patchID, 0) << "   origin: " << origin << ", spread_x: " << spread_x << ", spread_y: " << spread_y << endl;
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -386,7 +420,7 @@ void customInitialization(const Patch* patch,
     // See:  "Characteristic Boundary conditions for direct simulations
     //        of turbulent counterflow flames" by Yoo, Wang Trouve and IM
     //        Combustion Theory and Modelling, Vol 9. No 4., Nov. 2005, 617-646
-    if( whichMethod == "counterflow" ){
+    if( whichMethod == method::m_counterFlow ){
 
       double strainRate   = cib->counterflow_vars.strainRate;
       Vector domainLength = cib->counterflow_vars.domainLength;
@@ -421,7 +455,7 @@ void customInitialization(const Patch* patch,
     // method of manufactured solution 1
     // See:  "A non-trival analytical solution to the 2d incompressible
     //        Navier-Stokes equations" by Randy McDermott
-    if( whichMethod == "mms_1" ){
+    if( whichMethod == method::m_MMS1 ){
       double t = 0.0;
       double A = cib->mms_vars.A;
       double nu = ice_matl->getDynViscosity();
@@ -454,7 +488,7 @@ void customInitialization(const Patch* patch,
 
 // This code is incomplete!!!
 
-    if( whichMethod == "mms_2" ){
+    if( whichMethod == method::m_MMS2 ){
       double cv = ice_matl->getSpecificHeat();
       double gamma = ice_matl->getGamma();
 
@@ -482,7 +516,7 @@ void customInitialization(const Patch* patch,
     //   These equations are slightly different than eq. 1.1 in reference and have
     //   been provided by James Sutherland
 
-    if( whichMethod == "mms_3" ){
+    if( whichMethod == method::m_MMS3 ){
       double angle = cib->mms_vars.angle;
       double A = ( 2.0/sqrt(3) ) ;
       double B = (2.0 * M_PI/3.0);
@@ -500,10 +534,40 @@ void customInitialization(const Patch* patch,
       }
     } // mms_3
 
+
+    //_______________________________________________
+    //  loglaw velocity profile
+    // u = frictionVel * (1/vonKarman) * log( (y-d)/roughnessHeight)
+    if( whichMethod == method::m_logLaw ){
+      int vDir          =  cib->common_vars.verticalDir;
+      int pDir          =  cib->common_vars.principalDir;
+      double roughness  =  cib->logLaw_vars.roughness;
+      double d          = cib->logLaw_vars.d;
+      double kappa      = cib->logLaw_vars.vonKarman;
+      double inv_kappa  = 1.0/kappa;
+      Vector frictionVel =  cib->logLaw_vars.frictionVel;
+      const Level* level = patch->getLevel();
+
+      proc0cout_eq(patchID, 0) << "   logLaw velocity profile:  u = frictionVel * (1/vonKarman) * log( (y-d)/roughnessHeight)\n";
+      proc0cout_eq(patchID, 0) << "   where  d: " << d << ", frictionVel: " << frictionVel << ", roughness: " << roughness
+                               << ", vonKarman constant: " << kappa << ", vDir: " << vDir << ", flowDir: " << pDir<< endl;
+
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+
+        Point here = level->getCellPosition(c);
+        double y   = here(vDir);
+
+        vel_CC[c]        = frictionVel;            // set the components that are not the principal direction
+        double ratio     = (y - d)/roughness;
+        vel_CC[c][pDir] = frictionVel[pDir] * inv_kappa * log( ratio );
+      }
+    }
+
     //_______________________________________________
     //  power law velocity profile
     // u = U_infinity * pow( h/height )^n
-    if( whichMethod == "powerLaw" ){
+    if( whichMethod == method::m_powerLaw ){
       int vDir          =  cib->common_vars.verticalDir;
       double yLow       =  cib->common_vars.domain.min()(vDir);
       double yHigh      =  cib->common_vars.domain.max()(vDir);
@@ -513,9 +577,10 @@ void customInitialization(const Patch* patch,
       double n          =  cib->powerLaw_vars.exponent;
       const Level* level = patch->getLevel();
 
-      //std::cout << "     profileHeight: " << profileHeight << " exponent: " << n << " U_infinity: " << U_infinity
-      //     << " nDir: " << nDir << " vDir: " << vDir << endl;
-
+      proc0cout_eq(patchID, 0) << "   powerLaw velocity profile:  u = U_infinity * pow( ratio)^n\n";
+      proc0cout_eq(patchID, 0) << "   where ratio = (y - yLow)/(profileHeight - yLow); \n";
+      proc0cout_eq(patchID, 0) << "   profileHeight: " << profileHeight << " exponent: " << n << " U_infinity: " << U_infinity
+                               << " vDir: " << vDir << endl;
 
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -542,7 +607,7 @@ void customInitialization(const Patch* patch,
     //_______________________________________________
     //  power law velocity profile
     //  Ref:  Jeremy Gibbs
-    if( whichMethod == "powerLaw2" ){
+    if( whichMethod == method::m_powerLaw2 ){
 
       int vDir         =  cib->common_vars.verticalDir;
       int pDir         =  cib->common_vars.principalDir;
@@ -557,8 +622,10 @@ void customInitialization(const Patch* patch,
       double u_tau     = ( visc * Re_tau/(rho * halfChanHeight) ) ;
       double vonKarman = 0.4;
 
-      //std::cout << "     halfChannelHeight: " << halfChanHeight << " vDir: " << vDir << " pDir: " << pDir
-      //          << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
+      proc0cout_eq(patchID, 0) << "   powerLaw2 velocity profile:  u = (uTau/vonKarman) * log( ratio*Re_tau )\n";
+      proc0cout_eq(patchID, 0) << "   where ratio = (y - yLow)/halfChannelHeight \n";
+      proc0cout_eq(patchID, 0) << "     halfChannelHeight: " << halfChanHeight << " vDir: " << vDir << " pDir: " << pDir
+                               << " viscosity: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
 
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -593,7 +660,7 @@ void customInitialization(const Patch* patch,
     //     channel flow up to Re_tau=590", Physics of Fluids, Vol 11, Number 4, 1999, 943-945
     //     This assumes that the flow is from x- to x+
 
-    if ( whichMethod == "DNS_Moser" ){
+    if ( whichMethod == method::m_DNS_Moser ){
 
       double visc  =  ice_matl->getDynViscosity();
       double rho   =  ice_matl->getInitialDensity();
@@ -612,6 +679,10 @@ void customInitialization(const Patch* patch,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
 
+      proc0cout_eq(patchID, 0) << "   DNS_moser velocity profile:  u = 1./(2. * nu) * dpdx * ( y*y - yHigh*y )\n";
+      proc0cout_eq(patchID, 0) << "   vDir: " << vDir << " nu: " << nu << " yHigh: " << yHigh
+                               << " viscosity: " << visc << " dpdx: " << dpdx << " u_tau: " << endl;
+
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
 
@@ -628,6 +699,7 @@ void customInitialization(const Patch* patch,
         }
       }
     }
+    proc0cout_eq(patchID,0) << "__________________________________ \n";
   }  // loop over whichMethod
 }
 

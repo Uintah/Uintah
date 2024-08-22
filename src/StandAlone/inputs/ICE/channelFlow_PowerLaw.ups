@@ -177,7 +177,7 @@
         </ImplicitSolver>
  
         <customInitialization> 
-          <include href="inputs/ICE/channelFlow.xml" section="powerLawProfile"/>
+          <include href="inputs/ICE/channelFlow.xml" section="initialization" type="powerLawProfile" excludeSectionTag="true"/>
         </customInitialization> 
       </ICE>        
     </CFD>

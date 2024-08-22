@@ -35,15 +35,23 @@ chanFlow_powerLaw_ups = modUPS2( the_dir,                       \
                                [( "update", "/Uintah_specification/DataArchiver/filebase :powerLaw.uda" ),
                                 ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :powerLawProfile" ),
                                 ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :powerLawProfile" ),
-                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile")
+                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml'and @section='initialization']/@type :powerLawProfile")
                                ] )
 
 chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
                                   "channelFlow_PowerLaw.ups",   \
                                [( "update", "/Uintah_specification/DataArchiver/filebase :powerLaw2.uda" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :logWindProfile" ),
-                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :logWindProfile" ),
-                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml']/@section :powerLawProfile2")
+                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :logLawProfile" ),
+                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :logLawProfile" ),
+                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml'and @section='initialization']/@type :powerLawProfile2")
+                               ] )
+
+chanFlow_logLaw_ups = modUPS2( the_dir,                       \
+                                  "channelFlow_PowerLaw.ups",   \
+                               [( "update", "/Uintah_specification/DataArchiver/filebase :logLaw.uda" ),
+                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/include[@href='inputs/ICE/channelFlow.xml' and @section='inletVelocity']/@type :logLawProfile" ),
+                                ( "update", "/Uintah_specification/Grid/BoundaryConditions/Face[@side='x-']/BCType[@id='0' and @label='Velocity']/@var :logLawProfile" ),
+                                ( "update", "/Uintah_specification/CFD/ICE/customInitialization/include[@href='inputs/ICE/channelFlow.xml'and @section='initialization']/@type :logLawProfile")
                                ] )
                                
 impVortices_smag_ups      = modUPS2( the_dir,                   \
@@ -132,7 +140,8 @@ AMRTESTS =    [   ("advectAMR",          "advectAMR.ups",           8, "All", ["
               ]
 
 INITIALIZE =  [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart"]),
-                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"])
+                  ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart"]),
+                  ("chanFlow_LogLaw",     chanFlow_logLaw_ups,      8, "All", ["exactComparison", "no_restart"])
               ]
 
 TURBULENCE =  [   ("impVortices_smag",    impVortices_smag_ups,    16, "All", ["exactComparison"]),

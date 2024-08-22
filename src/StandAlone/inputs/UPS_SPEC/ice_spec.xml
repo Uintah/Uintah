@@ -26,10 +26,10 @@
         <CreepFlow          spec="REQUIRED BOOLEAN" />
       </microSlip>
 
-      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
+      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logLawProfile'">
         <material           spec="REQUIRED STRING"/>
-        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
-        <vonKarmanConstant  spec="OPTIONAL DOUBLE '0,0.5'"    need_applies_to="type logWindProfile"/>
+        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logLawProfile" />
+        <vonKarmanConstant  spec="OPTIONAL DOUBLE '0,0.5'"    need_applies_to="type logLawProfile"/>
         <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" />
         <verticalDirection  spec="REQUIRED INTEGER '0,2'" />
         <maxHeight          spec="OPTIONAL DOUBLE"            need_applies_to="type powerLawProfile"/>
@@ -105,6 +105,14 @@
           <strainRate                   spec="REQUIRED DOUBLE 'positive'"/>
           <referenceCell                spec="REQUIRED VECTOR"/>
         </counterflow>
+
+        <logLawProfile                  spec="OPTIONAL NO_DATA">
+          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
+          <principalFlowDir             spec="REQUIRED INTEGER '0,2'" />
+          <frictionVel                  spec="REQUIRED VECTOR"/>
+          <roughness                    spec="OPTIONAL DOUBLE" />
+          <vonKarmanConstant            spec="OPTIONAL DOUBLE '0,0.5'"  />
+        </logLawProfile>
 
         <powerLawProfile                spec="OPTIONAL NO_DATA">
           <verticalDir                  spec="REQUIRED INTEGER '0,2'" />

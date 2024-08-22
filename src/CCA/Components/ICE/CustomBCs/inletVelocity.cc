@@ -61,7 +61,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
       bc_iter->getAttributes(bc_type);
       
       whichProfile = bc_type["var"];
-      if ( (whichProfile == "powerLawProfile" || whichProfile == "logWindProfile") && !setThisFace ) {
+      if ( (whichProfile == "powerLawProfile" || whichProfile == "logLawProfile") && !setThisFace ) {
         usingBC = true;
         setThisFace = true;
         
@@ -222,7 +222,7 @@ int  set_inletVelocity_BC(const Patch* patch,
 {
   int nCells = 0;
   
-  if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ) {
+  if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logLawProfile") ) {
     cout_BC_CC << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
@@ -275,8 +275,9 @@ int  set_inletVelocity_BC(const Patch* patch,
     }
     
     //__________________________________
-    //   u = U_star * (1/vonKarman) * ln( (z-d)/roughness)
-    else if( bc_kind == "logWindProfile" ){
+    // slightly generalized version of logLaw
+    //   u = U_star * (1/vonKarman) * log( (z-d)/roughness)
+    else if( bc_kind == "logLawProfile" ){
     
       double inv_K       = 1.0/global->vonKarman;
       double d           = global->gridMin(vDir);  // origin

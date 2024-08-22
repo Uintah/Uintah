@@ -38,24 +38,24 @@ namespace Uintah {
   struct common{
     int verticalDir  {-9};             // vertical direction
     int principalDir {-9};             // The component of velocity to set
-    BBox domain;                       // Interior spatial computational domain 
+    BBox domain;                       // Interior spatial computational domain
     ~common() {};
   };
-  
+
   //__________________________________
   // multiple vortices
-  struct vortices{    
+  struct vortices{
     std::vector<Point>  origin;
     std::vector<double> strength;
     std::vector<double> radius;
     std::vector<std::string> axis;
-    
+
     ~vortices() {};
   };
 
   //__________________________________
-  // vortex pairs 
-  struct vortexPairs{ 
+  // vortex pairs
+  struct vortexPairs{
     double nPairs;
     double strength;
     std::string axis;
@@ -64,7 +64,7 @@ namespace Uintah {
 
   //__________________________________
   // method of manufactured solutions
-  struct mms{ 
+  struct mms{
     double A;      // mms_1
     double angle;  // mms_3
     ~mms() {};
@@ -72,7 +72,7 @@ namespace Uintah {
 
   //__________________________________
   //
-  struct gaussTemp{ 
+  struct gaussTemp{
     double spread_x;
     double spread_y;
     double amplitude;
@@ -82,7 +82,7 @@ namespace Uintah {
 
   //__________________________________
   //
-  struct counterflow{ 
+  struct counterflow{
     double strainRate;
     Vector domainLength;
     IntVector refCell;
@@ -99,15 +99,26 @@ namespace Uintah {
                                  // default is the domain height
     ~powerLaw() {};
   };
-    
+
   //__________________________________
   //
-  struct powerLaw2{ 
+  struct powerLaw2{
     double Re_tau;                // Reynolds number based on uTau
     double halfChanHeight;        // half channel height
     ~powerLaw2() {};
   };
 
+  //__________________________________
+  // logLawProfile
+  // u = frictionVel/vonKarman * log( y-d/roughnessHeight)
+  struct logLawProfile{
+    Vector frictionVel;           // friction velocity uTau
+    double vonKarman {0.4};       // vonKarman constant
+    double roughness {1.0};       // roughness height
+    double d;                     //
+
+    ~logLawProfile() {};
+  };
   //__________________________________
   // velocity profile according to Moser
   // "Direct Numerical Simulation of turbulent channel Flow up to Re_tau=590
@@ -118,20 +129,24 @@ namespace Uintah {
     ~DNS_Moser() {};
   };
 
+  enum method { m_vortices, m_vortexPairs, m_MMS1, m_MMS2, m_MMS3,
+                m_gaussTemperature, m_counterFlow, m_powerLaw, m_powerLaw2,
+                m_logLaw, m_DNS_Moser };
   //__________________________________
   //
   struct customInitialize_basket{
-    common       common_vars;
-    vortices     vortex_vars;
-    vortexPairs  vortexPairs_vars;
-    mms          mms_vars;
-    gaussTemp    gaussTemp_vars;
-    counterflow  counterflow_vars;
-    powerLaw     powerLaw_vars;
-    powerLaw2    powerLaw2_vars;
-    DNS_Moser    DNS_Moser_vars;
+    common        common_vars;
+    vortices      vortex_vars;
+    vortexPairs   vortexPairs_vars;
+    mms           mms_vars;
+    gaussTemp     gaussTemp_vars;
+    counterflow   counterflow_vars;
+    powerLaw      powerLaw_vars;
+    powerLaw2     powerLaw2_vars;
+    DNS_Moser     DNS_Moser_vars;
+    logLawProfile logLaw_vars;
     bool         doesComputePressure;
-    std::vector<std::string> whichMethod;
+    std::vector<method> whichMethod;
   };
 
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
