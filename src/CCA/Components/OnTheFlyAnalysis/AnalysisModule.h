@@ -157,7 +157,8 @@ namespace Uintah {
     double     d_startTime{0.0};
     double     d_stopTime{DBL_MAX};
 
-    Ghost::GhostType m_gn = Ghost::None;
+    Ghost::GhostType  m_gn  = Ghost::None;
+    Ghost::GhostType  m_gac = Ghost::AroundCells;
     MaterialSubset  * m_zeroMatl            {nullptr};
     MaterialSet     * m_zeroMatlSet         {nullptr};
 

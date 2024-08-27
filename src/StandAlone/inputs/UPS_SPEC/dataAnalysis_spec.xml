@@ -7,7 +7,7 @@
                                           attribute1="name REQUIRED STRING 'controlVolFluxes  firstLawThermo, flatPlate_heatFlux,
                                                                             lineExtract,      meanTurbFluxes, minMax,         momentumAnalysis,
                                                                             particleExtract,  planeAverage,   planeExtract,
-                                                                            radiometer,       spatialAvg,     statistics,
+                                                                            radiometer,       spatialAvg,     statistics, SGS_ReynoldsStress,
                                                                             turbulentFluxes, vorticity'" >
 
       <!--  Common __________________________________-->

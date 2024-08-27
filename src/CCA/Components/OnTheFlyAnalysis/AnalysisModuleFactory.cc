@@ -38,6 +38,7 @@
 #if !defined( NO_ICE )
   #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
   #include <CCA/Components/OnTheFlyAnalysis/controlVolFluxes.h>
+  #include <CCA/Components/OnTheFlyAnalysis/SGS_ReynoldsStress.h>
 #endif
 
 #if !defined( NO_MPM )
@@ -131,6 +132,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       }
 
 #if !defined( NO_ICE )
+      else if ( module == "SGS_ReynoldsStress" ) {
+        modules.push_back( scinew SGS_ReynoldsStress(  myworld, materialManager, module_ps ) );
+      }
       else if ( module == "vorticity" ) {
         modules.push_back( scinew vorticity(           myworld, materialManager, module_ps ) );
       }
