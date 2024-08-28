@@ -179,28 +179,13 @@ void SGS_ReynoldsStress::interpolateTauComponents( const Patch* patch,
   Vector dx = patch->dCell();
   //__________________________________
   //  Compute over the entire domain the different components
-  CellIterator hi_lo = patch->getSFCXIterator();
-  IntVector low = hi_lo.begin();
-  IntVector hi  = hi_lo.end();
-  hi[0] += patch->getBCType(patch->xplus) ==Patch::Neighbor?1:0;
-  CellIterator X_iterLimits( low,hi );
-  interpolateTauX_driver( X_iterLimits, dx, tau_X_FC, SGS_ReynoldsStress);
+  CellIterator cellIter = patch->getCellIterator();
 
+  interpolateTauX_driver( cellIter, dx, tau_X_FC, SGS_ReynoldsStress);
 
-  hi_lo = patch->getSFCYIterator();
-  low   = hi_lo.begin();
-  hi    = hi_lo.end();
-  hi[1] += patch->getBCType(patch->yplus) ==Patch::Neighbor?1:0;
-  CellIterator Y_iterLimits( low,hi );
-  interpolateTauY_driver( Y_iterLimits, dx, tau_Y_FC, SGS_ReynoldsStress);
+  interpolateTauY_driver( cellIter, dx, tau_Y_FC, SGS_ReynoldsStress);
 
-
-  hi_lo = patch->getSFCZIterator();
-  low   = hi_lo.begin();
-  hi    = hi_lo.end();
-  hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0;
-  CellIterator Z_iterLimits( low,hi );
-  interpolateTauZ_driver( Z_iterLimits, dx, tau_Z_FC, SGS_ReynoldsStress);
+  interpolateTauZ_driver( cellIter, dx, tau_Z_FC, SGS_ReynoldsStress);
 }
 
 
@@ -220,22 +205,22 @@ void SGS_ReynoldsStress::interpolateTauX_driver( CellIterator iterLimits,
   //  f_CC = f_FC[L] + (( f_FC[R] - f_FC[L] )/dx ) * dx/2
   //
   //       = f_FC[L] + (( f_FC[R] - f_FC[L] )/2 )
-  
+
   for(CellIterator iter = iterLimits;!iter.done();iter++){
     IntVector c = *iter;
-    
+
     IntVector R   = c + IntVector(1,0,0);   // right
     IntVector L   = c;                      // left
 
     Vector tau_X_R = tau_X[R];              // access the array once
     Vector tau_X_L = tau_X[L];
-    
+
     Vector Delta = ( tau_X_R - tau_X_L )/2.0;
-    
+
     //__________________________________
     //  tau_XX_CC
     double tau_XX_CC = tau_X_L.x() + Delta.x();
-    
+
     //__________________________________
     //  tau_XY_CC
     double tau_XY_CC = tau_X_L.y() + Delta.y();
@@ -273,16 +258,16 @@ void SGS_ReynoldsStress::interpolateTauY_driver( CellIterator iterLimits,
 
     IntVector T   = c + IntVector(0,1,0);   // top
     IntVector B   = c;                      // bottom
-    
+
     Vector tau_Y_T = tau_Y[T];              // access the array once
     Vector tau_Y_B = tau_Y[B];
 
     Vector Delta = ( tau_Y_T - tau_Y_B )/2.0;
-    
+
     //__________________________________
     //  tau_YX_CC
     double tau_YX_CC = tau_Y_B.x() + Delta.x();
-    
+
     //__________________________________
     //  tau_YY_CC
     double tau_YY_CC = tau_Y_B.y() + Delta.y();
@@ -319,16 +304,16 @@ void SGS_ReynoldsStress::interpolateTauZ_driver( CellIterator iterLimits,
 
     IntVector frt = c + IntVector(0,0,1);   // front
     IntVector bck = c;                      // back
-    
+
     Vector tau_Z_FRT = tau_Z[frt];          // access the array once
     Vector tau_Z_BCK = tau_Z[bck];
 
     Vector Delta = ( tau_Z_FRT - tau_Z_BCK )/2.0;
-    
+
     //__________________________________
     //  tau_ZX_CC
     double tau_ZX_CC = tau_Z_BCK.x() + Delta.x();
-    
+
     //__________________________________
     //  tau_ZY_CC
     double tau_ZY_CC = tau_Z_BCK.y() + Delta.y();
