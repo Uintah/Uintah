@@ -22,7 +22,7 @@
        <delt_init>          1.0e-4      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps>  100 </max_Timesteps>
+       <max_Timesteps>  50 </max_Timesteps>
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
@@ -106,7 +106,7 @@
               <upper>        [0.5,  0.5, 0.5]    </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [4,4,1]             </patches>
-              <resolution>   [100,100,100]         </resolution>
+              <resolution>   [50,50,50]         </resolution>
            </Box>
        </Level>
     </Grid>
@@ -121,7 +121,6 @@
       <save label="temp_CC"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
-      <save label="delP_Dilatate"/>
       <save label="vorticity"/>
       <save label="viscous_src_CC"/>
       <save label="total_viscosity_CC"/>
@@ -133,22 +132,17 @@
 
       <save label="mean_press_CC"/>
       <save label="mean_vel_CC"/>
-      <save label="mean_temp_CC"/>
 
       <save label="variance_vel_CC"/>
       <save label="variance_press_CC"/>
-      <save label="variance_temp_CC"/>
       <save label="covariance_vel_CC"/>
-      <save label="covariance_temp_CC"/>
       <save label="covariance_press_CC"/>
 
       <save label="sum_Qu_Qv_Qw_vel_CC"/>
       <save label="sum_Qu_Qv_Qw_press_CC"/>
-      <save label="sum_Qu_Qv_Qw_temp_CC"/>
 
       <save label="mean_Qu_Qv_Qw_vel_CC"/>
       <save label="mean_Qu_Qv_Qw_press_CC"/>
-      <save label="mean_Qu_Qv_Qw_temp_CC"/>
 
 
       <checkpoint timestepInterval="15" cycle="1"/>
@@ -269,7 +263,6 @@
         <timeStop>       100        </timeStop>
         <Variables>
           <analyze label="press_CC"  matl="0"/>
-          <analyze label="temp_CC"/>
           <analyze label="vel_CC"    fluidVelocityLabel="true" />
         </Variables>
       </Module>
