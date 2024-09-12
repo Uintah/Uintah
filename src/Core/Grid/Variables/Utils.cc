@@ -77,12 +77,10 @@ areAllValuesPositive( T & src, IntVector & neg_cell )
 //   with the first cell index.
 template< class T >
 bool
-areAllValuesNumbers( T & src, IntVector & neg_cell )
+is_NanInf( T & src, IntVector & badCell )
 { 
-  double    numCells = 0;
-  double    sum_src = 0;
-  int       sumNan = 0;
-  int       sumInf = 0;
+  int  sumNan = 0;
+  int  sumInf = 0;
   IntVector l = src.getLowIndex();
   IntVector h = src.getHighIndex();
   CellIterator iterLim = CellIterator(l,h);
@@ -91,27 +89,60 @@ areAllValuesNumbers( T & src, IntVector & neg_cell )
     IntVector c = *iter;
     sumInf += std::isinf(src[c]);       // check for infs
     sumNan += std::isnan(src[c]);       // check for nans
-    sum_src += src[c]/(fabs(src[c]) + d_SMALLNUM);
-    numCells++;
   }
 
   // now find the first cell where the value is inf or nan   
-  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
+  if ( sumInf !=0 || sumNan !=0) {
     for(CellIterator iter=iterLim; !iter.done();iter++) {
       IntVector c = *iter;
       if (std::isinf(src[c]) != 0 || std::isnan(src[c]) !=0) {
-        neg_cell = c;
-        return false;
+        badCell = c;
+        return true;
       }
     }
   } 
-  neg_cell = IntVector(0,0,0); 
-  return true;      
+  badCell = IntVector(0,0,0); 
+  return false;      
 }
 
+//______________________________________________________________________
+//   This method examines all the values and looks for an Inf or Nan.
+//   if found it returns true along with the first cell index.
+template< class T >
+bool
+is_NanInf_V( T & src, IntVector & badCell )
+{ 
+  int       sumNan = 0;
+  int       sumInf = 0;
+  IntVector l = src.getLowIndex();
+  IntVector h = src.getHighIndex();
+  CellIterator iterLim = CellIterator(l,h);
+  
+  for(CellIterator iter=iterLim; !iter.done();iter++) {
+    IntVector c = *iter;
+    sumInf += src[c].Vector::isinf();       // check for infs
+    sumNan += src[c].Vector::isnan();       // check for nans
+  }
+
+  // now find the first cell where the value is inf or nan   
+  if ( sumInf !=0 || sumNan !=0) {
+    for(CellIterator iter=iterLim; !iter.done();iter++) {
+      IntVector c = *iter;
+      if (src[c].Vector::isinf() == true || src[c].Vector::isnan() == true) {
+        badCell = c;
+        return true;
+      }
+    }
+  } 
+  badCell = IntVector(0,0,0); 
+  return false;      
+}
+
+//______________________________________________________________________
+//
 //template< class T >
 bool
-areAllNodeValuesNumbers(NCVariable<Vector> & src, IntVector & neg_node )
+is_NanInf(NCVariable<Vector> & src, IntVector & neg_node )
 {
   double    numCells = 0;
   double    sum_src = 0;
@@ -143,6 +174,8 @@ areAllNodeValuesNumbers(NCVariable<Vector> & src, IntVector & neg_node )
   return true;
 }
 
+//______________________________________________________________________
+//
 // Explicit template instantiations:
 template bool areAllValuesPositive( CCVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCXVariable<double> &, IntVector & );
@@ -154,14 +187,23 @@ template bool areAllValuesPositive( constSFCYVariable<double> &, IntVector & );
 template bool areAllValuesPositive( constSFCZVariable<double> &, IntVector & );
 
 // Explicit template instantiations:
-template bool areAllValuesNumbers( CCVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( SFCXVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( SFCYVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( SFCZVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( constCCVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( constSFCXVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( constSFCYVariable<double> &, IntVector & );
-template bool areAllValuesNumbers( constSFCZVariable<double> &, IntVector & );
+template bool is_NanInf( CCVariable<double> &, IntVector & );
+template bool is_NanInf( SFCXVariable<double> &, IntVector & );
+template bool is_NanInf( SFCYVariable<double> &, IntVector & );
+template bool is_NanInf( SFCZVariable<double> &, IntVector & );
+template bool is_NanInf( NCVariable<double> &, IntVector & );
+template bool is_NanInf( constCCVariable<double> &, IntVector & );
+template bool is_NanInf( constSFCXVariable<double> &, IntVector & );
+template bool is_NanInf( constSFCYVariable<double> &, IntVector & );
+template bool is_NanInf( constSFCZVariable<double> &, IntVector & );
+template bool is_NanInf( constNCVariable<double> &, IntVector & );
+
+template bool is_NanInf_V( CCVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( SFCXVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( SFCYVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( SFCZVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( NCVariable<Vector> &, IntVector & );
+
 
 //template bool areAllNodeValuesNumbers( NCVariable<double> &, IntVector & );
 } // end namespace Uintah

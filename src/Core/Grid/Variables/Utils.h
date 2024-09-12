@@ -31,23 +31,23 @@
 namespace Uintah {
 
 //______________________________________________________________________
-//   This function examines all the values for being positive.  If a 
+//   This method examines all the values for being positive.  If a 
 //   negative value or nan is found the function returns false along 
 //   with the first cell index.
 template< class T >
-bool areAllValuesPositive( T                 & src, 
+bool areAllValuesPositive( T & src, 
                            Uintah::IntVector & neg_cell );
 
 //______________________________________________________________________
-//   This function examines all the values for being numbers.  If a 
-//   inf or nan is found the function returns false along 
-//   with the first cell index.
+//   This method examines all the values and looks for an Inf or Nan.
+//   if found it returns true along with the first cell index.
 template< class T >
-bool areAllValuesNumbers( T                 & src, 
-                           Uintah::IntVector & neg_cell );
+bool is_NanInf( T & src, 
+                Uintah::IntVector & neg_cell );
 
-bool areAllNodeValuesNumbers( NCVariable<Vector>  & src, 
-                           Uintah::IntVector & neg_cell );
+template< class T >
+bool is_NanInf_V( T & src, 
+                Uintah::IntVector & neg_cell );
 }
 
 #endif

@@ -1192,7 +1192,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
             <<neg_cell << " position " << pt << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesNumbers(speedSound, neg_cell) ) {
+      if( is_NanInf(speedSound, neg_cell) ) {
         Point pt = patch->getCellPosition(neg_cell);
 
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
@@ -2460,6 +2460,7 @@ void MPMICE::binaryPressureSearch( std::vector<constCCVariable<double> >& Temp,
 }
 
 //______________________________________________________________________
+//
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
                                      bool needOld, bool needNew)
@@ -2486,7 +2487,8 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   }
 }
 
-
+//______________________________________________________________________
+//
 void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset*,

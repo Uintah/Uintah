@@ -103,6 +103,7 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 static DebugStream ds_EqPress("DBG_EqPress",false);
 
 Dout m_ice_tasks(   "ICE_tasks", "ICE", "Print task scheduling & execution", false );
+Dout m_ice_DelT(    "ICE_DelT", "ICE", "Print timestep information ", false );
 
 //______________________________________________________________________
 //
@@ -2195,6 +2196,10 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
         }  //
         // cout << "delT based on diffusion  "<< delt_diff<<endl;
         delt = std::min(delt_CFL, delt_diff);
+
+        ostringstream mesg;
+        mesg << "matl: " << indx << " patch: " << patch->getID() << " delT based on diffusion  " << delt_diff << " delT based on convective velocities: " << delt_CFL << " final DelT: " << delt;
+        DOUTR( m_ice_DelT, mesg.str() );
       } // aggressive Timestep
 
 
@@ -2616,7 +2621,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
 
       if( cvModel ) {
-      CellIterator iter = patch->getExtraCellIterator();            // get rid of passing the iterator -Todd
+        CellIterator iter = patch->getExtraCellIterator();            // get rid of passing the iterator -Todd
         cvModel->computeSpecificHeat( iter, temp_CC, cv);
 
         for(;!iter.done();iter++) {
@@ -5281,23 +5286,29 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup  *,
 
       //____ B U L L E T   P R O O F I N G----
       // ignore BP if recompute time step has already been requested
-      IntVector neg_cell;
+      IntVector badCell;
       bool rts = new_dw->recomputeTimeStep();
 
       ostringstream base, warn;
       base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";
-      if (!areAllValuesPositive(rho_CC, neg_cell) && !rts) {
-        warn << base.str() << neg_cell << " negative rho_CC\n ";
+
+      if (!areAllValuesPositive(rho_CC, badCell) && !rts) {
+        warn << base.str() << badCell << " negative rho_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 
-      if (!areAllValuesPositive(temp_CC, neg_cell) && !rts) {
-        warn << base.str() << neg_cell << " negative temp_CC\n ";
+      if (!areAllValuesPositive(temp_CC, badCell) && !rts) {
+        warn << base.str() << badCell << " negative temp_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 
-      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !rts) {
-       warn << base.str() << neg_cell << " negative sp_vol_CC\n ";
+      if (!areAllValuesPositive(sp_vol_CC, badCell) && !rts) {
+        warn << base.str() << badCell << " negative sp_vol_CC\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+      if ( is_NanInf_V(vel_CC, badCell) && !rts) {
+       warn << base.str() << badCell << ", vel_CC is either a Nan or Inf.\n ";
        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
     }  // ice_matls loop

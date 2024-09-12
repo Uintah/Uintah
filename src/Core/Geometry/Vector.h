@@ -123,6 +123,8 @@ public:
   inline Vector& operator-=(const Vector&);
   inline double normalize();
   inline double safe_normalize();
+  inline bool   isnan();
+  inline bool   isinf();
 
   Vector normal() const;
   friend inline Vector Cross(const Vector&, const Vector&);
@@ -504,6 +506,20 @@ inline Vector Max(const Vector &v1, const Vector &v2)
                   Max(v1.y(), v2.y()),
                   Max(v1.z(), v2.z()));
 }
+
+inline
+bool Vector::isnan()
+{
+  return( std::isnan(x_) || std::isnan(y_) || std::isnan(z_) );
+}
+
+
+inline
+bool Vector::isinf()
+{
+  return( std::isinf(x_) || std::isinf(y_) || std::isinf(z_) );
+}
+
 
 const TypeDescription* get_type_description(Vector*);
 
