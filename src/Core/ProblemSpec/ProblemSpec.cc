@@ -1835,3 +1835,28 @@ ProblemSpec::print()
        << "\n getParent():       " << parent
        << "\n findNextBlock():   " << nextBlock << "\n";
 }
+
+//______________________________________________________________________
+// printElementNames:
+// @a_node: the initial xml node to consider.
+//
+// Prints the names of the all the xml elements
+// that are siblings or children of a given xml node.
+// usage:  
+//      xmlNode* a_node = geo_obj_ps.get_rep()->getNode();
+//      geo_obj_ps.get_rep()->print_element_names( a_node );
+      
+void
+ProblemSpec::printElementNames(xmlNode * a_node)
+{
+  xmlNode *cur_node = NULL;
+
+  for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+    if (cur_node->type == XML_ELEMENT_NODE) {
+      printf("node type: Element, name: %s\n", cur_node->name);
+    }
+
+    printElementNames(cur_node->children);
+  }
+}
+

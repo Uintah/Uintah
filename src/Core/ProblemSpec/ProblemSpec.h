@@ -306,6 +306,10 @@ public:
   void print();
 
   //////////
+  // recursively output the node names
+  void printElementNames(xmlNode * a_node);
+
+  //////////
   // return the name of this node
   std::string getNodeName() const;
 
