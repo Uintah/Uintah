@@ -48,12 +48,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/RWS.h>
 
 #include <iostream>
 #include <string>
+
+//#include <libxml/tree.h>
 
 using namespace std;
 using namespace Uintah;
@@ -226,18 +227,18 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
 {
   for( ProblemSpecP child = ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
 
-    string go_type = child->getNodeName();
-    string go_label;
+    string gp_type = child->getNodeName();
+    string gp_label;
 
-    if( !child->getAttribute( "label", go_label ) ) {
+    if( !child->getAttribute( "label", gp_label ) ) {
       // "label" and "name" are both used... so check for "label"
       // first, and if it isn't found, then check for "name".
-      child->getAttribute( "name", go_label );
+      child->getAttribute( "name", gp_label );
     }
 
-    DOUTR( dout_gpf, "---------------------------------------------------------------: go_label: " << go_label );
+    DOUTR( dout_gpf, "---------------------------------------------------------------: geometryPiece label: " << gp_label );
 
-    if( go_label != "" ) {
+    if( gp_label != "" ) {
 
       ProblemSpecP childBlock = child->findBlock();
 
@@ -246,14 +247,14 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
       remove_lt_white_space(data);
 
       // Lookup in table to see if this piece has already been named...
-      GeometryPieceP referencedPiece = m_namedPieces[ go_label ];
+      GeometryPieceP referencedPiece = m_namedPieces[ gp_label ];
 
       // If it has a childBlock or data, then it is not just a reference.
       bool goHasInfo = (childBlock || data != "");
 
       if( referencedPiece.get_rep() != nullptr && goHasInfo ) {
-       cout << "Error: GeometryPiece (" << go_type << ")"
-            << " labeled: '" << go_label
+       cout << "Error: GeometryPiece (" << gp_type << ")"
+            << " labeled: '" << gp_label
             << "' has already been specified...  You can't change its values.\n"
             << "Please just reference the original by only "
             << "using the label (no values)\n";
@@ -262,116 +263,117 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
       }
 
       if( goHasInfo ) {
-        DOUTR( dout_gpf, "Creating new GeometryPiece: " << go_label
-                         <<  " (of type: " << go_type << ")");
+        DOUTR( dout_gpf, "Creating new GeometryPiece: " << gp_label
+                         <<  " (of type: " << gp_type << ")");
       } else {
 
         if( referencedPiece.get_rep() != nullptr ) {
-          DOUTR( dout_gpf, "Referencing GeometryPiece: " << go_label
-                            << " (of type: " << go_type << ")");
+          DOUTR( dout_gpf, "Referencing GeometryPiece: " << gp_label
+                            << " (of type: " << gp_type << ")");
 
           objs.push_back( referencedPiece );
         } else {
           cout << "Error... couldn't find the referenced GeomPiece: "
-               << go_label << " (" << go_type << ")\n";
+               << gp_label << " (" << gp_type << ")\n";
           throw ProblemSetupException("Referenced GeomPiece does not exist",
                                       __FILE__, __LINE__);
         }
 
         // Verify that the referenced piece is of the same type as
         // the originally created piece.
-        if( referencedPiece->getType() != go_type ) {
-          cout << "Error... the referenced GeomPiece: " << go_label
+        if( referencedPiece->getType() != gp_type ) {
+          cout << "Error... the referenced GeomPiece: " << gp_label
                << " (" << referencedPiece->getType() << "), "
                << "is not of the same type as this new object: '"
-               << go_type << "'!\n";
+               << gp_type << "'!\n";
           throw ProblemSetupException("Referenced GeomPiece is not of the same type as original",__FILE__, __LINE__);
         }
         continue;
       }
 
     } else {
-      DOUTR( dout_gpf, "Creating non-labeled GeometryPiece of type (" << go_type << ")");
+      DOUTR( dout_gpf, "Creating non-labeled GeometryPiece of type (" << gp_type << ")");
     }
 
     GeometryPiece * newGeomPiece = nullptr;
 
-    if ( go_type == BoxGeometryPiece::TYPE_NAME ) {
+    if ( gp_type == BoxGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew BoxGeometryPiece(child);
     }
-    else if ( go_type == NaaBoxGeometryPiece::TYPE_NAME ){
+    else if ( gp_type == NaaBoxGeometryPiece::TYPE_NAME ){
       newGeomPiece = scinew NaaBoxGeometryPiece(child);
     }
-    else if ( go_type == SphereGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == SphereGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew SphereGeometryPiece(child);
     }
-    else if ( go_type == SphereMembraneGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == SphereMembraneGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew SphereMembraneGeometryPiece(child);
     }
-    else if ( go_type == CylinderGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == CylinderGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew CylinderGeometryPiece(child);
     }
-    else if ( go_type == TorusGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == TorusGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew TorusGeometryPiece(child);
     }
-    else if ( go_type ==  SmoothCylGeomPiece::TYPE_NAME ) {
+    else if ( gp_type ==  SmoothCylGeomPiece::TYPE_NAME ) {
       newGeomPiece = scinew SmoothCylGeomPiece(child);
     }
-    else if ( go_type == EllipsoidGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == EllipsoidGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew EllipsoidGeometryPiece(child);
     }
-    else if ( go_type == ConeGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == ConeGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConeGeometryPiece(child);
     }
-    else if ( go_type == TriGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == TriGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew TriGeometryPiece(child);
     }
-    else if ( go_type == LineSegGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == LineSegGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew LineSegGeometryPiece(child);
     }
-    else if ( go_type == UnionGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == UnionGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew UnionGeometryPiece(child);
     }
-    else if ( go_type == DifferenceGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == DifferenceGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew DifferenceGeometryPiece(child);
     }
-    else if ( go_type == FileGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == FileGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew FileGeometryPiece(child);
     }
-    else if ( go_type == IntersectionGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == IntersectionGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew IntersectionGeometryPiece(child);
     }
-    else if ( go_type == NullGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == NullGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew NullGeometryPiece(child);
     }
-    else if ( go_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
+    else if ( gp_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConvexPolyhedronGeometryPiece(child);
     }
-    else if (go_type == "res"         || //go_type == "velocity" ||
-             go_type == "temperature" || go_type == "comment"  ||
-             go_type == "density"     || go_type == "pressure" ||
-             go_type == "scalar"      || go_type == "color"    ||
-             go_type == "concentration" ||
-             go_type == "conductivity"  ||
-             go_type == "neg_charge_density" ||
-             go_type == "pos_charge_density" ||
-             go_type == "permittivity" ||
-             go_type == "affineTransformation_A0" ||
-             go_type == "affineTransformation_A1" ||
-             go_type == "affineTransformation_A2" ||
-             go_type == "affineTransformation_b"  ||
-             go_type == "numLevelsParticleFilling"  ||
-             go_type == "volumeFraction" )  {
+    else if (gp_type == "res"         || //gp_type == "velocity" ||
+             gp_type == "temperature" || gp_type == "comment"  ||
+             gp_type == "density"     || gp_type == "pressure" ||
+             gp_type == "scalar"      || gp_type == "color"    ||
+             gp_type == "concentration" ||
+             gp_type == "conductivity"  ||
+             gp_type == "neg_charge_density" ||         // these are not geometry pieces.
+             gp_type == "pos_charge_density" ||
+             gp_type == "permittivity" ||
+             gp_type == "affineTransformation_A0" ||
+             gp_type == "affineTransformation_A1" ||
+             gp_type == "affineTransformation_A2" ||
+             gp_type == "affineTransformation_b"  ||
+             gp_type == "numLevelsParticleFilling"  ||
+             gp_type == "volumeFraction" )  {
       // Ignoring.
       continue;    // restart loop to avoid accessing name of empty object
 
-    } else {
+    } 
+    else {
       // Perhaps it is a shell piece... let's find out:
       newGeomPiece = ShellGeometryFactory::create(child);
 
       if( newGeomPiece == nullptr ) {
         if( Parallel::getMPIRank() == 0 ) {
-          cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")\n" ;
+          cerr << "WARNING: Unknown Geometry Piece Type " << "(" << gp_type << ")\n" ;
         }
         continue;    // restart loop to avoid accessing name of empty object
       }
@@ -429,23 +431,23 @@ GeometryPieceFactory::resetFactory()
 //
 //   CASE A
 //         <geom_object>
-//           <box label="mpm_box">
+//           <box label="mpm_box">            << childBlock and  gp label
 //             <min>[1, 1, 1]</min>
 //             <max>[1.5, 1.5, 1.5]</max>
 //           </box>
 //         </geom_object>
 //   CASE B
 //         <geom_object>
-//           <difference>                    << start recursive search
-//             <box label="domain">
+//           <difference>                    << start recursive search 
+//             <box label="domain">          << childBlock and gp label
 //               <min>[-1, -1, -1]</min>
 //               <max>[4, 4, 4]</max>
 //             </box>
-//             <box label="mpm_box"/>         << no childBlock or goLabel
+//             <box label="mpm_box"/>         << no childBlock or gpLabel
 //           </difference>
 //         </geom_object>
 //
-//   returns a negative integer if any of the geom pieces was not found.
+//   returns a negative INT_MAX if any of the geom pieces were not found.
 //   returns a positive integer if all of the geom pieces were found.
 //
 //______________________________________________________________________
@@ -456,52 +458,67 @@ GeometryPieceFactory::geometryPieceExists(const ProblemSpecP & ps,
 {
 
   int nFoundPieces = 0;
-  for( ProblemSpecP child = ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
+  for( ProblemSpecP child_ps = ps->findBlock(); child_ps != nullptr; child_ps = child_ps->findNextBlock() ) {
+    
 
+//    xmlNode* a_node = child_ps.get_rep()->getNode();          // debuggin output commented out -Todd
+//    cout << "  nodeName " << a_node->name << endl;
+//    child.get_rep()->printElementNames( a_node ); 
+     
     bool hasChildBlock = false;
-    if( child->findBlock() ){
+    if( child_ps->findBlock() ){
       hasChildBlock = true;
     }
 
-    string go_label;
+    string gp_label = "";                                     // geometry piece label
 
-    // search for either a label or name.
-    if( !child->getAttribute( "label", go_label ) ) {
-      child->getAttribute( "name", go_label );
+    // search the node for either a label or name.
+    if( !child_ps->getAttribute( "label", gp_label ) ) {
+      child_ps->getAttribute( "name", gp_label );
     }
 
-    //
-    if( go_label == "" )  {
-
-      if( hasChildBlock ){      // This could be either a <difference> or <intersection > node, dig deeper
-        nFoundPieces += geometryPieceExists( child, false );
+    //__________________________________
+    //  possibly do a recursive search
+    if( gp_label == "" )  {
+      if( hasChildBlock ){                                // This could be either a <union> or<difference> or <intersection > node, dig deeper
+        //cout << "   digging deeper "  << endl; 
+        nFoundPieces += geometryPieceExists( child_ps, false );
       }
       continue;
     }
 
-    // Is this child a geometry piece
-    GeometryPieceP referencedPiece = m_namedPieces[ go_label ];
+    // Is this geometry piece already a known?
+    GeometryPieceP referencedPiece = m_namedPieces[ gp_label ];
 
     if( referencedPiece.get_rep() != nullptr  ) {
+//    cout <<     " this child is known " << nFoundPieces << endl; 
       nFoundPieces += 1;
-      continue;
+      continue;                       // keep searching
     }
 
+    //__________________________________
     // Does the child have the spec of a geom_piece?
     // See if there is any data for this node (that is not in a sub-block)
     // If the spec exists then the geom_piece doesn't exist
-    string data = child->getNodeValue();
-    remove_lt_white_space(data);
+    string nodeValue = child_ps->getNodeValue();
+ 
+    remove_lt_white_space(nodeValue);
 
-    bool has_go_spec = ( hasChildBlock || data != "");
-    if( has_go_spec ){
-      nFoundPieces -= INT_MAX;
+    bool has_gp_spec = ( hasChildBlock || nodeValue != "");
+    if( has_gp_spec ){
+      nFoundPieces = -INT_MAX;
     }
+
+//    cout << "     geometryPieceExists: hasChildBlock: " << hasChildBlock  
+//         << " nodeValue: (" << nodeValue << ") gp_label " << gp_label 
+//         <<  " nodeName: " << child_ps->getNodeName() << " nFoundPieces: " << nFoundPieces << endl; 
 
     if( isTopLevel ){
       break;
     }
-  }
+  }  // loop over geometry pieces
+
+//  cout << "     exit isTopLevel: " << isTopLevel << " nFoundPieces: " << nFoundPieces << endl; 
 
   return nFoundPieces;
 }
