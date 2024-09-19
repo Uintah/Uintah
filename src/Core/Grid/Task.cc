@@ -1780,28 +1780,28 @@ operator <<( std::ostream & out, const Task::TaskType & tt )
 {
   switch (tt) {
     case Task::Normal :
-      out << "Normal";
+      out << "Normal task";
       break;
     case Task::OutputGlobalVars :
-      out << "OutputGlobalVars";
+      out << "OutputGlobalVars task";
       break;
     case Task::Reduction :
-      out << "Reduction";
+      out << "Reduction task";
       break;
     case Task::InitialSend :
-      out << "InitialSend";
+      out << "InitialSend task";
       break;
     case Task::Output :
-      out << "Output";
+      out << "Output task";
       break;
     case Task::OncePerProc :
-      out << "OncePerProc";
+      out << "OncePerProc task";
       break;
     case Task::Spatial :
-      out << "Spatial";
+      out << "Spatial task";
       break;
     case Task::Hypre :
-      out << "Hypre";
+      out << "Hypre task";
       break;
   }
   return out;

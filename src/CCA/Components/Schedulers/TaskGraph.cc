@@ -116,26 +116,39 @@ TaskGraph::nullSort( std::vector<Task*> & tasks )
   for (auto task_iter = m_tasks.begin(); task_iter != m_tasks.end(); ++task_iter) {
     Task* task = task_iter->get();
 
-    std::ostringstream mesg;
-    mesg<< "      " << std::left<< std::setw(50) << task->getName();
-
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap
     if (task->getType() == Task::Reduction) {
       for (auto reduction_task_iter = m_scheduler->m_reduction_tasks.begin(); reduction_task_iter != m_scheduler->m_reduction_tasks.end(); ++reduction_task_iter) {
         if (task == reduction_task_iter->second) {
           (*task_iter)->setSortedOrder(n++);
           tasks.push_back(task);
-          mesg<< "     Added to sorted tasks (reduction task)";
+
           break;
         }
       }
     }
     else {
-      mesg << "     Added to sorted tasks (normal task)";
       task->setSortedOrder(n++);
       tasks.push_back(task);
     }
-    DOUTR(g_detailed_task_dbg, mesg.str() );
+
+    //__________________________________
+    //  Debugging output
+    if( g_detailed_task_dbg.active() ){
+      std::ostringstream mesg;
+      mesg << n << " Added to tasks       : "<< std::left << std::setw(50) << task->getName();
+
+      if( task->getPatchSet() ){
+        mesg << " " << *task->getPatchSet();
+      }
+      if( task->getMaterialSet() ){
+        mesg << " " << *task->getMaterialSet();
+      }
+      
+      mesg << " (" << task->getType() << ")";
+      DOUTR(g_detailed_task_dbg, mesg.str() );
+      
+    }
   }
 }
 
@@ -624,8 +637,6 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
                  << " SKipping patch subset: " << *pss << " because it has no patches");
           }
         }
-        DOUTR( g_detailed_task_dbg, " created: " << num_detailed_tasks << " (" << task->getType()
-              << ") DetailedTasks for: " << task->getName() << "\t on level: " << levelID);
       }
     } // end valid patch and matl sets
 
@@ -657,8 +668,6 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
           else{
             ++tot_reduction_tasks;
           }
-          DOUTR( g_detailed_task_dbg, " created: " << num_detailed_tasks << " (" << task->getType()
-                 << ") DetailedTasks for: " << task->getName() << "\t level : " << levelID << " materialSubset: " << *mss    );
         }
       }
     }
@@ -666,14 +675,32 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
       SCI_THROW(InternalError("Task ("+task->getName()+") has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
     tot_detailed_tasks += num_detailed_tasks;
+  }  // loop number of tasks
+  
+  //__________________________________
+  //  DOOUT output
+  if( g_detailed_task_dbg.active()){
+  
+    const int num_tasks = m_detailed_tasks->numTasks();
+    for (auto i = 0; i < num_tasks; i++) {
+      DetailedTask* dtask = m_detailed_tasks->getTask(i);
+
+      std::ostringstream mesg;
+      mesg << i << " created detailed task: " << std::left << std::setw(70) << *dtask
+           << " (" << dtask->getTask()->getType() << ")";
+
+      DOUTR(g_detailed_task_dbg, mesg.str() );
+    }
+
+    DOUT(g_detailed_task_dbg, "\nRank-" << m_proc_group->myRank()       << " created: " << tot_detailed_tasks << "  total DetailedTasks in TG: " << m_index << " with:\n"
+                                        << "\t" << tot_normal_tasks     << " total      Normal tasks\n"
+                                        << "\t" << tot_opp_tasks        << " total OncePerProc tasks\n"
+                                        << "\t" << tot_output_tasks     << " total      Output tasks\n"
+                                        << "\t" << tot_reduction_tasks  << " total   Reduction tasks\n");
   }
 
-  DOUT(g_detailed_task_dbg, "\nRank-" << m_proc_group->myRank()       << " created: " << tot_detailed_tasks << "  total DetailedTasks in TG: " << m_index << " with:\n"
-                                      << "\t" << tot_normal_tasks     << " total      Normal tasks\n"
-                                      << "\t" << tot_opp_tasks        << " total OncePerProc tasks\n"
-                                      << "\t" << tot_output_tasks     << " total      Output tasks\n"
-                                      << "\t" << tot_reduction_tasks  << " total   Reduction tasks\n");
-
+  //__________________________________
+  //
   m_load_balancer->assignResources(*m_detailed_tasks);
 
   // scrub counts are created via addScrubCount() through this call ( via possiblyCreateDependency() )
