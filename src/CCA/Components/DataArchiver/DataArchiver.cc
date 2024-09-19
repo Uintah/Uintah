@@ -1192,6 +1192,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       task->requires(Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
+    task->setType( Task::OutputGlobalVars );
     sched->addTask(task, nullptr, nullptr);
 
     // schedule task for non-global variables to a checkpoint
