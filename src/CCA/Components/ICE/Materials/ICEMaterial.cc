@@ -80,8 +80,6 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
   //    Variable Transport properties
   d_dynViscosityModels = ViscosityFactory::create( ps, grid );
 
-
-
   //__________________________________
   //  Misc. Flags
   d_isSurroundingMatl = false;
@@ -202,7 +200,16 @@ std::vector<Viscosity *> ICEMaterial::getDynViscosityModels() const
 {
   return d_dynViscosityModels;
 }
-
+bool ICEMaterial::isDynViscosityDefined()  const
+{
+  return ( d_dynViscosity > 0 );
+}
+ 
+bool ICEMaterial::usingDyVisocityModels() const
+{
+  return ( d_dynViscosityModels.size() > 0 );
+}
+ 
 double ICEMaterial::getGamma() const
 {
   return d_gamma;
@@ -236,6 +243,11 @@ double ICEMaterial::getSpecificHeat() const
 double ICEMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
+}
+
+bool ICEMaterial::isThermalCondDefined()  const
+{
+  return ( d_thermalConductivity > 0 );
 }
 
 double ICEMaterial::getInitialDensity() const
@@ -283,19 +295,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   IveBeenHere.initialize(-9);
 
 
-
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
     GeometryPieceP piece = d_geom_objs[obj]->getPiece();
-    Box bb_gp    = piece->getBoundingBox();
-    Box bb_patch = patch->getBox();
-
-    //if( ! bb_gp.overlaps(bb_patch) ){
-    //  continue;
-    //}
 
     string name = piece->getName();
-    cout << "geomPiece: " << name << " bb_gp: " << bb_gp << " bb_patch: " << bb_patch<< " overlaps " << bb_gp.overlaps(bb_patch) << endl;
-
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
 
     if(fgp){
@@ -304,6 +307,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   //    fgp->readPoints(patch->getID());
       int numPts = fgp->returnPointCount();
       vector<Point>* points = fgp->getPoints();
+
       if(numMatls > 2)  {
         cerr << "ERROR!!!\n";
         cerr << "File Geometry Piece with ICE only supported for one ice matl.\n";
@@ -339,7 +343,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         IntVector c = *iter;
         rho_CC[c] = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
       }
-    }
+    }  // file geometry piece
     else {
 
       IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
@@ -347,6 +351,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       Vector dcorner  = dxpp*0.5;
       double totalppc = ppc.x()*ppc.y()*ppc.z();
 
+      //__________________________________
+      //
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         Point lower = patch->nodePosition(c) + dcorner;
@@ -365,9 +371,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           }
         }
 
-       if(name == "Hotspot") {
-       //  cout << c << " IveBeenHere[c]: " << IveBeenHere[c] << " count: " << count << endl;
-       }
+
         //__________________________________
         // For single materials with more than one object
         if(numMatls == 1)  {
@@ -389,7 +393,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           double ups_volFrac = d_geom_objs[obj]->getInitialData_double("volumeFraction");
           if( ups_volFrac == -1.0 ) {
             vol_frac_CC[c] += count/totalppc;  // there can be contributions from multiple objects
-          } else {
+          }
+          else {
             vol_frac_CC[c] = ups_volFrac * count/(totalppc);
           }
 
@@ -402,6 +407,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
             IveBeenHere[c]= obj;
           }
+
           if(IveBeenHere[c] != -9 && count > 0){
             // This cell HAS been hit but another object has values to
             // override it, possibly in a cell that was just set by default
@@ -413,12 +419,13 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
             IveBeenHere[c]= obj;
           }
+
           if(IveBeenHere[c] != -9 && count == 0){
             // This cell has been initialized, the current object doesn't
             // occupy this cell, so don't screw with it.  All bases are
             // covered.
           }
-        }
+        }  // multiple matls
       }  // Loop over domain
     }
   }  // Loop over geom_objects

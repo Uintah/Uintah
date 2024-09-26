@@ -73,6 +73,7 @@ namespace Uintah {
                                    SFCYVariable<Vector>& tau_Y_FC,
                                    SFCZVariable<Vector>& tau_Z_FC ) = 0;
   protected:
+    MaterialManagerP d_materialManager;
     
   };// End class WallShearStress
 

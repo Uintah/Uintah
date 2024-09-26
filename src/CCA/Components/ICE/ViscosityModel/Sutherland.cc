@@ -40,6 +40,9 @@ Sutherland::Sutherland( ProblemSpecP& ps)
   ps->getWithDefault("a", d_a, 0.0);
   ps->getWithDefault("b", d_b, 0.0);
 
+  set_isViscosityDefined( true ); // Assumption the viscosity will be non-zero everywhere
+  setCallOrder( Middle );
+  setName( "Sutherland" );
 }
 
 //______________________________________________________________________

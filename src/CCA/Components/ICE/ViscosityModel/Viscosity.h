@@ -39,6 +39,28 @@ class Patch;
 
 
 class Viscosity {
+
+//______________________________________________________________________
+//
+protected:
+
+
+  enum callOrder{
+    First = 0,              // model must be called before all others
+    Middle = 1,             //
+    Last = 2                // model must be called last
+  };
+
+private:
+
+  callOrder m_callOrder;                         // models calling order
+
+  std::string m_modelName;
+
+  bool m_isViscosityDefined={false};             // if a patch has at least one cell that has a non-zero velocity
+
+//______________________________________________________________________
+//
 public:
             // constructors
   Viscosity( ProblemSpecP& ps);
@@ -49,24 +71,81 @@ public:
             // destructor
   virtual ~Viscosity();
 
+  //__________________________________
+  //
   virtual void
   outputProblemSpec(ProblemSpecP& vModels_ps) = 0;
 
-            // methods compute the viscosity
+  //__________________________________
+  //           methods compute the viscosity
   virtual void
   computeDynViscosity(const Patch         * patch,
                       CCVariable<double>  & temp_CC,
                       CCVariable<double>  & mu) = 0;
 
+  //__________________________________
+  //
   virtual void
   computeDynViscosity(const Patch              * patch,
                       constCCVariable<double>  & temp_CC,
                       CCVariable<double>       & mu) = 0;
 
+  //__________________________________
+  //
   virtual void
   initialize (const Level * level ) = 0;
 
-protected:
+
+  //__________________________________
+  //        Name of the model used
+  void setName(std::string s)
+  {
+    m_modelName = s;
+  }
+  //__________________________________
+  //
+  std::string getName()
+  {
+    return m_modelName;
+  }
+
+  //__________________________________
+  //        Is the viscosity non-zero anywhere on this patch
+  void
+  set_isViscosityDefined( bool in ){
+    m_isViscosityDefined = in;
+  }
+
+  //__________________________________
+  //
+  bool
+  isViscosityDefined(){
+    return m_isViscosityDefined;
+  }
+
+  //__________________________________
+  //    The last model in the input file takes precedence over all models.
+  static
+  bool  isDynViscosityDefined( std::vector<bool> trueFalse );
+
+
+  //__________________________________
+  //          Model can say it must be "last"
+  void setCallOrder( callOrder c ){
+    m_callOrder = c;
+  }
+
+  //__________________________________
+  //
+  callOrder getCallOrder(){
+    return m_callOrder;
+  }
+
+  //__________________________________
+  //    check that the order of the models is correct
+  static
+  bool inCorrectOrder( std::vector<Viscosity*> );
+
 };
 
 }

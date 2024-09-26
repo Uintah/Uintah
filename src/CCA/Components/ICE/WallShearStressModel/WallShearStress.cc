@@ -22,10 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/MaterialManager.h>
 
 using namespace Uintah;
 
@@ -33,9 +35,26 @@ WallShearStress::WallShearStress()
 {
 }
 
-WallShearStress::WallShearStress( ProblemSpecP& ps,
+WallShearStress::WallShearStress( ProblemSpecP    & ps,
                                   MaterialManagerP& materialManager )
+  : d_materialManager(materialManager)
 {
+
+  //__________________________________
+  // bulletproofing  If using a wallShearStress model then all ice matls
+  // must have a non-zero viscosity d
+  unsigned int numMatls = d_materialManager->getNumMatls( "ICE" );
+
+  for (unsigned int m = 0; m < numMatls; m++) {
+    ICEMaterial* ice_matl = (ICEMaterial*) d_materialManager->getMaterial( "ICE", m);
+    
+
+    bool isViscosityDefined = ice_matl->isDynViscosityDefined();
+    if( !isViscosityDefined ){
+      std::string warn = "\nERROR:ICE:\n The viscosity can't be 0 when using a wallShearStress model";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+  }
 }
 
 WallShearStress::~WallShearStress()

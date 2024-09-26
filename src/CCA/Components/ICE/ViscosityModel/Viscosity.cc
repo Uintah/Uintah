@@ -41,3 +41,38 @@ Viscosity::Viscosity( ProblemSpecP & boxps,
 Viscosity::~Viscosity()
 {
 }
+
+//______________________________________________________________________
+//        Static methods
+//______________________________________________________________________
+//
+//    The last model in the input file takes precedence over all models.
+bool  Viscosity::isDynViscosityDefined( std::vector<bool> trueFalse )
+{
+  for( auto iter  = trueFalse.begin(); iter != trueFalse.end(); iter++){
+    if( *iter ){
+      return true;
+    }
+  }
+  return false;
+}
+
+//______________________________________________________________________
+//     If a model is out of order return false
+
+bool Viscosity::inCorrectOrder( std::vector<Viscosity*> models )
+{  
+  int callOrder_old = 0;
+  
+  for( auto iter  = models.begin(); iter != models.end(); iter++){
+    Viscosity* viscModel = *iter;
+    
+    int callOrder = viscModel->getCallOrder();
+    if( callOrder < callOrder_old ){
+      return false;
+    }
+    callOrder_old = callOrder;
+  }
+  
+  return true;
+}

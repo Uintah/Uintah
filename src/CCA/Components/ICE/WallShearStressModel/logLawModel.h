@@ -77,7 +77,6 @@ namespace Uintah {
     
       const VarLabel* d_roughnessLabel;
       
-      MaterialManagerP d_materialManager;
       Patch::FaceType d_face;
       double d_roughnessConstant;
       double d_vonKarman; 

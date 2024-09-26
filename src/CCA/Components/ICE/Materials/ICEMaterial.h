@@ -76,11 +76,14 @@ class ICEMaterial : public Material {
 
     double getGamma()               const;
     double getDynViscosity()        const;
+    bool   isDynViscosityDefined()  const;
+    bool   usingDyVisocityModels()  const;
     double getSpeedOfSound()        const;
     bool   isSurroundingMatl()      const;
     bool   getIncludeFlowWork()     const;
     double getSpecificHeat()        const;
     double getThermalConductivity() const;
+    bool   isThermalCondDefined()   const;
     double getInitialDensity()      const;
     double getTinyRho()             const;
 

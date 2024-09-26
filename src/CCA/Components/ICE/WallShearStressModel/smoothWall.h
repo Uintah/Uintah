@@ -77,7 +77,6 @@ namespace Uintah {
                     DataWarehouse*, 
                     DataWarehouse*);
       
-      MaterialManagerP d_materialManager;
       Patch::FaceType d_face;
       
       double d_invVonKarman;        // 1/VonKarman 

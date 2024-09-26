@@ -39,6 +39,9 @@ namespace Uintah {
     const VarLabel* timeStepLabel;
     const VarLabel* simulationTimeLabel;
     const VarLabel* delTLabel;
+    
+    // Per-Patch variables
+    const VarLabel* isViscosityDefinedFlagLabel;      // compute shear stresses on this patch
 
     // Cell centered variables
     const VarLabel* DLabel;

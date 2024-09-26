@@ -363,16 +363,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     mat_ps->getAttribute("index",index);
 
     // create a new ICE material and initalize it
-    ICEMaterial *mat = scinew ICEMaterial(mat_ps, m_materialManager, isRestart, grid);
+    ICEMaterial *ice_matl = scinew ICEMaterial(mat_ps, m_materialManager, isRestart, grid);
     if ( index != "" ){
-      m_materialManager->registerMaterial( "ICE", mat, std::stoi(index));
+      m_materialManager->registerMaterial( "ICE", ice_matl, std::stoi(index));
     }
     else{
-      m_materialManager->registerMaterial( "ICE", mat);
-    }
-
-    if(mat->isSurroundingMatl()) {
-      d_surroundingMatl_indx = mat->getDWIndex();  //which matl. is the surrounding matl
+      m_materialManager->registerMaterial( "ICE", ice_matl);
     }
   }
 
@@ -679,6 +675,28 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
 }
 
 /* _____________________________________________________________________
+ Task:      ICE::initializeSubTask_setFlags--
+ Notes:     For AMR initialize is not run by every rank, only if
+            it owns a set of patches.  Thus we use this task
+            to set all the flags.
+_____________________________________________________________________*/
+void ICE::scheduleInitializeSubTask_setFlags(const LevelP & level,
+                                             SchedulerP   & sched)
+{
+  printSchedule( level, m_ice_tasks, " ICE::initializeSubTask_setFlags" );
+
+  Task* t = scinew Task("ICE::initializeSubTask_setFlags",
+                   this, &ICE::initializeSubTask_setFlags);
+
+  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
+
+  const PatchSet * perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+  t->setType( Task::OncePerProc );
+
+  sched->addTask( t, perProcPatches, ice_matls);
+}
+
+/* _____________________________________________________________________
  Task:      ICE::scheduleInitialize--
  Notes:     Schedule tasks needed to initialize all of the relevant variables.
             This schedules several tasks.
@@ -712,6 +730,10 @@ void ICE::scheduleInitialize(const LevelP & level,
   const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
 
   sched->addTask(t, level->eachPatch(), ice_matls);
+
+  //__________________________________
+  //  Initialize flags
+  scheduleInitializeSubTask_setFlags( level, sched);
 
   //__________________________________
   //  Implicit solver
@@ -785,6 +807,10 @@ void ICE::scheduleRestartInitialize(const LevelP & levelP,
   }
 
   //__________________________________
+  //  Initialize flags
+  scheduleInitializeSubTask_setFlags( levelP, sched);
+
+  //__________________________________
   // Models Initialization
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
@@ -799,45 +825,6 @@ void ICE::scheduleRestartInitialize(const LevelP & levelP,
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
     AnalysisModule* am = *iter;
     am->scheduleRestartInitialize( sched, levelP);
-  }
-
-  //__________________________________
-  // ICE: Material specific flags
-  unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
-  for (unsigned int m = 0; m < numMatls; m++ ) {
-    ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-
-    if(ice_matl->isSurroundingMatl()) {
-      d_surroundingMatl_indx = ice_matl->getDWIndex();
-    }
-
-    if(ice_matl->getDynViscosity() > 0.0){
-      d_viscousFlow = true;
-    }
-
-    //__________________________________
-    //    dynamic viscosity models
-    std::vector<Viscosity*>  viscModels;
-    viscModels = ice_matl->getDynViscosityModels();
-
-    for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
-      Viscosity* viscModel = *iter;
-      const Level * level = levelP.get_rep();
-      viscModel->initialize( level );
-      d_viscousFlow = true;
-    }
-
-  }
-
-  //__________________________________
-  // bulletproofing
-  Vector grav = getGravity();
-  if (grav.length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
-    throw ProblemSetupException("ERROR ICE::restartInitialize \n"
-          "You must have \n"
-          "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-          "specified inside the ICE material that is the background matl\n",
-                                __FILE__, __LINE__);
   }
 }
 /* _____________________________________________________________________
@@ -1125,6 +1112,11 @@ void ICE::scheduleComputeThermoTransportProperties( SchedulerP        & sched,
   t->computes( lb->thermalCondLabel );
   t->computes( lb->gammaLabel );
   t->computes( lb->specific_heatLabel );
+  t->computes( lb->isViscosityDefinedFlagLabel );
+
+/*`==========TESTING==========*/
+//  sched->overrideVariableBehavior(lb->isViscosityDefinedFlagLabel->getName(), false, false, true, true, true); 
+/*===========TESTING==========`*/
 
   sched->addTask( t, level->eachPatch(), ice_matls );
 
@@ -1449,7 +1441,7 @@ void ICE::scheduleVelTau_CC( SchedulerP         & sched,
                              const PatchSet     * patches,
                              const MaterialSet  * ice_matls )
 {
-  if( !d_viscousFlow ){
+  if( !d_doFullShearStressTask ){
     return;
   }
   printSchedule(patches, m_ice_tasks, " ICE::scheduleVelTau_CC");
@@ -1476,17 +1468,20 @@ void ICE::scheduleViscousShearStress(SchedulerP        & sched,
   Task* t = scinew Task("ICE::viscousShearStress",
                   this, &ICE::viscousShearStress);
 
-  if(d_viscousFlow){
+  if( d_doFullShearStressTask ){
     t->requires( Task::NewDW, lb->viscosityLabel,   m_gac, 2 );
     t->requires( Task::NewDW, lb->velTau_CCLabel,   m_gac, 2 );
     t->requires( Task::NewDW, lb->rho_CCLabel,      m_gac, 2 );
     t->requires( Task::NewDW, lb->vol_frac_CCLabel, m_gac, 2 );
+    t->requires( Task::NewDW, lb->isViscosityDefinedFlagLabel,
+                                                    m_gn, 0 );
 
     t->computes( lb->tau_X_FCLabel );
     t->computes( lb->tau_Y_FCLabel );
     t->computes( lb->tau_Z_FCLabel );
   }
-  if(d_turbulence){
+
+  if( d_turbulence ){
     t->requires( Task::NewDW,lb->uvel_FCMELabel,    m_gac, 3 );
     t->requires( Task::NewDW,lb->vvel_FCMELabel,    m_gac, 3 );
     t->requires( Task::NewDW,lb->wvel_FCMELabel,    m_gac, 3 );
@@ -1506,12 +1501,7 @@ void ICE::scheduleViscousShearStress(SchedulerP        & sched,
     d_WallShearStressModel->sched_AddComputeRequires( t, ice_matls->getUnion() );
   }
 
-  //__________________________________
-  // bulletproofing
-  if( (d_viscousFlow == 0.0 && d_turbulence) || (d_viscousFlow == 0.0 && d_WallShearStressModel )){
-    string warn = "\nERROR:ICE:viscousShearStress\n The viscosity can't be 0 when using a turbulence model or a wall shear stress model";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
+
 
   t->computes( lb->viscous_src_CCLabel );
   sched->addTask(t, patches, ice_matls);
@@ -2171,9 +2161,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
         //__________________________________
         // stability constraint due to diffusion
         //  I C E  O N L Y
-        double thermalCond_test = ice_matl->getThermalConductivity();
 
-        if (thermalCond_test !=0 || d_viscousFlow ) {
+        if (ice_matl->isThermalCondDefined() || ice_matl->isDynViscosityDefined() ) {
 
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
@@ -2296,6 +2285,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
   }  // patch loop
 }
 
+
+
+
 /* _____________________________________________________________________
  Task:     ICE::actuallyInitialize--
  Purpose:  Initialize CC variables and the pressure
@@ -2336,7 +2328,7 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
     unsigned int numMatls    = m_materialManager->getNumMatls( "ICE" );
     unsigned int numALLMatls = m_materialManager->getNumMatls();
-    Vector grav     = getGravity();
+
     std::vector<constCCVariable<double> > placeHolder(0);
     std::vector<CCVariable<double>   > rho_micro(max_indx);
     std::vector<CCVariable<double>   > sp_vol_CC(max_indx);
@@ -2356,15 +2348,6 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
     new_dw->allocateTemporary(vol_frac_sum,patch);
     vol_frac_sum.initialize(0.0);
 //  delP_initialGuess.initialize(0.0);
-
-    // --------bulletproofing
-    if (grav.length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
-      throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
-            "You must have \n"
-            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-            "specified inside the ICE material that is the background matl\n",
-                                  __FILE__, __LINE__);
-    }
 
   //__________________________________
   // Note:
@@ -2430,11 +2413,6 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
         Viscosity* viscModel = *iter;
         viscModel->initialize( level );
         viscModel->computeDynViscosity( patch, Temp_CC[indx], dynViscosity);
-        d_viscousFlow = true;
-      }
-
-      if(ice_matl->getDynViscosity() > 0.0){
-        d_viscousFlow = true;
       }
 
       //__________________________________
@@ -2538,6 +2516,57 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
     }
   }  // patch loop
 }
+
+/* _____________________________________________________________________
+ Task:     ICE::initializeSubTask_setFlags--
+ Purpose:  Initialize flags
+ ____________________________________________*/
+void ICE::initializeSubTask_setFlags(const ProcessorGroup *,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * ice_matls,
+                                     DataWarehouse        *,
+                                     DataWarehouse        *)
+{
+  printTask(patches, m_ice_tasks, "ICE::initializeSubTask_setFlags" );
+
+  for(int m=0;m<ice_matls->size();m++){
+
+    ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
+
+    //__________________________________
+    //    dynamic viscosity models
+    std::vector<Viscosity*>  viscModels;
+    viscModels = ice_matl->getDynViscosityModels();
+
+    if( patches && patches->size() ){
+      const Level * level = getLevel(patches);
+      for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
+        Viscosity* viscModel = *iter;
+        viscModel->initialize( level );
+      }
+    }
+
+    if( !ice_matl->isDynViscosityDefined() &&
+        !ice_matl->usingDyVisocityModels() ){
+      d_doFullShearStressTask = false;
+    }
+
+    if( ice_matl->isSurroundingMatl() ) {
+      d_surroundingMatl_indx = ice_matl->getDWIndex();
+    }
+    
+    //__________________________________
+    // bulletproofing
+
+    if (getGravity().length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
+      throw ProblemSetupException("ERROR ICE::initializeSubTask_setFlags \n"
+            "You must have \n"
+            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
+            "specified inside the ICE material that is the background matl\n",
+                                  __FILE__, __LINE__);
+    }
+  }
+}
 /* _____________________________________________________________________
  Task:      ICE::initialize_hydrostaticAdj
  Purpose~   adjust the pressure and temperature fields after both
@@ -2600,10 +2629,15 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
       new_dw->allocateAndPut( dynViscosity, lb->viscosityLabel,    indx, patch );
       new_dw->allocateAndPut( cv,           lb->specific_heatLabel,indx, patch );
       new_dw->allocateAndPut( gamma,        lb->gammaLabel,        indx, patch );
+      new_dw->allocateAndPut( gamma,        lb->gammaLabel,        indx, patch );
+
+      std::vector< bool > isDynVisDefined_flags;                                  // each model sets this flag
+      isDynVisDefined_flags.push_back( ice_matl->isDynViscosityDefined() );
+      
 
       //__________________________________
       //    Transport Prpoerties
-      thermalCond.initialize( ice_matl->getThermalConductivity());
+      thermalCond.initialize( ice_matl->getThermalConductivity() );
       dynViscosity.initialize( ice_matl->getDynViscosity() );
 
       std::vector<Viscosity*>  viscModels;
@@ -2611,8 +2645,32 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
 
       for( auto iter  = viscModels.begin(); iter != viscModels.end(); iter++){
         Viscosity* viscModel = *iter;
-        viscModel->computeDynViscosity( patch, temp_CC, dynViscosity);
+        viscModel->computeDynViscosity( patch, temp_CC, dynViscosity );
+
+        isDynVisDefined_flags.push_back( viscModel->isViscosityDefined() );
       }
+
+      //__________________________________
+      //    If the viscosity is computed by any viscosity model on this patch
+      //    set the perPatch flag
+      bool trueFalse = Viscosity::isDynViscosityDefined( isDynVisDefined_flags );
+      PerPatch<int> computePatchFlag( trueFalse );
+
+      new_dw->put( computePatchFlag, lb->isViscosityDefinedFlagLabel, indx, patch );
+
+      //__________________________________
+      //     bulletproofing
+      //  Only check on patches have a non-zero viscosity and have been computed via a viscModel
+      IntVector badCell;
+      if ( computePatchFlag && !viscModels.empty() && !areAllValuesPositive( dynViscosity, badCell ) ) {
+        ostringstream base, warn;
+
+        warn <<"ERROR ICE:(L-"<<  getLevel(patches)->getIndex() <<" computeThermoTransportProperties: , mat "
+             << indx <<" cell " << badCell << " negative viscosity\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+
 
       //__________________________________
       //  Thermo properties
@@ -4049,12 +4107,10 @@ void ICE::viscousShearStress(const ProcessorGroup *,
 
       //__________________________________
       // Compute Viscous diffusion for this matl
-      if( d_viscousFlow ){
-        constCCVariable<double>   vol_frac;
-        constCCVariable<double>   rho_CC;
+      if( d_doFullShearStressTask ){
 
-        new_dw->get( vol_frac,  lb->vol_frac_CCLabel, indx,patch,m_gac,2 );
-        new_dw->get( rho_CC,    lb->rho_CCLabel,      indx,patch,m_gac,2 );
+        PerPatch<int> computePatchFlag;
+        new_dw->get( computePatchFlag, lb->isViscosityDefinedFlagLabel, indx, patch);
 
         SFCXVariable<Vector> tau_X_FC;
         SFCYVariable<Vector> tau_Y_FC;
@@ -4074,14 +4130,21 @@ void ICE::viscousShearStress(const ProcessorGroup *,
 
         //__________________________________
         //  compute the shear stress terms
-        if( d_viscousFlow ) {
+        if( ice_matl->isDynViscosityDefined() || computePatchFlag ) {
+
+          cout << "   viscousShearStress: patchID: " << patch->getID() << ", d_isViscosityDefined: " << ice_matl->isDynViscosityDefined() << ", computePatchFlag: " << computePatchFlag << endl;
+
           CCVariable<double>        tot_viscosity;     // total viscosity
           CCVariable<double>        viscosity;         // total *OR* molecular viscosity;
           constCCVariable<double>   molecularVis;      // molecular viscosity
           constCCVariable<Vector>   velTau_CC;
+          constCCVariable<double>   vol_frac;
+          constCCVariable<double>   rho_CC;
 
-          new_dw->get( molecularVis, lb->viscosityLabel, indx,patch,m_gac,2 );
-          new_dw->get( velTau_CC,    lb->velTau_CCLabel, indx,patch,m_gac,2 );
+          new_dw->get( vol_frac,     lb->vol_frac_CCLabel, indx, patch, m_gac,2 );
+          new_dw->get( rho_CC,       lb->rho_CCLabel,      indx, patch, m_gac,2 );
+          new_dw->get( molecularVis, lb->viscosityLabel,   indx, patch, m_gac,2 );
+          new_dw->get( velTau_CC,    lb->velTau_CCLabel,   indx, patch, m_gac,2 );
 
           // don't alter the original value
           new_dw->allocateTemporary( tot_viscosity, patch, m_gac,2 );
@@ -4099,7 +4162,8 @@ void ICE::viscousShearStress(const ProcessorGroup *,
           new_dw->allocateTemporary( Ttau_Y_FC, patch, m_gac,1 );
           new_dw->allocateTemporary( Ttau_Z_FC, patch, m_gac,1 );
 
-          Vector evilNum(-9e30);
+          Vector evilNum( std::numeric_limits<double>::quiet_NaN() );
+
           Ttau_X_FC.initialize( evilNum );
           Ttau_Y_FC.initialize( evilNum );
           Ttau_Z_FC.initialize( evilNum );
@@ -4144,8 +4208,14 @@ void ICE::viscousShearStress(const ProcessorGroup *,
           tau_Y_FC.copyPatch( Ttau_Y_FC, tau_Y_FC.getLowIndex(), tau_Y_FC.getHighIndex() );
           tau_Z_FC.copyPatch( Ttau_Z_FC, tau_Z_FC.getLowIndex(), tau_Z_FC.getHighIndex() );
 
-        }  // hasViscosity
-      }  // ice_matl
+          IntVector badCell;
+          if ( is_NanInf_V( viscous_src, badCell) ) {
+            ostringstream warn;
+            warn << "ICE::viscousShearStress: " << badCell << ", viscousSrc is either a Nan or Inf.\n ";
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+        } // compute on this patch
+      } // isViscosityDefined
     }  // matl loop
   }  // patch loop
 }

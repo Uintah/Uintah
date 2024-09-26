@@ -62,7 +62,7 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
     else if (WSS_model == "smoothWall"){
       return( scinew smoothwall( wss_ps, materialManager) );
     }
-else{
+  else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown WallShearStress model ("<< WSS_model << " )\n"
          << "Valid models are:\n" 

@@ -50,9 +50,11 @@ public:
                       CCVariable<double>  & temp_CC,
                       CCVariable<double>  & mu)
   {
-    computeDynViscosity_impl<CCVariable<double> >( patch, temp_CC, mu);
+    computeDynViscosity_impl<CCVariable<double> >( patch, temp_CC, mu );
   }
-
+  
+  //__________________________________
+  //
   virtual void
   computeDynViscosity(const Patch              * patch,
                       constCCVariable<double>  & temp_CC,

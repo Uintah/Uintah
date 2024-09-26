@@ -24,11 +24,12 @@
 
 
 #include <CCA/Components/ICE/Core/ICELabel.h>
-#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
 using namespace Uintah;
@@ -36,6 +37,8 @@ using namespace Uintah;
 ICELabel::ICELabel()
 {
    // shortcuts
+  const TypeDescription* PP_int = PerPatch<int>::getTypeDescription();
+   
   const TypeDescription* CC_int = CCVariable<int>::getTypeDescription();
   const TypeDescription* CC_double  = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector  = CCVariable<Vector>::getTypeDescription();
@@ -64,6 +67,12 @@ ICELabel::ICELabel()
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
   nonconstDelt->schedReductionTask(false);
   delTLabel = nonconstDelt;
+
+  //__________________________________
+  //  Per-patch variables
+  //  single number saved per patch
+  isViscosityDefinedFlagLabel    = VarLabel::create("viscousFlowFlag",PP_int);
+
 
   //__________________________________
   // Cell Centered variables
@@ -271,9 +280,12 @@ ICELabel::~ICELabel()
     VarLabel::destroy(timeStepLabel);
     VarLabel::destroy(simulationTimeLabel);
     VarLabel::destroy(delTLabel);
+    
+    // PerPatch variables
+    VarLabel::destroy( isViscosityDefinedFlagLabel );
 
     // Cell centered variables
-     VarLabel::destroy(DLabel);
+    VarLabel::destroy(DLabel);
     VarLabel::destroy(TMV_CCLabel);
     VarLabel::destroy(compressibilityLabel);
     VarLabel::destroy(delP_DilatateLabel);

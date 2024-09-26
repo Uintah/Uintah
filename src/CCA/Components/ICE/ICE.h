@@ -125,6 +125,10 @@ using namespace ExchangeModels;
 
       virtual void scheduleAnalysis(const LevelP& level, SchedulerP&);
 
+
+      void scheduleInitializeSubTask_setFlags(const LevelP & level,
+                                              SchedulerP   & sched);
+
       void scheduleComputePressure(SchedulerP&,
                                    const PatchSet*,
                                    const MaterialSubset*,
@@ -343,6 +347,12 @@ using namespace ExchangeModels;
                               DataWarehouse*,
                               DataWarehouse* new_dw);
 
+      void initializeSubTask_setFlags(const ProcessorGroup *,
+                                     const PatchSubset     *,
+                                     const MaterialSubset  * ice_matls,
+                                     DataWarehouse         *,
+                                     DataWarehouse         *);
+      
       void initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
                                             const PatchSubset*,
                                             const MaterialSubset*,
@@ -664,7 +674,7 @@ using namespace ExchangeModels;
       bool d_impICE                = false;
       bool d_with_mpm              = false;
       bool d_with_rigid_mpm        = false;
-      bool d_viscousFlow           = false;
+      bool d_doFullShearStressTask = true;              // ignore portion of shear stress task if the viscosity isn't defined
       bool d_applyHydrostaticPress = true;
 
       int d_max_iter_equilibration  = 100;

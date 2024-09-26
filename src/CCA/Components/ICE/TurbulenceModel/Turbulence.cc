@@ -22,9 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/MaterialManager.h>
@@ -44,13 +45,33 @@ Turbulence::Turbulence()
 Turbulence::Turbulence( ProblemSpecP & ps, MaterialManagerP & materialManager )
   : d_materialManager(materialManager)
 {
+
+  //__________________________________
+  // bulletproofing  If using a turbulence model then all ice matls
+  // must have a non-zero viscosity
+  unsigned int numMatls = d_materialManager->getNumMatls( "ICE" );
+
+  for (unsigned int m = 0; m < numMatls; m++) {
+    ICEMaterial* ice_matl = (ICEMaterial*) d_materialManager->getMaterial( "ICE", m);
+
+    bool isViscosityDefined = ice_matl->isDynViscosityDefined();
+    if( !isViscosityDefined ){
+      std::string warn = "\nERROR:ICE:\n The viscosity can't be 0 when using a Turbulence model";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+  }
+
+  //__________________________________
+  //
   for( ProblemSpecP child = ps->findBlock("FilterScalar"); child != nullptr; child = child->findNextBlock( "FilterScalar" ) ) {
     FilterScalar* s = scinew FilterScalar;
     child->get("name", s->name);
-    
-    s->matl = materialManager->parseAndLookupMaterial(child, "material");
+
+    Material* ice_matl = materialManager->parseAndLookupMaterial(child, "material");
+    s->matl = ice_matl;
+
     vector<int> m(1);
-    m[0] = s->matl->getDWIndex();
+    m[0] = ice_matl->getDWIndex();
     s->matl_set = scinew MaterialSet();
     s->matl_set->addAll(m);
     s->matl_set->addReference();
@@ -76,7 +97,7 @@ Turbulence::~Turbulence()
 /* ---------------------------------------------------------------------
   Function~  callTurb
   Purpose~ Call turbulent subroutines
-  -----------------------------------------------------------------------  */  
+  -----------------------------------------------------------------------  */
 void Turbulence::callTurb(DataWarehouse* new_dw,
                           const Patch* patch,
                           constCCVariable<Vector>& vel_CC,
@@ -89,27 +110,27 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
                           CCVariable<double>& tot_viscosity)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  
+
   constSFCXVariable<double> uvel_FC;
   constSFCYVariable<double> vvel_FC;
   constSFCZVariable<double> wvel_FC;
-  
-  CCVariable<double> turb_viscosity, turb_viscosity_copy;    
+
+  CCVariable<double> turb_viscosity, turb_viscosity_copy;
   CCVariable<double> tot_viscosity_copy;
   new_dw->allocateTemporary(turb_viscosity, patch, gac, 1);
-  
+
   new_dw->allocateAndPut(turb_viscosity_copy, lb->turb_viscosity_CCLabel,  indx, patch);
   new_dw->allocateAndPut(tot_viscosity_copy , lb->total_viscosity_CCLabel, indx, patch);
-   
+
   turb_viscosity.initialize(0.0);
   tot_viscosity.initialize(0.0);
-    
-  new_dw->get(uvel_FC,     lb->uvel_FCMELabel,            indx,patch,gac,3);  
-  new_dw->get(vvel_FC,     lb->vvel_FCMELabel,            indx,patch,gac,3);  
+
+  new_dw->get(uvel_FC,     lb->uvel_FCMELabel,            indx,patch,gac,3);
+  new_dw->get(vvel_FC,     lb->vvel_FCMELabel,            indx,patch,gac,3);
   new_dw->get(wvel_FC,     lb->wvel_FCMELabel,            indx,patch,gac,3);
-    
+
   computeTurbViscosity(new_dw, patch, lb, vel_CC,
-                       uvel_FC, vvel_FC, wvel_FC, rho_CC, 
+                       uvel_FC, vvel_FC, wvel_FC, rho_CC,
                        indx, d_materialManager, turb_viscosity );
 
   //__________________________________
@@ -125,46 +146,46 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  
+
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
-    
+
     IntVector oneCell = patch->faceDirection(face);
     Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-    
+
     for(CellIterator itr = patch->getFaceIterator(face, MEC); !itr.done(); itr++){
       IntVector ec  = *itr;
       IntVector adj = ec - oneCell;
-      
+
       double m_Vis = molecularVis[adj];           // for readability;
       double t_Vis = turb_viscosity[adj];
-      
+
       tot_viscosity[ec] = m_Vis * (m_Vis + t_Vis) / ( m_Vis + 2 * t_Vis);
     }
   }
-  
+
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   // near interfaces use molecularVis
 
   int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
-    IntVector c = *iter; 
-    
-    if( vol_frac_CC[c] > 0.9 ){            
-      tot_viscosity[c] = molecularVis[c] + turb_viscosity[c]; 
-    }else{                        // near interface 
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {
+    IntVector c = *iter;
+
+    if( vol_frac_CC[c] > 0.9 ){
+      tot_viscosity[c] = molecularVis[c] + turb_viscosity[c];
+    }else{                        // near interface
       tot_viscosity[c] = molecularVis[c];
-    } 
-  } 
-  
+    }
+  }
+
   // make copy for visualization.
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-    IntVector c = *iter;    
+    IntVector c = *iter;
     turb_viscosity_copy[c] = turb_viscosity[c];
-    tot_viscosity_copy[c]  = tot_viscosity[c];     
-  }  
+    tot_viscosity_copy[c]  = tot_viscosity[c];
+  }
 }
 
 
@@ -180,19 +201,19 @@ void Turbulence::setZeroNeumannBC_CC( const Patch* patch,
 {
   if(patch->hasBoundaryFaces() == false){
     return;
-  }  
-  
+  }
+
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  
+
   for( vector<Patch::FaceType>::const_iterator faceIter = bf.begin(); faceIter != bf.end(); ++faceIter ){
     Patch::FaceType face = *faceIter;
-    
+
     //__________________________________
     //  find the iterator for this face
     int p_dir = patch->getFaceAxes(face)[0];  // principal direction
-    
+
     //is this a plus face
     bool plusface=face%2;
 
@@ -210,10 +231,10 @@ void Turbulence::setZeroNeumannBC_CC( const Patch* patch,
       //move high point to minus face
       highPt[p_dir] = patch->getCellLowIndex()[p_dir];
     }
-    
+
 
     //__________________________________
-    //  Apply BC    
+    //  Apply BC
     CellIterator iter( lowPt, highPt );
 
     IntVector oneCell = patch->faceDirection( face );

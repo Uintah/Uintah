@@ -43,7 +43,7 @@ ViscosityFactory::~ViscosityFactory()
 //______________________________________________________________________
 //
 std::vector<Viscosity*> ViscosityFactory::create( ProblemSpecP & ps,
-                                                  const GridP        & grid )
+                                                  const GridP  & grid )
 {
   ProblemSpecP dvm_ps = ps->findBlock("dynamicViscosityModels");
 
@@ -78,6 +78,25 @@ std::vector<Viscosity*> ViscosityFactory::create( ProblemSpecP & ps,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
+    
+    //__________________________________
+    //  Bulletproofing  
+    //    The order in which the models are listed matters.
+    bool ans = Viscosity::inCorrectOrder( models );
+    
+    if( !ans ){
+      ostringstream warn;
+      warn << "ERROR ICE: The dynamicViscosity models are not specified in the correct order. \n"
+           << "           The SpongeLayer model must be specified last\n";
+      
+      for( auto iter  = models.begin(); iter != models.end(); iter++){
+        Viscosity* viscModel = *iter;
+        warn << "    " << viscModel->getName() << "\n";
+      }
+
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
   }
 
   return models;

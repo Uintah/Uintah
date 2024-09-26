@@ -42,6 +42,9 @@ SpongeLayer::SpongeLayer( ProblemSpecP & sLayer_ps,
                           const GridP  & grid )
  : Viscosity(sLayer_ps, grid)
 {
+
+  setCallOrder( Last );
+
   ProblemSpecP box_ps = sLayer_ps->findBlock( "box" );
   if( box_ps == nullptr ){
     throw ProblemSetupException("ERROR: ICE:  Couldn't find <SpongeLayer> -> <box> tag", __FILE__, __LINE__);
@@ -51,11 +54,17 @@ SpongeLayer::SpongeLayer( ProblemSpecP & sLayer_ps,
   box_ps->getAttributes(attribute);
   m_SL_name = attribute["label"];
 
+  setName( "SpongeLayer " + m_SL_name );
+
   Point min;
   Point max;
   box_ps->require( "min", min );
   box_ps->require( "max", max );
   sLayer_ps->require( "maxDynamicViscosity", m_maxDynViscosity );
+
+  if( m_maxDynViscosity > 0.0 ){
+    set_isViscosityDefined( true );
+  }
 
   //__________________________________
   //      bulletproofing
@@ -109,7 +118,7 @@ void SpongeLayer::outputProblemSpec(ProblemSpecP& vModels_ps)
 {
   ProblemSpecP vModel = vModels_ps->appendChild("Model");
   vModel->setAttribute("name", "SpongeLayer");
-  
+
   vModel->appendElement("maxDynamicViscosity", m_maxDynViscosity);
   ProblemSpecP box_ps = vModel->appendChild("box");
   box_ps->setAttribute( "label", m_SL_name );
@@ -159,13 +168,23 @@ IntVector SpongeLayer::findCell( const Level * level,
 }
 
 //______________________________________________________________________
-//        Set the viscosity
+//        Set the viscosity for each cell in the region
+//        If the viscosity will be non-zero set the flag.
 template< class CCVar>
 void SpongeLayer::computeDynViscosity_impl( const Patch       * patch ,
                                             CCVar              & ,
                                             CCVariable<double> & mu)
 {
   CellIterator iter = getCellIterator( patch );
+
+  //  set the flag if the viscosity is > 0 somewhere on this patch.
+  bool flag = false;
+
+  if( iter.size() > 0  && m_maxDynViscosity > 0.0){
+    flag = true;
+  }
+  set_isViscosityDefined(flag);
+
 
   for (;!iter.done();iter++) {
     IntVector c = *iter;

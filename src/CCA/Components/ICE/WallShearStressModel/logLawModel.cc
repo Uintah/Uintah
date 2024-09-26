@@ -49,7 +49,6 @@ static DebugStream dbg("ICE_DOING_COUT", false);
 logLawModel::logLawModel(ProblemSpecP& ps, MaterialManagerP& materialManager)
   : WallShearStress(ps, materialManager)
 {
-  d_materialManager = materialManager;
     
   string face;
   ps->require("domainFace", face);
@@ -94,6 +93,8 @@ logLawModel::logLawModel(ProblemSpecP& ps, MaterialManagerP& materialManager)
   
 }
 
+//______________________________________________________________________
+//
 logLawModel::~logLawModel()
 {
    VarLabel::destroy(d_roughnessLabel);
