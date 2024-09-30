@@ -41,13 +41,13 @@ public:
   // this function has a switch for all known BC_types
   static void create(ProblemSpecP& ps,BoundCondBase* &bc, int& mat_id, const std::string face_label);
 
-  static void customBC(BoundCondBase* &bc, 
+  static void customBC(BoundCondBase* &bc,
     int mat_id, const std::string face_label, double value ,std::string label, std::string var);
 
-  static void customBC(BoundCondBase* &bc, 
+  static void customBC(BoundCondBase* &bc,
     int mat_id, const std::string face_label, Vector value ,std::string label, std::string var);
 
-  static void customBC(BoundCondBase* &bc, 
+  static void customBC(BoundCondBase* &bc,
     int mat_id, const std::string face_label, std::string value ,std::string label, std::string var);
 
 };

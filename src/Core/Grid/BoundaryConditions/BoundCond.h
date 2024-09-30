@@ -32,13 +32,13 @@
 
 namespace Uintah {
 
-   
+
 /**************************************
 
 CLASS
    BoundCond
-   
-   
+
+
 GENERAL INFORMATION
 
    BoundCond.h
@@ -48,25 +48,22 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    BoundCond
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
- class NoValue {
 
- public:
-   NoValue() {};
-   ~NoValue() {};
- };
 
+//______________________________________________________________________
+//
  template <class T>  class BoundCond : public BoundCondBase {
  public:
    BoundCond() {};
@@ -83,13 +80,15 @@ WARNING
        d_face_label   = face_label;
        d_value_type   = val_type;
      };
+
    virtual ~BoundCond() {};
+
    virtual BoundCond* clone()
    {
      return scinew BoundCond(*this);
    };
 
-   T getValue() const { return d_value;}; 
+   T getValue() const { return d_value;};
 
    const std::string getType() const { return d_type; };
 
@@ -99,25 +98,38 @@ WARNING
  };
 
 
+//______________________________________________________________________
+//
+ class NoValue {
+
+ public:
+   NoValue() {};
+   ~NoValue() {};
+ };
+
+
+//______________________________________________________________________
+//
  template <> class BoundCond<NoValue> : public BoundCondBase {
 
 
  public:
 
-   BoundCond(std::string var_name,std::string type)
+   BoundCond( std::string var_name,
+              std::string type)
      {
-       d_variable = var_name;
-       d_type = type;
-       d_value = NoValue();
+       d_variable   = var_name;
+       d_type       = type;
+       d_value      = NoValue();
        d_face_label = "none";
        d_value_type = BoundCondBase::UNKNOWN_TYPE;
      };
 
    BoundCond(std::string var_name)
      {
-       d_variable = var_name;
-       d_type = "";
-       d_value = NoValue();
+       d_variable   = var_name;
+       d_type       = "";
+       d_value      = NoValue();
        d_face_label = "none";
        d_value_type = BoundCondBase::UNKNOWN_TYPE;
      };
@@ -127,12 +139,12 @@ WARNING
      return scinew BoundCond(*this);
    };
 
-   
+
  protected:
    NoValue d_value;
 
  };
- 
+
 } // End namespace Uintah
 
 

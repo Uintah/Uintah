@@ -37,8 +37,8 @@ namespace Uintah {
 
 CLASS
    BCData
-   
-   
+
+
 GENERAL INFORMATION
 
    BCData.h
@@ -48,16 +48,16 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    BoundCondBase
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
   class BCData  {
@@ -75,7 +75,7 @@ WARNING
      and the user is responsible for deleting the newly created variable.
      */
     const BoundCondBase* cloneBCValues(const std::string& type) const;
-    
+
     /*
      *  \author Tony Saad
      *  \date   August 2014
@@ -83,26 +83,26 @@ WARNING
      This is a lightweight access to the BCValues and does not perform a deep copy.
      */
     const BoundCondBase* getBCValues(const std::string& type) const;
-    
+
     /**
      *  \author Tony Saad
      *  \date   August 29, 2013
-     *  \brief  Returns a reference to the vector of boundary conditions (BoundCondBase) attached 
+     *  \brief  Returns a reference to the vector of boundary conditions (BoundCondBase) attached
      to this BCData. Recall that BCDataArray stores a collection of BCGeometries. Each BCGeomBase
      has BCData associated with it. The BCData stores all the boundary specification via BoundCond
      and BoundCondBase. This boundary specification corresponds to all the spec within a given
      <Face> xml tag in the input file.
      */
     const std::vector<BoundCondBase*>& getBCData() const;
-    
+
     void print() const;
     bool find(const std::string& type) const;
     bool find(const std::string& bc_type,const std::string& bc_variable) const;
     void combine(BCData& from);
-    
+
    private:
       // The map is for the name of the
-    // bc type and then the actual bc data, i.e. 
+    // bc type and then the actual bc data, i.e.
     // "Velocity", VelocityBoundCond
     std::vector<BoundCondBase*>  d_BCData;
   };

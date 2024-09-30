@@ -30,10 +30,10 @@
 #include <Core/Grid/Patch.h>
 
 namespace Uintah {
-  
+
   void is_BC_specified(const ProblemSpecP& prob_spec, std::string variable, const MaterialSubset* matls);
-  
-  
+
+
   /* ---------------------------------------------------------------------
    For a given domain face, material, variable this returns
    the following:
@@ -54,7 +54,7 @@ namespace Uintah {
     bc_value=T(-9);
     bc_kind="NotSet";
     bool foundBC = false;
-    
+
     //__________________________________
     //  Any variable with zero Neumann BC
     if (desc == "zeroNeumann" ){
@@ -62,7 +62,7 @@ namespace Uintah {
       bc_value = T(0.0);
       foundBC = true;
     }
-    
+
     const BoundCondBase* bc;
     const BoundCond<T>* new_bcs;
     const BCDataArray* bcd = patch->getBCDataArray(face);
@@ -72,7 +72,7 @@ namespace Uintah {
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,desc,child);
       new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
-      
+
       if (new_bcs != 0) {
         bc_value = new_bcs->getValue();
         bc_kind  = new_bcs->getBCType();
@@ -80,13 +80,13 @@ namespace Uintah {
       }
       delete bc;
     }
-    
+
     //__________________________________
     // Symmetry
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
       std::string test =(bc) ? bc->getBCType() : "NotSet";
-      
+
       if (test == "symmetry") {
         bc_kind  = "symmetry";
         bc_value = T(0.0);
@@ -94,13 +94,13 @@ namespace Uintah {
       }
       delete bc;
     }
-    
+
     //__________________________________
     //  Now deteriming the iterator
     if(foundBC){
       // For this face find the iterator
       bcd->getCellFaceIterator(mat_id,bound_ptr,child);
-      
+
       // bulletproofing
       if (bound_ptr.done()){  // size of the iterator is 0
         return false;
@@ -109,7 +109,7 @@ namespace Uintah {
     }
     return false;
   }
-  
+
   //______________________________________________________________________
   //
   template <class T>
@@ -122,7 +122,7 @@ namespace Uintah {
                           Iterator& bound_ptr )
   {
     bool foundBC = false;
-    
+
     const BoundCondBase* bc;
     const BoundCond<T>* new_bcs;
     const BCDataArray* bcd = patch->getBCDataArray(face);
@@ -132,20 +132,20 @@ namespace Uintah {
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,desc,child);
       new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
-      
+
       if (new_bcs != 0) {
         bc_value = new_bcs->getValue();
         foundBC = true;
       }
       delete bc;
     }
-    
+
     //__________________________________
     //  Now deteriming the iterator
     if(foundBC){
       // For this face find the iterator
       bcd->getCellFaceIterator(mat_id,bound_ptr,child);
-      
+
       // bulletproofing
       if (bound_ptr.done()){  // size of the iterator is 0
         return false;
@@ -154,7 +154,7 @@ namespace Uintah {
     }
     return false;
   }
-  
+
   //______________________________________________________________________
   /**
    *  \author Tony Saad
@@ -173,7 +173,7 @@ namespace Uintah {
                   T& bc_value )
   {
     bool foundBC = false;
-    
+
     const BoundCondBase* bc;
     const BoundCond<T>* new_bcs;
     const BCDataArray* bcd = patch->getBCDataArray(face);
@@ -183,7 +183,7 @@ namespace Uintah {
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,desc,child);
       new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
-      
+
       if (new_bcs != 0) {
         bc_value = new_bcs->getValue();
         foundBC = true;
@@ -192,7 +192,7 @@ namespace Uintah {
     }
     return foundBC;
   }
-  
+
   //______________________________________________________________________
   //
   void
@@ -203,7 +203,7 @@ namespace Uintah {
              const int mat_id,
              std::string& bc_kind,
              std::string& face_label );
-  
+
   //______________________________________________________________________
   //  Neumann BC:  CCVariable
   template<class T>
@@ -217,9 +217,9 @@ namespace Uintah {
     Uintah::IntVector oneCell = patch->faceDirection(face);
     Uintah::IntVector dir= patch->getFaceAxes(face);
     double dx = cell_dx[dir[0]];
-    
+
     int nCells = 0;
-    
+
     if (value == T(0)) {   //    Z E R O  N E U M A N N
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         Uintah::IntVector adjCell = *bound_ptr - oneCell;
@@ -235,13 +235,13 @@ namespace Uintah {
     }
     return nCells;
   }
-  
+
   //______________________________________________________________________
   //  Dirichlet BC:    CCVariable
   template<class T>
-  int setDirichletBC_CC( CCVariable<T>& var,     
-                        Iterator& bound_ptr,    
-                        T& value) 
+  int setDirichletBC_CC( CCVariable<T>& var,
+                        Iterator& bound_ptr,
+                        T& value)
   {
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       var[*bound_ptr] = value;
@@ -249,6 +249,6 @@ namespace Uintah {
     int nCells = bound_ptr.size();
     return nCells;
   }
-  
+
 } // End namespace Uintah
 #endif
