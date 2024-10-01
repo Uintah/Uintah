@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
-#define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
+#ifndef Ice_customBCs_BoundaryCond_h
+#define Ice_customBCs_BoundaryCond_h
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>

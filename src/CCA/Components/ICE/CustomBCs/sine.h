@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_Sine_h
-#define Packages_Uintah_CCA_Components_Ice_CustomBCs_Sine_h
+#ifndef ICE_CUSTOMBCS_SINE_H
+#define ICE_CUSTOMBCS_SINE_H
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>

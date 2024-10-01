@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_MMS_BC_h
-#define Packages_Uintah_CCA_Components_Ice_CustomBCs_MMS_BC_h
+#ifndef ICE_CUSTOMBCS_MMS_BC_H
+#define ICE_CUSTOMBCS_MMS_BC_H
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>

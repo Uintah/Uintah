@@ -38,7 +38,8 @@ SRCS += \
         $(SRCDIR)/LODI2.cc         \
         $(SRCDIR)/microSlipBCs.cc  \
         $(SRCDIR)/MMS_BCs.cc       \
-        $(SRCDIR)/sine.cc
+        $(SRCDIR)/sine.cc          \
+        $(SRCDIR)/temporalBCs.cc        
 
 PSELIBS := \
 	CCA/Components/ICE/Core      \

@@ -641,7 +641,7 @@ void setBC(CCVariable<double>& press_CC,
 
       bool foundIterator =
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-                                               bc_value, bound_ptr,bc_kind);
+                                               bc_value, bound_ptr, bc_kind);
 
       if(foundIterator && bc_kind != "LODI") {
         //__________________________________

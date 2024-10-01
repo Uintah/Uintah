@@ -22,14 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
-#define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
+#ifndef ICE_CUSTOMBCS_C_BC_DRIVER_H
+#define ICE_CUSTOMBCS_C_BC_DRIVER_H
 
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/sine.h>
+#include <CCA/Components/ICE/CustomBCs/temporalBCs.h>
 
 #include <Core/Grid/MaterialManagerP.h>
 
@@ -47,19 +48,22 @@ namespace Uintah {
       slip              = nullptr;
       mms               = nullptr;
       sine              = nullptr;
+      temporal          = nullptr;
       inletVel          = nullptr;
 
-      usingLodi         = false;
-      usingMicroSlipBCs = false;
-      using_MMS_BCs     = false;
-      using_Sine_BCs    = false;
-      using_inletVel_BCs= false;
+      usingLodi           = false;
+      usingMicroSlipBCs   = false;
+      using_MMS_BCs       = false;
+      using_Sine_BCs      = false;
+      using_Temporal_BCs  = false;
+      using_inletVel_BCs  = false;
       applyHydrostaticPress = true;
       d_gravity         = Vector(0,0,0);
 
     };
     
     ~customBC_globalVars() {};
+    
     // LODI boundary condtions
     bool usingLodi;
     Lodi_globalVars* lodi;
@@ -76,6 +80,10 @@ namespace Uintah {
     bool using_Sine_BCs;
     sine_globalVars* sine;
     
+    // temporal boundary conditions
+    bool using_Temporal_BCs;
+    temporal_globalVars* temporal;
+
     // powerLawProfile or logLawProfile inlet velocity profile
     bool using_inletVel_BCs;
     inletVel_globalVars* inletVel;
@@ -102,6 +110,7 @@ namespace Uintah {
       setMicroSlipBcs   = false;
       set_MMS_BCs       = false;
       set_Sine_BCs      = false;
+      set_Temporal_BCs  = false;
       set_inletVel_BCs  = false;
       recursiveTask     = false;
     };
@@ -127,6 +136,10 @@ namespace Uintah {
     bool set_Sine_BCs;
     sine_localVars* sine;
     
+    // temporal boundary conditions
+    bool set_Temporal_BCs;
+    temporal_localVars* temporal;
+    
     // powerLawProfile or logLawProfile inlet velocity profile
     bool set_inletVel_BCs;
     inletVel_localVars* inletVel;
@@ -137,22 +150,22 @@ namespace Uintah {
   
    void computesRequires_CustomBCs(Task* t, 
                                    const std::string& where,
-                                   ICELabel* lb,                             
-                                   const MaterialSubset* ice_matls,          
-                                   customBC_globalVars* global,
+                                   ICELabel * lb,                             
+                                   const MaterialSubset * ice_matls,          
+                                   customBC_globalVars  * global,
                                    const bool recursiveTask = false);        
  
-   void preprocess_CustomBCs(const std::string& where,
-                             DataWarehouse* old_dw,                    
-                             DataWarehouse* new_dw,                    
-                             ICELabel* lb,                             
-                             const Patch* patch,                       
+   void preprocess_CustomBCs(const std::string  & where,
+                             DataWarehouse      * old_dw,                    
+                             DataWarehouse      * new_dw,                    
+                             ICELabel           * lb,                             
+                             const Patch        * patch,                       
                              const int indx,                           
-                             customBC_globalVars* global,
-                             customBC_localVars* localVars);        
+                             customBC_globalVars  * global,
+                             customBC_localVars   * localVars);        
                             
-   void delete_CustomBCs( customBC_globalVars* global,
-                          customBC_localVars* local );
+   void delete_CustomBCs( customBC_globalVars * global,
+                          customBC_localVars  * local );
   
 } // End namespace Uintah  
 #endif

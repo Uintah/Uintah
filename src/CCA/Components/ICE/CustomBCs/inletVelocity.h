@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef ICE_INLETVELOCITY_h
-#define ICE_INLETVELOCITY_h
+#ifndef ICE_CUSTOMBCS_INLETVELOCITY_H
+#define ICE_CUSTOMBCS_INLETVELOCITY_H
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>

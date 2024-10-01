@@ -35,11 +35,11 @@ namespace Uintah {
 //__________________________________
 // Function~  add the computes and requires for each of the custom BC
 //______________________________________________________________________
-void computesRequires_CustomBCs(Task* t, 
-                                const string& where,
-                                ICELabel* lb,
-                                const MaterialSubset* ice_matls,
-                                customBC_globalVars* gv,
+void computesRequires_CustomBCs(Task          * t, 
+                                const string  & where,
+                                ICELabel      * lb,
+                                const MaterialSubset  * ice_matls,
+                                customBC_globalVars   * gv,
                                 const bool recursiveTask)
 {   
   if( gv->usingLodi ){             // LODI         
@@ -51,8 +51,11 @@ void computesRequires_CustomBCs(Task* t,
   if( gv->using_MMS_BCs ){         // method of manufactured solutions         
     addRequires_MMS( t, where,  lb, ice_matls);
   }
-  if( gv->using_Sine_BCs ){         // method of manufactured solutions         
+  if( gv->using_Sine_BCs ){         // Sine        
     addRequires_Sine( t, where,  lb, ice_matls);
+  }
+  if( gv->using_Temporal_BCs ){     // Temporal
+    addRequires_Temporal( t, where,  lb, ice_matls);
   }
   if( gv->using_inletVel_BCs ){               
     addRequires_inletVel( t, where,  lb, ice_matls, recursiveTask);
@@ -62,14 +65,14 @@ void computesRequires_CustomBCs(Task* t,
 // Function:  preprocess_CustomBCs
 // Purpose:   Get variables and precompute any data before setting the Bcs.
 //______________________________________________________________________
-void preprocess_CustomBCs(const string& where,
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw,
-                          ICELabel* lb,
-                          const Patch* patch,
+void preprocess_CustomBCs(const string  & where,
+                          DataWarehouse * old_dw, 
+                          DataWarehouse * new_dw,
+                          ICELabel      * lb,
+                          const Patch   * patch,
                           const int indx,
-                          customBC_globalVars* gv,
-                          customBC_localVars* lv)
+                          customBC_globalVars * gv,
+                          customBC_localVars  * lv)
 {
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
@@ -122,6 +125,17 @@ void preprocess_CustomBCs(const string& where,
                         lv->set_Sine_BCs, 
                         lv->sine);        
   }  
+
+  //__________________________________
+  //  temporal boundary conditions
+  if( gv->using_Temporal_BCs ){  
+    lv->temporal = scinew temporal_localVars();
+    lv->temporal->simTime = (double)simTime;
+    gv->temporal->delT = (double)delT;
+    preprocess_temporal_BCs( new_dw, old_dw, lb, indx, patch, where,
+                              lv->set_Temporal_BCs, 
+                              lv->temporal);        
+  }
   
   //__________________________________
   //  inletVelocity conditions
