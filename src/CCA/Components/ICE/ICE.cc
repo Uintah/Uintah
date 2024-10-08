@@ -2021,10 +2021,10 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
     MaterialSubset* reduction_mss = scinew MaterialSubset();
     reduction_mss->add( global_mss->get(0) );
 
-    unsigned int numICEmatls = m_materialManager->getNumMatls( "ICE" );
+    unsigned int numMatls = m_materialManager->getNumMatls();
 
-    if( numICEmatls > 1  ){  // ignore for single matl problems
-      for (unsigned int m = 0; m < numICEmatls; m++ ) {
+    if( numMatls > 1 ){  // ignore for single matl problems 
+      for ( int m = 0; m < ice_mss->size(); m++ ) {
         reduction_mss->add( ice_mss->get(m) );
       }
     }
