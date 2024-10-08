@@ -18,7 +18,8 @@
       </SwitchCriteria>                                              
     </subcomponent>                                                  
     <!--__________________________________-->       
-    <!-- heat transfer calculation phase: impm -->    <subcomponent>
+    <!-- heat transfer calculation phase: impm -->    
+    <subcomponent>
       <input_file>inputs/UCF/Switcher/ex3_phase2.ups</input_file> 
       <SwitchCriteria type = "simpleBurn">
         <reactant_material>    1      </reactant_material>

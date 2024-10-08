@@ -214,6 +214,7 @@
       <SolidReactionModel           spec="OPTIONAL NO_DATA">
         <fromMaterial               spec="REQUIRED STRING" />
         <toMaterial                 spec="REQUIRED STRING" />
+        <E0                         spec="REQUIRED DOUBLE"/>
         <RateConstantModel          spec="OPTIONAL NO_DATA"
                                         attribute="type REQUIRED STRING 'Arrhenius, ModifiedArrhenius'">
           <A                        spec="REQUIRED DOUBLE"/>
