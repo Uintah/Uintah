@@ -326,16 +326,20 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->allocateAndPut(onSurface,  Simple_Burn::onSurfaceLabel,   0, patch);
     new_dw->allocateAndPut(surfaceTemp,Simple_Burn::surfaceTempLabel, 0, patch);
  
-    IntVector nodeIdx[8];
+    onSurface.initialize(0.0);
+    surfaceTemp.initialize(0.0);
+ 
+ 
+    
     
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m0);
     double cv_solid = mpm_matl->getSpecificHeat();
    
-
     // Get all Temperatures for burning check
     int numAllMatls = m_materialManager->getNumMatls();
     std::vector<constCCVariable<double> >  vol_frac_CC(numAllMatls);
     std::vector<constCCVariable<double> >  temp_CC(numAllMatls);
+    
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = m_materialManager->getMaterial(m);
       int indx = matl->getDWIndex();
@@ -347,11 +351,14 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
 
-     //__________________________________
-     // Find if the cell contains surface:
+      //__________________________________
+      // Find if the cell contains surface:
+      IntVector nodeIdx[8];
       patch->findNodesFromCell(*iter,nodeIdx);
+      
       double MaxMass = d_SMALL_NUM;
       double MinMass = 1.0/d_SMALL_NUM;                 
+      
       for (int nN=0; nN<8; nN++) {
         MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
                                    NCsolidMass[nodeIdx[nN]]);
@@ -384,7 +391,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         surfaceTemp[c] = Temp;
 
         Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight, dx);
-        double surfArea = computeSurfaceArea(rhoGradVector, dx);  
+        double surfArea      = computeSurfaceArea(rhoGradVector, dx);  
         onSurface[c] = surfArea; // debugging var
 
         //__________________________________
