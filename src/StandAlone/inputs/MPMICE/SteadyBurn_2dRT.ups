@@ -3,7 +3,7 @@
 <Uintah_specification>
   <!-- The tuna can problem -->
   <Solver type="hypre" />
-  
+
   <Meta>
     <title> Exploding Container 2-D Using Steady Burn Model </title>
   </Meta>
@@ -32,7 +32,7 @@
       <Face side="x-">
         <BCType id="all" label="Symmetric" var="symmetry">
         </BCType>
-      </Face>     
+      </Face>
       <Face side="x+">
         <BCType id="0" label="Pressure" var="Neumann">
           <value>   0.0        </value>
@@ -145,7 +145,7 @@
         <Scheme_for_delT_calc> aggressive  </Scheme_for_delT_calc>
         <knob_for_speedSound>  0.000       </knob_for_speedSound>
       </TimeStepControl>
-                 
+
       <ImplicitSolver>
         <max_outer_iterations>      20     </max_outer_iterations>
         <outer_iteration_tolerance> 1.01e-7 </outer_iteration_tolerance>
@@ -252,7 +252,7 @@
           <stddevstrain_nucleation>       0.1     </stddevstrain_nucleation>
           <initial_porosity_distrib>      gauss   </initial_porosity_distrib>
         </constitutive_model>
-        
+
         <damage_model type="johnson_cook">
           <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
           <initial_std_scalar_damage>     0.001  </initial_std_scalar_damage>
@@ -260,9 +260,9 @@
           <initial_scalar_damage_distrib> gauss  </initial_scalar_damage_distrib>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
         </damage_model>
-        
+
         <erosion algorithm="ZeroStress"/>
-          
+
         <geom_object>
           <difference label="SteelShell">
             <cylinder>
@@ -342,7 +342,7 @@
               <bottom>           [0.0,0.0,-.0508]   </bottom>
               <top>              [0.0,0.0, .0508]   </top>
               <radius>           0.03810            </radius>
-              <!-- If no center bore, set radius = 1e-20 --> 
+              <!-- If no center bore, set radius = 1e-20 -->
             </cylinder>
           </difference>
           <res>              [2,2,2]         </res>
@@ -393,8 +393,12 @@
       </material>
     </ICE>
 
+    <!--__________________________________-->
     <exchange_properties>
-      <heatExchangeCoeff>  variable  </heatExchangeCoeff>
+      <CoefficientModel>
+        <heat> linearVariation </heat>
+      </CoefficientModel>
+
       <exchange_coefficients>
         <momentum>  [0,   1e10, 1e10 ]   </momentum>
         <heat>      [1e5, 1e5,  1e5  ]   </heat>
@@ -402,6 +406,7 @@
     </exchange_properties>
   </MaterialProperties>
 
+  <!--______________________________________________________________________-->
   <Models>
     <Model type="Steady_Burn">
       <Steady_Burn>

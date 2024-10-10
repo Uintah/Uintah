@@ -53,14 +53,19 @@ namespace ExchangeModels{
     void getConstantExchangeCoeff( FastMatrix& K,
                                    FastMatrix& H );
 
-    void getVariableExchangeCoeff( FastMatrix& ,
-                                   FastMatrix& H,
+    void getVariableExchangeCoeff( FastMatrix& Q,
                                    IntVector & c,
                                    std::vector<constCCVariable<double> >& mass );
     bool convective();
     int conv_fluid_matlindex();
     int conv_solid_matlindex();
-    std::string d_heatExchCoeffModel;
+
+    enum model{ ConstantCoeff, linearVariation, none };
+
+
+    model d_heatExchCoeffModel = {none};
+    model d_momExchCoeffModel  = {none};
+
 
   private:
     std::vector<double> d_K_mom_V;
@@ -69,6 +74,11 @@ namespace ExchangeModels{
     int d_conv_fluid_matlindex = -9;
     int d_conv_solid_matlindex = -9;
     int d_numMatls = 0;
+
+    std::map<model, std::string> d_coeffModelName = {
+      { ConstantCoeff,   "ConstantCoeff"},
+      { linearVariation, "linearVariation" }
+    };
   };
 }
 }

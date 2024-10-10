@@ -296,24 +296,33 @@
     <!--________________________________________________________________________________________________________-->
     <!--ICE and MPMICE related -->
     <exchange_properties           spec="OPTIONAL NO_DATA" >
+
+      <CoefficientModel            spec="OPTIONAL NO_DATA">
+        <momentum                  spec="OPTIONAL STRING 'constant, linearVariation'" />
+        <heat                      spec="OPTIONAL STRING 'constant, linearVariation'" />
+      </CoefficientModel>
+
       <Model                          spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'slip'" >
-        <solidMatlIndex               spec="REQUIRED INTEGER" />
-        <fluidMatlIndex               spec="REQUIRED INTEGER" />
-        <momentum_accommodation_coeff spec="REQUIRED DOUBLE"  />
-        <thermal_accommodation_coeff  spec="REQUIRED DOUBLE"  />
-        <useSlipCoeffs                spec="OPTIONAL BOOLEAN" />
+        <solidMatlIndex               spec="REQUIRED INTEGER 'positive'"  need_applies_to="type slip" />
+        <fluidMatlIndex               spec="REQUIRED INTEGER 'positive'"  need_applies_to="type slip" />
+        <momentum_accommodation_coeff spec="REQUIRED DOUBLE"  need_applies_to="type slip" />
+        <thermal_accommodation_coeff  spec="REQUIRED DOUBLE"  need_applies_to="type slip" />
+        <useSlipCoeffs                spec="OPTIONAL BOOLEAN" need_applies_to="type slip" />
       </Model>
 
       <convective_fluid            spec="OPTIONAL INTEGER" />
       <convective_solid            spec="OPTIONAL INTEGER" />
       <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" />
-      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
+
+
 
       <exchange_coefficients       spec="REQUIRED NO_DATA" >
         <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
         <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
       </exchange_coefficients>
+
     </exchange_properties>
+
   </MaterialProperties>
 
 </Uintah_Include>

@@ -19,7 +19,7 @@
     <delt_init>          2.1e-8      </delt_init>
     <!--<max_Timesteps>     30000       </max_Timesteps> -->
     <timestep_multiplier>0.3         </timestep_multiplier>
-  </Time>    
+  </Time>
   <!--____________________________________________________________________-->
   <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
@@ -78,8 +78,8 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
           <value> 0.0  </value>
         </BCType>
-      </Face>   
-      <!--______________TOP____________________-->               
+      </Face>
+      <!--______________TOP____________________-->
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
           <value> 101325.0   </value>
@@ -101,8 +101,8 @@
       <Face side = "z-">
         <BCType id = "all"   label = "Symmetric"     var = "symmetry">
         </BCType>
-      </Face>  
-      <!--______________FRONT____________________--> 
+      </Face>
+      <!--______________FRONT____________________-->
       <Face side = "z+">
         <BCType id = "all"   label = "Symmetric"     var = "symmetry">
         </BCType>
@@ -118,7 +118,7 @@
       </Box>
     </Level>
   </Grid>
-  
+
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
@@ -132,11 +132,11 @@
     <save label="vel_CC"/>
     <save label="vol_frac_CC"/>
     <save label="sp_vol_CC"/>
-    
+
     <save label="KineticEnergy"/>
     <save label="totalMassBurned"/>
     <save label="totalHeatReleased"/>
-    
+
     <save label="p.x"           levels="-1"/>
     <save label="p.temperature" levels="-1"/>
     <save label="p.particleID"  levels="-1"/>
@@ -153,7 +153,7 @@
     <ICE>
       <advection type="SecondOrder"/>
       <ClampSpecificVolume>true</ClampSpecificVolume>
-    </ICE>        
+    </ICE>
   </CFD>
 
   <!--____________________________________________________________________-->
@@ -164,7 +164,7 @@
       <do_Refluxing>        false    </do_Refluxing>
       <orderOfInterpolation>1        </orderOfInterpolation>
       <ClampSpecificVolume>true</ClampSpecificVolume>
-      
+
       <Refinement_Criteria_Thresholds>
       </Refinement_Criteria_Thresholds>
       <orderOf_CFI_Interpolation>1</orderOf_CFI_Interpolation>
@@ -185,18 +185,18 @@
     </Regridder>
 
     <useLockStep>       true </useLockStep>
-  </AMR> 
-  
-  
+  </AMR>
+
+
   <LoadBalancer type="DLB">
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>
-  </LoadBalancer>                                                                                                                 
+  </LoadBalancer>
 
   <!--____________________________________________________________________-->
   <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-  <!--____________________________________________________________________-->   
+  <!--____________________________________________________________________-->
   <PhysicalConstants>
     <gravity>            [0,0,0]   </gravity>
     <reference_pressure> 101325.0  </reference_pressure>
@@ -257,7 +257,7 @@
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
           <initial_porosity_distrib>      gauss </initial_porosity_distrib>
         </constitutive_model>
-         
+
         <damage_model type="johnson_cook">
           <initial_mean_scalar_damage>    0.005   </initial_mean_scalar_damage>
           <initial_std_scalar_damage>     0.001   </initial_std_scalar_damage>
@@ -265,25 +265,25 @@
           <initial_scalar_damage_distrib> gauss   </initial_scalar_damage_distrib>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
         </damage_model>
-        <erosion algorithm = "ZeroStress"/>                                     
-        
-        <geom_object>                                                
-          <difference>                                              
-            <cylinder label="outer steel cylinder 2">  
-              <bottom>           [0.0, 0.0,-0.06985]  </bottom>        
-              <top>              [0.0, 0.0, 0.06985]  </top>           
-              <radius>           0.05715             </radius>        
-            </cylinder>                                               
+        <erosion algorithm = "ZeroStress"/>
+
+        <geom_object>
+          <difference>
+            <cylinder label="outer steel cylinder 2">
+              <bottom>           [0.0, 0.0,-0.06985]  </bottom>
+              <top>              [0.0, 0.0, 0.06985]  </top>
+              <radius>           0.05715             </radius>
+            </cylinder>
             <cylinder label="inner steel cylinder 2">
-              <bottom>           [0.0, 0.0,-.0508]    </bottom>            
-              <top>              [0.0, 0.0, .0508]    </top>         
-              <radius>           0.0508              </radius>         
-            </cylinder>                                               
-          </difference>                                             
-          <res>                 [2,2,2]         </res>                
-          <velocity>            [0.0,0.0,0.0]   </velocity>           
-          <temperature>         600             </temperature>        
-        </geom_object>                                               
+              <bottom>           [0.0, 0.0,-.0508]    </bottom>
+              <top>              [0.0, 0.0, .0508]    </top>
+              <radius>           0.0508              </radius>
+            </cylinder>
+          </difference>
+          <res>                 [2,2,2]         </res>
+          <velocity>            [0.0,0.0,0.0]   </velocity>
+          <temperature>         600             </temperature>
+        </geom_object>
       </material>
 
       <!--__________________________________-->
@@ -298,7 +298,7 @@
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
         <erosion algorithm = "ZeroStress"/>
-            
+
         <geom_object> <!-- hot HMX particles -->
           <intersection>
             <box label="hot chunk 2">
@@ -312,28 +312,28 @@
           <temperature>         600.0           </temperature>
         </geom_object>
         <geom_object>
-          <difference>  
+          <difference>
             <difference>
               <cylinder label="inner steel cylinder 2"> </cylinder>
               <box label="hot chunk 2">                 </box>
             </difference>
             <cylinder label="bore">
               <bottom>   [0.0, 0, -0.0381]    </bottom>
-              <top>      [0.0, 0, 0.0381]     </top>  
+              <top>      [0.0, 0, 0.0381]     </top>
               <radius>       0.0381           </radius>
             </cylinder>
           </difference>
           <res>                 [2,2,2]         </res>
           <velocity>            [0.0,0.0,0.0]   </velocity>
           <temperature>         300.0           </temperature>
-        </geom_object> 
+        </geom_object>
       </material>
 
-      <contact>                                               
-        <type>approach</type>                                 
-        <materials>              [0,1]         </materials>   
-        <mu> 0.0 </mu>                                        
-      </contact>                                              
+      <contact>
+        <type>approach</type>
+        <materials>              [0,1]         </materials>
+        <mu> 0.0 </mu>
+      </contact>
     </MPM>
     <!--__________________________________-->
     <ICE>
@@ -345,16 +345,16 @@
         <specific_heat>              716.0          </specific_heat>
         <gamma>                      1.4            </gamma>
         <geom_object>
-          <difference>                                                    
-            <box>                                                       
-              <min>       [-2.54,-2.54,-2.54]   </min>               
-              <max>       [ 2.54, 2.54, 2.54]   </max>               
-            </box>                                                         
+          <difference>
+            <box>
+              <min>       [-2.54,-2.54,-2.54]   </min>
+              <max>       [ 2.54, 2.54, 2.54]   </max>
+            </box>
             <difference>
               <cylinder label="outer steel cylinder 2">  </cylinder>
               <cylinder label="bore"> </cylinder>
             </difference>
-          </difference>                                                 
+          </difference>
           <res>                      [2,2,2]         </res>
           <velocity>           [0.0,0.0,0.0]         </velocity>
           <temperature>        300.0                 </temperature>
@@ -362,7 +362,7 @@
           <pressure>           101325.0              </pressure>
         </geom_object>
       </material>
-      
+
       <material name = "PBXproductGases">  <!-- MATL 3 -->
         <EOS type="hard_sphere_gas">
           <b> 1.4e-3 </b>
@@ -383,22 +383,29 @@
           <pressure>           101325.0            </pressure>
         </geom_object>
       </material>
-      
-    </ICE>       
 
-    <exchange_properties>  
-      <heatExchangeCoeff>  variable     </heatExchangeCoeff>
+    </ICE>
+
+    <!--__________________________________-->
+    <exchange_properties>
+      <CoefficientModel>
+        <heat> linearVariation </heat>
+      </CoefficientModel>
+
       <exchange_coefficients>
         <momentum>  [ 0, 1e15, 1e15,
-        1e15, 1e9,
-        1e15]     </momentum>
+                          1e15, 1e9,
+                                1e15]
+        </momentum>
         <heat>      [ 0, 1e10, 1e10,
-        1e10, 1e10,
-        1e10]     </heat>
+                         1e10, 1e10,
+                               1e10]
+        </heat>
       </exchange_coefficients>
-    </exchange_properties> 
+    </exchange_properties>
   </MaterialProperties>
 
+  <!--__________________________________-->
   <Models>
     <Model type="Steady_Burn">
       <Steady_Burn>
@@ -418,7 +425,7 @@
         <ThresholdPressure>    50000        </ThresholdPressure>
         <IgnitionTemp>         550.0        </IgnitionTemp>
       </Steady_Burn>
-    </Model> 
+    </Model>
   </Models>
 
   <PhysicalBC>
