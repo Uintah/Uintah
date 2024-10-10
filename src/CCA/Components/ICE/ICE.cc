@@ -4132,7 +4132,7 @@ void ICE::viscousShearStress(const ProcessorGroup *,
         //  compute the shear stress terms
         if( ice_matl->isDynViscosityDefined() || computePatchFlag ) {
 
-          cout << "   viscousShearStress: patchID: " << patch->getID() << ", d_isViscosityDefined: " << ice_matl->isDynViscosityDefined() << ", computePatchFlag: " << computePatchFlag << endl;
+         // cout << "   viscousShearStress: patchID: " << patch->getID() << ", d_isViscosityDefined: " << ice_matl->isDynViscosityDefined() << ", computePatchFlag: " << computePatchFlag << endl;
 
           CCVariable<double>        tot_viscosity;     // total viscosity
           CCVariable<double>        viscosity;         // total *OR* molecular viscosity;
