@@ -204,6 +204,12 @@ template bool is_NanInf_V( SFCYVariable<Vector> &, IntVector & );
 template bool is_NanInf_V( SFCZVariable<Vector> &, IntVector & );
 template bool is_NanInf_V( NCVariable<Vector> &, IntVector & );
 
+template bool is_NanInf_V( constCCVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCXVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCYVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCZVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constNCVariable<Vector> &, IntVector & );
+
 
 //template bool areAllNodeValuesNumbers( NCVariable<double> &, IntVector & );
 } // end namespace Uintah

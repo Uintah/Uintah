@@ -59,6 +59,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/Utils.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 
@@ -1115,7 +1116,7 @@ void ICE::scheduleComputeThermoTransportProperties( SchedulerP        & sched,
   t->computes( lb->isViscosityDefinedFlagLabel );
 
 /*`==========TESTING==========*/
-//  sched->overrideVariableBehavior(lb->isViscosityDefinedFlagLabel->getName(), false, false, true, true, true); 
+//  sched->overrideVariableBehavior(lb->isViscosityDefinedFlagLabel->getName(), false, false, true, true, true);
 /*===========TESTING==========`*/
 
   sched->addTask( t, level->eachPatch(), ice_matls );
@@ -1263,13 +1264,13 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
 
     printSchedule( level, m_ice_tasks, " ICE::scheduleComputeModelSources" );
 
-    Task* task = scinew Task("ICE::zeroModelSources",this,
+    Task* t1 = scinew Task("ICE::zeroModelSources",this,
                              &ICE::zeroModelSources);
 
-    task->computes( lb->modelMass_srcLabel );
-    task->computes( lb->modelMom_srcLabel );
-    task->computes( lb->modelEng_srcLabel );
-    task->computes( lb->modelVol_srcLabel );
+    t1->computes( lb->modelMass_srcLabel );
+    t1->computes( lb->modelMom_srcLabel );
+    t1->computes( lb->modelEng_srcLabel );
+    t1->computes( lb->modelVol_srcLabel );
 
     //__________________________________
     // Model with transported variables.
@@ -1286,13 +1287,13 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
           TransportedVariable* tvar = *t_iter;
 
           if(tvar->src){
-            task->computes( tvar->src, tvar->matls );
+            t1->computes( tvar->src, tvar->matls );
           }
         }
       }
     }
 
-    sched->addTask(task, level->eachPatch(), matls);
+    sched->addTask(t1, level->eachPatch(), matls);
 
     //__________________________________
     //  Models *can* compute their resources
@@ -1319,6 +1320,21 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
         p_model->scheduleComputeModelSources( sched, level );
       }
     }
+
+    //__________________________________
+    //  Validate that what was computed isn't a nan or inf
+    printSchedule( level, m_ice_tasks, " ICE::schedule_bulletProofing_ModelSources" );
+
+    Task* t2 = scinew Task("ICE::bulletProofing_ModelSources",this,
+                           &ICE::bulletProofing_ModelSources);
+
+    t2->requires( Task::NewDW, lb->modelMass_srcLabel, m_gn );
+    t2->requires( Task::NewDW, lb->modelMom_srcLabel,  m_gn );
+    t2->requires( Task::NewDW, lb->modelEng_srcLabel,  m_gn );
+    t2->requires( Task::NewDW, lb->modelVol_srcLabel,  m_gn );
+
+    sched->addTask(t2, level->eachPatch(), matls);
+
   }
 }
 
@@ -2023,7 +2039,7 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
 
     unsigned int numMatls = m_materialManager->getNumMatls();
 
-    if( numMatls > 1 ){  // ignore for single matl problems 
+    if( numMatls > 1 ){  // ignore for single matl problems
       for ( int m = 0; m < ice_mss->size(); m++ ) {
         reduction_mss->add( ice_mss->get(m) );
       }
@@ -2554,7 +2570,7 @@ void ICE::initializeSubTask_setFlags(const ProcessorGroup *,
     if( ice_matl->isSurroundingMatl() ) {
       d_surroundingMatl_indx = ice_matl->getDWIndex();
     }
-    
+
     //__________________________________
     // bulletproofing
 
@@ -2633,7 +2649,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup *,
 
       std::vector< bool > isDynVisDefined_flags;                                  // each model sets this flag
       isDynVisDefined_flags.push_back( ice_matl->isDynViscosityDefined() );
-      
+
 
       //__________________________________
       //    Transport Prpoerties
@@ -3895,6 +3911,62 @@ void ICE::zeroModelSources(const ProcessorGroup   *,
 }
 
 /* _____________________________________________________________________
+ Task:      ICE::bulletProofing_ModelSources
+ Purpose:   verify that all values are real numbers
+ _____________________________________________________________________  */
+void ICE::bulletProofing_ModelSources(const ProcessorGroup  *,
+                                      const PatchSubset     * patches,
+                                      const MaterialSubset  * matls,
+                                      DataWarehouse         * /*old_dw*/,
+                                      DataWarehouse         * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, m_ice_tasks, "ICE::bulletProofing_ModelSources" );
+
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      constCCVariable<double> mass_src;
+      constCCVariable<double> energy_src;
+      constCCVariable<double> vol_src;
+      constCCVariable<Vector> mom_src;
+
+      new_dw->get( mass_src,   lb->modelMass_srcLabel,matl, patch, m_gn, 0 );
+      new_dw->get( energy_src, lb->modelEng_srcLabel, matl, patch, m_gn, 0 );
+      new_dw->get( mom_src,    lb->modelMom_srcLabel, matl, patch, m_gn, 0 );
+      new_dw->get( vol_src,    lb->modelVol_srcLabel, matl, patch, m_gn, 0 );
+
+      IntVector badCell;
+      if ( is_NanInf( mass_src, badCell) ) {
+        ostringstream warn;
+        warn << "ICE::bulletProofing_ModelSources:  modelMass_src " << badCell << " is either a Nan or Inf.\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+      if ( is_NanInf_V( mom_src, badCell) ) {
+        ostringstream warn;
+        warn << "ICE::bulletProofing_ModelSources:  modelMom_src " << badCell << " is either a Nan or Inf.\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+      if ( is_NanInf( energy_src, badCell) ) {
+        ostringstream warn;
+        warn << "ICE::bulletProofing_ModelSources:  modelEng_src " << badCell << " is either a Nan or Inf.\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+      if ( is_NanInf( vol_src, badCell) ) {
+        ostringstream warn;
+        warn << "ICE::bulletProofing_ModelSources:  modelVol_src " << badCell << " is either a Nan or Inf.\n ";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
+    }
+  }  // patches loop
+}
+
+/* _____________________________________________________________________
  Task:      ICE::updateVolumeFraction
  Purpose:   Update the volume fraction to reflect the mass exchange done
             by models
@@ -4211,7 +4283,14 @@ void ICE::viscousShearStress(const ProcessorGroup *,
           IntVector badCell;
           if ( is_NanInf_V( viscous_src, badCell) ) {
             ostringstream warn;
-            warn << "ICE::viscousShearStress: " << badCell << ", viscousSrc is either a Nan or Inf.\n ";
+            warn << "ICE::viscousShearStress: " << badCell << ", viscousSrc is either a Nan or Inf.\n "
+                 << "Primitive Variables: "
+                 << " vol_frac: " << vol_frac[badCell] << " rho_CC: " << rho_CC[badCell]
+                 << "\n  viscosity: " << viscosity[badCell] << " velTau_CC:" << velTau_CC[badCell]
+                 << "\n viscous_src: " << viscous_src[badCell];
+
+
+
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
         } // compute on this patch

@@ -617,6 +617,12 @@ using namespace ExchangeModels;
                             DataWarehouse*,
                             DataWarehouse*);
 
+      void bulletProofing_ModelSources(const ProcessorGroup *,
+                                       const PatchSubset    * patches,
+                                       const MaterialSubset * matls,
+                                       DataWarehouse *,
+                                       DataWarehouse *);
+
       void updateVolumeFraction(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
