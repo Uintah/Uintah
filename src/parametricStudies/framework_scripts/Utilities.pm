@@ -116,7 +116,7 @@ sub setPath{
     print " ($modInput)\n";
   }
 
-  print "does not exist.  Now exiting\n";
+  print "does not exist at any of the paths above.  Now exiting\n";
   exit
 }
 

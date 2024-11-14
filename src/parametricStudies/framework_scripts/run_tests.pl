@@ -66,15 +66,6 @@ my $config_files_path = $ARGV[1];
 # read XML file into a dom tree
 my $tst_dom = XML::LibXML->load_xml(location => $tstFile);
 
-#__________________________________
-# copy gnuplot script   OPTIONAL
-my $gpFile = cleanStr( $tst_dom->findvalue( '/start/gnuplot/script' ) );
-
-if( length $gpFile > 0 ){
-  $gpFile    = $config_files_path."/".$gpFile;
-  system("cp -f $gpFile . > /dev/null 2>&1");
-  print "  gnuplot script used in postProcess ($gpFile)\n";
-}
 
 #__________________________________
 # copy batch script and modify the template  OPTIONAL
