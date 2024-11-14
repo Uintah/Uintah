@@ -537,7 +537,7 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 //
 void
 DataArchiver::initializeOutput( const ProblemSpecP & params,
-                                const GridP& grid )
+                                const GridP& /*grid*/ )
 {
   if( m_outputInterval             == 0.0 &&
       m_outputTimeStepInterval     == 0   &&
@@ -556,19 +556,50 @@ DataArchiver::initializeOutput( const ProblemSpecP & params,
   // Wait for all ranks to finish verifying shared file system....
   Uintah::MPI::Barrier(d_myworld->getComm());
 
+  //__________________________________
+  //
   if( m_writeMeta ) {
 
     saveSVNinfo();
-    // Create index.xml:
-    string inputname = m_outputDir.getName()+"/input.xml";
-    params->output( inputname.c_str() );
+    //__________________________________
+    //  write the ups or input.xml to new uda
+    string absFilename = params->getFile();            // resolved absolute filename
+    string fileName = basename( absFilename );         // input.xml or X.ups
+    string path     = pathname( absFilename );         // path to ups file or path to restart uda dir
 
-    cout << "Saving original .ups file in UDA...\n";
-    Dir ups_location( pathname( params->getFile() ) );
-    ups_location.copy( basename( params->getFile() ), m_outputDir );
+    string uda = m_outputDir.getName();
+    string inputname = uda +"/input.xml";
+    params->output( inputname.c_str() );                     // create the the input.xml file
+
+    //__________________________________
+    // copy the ups file to the uda
+    cout << "Saving " << fileName << " file in UDA \n";
+    Dir fromDir( path );
+    fromDir.copy( fileName , m_outputDir );
+
+    //__________________________________
+    //  copy ups file to input.xml.orig
+    if( fileName != "input.xml" ){
+      string destFile = uda + "/input.xml.orig";
+      copyFile( absFilename, destFile);
+      proc0cout << "Copied " << fileName << " to input.xml.orig\n";
+    }
+    //__________________________________
+    // copy input.xml.orig if it exists in old uda
+
+    string orig  = fromDir.getName() + "/input.xml.orig";
+    if ( validFile(orig) ) {
+      fromDir.copy("input.xml.orig", m_outputDir);
+      proc0cout << "Copied input.xml.orig to: " << uda<< "\n";
+    }
+
+    //__________________________________
+    // Create index.xml:
+
 
     createIndexXML(m_outputDir);
 
+    //__________________________________
     // create checkpoints/index.xml (if we are saving checkpoints)
     if ( m_checkpointInterval         > 0.0 ||
          m_checkpointTimeStepInterval > 0   ||
@@ -1914,19 +1945,12 @@ DataArchiver::writeto_xml_files( const GridP& grid )
         rootElem->output( name.c_str() );
 
         //__________________________________
-        // output input.xml & input.xml.orig
-
-        // A small convenience to the user who wants to change things
-        // when they restart let them know that some information to change
-        // will need to be done in the timestep.xml file instead of the
-        // input.xml file.  Only do this once, though.
-
+        //  Modify the input.xml file by removing certain nodes
+        //  Add a comment and instruct the user which file to modify
         if( firstCheckpointTimeStep ) {
-          // loop over the blocks in timestep.xml and remove them from
-          // input.xml, with some exceptions.
+
           string inputname = m_outputDir.getName()+"/input.xml";
           ProblemSpecP inputDoc = loadDocument(inputname);
-          inputDoc->output((inputname + ".orig").c_str());
 
           for (ProblemSpecP ps = rootElem->getFirstChild(); ps != nullptr; ps = ps->getNextSibling()) {
             string nodeName = ps->getNodeName();
@@ -1936,7 +1960,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
               continue;
             }
 
-            // find and replace the node
+            // find and replace the node with the comment
             ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
             if (removeNode != nullptr) {
               string comment = "The node " + nodeName + " has been removed.  Its original values are\n"

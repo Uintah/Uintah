@@ -24,6 +24,7 @@
 
 /* FileUtils.cc */
 
+#include <Core/Exceptions/InternalError.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
@@ -47,13 +48,13 @@ namespace Uintah {
 
 ////////////////////////////////////////////////////////////
 //
-// InsertStringInFile 
+// InsertStringInFile
 //
 //       If "match" is found in "filename", then add "add_text" text
 //       to the file _after_ the location of the matched text.
 //
 //   Normally, I would just use sed via system() to edit a file,
-//   but for some reason system() calls never work from Dataflow 
+//   but for some reason system() calls never work from Dataflow
 //   processes in linux.  Oh well, sed isn't natively available
 //   under windows, so I'd have to do something like this anyhow
 //   - Chris Moulding
@@ -130,7 +131,7 @@ InsertStringInFile(char* filename, const char* match, const char* add_text)
     }
     fclose(ifile);
     fclose(ofile);
-  } 
+  }
 }
 
 map<int,char*>*
@@ -141,14 +142,14 @@ GetFilenamesEndingWith(const char* d, string ext)
   DIR* dir = opendir(d);
   char* newstring = 0;
 
-  if (!dir) 
+  if (!dir)
     return 0;
 
   newmap = new map<int,char*>;
 
   file = readdir(dir);
   while (file) {
-    if ((strlen(file->d_name)>=strlen(ext.c_str())) && 
+    if ((strlen(file->d_name)>=strlen(ext.c_str())) &&
         (strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext.c_str())]),ext.c_str())==0)) {
       newstring = new char[strlen(file->d_name)+1];
       sprintf(newstring,"%s",file->d_name);
@@ -161,14 +162,14 @@ GetFilenamesEndingWith(const char* d, string ext)
   return newmap;
 }
 
-string 
+string
 substituteTilde( const string & dirstr ) {
   string realdirstr = dirstr;
 
   string::size_type pos = realdirstr.find("~");
   if (pos != string::npos && (pos == 0 || dirstr[pos-1] == '/')) {
     string HOME = sci_getenv("HOME");
-    realdirstr = HOME + "/" + 
+    realdirstr = HOME + "/" +
       dirstr.substr(pos+1, dirstr.size()-pos-1);
   }
   return realdirstr;
@@ -208,11 +209,11 @@ split_filename( const string & fname )
   if (fname[fname.size()-1] == '/' || fname[fname.size()-1] == '\\') {
     filename = fname.substr(0, fname.size()-1);
   }
-  
+
   if (validDir(fname)) {
     return make_pair(filename, string(""));
   }
-    
+
   string::size_type pos = filename.find_last_of("/");
   if (pos == string::npos) {
     pos = filename.find_last_of("\\");
@@ -232,7 +233,7 @@ getInfo( const string & filename )
   if( result == 0 ) {
     printf( "Successful stat of file '%s'.\n", filename.c_str() );
     mode_t &m = buf.st_mode;
- 
+
     if( m & S_IRUSR && S_ISREG(m) && !S_ISDIR(m) ) {
       printf( "   File appears to be a regular file.\n" );
     }
@@ -260,7 +261,7 @@ getInfo( const string & filename )
 }
 
 bool
-validFile( const string & filename ) 
+validFile( const string & filename )
 {
   struct stat buf;
   string updatedFilename = substituteTilde(filename);
@@ -318,7 +319,7 @@ testFilesystem( const string & directoryPath,
   // Create a temporary file
   fp = fopen( fileName.c_str(), "w" );
   if( fp == nullptr ) {
-    error_stream << "ERROR: testFilesystem() failed to create a temp file (" << fileName << ") in " 
+    error_stream << "ERROR: testFilesystem() failed to create a temp file (" << fileName << ") in "
                  << directoryPath << "\n";
     error_stream << "       errno is " << errno << "\n";
     return false;
@@ -329,7 +330,7 @@ testFilesystem( const string & directoryPath,
   for( int cnt = 0; cnt < 1001; cnt++ ) {
     int numWritten = fwrite( myStr, 1, 11, fp );
     if( numWritten != 11 ) {
-      error_stream << "ERROR: testFilesystem() failed to write data to temp file (" << fileName << ") in " 
+      error_stream << "ERROR: testFilesystem() failed to write data to temp file (" << fileName << ") in "
                    << directoryPath << "\n";
       error_stream << "       iteration: " << cnt << ", errno is " << errno << "\n";
       return false;
@@ -372,7 +373,7 @@ testFilesystem( const string & directoryPath,
 // Searches the colon-seperated 'path' string variable for a file named
 // 'file'.  From left to right in the path string each directory is
 // tested to see if the file named 'file' is in it.
-// 
+//
 // If the file is found, it returns the DIRECTORY that the file is located in
 // Otherwise if the file is not found in the path, returns an empty string
 //
@@ -406,7 +407,7 @@ findFileInPath(const string &file, const string &path)
   }
   return "";
 }
-    
+
 string
 autocomplete(const string & instr)
 {
@@ -451,7 +452,7 @@ autocomplete(const string & instr)
 }
 
 
-string 
+string
 canonicalize(const string & fname )
 {
   string filename = substituteTilde( fname );
@@ -475,8 +476,8 @@ canonicalize(const string & fname )
         newentries.push_back(entries[i]);
       }
     }
-  } 
-  
+  }
+
   filename = "";
   for (unsigned int i = 0; i < entries.size(); ++i) {
     filename = filename + "/" + entries[i];
@@ -498,7 +499,7 @@ convertToWindowsPath( string & unixPath )
       unixPath[cnt] = '\\';
     }
   }
-}    
+}
 
 void
 convertToUnixPath( string & unixPath )
@@ -508,7 +509,7 @@ convertToUnixPath( string & unixPath )
       unixPath[cnt] = '/';
     }
   }
-}    
+}
 
 int
 copyFile( const string & src, const string & dest)
@@ -517,7 +518,7 @@ copyFile( const string & src, const string & dest)
   string cmd = cpCmd + src + " " + dest;
   int code = std::system(cmd.c_str());
   if (code) {
-    cerr << "Error executing: " << cmd << "\n";
+    throw InternalError(string("FileUtils::copyFile failed executing: ") + cmd, __FILE__, __LINE__);
   }
   return code;
 }
@@ -529,7 +530,7 @@ moveFile( const string & src, const string & dest )
   string cmd = mvCmd + src + " " + dest;
   int code = std::system(cmd.c_str());
   if (code) {
-    cerr << "Error executing: " << cmd << "\n";
+    throw InternalError(string("FileUtils::moveFile failed executing: ") + cmd, __FILE__, __LINE__);
   }
   return code;
 }
@@ -541,7 +542,7 @@ deleteFile( const string & filename )
   string cmd = rmCmd + filename;
   int code = std::system(cmd.c_str());
   if (code) {
-    cerr << "Error executing: " << cmd << "\n";
+    throw InternalError(string("FileUtils::deleteFile failed executing: ") + cmd, __FILE__, __LINE__);
   }
   return code;
 }
@@ -553,7 +554,7 @@ copyDir( const string & src, const string & dest )
   string cmd = cpCmd + src + " " + dest;
   int code = std::system(cmd.c_str());
   if (code) {
-    cerr << "Error executing: " << cmd << "\n";
+    throw InternalError(string("FileUtils::copyDir failed executing: ") + cmd, __FILE__, __LINE__);
   }
   return code;
 }
@@ -564,7 +565,7 @@ int deleteDir(string filename)
   string cmd = rmCmd + filename;
   int code = std::system(cmd.c_str());
   if (code) {
-    cerr << "Error executing: " << cmd << "\n";
+    throw InternalError(string("FileUtils::deleteDir failed executing: ") + cmd, __FILE__, __LINE__);
   }
   return code;
 }
