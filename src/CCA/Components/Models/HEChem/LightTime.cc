@@ -56,9 +56,6 @@
 using namespace Uintah;
 using namespace std;
 
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
-
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_NORMAL_COUT:+,MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed

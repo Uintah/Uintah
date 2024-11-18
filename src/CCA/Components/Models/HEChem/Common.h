@@ -31,6 +31,8 @@
 
 namespace Uintah {
 
+  #define d_SMALL_NUM 1e-100
+  #define d_TINY_RHO  1e-12
   //______________________________________________________________________
   double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
   //______________________________________________________________________
