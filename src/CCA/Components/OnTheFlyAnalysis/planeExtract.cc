@@ -374,6 +374,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       //__________________________________
       // loop over each plane
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
+        bool initialPass = true;
 
         string relativePath = d_planes[p]->name + "/" + timestep + "/" + levelIndx;
 
@@ -427,13 +428,17 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             //__________________________________
             //  Open the file pointer and write the header
             ostringstream fname;
-            fname<< udaPath <<"/"<< relativePath << "/" << patch->getID() << ":"<< labelName <<"_"<< matl<<".dat";
+            int patchID = patch->getID();
+            fname<< udaPath <<"/"<< relativePath << "/" << patchID << ":"<< labelName <<"_"<< matl<<".dat";
             string filename = fname.str();
 
-
             FILE *fp;
-            createFile(filename, varLabel, matl, tv.now, fp);
+            createFile(filename, varLabel, matl, tv.now, fp);\
 
+            if ( initialPass && pg->myRank() == 1 ){
+              DOUTR( true, " OnTheFlyAnalysis planeExtract results are located at " << relativePath );
+              initialPass = false;
+            }
             //__________________________________
             //
             const Uintah::TypeDescription* td = varLabel->typeDescription();
@@ -559,6 +564,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             }
 
             fclose(fp);
+
           }  // loop over variables
         }  // doWrite
       }  // loop over planes
@@ -619,8 +625,6 @@ void planeExtract::createFile(const string& filename,
 
   fprintf(fp,"\n");
   fflush(fp);
-
-  cout << Parallel::getMPIRank() << " OnTheFlyAnalysis planeExtract results are located in " << filename << endl;
 }
 
 //______________________________________________________________________

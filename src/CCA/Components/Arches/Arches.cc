@@ -173,7 +173,8 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
                                                      m_materialManager,
-                                                     params);
+                                                     params,
+                                                     "DataAnalysis");
 
   if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;

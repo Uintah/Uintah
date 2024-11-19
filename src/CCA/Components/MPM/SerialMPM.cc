@@ -319,7 +319,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(!flags->d_with_ice ){ // mpmice
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
                                                       m_materialManager,
-                                                      prob_spec);
+                                                      prob_spec,
+                                                      "DataAnalysis");
 
     if(d_analysisModules.size() != 0){
       vector<AnalysisModule*>::iterator iter;

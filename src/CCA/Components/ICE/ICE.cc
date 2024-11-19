@@ -511,7 +511,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   if(!d_with_mpm){
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
                                                       m_materialManager,
-                                                      prob_spec);
+                                                      prob_spec,
+                                                      "DataAnalysis");
 
     for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
       AnalysisModule* am = *iter;

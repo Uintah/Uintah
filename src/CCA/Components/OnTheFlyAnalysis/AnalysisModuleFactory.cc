@@ -72,21 +72,16 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 std::vector<AnalysisModule*>
 AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const MaterialManagerP materialManager,
-                              const ProblemSpecP& prob_spec)
+                              const ProblemSpecP&   prob_spec,
+                              const std::string     base_str )
 {
-  // the factory can use either of these xml tags
-  ProblemSpecP base_ps;
-  ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
-  ProblemSpecP pp_ps = prob_spec->findBlock("PostProcess");
-
-  if( da_ps ){
-    base_ps = da_ps;
-  } 
-  else{
-    base_ps = pp_ps;
+  ProblemSpecP base_ps = prob_spec->findBlock(base_str);
+  if( !base_ps ) {
+    std::string msg;
+    msg = "\nERROR<DataAnalysis>: Could not find find  <" + base_str +"> tag.\n";
+    throw ProblemSetupException( msg, __FILE__, __LINE__ );
   }
-
-
+  
   std::vector<AnalysisModule*> modules;
 
   if (base_ps) {

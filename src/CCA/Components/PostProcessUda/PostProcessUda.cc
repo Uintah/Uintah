@@ -78,7 +78,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "    - If you're using this on a machine with a reduced set of system calls (mira) configure with\n";
   proc0cout << "          --with-boost\n";
   proc0cout << "      This will enable the non-system copy functions.\n\n";
-  proc0cout << "    - You must manually copy all On-the-Fly files/directories from the original uda\n";
+  proc0cout << "    - You must manually copy all DataAnalysis files/directories from the original uda\n";
   proc0cout << "      to the new uda, postProcessUda ignores them.\n\n";
   proc0cout << "    - The <outputInterval>, <outputTimestepInterval> tags are ignored and every\n";
   proc0cout << "      timestep in the original uda is processed. \n\n";
@@ -153,20 +153,22 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
     m_materialManager->registerSimpleMaterial( mat );
   }
 
+#if 0
   //__________________________________
-  //  create the PostProcess analysis modules
+  //  create the PostProcess analysis modules             These modules are placeholders and not used
   d_Modules = ModuleFactory::create(prob_spec, m_materialManager, m_output, d_dataArchive);
 
   for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
     Module* m = *iter;
     m->problemSetup();
   }
-
+#endif
   //__________________________________
   //  Set up data OnTheFly analysis modules
   d_analysisModules = AnalysisModuleFactory::create( d_myworld,
                                                      m_materialManager,
-                                                     prob_spec);
+                                                     prob_spec,
+                                                     "PostProcess");
 
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
     AnalysisModule* am = *iter;
@@ -328,7 +330,7 @@ void PostProcessUda::readDataArchive(const ProcessorGroup * pg,
   const Level * level = getLevel(patches);
   const GridP grid    = level->getGrid();
     
-  if( udaTimestep > 1){
+  if( udaTimestep > 1 && d_simTimestep > 0 ){
     
    proc0cout << "    OLD_DW  ";
    old_dw->unfinalize();

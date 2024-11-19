@@ -229,7 +229,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   //  Set up data analysis modules
   d_analysisModules = AnalysisModuleFactory::create(d_myworld,
                                                     m_materialManager,
-                                                    prob_spec);
+                                                    prob_spec,
+                                                    "DataAnalysis");
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
