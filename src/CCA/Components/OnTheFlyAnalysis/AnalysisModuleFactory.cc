@@ -76,11 +76,6 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const std::string     base_str )
 {
   ProblemSpecP base_ps = prob_spec->findBlock(base_str);
-  if( !base_ps ) {
-    std::string msg;
-    msg = "\nERROR<DataAnalysis>: Could not find find  <" + base_str +"> tag.\n";
-    throw ProblemSetupException( msg, __FILE__, __LINE__ );
-  }
   
   std::vector<AnalysisModule*> modules;
 
