@@ -435,7 +435,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             FILE *fp;
             createFile(filename, varLabel, matl, tv.now, fp);\
 
-            if ( initialPass && pg->myRank() == 1 ){
+            if ( initialPass && pg->myRank() == 0 ){
               DOUTR( true, " OnTheFlyAnalysis planeExtract results are located at " << relativePath );
               initialPass = false;
             }
