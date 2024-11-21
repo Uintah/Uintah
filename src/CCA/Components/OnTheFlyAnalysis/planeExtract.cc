@@ -645,7 +645,7 @@ void planeExtract::writeDataD( DataWarehouse*  new_dw,
     Point here = patch->cellPosition(c);
     here += offset;
 
-    fprintf(fp,    "%16.15E %16.15E  %16.15E ",here.x(),here.y(),here.z());
+    fprintf(fp,    "%16.15E %16.15E %16.15E ",here.x(),here.y(),here.z());
     fprintf(fp, "    %16.15E\n",Q_var[c]);
   }
 }
