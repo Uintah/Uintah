@@ -354,6 +354,10 @@ sub modify_xml_files{
 sub modify_xml_file{
   my ( $upsFile, $test_nodes ) = @_;
 
+
+  if( ! $test_nodes  ){
+    return;
+  }
   #__________________________________
   # replace lines in test_ups
   foreach my $rpl_node ( $test_nodes->findnodes('replace_lines/*') ) {
@@ -406,7 +410,8 @@ sub write_file {
 sub runPreProcessCmd {
   my ( $upsFile_base, $upsFile_mod, $test_nodes ) = @_;
   
-  if( ! $test_nodes->findnodes('preProcess_cmd') ){
+  
+  if( ! $test_nodes ){
     return;
   }
    
