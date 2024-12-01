@@ -77,9 +77,9 @@ WARNING
       
     public:
       // Constructor
-      NullContact(const ProcessorGroup* myworld,
+      NullContact(const ProcessorGroup* myworld, ProblemSpecP& ps,
                   MaterialManagerP& ss, MPMLabel* lb,
-                  MPMFlags* MFlag);
+                  MPMFlags* MFlag, int numMatls);
       
       // Destructor
       virtual ~NullContact();

@@ -86,7 +86,7 @@ WARNING
          ContactMaterialSpec() {}
          
          // contructor using contact block
-         ContactMaterialSpec(ProblemSpecP & ps);
+         ContactMaterialSpec(ProblemSpecP & ps, int i);
 
          void outputProblemSpec(ProblemSpecP& ps);
          

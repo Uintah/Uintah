@@ -50,8 +50,8 @@ using namespace std;
 
 PenaltyContact::PenaltyContact(const ProcessorGroup* myworld,
                                ProblemSpecP& ps,MaterialManagerP& d_sS,
-                               MPMLabel* Mlb, MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, ps)
+                               MPMLabel* Mlb, MPMFlags* MFlag, int numMatls)
+  : Contact(myworld, Mlb, MFlag, ps, numMatls)
 {
   // Constructor
   d_vol_const=0.;

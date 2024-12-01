@@ -128,7 +128,7 @@ DESCRIPTION
   public:
     // Constructor
     SpecifiedBodyFrictionContact(const ProcessorGroup* myworld,
-            ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,MPMFlags*flag);
+            ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,MPMFlags*flag, int numMatls);
          
     // Destructor
     virtual ~SpecifiedBodyFrictionContact();

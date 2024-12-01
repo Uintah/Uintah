@@ -28,8 +28,8 @@
 using namespace Uintah;
 using namespace std;
 
-Contact::Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps)
-  : lb(Mlb), flag(MFlag), d_matls(ps)
+Contact::Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, ProblemSpecP ps, int numMatls)
+  : lb(Mlb), flag(MFlag), d_matls(ps, numMatls)
 {
 }
 

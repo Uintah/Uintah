@@ -304,9 +304,10 @@ void SingleHydroMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   bool needNormals = false;
   bool useLR       = false;
+  unsigned int numMatls = m_materialManager->getNumMatls();
   contactModel = ContactFactory::create(d_myworld,
                                         restart_mat_ps,m_materialManager,lb,
-                                        flags, needNormals, useLR);
+                                        flags, needNormals, useLR, numMatls);
 
   flags->d_computeNormals        = needNormals;
   flags->d_useLogisticRegression = useLR;

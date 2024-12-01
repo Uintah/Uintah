@@ -52,8 +52,8 @@ using std::vector;
 
 SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
                                    ProblemSpecP& ps, MaterialManagerP& d_sS, 
-                                   MPMLabel* Mlb,MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, ps)
+                                   MPMLabel* Mlb,MPMFlags* MFlag, int numMatls)
+  : Contact(myworld, Mlb, MFlag, ps, numMatls)
 {
   // Constructor
   d_materialManager = d_sS;

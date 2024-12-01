@@ -52,8 +52,8 @@ using namespace std;
 
 PenaltyRigidContact::PenaltyRigidContact(const ProcessorGroup* myworld,
                                ProblemSpecP& ps,MaterialManagerP& d_sS,
-                               MPMLabel* Mlb, MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, ps)
+                               MPMLabel* Mlb, MPMFlags* MFlag, int numMatls)
+  : Contact(myworld, Mlb, MFlag, ps, numMatls)
 {
   // Constructor
   d_oneOrTwoStep = 1;

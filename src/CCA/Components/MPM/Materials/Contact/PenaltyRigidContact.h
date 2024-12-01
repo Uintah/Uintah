@@ -100,7 +100,7 @@ WARNING
          // Constructor
          PenaltyRigidContact(const ProcessorGroup* myworld,
                              ProblemSpecP& ps, MaterialManagerP& d_sS,
-                             MPMLabel* lb, MPMFlags* MFlag);
+                             MPMLabel* lb, MPMFlags* MFlag, int numMatls);
          
          // Destructor
          virtual ~PenaltyRigidContact();

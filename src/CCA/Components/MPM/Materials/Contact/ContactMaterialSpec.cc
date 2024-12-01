@@ -28,20 +28,19 @@
 using namespace std;
 using namespace Uintah;
 
-ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
+ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps, int numMPMMatls)
 {
   if(ps) {
     vector<int> materials;
     if(ps->get("materials", materials)) {
       for(vector<int>::const_iterator mit(materials.begin());
           mit!=materials.end();mit++) {
-        if(*mit<0)
+        if(*mit<0 || *mit >=numMPMMatls)
           throw ProblemSetupException(" Invalid material index in contact block", __FILE__, __LINE__);
         this->add(*mit);
       }
     }
   }
-  
 }
 
 void ContactMaterialSpec::outputProblemSpec(ProblemSpecP& ps)

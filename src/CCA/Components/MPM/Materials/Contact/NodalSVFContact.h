@@ -96,7 +96,7 @@ WARNING
          // Constructor
          NodalSVFContact(const ProcessorGroup* myworld,
                           ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
-                          MPMFlags* MFlag);
+                          MPMFlags* MFlag, int numMatls);
          
          // Destructor
          virtual ~NodalSVFContact();

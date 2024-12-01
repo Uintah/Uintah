@@ -29,8 +29,8 @@
 using namespace std;
 using namespace Uintah;
 
-CompositeContact::CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb,MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, 0)
+CompositeContact::CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb,MPMFlags* MFlag, const ProblemSpecP& ps, int numMatls)
+  : Contact(myworld, Mlb, MFlag, ps, numMatls)
 {
 }
 

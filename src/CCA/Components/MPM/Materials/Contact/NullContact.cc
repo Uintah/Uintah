@@ -45,10 +45,10 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 using namespace Uintah;
 
-NullContact::NullContact(const ProcessorGroup* myworld,
+NullContact::NullContact(const ProcessorGroup* myworld, ProblemSpecP& ps,
                          MaterialManagerP& d_sS,
-                         MPMLabel* Mlb,MPMFlags* MFlags)
-  : Contact(myworld, Mlb, MFlags, 0)
+                         MPMLabel* Mlb,MPMFlags* MFlags, int numMatls)
+  : Contact(myworld, Mlb, MFlags, ps, numMatls)
 {
   // Constructor
   d_materialManager = d_sS;

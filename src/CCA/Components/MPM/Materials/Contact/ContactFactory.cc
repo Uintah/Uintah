@@ -46,7 +46,7 @@ using namespace Uintah;
 Contact* ContactFactory::create(const ProcessorGroup* myworld,
                                 const ProblemSpecP& ps, MaterialManagerP &ss,
                                 MPMLabel* lb, MPMFlags* flag, bool &needNormals,
-                                bool &useLogisticRegression)
+                                bool &useLogisticRegression, int numMatls)
 {
 
    ProblemSpecP mpm_ps = 
@@ -57,7 +57,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
    }
    
-   CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
+   CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag, ps, numMatls);
    
    needNormals=false;
    useLogisticRegression=false;
@@ -68,44 +68,44 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",con_type, "null");
      
      if (con_type == "null") {
-       contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+       contact_list->add(scinew NullContact(myworld,child,ss,lb,flag,numMatls));
      }
      else if (con_type == "single_velocity") {
-       contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag,numMatls));
      }
      else if (con_type == "nodal_svf") {
-       contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag,numMatls));
      }
      else if (con_type == "friction_LR") {
-       contact_list->add(scinew FrictionContactLR(myworld,child,ss,lb,flag));
+       contact_list->add(scinew FrictionContactLR(myworld,child,ss,lb,flag,numMatls));
        useLogisticRegression=true;
      }
      else if (con_type == "friction_LRVar") {
-       contact_list->add(scinew FrictionContactLRVar(myworld,child,ss,lb,flag));
+       contact_list->add(scinew FrictionContactLRVar(myworld,child,ss,lb,flag,numMatls));
        useLogisticRegression=true;
      }
      else if (con_type == "friction_bard") {
-       contact_list->add(scinew FrictionContactBard(myworld,child,ss,lb,flag));
+       contact_list->add(scinew FrictionContactBard(myworld,child,ss,lb,flag,numMatls));
        needNormals=true;
      }
      else if (con_type == "penalty") {
-       contact_list->add(scinew PenaltyContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew PenaltyContact(myworld,child,ss,lb,flag,numMatls));
        needNormals=false;
      }
      else if (con_type == "penalty_rigid") {
-       contact_list->add(scinew PenaltyRigidContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew PenaltyRigidContact(myworld,child,ss,lb,flag,numMatls));
        needNormals=false;
      }
      else if (con_type == "approach") {
-       contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag,numMatls));
        needNormals=true;
      }
      else if (con_type == "specified_friction") {
-       contact_list->add(scinew SpecifiedBodyFrictionContact(myworld,child,ss,lb,flag));
+       contact_list->add(scinew SpecifiedBodyFrictionContact(myworld,child,ss,lb,flag,numMatls));
        useLogisticRegression=true;
      }
      else if (con_type == "specified_velocity" || con_type == "specified" || con_type == "rigid"  ) {
-       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag ) );
+       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag,numMatls));
        needNormals=true;
      }
      else {
@@ -117,7 +117,8 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    // 
    if( contact_list->size() == 0 ) {
      proc0cout << "no contact - using null\n";
-     contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+     ProblemSpecP child;
+     contact_list->add(scinew NullContact(myworld,child,ss,lb,flag,numMatls));
    }
 
    return contact_list;

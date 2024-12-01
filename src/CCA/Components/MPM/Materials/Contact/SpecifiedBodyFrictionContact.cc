@@ -55,8 +55,8 @@ using namespace Uintah;
 SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup* myworld,
                                            ProblemSpecP& ps,
                                            MaterialManagerP& d_sS, 
-                                           MPMLabel* Mlb, MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, ps)
+                                           MPMLabel* Mlb, MPMFlags* MFlag, int numMatls)
+  : Contact(myworld, Mlb, MFlag, ps, numMatls)
 {
   // Constructor
   // read a list of values from a file

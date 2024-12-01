@@ -157,7 +157,7 @@ DESCRIPTION
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
                          ProblemSpecP& ps, MaterialManagerP& d_sS,
-                         MPMLabel* lb, MPMFlags*flag);
+                         MPMLabel* lb, MPMFlags*flag, int numMatls);
          
     // Destructor
     virtual ~SpecifiedBodyContact();

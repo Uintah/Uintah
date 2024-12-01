@@ -73,7 +73,7 @@ WARNING
       public:
          // Constructor
          Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag,
-                 ProblemSpecP ps);
+                 ProblemSpecP ps, int numMatls);
          virtual ~Contact();
 
          Vector findValFromProfile(double t,

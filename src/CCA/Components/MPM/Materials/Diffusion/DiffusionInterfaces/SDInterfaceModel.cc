@@ -33,7 +33,8 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP         & ps      ,
                                    MaterialManagerP     & sS      ,
                                    MPMFlags             * Mflag   ,
                                    MPMLabel             * mpm_lb  )
-                                  : d_materials_list(ps)
+                                  : d_materials_list(ps, 9999)
+// 9999 is a placeholder for numMaterials
 {
   d_mpm_lb = mpm_lb;
   d_materialManager = sS;
