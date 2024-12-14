@@ -351,8 +351,7 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 //
 void
 SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
-                             , const MaterialManagerP & materialManager
-                             )
+                             , const MaterialManagerP & materialManager)
 {
   m_materialManager = materialManager;
 
@@ -369,28 +368,31 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
       proc0cout << "Using large, combined MPI messages\n";
     }
 
+    //__________________________________
+    //
     ProblemSpecP track = params->findBlock("VarTracker");
     if (track) {
-      track->require("start_time", m_tracking_start_time);
-      track->require("end_time", m_tracking_end_time);
-      track->getWithDefault("level", m_tracking_level, -1);
+      track->require( "start_time",   m_tracking_start_time);
+      track->require( "end_time",     m_tracking_end_time);
+      track->getWithDefault("level",  m_tracking_level, -1);
       track->getWithDefault("start_index", m_tracking_start_index, IntVector(-9, -9, -9));
-      track->getWithDefault("end_index", m_tracking_end_index, IntVector(-9, -9, -9));
-      track->getWithDefault("patchid", m_tracking_patch_id, -1);
+      track->getWithDefault("end_index",   m_tracking_end_index,   IntVector(-9, -9, -9));
+      track->getWithDefault("patchid",     m_tracking_patch_id, -1);
 
-      if (d_myworld->myRank() == 0) {
-        std::cout << "\n";
-        std::cout << "-----------------------------------------------------------\n";
-        std::cout << "-- Initializing VarTracker...\n";
-        std::cout << "--  Running from time " << m_tracking_start_time << " to " << m_tracking_end_time << "\n";
-        std::cout << "--  for indices: " << m_tracking_start_index << " to " << m_tracking_end_index << "\n";
-      }
+      proc0cout << "\n";
+      proc0cout << "-----------------------------------------------------------\n";
+      proc0cout << "-- Initializing VarTracker...\n";
+      proc0cout << "--  Running from time " << m_tracking_start_time << " to " << m_tracking_end_time << "\n";
+      proc0cout << "--  for indices: " << m_tracking_start_index << " to " << m_tracking_end_index << "\n";
 
+      //__________________________________
+      //
       ProblemSpecP location = track->findBlock("locations");
       if (location) {
         m_tracking_vars_print_location = 0;
         std::map<std::string, std::string> attributes;
         location->getAttributes(attributes);
+
         if (attributes["before_comm"] == "true") {
           m_tracking_vars_print_location |= PRINT_BEFORE_COMM;
           proc0cout << "--  Printing variable information before communication.\n";
@@ -409,63 +411,67 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
         proc0cout << "--  Defaulting to printing variable information after task execution.\n";
       }
 
+      //__________________________________
+      //
       for (ProblemSpecP var = track->findBlock("var"); var != nullptr; var = var->findNextBlock("var")) {
-        std::map<std::string, std::string> attributes;
-        var->getAttributes(attributes);
-        std::string name = attributes["label"];
-        m_tracking_vars.push_back(name);
-        std::string dw = attributes["dw"];
+        std::map<std::string, std::string> var_attr;
+        var->getAttributes(var_attr);
+
+        auto Q = std::make_shared<trackingVar>();
+        Q->name     = var_attr["label"];
+        std::string dw = var_attr["dw"];
+
+        if( ! var_attr["matl_id"].empty() ){
+          Q->matl_id  = stoi(var_attr["matl_id"]);
+        }
 
         if (dw == "OldDW") {
-          m_tracking_dws.push_back(Task::OldDW);
+          Q->dw = Task::OldDW;
         }
         else if (dw == "NewDW") {
-          m_tracking_dws.push_back(Task::NewDW);
+          Q->dw = Task::NewDW;
         }
         else if (dw == "CoarseNewDW") {
-          m_tracking_dws.push_back(Task::CoarseNewDW);
+          Q->dw = Task::CoarseNewDW;
         }
         else if (dw == "CoarseOldDW") {
-          m_tracking_dws.push_back(Task::CoarseOldDW);
+          Q->dw = Task::CoarseOldDW;
         }
         else if (dw == "ParentOldDW") {
-          m_tracking_dws.push_back(Task::ParentOldDW);
+          Q->dw = Task::ParentOldDW;
         }
         else if (dw == "ParentOldDW") {
-          m_tracking_dws.push_back(Task::ParentNewDW);
+          Q->dw = Task::ParentNewDW;
         }
         else {
           // This error message most likely can go away once the .ups
           // validation is put into place:
           printf("WARNING: Hit switch statement default... using NewDW... (This could possibly be"
                  "an error in input file specification.)\n");
-          m_tracking_dws.push_back(Task::NewDW);
+          Q->dw = Task::NewDW;
         }
-        if (d_myworld->myRank() == 0) {
-          std::cout << "--  Tracking variable '" << name << "' in DataWarehouse '" << dw << "'\n";
-        }
+        proc0cout << "--  Tracking variable '" << Q->name << "' in DataWarehouse '" << dw << "' matl " << Q->matl_id <<"\n";
+        m_tracking_vars.push_back( Q );
       }
 
+      //__________________________________
+      //
       for (ProblemSpecP task = track->findBlock("task"); task != nullptr; task = task->findNextBlock("task")) {
-        std::map<std::string, std::string> attributes;
-        task->getAttributes(attributes);
-        std::string name = attributes["name"];
+        std::map<std::string, std::string> task_attr;
+        task->getAttributes(task_attr);
+
+        std::string name = task_attr["name"];
         m_tracking_tasks.push_back(name);
-        if (d_myworld->myRank() == 0) {
-          std::cout << "--  Tracking variables for specific task: " << name << "\n";
-        }
+
+          proc0cout<< "--  Tracking variables for specific task: " << name << "\n";
       }
-      if (d_myworld->myRank() == 0) {
-        std::cout << "-----------------------------------------------------------\n\n";
-      }
+      proc0cout << "-----------------------------------------------------------\n\n";
     }
     // Tracking not specified.
     else {
       // This 'else' won't be necessary once the .ups files are
       // validated... but for now.
-      if (d_myworld->myRank() == 0) {
-        std::cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
-      }
+      proc0cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
     }
 
     // Task monitoring variables.
@@ -582,33 +588,30 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
 //______________________________________________________________________
 // handleError()
 //
-// The following routine is designed to only print out a given error
+// The following routine is designed to only print out a given warning message
 // once per error type per variable.  handleError is used by
-// printTrackedVars() with each type of error ('errorPosition')
-// condition specifically enumerated (by an integer running from 0 to 5).
+// printTrackedVars() multiple times inside the method
 //
 // Returns true if the error message is displayed.
 //
 bool
-handleError(       int           errorPosition
-           , const std::string & errorMessage
-           , const std::string & variableName
+handleError(       int           here
+           , const std::string & mesg
+           , const std::string & varName
            )
 {
-  static std::vector<std::map<std::string, bool> *> errorsReported(5);
+  std::map<std::string, bool> initialMap = {{"", false}};
+  static std::vector< std::map<std::string, bool> > errorsReported(5, initialMap);
 
-  std::map<std::string, bool> * varToReportedMap = errorsReported[errorPosition];
+  std::map<std::string, bool>  varToReportedMap = errorsReported[here];
 
-  // TODO: this new shouldn't happen - APH 08/06/16
-  if (varToReportedMap == nullptr) {
-    varToReportedMap = new std::map<std::string, bool>;
-    errorsReported[errorPosition] = varToReportedMap;
-  }
 
-  bool reported = (*varToReportedMap)[variableName];
+  bool reported = varToReportedMap[varName];
+
   if (!reported) {
-    (*varToReportedMap)[variableName] = true;
-    std::cout << errorMessage << "\n";
+    varToReportedMap[varName] = true;
+    errorsReported[here]      = varToReportedMap;
+    std::cout << mesg << "\n";
     return true;
   }
   return false;
@@ -649,41 +652,53 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
 {
   bool printedHeader = false;
 
+  const Task* task = dtask->getTask();
+  const std::string taskName = task->getName();
+
   unsigned taskNum;
   for (taskNum = 0; taskNum < m_tracking_tasks.size(); taskNum++) {
-    if (m_tracking_tasks[taskNum] == dtask->getTask()->getName())
+    if (m_tracking_tasks[taskNum] == taskName) {
       break;
+    }
   }
 
   // Print all tasks unless one is specified (skip DataArchiver tasks).
   if ((taskNum == m_tracking_tasks.size() && m_tracking_tasks.size() != 0) ||
-      ((std::string(dtask->getTask()->getName())).substr(0, 12) == "DataArchiver")) {
+      ( (taskName.substr(0, 12) == "DataArchiver")) ) {
     return;
   }
 
-  if( m_tracking_start_time > m_application->getSimTime() ||
-      m_tracking_end_time   < m_application->getSimTime() ) {
+  const double simTime =  m_application->getSimTime();
+  if( m_tracking_start_time > simTime ||
+      m_tracking_end_time   < simTime ) {
     return;
   }
 
-  for (int i = 0; i < static_cast<int>(m_tracking_vars.size()); i++) {
+  //__________________________________
+  //
+  for ( unsigned int i =0 ; i < m_tracking_vars.size(); i++ ) {
+    const trackingVar_ptr tVar = m_tracking_vars[i];
+
     bool printedVarName = false;
 
+    const std::string   tv_name = tVar->name;
+    const int           tv_matl = tVar->matl_id;
+    const Task::WhichDW tv_dw   = tVar->dw;
+    const int           int_dw  = task->mapDataWarehouse( tv_dw );
+
     // That DW may not have been mapped....
-    if (dtask->getTask()->mapDataWarehouse(m_tracking_dws[i]) < 0 ||
-        dtask->getTask()->mapDataWarehouse(m_tracking_dws[i]) >= (int)m_dws.size()) {
+    if ( int_dw < 0 || int_dw >= (int)m_dws.size()) {
 
       std::ostringstream mesg;
-      mesg << "WARNING: VarTracker: Not printing requested variable (" << m_tracking_vars[i] << ") DW is out of range.\n";
-
-      handleError(0, mesg.str(), m_tracking_vars[i]);
+      mesg << "WARNING: VarTracker: Not printing requested variable (" <<tv_name << ") DW is out of range.\n";
+      handleError(0, mesg.str(), tv_name);
 
       continue;
     }
 
-    OnDemandDataWarehouseP dw = m_dws[dtask->getTask()->mapDataWarehouse(m_tracking_dws[i])];
+    OnDemandDataWarehouseP dw = m_dws[int_dw];
 
-    // Old on initialization timestep.
+    // ignore initialization timestep.
     if (dw == nullptr) {
       continue;
     }
@@ -705,15 +720,15 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
     }
 
     const LevelP level = grid->getLevel(levelnum);
-    const VarLabel* label = VarLabel::find(m_tracking_vars[i]);
+    const VarLabel* label = VarLabel::find(tv_name);
 
     std::cout.precision(16);
 
     if (!label) {
       std::ostringstream mesg;
-      mesg << "WARNING: VarTracker: Not printing requested variable (" << m_tracking_vars[i]
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << tv_name
            << ") because the label could not be found.\n";
-      handleError(1, mesg.str(), m_tracking_vars[i]);
+      handleError(1, mesg.str(), tv_name);
       continue;
     }
 
@@ -724,26 +739,25 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
     // A once-per-proc or hypre task could execute on multiple levels,
     // and thus calls to getLevel(patches) will fail The task could
     // also run on a different level (coarse or fine).
-    const Task::TaskType TT    = dtask->getTask()->getType();
+    const Task::TaskType TT    = task->getType();
     const bool not_oncePerProc = ( TT != Task::OncePerProc );
     const bool not_hypre       = ( TT != Task::Hypre );
     const int Lindx            = getLevel(patches)->getIndex();
     const bool not_rightLevel  = (!patches || Lindx != levelnum);
 
     if ( not_oncePerProc && not_hypre && not_rightLevel ) {
-      const std::string name = dtask->getTask()->getName();
       std::ostringstream mesg;
       mesg << "WARNING: VarTracker: Not printing requested variable ("
-           << m_tracking_vars[i] << "), for task ("<<name<<"). Reasons:\n"
+           << tv_name << "), for task ("<<taskName<<"). Reasons:\n"
            << "  - The task is not running on the requested level (" <<levelnum<<")\n"
            << "  - The task is either a oncePerProc or hypre task, "
            << "which can span multiple levels\n";
-      handleError(2, mesg.str(), m_tracking_vars[i]);
+      handleError(2, mesg.str(), tv_name);
       continue;
     }
 
     //__________________________________
-    //
+    //          Loop patches
     for (int p = 0; patches && p < patches->size(); p++) {
 
       const Patch* patch = patches->get(p);
@@ -752,8 +766,8 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
       }
 
       // Don't print ghost patches (dw->get will complain).
-      if ((m_tracking_dws[i] == Task::OldDW && m_loadBalancer->getOldProcessorAssignment(patch) != d_myworld->myRank()) ||
-          (m_tracking_dws[i] == Task::NewDW && m_loadBalancer->getPatchwiseProcessorAssignment(patch) != d_myworld->myRank())) {
+      if (( tv_dw == Task::OldDW && m_loadBalancer->getOldProcessorAssignment(patch) != d_myworld->myRank()) ||
+          ( tv_dw == Task::NewDW && m_loadBalancer->getPatchwiseProcessorAssignment(patch) != d_myworld->myRank())) {
         continue;
       }
 
@@ -763,24 +777,37 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
       IntVector start = Max(patch->getExtraLowIndex( basis, IntVector(0, 0, 0)), m_tracking_start_index);
       IntVector end   = Min(patch->getExtraHighIndex(basis, IntVector(0, 0, 0)), m_tracking_end_index);
 
-      // Loop over matls too...
-      for (unsigned int m = 0; m < m_materialManager->getNumMatls(); m++) {
+      //__________________________________
+      //        Loop over matls
+      //    Each variable can have a single matl associated with it
+      //    limit the loop if that's the case
+      unsigned int m    = 0;
+      unsigned int mMax = m_materialManager->getNumMatls();
 
+      if ( tv_matl != -1 ){
+        m     = tv_matl;
+        mMax  = tv_matl+1;
+      }
+
+      for (; m < mMax; m++) {
+
+        //__________________________________
+        //    bulletproofing
         if (!dw->exists(label, m, patch)) {
           std::ostringstream mesg;
           mesg << "WARNING: VarTracker: Not printing requested variable ("
-               << m_tracking_vars[i]
-               << ") because it does not exist in DW.\n"
-               << "            Patch is: " << *patch << "\n";
-          if (handleError(3, mesg.str(), m_tracking_vars[i])) {
-          }
+               << tv_name
+               << ") because it does not exist in the DataWarehouse for a patch or material\n";
+
+          handleError(3, mesg.str(), tv_name);
           continue;
         }
 
-        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) {
+        if (!(start.x() <= end.x() && start.y() <= end.y() && start.z() <= end.z())) {
           continue;
         }
-
+        //__________________________________
+        //    bulletproofing
         const TypeDescription::Type subType = td->getSubType()->getType();
         if (subType != TypeDescription::double_type &&
             subType != TypeDescription::float_type  &&
@@ -791,15 +818,16 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
           // *Variable<Vector> for now.
           std::ostringstream mesg;
           mesg << "WARNING: VarTracker: Not printing requested variable ("
-               << m_tracking_vars[i]
+               << tv_name
                << ") because its type is not supported:\n" << "             "
                << td->getName() << "\n";
 
-          handleError(4, mesg.str(), m_tracking_vars[i]);
+          handleError(4, mesg.str(), tv_name);
           continue;
         }
 
-        // Pending the task that allocates the var, it may be allocated yet.
+        //__________________________________
+        //  Pending the task that allocates the var, it may be allocated yet.
         GridVariableBase* v;
         switch (td->getType()) {
           case TypeDescription::CCVariable :
@@ -810,15 +838,14 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
             v = dynamic_cast<GridVariableBase*>(dw->m_var_DB.get(label, m, patch));
             break;
           default :
-            throw InternalError("Cannot track var type of non-grid-type",
-                                __FILE__, __LINE__);
+            throw InternalError("ERROR: VarTracker: Cannot track var type of non-grid-type",__FILE__, __LINE__);
             break;
         }
 
         start = Max(start, v->getLow());
-        end = Min(end, v->getHigh());
+        end   = Min(end, v->getHigh());
 
-        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) {
+        if (!(start.x() <= end.x() && start.y() <= end.y() && start.z() <= end.z())) {
           continue;
         }
 
@@ -840,8 +867,12 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
         }
 
         if (!printedVarName) {
-          std::cout << d_myworld->myRank() << "  Variable: " << m_tracking_vars[i] << ", DW " << dw->getID() << ", Patch "
-                    << patch->getID() << ", Matl " << m << std::endl;
+          std::cout << d_myworld->myRank() << "  Variable: "
+                    << tv_name
+                    << ", DW " << dw->getID()
+                    << ", Patch "
+                    << patch->getID()
+                    << ", Matl " << m << "\n";
         }
 
         switch (subType) {

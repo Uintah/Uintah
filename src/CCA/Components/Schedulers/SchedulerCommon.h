@@ -53,7 +53,7 @@ class DetailedTask;
 class DetailedTasks;
 class TaskGraph;
 class LocallyComputedPatchVarMap;
-  
+
 using LabelMatlMap            = std::map<const VarLabel*, MaterialSubset*, VarLabel::Compare>;
 using VarLabelMaterialListMap = std::map< std::string, std::list<int> >;
 using ReductionTasksMap       = std::map<VarLabelMatl<Level, DataWarehouse>, Task*>;
@@ -100,7 +100,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual ApplicationInterface *getApplication()   { return m_application; };
     virtual LoadBalancer         * getLoadBalancer() { return m_loadBalancer; };
     virtual Output               * getOutput()       { return m_output; };
-  
+
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
                                const MaterialManagerP & materialManager );
 
@@ -252,7 +252,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                      ,       DataWarehouse  * old_dw
                                      ,       DataWarehouse  * new_dw
                                      );
-  
+
     //! override default behavior of copying, scrubbing, and such
     virtual void overrideVariableBehavior( const std::string & var
                                          ,       bool          treatAsOld
@@ -279,7 +279,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     int getMaxLevelOffset() { return m_max_level_offset; }
 
     bool isCopyDataTimestep() { return m_is_copy_data_timestep; }
-      
+
     bool copyTimestep() { return (m_is_copy_data_timestep || m_is_init_timestep); }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
@@ -291,7 +291,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
-    
+
     // number of schedulers and subschedulers
     int m_num_schedulers {0};
 
@@ -328,7 +328,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     };
 
     // Some places need to know if this is a copy data timestep or
-    // a normal timestep.  (A copy data timestep is AMR's current 
+    // a normal timestep.  (A copy data timestep is AMR's current
     // method of getting data from an old to a new grid).
 protected:
     bool                                m_is_copy_data_timestep{false};
@@ -341,22 +341,31 @@ protected:
     ApplicationInterface * m_application  {nullptr};
     LoadBalancer         * m_loadBalancer {nullptr};
     Output               * m_output       {nullptr};
-  
+
     MaterialManagerP                    m_materialManager{nullptr};
     std::vector<OnDemandDataWarehouseP> m_dws;
     std::vector<TaskGraph*>             m_task_graphs;
 
     //! These are so we can track certain variables over the taskgraph's execution.
-    int                        m_tracking_vars_print_location{0};
-    int                        m_tracking_patch_id{-1};
-    int                        m_tracking_level{-1};
-    double                     m_tracking_start_time{1.0};
-    double                     m_tracking_end_time{0.0};
-    IntVector                  m_tracking_start_index{IntVector(-9, -9, -9)};
-    IntVector                  m_tracking_end_index{IntVector(-9, -9, -9)};
-    std::vector<std::string>   m_tracking_vars;
+    int                        m_tracking_vars_print_location {0};
+    int                        m_tracking_patch_id    {-1};
+    int                        m_tracking_level       {-1};
+    double                     m_tracking_start_time  {1.0};
+    double                     m_tracking_end_time    {0.0};
+    IntVector                  m_tracking_start_index {IntVector(-9, -9, -9)};
+    IntVector                  m_tracking_end_index   {IntVector(-9, -9, -9)};
+
+    struct trackingVar{         // for each variable store the name, dw and matl_id
+      trackingVar(){};
+      std::string      name;
+      Task::WhichDW    dw;
+      int              matl_id {-1};
+    };
+
+    using trackingVar_ptr       = std::shared_ptr<trackingVar>;
+    std::vector<trackingVar_ptr> m_tracking_vars;
     std::vector<std::string>   m_tracking_tasks;
-    std::vector<Task::WhichDW> m_tracking_dws;
+
 
     // Optional task monitoring.
     MaterialSubset* m_dummy_matl{0};
