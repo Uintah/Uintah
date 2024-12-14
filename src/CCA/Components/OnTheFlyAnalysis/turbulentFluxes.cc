@@ -138,8 +138,9 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  read in when each variable started
   string comment = "__________________________________\n"
-                   "\tIf you want to overide the value of\n \t  firstSumTimestep\n"
-                   "\tsee checkpoints/t*****/timestep.xml\n"
+                   "\t- To overide the value of firstSumTimestep\n"
+                   "\t- To reset all summations, which is needed if you change the analysis window\n"
+                   "\t  Modify checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
 
@@ -242,11 +243,21 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   //  On restart read the firstSumTimestep for each variable from checkpoing/t***/timestep.xml
+  // if user has <resetAllVariables> true  </resetAllVariables> then reinitialize all summations
   if( restart_prob_spec ){
 
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
     if( da_rs_ps ){
       ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "turbulentFluxes");
+
+      stat_ps->require( "resetAllVariables", m_resetAllVariables);
+
+      if ( m_resetAllVariables){
+        static int count = 0;
+        proc0cout_eq(0 , count)<< "         Initializing all summation variables to zero    \n";
+        count ++;
+      }
+
       ProblemSpecP vars_ps = stat_ps->findBlock("variables");
 
       for(ProblemSpecP n = vars_ps->getFirstChild(); n != nullptr; n=n->getNextSibling()) {
@@ -278,6 +289,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  Warnings
 
+  static int count = 0;
   ostringstream warn;
   warn << "";
 
@@ -289,10 +301,11 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     }
   }
 
-  if( warn.str() != "" ){
+  if( warn.str() != ""){
     warn << "WARNING:  You've activated the DataAnalysis:turbulentFluxes module but your not saving the variable(s) (\n"
          << warn.str() << ")";
-    proc0cout << warn.str() << endl;
+    proc0cout_eq(0, count) << warn.str() << endl;
+    count ++;
   }
 
 
@@ -342,6 +355,7 @@ void turbulentFluxes::scheduleInitialize( SchedulerP   & sched,
 //______________________________________________________________________
 //
 //   Zero out computed quantites if they don't exist in the new_dw
+//   or if the user has requested that they are reinitialized.
 void turbulentFluxes::initialize( const ProcessorGroup *,
                                   const PatchSubset    * patches,
                                   const MaterialSubset *,
@@ -358,8 +372,16 @@ void turbulentFluxes::initialize( const ProcessorGroup *,
       const Qvar_ptr Q = m_Qvars[i];
 
      // skip if it already exists in the new_dw from a checkpoint
-      if( new_dw->exists( Q->Qsum_Label, Q->matl, patch ) ){
+      if( new_dw->exists( Q->Qsum_Label, Q->matl, patch ) && m_resetAllVariables == false){
         continue;
+      }
+
+
+      if ( m_resetAllVariables == true ){
+        Q->isInitialized    = false;
+        Q->firstSumTimestep = 0;
+        Q->nTimesteps       = 0;
+        Q->isStatEnabled    = false;
       }
 
       switch(Q->subtype->getType()) {
@@ -404,6 +426,11 @@ turbulentFluxes::outputProblemSpec( ProblemSpecP& root_ps)
 
   ProblemSpecP m_ps = da_ps->appendChild("Module");
   m_ps->setAttribute( "name","turbulentFluxes" );
+
+  string comment = "*** Set resetAllVariables to true if you change the start/end times";
+  m_ps->addComment( comment );
+
+  m_ps->appendElement("resetAllVariables", false);
 
   ProblemSpecP var_ps = m_ps->appendChild("variables");
 

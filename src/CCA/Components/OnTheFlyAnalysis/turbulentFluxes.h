@@ -281,6 +281,7 @@ WARNING
     Qvar_ptr                 m_velVar;
     MaterialSet            * m_matlSet {nullptr};
     std::vector< std::string >  m_VarLabelNames;
+    bool    m_resetAllVariables {true};                 // used if user wants a different window on a restart
   };
 }
 
