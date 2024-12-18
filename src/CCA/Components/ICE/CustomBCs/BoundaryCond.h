@@ -259,7 +259,7 @@ void setBC(T& vel_FC,
           getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
                                                  bc_value, bound_ptr,bc_kind); 
 
-        if (foundIterator && (bc_kind != "LODI" || bc_kind != "Neumann") ) {
+        if (foundIterator && bc_kind != "LODI" ) {
           //__________________________________
           // Extract which SFC variable you're
           //  working on, the value 
@@ -281,11 +281,14 @@ void setBC(T& vel_FC,
           //  Neumann BCs
           //The normal components are computed in AddExchangeContributionToFCVel.
           //Do Not Set BC here
+          if (bc_kind == "Neumann" ){
+            nCells += bound_ptr.size();
+          }
           
           //__________________________________
           //  Symmetry boundary conditions
           //  -- faces in the principal dir:     vel[c] = 0
-          if (bc_kind == "symmetry") { 
+          else if (bc_kind == "symmetry") { 
             value = 0.0;                                                                           
             nCells += setDirichletBC_FC<T>( patch, face, vel_FC, bound_ptr, value);    
           }

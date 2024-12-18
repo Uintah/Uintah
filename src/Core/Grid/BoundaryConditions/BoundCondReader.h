@@ -157,6 +157,11 @@ namespace Uintah {
                                             Patch::FaceType& face_side,
                                             const Uintah::LevelP level);
 
+    //__________________________________
+    //  Parse the attributes for the material indices.
+    static std::vector<int>
+    parseMatl_ids( std::map<std::string,std::string> bc_attr,
+                   std::string defaultMat );
 
     //__________________________________
     /// Combine the boundary conditions for a given face into union and
