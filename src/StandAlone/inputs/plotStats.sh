@@ -170,6 +170,9 @@ set origin 0.0, 0.66
 set title "${metaData[date]}, ${metaData[machine]}, ${metaData[procs]} MPI ranks, ${metaData[threads]} Threads, uda: ${metaData[uda]}"
 
 set xlabel "Elaspsed Time [s]" offset 0,+0.5
+set x2label "Timestep"         offset 0,-1.5  textcolor lt 6
+set x2tics textcolor lt 6
+
 set ylabel 'Delt'           textcolor lt 1 offset +2,0
 set y2label 'Physical Time' textcolor lt 2 offset -2,0
 set y2tics
@@ -178,13 +181,14 @@ set autoscale xfix
 set y2range[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
 
 plot 'data' using 2:6           t 'Delt' with lines,\
-     'data' using 2:5 axes x1y2 t 'Physical Time' with lines
+     'data' using 2:5     axes x1y2 t 'Physical Time' with lines ,\
+     'data' using 1:(1/0) axes x2y1 t ''
 
 #__________________________________ Middle
 #     Mean time per timestep
 set origin 0.0,0.33
 set title ''
-set xlabel "Timestep" offset 0,+0.5
+
 set ylabel 'Mean Time/timestep'           textcolor lt 1  
 set y2label 'Time per timestep [sec]'     textcolor lt 2  
 set y2tics
@@ -198,15 +202,16 @@ if ( (C_up_quartile + C_median) > ymax ) {
 set yrange[ 0:ymax]
 set y2range[0:ymax]
 
-plot 'data' using 1:3           t 'meanTime/timestep' with lines, \
-     'data' using 1:4 axes x1y2 t 'time/timestep'     with lines
+plot 'data' using 2:3               t 'meanTime/timestep' with lines, \
+     'data' using 2:4     axes x1y2 t 'time/timestep'     with lines, \
+     'data' using 1:(1/0) axes x2y1 t ''
 
 
 #__________________________________Bottom
 #     Memory plots
 set origin 0.0,0.0
 set title ''
-set xlabel "Elapsed Time [s]" offset 0,+0.5
+
 set ylabel  "Ave memory usage [MB]"     textcolor lt 1
 set yrange[ D_min - D_stddev:D_max + D_stddev]
 
@@ -218,7 +223,8 @@ if( E_records ){                              # if the outputfile contains max m
   set y2range[D_min - D_stddev:E_max + E_stddev]
 
   plot 'data' using 2:7   t 'ave' with lines, \
-       'data' using 2:8   t 'max' with lines
+       'data' using 2:8   t 'max' with lines, \
+       'data' using 1:(1/0) axes x2y1 t ''
 } 
 else{                                       #  if the outputfile doesn't contain max stats
   unset y2label
