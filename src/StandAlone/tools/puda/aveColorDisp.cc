@@ -59,9 +59,9 @@ Uintah::aveColorDisp( DataArchive * da, CommandLineFlags & clf )
       
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
-//  int matl = clf.matl;
+  int matl = clf.matl;
 
-  for(int matl=0; matl < clf.matl; matl++){ 
+//  for(int matl=0; matl < clf.matl; matl++){
     // Make file for the data
     ostringstream fnum;
     fnum << matl;
@@ -115,7 +115,7 @@ Uintah::aveColorDisp( DataArchive * da, CommandLineFlags & clf )
              << " = " << colors.size() << endl;
       }
       vector<double> ColorsVec(colors.size());
-      vector<double> ColorDisp(colors.size());
+      vector<Vector> ColorDisp(colors.size());
       vector<int> NumOfColor(colors.size());
       unsigned long int i=0;
       if(t==0){
@@ -148,7 +148,7 @@ Uintah::aveColorDisp( DataArchive * da, CommandLineFlags & clf )
       for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-//        int matl = clf.matl;
+        int matl = clf.matl;
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
         ParticleVariable<Point> value_pos;
@@ -164,7 +164,7 @@ Uintah::aveColorDisp( DataArchive * da, CommandLineFlags & clf )
           for(;piter != pset->end(); piter++){
              for(long unsigned int ic = 0; ic<colors.size(); ic++){
                if(value_color[*piter]==ColorsVec[ic]){
-                 ColorDisp[ic]+=value_disp[*piter].length();
+                 ColorDisp[ic]+=value_disp[*piter];
                  NumOfColor[ic]++;
                  break;
                } // if
@@ -181,6 +181,5 @@ Uintah::aveColorDisp( DataArchive * da, CommandLineFlags & clf )
       outfile << endl; 
     } // loop over time
     plotfile << "pause -1" << endl;
-  } // loop over matls
+//  } // loop over matls
 } // end aveColorDisp()
-
