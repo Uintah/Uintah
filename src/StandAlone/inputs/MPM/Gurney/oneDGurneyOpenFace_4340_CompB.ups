@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+   <Meta>
+       <title>
+          1-D Gurney "open-faced sandwich" test.
+          Mean velocity of the metal plate should behave
+          as in Eq. 27.10 of Explosives Engineering by Paul Cooper.
+          This relationship can also be found at:
+          https://en.wikipedia.org/wiki/Gurney_equations
+          In that equation, "M" is the mass of the metal,
+          "C" is the mass of the explosive, and sqrt(2E)
+          is a property of the explosive.  In this case, the
+          explosive is Comp-B, so sqrt(2E)=2.70 km/s.
+          For this 1-D case:
+          M/C = rho_metal*length_metal/(rho_compB*length_compb)
+          M/C = (7830.e3*1.0)/(1717.e3*4.0)
+          M/C = 1.14
+          V/sqrt(2E) = 1./sqrt((1+(1+2*M/C)^3)/(6.*(1+M/C)) + M/C)
+                     = .5021
+          V = 2700 m/s*.5021 = 1356 m/s = .1356 cm/us
+          From the uda/TotalMass_0.dat, the metal mass = 4893.75
+          Using gnuplot to plot the results:
+
+	set terminal x11
+	#set terminal postscript portrait color solid "Times-Roman" 18 size 10 in, 6.68 in
+	set key bottom right
+	set xlabel("Time (microseconds)")
+	set ylabel("Mean Metal Velocity (cm/microsecond)")
+
+	#set output("GurneyOpenFace.ps")
+
+	set yrange[-0.01:0.11]
+	set xrange[0:80]
+
+	plot \
+	    "1DGurneyOpenFace4340Steel_CompB.uda.000/TotalMomentum_0.dat" using 1:($3/4893.75) w l lw 3 t "Mean metal velocity",\
+	    .1356 lw 3 t "Expected Value"
+	pause -1
+
+        JWLC parameters for the Comp-B explosive come from:
+        Hornberg, H., "Determination of Fume State Parameters from
+        Expansion of Metal Tubes",
+        Propellants, Explosives and Pyrotechnics", 11, 23-31, 1986.
+        Note, I don't have that paper directly, so I'm relying on those
+        values as referenced in other papers.
+
+      </title>
+   </Meta>
+
+  <SimulationComponent type="mpm" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            80.0      </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           2.4e-14    </delt_min>
+       <delt_max>           2.0        </delt_max>
+       <delt_init>          1.8e-09    </delt_init>
+       <timestep_multiplier>0.1        </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+             <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
+             <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0.0,  -10.0, 0.]     </lower>
+              <upper>        [0.025, 10.0, 0.025]  </upper>
+              <extraCells>   [1,1,1]             </extraCells>
+              <patches>      [1,1,1]             </patches>
+              <resolution>   [1, 800, 1]      </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>1DGurneyOpenFace4340Steel_CompB.uda</filebase>
+      <outputInterval>5.0</outputInterval>
+       <save label="p.x"/>
+       <save label="p.mass"/>
+       <save label="g.mass"/>
+       <save label="p.color"/>
+       <save label="p.volume"/>
+       <save label="p.velocity"/>
+       <save label="p.stress"/>
+       <save label="p.scalefactor"/>
+       <save label="TotalMass"/>
+       <save label="TotalMomentum"/>
+<!--
+       <save label="g.velocity"/>
+       <save label="p.temperature"/>
+       <save label="p.localized"/>
+       <save label="p.damage"/>
+       <save label="p.progressF"/>
+       <save label="p.plasticStrain"/>
+       <save label="p.plasticStrainRate"/>
+-->
+       <checkpoint cycle = "2" interval = "1.0"/>
+   </DataArchiver>
+    <!--____________________________________________________________________-->
+    <!--    M P M     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <MPM>
+      <interpolator>            fast_cpdi  </interpolator>
+      <cpdi_lcrit>              1.8        </cpdi_lcrit>
+      <artificial_viscosity>    true       </artificial_viscosity>
+      <artificial_viscosity_heating>   false  </artificial_viscosity_heating>
+      <DoPressureStabilization> false </DoPressureStabilization>
+      <axisymmetric>            false  </axisymmetric>
+      <withColor>               true  </withColor>
+      <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+      <restartOnLargeNodalVelocity>false</restartOnLargeNodalVelocity>
+      <minimum_subcycles_for_F> 1 </minimum_subcycles_for_F>
+<!--
+     <maximum_particle_velocity>2.0000</maximum_particle_velocity>
+-->
+   </MPM>        
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> .1013250  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "4340 Steel Plate">
+              <density>7830.0e3</density>
+              <thermal_conductivity>38e-7</thermal_conductivity>
+              <specific_heat>477e-8</specific_heat>
+              <room_temp>294.0</room_temp>
+              <melt_temp>1793.0</melt_temp>
+              <constitutive_model type="elastic_plastic">
+                <shear_modulus>80.0e4</shear_modulus>
+                <bulk_modulus>173.33e4 </bulk_modulus>
+
+                <equation_of_state type = "mie_gruneisen">
+                  <C_0>    .3574  </C_0>
+                  <Gamma_0> 1.69 </Gamma_0>
+                  <S_alpha> 1.92 </S_alpha>
+                </equation_of_state>
+
+                <yield_condition type = "vonMises"> </yield_condition>
+
+                <flow_model type="johnson_cook">
+                  <A>792.0e1</A>
+                  <B>510.0e1</B>
+                  <C>0.014</C>
+                  <n>0.26</n>
+                  <m>1.03</m>
+                  <T_r>298.0</T_r>
+                  <T_m>1793.0</T_m>
+                  <epdot_0>1.0e-6</epdot_0>
+                </flow_model>
+              </constitutive_model>
+
+              <geom_object>
+                <box label="Metal">
+                   <min>[0.0, 0.0,-1.0]</min>
+                   <max>[1.0, 1.0, 1.0]</max>
+                </box>
+               <res>[1,4,1]</res>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>294</temperature>
+               <color>1</color>
+              </geom_object>
+         </material>
+
+         <material name = "CompB">
+           <density>1717.0e3</density>
+           <constitutive_model type="program_burn">
+             <n>7.4</n>
+             <K>39.0e-6</K>
+             <A>4.96376e6</A>
+             <B>3.944e4</B>
+             <C>1.288e4</C>
+             <R1>4.06244</R1>
+             <R2>0.94846</R2>
+             <om>0.35</om>
+             <rho0>1717.0e3</rho0>
+
+             <P0>.101325 </P0>
+             <D>   7.98e-1</D>
+
+<!--
+             I'm not sure where these A, B, and C parameters came from... JG
+             <A>5.0999434e6</A>
+             <B>4.0522056e4</B>
+             <C>1.3233369e4</C>
+             <R1>4.06244</R1>
+             <R2>0.94846</R2>
+             <om>0.35</om>
+             <rho0>1717.0e3</rho0>
+
+             <P0>.101325 </P0>
+             <D>   8.1e-1</D>
+-->
+<!--
+-->
+             <starting_location>      [0.0,-4.0,0.]   </starting_location>
+             <direction_if_plane>     [0.0, 0., 0.]   </direction_if_plane>
+           </constitutive_model>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          1515.31e-8          </specific_heat>
+             <geom_object>
+              <box label="charge">
+                 <min>[0.0,-4.0,-1.0]</min>
+                 <max>[5.0, 0.0, 1.0]</max>
+              </box>
+              <res>[1,4,1]</res>
+              <velocity>[0.0,0.0,0.0]</velocity>
+              <temperature>294</temperature>
+              <color>3</color>
+              <pressure>   .101325 </pressure>
+              <density>    1717.0e3  </density>
+             </geom_object>
+         </material>
+         <contact>
+           <type>single_velocity</type>
+         </contact>
+      </MPM>       
+    </MaterialProperties>  
+
+   <PhysicalBC>
+      <MPM>       
+      </MPM>       
+   </PhysicalBC>
+</Uintah_specification>
