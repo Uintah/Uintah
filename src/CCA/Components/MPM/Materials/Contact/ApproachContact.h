@@ -90,7 +90,7 @@ WARNING
          // Constructor
          ApproachContact(const ProcessorGroup* myworld,
                          ProblemSpecP& ps, MaterialManagerP& d_sS,MPMLabel* lb,
-                         MPMFlags* Mflag, int numMatls);
+                         MPMFlags* Mflag);
          
          // Destructor
          virtual ~ApproachContact();

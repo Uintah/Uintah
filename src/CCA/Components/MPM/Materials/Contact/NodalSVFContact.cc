@@ -66,9 +66,8 @@ NodalSVFContact:: NodalSVFContact( const ProcessorGroup*       myworld,
                                          ProblemSpecP&              ps, 
                                          MaterialManagerP&        d_sS, 
                                          MPMLabel*                 Mlb,
-                                         MPMFlags*                MFlag,
-                                         int                      numMatls)
-                             : Contact(myworld,   Mlb,  MFlag,  ps, numMatls)
+                                         MPMFlags*                MFlag)
+                             : Contact(myworld,   Mlb,  MFlag,  ps)
 {  // Constructor
   d_materialManager = d_sS;
   ps->    require("myu",    d_myu);

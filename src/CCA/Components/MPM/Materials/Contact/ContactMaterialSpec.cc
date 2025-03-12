@@ -28,14 +28,14 @@
 using namespace std;
 using namespace Uintah;
 
-ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps, int numMPMMatls)
+ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
 {
   if(ps) {
     vector<int> materials;
     if(ps->get("materials", materials)) {
       for(vector<int>::const_iterator mit(materials.begin());
           mit!=materials.end();mit++) {
-        if(*mit<0 || *mit >=numMPMMatls)
+        if(*mit<0)
           throw ProblemSetupException(" Invalid material index in contact block", __FILE__, __LINE__);
         this->add(*mit);
       }
@@ -79,4 +79,3 @@ ContactMaterialSpec::add(unsigned int matlIndex)
   
   d_matls[matlIndex] = true;
 }
-

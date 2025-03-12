@@ -50,8 +50,8 @@ using namespace std;
 
 FrictionContactLRVar::FrictionContactLRVar(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps,MaterialManagerP& d_sS,
-                                 MPMLabel* Mlb,MPMFlags* MFlag, int numMatls)
-  : Contact(myworld, Mlb, MFlag, ps, numMatls)
+                                 MPMLabel* Mlb,MPMFlags* MFlag)
+  : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
   d_oneOrTwoStep = 2;

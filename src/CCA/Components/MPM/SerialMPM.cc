@@ -294,23 +294,21 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
+  bool needNormals = false;
+  bool useLR       = false;
+  contactModel = ContactFactory::create(d_myworld,
+                                        restart_mat_ps,m_materialManager,lb,
+                                        flags, needNormals, useLR);
+
+  flags->d_computeNormals        = needNormals;
+  flags->d_useLogisticRegression = useLR;
+
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);
 
   heatConductionModel = scinew HeatConduction(m_materialManager,lb,flags);
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
-
-  bool needNormals = false;
-  bool useLR       = false;
-  unsigned int numMatls = m_materialManager->getNumMatls();
-  contactModel = ContactFactory::create(d_myworld,
-                                        restart_mat_ps,m_materialManager,lb,
-                                        flags, needNormals, useLR, numMatls);
-
-  flags->d_computeNormals        = needNormals;
-
-  flags->d_useLogisticRegression = useLR;
 
   contactModel->setContactMaterialAttributes();
 

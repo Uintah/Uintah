@@ -57,7 +57,7 @@ WARNING
       public:
          // Constructor
          CompositeContact(const ProcessorGroup* myworld, MPMLabel* Mlb, 
-                          MPMFlags* MFlag, const ProblemSpecP& ps,int numMatls);
+                          MPMFlags* MFlag, const ProblemSpecP& ps);
          virtual ~CompositeContact();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);

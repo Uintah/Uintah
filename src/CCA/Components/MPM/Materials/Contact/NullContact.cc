@@ -47,8 +47,8 @@ using namespace Uintah;
 
 NullContact::NullContact(const ProcessorGroup* myworld, ProblemSpecP& ps,
                          MaterialManagerP& d_sS,
-                         MPMLabel* Mlb,MPMFlags* MFlags, int numMatls)
-  : Contact(myworld, Mlb, MFlags, ps, numMatls)
+                         MPMLabel* Mlb,MPMFlags* MFlags)
+  : Contact(myworld, Mlb, MFlags, ps)
 {
   // Constructor
   d_materialManager = d_sS;
