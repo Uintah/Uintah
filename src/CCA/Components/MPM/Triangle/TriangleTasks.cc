@@ -354,6 +354,9 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           double sumSk=0.0;
           Vector gSN(0.,0.,0.);
           vector< std::pair <double,int> > matlMass(numMPMMatls);
+          // matlMass is the mass of other materials near the point
+          // This is to limit the number of materials we search through
+          // to find intersections.
           for(unsigned int m = 0; m < numMPMMatls; m++){
              matlMass[m].first=0.0;
           }
@@ -368,18 +371,36 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           }
           
           if(doit==1){
+            // Find which other materials have the largest
+            // mass near the current node so we can only check
+            // those in looking for intersections
             if(triUseInPenalty[idx](itv)==1){
               for (int k = 0; k < NN; k++) {
                 IntVector node = ni[k];
-                for(unsigned int m = 0; m < numMPMMatls; m++){
-                   matlMass[m].first += gmass[m][node]*S[k];
-                   matlMass[m].second = m;
+                // skip the node's own material
+                for(unsigned int m = 0; m < adv_matl; m++){
+                  matlMass[m].first += gmass[m][node]*S[k];
+                  matlMass[m].second = m;
+                }
+                for(unsigned int m = adv_matl+1; m < numMPMMatls; m++){
+                  matlMass[m].first += gmass[m][node]*S[k];
+                  matlMass[m].second = m;
                 }
               } // loop over grid nodes
               sort(matlMass.rbegin(), matlMass.rend());
+
+              // If any of the three top mass materials are zero, don't
+              // include them in the materials to be searched.
+              for(int im=0; im<3; im++){
+                if(matlMass[im].first < 1.e-199){
+                   matlMass[im].second = -99;
+                }
+              }
+
+              // Only going to look at the two most likely materials
               matls[itv]=IntVector(matlMass[0].second,  
                                    matlMass[1].second,  
-                                   matlMass[2].second);
+                                   -99 /*matlMass[2].second*/);
             }   // if a vertex to be used in penalty contact
           }
 
@@ -400,13 +421,13 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
         if(doit==1){
           triNearbyMats_new[idx](0,0)=matls[0].x();
           triNearbyMats_new[idx](0,1)=matls[0].y();
-          triNearbyMats_new[idx](0,2)=matls[0].z();
+          //triNearbyMats_new[idx](0,2)=matls[0].z();
           triNearbyMats_new[idx](1,0)=matls[1].x();
           triNearbyMats_new[idx](1,1)=matls[1].y();
-          triNearbyMats_new[idx](1,2)=matls[1].z();
+          //triNearbyMats_new[idx](1,2)=matls[1].z();
           triNearbyMats_new[idx](2,0)=matls[2].x();
           triNearbyMats_new[idx](2,1)=matls[2].y();
-          triNearbyMats_new[idx](2,2)=matls[2].z();
+          //triNearbyMats_new[idx](2,2)=matls[2].z();
         }
 
         if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
@@ -819,8 +840,8 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
 
           if(triUseInPenalty[tmo][idx0](iu)==0 ||
             ((int) triNearbyMats[tmo][idx0](iu,0) != adv_matl1 &&
-             (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1 &&
-             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)){
+             (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1/* &&
+             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1*/)){
             continue;
           }
 
