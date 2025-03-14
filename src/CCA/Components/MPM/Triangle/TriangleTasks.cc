@@ -148,6 +148,11 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   if (d_flags->d_doingDissolution) {
     t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
   }
+  t->requires(Task::NewDW, lb->gMassLabel,
+             d_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+2);
+  t->requires(Task::NewDW, lb->gVelocityLabel,
+             d_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+2);
+
   t->requires(Task::OldDW, lb->pXLabel,                  triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,               triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triangleIDLabel,        triangle_matls, gnone);
@@ -219,6 +224,13 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
     std::vector<bool> PistonMaterial(numMPMMatls);
+
+    constNCVariable<Vector>  gvelocityglobal;
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+           d_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+2);
+    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
+           d_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+2);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
@@ -351,7 +363,9 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
           Vector vel(0.0,0.0,0.0);
+          Vector velGlobal(0.0,0.0,0.0);
           double sumSk=0.0;
+          double sumSkGlobal=0.0;
           Vector gSN(0.,0.,0.);
           vector< std::pair <double,int> > matlMass(numMPMMatls);
           // matlMass is the mass of other materials near the point
@@ -363,10 +377,12 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-            surf[itv] -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
-            gSN   += gSurfNorm[adv_matl][node]*S[k];
+            vel         += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+            sumSk       += gmass[adv_matl][node]*S[k];
+            velGlobal   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+            sumSkGlobal += gmassglobal[node]*S[k];
+            surf[itv]   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            gSN         += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
           }
           
@@ -414,7 +430,12 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
             vertexVel[itv] = vel + surf[itv];
             populatedVertex[itv] = 1.;
           } else {
-            deleteThisTriangle++;
+            if(sumSkGlobal > 1.e-90){
+              velGlobal/=sumSkGlobal;
+              P[itv] += vel*delT;
+            } else {
+              deleteThisTriangle++;
+            }
           }
         } // loop over vertices
 
