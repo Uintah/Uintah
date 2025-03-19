@@ -69,7 +69,7 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   }
 
   _old_manifold_label = VarLabel::find( _manifold_var_name+"_old");
-  tsk->requires( Task::NewDW, _old_manifold_label, Ghost::AroundCells, 1 );
+  tsk->needsLabel( Task::NewDW, _old_manifold_label, Ghost::AroundCells, 1 );
 
   if (timeSubStep == 0) {
     tsk->computes(_src_label);
@@ -81,15 +81,15 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->modifies(_diff_label);
   }
 
-  tsk->requires( Task::NewDW, _manifold_label, Ghost::None, 0 );
-  tsk->requires(Task::NewDW, VarLabel::find("uVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("vVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("wVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, VarLabel::find("areaFraction"), Ghost::AroundCells, 2);
-  tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("density"), Ghost::None, 0);
-  tsk->requires(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, _field_labels->d_delTLabel);
+  tsk->needsLabel( Task::NewDW, _manifold_label, Ghost::None, 0 );
+  tsk->needsLabel(Task::NewDW, VarLabel::find("uVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, VarLabel::find("vVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, VarLabel::find("wVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, VarLabel::find("areaFraction"), Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, VarLabel::find("density"), Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, _field_labels->d_delTLabel);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

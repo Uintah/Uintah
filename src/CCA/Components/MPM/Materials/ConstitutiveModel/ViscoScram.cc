@@ -379,11 +379,11 @@ ViscoScram::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->requires(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStatedataLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pRandLabel,        matlset, gnone);
+  task->needsLabel(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pStatedataLabel,   matlset, gnone);
+  task->needsLabel(Task::OldDW, pRandLabel,        matlset, gnone);
 
   task->computes(pVolChangeHeatRateLabel_preReloc, matlset);
   task->computes(pViscousHeatRateLabel_preReloc,   matlset);

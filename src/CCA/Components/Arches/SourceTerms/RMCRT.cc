@@ -922,11 +922,11 @@ RMCRT_Radiation::sched_sigmaT4( const LevelP & level,
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sigmaT4 (" +type+")");
 
-  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
+  tsk->needsLabel( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
-    tsk->requires( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
+    tsk->needsLabel( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->needsLabel( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_RMCRT->d_sigmaT4Label );
@@ -1045,10 +1045,10 @@ RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sumAbsk (" +type+")");
 
-  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
+  tsk->needsLabel( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->needsLabel( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_sumAbsk_Label );
@@ -1168,7 +1168,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   printSchedule(level, dbg, "RMCRT_radiation::sched_setBoundaryConditions");
 
   if (!backoutTemp) {
-    tsk->requires( temp_dw, m_gasTemp_Label, m_gn, 0 );
+    tsk->needsLabel( temp_dw, m_gasTemp_Label, m_gn, 0 );
   }
 
   tsk->modifies( m_RMCRT->d_sigmaT4Label );
@@ -1369,7 +1369,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
 
     //  only schedule task on arches level
-    tsk->requires(Task::NewDW, VarLabel::find("RMCRTboundFlux"), m_gn, 0);
+    tsk->needsLabel(Task::NewDW, VarLabel::find("RMCRTboundFlux"), m_gn, 0);
 
     tsk->computes( m_radFluxE_Label );
     tsk->computes( m_radFluxW_Label );
@@ -1440,12 +1440,12 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
     printSchedule( level, dbg, "RMCRT_Radiation::sched_DBLsToStencil" );
 
     //  only schedule task on arches level
-    tsk->requires(Task::NewDW, m_radFluxE_Label, m_gn, 0);
-    tsk->requires(Task::NewDW, m_radFluxW_Label, m_gn, 0);
-    tsk->requires(Task::NewDW, m_radFluxN_Label, m_gn, 0);
-    tsk->requires(Task::NewDW, m_radFluxS_Label, m_gn, 0);
-    tsk->requires(Task::NewDW, m_radFluxT_Label, m_gn, 0);
-    tsk->requires(Task::NewDW, m_radFluxB_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxE_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxW_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxN_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxS_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxT_Label, m_gn, 0);
+    tsk->needsLabel(Task::NewDW, m_radFluxB_Label, m_gn, 0);
 
     tsk->computes( m_RMCRT->d_boundFluxLabel );
 

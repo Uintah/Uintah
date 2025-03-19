@@ -610,7 +610,7 @@ void HypoElastic::addComputesAndRequires(Task* task,
   if(d_initialData.alpha>0){
     Ghost::GhostType gnone = Ghost::None;
     // for thermal stress
-    task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+    task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
   }
 }
 

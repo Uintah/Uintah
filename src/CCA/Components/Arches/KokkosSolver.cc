@@ -260,11 +260,11 @@ KokkosSolver::computeTimestep( const LevelP     & level
       m_tot_muLabel = VarLabel::find( muname );
 
       if ( level->getIndex() == m_archesLevelIndex ){
-        tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+        tsk->needsLabel( Task::NewDW, m_uLabel, Ghost::None, 0 );
+        tsk->needsLabel( Task::NewDW, m_vLabel, Ghost::None, 0 );
+        tsk->needsLabel( Task::NewDW, m_wLabel, Ghost::None, 0 );
+        tsk->needsLabel( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
+        tsk->needsLabel( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
       }
 
       m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );

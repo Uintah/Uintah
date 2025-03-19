@@ -175,9 +175,9 @@ void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
   addSharedRForConvertExplicit(task, matlset, patches);
 
   // Add requires local to this model
-  task->requires(Task::NewDW,p_statedata_label_preReloc, 
+  task->needsLabel(Task::NewDW,p_statedata_label_preReloc, 
                  matlset, Ghost::None);
-  task->requires(Task::NewDW,bElBarLabel_preReloc, 
+  task->needsLabel(Task::NewDW,bElBarLabel_preReloc, 
                  matlset, Ghost::None);
 }
 
@@ -600,8 +600,8 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, p_statedata_label, matlset,gnone);
-  task->requires(Task::OldDW, bElBarLabel,       matlset,gnone);
+  task->needsLabel(Task::OldDW, p_statedata_label, matlset,gnone);
+  task->needsLabel(Task::OldDW, bElBarLabel,       matlset,gnone);
 
   task->computes(bElBarLabel_preReloc,       matlset);
   task->computes(p_statedata_label_preReloc, matlset);

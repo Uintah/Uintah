@@ -549,14 +549,14 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
   printSchedule(level,cout_doing,"DDT1::scheduleComputeNumPPC");  
     
-  t0->requires(Task::OldDW, Ilb->timeStepLabel );
-  t0->requires(Task::OldDW, Mlb->pXLabel,               react_matl, gn);
+  t0->needsLabel(Task::OldDW, Ilb->timeStepLabel );
+  t0->needsLabel(Task::OldDW, Mlb->pXLabel,               react_matl, gn);
   t0->computes(numPPCLabel, react_matl);
   
   if(d_useCrackModel){  // Because there is a particle loop already in computeNumPPC, 
                         //  we will put crack threshold determination there as well
-    t0->requires(Task::NewDW, Ilb->press_equil_CCLabel, d_one_matl, gac, 1);
-    t0->requires(Task::OldDW, pCrackRadiusLabel,        react_matl, gn);
+    t0->needsLabel(Task::NewDW, Ilb->press_equil_CCLabel, d_one_matl, gac, 1);
+    t0->needsLabel(Task::OldDW, pCrackRadiusLabel,        react_matl, gn);
     t0->computes(crackedEnoughLabel,    react_matl);
   }
   sched->addTask(t0, level->eachPatch(), d_mymatls);
@@ -569,35 +569,35 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
   printSchedule(level,cout_doing,"DDT1::computeBurnLogic");  
   if(d_useCrackModel){  
-    t1->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
+    t1->needsLabel(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
   }
   //__________________________________
   // Requires
   //__________________________________ 
-  t1->requires(Task::OldDW, Ilb->delTLabel,            level.get_rep());
-  t1->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
-  t1->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
-  t1->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
-  t1->requires(Task::OldDW, Mlb->pXLabel,              mpm_matls,  gn);
+  t1->needsLabel(Task::OldDW, Ilb->delTLabel,            level.get_rep());
+  t1->needsLabel(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
+  t1->needsLabel(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
+  t1->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
+  t1->needsLabel(Task::OldDW, Mlb->pXLabel,              mpm_matls,  gn);
  
   
   //__________________________________
   // Products
-  t1->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
-  t1->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl2,  gn); 
-  t1->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gac, 1);
-  t1->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
+  t1->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
+  t1->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl2,  gn); 
+  t1->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gac, 1);
+  t1->needsLabel(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
 
   //__________________________________
   // Reactants
-  t1->requires(Task::NewDW, Ilb->sp_vol_CCLabel,       react_matl, gn);
-  t1->requires(Task::NewDW, MIlb->vel_CCLabel,         react_matl, gn);
-  t1->requires(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
-  t1->requires(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
-  t1->requires(Task::NewDW, numPPCLabel,               react_matl, gac,1);
-  t1->requires(Task::OldDW, burningLabel,              react_matl, gac,1);
-  t1->requires(Task::OldDW, inductionTimeLabel,        react_matl, gn);
-  t1->requires(Task::OldDW, countTimeLabel,            react_matl, gn);
+  t1->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,       react_matl, gn);
+  t1->needsLabel(Task::NewDW, MIlb->vel_CCLabel,         react_matl, gn);
+  t1->needsLabel(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
+  t1->needsLabel(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
+  t1->needsLabel(Task::NewDW, numPPCLabel,               react_matl, gac,1);
+  t1->needsLabel(Task::OldDW, burningLabel,              react_matl, gac,1);
+  t1->needsLabel(Task::OldDW, inductionTimeLabel,        react_matl, gn);
+  t1->needsLabel(Task::OldDW, countTimeLabel,            react_matl, gn);
   
   //__________________________________
   // Computes
@@ -610,7 +610,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
    
   // if detonation occurs change the output interval  
   if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
-    t1->requires( Task::OldDW, adjOutIntervalsLabel );
+    t1->needsLabel( Task::OldDW, adjOutIntervalsLabel );
     t1->computes( adjOutIntervalsLabel );
     
     t1->computes( VarLabel::find( outputInterval_name ) );
@@ -626,38 +626,38 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
                         
   if(d_useCrackModel){  // Because there is a particle loop already in computeNumPPC, 
                         //  we will put crack threshold determination there as well
-    t2->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
-    //t2->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
-   // t2->requires(Task::NewDW, crackedEnoughLabel,      react_matl, gac,1);
+    t2->needsLabel(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
+    //t2->needsLabel(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
+   // t2->needsLabel(Task::NewDW, crackedEnoughLabel,      react_matl, gac,1);
   }  
   
    
   //__________________________________
   // Requires
   //__________________________________
-  t2->requires(Task::OldDW, Ilb->timeStepLabel );
-  t2->requires(Task::OldDW, Ilb->delTLabel,            level.get_rep());
-  t2->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
-  t2->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
-  t2->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
+  t2->needsLabel(Task::OldDW, Ilb->timeStepLabel );
+  t2->needsLabel(Task::OldDW, Ilb->delTLabel,            level.get_rep());
+  t2->needsLabel(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
+  t2->needsLabel(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
+  t2->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
   
   
   //__________________________________
   // Products
-  t2->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
-  t2->requires(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl2,  gn); 
-  t2->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gac, 1);
-  t2->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
+  t2->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
+  t2->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl2,  gn); 
+  t2->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gac, 1);
+  t2->needsLabel(Task::OldDW,  MIlb->NC_CCweightLabel,   d_one_matl,  gac, 1);
 
   //__________________________________
   // Reactants
-  t2->requires(Task::NewDW, Ilb->sp_vol_CCLabel,       react_matl, gn);
-  t2->requires(Task::NewDW, MIlb->vel_CCLabel,         react_matl, gn);
-  t2->requires(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
-  t2->requires(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
-  t2->requires(Task::NewDW, numPPCLabel,               react_matl, gac,1);
-  t2->requires(Task::NewDW, detonatingLabel,           react_matl, gn); 
-  t2->requires(Task::NewDW, BurningCriteriaLabel,      react_matl, gn);
+  t2->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,       react_matl, gn);
+  t2->needsLabel(Task::NewDW, MIlb->vel_CCLabel,         react_matl, gn);
+  t2->needsLabel(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
+  t2->needsLabel(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
+  t2->needsLabel(Task::NewDW, numPPCLabel,               react_matl, gac,1);
+  t2->needsLabel(Task::NewDW, detonatingLabel,           react_matl, gn); 
+  t2->needsLabel(Task::NewDW, BurningCriteriaLabel,      react_matl, gn);
  
   //__________________________________
   // Computes

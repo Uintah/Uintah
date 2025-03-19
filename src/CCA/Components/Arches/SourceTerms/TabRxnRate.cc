@@ -55,7 +55,7 @@ TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   }
 
   const VarLabel* the_label = VarLabel::find(_rxn_rate);
-  tsk->requires( which_dw, the_label, Ghost::None, 0 );
+  tsk->needsLabel( which_dw, the_label, Ghost::None, 0 );
 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

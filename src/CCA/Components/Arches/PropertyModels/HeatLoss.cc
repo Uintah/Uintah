@@ -107,7 +107,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
       if ( label == 0 ){
         throw InvalidValue( "Error: Could not find table IV label with name: "+*iter, __FILE__, __LINE__);
       }
-      tsk->requires( Task::NewDW , label , Ghost::None , 0 );
+      tsk->needsLabel( Task::NewDW , label , Ghost::None , 0 );
     }
   }
 
@@ -118,8 +118,8 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
       tsk->computes( _actual_hl_label );
     }
 
-    tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
-    tsk->requires( Task::OldDW,  _vol_frac_label , Ghost::None , 0 );
+    tsk->needsLabel( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->needsLabel( Task::OldDW,  _vol_frac_label , Ghost::None , 0 );
 
   } else {
 
@@ -128,8 +128,8 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
       tsk->modifies( _actual_hl_label );
     }
 
-    tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
-    tsk->requires( Task::NewDW,  _vol_frac_label , Ghost::None , 0 );
+    tsk->needsLabel( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->needsLabel( Task::NewDW,  _vol_frac_label , Ghost::None , 0 );
 
   }
 
@@ -137,7 +137,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   _inert_map = _rxn_model->getInertMap();
   for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){
     const VarLabel* label = VarLabel::find( iter->first );
-    tsk->requires( Task::NewDW, label, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, label, Ghost::None, 0 );
     _use_h_ad_lookup = true;
   }
 

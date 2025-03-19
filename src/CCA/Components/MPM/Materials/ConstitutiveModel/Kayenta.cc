@@ -658,13 +658,13 @@ void Kayenta::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
   // Computes and requires for internal state data
   for(int i=0;i<d_NINSV;i++){
-    task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+    task->needsLabel(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
   
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, peakI1IDistLabel,         matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pLocalizedMPMLabel,   matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, peakI1IDistLabel,         matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
   
   task->computes(peakI1IDistLabel_preReloc,       matlset);
   task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);

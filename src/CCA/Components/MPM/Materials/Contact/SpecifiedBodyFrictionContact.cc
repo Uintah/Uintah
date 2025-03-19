@@ -646,13 +646,13 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
-  t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
+  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, lb->delTLabel);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,                    Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
+  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
 
   t->modifies(             lb->gVelocityLabel,   mss);
 
@@ -676,14 +676,14 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
+  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, lb->delTLabel);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,                    Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
+  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
 

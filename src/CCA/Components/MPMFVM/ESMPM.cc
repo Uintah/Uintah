@@ -345,8 +345,8 @@ void ESMPM::scheduleInterpESPotentialToPart(SchedulerP& sched,
   Task* task = scinew Task("ESMPM::interpESPotentialToPart", this,
                            &ESMPM::interpESPotentialToPart);
 
-  task->requires(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
-  task->requires(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
+  task->needsLabel(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
   task->computes(d_mpm_lb->pESPotential,     mpm_matls);
   task->computes(d_mpm_lb->pESGradPotential, mpm_matls);
 

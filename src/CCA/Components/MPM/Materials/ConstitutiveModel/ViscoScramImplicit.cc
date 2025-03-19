@@ -648,13 +648,13 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pSizeLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
+  task->needsLabel(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, lb->pSizeLabel,      matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
-  task->requires(Task::OldDW,Il->dispNewLabel,matlset,Ghost::AroundCells,1);
+  task->needsLabel(Task::OldDW,Il->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
   task->computes(lb->pdTdtLabel,           matlset);  
@@ -669,18 +669,18 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,gnone);
-  task->requires(Task::OldDW, lb->pSizeLabel,              matlset,gnone);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,gnone);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
-  task->requires(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
-  task->requires(Task::OldDW, pStatedataLabel,             matlset,gnone);
-  task->requires(Task::OldDW, pRandLabel,                  matlset,gnone);
-  task->requires(Task::NewDW, Il->dispNewLabel,   matlset,Ghost::AroundCells,1);
+  task->needsLabel(Task::OldDW, lb->delTLabel);
+  task->needsLabel(Task::OldDW, lb->pXLabel,                 matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pSizeLabel,              matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pMassLabel,              matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pStressLabel,            matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
+  task->needsLabel(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
+  task->needsLabel(Task::OldDW, pStatedataLabel,             matlset,gnone);
+  task->needsLabel(Task::OldDW, pRandLabel,                  matlset,gnone);
+  task->needsLabel(Task::NewDW, Il->dispNewLabel,   matlset,Ghost::AroundCells,1);
                                                                                 
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pdTdtLabel,                           matlset);

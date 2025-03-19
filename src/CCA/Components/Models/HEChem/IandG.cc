@@ -193,21 +193,21 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
   
-  t->requires( Task::OldDW, Ilb->timeStepLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep());
+  t->needsLabel( Task::OldDW, Ilb->timeStepLabel );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel,        level.get_rep());
   //__________________________________
   // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
   
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
+  t->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->needsLabel(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+  t->needsLabel(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
   
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+  t->needsLabel(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
   t->computes(reactedFractionLabel, react_matl);
   t->computes(IandGterm1Label, react_matl);
   t->computes(IandGterm2Label, react_matl);

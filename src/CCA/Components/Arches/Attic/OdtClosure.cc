@@ -241,19 +241,19 @@ OdtClosure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel,      gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_odtDataLabel,       gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_odtDataLabel,       gac, 1);
 
   // for multimaterial
   if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
 
       // Computes
@@ -1129,7 +1129,7 @@ OdtClosure::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells, 1);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -1248,16 +1248,16 @@ OdtClosure::sched_computeScalarDissipation(SchedulerP& sched,
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+    tsk->needsLabel(Task::OldDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gac, 1);
     tsk->computes(d_lab->d_scalarDissSPLabel);
   }
   else {
-    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+    tsk->needsLabel(Task::NewDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gac, 1);
     tsk->modifies(d_lab->d_scalarDissSPLabel);
   }

@@ -537,14 +537,14 @@ namespace Vaango {
                                 const Uintah::PatchSet* patches) const 
       {
         const Uintah::MaterialSubset* matlset = matl->thisMaterial(); 
-        task->requires(Uintah::Task::OldDW, pPEAKI1Label,    matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pFSLOPELabel,    matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pSTRENLabel,     matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pYSLOPELabel,    matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pBETALabel,      matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pCRLabel,        matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pT1Label,        matlset, Uintah::Ghost::None);
-        task->requires(Uintah::Task::OldDW, pT2Label,        matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pPEAKI1Label,    matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pFSLOPELabel,    matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pSTRENLabel,     matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pYSLOPELabel,    matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pBETALabel,      matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pCRLabel,        matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pT1Label,        matlset, Uintah::Ghost::None);
+        task->needsLabel(Uintah::Task::OldDW, pT2Label,        matlset, Uintah::Ghost::None);
 
         task->computes(pPEAKI1Label_preReloc,    matlset);
         task->computes(pFSLOPELabel_preReloc,    matlset);

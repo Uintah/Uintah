@@ -119,10 +119,10 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,   gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel,   gac, 1);
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);

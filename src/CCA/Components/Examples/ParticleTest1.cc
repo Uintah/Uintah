@@ -122,23 +122,23 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
   // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost
   // atound-node, and 2 mixes them
   if (doGhostCells_ == 0) {
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::None, 0);
+    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
+    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
+    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::None, 0);
   }
   
   else if (doGhostCells_ == 1) {
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::AroundNodes, 1);
   }
   else if (doGhostCells_ == 2) {
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
+    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
+    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
   }
 
-  task->requires(Task::OldDW, lb_->timeStepLabel);
+  task->needsLabel(Task::OldDW, lb_->timeStepLabel);
   
   task->computes(lb_->dummyLabel);
   task->computes(lb_->pXLabel_preReloc);

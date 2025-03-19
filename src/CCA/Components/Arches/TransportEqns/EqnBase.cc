@@ -259,8 +259,8 @@ EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched, bool isRegrid =
   // These dependencies may be needed for BoundaryCondition::sched_setupBCInletVelocities
   // to be executed first, order appears to be ambigous in certain circumstances.
   if(isRegrid==0){ // dependencies are here to ensure task occurs after bcs are set
-    tsk->requires( Task::NewDW,VarLabel::find("densityCP") , Ghost::None, 0 );
-    tsk->requires( Task::NewDW,VarLabel::find("volFraction") , Ghost::AroundCells, 0 );
+    tsk->needsLabel( Task::NewDW,VarLabel::find("densityCP") , Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW,VarLabel::find("volFraction") , Ghost::AroundCells, 0 );
   }
 
   sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ) );
@@ -298,7 +298,7 @@ EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
   // independent variables :: these must have been computed previously
   for ( MixingRxnModel::VarMap::iterator i = ivVarMap.begin(); i != ivVarMap.end(); ++i ) {
 
-    tsk->requires( Task::NewDW, i->second, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, i->second, Ghost::None, 0 );
 
   }
 
@@ -306,7 +306,7 @@ EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
   MixingRxnModel::InertMasterMap inertMap = _table->getInertMap();
   for ( MixingRxnModel::InertMasterMap::iterator iter = inertMap.begin(); iter != inertMap.end(); iter++ ){
     const VarLabel* label = VarLabel::find( iter->first );
-    tsk->requires( Task::NewDW, label, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, label, Ghost::None, 0 );
   }
 
   tsk->modifies( d_transportVarLabel );

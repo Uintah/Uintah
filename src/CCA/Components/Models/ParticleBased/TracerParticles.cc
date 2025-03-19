@@ -579,7 +579,7 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   const string taskName = "TracerParticles::initializeTask_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::initializeTask);
 
-  t->requires( Task::OldDW,    simTimeLabel );
+  t->needsLabel( Task::OldDW,    simTimeLabel );
   t->computes( nPPCLabel,      d_matl_mss );
   t->computes( pXLabel,        d_matl_mss );
   t->computes( pDispLabel,     d_matl_mss );
@@ -681,7 +681,7 @@ void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
   const string taskName = "TracerParticles::restartInitializeTask_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::restartInitializeTask);
 
-  t->requires( Task::OldDW,    simTimeLabel );
+  t->needsLabel( Task::OldDW,    simTimeLabel );
   t->modifies( nPPCLabel,      d_matl_mss );
   t->modifies( pXLabel,        d_matl_mss );
   t->modifies( pDispLabel,     d_matl_mss );
@@ -1242,14 +1242,14 @@ void TracerParticles::sched_moveParticles(SchedulerP  & sched,
   const string taskName = "TracerParticles::moveParticles_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::moveParticles);
 
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-  t->requires( Task::OldDW, simTimeLabel );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->needsLabel( Task::OldDW, simTimeLabel );
 
-  t->requires( Task::OldDW, pXLabel,        d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pDispLabel,     d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pIDLabel,       d_matl_mss, d_gn );
+  t->needsLabel( Task::OldDW, pXLabel,        d_matl_mss, d_gn );
+  t->needsLabel( Task::OldDW, pDispLabel,     d_matl_mss, d_gn );
+  t->needsLabel( Task::OldDW, pIDLabel,       d_matl_mss, d_gn );
 
-  t->requires( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );   // hardwired to use ICE's velocity
+  t->needsLabel( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );   // hardwired to use ICE's velocity
 
   t->computes( pXLabel_preReloc,        d_matl_mss );
   t->computes( pDispLabel_preReloc,     d_matl_mss );
@@ -1352,8 +1352,8 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   const string taskName = "TracerParticles::addParticles_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::addParticles);
 
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-  t->requires( Task::OldDW, nPPCLabel,     d_matl_mss, d_gn );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->needsLabel( Task::OldDW, nPPCLabel,     d_matl_mss, d_gn );
 
   t->modifies( pXLabel_preReloc,        d_matl_mss );
   t->modifies( pDispLabel_preReloc,     d_matl_mss );
@@ -1539,8 +1539,8 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   const string taskName = "TracerParticles::setParticleVars_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::setParticleVars);
 
-  t->requires( Task::OldDW, pXLabel,   d_matl_mss, d_gn, 0 );
-  t->requires( Task::OldDW, nPPCLabel, d_matl_mss, d_gn, 0 );
+  t->needsLabel( Task::OldDW, pXLabel,   d_matl_mss, d_gn, 0 );
+  t->needsLabel( Task::OldDW, nPPCLabel, d_matl_mss, d_gn, 0 );
   t->computes( nPPCLabel,              d_matl_mss );
 
   //__________________________________
@@ -1548,7 +1548,7 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
 
-    t->requires( Task::OldDW, Q->CCVarLabel, d_matl_mss, d_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->CCVarLabel, d_matl_mss, d_gn, 0 );
     t->computes ( Q->pQLabel_preReloc, d_matl_mss );
   }
 
@@ -1557,14 +1557,14 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
 
-    t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-    t->requires( Task::OldDW, S->label,   d_matl_mss, d_gn, 0 );
+    t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+    t->needsLabel( Task::OldDW, S->label,   d_matl_mss, d_gn, 0 );
 
     t->computes( S->label_preReloc,       d_matl_mss );
 
     if ( S->withExpDecayModel ){
-      t->requires( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
-      t->requires( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
+      t->needsLabel( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
+      t->needsLabel( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
 
       t->computes( S->totalDecayLabel_preReloc, d_matl_mss );
       t->computes( S->expDecayCoefLabel,         d_matl_mss );

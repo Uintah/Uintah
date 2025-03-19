@@ -149,7 +149,7 @@ CNHPDamage::addComputesAndRequires(Task* task,
 
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
   task->computes(pPlasticStrainLabel_preReloc,     matlset);
 }
 
@@ -608,9 +608,9 @@ CNHPDamage::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
-    task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
   }else{
-    task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+    task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
   }
 }
 
@@ -975,7 +975,7 @@ CNHPDamage::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
+  task->needsLabel(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
                  Ghost::None);
 }
 

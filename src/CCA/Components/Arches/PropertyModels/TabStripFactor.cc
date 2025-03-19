@@ -58,9 +58,9 @@ void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, 
   tsk->modifies( _prop_label ); 
 
   const VarLabel* the_label = VarLabel::find(_co2_label);
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->needsLabel( Task::NewDW, the_label, Ghost::None, 0 ); 
   the_label = VarLabel::find(_f_label); 
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->needsLabel( Task::NewDW, the_label, Ghost::None, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     

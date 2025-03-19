@@ -49,7 +49,7 @@ void CommonIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,
                            &CommonIFConcDiff::sdInterfaceInterpolated);
 
   const MaterialSubset* mss = matls->getUnion();
-  task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::AroundNodes, 1);
+  task->needsLabel( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::AroundNodes, 1);
 
   task->modifies(d_mpm_lb->diffusion->gConcentration, mss);
 
@@ -117,7 +117,7 @@ void CommonIFConcDiff::addComputesAndRequiresDivergence(SchedulerP & sched,
                            &CommonIFConcDiff::sdInterfaceDivergence);
 
   const MaterialSubset* mss = matls->getUnion();
-  task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::None);
+  task->needsLabel( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::None);
 
   task->modifies(d_mpm_lb->diffusion->gConcentrationRate, mss);
 

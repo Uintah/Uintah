@@ -128,7 +128,7 @@ void JGConcentrationDiffusion::scheduleComputeFlux(      Task         * task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType        gnone = Ghost::None;
 
-  task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
 
   task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
   task->computes(d_lb->delTLabel,getLevel(patch));

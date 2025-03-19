@@ -204,7 +204,7 @@ PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->computes(_src_label);
 
     for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){
-      tsk->requires( Task::OldDW, iter->second, Ghost::None, 0 );
+      tsk->needsLabel( Task::OldDW, iter->second, Ghost::None, 0 );
     }
 
   } else {
@@ -212,7 +212,7 @@ PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->modifies(_src_label);
 
     for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){
-      tsk->requires( Task::NewDW, iter->second, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, iter->second, Ghost::None, 0 );
     }
 
   }

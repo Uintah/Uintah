@@ -134,7 +134,7 @@ ConstantProps::sched_getState( const LevelP& level,
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
 
         if ( timeStep != 0 ){
-          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
+          tsk->needsLabel( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
     }
@@ -161,14 +161,14 @@ ConstantProps::sched_getState( const LevelP& level,
   } else {
     if ( time_substep == 0 ){
       tsk->computes( m_denRefArrayLabel );
-      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
+      tsk->needsLabel( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
     }
   }
 
   // other variables
   tsk->modifies( m_densityLabel );
 
-  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
+  tsk->needsLabel( Task::NewDW, m_volFractionLabel, gn, 0 );
 
   sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 }

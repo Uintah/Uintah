@@ -193,27 +193,27 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-    tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
+    tsk->needsLabel(Task::OldDW, timelabels->pressure_guess, gn, 0);
   }else{
-    tsk->requires(Task::NewDW, timelabels->pressure_guess, gn, 0);
+    tsk->needsLabel(Task::NewDW, timelabels->pressure_guess, gn, 0);
   }
   
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,     gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,     gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,     gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelRhoHatLabel,     gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelRhoHatLabel,     gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelRhoHatLabel,     gaf, 1);
   // get drhodt that goes in the rhs of the pressure equation
-  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,   gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_filterdrhodtLabel,   gn, 0);
 #ifdef divergenceconstraint
-  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,  gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_divConstraintLabel,  gn, 0);
 #endif
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_mmgasVolFracLabel, gac, 1);
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -378,20 +378,20 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
                           d_EKTCorrection, doing_EKT_now);
 
   // Requires
-  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+  tsk->needsLabel( Task::OldDW, d_lab->d_timeStepLabel );
 
   // coefficient for the variable for which solve is invoked
   Ghost::GhostType  gn = Ghost::None;
   if (!((d_pressure_correction)||(extraProjection)
         ||((d_EKTCorrection)&&(doing_EKT_now)))){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
+      tsk->needsLabel(Task::OldDW, timelabels->pressure_guess, gn, 0);
     }else{
-      tsk->requires(Task::NewDW, timelabels->pressure_guess, gn, 0);
+      tsk->needsLabel(Task::NewDW, timelabels->pressure_guess, gn, 0);
     }
   }
-  tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel,     gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_presCoefPBLMLabel,     gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,gn, 0);
 
 
   if ((extraProjection)||(doing_EKT_now)){
@@ -599,10 +599,10 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,    gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,  gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0 ); 
+  tsk->needsLabel(Task::OldDW, d_lab->d_pressurePSLabel,    gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityMicroLabel,  gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0 ); 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_pressPlusHydroLabel);

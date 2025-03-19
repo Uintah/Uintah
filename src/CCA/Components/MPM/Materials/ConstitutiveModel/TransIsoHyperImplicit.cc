@@ -1035,11 +1035,11 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
   }else{
-    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
   }
 
   task->computes(lb->pFiberDirLabel_preReloc,           matlset);
@@ -1056,8 +1056,8 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                                                 
   addSharedCRForImplicit(task, matlset, reset);
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
 
   task->computes(lb->pFiberDirLabel_preReloc,           matlset);
   task->computes(pStretchLabel_preReloc,                matlset);

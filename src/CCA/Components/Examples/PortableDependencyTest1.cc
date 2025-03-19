@@ -68,7 +68,7 @@ template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleRequireTask( const LevelP& level, SchedulerP& sched){
         std::string name = "PortableDependencyTest1::requireTask" + to_string(rid++);
         auto TaskDependencies = [&](Task* task) {
-                task->requires(Task::NewDW, phi_label, Ghost::None, 0);
+                task->needsLabel(Task::NewDW, phi_label, Ghost::None, 0);
         };
         create_portable_tasks(TaskDependencies, this, name.data(),
                         &PortableDependencyTest1::requireTask<ExecSpace, MemSpace>,

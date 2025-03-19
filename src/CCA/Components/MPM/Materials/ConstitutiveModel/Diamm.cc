@@ -535,7 +535,7 @@ void Diamm::addComputesAndRequires(Task* task,
 
   // Computes and requires for internal state data
   for(int i=0;i<d_NINSV;i++){
-    task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+    task->needsLabel(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
 }

@@ -86,11 +86,11 @@ void CohesiveZoneTasks::scheduleAddCohesiveZoneForces(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, d_lb->pXLabel,                   cz_matls, gan,NGP);
-  t->requires(Task::NewDW, d_Cl->czForceLabel_preReloc,     cz_matls, gan,NGP);
-  t->requires(Task::NewDW, d_Cl->czTopMatLabel_preReloc,    cz_matls, gan,NGP);
-  t->requires(Task::NewDW, d_Cl->czBotMatLabel_preReloc,    cz_matls, gan,NGP);
-  t->requires(Task::NewDW, d_lb->gMassLabel,                mpm_matls,gac,NGN);
+  t->needsLabel(Task::OldDW, d_lb->pXLabel,                   cz_matls, gan,NGP);
+  t->needsLabel(Task::NewDW, d_Cl->czForceLabel_preReloc,     cz_matls, gan,NGP);
+  t->needsLabel(Task::NewDW, d_Cl->czTopMatLabel_preReloc,    cz_matls, gan,NGP);
+  t->needsLabel(Task::NewDW, d_Cl->czBotMatLabel_preReloc,    cz_matls, gan,NGP);
+  t->needsLabel(Task::NewDW, d_lb->gMassLabel,                mpm_matls,gac,NGN);
 
   t->modifies(d_lb->gExternalForceLabel, mpm_matls);
 
@@ -260,24 +260,24 @@ void CohesiveZoneTasks::scheduleUpdateCohesiveZones(SchedulerP& sched,
   Task* t=scinew Task("CohesiveZoneTasks::updateCohesiveZones",
                       this, &CohesiveZoneTasks::updateCohesiveZones);
 
-  t->requires(Task::OldDW, d_lb->delTLabel);
+  t->needsLabel(Task::OldDW, d_lb->delTLabel);
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, d_lb->gVelocityLabel,     mpm_matls,   gac,NGN);
-  t->requires(Task::NewDW, d_lb->gMassLabel,         mpm_matls,   gac,NGN);
-  t->requires(Task::OldDW, d_lb->pXLabel,            cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czAreaLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czNormLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czTangLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czDispTopLabel,     cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czDispBottomLabel,  cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czSeparationLabel,  cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czForceLabel,       cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czTopMatLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czBotMatLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czFailedLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, d_Cl->czIDLabel,          cz_matls,    gnone);
+  t->needsLabel(Task::NewDW, d_lb->gVelocityLabel,     mpm_matls,   gac,NGN);
+  t->needsLabel(Task::NewDW, d_lb->gMassLabel,         mpm_matls,   gac,NGN);
+  t->needsLabel(Task::OldDW, d_lb->pXLabel,            cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czAreaLabel,        cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czNormLabel,        cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czTangLabel,        cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czDispTopLabel,     cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czDispBottomLabel,  cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czSeparationLabel,  cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czForceLabel,       cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czTopMatLabel,      cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czBotMatLabel,      cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czFailedLabel,      cz_matls,    gnone);
+  t->needsLabel(Task::OldDW, d_Cl->czIDLabel,          cz_matls,    gnone);
 
   t->computes(d_lb->pXLabel_preReloc,           cz_matls);
   t->computes(d_Cl->czAreaLabel_preReloc,       cz_matls);

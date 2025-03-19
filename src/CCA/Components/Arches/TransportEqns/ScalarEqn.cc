@@ -264,18 +264,18 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
     if ( _reinit_var_label == 0 ){
       throw InvalidValue("Error: Cannot find the reinitialization label for the scalar eqn: "+d_eqnName, __FILE__, __LINE__);
     }
-    tsk->requires( Task::OldDW, _reinit_var_label, gn, 0 );
+    tsk->needsLabel( Task::OldDW, _reinit_var_label, gn, 0 );
 
   } else {
 
-    tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+    tsk->needsLabel(Task::OldDW, d_transportVarLabel, gn, 0);
 
   }
 
   if (d_laminar_pr){
     // This requires that the LaminarPrNo model is activated
     const VarLabel* pr_label = VarLabel::find(d_pr_label);
-    tsk->requires(Task::OldDW, pr_label, gn, 0);
+    tsk->needsLabel(Task::OldDW, pr_label, gn, 0);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -372,13 +372,13 @@ ScalarEqn::sched_addSourceTerms( const LevelP& level, SchedulerP& sched, int tim
       throw InvalidValue("Error: Source Label not found: "+iter->name, __FILE__, __LINE__);
     }
 
-    tsk->requires( Task::NewDW, iter->label, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, iter->label, Ghost::None, 0 );
 
   }
 
   //extra sources
   for ( int i = 0; i < nExtraSources; i++ ) {
-    tsk->requires( Task::NewDW, extraSourceLabels[i], Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, extraSourceLabels[i], Ghost::None, 0 );
   }
 
   tsk->modifies(d_RHSLabel);
@@ -457,39 +457,39 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   printSchedule(level,dbg,taskname);
 
   if ( timeSubStep == 0 ){
-    tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+    tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   } else {
-    tsk->requires(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
+    tsk->needsLabel(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
   }
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
   if ( _stage == 0 ){
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1);
+    tsk->needsLabel(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1);
   } else {
-    tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
+    tsk->needsLabel(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
   }
-  tsk->requires(Task::NewDW, d_fieldLabels->d_turbViscosLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_turbViscosLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
 #ifdef YDIM
-  tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
 #ifdef ZDIM
-  tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
-  tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_prNo_label, Ghost::None, 0);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
 
   //---- time substep dependent ---
   if ( !d_use_constant_D ){
     if ( timeSubStep == 0 ){
-      tsk->requires( Task::OldDW, d_mol_D_label, Ghost::AroundCells, 1 );
+      tsk->needsLabel( Task::OldDW, d_mol_D_label, Ghost::AroundCells, 1 );
     } else {
-      tsk->requires( Task::NewDW, d_mol_D_label, Ghost::AroundCells, 1 );
+      tsk->needsLabel( Task::NewDW, d_mol_D_label, Ghost::AroundCells, 1 );
     }
   }
 
@@ -630,17 +630,17 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
 
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_RHSLabel, Ghost::None, 0);
 
   if ( _stage == 0 ){
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   } else {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
   }
-  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
-  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
@@ -712,12 +712,12 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
 
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
@@ -814,7 +814,7 @@ ScalarEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSu
       if ( ind_var_label == 0 ) {
         throw InvalidValue("Error: For Clipping on equation: "+d_eqnName+" -- Cannot find the constraining variable: "+clip.ind_var, __FILE__, __LINE__);
       }
-      tsk->requires(Task::NewDW, ind_var_label, Ghost::None, 0);
+      tsk->needsLabel(Task::NewDW, ind_var_label, Ghost::None, 0);
     }
 
     tsk->modifies(d_transportVarLabel);

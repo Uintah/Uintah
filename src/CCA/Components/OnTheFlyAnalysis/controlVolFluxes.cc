@@ -307,12 +307,12 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t0, level, m_lb->lastCompTime, false );
 
-//  t0->requires( Task::NewDW, m_lb->vel_CC,    m_matl, gn );
-  t0->requires( Task::NewDW, m_lb->rho_CC,    m_matl, gac, 1 );
+//  t0->needsLabel( Task::NewDW, m_lb->vel_CC,    m_matl, gn );
+  t0->needsLabel( Task::NewDW, m_lb->rho_CC,    m_matl, gac, 1 );
 
-  t0->requires( Task::NewDW, m_lb->uvel_FC,   m_matl, gn );
-  t0->requires( Task::NewDW, m_lb->vvel_FC,   m_matl, gn );
-  t0->requires( Task::NewDW, m_lb->wvel_FC,   m_matl, gn );
+  t0->needsLabel( Task::NewDW, m_lb->uvel_FC,   m_matl, gn );
+  t0->needsLabel( Task::NewDW, m_lb->vvel_FC,   m_matl, gn );
+  t0->needsLabel( Task::NewDW, m_lb->wvel_FC,   m_matl, gn );
 
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     controlVolume* cv = m_controlVols[i];
@@ -333,16 +333,16 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
                     this,&controlVolFluxes::doAnalysis );
 
   sched_TimeVars( t1, level, m_lb->lastCompTime, true );
-  t1->requires( Task::OldDW, m_lb->fileVarsStruct, m_zeroMatl, gn, 0 );
+  t1->needsLabel( Task::OldDW, m_lb->fileVarsStruct, m_zeroMatl, gn, 0 );
 
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     controlVolume* cv = m_controlVols[i];
 
-    t1->requires( Task::NewDW, m_lb->totalQ_CV[i] );
-    t1->requires( Task::NewDW, m_lb->net_Q_faceFluxes[i] );
+    t1->needsLabel( Task::NewDW, m_lb->totalQ_CV[i] );
+    t1->needsLabel( Task::NewDW, m_lb->net_Q_faceFluxes[i] );
 
     for( auto f : cv->allFaces){
-      t1->requires( Task::NewDW, m_lb->Q_faceFluxes[i][f] );
+      t1->needsLabel( Task::NewDW, m_lb->Q_faceFluxes[i][f] );
     }
   }
 

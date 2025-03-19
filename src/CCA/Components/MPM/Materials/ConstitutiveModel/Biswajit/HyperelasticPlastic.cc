@@ -853,21 +853,21 @@ void HyperelasticPlastic::addComputesAndRequires(Task* task,
   
   // Plasticity
   if(d_usePlasticity) {
-    task->requires(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
-    task->requires(Task::OldDW, pYieldStress_label,     matlset, gnone);
+    task->needsLabel(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
+    task->needsLabel(Task::OldDW, pYieldStress_label,     matlset, gnone);
     task->computes(pPlasticStrain_label_preReloc,       matlset);
     task->computes(pYieldStress_label_preReloc,         matlset);
   }
   
   if(d_useDamage) {
     //for pParticleID
-    task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+    task->needsLabel(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
     
     // Other constitutive model and input dependent computes and requires
-    task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matlset, gnone);
-    task->requires(Task::OldDW, pLocalizedLabel,                matlset, gnone);
-    task->requires(Task::OldDW, pTimeOfLocLabel,                matlset, gnone);
-    task->requires(Task::OldDW, pDamageLabel,                   matlset, gnone);
+    task->needsLabel(Task::OldDW, pFailureStressOrStrainLabel,    matlset, gnone);
+    task->needsLabel(Task::OldDW, pLocalizedLabel,                matlset, gnone);
+    task->needsLabel(Task::OldDW, pTimeOfLocLabel,                matlset, gnone);
+    task->needsLabel(Task::OldDW, pDamageLabel,                   matlset, gnone);
     
     task->computes(pFailureStressOrStrainLabel_preReloc,        matlset);
     task->computes(pLocalizedLabel_preReloc,                    matlset);
@@ -875,15 +875,15 @@ void HyperelasticPlastic::addComputesAndRequires(Task* task,
     task->computes(pDamageLabel_preReloc,                       matlset);
     task->computes(lb->TotalLocalizedParticleLabel);   
   } else {
-    task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+    task->needsLabel(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   }
 
   if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    task->needsLabel(Task::OldDW, lb->pColorLabel,  Ghost::None);
   }
   
   // Universal
-  task->requires(Task::OldDW, bElBarLabel,              matlset, gnone);
+  task->needsLabel(Task::OldDW, bElBarLabel,              matlset, gnone);
   task->computes(bElBarLabel_preReloc,                  matlset);
   task->computes(pDeformRateLabel_preReloc,             matlset);
 }
@@ -904,16 +904,16 @@ void HyperelasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   if(d_usePlasticity){
     if(SchedParent){
-      task->requires(Task::ParentOldDW, pPlasticStrain_label, matlset, gnone);
+      task->needsLabel(Task::ParentOldDW, pPlasticStrain_label, matlset, gnone);
     }else{
-      task->requires(Task::OldDW,       pPlasticStrain_label, matlset, gnone);
+      task->needsLabel(Task::OldDW,       pPlasticStrain_label, matlset, gnone);
     }
   }
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW,   bElBarLabel,          matlset, gnone);
+    task->needsLabel(Task::ParentOldDW,   bElBarLabel,          matlset, gnone);
   }else{
-    task->requires(Task::OldDW,         bElBarLabel,          matlset, gnone);
+    task->needsLabel(Task::OldDW,         bElBarLabel,          matlset, gnone);
   }
 }
 
@@ -949,9 +949,9 @@ void HyperelasticPlastic::addRequiresDamageParameter(Task* task,
 {
   if(d_useDamage) {
     const MaterialSubset* matlset = matl->thisMaterial();
-    task->requires(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
-    task->requires(Task::NewDW, pTimeOfLocLabel_preReloc, matlset, Ghost::None);
-    task->requires(Task::NewDW, pDamageLabel_preReloc, matlset, Ghost::None);
+    task->needsLabel(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
+    task->needsLabel(Task::NewDW, pTimeOfLocLabel_preReloc, matlset, Ghost::None);
+    task->needsLabel(Task::NewDW, pDamageLabel_preReloc, matlset, Ghost::None);
   }
 }
 

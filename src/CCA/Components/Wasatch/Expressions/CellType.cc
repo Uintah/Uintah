@@ -96,7 +96,7 @@ void CellType::schedule_carry_forward(const Uintah::PatchSet* const patches,
                                       Uintah::SchedulerP& sched)
 {
   Uintah::Task* tsk = scinew Uintah::Task( "WasatchCore::CellType::carry_forward", this, &CellType::carry_forward );
-  tsk->requires(Uintah::Task::OldDW, cellTypeVarLabel_, Uintah::Ghost::None, 0);
+  tsk->needsLabel(Uintah::Task::OldDW, cellTypeVarLabel_, Uintah::Ghost::None, 0);
   tsk->computes(cellTypeVarLabel_);
   sched->addTask( tsk, patches, materials );
 }

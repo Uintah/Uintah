@@ -235,10 +235,10 @@ void TongeRameshPTR::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
   for (int i=0; i<d_numHistVar; ++i){
-    task->requires(Task::OldDW, histVarVect[i], matlset, gnone);
+    task->needsLabel(Task::OldDW, histVarVect[i], matlset, gnone);
     task->computes(histVarVect_preReloc[i],     matlset);
   }
-  task->requires(Task::OldDW, pSSELabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pSSELabel, matlset, gnone);
   task->computes(pSSELabel_preReloc, matlset);
   task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
@@ -259,7 +259,7 @@ void TongeRameshPTR::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   // Other constitutive model and input dependent computes and requires
-  // task->requires(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
+  // task->needsLabel(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
   for (int i=0; i<d_numHistVar; ++i){
     task->computes(histVarVect[i],     matlset);
   }

@@ -105,9 +105,9 @@ ConductiveHT::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   }
 
-  tsk->requires( Task::NewDW, VarLabel::find("alpha_geom"), gac, 1 );
-  tsk->requires( Task::OldDW, _volFraction_varlabel,      gac, 1 );
-  tsk->requires( which_dw,     _gas_temperature_varlabel, gac, 1 );
+  tsk->needsLabel( Task::NewDW, VarLabel::find("alpha_geom"), gac, 1 );
+  tsk->needsLabel( Task::OldDW, _volFraction_varlabel,      gac, 1 );
+  tsk->needsLabel( which_dw,     _gas_temperature_varlabel, gac, 1 );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

@@ -95,7 +95,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
   
     if (m_dest_flag){
       // require Charmass birth/death   
@@ -105,7 +105,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
       const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
       std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, iqn);
       const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
-      tsk->requires( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
     }
     
 

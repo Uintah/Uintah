@@ -102,7 +102,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
     if (m_dest_flag){
       // require enthalpy birth/death
@@ -112,15 +112,15 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       const std::string enthalpy_birth_name = enthalpy_eqn.get_model_by_type( "BirthDeath" );
       std::string enthalpy_birth_qn_name = ArchesCore::append_qn_env(enthalpy_birth_name, iqn);
       const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
-      tsk->requires( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
       // find unscaled unweighted particle enthalpy
       std::string enthalpy_name = ArchesCore::append_env(m_enthalpy_root, iqn );
       const VarLabel* particle_enthalpy_varlabel = VarLabel::find(enthalpy_name);
-      tsk->requires( Task::NewDW, particle_enthalpy_varlabel, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, particle_enthalpy_varlabel, Ghost::None, 0 );
       // find particle temperature
       std::string temperature_name = ArchesCore::append_env( m_temperature_root, iqn );
       const VarLabel* particle_temperature_varlabel = VarLabel::find(temperature_name);
-      tsk->requires( Task::NewDW, particle_temperature_varlabel, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, particle_temperature_varlabel, Ghost::None, 0 );
     }
 
 

@@ -1094,25 +1094,25 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
+    task->needsLabel(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
   }else{
-    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
-    task->requires(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
-    task->requires(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   }
   //
   task->computes(lb->pFiberDirLabel_preReloc,matlset);
@@ -1129,15 +1129,15 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                                                 
   addSharedCRForImplicit(task, matlset, reset);
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
-  task->requires(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
-  task->requires(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
+  task->needsLabel(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   //
   task->computes(lb->pFiberDirLabel_preReloc,           matlset);
   task->computes(pStretchLabel_preReloc,                matlset);

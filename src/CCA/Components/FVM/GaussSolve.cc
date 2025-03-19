@@ -229,9 +229,9 @@ GaussSolve::scheduleBuildMatrixAndRhs(       SchedulerP  & sched,
                            &GaussSolve::buildMatrixAndRhs,
                            level, sched.get_rep());
 
-  task->requires(Task::NewDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
   task->computes(d_lb->ccESPotentialMatrix, d_es_matl, Task::OutOfDomain);
   task->computes(d_lb->ccRHS_ESPotential,   d_es_matl, Task::OutOfDomain);
   task->computes(d_lb->ccTotalCharge,       d_es_matl, Task::OutOfDomain);
@@ -334,9 +334,9 @@ void GaussSolve::scheduleComputeCharge(SchedulerP& sched,
   Task* t = scinew Task("GaussSolve::computeCharge", this,
                         &GaussSolve::computeCharge);
 
-  t->requires(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
+  t->needsLabel(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
+  t->needsLabel(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
+  t->needsLabel(Task::OldDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
   t->computes(d_lb->ccPosCharge);
   t->computes(d_lb->ccNegCharge);
   t->computes(d_lb->ccPermittivity);

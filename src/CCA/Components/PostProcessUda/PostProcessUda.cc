@@ -266,7 +266,7 @@ void PostProcessUda::sched_readDataArchive( const LevelP & level,
   Task* t = scinew Task("PostProcessUda::readDataArchive", this,
                         &PostProcessUda::readDataArchive);
 
-  t->requires(Task::OldDW, getTimeStepLabel());
+  t->needsLabel(Task::OldDW, getTimeStepLabel());
 
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);

@@ -274,36 +274,36 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     const PatchSubset* patches = level->allPatches()->getUnion();
     //__________________________________
     // common Variables
-    t->requires( Task::OldDW, lb->delTLabel, level.get_rep());  
-    t->requires( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
-    t->requires( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
-    t->requires( Task::NewDW, lb->rhsLabel,             patches, tl, one_matl,   oims,gn,0);
-    t->requires( Task::NewDW, lb->uvel_FCLabel,         patches, gn, 0);
-    t->requires( Task::NewDW, lb->vvel_FCLabel,         patches, gn, 0);
-    t->requires( Task::NewDW, lb->wvel_FCLabel,         patches, gn, 0);
+    t->needsLabel( Task::OldDW, lb->delTLabel, level.get_rep());  
+    t->needsLabel( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
+    t->needsLabel( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
+    t->needsLabel( Task::NewDW, lb->rhsLabel,             patches, tl, one_matl,   oims,gn,0);
+    t->needsLabel( Task::NewDW, lb->uvel_FCLabel,         patches, gn, 0);
+    t->needsLabel( Task::NewDW, lb->vvel_FCLabel,         patches, gn, 0);
+    t->needsLabel( Task::NewDW, lb->wvel_FCLabel,         patches, gn, 0);
 
     //__________________________________
     // SetupRHS
     if(d_models.size() > 0){  
-      t->requires(Task::NewDW,lb->modelMass_srcLabel, patches, gn,0);
+      t->needsLabel(Task::NewDW,lb->modelMass_srcLabel, patches, gn,0);
     } 
-    t->requires( Task::NewDW, lb->speedSound_CCLabel, patches, gn,0);
-    t->requires( Task::NewDW, lb->max_RHSLabel,                gn,0);
+    t->needsLabel( Task::NewDW, lb->speedSound_CCLabel, patches, gn,0);
+    t->needsLabel( Task::NewDW, lb->max_RHSLabel,                gn,0);
     
     //__________________________________
     // setup Matrix
-    t->requires( Task::NewDW, lb->sp_volX_FCLabel,   patches,  gac,1);            
-    t->requires( Task::NewDW, lb->sp_volY_FCLabel,   patches,  gac,1);            
-    t->requires( Task::NewDW, lb->sp_volZ_FCLabel,   patches,  gac,1);            
-    t->requires( Task::NewDW, lb->vol_fracX_FCLabel, patches,  gac,1);            
-    t->requires( Task::NewDW, lb->vol_fracY_FCLabel, patches,  gac,1);            
-    t->requires( Task::NewDW, lb->vol_fracZ_FCLabel, patches,  gac,1);            
-    t->requires( Task::NewDW, lb->sumKappaLabel,  patches, tl, press_matl,oims,gn,0);   
+    t->needsLabel( Task::NewDW, lb->sp_volX_FCLabel,   patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->sp_volY_FCLabel,   patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->sp_volZ_FCLabel,   patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->vol_fracX_FCLabel, patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->vol_fracY_FCLabel, patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->vol_fracZ_FCLabel, patches,  gac,1);            
+    t->needsLabel( Task::NewDW, lb->sumKappaLabel,  patches, tl, press_matl,oims,gn,0);   
         
     //__________________________________
     // Update Pressure
-    t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);  
-    t->requires( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);  
+    t->needsLabel( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);  
+    t->needsLabel( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);  
     
 #if 0 // fix me
     computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
@@ -312,9 +312,9 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     // ImplicitVel_FC
-    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);
+    t->needsLabel(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);
     if( mpm_matls)
-      t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
+      t->needsLabel(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
     
     //__________________________________
     //  what's produced from this task
@@ -664,11 +664,11 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet
     
     // Fluxes from the fine level. These are computed in the advection operator
-    t1->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel,
+    t1->needsLabel(Task::NewDW, lb->vol_frac_X_FC_fluxLabel,
                  0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
-    t1->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel,
+    t1->needsLabel(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel,
                  0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
-    t1->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel,
+    t1->needsLabel(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel,
                  0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);             
 
     t1->modifies(lb->vol_frac_X_FC_fluxLabel);  // these are the correction fluxes
@@ -687,12 +687,12 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                      this, &impAMRICE::apply_refluxFluxes_RHS);
                      
     // coarse grid RHS after setupRHS               
-    t2->requires(Task::NewDW,lb->rhsLabel, one_matl,oims,gn,0);                        
+    t2->needsLabel(Task::NewDW,lb->rhsLabel, one_matl,oims,gn,0);                        
     
     // Correction fluxes  from the coarse level               
-    t2->requires(Task::NewDW, lb->vol_frac_X_FC_fluxLabel, gac, 1);    
-    t2->requires(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel, gac, 1);    
-    t2->requires(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);
+    t2->needsLabel(Task::NewDW, lb->vol_frac_X_FC_fluxLabel, gac, 1);    
+    t2->needsLabel(Task::NewDW, lb->vol_frac_Y_FC_fluxLabel, gac, 1);    
+    t2->needsLabel(Task::NewDW, lb->vol_frac_Z_FC_fluxLabel, gac, 1);
     t2->modifies(lb->rhsLabel, one_matl,oims);
 
     sched->addTask(t2, coarseLevel->eachPatch(), all_matls);    
@@ -826,7 +826,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::NewDW, variable,
+  t->needsLabel(Task::NewDW, variable,
               0, Task::FineLevel,  press_matl,oims, gn, 0);
 
   t->modifies(variable, d_press_matl, oims);        
@@ -1016,7 +1016,7 @@ void impAMRICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
                   this, &impAMRICE::matrixBC_CFI_coarsePatch);
 
     Ghost::GhostType  gn  = Ghost::None;
-    task->requires(Task::NewDW, lb->matrixLabel, 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+    task->needsLabel(Task::NewDW, lb->matrixLabel, 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
     task->modifies(lb->matrixLabel);
 

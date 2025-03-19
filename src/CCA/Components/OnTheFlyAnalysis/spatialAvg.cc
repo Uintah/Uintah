@@ -313,8 +313,8 @@ void spatialAvg::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t = scinew Task("spatialAvg::doAnalysis",
                    this,&spatialAvg::doAnalysis);
 
-  t->requires( Task::OldDW, m_timeStepLabel);
-  t->requires( Task::OldDW, m_simulationTimeLabel);
+  t->needsLabel( Task::OldDW, m_timeStepLabel);
+  t->needsLabel( Task::OldDW, m_simulationTimeLabel);
 
   Ghost::GhostType  gn  = Ghost::None;
 
@@ -326,7 +326,7 @@ void spatialAvg::scheduleDoAnalysis(SchedulerP   & sched,
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
-    t->requires( Task::NewDW, Q.Q_Label, matSubSet, gn, 0 );
+    t->needsLabel( Task::NewDW, Q.Q_Label, matSubSet, gn, 0 );
     t->computes ( Q.avgLabel,       matSubSet );
     t->computes ( Q.varianceLabel,  matSubSet );
 

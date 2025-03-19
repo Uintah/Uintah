@@ -216,54 +216,54 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::OldDW, d_lab->d_delTLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_delTLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+    tsk->needsLabel(Task::OldDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gn,  0);
                   
-    tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
+    tsk->needsLabel(Task::OldDW, d_lab->d_stressTensorCompLabel,
                   d_lab->d_tensorMatl, oams, gac, 1);
   }
   
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,     gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,    gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_densityOldOldLabel,gn,  0);
-  tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel, gn,  0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_divConstraintLabel,gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_scalarSPLabel,     gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,    gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityOldOldLabel,gn,  0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_oldDeltaTLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_viscosityCTSLabel, gn,  0);
   
   //__________________________________
   if (d_MAlab){ 
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_mmcellTypeLabel,  gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_densityMicroLabel,gn, 0);
   }else{
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,    gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_cellTypeLabel,    gn, 0);
   }
   
   //__________________________________
   if (d_enthalpySolve) {
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, gn,  0);
-    tsk->requires(Task::OldDW, d_lab->d_tempINLabel,     gac, 1);
-    tsk->requires(Task::OldDW, d_lab->d_cpINLabel,       gac, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_enthalpySPLabel, gn,  0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_tempINLabel,     gac, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_cpINLabel,       gac, 1);
     
     if (d_radiationCalc) {
-      tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,gn, 0);
+      tsk->needsLabel(Task::OldDW, d_lab->d_absorpINLabel,gn, 0);
       if (d_DORadiationCalc) {
-        tsk->requires(Task::OldDW, d_lab->d_co2INLabel,           gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,           gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,        gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,  gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,gn, 0);
-        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,         gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_co2INLabel,           gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_h2oINLabel,           gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_sootFVINLabel,        gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationSRCINLabel,  gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxEINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxWINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxNINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxSINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxTINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_radiationFluxBINLabel,gn, 0);
+        tsk->needsLabel(Task::OldDW, d_lab->d_abskgINLabel,         gn, 0);
       }
     } 
   }
@@ -271,10 +271,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   //__________________________________
   if (d_dynScalarModel) {
     if (d_calScalar){
-      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
+      tsk->needsLabel(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
     }
     if (d_enthalpySolve){
-      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
+      tsk->needsLabel(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
     }
   }
   
@@ -899,28 +899,28 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
                           
   Ghost::GhostType  gn = Ghost::None;
   if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,   gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_mmcellTypeLabel,   gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_densityMicroLabel, gn, 0);
   }else{
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
   }
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,   gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,   gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,   gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,        gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,       gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,    gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_uVelocitySPBCLabel,   gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_vVelocitySPBCLabel,   gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_wVelocitySPBCLabel,   gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_scalarSPLabel,        gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,       gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_viscosityCTSLabel,    gn, 0);
 
   if (d_enthalpySolve){
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,    gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
   
   if (d_dynScalarModel) {
     if (d_calScalar){
-      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
+      tsk->needsLabel(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
     }
     if (d_enthalpySolve){
-      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
+      tsk->needsLabel(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
     }
   }
   
@@ -980,10 +980,10 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
   Task* tsk = scinew Task( "PicardNonlinearSolver::dataCopy",
                            this, &PicardNonlinearSolver::dummySolve);
 
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_pressurePSLabel, Ghost::None, 0);
 
   if (d_calcVariance) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_scalarVarSPLabel, Ghost::None, 0);
   }
 
   tsk->computes(d_lab->d_pressurePSLabel);
@@ -1026,15 +1026,15 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gaf, 1);
-    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gaf, 1);
-    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gaf, 1);
-    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,    gn, 0);
+    tsk->needsLabel(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gaf, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gaf, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gaf, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,    gn, 0);
 // hat velocities are only interpolated for first substep, since they are
 // not really needed anyway
-    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,   gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,   gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,   gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_uVelRhoHatLabel,   gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_vVelRhoHatLabel,   gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_wVelRhoHatLabel,   gaf, 1);
 
     tsk->computes(d_lab->d_oldCCVelocityLabel);
     tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
@@ -1043,12 +1043,12 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   }
 
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel, gn,  0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_divConstraintLabel, gn,  0);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -1682,42 +1682,42 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
                      this, &PicardNonlinearSolver::probeData);
                      
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,    gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_pressurePSLabel,    gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel,      gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_newCCUVelocityLabel,gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_newCCVVelocityLabel,gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_newCCWVelocityLabel,gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_kineticEnergyLabel, gn, 0);
 
   if (d_calcVariance) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_scalarVarSPLabel, gn, 0);
   }
 
   if (d_enthalpySolve){
-    tsk->requires(Task::NewDW, d_lab->d_tempINLabel,      gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_tempINLabel,      gn, 0);
   }
   
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->integTemp_CCLabel,gn, 0);
     
-    tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,    gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHT_CCLabel,    gn, 0);
 
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,   gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHT_FCXLabel,   gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHT_FCYLabel,   gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHT_FCZLabel,   gn, 0);
 
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxXLabel,  gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxYLabel,  gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,  gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHtFluxXLabel,  gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHtFluxYLabel,  gn, 0);
+    tsk->needsLabel(Task::NewDW, d_MAlab->totHtFluxZLabel,  gn, 0);
   }
 
-  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_simulationTimeLabel);
 
   sched->addTask(tsk, patches, matls);
   
@@ -2086,12 +2086,12 @@ PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched,
                           this, &PicardNonlinearSolver::printTotalKE,
                           timelabels);
   
-  tsk->requires(Task::NewDW, timelabels->tke_out);
+  tsk->needsLabel(Task::NewDW, timelabels->tke_out);
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::NewDW, d_lab->d_uVelNormLabel);
-    tsk->requires(Task::NewDW, d_lab->d_vVelNormLabel);
-    tsk->requires(Task::NewDW, d_lab->d_wVelNormLabel);
-    tsk->requires(Task::NewDW, d_lab->d_rhoNormLabel);
+    tsk->needsLabel(Task::NewDW, d_lab->d_uVelNormLabel);
+    tsk->needsLabel(Task::NewDW, d_lab->d_vVelNormLabel);
+    tsk->needsLabel(Task::NewDW, d_lab->d_wVelNormLabel);
+    tsk->needsLabel(Task::NewDW, d_lab->d_rhoNormLabel);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -2152,11 +2152,11 @@ PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched,
                           timelabels);
                           
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel,  gn, 0);
   
   if (d_enthalpySolve){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
   
   tsk->modifies(d_lab->d_densityTempLabel);
@@ -2217,7 +2217,7 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
                           &PicardNonlinearSolver::getDensityGuess,
                           timelabels);
 
-  // tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+  // tsk->needsLabel( Task::OldDW, d_lab->d_timeStepLabel );
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
@@ -2237,13 +2237,13 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
     
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,     gn, 0);
-  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,     gac, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_wVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,      gn, 0);
+  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
+  tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_densityCPLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_cellTypeLabel,      gn, 0);
 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -2488,8 +2488,8 @@ PicardNonlinearSolver::sched_checkDensityGuess(SchedulerP& sched,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
-  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
+  tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, timelabels->negativeDensityGuess);
 
 
   tsk->modifies(d_lab->d_densityGuessLabel);
@@ -2557,7 +2557,7 @@ PicardNonlinearSolver::sched_updateDensityGuess(SchedulerP& sched,
                           &PicardNonlinearSolver::updateDensityGuess,
                           timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,1);
   tsk->modifies(d_lab->d_densityGuessLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -2602,8 +2602,8 @@ PicardNonlinearSolver::sched_syncRhoF(SchedulerP& sched,
                           &PicardNonlinearSolver::syncRhoF, timelabels);
                           
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel,gn,0);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gn,0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityGuessLabel,gn,0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,   gn,0);
   tsk->modifies(d_lab->d_scalarSPLabel);
   
   if (d_enthalpySolve){
@@ -2686,9 +2686,9 @@ PicardNonlinearSolver::sched_saveFECopies(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
   if (d_enthalpySolve){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
  
   tsk->computes(d_lab->d_scalarFELabel);

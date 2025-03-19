@@ -80,12 +80,12 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  t->requires(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
-  t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
-  t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
-  t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
-  t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
+  t->needsLabel(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
+  t->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
+  t->needsLabel(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
+  t->needsLabel(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  t->needsLabel(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
+  t->needsLabel(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
@@ -110,11 +110,11 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::OldDW, d_lb->pXLabel,             gan, NGP);
-  t->requires(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
-  t->requires(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
-  t->requires(Task::NewDW, d_lb->gMassLabel,          gnone);
+  t->needsLabel(Task::OldDW, d_lb->pXLabel,             gan, NGP);
+  t->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
+  t->needsLabel(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
+  t->needsLabel(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
+  t->needsLabel(Task::NewDW, d_lb->gMassLabel,          gnone);
   t->computes(d_lb->gHeatFluxLabel);
   
   sched->addTask(t, patches, matls);
@@ -135,11 +135,11 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
                         this, &HeatConduction::solveHeatEquations);
 
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::NewDW, d_lb->gMassLabel,                           gnone);
-  t->requires(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
-  t->requires(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
-  t->requires(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
-  t->requires(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel,  gnone);
+  t->needsLabel(Task::NewDW, d_lb->gMassLabel,                           gnone);
+  t->needsLabel(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
+  t->needsLabel(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
+  t->needsLabel(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
+  t->needsLabel(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel,  gnone);
   t->modifies(d_lb->gTemperatureRateLabel);
 
   sched->addTask(t, patches, matls);
@@ -162,10 +162,10 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
   const MaterialSubset* mss = matls->getUnion();
 
-  t->requires(Task::OldDW, d_lb->delTLabel );
+  t->needsLabel(Task::OldDW, d_lb->delTLabel );
 
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
-  t->requires(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
+  t->needsLabel(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
+  t->needsLabel(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
   t->modifies(             d_lb->gTemperatureRateLabel, mss);
   t->computes(d_lb->gTemperatureStarLabel);
 

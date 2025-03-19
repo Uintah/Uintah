@@ -113,9 +113,9 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
   printSchedule( patches, dbgExch, "ScalarExch::sched_AddExch_VelFC" );
 
   if(recursion) {
-    t->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
+    t->needsLabel(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
   } else {
-    t->requires(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
+    t->needsLabel(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
   }
 
   Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -132,11 +132,11 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
+  t->needsLabel( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
+  t->needsLabel( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
+  t->needsLabel( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
+  t->needsLabel( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
+  t->needsLabel( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
                              BC_globalVars, recursion);
@@ -431,22 +431,22 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, Ilb->timeStepLabel);
-  t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
+  t->needsLabel(Task::OldDW, Ilb->timeStepLabel);
+  t->needsLabel(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective() && mpm_matls ){
-    t->requires( Task::NewDW, d_isSurfaceCellLabel, d_zero_matl, gac, 1 );
+    t->needsLabel( Task::NewDW, d_isSurfaceCellLabel, d_zero_matl, gac, 1 );
   }
                                 // I C E
-  t->requires(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
-  t->requires(Task::NewDW,  Ilb->specific_heatLabel,ice_matls, gn);
-  t->requires(Task::NewDW,  Ilb->gammaLabel,        ice_matls, gn);
+  t->needsLabel(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
+  t->needsLabel(Task::NewDW,  Ilb->specific_heatLabel,ice_matls, gn);
+  t->needsLabel(Task::NewDW,  Ilb->gammaLabel,        ice_matls, gn);
                                 // A L L  M A T L S
-  t->requires(Task::NewDW,  Ilb->mass_L_CCLabel,    gn);
-  t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     gn);
-  t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, gn);
-  t->requires(Task::NewDW,  Ilb->sp_vol_CCLabel,    gn);
-  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,  gn);
+  t->needsLabel(Task::NewDW,  Ilb->mass_L_CCLabel,    gn);
+  t->needsLabel(Task::NewDW,  Ilb->mom_L_CCLabel,     gn);
+  t->needsLabel(Task::NewDW,  Ilb->int_eng_L_CCLabel, gn);
+  t->needsLabel(Task::NewDW,  Ilb->sp_vol_CCLabel,    gn);
+  t->needsLabel(Task::NewDW,  Ilb->vol_frac_CCLabel,  gn);
 
   computesRequires_CustomBCs(t, "CC_Exchange", Ilb, ice_matls, BC_globalVars);
 

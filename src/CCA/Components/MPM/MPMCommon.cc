@@ -116,7 +116,7 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
   Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
                         &MPMCommon::updateStress_DamageErosionModels);
 
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
   
   int numMatls = d_matlManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMatls; m++){

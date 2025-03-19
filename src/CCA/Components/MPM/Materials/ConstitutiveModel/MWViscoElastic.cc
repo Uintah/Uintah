@@ -389,11 +389,11 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
   task->computes(pStress_e_dLabel_preReloc,  matlset);
   task->computes(pStress_eLabel_preReloc,    matlset);
 
-  task->requires(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStress_e_vLabel,  matlset, gnone);
-  task->requires(Task::OldDW, pStress_e_dLabel,  matlset, gnone);
-  task->requires(Task::OldDW, pStress_eLabel,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pStress_e_vLabel,  matlset, gnone);
+  task->needsLabel(Task::OldDW, pStress_e_dLabel,  matlset, gnone);
+  task->needsLabel(Task::OldDW, pStress_eLabel,    matlset, gnone);
 }
 
 void 

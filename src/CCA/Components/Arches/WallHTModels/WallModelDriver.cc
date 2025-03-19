@@ -239,19 +239,19 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   }
 
   task->modifies(_T_label);
-  task->requires( Task::NewDW, VarLabel::find("alpha_geom"), Ghost::AroundCells, 1 );
+  task->needsLabel( Task::NewDW, VarLabel::find("alpha_geom"), Ghost::AroundCells, 1 );
 
   if ( time_subset == 0 ) {
 
     task->computes( _T_copy_label );
     task->computes( _True_T_Label );
-    task->requires( Task::OldDW , _cc_vel_label   , Ghost::None , 0 );
-    task->requires( Task::OldDW , _T_label        , Ghost::None , 0 );
+    task->needsLabel( Task::OldDW , _cc_vel_label   , Ghost::None , 0 );
+    task->needsLabel( Task::OldDW , _T_label        , Ghost::None , 0 );
     //Use the restart information from the gas temperature label since the
     //True wall temperature may not exisit.
     //This is a band-aid for cases that were run previously without the
     //true wall temperature variable.
-    task->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
+    task->needsLabel( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
     if (do_coal_region){
       task->computes( _deposit_thickness_label );
       task->computes( _deposit_thickness_sb_s_label );
@@ -260,48 +260,48 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
       task->computes( _thermal_cond_en_label );
       task->computes( _thermal_cond_sb_s_label );
       task->computes( _thermal_cond_sb_l_label );
-      task->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _emissivity_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
-      task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _emissivity_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
+      task->needsLabel( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
       for(int i=0; i<_num_extra_src; i++) {
-        task->requires( Task::OldDW, _extra_src_varlabels[i] , Ghost::None, 0 );
+        task->needsLabel( Task::OldDW, _extra_src_varlabels[i] , Ghost::None, 0 );
       }
       for(int i=0; i<_Nenv; i++) {
-        task->requires( Task::OldDW, _particle_flow_rate_d_varlabels[i] , Ghost::None, 0 );
-        task->requires( Task::OldDW, _particle_flow_rate_varlabels[i] , Ghost::None, 0 );
+        task->needsLabel( Task::OldDW, _particle_flow_rate_d_varlabels[i] , Ghost::None, 0 );
+        task->needsLabel( Task::OldDW, _particle_flow_rate_varlabels[i] , Ghost::None, 0 );
       }
     }
-    //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
+    //task->needsLabel( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
 
-    task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+    task->needsLabel( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
 
-      task->requires( Task::OldDW, _HF_E_label, Ghost::AroundCells, 1 );
-      task->requires( Task::OldDW, _HF_W_label, Ghost::AroundCells, 1 );
-      task->requires( Task::OldDW, _HF_N_label, Ghost::AroundCells, 1 );
-      task->requires( Task::OldDW, _HF_S_label, Ghost::AroundCells, 1 );
-      task->requires( Task::OldDW, _HF_T_label, Ghost::AroundCells, 1 );
-      task->requires( Task::OldDW, _HF_B_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_E_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_W_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_N_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_S_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_T_label, Ghost::AroundCells, 1 );
+      task->needsLabel( Task::OldDW, _HF_B_label, Ghost::AroundCells, 1 );
 
        _lastRadSolveLabel=VarLabel::find( "last_radiation_solve_timestep_index");
        if (_lastRadSolveLabel!=nullptr){ // Dynamic radiation solve.  Normalize relaxation factor so wall averaging rate isn't affected (as much)
-         task->requires( Task::OldDW, _lastRadSolveLabel, Ghost::None,0);
-         task->requires(Task::OldDW, VarLabel::find(timeStep_name),Ghost::None,0 );
+         task->needsLabel( Task::OldDW, _lastRadSolveLabel, Ghost::None,0);
+         task->needsLabel(Task::OldDW, VarLabel::find(timeStep_name),Ghost::None,0 );
        }
   } else {
 
 
-    task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
-    task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+    task->needsLabel( Task::NewDW, _T_copy_label, Ghost::None, 0 );
+    task->needsLabel( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
 
   }
 
-  task->requires( Task::OldDW, _simulationTimeLabel);
-  task->requires( Task::OldDW, _delTLabel, Ghost::None, 0);
+  task->needsLabel( Task::OldDW, _simulationTimeLabel);
+  task->needsLabel( Task::OldDW, _delTLabel, Ghost::None, 0);
 
   sched->addTask(task, level->eachPatch(), _materialManager->allMaterials( "Arches" ), Rad_TG);
 
@@ -313,9 +313,9 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   if ( time_subset == 0 ){
 
-   task2->requires( Task::OldDW , _T_label        , Ghost::None , 0 );
-   task2->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
-   task2->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+   task2->needsLabel( Task::OldDW , _T_label        , Ghost::None , 0 );
+   task2->needsLabel( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
+   task2->needsLabel( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
    task2->modifies(_T_label);
    task2->computes( _T_copy_label );
    task2->computes( _True_T_Label );
@@ -333,18 +333,18 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task2->computes( _thermal_cond_en_label );
     task2->computes( _thermal_cond_sb_s_label );
     task2->computes( _thermal_cond_sb_l_label );
-    task2->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _emissivity_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
-    task2->requires( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _deposit_thickness_sb_s_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _deposit_thickness_sb_l_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _emissivity_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _thermal_cond_sb_s_label, Ghost::None, 0 );
+    task2->needsLabel( Task::OldDW, _thermal_cond_sb_l_label, Ghost::None, 0 );
   }
   }else{
 
-    task2->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
-    task2->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
+    task2->needsLabel( Task::NewDW, _T_copy_label, Ghost::None, 0 );
+    task2->needsLabel( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     task2->modifies(_T_label);
 
   }
@@ -643,8 +643,8 @@ WallModelDriver::sched_copyWallTintoT( const LevelP& level, SchedulerP& sched )
 
   //WARNING: Hardcoding temperature for now:
   task->modifies( VarLabel::find("temperature") );
-  task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 );
-  task->requires( Task::NewDW, _cellType_label, Ghost::None, 0 );
+  task->needsLabel( Task::NewDW, _True_T_Label, Ghost::None, 0 );
+  task->needsLabel( Task::NewDW, _cellType_label, Ghost::None, 0 );
 
   sched->addTask( task, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );
 

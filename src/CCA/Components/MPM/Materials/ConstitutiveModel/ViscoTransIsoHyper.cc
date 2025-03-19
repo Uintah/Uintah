@@ -785,16 +785,16 @@ void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
-  task->requires(Task::OldDW, pFailureLabel,      matlset,gnone);
+  task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+  task->needsLabel(Task::OldDW, pFailureLabel,      matlset,gnone);
 
-  task->requires(Task::OldDW, pElasticStressLabel,matlset,gnone);
-  task->requires(Task::OldDW, pHistory1Label,     matlset,gnone);
-  task->requires(Task::OldDW, pHistory2Label,     matlset,gnone);
-  task->requires(Task::OldDW, pHistory3Label,     matlset,gnone);
-  task->requires(Task::OldDW, pHistory4Label,     matlset,gnone);
-  task->requires(Task::OldDW, pHistory5Label,     matlset,gnone);
-  task->requires(Task::OldDW, pHistory6Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory1Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory2Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory3Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory4Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory5Label,     matlset,gnone);
+  task->needsLabel(Task::OldDW, pHistory6Label,     matlset,gnone);
 
   task->computes(lb->pFiberDirLabel_preReloc, matlset);
   task->computes(pStretchLabel_preReloc,      matlset);

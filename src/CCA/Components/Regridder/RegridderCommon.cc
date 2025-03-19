@@ -750,8 +750,8 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
   int ngc_regrid = Max(regrid_depth.x(), regrid_depth.y());
   ngc_regrid = Max(ngc_regrid, regrid_depth.z());
 
-  dilate_stability_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
-  dilate_regrid_task->requires(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
+  dilate_stability_task->needsLabel(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
+  dilate_regrid_task->needsLabel(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
 
   const MaterialSet* all_matls = d_materialManager->allMaterials();
 

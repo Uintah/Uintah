@@ -178,9 +178,9 @@ ShrinkageRate::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
     which_dw = Task::NewDW;
   }
 
-  //tsk->requires( Task::NewDW, _surfacerate_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, m_charoxiSize_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, m_weight_scaled_varlabel, gn, 0 ); 
+  //tsk->needsLabel( Task::NewDW, _surfacerate_varlabel, gn, 0 );
+  tsk->needsLabel( Task::NewDW, m_charoxiSize_varlabel, gn, 0 ); 
+  tsk->needsLabel( which_dw, m_weight_scaled_varlabel, gn, 0 ); 
   
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

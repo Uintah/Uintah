@@ -198,7 +198,7 @@ ErosionModel::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
   
-  task->requires(Task::OldDW, pTimeOfLocLabel, matls, gnone);
+  task->needsLabel(Task::OldDW, pTimeOfLocLabel, matls, gnone);
   task->modifies(d_lb->pStressLabel_preReloc,  matls); 
   task->computes(pTimeOfLocLabel_preReloc,     matls);
 }

@@ -251,15 +251,15 @@ namespace Uintah {
                                __FILE__, __LINE__);
     }
     else {
-      task->requires(Task::OldDW, lb->delTLabel);
-      task->requires(Task::OldDW, lb->pStressLabel,   matlSubset, gnone);
-      task->requires(Task::OldDW, lb->pMassLabel,     matlSubset, gnone);
-      task->requires(Task::OldDW, lb->pVelocityLabel, matlSubset, gnone);
-      task->requires(Task::OldDW, m_pInitialStress,   matlSubset, gnone);
-      task->requires(Task::OldDW, lb->pDeformationMeasureLabel,  matlSubset, gnone);
+      task->needsLabel(Task::OldDW, lb->delTLabel);
+      task->needsLabel(Task::OldDW, lb->pStressLabel,   matlSubset, gnone);
+      task->needsLabel(Task::OldDW, lb->pMassLabel,     matlSubset, gnone);
+      task->needsLabel(Task::OldDW, lb->pVelocityLabel, matlSubset, gnone);
+      task->needsLabel(Task::OldDW, m_pInitialStress,   matlSubset, gnone);
+      task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,  matlSubset, gnone);
 
-      task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,             matlSubset, gnone);
-      task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlSubset, gnone);
+      task->needsLabel(Task::NewDW, lb->pVelGradLabel_preReloc,             matlSubset, gnone);
+      task->needsLabel(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlSubset, gnone);
 
       task->computes(lb->pdTdtLabel, matlSubset);
       task->computes(lb->pStressLabel_preReloc, matlSubset);
@@ -267,7 +267,7 @@ namespace Uintah {
 
       size_t numModes = m_stressDecayTrackers.size();
       for (size_t mode = 0; mode < numModes; ++mode) {
-        task->requires(Task::OldDW, m_stressDecayTrackers[mode], matlSubset, gnone);
+        task->needsLabel(Task::OldDW, m_stressDecayTrackers[mode], matlSubset, gnone);
         task->computes(m_stressDecayTrackers_preReloc[mode], matlSubset);
       }
     }

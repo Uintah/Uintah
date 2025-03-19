@@ -307,7 +307,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("planeExtract::doAnalysis",
                    this,&planeExtract::doAnalysis);
 
-  t->requires( Task::OldDW, m_timeStepLabel);
+  t->needsLabel( Task::OldDW, m_timeStepLabel);
   sched_TimeVars( t, level, d_lb->lastWriteTimeLabel, true );
 
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
@@ -321,7 +321,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
 
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
+    t->needsLabel(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;

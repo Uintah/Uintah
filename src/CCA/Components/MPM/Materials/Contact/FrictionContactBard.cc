@@ -514,13 +514,13 @@ void FrictionContactBard::addComputesAndRequiresInterpolated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gSurfNormLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gPositionLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
+  t->needsLabel(Task::OldDW, lb->delTLabel);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,               Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gSurfNormLabel,           Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gPositionLabel,           Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
+  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
   t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel,      mss);
 
@@ -542,13 +542,13 @@ void FrictionContactBard::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
-  t->requires(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
-  t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gPositionLabel,         Ghost::None);
+  t->needsLabel(Task::OldDW, lb->delTLabel);
+  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gNormTractionLabel,     Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gPositionLabel,         Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
 

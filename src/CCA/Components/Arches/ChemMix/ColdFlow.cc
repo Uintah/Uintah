@@ -225,7 +225,7 @@ ColdFlow::sched_getState( const LevelP& level,
   // independent variables :: these must have been computed previously
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
 
-    tsk->requires( Task::NewDW, i->second, gn, 0 );
+    tsk->needsLabel( Task::NewDW, i->second, gn, 0 );
 
   }
 
@@ -244,7 +244,7 @@ ColdFlow::sched_getState( const LevelP& level,
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
 
         if ( timeStep != 0 ){
-          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
+          tsk->needsLabel( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
     }
@@ -274,16 +274,16 @@ ColdFlow::sched_getState( const LevelP& level,
   } else {
     if ( time_substep == 0 ){
       tsk->computes( m_denRefArrayLabel );
-      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
+      tsk->needsLabel( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
     }
   }
 
-  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
+  tsk->needsLabel( Task::NewDW, m_volFractionLabel, gn, 0 );
 
   // for inert mixing
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){
     const VarLabel* label = VarLabel::find( iter->first );
-    tsk->requires( Task::NewDW, label, gn, 0 );
+    tsk->needsLabel( Task::NewDW, label, gn, 0 );
   }
 
   sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );

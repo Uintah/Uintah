@@ -74,7 +74,7 @@ KinematicHardeningModel::addComputesAndRequires(Task* task,
                                         const PatchSet* patches) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pBackStressLabel, matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pBackStressLabel, matlset, Ghost::None);
   task->computes(pBackStressLabel_preReloc, matlset);
 }
 
@@ -85,7 +85,7 @@ KinematicHardeningModel::addComputesAndRequires(Task* task,
                                         bool recurse) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::ParentOldDW, pBackStressLabel, matlset, Ghost::None);
+  task->needsLabel(Task::ParentOldDW, pBackStressLabel, matlset, Ghost::None);
 }
 
 void 
@@ -94,7 +94,7 @@ KinematicHardeningModel::allocateCMDataAddRequires(Task* task, const MPMMaterial
                                            MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pBackStressLabel_preReloc, matlset, Ghost::None);
+  task->needsLabel(Task::NewDW, pBackStressLabel_preReloc, matlset, Ghost::None);
 }
 
 void 

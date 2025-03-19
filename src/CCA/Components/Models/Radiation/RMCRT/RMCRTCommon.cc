@@ -229,7 +229,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
-  tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
+  tsk->needsLabel( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
   // shedule on all taskgraphs not just TG_RMCRT.  The output task needs d_abskgLabel
@@ -293,7 +293,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
-  tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
+  tsk->needsLabel( temp_dw, d_compTempLabel,    d_gn, 0 );
   tsk->computes( d_sigmaT4Label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
@@ -360,9 +360,9 @@ RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_combineAbskgSigmaT4CellType");
 
-  tsk->requires( temp_dw, d_abskgLabel,    d_gn, 0 );
-  tsk->requires( temp_dw, d_sigmaT4Label,    d_gn, 0 );
-  tsk->requires( temp_dw, d_cellTypeLabel,    d_gn, 0 );
+  tsk->needsLabel( temp_dw, d_abskgLabel,    d_gn, 0 );
+  tsk->needsLabel( temp_dw, d_sigmaT4Label,    d_gn, 0 );
+  tsk->needsLabel( temp_dw, d_cellTypeLabel,    d_gn, 0 );
 
   tsk->computes(d_abskgSigmaT4CellTypeLabel);
   
@@ -916,10 +916,10 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 
   Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
 
-  tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
-  tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
-  tsk->requires( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
+  tsk->needsLabel( Task::OldDW, d_divQLabel,          d_gn, 0 );
+  tsk->needsLabel( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+  tsk->needsLabel( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+  tsk->needsLabel( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
 
   tsk->computes( d_divQLabel );
   tsk->computes( d_boundFluxLabel );
@@ -944,7 +944,7 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
   Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_VarLabels<UintahSpaces::CPU, UintahSpaces::HostSpace>, varLabels );
 
   for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
-    tsk->requires( Task::OldDW, *iter, d_gn, 0 );
+    tsk->needsLabel( Task::OldDW, *iter, d_gn, 0 );
     tsk->computes( *iter );
   }
 
@@ -967,7 +967,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 
   Task* task = scinew Task( taskName, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
 
-  task->requires(Task::OldDW, variable,   d_gn, 0);
+  task->needsLabel(Task::OldDW, variable,   d_gn, 0);
   task->computes(variable);
 
   sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);

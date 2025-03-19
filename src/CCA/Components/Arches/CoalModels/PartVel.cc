@@ -178,14 +178,14 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     else
       tsk->modifies( i->second );
     // also get the old one
-    tsk->requires( Task::OldDW, i->second, gn, 0);
+    tsk->needsLabel( Task::OldDW, i->second, gn, 0);
   }
 
 
-    tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFXLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFYLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFZLabel, gn, 0 );
+    tsk->needsLabel( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    tsk->needsLabel( which_dw, d_fieldLabels->d_areaFractionFXLabel, gn, 0 );
+    tsk->needsLabel( which_dw, d_fieldLabels->d_areaFractionFYLabel, gn, 0 );
+    tsk->needsLabel( which_dw, d_fieldLabels->d_areaFractionFZLabel, gn, 0 );
 
     //for (int i = 0; i < N; i++){
       //std::string name = "w_qn";
@@ -198,7 +198,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
       //EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
       //const VarLabel* myLabel = eqn.getTransportEqnLabel();
 
-      //tsk->requires( which_dw, myLabel, gn, 0 );
+      //tsk->needsLabel( which_dw, myLabel, gn, 0 );
     //}
 
     for (int i = 0; i < N; i++){
@@ -215,19 +215,19 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
       std::string name = ArchesCore::append_env( _uname, i );
       const VarLabel* ulabel = VarLabel::find(name);
-      tsk->requires( which_dw, ulabel, ga, 1 );
+      tsk->needsLabel( which_dw, ulabel, ga, 1 );
 
       name = ArchesCore::append_env( _vname, i );
       const VarLabel* vlabel = VarLabel::find(name);
-      tsk->requires( which_dw, vlabel, ga, 1 );
+      tsk->needsLabel( which_dw, vlabel, ga, 1 );
 
       name = ArchesCore::append_env( _wname, i );
       const VarLabel* wlabel = VarLabel::find(name);
-      tsk->requires( which_dw, wlabel, ga, 1 );
+      tsk->needsLabel( which_dw, wlabel, ga, 1 );
 
       name = ArchesCore::append_qn_env( "w", i );
       const VarLabel* weightlabel = VarLabel::find(name);
-      tsk->requires( which_dw, weightlabel, ga, 1);
+      tsk->needsLabel( which_dw, weightlabel, ga, 1);
 
     }
 

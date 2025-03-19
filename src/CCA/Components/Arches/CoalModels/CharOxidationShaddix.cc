@@ -322,35 +322,35 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     which_dw = Task::NewDW;
   }
 
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( which_dw, _number_density_varlabel, gn, 0 );
-  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
-  tsk->requires( which_dw, _char_varlabel, gn, 0 );
-  tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
-  tsk->requires( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _number_density_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _rcmass_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _char_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 );
 
   for (int i=0; i<_nQn_part;i++ ){
-  tsk->requires( which_dw, _length_varlabel[i], gn, 0 );
-  tsk->requires( which_dw, _weight_varlabel[i], gn, 0 );
+  tsk->needsLabel( which_dw, _length_varlabel[i], gn, 0 );
+  tsk->needsLabel( which_dw, _weight_varlabel[i], gn, 0 );
   }
 
-  tsk->requires( which_dw, _gas_temperature_varlabel, gn, 0);
-  tsk->requires( which_dw, _O2_varlabel, gn, 0 );
-  tsk->requires( which_dw, _CO2_varlabel, gn, 0 );
-  tsk->requires( which_dw, _H2O_varlabel, gn, 0 );
-  tsk->requires( which_dw, _N2_varlabel, gn, 0 );
-  tsk->requires( which_dw, _MW_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel);
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _gas_temperature_varlabel, gn, 0);
+  tsk->needsLabel( which_dw, _O2_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _CO2_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _H2O_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _N2_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _MW_varlabel, gn, 0 );
+  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_delTLabel);
+  tsk->needsLabel( Task::NewDW, _RHS_source_varlabel, gn, 0 );
+  tsk->needsLabel( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
 
-  tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
-  tsk->requires( Task::NewDW, _devolCharLabel, gn, 0);
-  tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
+  tsk->needsLabel( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
+  tsk->needsLabel( Task::NewDW, _devolCharLabel, gn, 0);
+  tsk->needsLabel( Task::NewDW, _devolRCLabel, gn, 0);
   if ( _char_birth_label != nullptr )
-    tsk->requires( Task::NewDW, _char_birth_label, gn, 0 );
+    tsk->needsLabel( Task::NewDW, _char_birth_label, gn, 0 );
   if ( _rawcoal_birth_label != nullptr )
-    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
+    tsk->needsLabel( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }

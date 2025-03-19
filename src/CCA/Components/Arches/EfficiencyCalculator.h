@@ -281,21 +281,21 @@ namespace Uintah {
             tsk->computes( _ACCUM_label ); 
             tsk->computes( _SOURCE_label ); 
 
-            tsk->requires( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::OldDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::OldDW, _a_labs->d_delTLabel, Ghost::None, 0);
-            tsk->requires( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
+            tsk->needsLabel( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::OldDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::OldDW, _a_labs->d_delTLabel, Ghost::None, 0);
+            tsk->needsLabel( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
 
             if ( !_no_species ){
-              tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
-              tsk->requires( Task::OldDW, _phi_label, Ghost::None, 0 ); 
+              tsk->needsLabel( Task::NewDW, _phi_label, Ghost::None, 0 ); 
+              tsk->needsLabel( Task::OldDW, _phi_label, Ghost::None, 0 ); 
             }
 
             if ( !_no_source ){ 
-              tsk->requires( Task::NewDW, _S_label, Ghost::None, 0 ); 
+              tsk->needsLabel( Task::NewDW, _S_label, Ghost::None, 0 ); 
             } 
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
@@ -620,10 +620,10 @@ namespace Uintah {
             Task* tsk = scinew Task( name, this, 
                 &MassBalance::computeEfficiency); 
 
-            tsk->requires( Task::NewDW, _IN_label ); 
-            tsk->requires( Task::NewDW, _OUT_label ); 
-            tsk->requires( Task::NewDW, _ACCUM_label ); 
-            tsk->requires( Task::NewDW, _SOURCE_label ); 
+            tsk->needsLabel( Task::NewDW, _IN_label ); 
+            tsk->needsLabel( Task::NewDW, _OUT_label ); 
+            tsk->needsLabel( Task::NewDW, _ACCUM_label ); 
+            tsk->needsLabel( Task::NewDW, _SOURCE_label ); 
 
             tsk->computes( _residual_label ); 
 
@@ -848,20 +848,20 @@ namespace Uintah {
 
             if ( _num_mf == 1 ){ 
 
-              tsk->requires( Task::NewDW, _mf_1_label, Ghost::None, 0); 
+              tsk->needsLabel( Task::NewDW, _mf_1_label, Ghost::None, 0); 
 
             } else if ( _num_mf == 2 ){ 
           
-              tsk->requires( Task::NewDW, _mf_1_label, Ghost::None, 0); 
-              tsk->requires( Task::NewDW, _mf_2_label, Ghost::None, 0); 
+              tsk->needsLabel( Task::NewDW, _mf_1_label, Ghost::None, 0); 
+              tsk->needsLabel( Task::NewDW, _mf_2_label, Ghost::None, 0); 
 
             }
 
-            tsk->requires( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->needsLabel( Task::NewDW, _phi_label, Ghost::None, 0 ); 
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_materialManager->allMaterials( "Arches" ) ); 
           
@@ -1092,8 +1092,8 @@ namespace Uintah {
             Task* tsk = scinew Task( name, this, 
                 &CombustionEfficiency::computeEfficiency); 
 
-            tsk->requires( Task::NewDW, _numerator_label ); 
-            tsk->requires( Task::NewDW, _denominator_label ); 
+            tsk->needsLabel( Task::NewDW, _numerator_label ); 
+            tsk->needsLabel( Task::NewDW, _denominator_label ); 
 
             tsk->computes( _efficiency_label ); 
 

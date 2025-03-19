@@ -201,7 +201,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                       this, &SingleVelContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires( Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->needsLabel( Task::NewDW, lb->gMassLabel,          Ghost::None);
 
   t->modifies(              lb->gVelocityLabel, mss);
 
@@ -216,8 +216,8 @@ void SingleVelContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                       this, &SingleVelContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);    
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
+  t->needsLabel(Task::OldDW, lb->delTLabel);    
+  t->needsLabel(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel, mss);
 

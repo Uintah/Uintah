@@ -156,20 +156,20 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(integration == "Euler"){
     Task* task = scinew Task("timeAdvance",
                              this, &Wave::timeAdvanceEuler);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
+    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->needsLabel(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       addRefineDependencies(task, phi_label, true, true);
     }
-    //task->requires(Task::OldDW, getDelTLabel());
+    //task->needsLabel(Task::OldDW, getDelTLabel());
     task->computes(phi_label);
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
                              this, &Wave::setupRK4);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
+    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->needsLabel(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       // TODO, fix calls to addRefineDependencies and refineFaces
       addRefineDependencies(task, phi_label, true, true);
@@ -183,11 +183,11 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       Task* task = scinew Task("timeAdvance",
                                this, &Wave::timeAdvanceRK4, s);
                                
-      task->requires(Task::OldDW, getDelTLabel(), level.get_rep());
-      task->requires(Task::OldDW, phi_label,      Ghost::None);
-      task->requires(Task::OldDW, pi_label,       Ghost::None);
-      task->requires(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
-      task->requires(s->cur_dw, s->curpi_label,   Ghost::None, 0);
+      task->needsLabel(Task::OldDW, getDelTLabel(), level.get_rep());
+      task->needsLabel(Task::OldDW, phi_label,      Ghost::None);
+      task->needsLabel(Task::OldDW, pi_label,       Ghost::None);
+      task->needsLabel(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
+      task->needsLabel(s->cur_dw, s->curpi_label,   Ghost::None, 0);
 
       if(level->getIndex()>0){        // REFINE 
         addRefineDependencies(task, s->curphi_label, true, true);

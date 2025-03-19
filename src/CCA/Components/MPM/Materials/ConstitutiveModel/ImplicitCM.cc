@@ -103,19 +103,19 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::OldDW, d_lb->delTLabel);
-  task->requires(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
+  task->needsLabel(Task::OldDW, d_lb->delTLabel);
+  task->needsLabel(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pSizeLabel,        matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
-    task->requires(Task::NewDW, Il->dispNewLabel,      matlset,gac,1);
+    task->needsLabel(Task::NewDW, Il->dispNewLabel,      matlset,gac,1);
   } else {
-    task->requires(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
+    task->needsLabel(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
   }
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
@@ -131,7 +131,7 @@ ImplicitCM::addSharedCRForImplicitHypo(Task* task,
 {
 
   addSharedCRForImplicit(task,matlset,reset);
-  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, d_lb->pStressLabel,      matlset, Ghost::None);
 }
 
 void 
@@ -146,12 +146,12 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
 
   if(SchedParent){
     // For subscheduler
-    task->requires(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
-    task->requires(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
-    task->requires(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
-    task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
-    task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
-    task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
+    task->needsLabel(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                                matlset, gnone);
 
     task->computes(d_lb->pStressLabel_preReloc,                 matlset);  
@@ -159,19 +159,19 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
     task->computes(d_lb->pdTdtLabel,                            matlset);
     if(reset){
-      task->requires(Task::OldDW,     Il->dispNewLabel,      matlset, gac,1);
+      task->needsLabel(Task::OldDW,     Il->dispNewLabel,      matlset, gac,1);
     }else {
-      task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
+      task->needsLabel(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
     }
   }
   else{
     // For scheduleIterate
-    task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
-    task->requires(Task::OldDW, d_lb->pSizeLabel,               matlset, gnone);
-    task->requires(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
-    task->requires(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
-    task->requires(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
-    task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pSizeLabel,               matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
+    task->needsLabel(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
   }
 
 }
@@ -186,9 +186,9 @@ ImplicitCM::addSharedCRForImplicitHypo(Task* task,
   addSharedCRForImplicit(task,matlset,reset,true,SchedParent);
   if(SchedParent){
     // For subscheduler
-    task->requires(Task::ParentOldDW, d_lb->pStressLabel, matlset, Ghost::None);
+    task->needsLabel(Task::ParentOldDW, d_lb->pStressLabel, matlset, Ghost::None);
   }else{
-    task->requires(Task::OldDW,       d_lb->pStressLabel, matlset, Ghost::None);
+    task->needsLabel(Task::OldDW,       d_lb->pStressLabel, matlset, Ghost::None);
   }
 }
 

@@ -438,8 +438,8 @@ void SoilFoam::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, sv_minLabel,         matlset, gnone);
-  task->requires(Task::OldDW, p_sv_minLabel,       matlset, gnone);
+  task->needsLabel(Task::OldDW, sv_minLabel,         matlset, gnone);
+  task->needsLabel(Task::OldDW, p_sv_minLabel,       matlset, gnone);
 
   task->computes(sv_minLabel_preReloc,       matlset);
   task->computes(p_sv_minLabel_preReloc,     matlset);
@@ -460,8 +460,8 @@ SoilFoam::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, sv_minLabel,       matlset,gnone);
-  task->requires(Task::OldDW, p_sv_minLabel,     matlset,gnone);
+  task->needsLabel(Task::OldDW, sv_minLabel,       matlset,gnone);
+  task->needsLabel(Task::OldDW, p_sv_minLabel,     matlset,gnone);
 
   task->computes(sv_minLabel_preReloc,       matlset);
   task->computes(p_sv_minLabel_preReloc,     matlset);

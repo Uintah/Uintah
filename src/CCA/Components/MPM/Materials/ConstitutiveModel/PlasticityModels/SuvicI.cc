@@ -203,11 +203,11 @@ SuvicI::addComputesAndRequires(Task* task,
                                             const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pYieldLabel, matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pYieldLabel, matlset,Ghost::None);
   task->computes(pYieldLabel_preReloc, matlset);
-  task->requires(Task::OldDW, pDragLabel, matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pDragLabel, matlset,Ghost::None);
   task->computes(pDragLabel_preReloc, matlset);
-  task->requires(Task::OldDW, pBackStressLabel, matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pBackStressLabel, matlset,Ghost::None);
   task->computes(pBackStressLabel_preReloc, matlset);
 
 }
@@ -219,9 +219,9 @@ SuvicI::addComputesAndRequires(Task* task,
                                    bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::ParentOldDW, pYieldLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pDragLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pBackStressLabel, matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, pYieldLabel, matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, pDragLabel, matlset,Ghost::None);
+  task->needsLabel(Task::ParentOldDW, pBackStressLabel, matlset,Ghost::None);
 }
 
 void 
@@ -243,10 +243,10 @@ SuvicI::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pYieldLabel_preReloc, matlset, Ghost::None);
-  task->requires(Task::NewDW, pDragLabel_preReloc, matlset, Ghost::None);
-  task->requires(Task::NewDW, pBackStressLabel_preReloc, matlset, Ghost::None);
-  //task->requires(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
+  task->needsLabel(Task::NewDW, pYieldLabel_preReloc, matlset, Ghost::None);
+  task->needsLabel(Task::NewDW, pDragLabel_preReloc, matlset, Ghost::None);
+  task->needsLabel(Task::NewDW, pBackStressLabel_preReloc, matlset, Ghost::None);
+  //task->needsLabel(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
 }
 
 void SuvicI::allocateCMDataAdd(DataWarehouse* new_dw,

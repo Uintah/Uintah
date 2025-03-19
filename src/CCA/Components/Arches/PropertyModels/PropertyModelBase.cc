@@ -85,7 +85,7 @@ PropertyModelBase::sched_timeStepInit( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task( "PropertyModelBase::timeStepInit", this, &PropertyModelBase::timeStepInit); 
 
   tsk->computes( _prop_label );   // 2nd compute for Julien_abskp
-  tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 );
+  tsk->needsLabel( Task::OldDW, _prop_label, Ghost::None, 0 );
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 }
 

@@ -1449,7 +1449,7 @@ namespace Uintah {
     auto TaskDependencies = [&](Task* task) {
 
       // Matrix A
-      task->requires(which_A_dw, A_label, Ghost::None, 0);
+      task->needsLabel(which_A_dw, A_label, Ghost::None, 0);
 
       // Solution X
       if(modifies_X) {
@@ -1460,23 +1460,23 @@ namespace Uintah {
 
       // Initial Guess
       if(guess_label) {
-        task->requires(which_guess_dw, guess_label, Ghost::None, 0);
+        task->needsLabel(which_guess_dw, guess_label, Ghost::None, 0);
       }
 
       // RHS  B
-      task->requires(which_b_dw, b_label, Ghost::None, 0);
+      task->needsLabel(which_b_dw, b_label, Ghost::None, 0);
 
       // timestep
       // it could come from old_dw or parentOldDw
       Task::WhichDW old_dw = m_params->getWhichOldDW();
-      task->requires( old_dw, m_timeStepLabel );
+      task->needsLabel( old_dw, m_timeStepLabel );
 
       // solve struct
       if (isFirstSolve) {
-        task->requires( Task::OldDW, m_hypre_solver_label);
+        task->needsLabel( Task::OldDW, m_hypre_solver_label);
         task->computes( m_hypre_solver_label);
       }  else {
-        task->requires( Task::NewDW, m_hypre_solver_label);
+        task->needsLabel( Task::NewDW, m_hypre_solver_label);
       }
 
       sched->overrideVariableBehavior(m_hypre_solver_label->getName(),false,true,false,false,true);

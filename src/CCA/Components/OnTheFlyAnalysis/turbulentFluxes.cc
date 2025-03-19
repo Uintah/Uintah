@@ -466,8 +466,8 @@ void turbulentFluxes::sched_Q_mean( SchedulerP   & sched,
 
   printSchedule(level,dbg_OTF_TF,"turbulentFluxes::sched_Q_mean");
 
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->requires(Task::OldDW, m_simulationTimeLabel);
+  t->needsLabel(Task::OldDW, m_timeStepLabel);
+  t->needsLabel(Task::OldDW, m_simulationTimeLabel);
 
   for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
     Qvar_ptr Q = m_Qvars[i];
@@ -476,13 +476,13 @@ void turbulentFluxes::sched_Q_mean( SchedulerP   & sched,
 
     //__________________________________
     //
-    t->requires( Task::NewDW, Q->Label,               matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qsum_Label,          matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Q2sum_Label,         matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qu_Qv_Qw_sum_Label,  matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qmean_Label,         matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Q2mean_Label,        matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qu_Qv_Qw_mean_Label, matl, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->Label,               matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Qsum_Label,          matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Q2sum_Label,         matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Qu_Qv_Qw_sum_Label,  matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Qmean_Label,         matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Q2mean_Label,        matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->Qu_Qv_Qw_mean_Label, matl, m_gn, 0 );
 
     t->computes( Q->Qsum_Label,          matl );
     t->computes( Q->Q2sum_Label,         matl );
@@ -648,8 +648,8 @@ void turbulentFluxes::sched_turbFluxes( SchedulerP   & sched,
 
   printSchedule(level,dbg_OTF_TF,"turbulentFluxes::sched_turbFluxes");
 
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->requires(Task::OldDW, m_simulationTimeLabel);
+  t->needsLabel(Task::OldDW, m_timeStepLabel);
+  t->needsLabel(Task::OldDW, m_simulationTimeLabel);
 
   //__________________________________
   //
@@ -658,13 +658,13 @@ void turbulentFluxes::sched_turbFluxes( SchedulerP   & sched,
 
     const MaterialSubset* matl = Q->matlSubset;
 
-    t->requires( Task::NewDW, Q->Label,                matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Qmean_Label,          matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Q2mean_Label,         matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Qu_Qv_Qw_mean_Label,  matl, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->Label,                matl, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->Qmean_Label,          matl, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->Q2mean_Label,         matl, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->Qu_Qv_Qw_mean_Label,  matl, m_gn, 0 );
 
-    t->requires( Task::OldDW, Q->variance_Label,    matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->covariance_Label,  matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->variance_Label,    matl, m_gn, 0 );
+    t->needsLabel( Task::OldDW, Q->covariance_Label,  matl, m_gn, 0 );
 
     t->computes ( Q->variance_Label,   matl );
     t->computes ( Q->covariance_Label, matl );

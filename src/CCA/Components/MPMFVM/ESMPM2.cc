@@ -332,10 +332,10 @@ void ESMPM2::scheduleComputeCCChargeMass(SchedulerP& sched,
   Task* task = scinew Task("ESMPM2::computeCCChargeMass", this,
                            &ESMPM2::computeCCChargeMass);
 
-  task->requires(Task::OldDW, d_mpm_lb->pPosChargeLabel,    mpm_matls, d_gac, 0);
-  task->requires(Task::OldDW, d_mpm_lb->pNegChargeLabel,    mpm_matls, d_gac, 0);
-  task->requires(Task::OldDW, d_mpm_lb->pPermittivityLabel, mpm_matls, d_gac, 0);
-  task->requires(Task::OldDW, d_mpm_lb->pXLabel,            mpm_matls, d_gac, 0);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pPosChargeLabel,    mpm_matls, d_gac, 0);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pNegChargeLabel,    mpm_matls, d_gac, 0);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pPermittivityLabel, mpm_matls, d_gac, 0);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pXLabel,            mpm_matls, d_gac, 0);
   task->computes(d_fvm_lb->ccPosCharge,    es_matls);
   task->computes(d_fvm_lb->ccNegCharge,    es_matls);
   task->computes(d_fvm_lb->ccPermittivity, es_matls);
@@ -429,8 +429,8 @@ void ESMPM2::scheduleInterpESPotentialToPart(SchedulerP& sched,
   Task* task = scinew Task("ESMPM2::interpESPotentialToPart", this,
                            &ESMPM2::interpESPotentialToPart);
 
-  task->requires(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
-  task->requires(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
+  task->needsLabel(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
   task->computes(d_mpm_lb->pESPotential,     mpm_matls);
   task->computes(d_mpm_lb->pESGradPotential, mpm_matls);
 

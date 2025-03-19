@@ -501,10 +501,10 @@ void P_Alpha::addComputesAndRequires(Task* task,
   addSharedCRForExplicit(task, matlset, patches);
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, alphaMinLabel,  matlset, gnone);
-  task->requires(Task::OldDW, tempAlpha1Label,matlset, gnone);
-  task->requires(Task::OldDW, bElBarLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainLabel,
+  task->needsLabel(Task::OldDW, alphaMinLabel,  matlset, gnone);
+  task->needsLabel(Task::OldDW, tempAlpha1Label,matlset, gnone);
+  task->needsLabel(Task::OldDW, bElBarLabel,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pPlasticStrainLabel,
                                               matlset, gnone);
 
   task->computes(alphaMinLabel_preReloc,      matlset);

@@ -301,8 +301,8 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
                           this, &MomentumSolver::buildLinearMatrix,
                           timelabels, extraProjection);
 
-  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
-  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_simulationTimeLabel);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -313,19 +313,19 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,    gac, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,   gac, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_vVelRhoHatLabel,  gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_volFractionLabel, gac, 1);
+  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_cellTypeLabel,    gac, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_densityCPLabel,   gac, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_vVelRhoHatLabel,  gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
+  tsk->needsLabel(Task::NewDW,   d_lab->d_volFractionLabel, gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
   if ( extraProjection ){
-    tsk->requires(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,gac, 1);
   }else{
-    tsk->requires(Task::NewDW, timelabels->pressure_out,  gac, 1);
+    tsk->needsLabel(Task::NewDW, timelabels->pressure_out,  gac, 1);
   }
 
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
@@ -515,8 +515,8 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                           this, &MomentumSolver::buildLinearMatrixVelHat,
                           timelabels, curr_level);
 
-  tsk->requires(Task::OldDW, d_lab->d_timeStepLabel);
-  tsk->requires(Task::OldDW, d_lab->d_simulationTimeLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_timeStepLabel);
+  tsk->needsLabel(Task::OldDW, d_lab->d_simulationTimeLabel);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -525,7 +525,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
+  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
 
   Task::WhichDW which_dw;
 
@@ -544,53 +544,53 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 2);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->needsLabel(Task::NewDW, d_lab->d_volFractionLabel, gac, 2);
 
   if ( d_wall_closure == "constant_coefficient"){
     d_boundaryCondition->sched_wallStressConstSmag( which_dw, tsk );
   }
 
   if (timelabels->multiple_steps){
-    tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
+    tsk->needsLabel(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
   }else{
-    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,  gac, 2);
+    tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,  gac, 2);
   }
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values) {
     old_values_dw = parent_old_dw;
-    tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gac, 1);
-    tsk->requires(old_values_dw, d_lab->d_uVelocitySPBCLabel, gn, 0);
-    tsk->requires(old_values_dw, d_lab->d_vVelocitySPBCLabel, gn, 0);
-    tsk->requires(old_values_dw, d_lab->d_wVelocitySPBCLabel, gn, 0);
+    tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel,   gac, 1);
+    tsk->needsLabel(old_values_dw, d_lab->d_uVelocitySPBCLabel, gn, 0);
+    tsk->needsLabel(old_values_dw, d_lab->d_vVelocitySPBCLabel, gn, 0);
+    tsk->needsLabel(old_values_dw, d_lab->d_wVelocitySPBCLabel, gn, 0);
   }else {
     old_values_dw = Task::NewDW;
-    tsk->requires(Task::NewDW,   d_lab->d_densityTempLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW,   d_lab->d_densityTempLabel, gac, 1);
   }
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
 
   d_denRefArrayLabel = VarLabel::find("denRefArray");
-  tsk->requires(Task::OldDW, d_denRefArrayLabel,   gac, 1);
+  tsk->needsLabel(Task::OldDW, d_denRefArrayLabel,   gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
+  tsk->needsLabel(Task::OldDW, d_lab->d_pressurePSLabel, gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_turbViscosLabel, gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_CCUVelocityLabel, gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1);
+  tsk->needsLabel(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1);
 
   if (d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
+      tsk->needsLabel(Task::OldDW, d_lab->d_stressTensorCompLabel,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
    }else {
-      tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
+      tsk->needsLabel(Task::NewDW, d_lab->d_stressTensorCompLabel,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
     }
   }
@@ -606,7 +606,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   for ( vector<std::string>::iterator iter = d_new_sources.begin();
         iter != d_new_sources.end(); iter++ ){
 
-    tsk->requires(Task::NewDW, VarLabel::find( *iter ), gac, 1);
+    tsk->needsLabel(Task::NewDW, VarLabel::find( *iter ), gac, 1);
 
   }
 
@@ -1125,15 +1125,15 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  tsk->requires(Task::OldDW , d_lab->d_uVelocitySPBCLabel , gn  , 0);
-  tsk->requires(Task::OldDW , d_lab->d_vVelocitySPBCLabel , gn  , 0);
-  tsk->requires(Task::OldDW , d_lab->d_wVelocitySPBCLabel , gn  , 0);
+  tsk->needsLabel(Task::OldDW , d_lab->d_uVelocitySPBCLabel , gn  , 0);
+  tsk->needsLabel(Task::OldDW , d_lab->d_vVelocitySPBCLabel , gn  , 0);
+  tsk->needsLabel(Task::OldDW , d_lab->d_wVelocitySPBCLabel , gn  , 0);
 
-  tsk->requires(Task::OldDW , d_lab->d_densityCPLabel     , gac , 1);
-  tsk->requires(Task::NewDW , d_lab->d_cellTypeLabel      , gac , 1);
+  tsk->needsLabel(Task::OldDW , d_lab->d_densityCPLabel     , gac , 1);
+  tsk->needsLabel(Task::NewDW , d_lab->d_cellTypeLabel      , gac , 1);
 
-  tsk->requires(Task::NewDW , d_lab->d_densityTempLabel   , gac , 1);
-  tsk->requires(Task::NewDW , d_lab->d_densityCPLabel     , gac , 1);
+  tsk->needsLabel(Task::NewDW , d_lab->d_densityTempLabel   , gac , 1);
+  tsk->needsLabel(Task::NewDW , d_lab->d_densityCPLabel     , gac , 1);
 
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
@@ -1281,10 +1281,10 @@ MomentumSolver::sched_computeMomentum( const LevelP& level,
     which_dw = Task::NewDW;
   }
 
-  tsk->requires( which_dw, d_lab->d_uVelocitySPBCLabel, Ghost::AroundFaces, 1 );
-  tsk->requires( which_dw, d_lab->d_vVelocitySPBCLabel, Ghost::AroundFaces, 1 );
-  tsk->requires( which_dw, d_lab->d_wVelocitySPBCLabel, Ghost::AroundFaces, 1 );
-  tsk->requires( which_dw, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
+  tsk->needsLabel( which_dw, d_lab->d_uVelocitySPBCLabel, Ghost::AroundFaces, 1 );
+  tsk->needsLabel( which_dw, d_lab->d_vVelocitySPBCLabel, Ghost::AroundFaces, 1 );
+  tsk->needsLabel( which_dw, d_lab->d_wVelocitySPBCLabel, Ghost::AroundFaces, 1 );
+  tsk->needsLabel( which_dw, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ) );
 

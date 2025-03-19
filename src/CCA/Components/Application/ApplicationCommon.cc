@@ -400,7 +400,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   task->computes(m_delTLabel);
 
   for (int i = 0; i < grid->numLevels(); i++) {
-    task->requires(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
+    task->needsLabel(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
   }
 
   // These are the application reduction variables. An application may
@@ -416,7 +416,7 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
         scheduler->getComputedVars().end() ) {
       activateReductionVariable(var.first, true);
 
-      task->requires(Task::NewDW, label);
+      task->needsLabel(Task::NewDW, label);
       task->computes(label);
     }
     else {
@@ -622,7 +622,7 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
 
   // This task really should be last as the simulation time gets
   // updated. Without the requires it could be first.
-  task->requires(Task::NewDW, m_delTLabel);
+  task->needsLabel(Task::NewDW, m_delTLabel);
   task->computes(m_timeStepLabel);
   task->computes(m_simulationTimeLabel);
 

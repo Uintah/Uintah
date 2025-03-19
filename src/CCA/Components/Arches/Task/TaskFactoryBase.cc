@@ -504,7 +504,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     case ArchesFieldContainer::REQUIRES:
       {
         DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << " from DW: " << ivar.dw );
-        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        tsk->needsLabel( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       }
       break;
     default:
@@ -520,8 +520,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     //other variables:
     if ( sched->get_dw(0) != nullptr ){
-      tsk->requires(Task::OldDW, VarLabel::find("delT"));
-      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+      tsk->needsLabel(Task::OldDW, VarLabel::find("delT"));
+      tsk->needsLabel(Task::OldDW, VarLabel::find(simTime_name));
     }
 
     // This task had no work to perform.  Delete it.

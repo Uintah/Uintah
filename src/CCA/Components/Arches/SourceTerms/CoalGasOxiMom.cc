@@ -73,10 +73,10 @@ CoalGasOxiMom::sched_computeSource( const LevelP& level, SchedulerP& sched, int 
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
     ArchesLabel::PartVelMap::const_iterator i = _field_labels->partVel.find(iqn);
-    tsk->requires( Task::NewDW, i->second, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, i->second, Ghost::None, 0 );
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

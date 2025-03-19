@@ -165,12 +165,12 @@ JohnsonCookDamage::addComputesAndRequires(Task* task,
 
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
-  task->requires( Task::OldDW, pDamageLabel,                     matls, gnone);
-  task->requires( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
+  task->needsLabel( Task::OldDW, pDamageLabel,                     matls, gnone);
+  task->needsLabel( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
+  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
 
-  task->requires( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
-  task->requires( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
+  task->needsLabel( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
+  task->needsLabel( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
 
   task->computes( pDamageLabel_preReloc, matls );
 

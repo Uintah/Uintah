@@ -138,7 +138,7 @@ void ConstantRate::scheduleComputeFlux(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  // task->requires(Task::OldDW, d_lb->simulationTimeLabel,);
+  // task->needsLabel(Task::OldDW, d_lb->simulationTimeLabel,);
 
   task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
 }
@@ -174,7 +174,7 @@ void ConstantRate::scheduleComputeDivergence(
                                             ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, d_lb->gMassLabel, Ghost::None);
+  task->needsLabel(Task::NewDW, d_lb->gMassLabel, Ghost::None);
 
   task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }

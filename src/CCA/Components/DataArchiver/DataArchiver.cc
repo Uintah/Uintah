@@ -1187,14 +1187,14 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
     // This task must be executed after the simulation time is updated
     // because when doing an AMR grid the delta T in the old warehouse
     // is overwritten in ApplicationCommon::setDelTForAllLevels.
-    task->requires( Task::NewDW, m_application->getTimeStepLabel() );
-    task->requires( Task::NewDW, m_application->getSimTimeLabel() );
+    task->needsLabel( Task::NewDW, m_application->getTimeStepLabel() );
+    task->needsLabel( Task::NewDW, m_application->getSimTimeLabel() );
 
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
       SaveItem& saveItem = m_saveGlobalLabels[i];
 
       const MaterialSubset* mss = saveItem.getMaterialSubset(0);
-      task->requires( Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
+      task->needsLabel( Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
     task->setType( Task::OutputGlobalVars );
@@ -1220,7 +1220,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       SaveItem& saveItem = m_checkpointGlobalLabels[i];
 
       const MaterialSubset* mss = saveItem.getMaterialSubset(0);
-      task->requires(Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
+      task->needsLabel(Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
     task->setType( Task::OutputGlobalVars );
@@ -2557,7 +2557,7 @@ DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
     //             deterministic order
     if( isThisCheckpoint ) {
       Ghost::GhostType  gn  = Ghost::None;
-      task->requires( Task::NewDW, m_sync_io_label, gn, 0 );
+      task->needsLabel( Task::NewDW, m_sync_io_label, gn, 0 );
     }
     else {
       task->computes( m_sync_io_label );
@@ -2569,7 +2569,7 @@ DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
       const MaterialSubset* matlSubset = saveIter->getMaterialSubset( level.get_rep() );
 
       if ( matlSubset != nullptr ) {
-        task->requires( Task::NewDW, (*saveIter).label, matlSubset, Task::OutOfDomain, Ghost::None, 0, Task::SearchTG::OldTG );
+        task->needsLabel( Task::NewDW, (*saveIter).label, matlSubset, Task::OutOfDomain, Ghost::None, 0, Task::SearchTG::OldTG );
 
         // Do not scrub any variables that are saved so they can be
         // accessed at any time after all of the tasks are finished.

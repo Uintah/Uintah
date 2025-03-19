@@ -126,14 +126,14 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     d_denRefArrayLabel = VarLabel::find("denRefArray");
 
     // Requires
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
-    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 2);
-    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
-    tsk->requires(Task::NewDW, d_denRefArrayLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
+    tsk->needsLabel(Task::NewDW, d_lab->d_volFractionLabel,   gac, 2);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
+    tsk->needsLabel(Task::NewDW, d_denRefArrayLabel, Ghost::None, 0);
 
     // Computes
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -163,14 +163,14 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel,gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
 
     // Computes
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -200,17 +200,17 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
-    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
+    tsk->needsLabel(Task::NewDW, d_lab->d_volFractionLabel, gac, 1);
 
-    tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
+    tsk->needsLabel(Task::NewDW, d_lab->d_strainTensorCompLabel,
         d_lab->d_symTensorMatl, oams,gac, 1);
 
-    tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
         d_lab->d_symTensorMatl, oams,gac, 1);
 
     // Computes
@@ -241,14 +241,14 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,         gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,         gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeLabel,   gn, 0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel, gn);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_volFractionLabel, gac, 1);
 
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);

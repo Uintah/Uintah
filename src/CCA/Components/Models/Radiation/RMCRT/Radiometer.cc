@@ -366,9 +366,9 @@ Radiometer::sched_radiometer( const LevelP & level,
 
   Ghost::GhostType gac = Ghost::AroundCells;
 
-  tsk->requires( abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
-  tsk->requires( sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
-  tsk->requires( celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
+  tsk->needsLabel( abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
+  tsk->needsLabel( sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
+  tsk->needsLabel( celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
   tsk->modifies( d_VRFluxLabel );
   tsk->modifies( d_VRIntensityLabel );

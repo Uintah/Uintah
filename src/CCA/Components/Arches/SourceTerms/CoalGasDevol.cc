@@ -105,7 +105,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
   
     if (m_dest_flag){
       // require RCmass birth/death   
@@ -115,7 +115,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
       const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
       std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, iqn);
       const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
-      tsk->requires( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
     }
     
 

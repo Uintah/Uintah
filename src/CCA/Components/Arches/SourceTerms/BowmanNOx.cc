@@ -82,11 +82,11 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   _temperature_label = VarLabel::find( _temperature_name );
 
 
-  tsk->requires( Task::OldDW, _n2_label, gType, nGhosts );
-  tsk->requires( Task::OldDW, _o2_label, gType, nGhosts );
-  tsk->requires( Task::OldDW, _rho_label, gType, nGhosts );
-  tsk->requires( Task::OldDW, _temperature_label, gType, nGhosts );
-  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts );
+  tsk->needsLabel( Task::OldDW, _n2_label, gType, nGhosts );
+  tsk->needsLabel( Task::OldDW, _o2_label, gType, nGhosts );
+  tsk->needsLabel( Task::OldDW, _rho_label, gType, nGhosts );
+  tsk->needsLabel( Task::OldDW, _temperature_label, gType, nGhosts );
+  tsk->needsLabel( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

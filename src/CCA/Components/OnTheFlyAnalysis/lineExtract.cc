@@ -336,7 +336,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t, level, m_lb->lastWriteTimeLabel, true );
 
-  t->requires(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
+  t->needsLabel(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
 
   //__________________________________
   //
@@ -351,7 +351,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
 
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
+    t->needsLabel(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;

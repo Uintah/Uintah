@@ -89,20 +89,20 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
   tsk->modifies( _prop_label ); 
   if ( time_substep == 0 ){ 
 
-    tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->needsLabel( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->needsLabel( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } else { 
 
-    tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->needsLabel( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->needsLabel( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } 
 
-  tsk->requires( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
-  tsk->requires( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
+  tsk->needsLabel( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
+  tsk->needsLabel( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 

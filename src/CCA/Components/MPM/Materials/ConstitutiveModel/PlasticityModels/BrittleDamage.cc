@@ -194,12 +194,12 @@ BrittleDamage::addComputesAndRequires(Task* task,
   // VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
 
-  task->requires( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
-  task->requires( Task::OldDW, pParticleIDLabel,            matls, gnone);   
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
-  task->requires( Task::NewDW, pDefGradLabel,               matls, gnone);   
-  task->requires( Task::NewDW, pVolumeLabel,                matls, gnone);
-  task->requires( Task::OldDW, pDamageLabel,                matls, gnone);   
+  task->needsLabel( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
+  task->needsLabel( Task::OldDW, pParticleIDLabel,            matls, gnone);   
+  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
+  task->needsLabel( Task::NewDW, pDefGradLabel,               matls, gnone);   
+  task->needsLabel( Task::NewDW, pVolumeLabel,                matls, gnone);
+  task->needsLabel( Task::OldDW, pDamageLabel,                matls, gnone);   
     
   task->modifies( pStressLabel,                         matls );
   task->computes( pFailureStressOrStrainLabel_preReloc, matls );

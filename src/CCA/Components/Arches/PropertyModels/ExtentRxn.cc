@@ -66,9 +66,9 @@ void ExtentRxn::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
   }
 
   const VarLabel* the_label = VarLabel::find(_mixture_fraction_name); 
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->needsLabel( Task::NewDW, the_label, Ghost::None, 0 ); 
   the_label = VarLabel::find(_scalar_name);
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->needsLabel( Task::NewDW, the_label, Ghost::None, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     

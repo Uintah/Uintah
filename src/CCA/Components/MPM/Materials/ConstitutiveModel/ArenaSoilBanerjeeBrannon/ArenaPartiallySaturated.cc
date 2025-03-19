@@ -688,9 +688,9 @@ void ArenaPartiallySaturated::addComputesAndRequires(Uintah::Task* task,
   // base class.
   const Uintah::MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->requires(Uintah::Task::OldDW, lb->pParticleIDLabel,   matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pElasticVolStrainLabel, matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pStressQSLabel,         matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, lb->pParticleIDLabel,   matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pElasticVolStrainLabel, matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pStressQSLabel,         matlset, Uintah::Ghost::None);
   task->computes(pElasticVolStrainLabel_preReloc, matlset);
   task->computes(pStressQSLabel_preReloc,         matlset);
 
@@ -698,13 +698,13 @@ void ArenaPartiallySaturated::addComputesAndRequires(Uintah::Task* task,
   d_yield->addComputesAndRequires(task, matl, patches);
 
   // Add internal variable computes and requires
-  task->requires(Uintah::Task::OldDW, pPlasticStrainLabel,       matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pPlasticCumEqStrainLabel,  matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pPlasticVolStrainLabel,    matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pBackstressLabel,          matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pPorosityLabel,            matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pSaturationLabel,          matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pCapXLabel,                matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pPlasticStrainLabel,       matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pPlasticCumEqStrainLabel,  matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pPlasticVolStrainLabel,    matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pBackstressLabel,          matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pPorosityLabel,            matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pSaturationLabel,          matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pCapXLabel,                matlset, Uintah::Ghost::None);
   task->computes(pPlasticStrainLabel_preReloc,         matlset);
   task->computes(pPlasticCumEqStrainLabel_preReloc,    matlset);
   task->computes(pPlasticVolStrainLabel_preReloc,      matlset);
@@ -714,10 +714,10 @@ void ArenaPartiallySaturated::addComputesAndRequires(Uintah::Task* task,
   task->computes(pCapXLabel_preReloc,                  matlset);
 
   // Add damage variable computes and requires
-  task->requires(Uintah::Task::OldDW, lb->pLocalizedMPMLabel, matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pP3Label,               matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pCoherenceLabel,        matlset, Uintah::Ghost::None);
-  task->requires(Uintah::Task::OldDW, pTGrowLabel,            matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, lb->pLocalizedMPMLabel, matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pP3Label,               matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pCoherenceLabel,        matlset, Uintah::Ghost::None);
+  task->needsLabel(Uintah::Task::OldDW, pTGrowLabel,            matlset, Uintah::Ghost::None);
 
   task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
   task->computes(pP3Label_preReloc,               matlset);
@@ -2742,8 +2742,8 @@ ArenaPartiallySaturated::allocateCMDataAdd(Uintah::DataWarehouse* new_dw,
   std::ostringstream out;
   out << "Material conversion after failure not implemented for ArenaSoil.";
   throw Uintah::ProblemSetupException(out.str(), __FILE__, __LINE__);
-  //task->requires(Task::NewDW, pPorosityLabel_preReloc,         matlset, Ghost::None);
-  //task->requires(Task::NewDW, pSaturationLabel_preReloc,       matlset, Ghost::None);
+  //task->needsLabel(Task::NewDW, pPorosityLabel_preReloc,         matlset, Ghost::None);
+  //task->needsLabel(Task::NewDW, pSaturationLabel_preReloc,       matlset, Ghost::None);
 }
 
 /*---------------------------------------------------------------------------------------

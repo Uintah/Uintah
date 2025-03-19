@@ -98,7 +98,7 @@ void Benchmark::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("Benchmark::computeStableTimeStep",
                      this, &Benchmark::computeStableTimeStep);
                      
-  task->requires(Task::NewDW, residual_label);
+  task->needsLabel(Task::NewDW, residual_label);
   task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
@@ -111,7 +111,7 @@ Benchmark::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Benchmark::timeAdvance",
                      this, &Benchmark::timeAdvance);
                      
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());

@@ -192,12 +192,12 @@ RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     which_dw = Task::NewDW; 
   }
 
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _char_varlabel, gn, 0 );
-  tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel); 
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
+  tsk->needsLabel( which_dw, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->needsLabel( which_dw, _rcmass_varlabel, gn, 0 ); 
+  tsk->needsLabel( which_dw, _char_varlabel, gn, 0 );
+  tsk->needsLabel( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_delTLabel); 
+  tsk->needsLabel( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 

@@ -295,7 +295,7 @@ namespace Uintah {
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("restart initialize particles",
                                              this, &ParticlesHelper::restart_initialize);
-    task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
     parse_boundary_conditions(level, sched);
   }
@@ -440,7 +440,7 @@ namespace Uintah {
     // go through the periodic boundaries
     using namespace Uintah;
     Uintah::Task* periodictask = scinew Uintah::Task("sync particles for periodic boundaries", this, &ParticlesHelper::sync_particle_position_periodic );
-    periodictask->requires(Task::NewDW, pPosLabel_, Uintah::Ghost::None, 0);
+    periodictask->needsLabel(Task::NewDW, pPosLabel_, Uintah::Ghost::None, 0);
     periodictask->modifies(pXLabel_);
     periodictask->modifies(pYLabel_);
     periodictask->modifies(pZLabel_);
@@ -481,7 +481,7 @@ namespace Uintah {
     Uintah::Task* task = scinew Uintah::Task( "transfer particles IDs",
                                               this, &ParticlesHelper::transfer_particle_ids );
     task->computes(pIDLabel_);
-    task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -563,9 +563,9 @@ namespace Uintah {
     else{
       task->computes( pPosLabel_ );
     }
-    task->requires(Task::NewDW, pXLabel_, Uintah::Ghost::None, 0);
-    task->requires(Task::NewDW, pYLabel_, Uintah::Ghost::None, 0);
-    task->requires(Task::NewDW, pZLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::NewDW, pXLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::NewDW, pYLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::NewDW, pZLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -686,7 +686,7 @@ namespace Uintah {
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("find boundary particles",
                                              this, &ParticlesHelper::find_boundary_particles);
-    task->requires(Task::OldDW, pPosLabel_, Uintah::Ghost::None, 0);
+    task->needsLabel(Task::OldDW, pPosLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -892,7 +892,7 @@ namespace Uintah {
     }
     task->modifies(pIDLabel_ );
     task->modifies(pPosLabel_);
-    task->requires(Task::OldDW, delTLabel_);
+    task->needsLabel(Task::OldDW, delTLabel_);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   

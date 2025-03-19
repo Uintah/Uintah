@@ -1885,7 +1885,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         const VarLabel* var = iter->first;
         MaterialSubset* matls = iter->second;
 
-        dataTasks.back()->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dataTasks.back()->needsLabel(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
         DOUTR(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
         dataTasks.back()->computes(var, matls);
       }
@@ -1904,7 +1904,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         const VarLabel* var = iter->first;
         MaterialSubset* matls = iter->second;
 
-        dataTasks.back()->requires(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dataTasks.back()->needsLabel(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
         DOUTR(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
         dataTasks.back()->modifies(var, matls);
       }

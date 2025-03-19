@@ -203,29 +203,29 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();  
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
+  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
 
-  t->requires( Task::OldDW, Ilb->timeStepLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel,       level.get_rep());
+  t->needsLabel( Task::OldDW, Ilb->timeStepLabel );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel,       level.get_rep());
   //__________________________________
   // Products
-  t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       
-  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,prod_matl, gn);       
-  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
-  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
-  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
+  t->needsLabel(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       
+  t->needsLabel(Task::NewDW,  Ilb->vol_frac_CCLabel,prod_matl, gn);       
+  t->needsLabel(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
+  t->needsLabel(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
+  t->needsLabel(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
     
-  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
-  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl,  gac, 1);
+  t->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
+  t->needsLabel(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl,  gac, 1);
   
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
-  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);  
+  t->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
+  t->needsLabel(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);  
 
   t->computes(Simple_Burn::onSurfaceLabel,     one_matl);
   t->computes(Simple_Burn::surfaceTempLabel,   one_matl);

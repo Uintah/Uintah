@@ -157,22 +157,22 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
   Task::WhichDW NDW =Task::NewDW;   
   if(d_is_mpm_matl){              // MPM (pull data from newDW)
     DW = Task::NewDW;
-    t->requires( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
+    t->needsLabel( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
   } else { 
     DW = Task::OldDW;             // ICE (pull data from old DW)
-    t->requires( DW, Ilb->rho_CCLabel,        matl0->thisMaterial(), gn);
-    t->requires( NDW,Ilb->specific_heatLabel, matl0->thisMaterial(), gn);
+    t->needsLabel( DW, Ilb->rho_CCLabel,        matl0->thisMaterial(), gn);
+    t->needsLabel( NDW,Ilb->specific_heatLabel, matl0->thisMaterial(), gn);
   } 
                                   // All matls
-  t->requires( DW,  Ilb->vel_CCLabel,    matl0->thisMaterial(), gn);
-  t->requires( DW,  Ilb->temp_CCLabel,   matl0->thisMaterial(), gn); 
-  t->requires( NDW, Ilb->sp_vol_CCLabel, matl0->thisMaterial(), gn);
+  t->needsLabel( DW,  Ilb->vel_CCLabel,    matl0->thisMaterial(), gn);
+  t->needsLabel( DW,  Ilb->temp_CCLabel,   matl0->thisMaterial(), gn); 
+  t->needsLabel( NDW, Ilb->sp_vol_CCLabel, matl0->thisMaterial(), gn);
   
   t->computes(TestModel::totalMassXLabel);
   t->computes(TestModel::totalIntEngXLabel);
   
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
-  t->requires( Task::OldDW, Ilb->simulationTimeLabel );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->needsLabel( Task::OldDW, Ilb->simulationTimeLabel );
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 

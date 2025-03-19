@@ -136,7 +136,7 @@ void Poisson1::scheduleComputeStableTimeStep( const LevelP     & level
 {
   Task* task = scinew Task("Poisson1::computeStableTimeStep", this, &Poisson1::computeStableTimeStep);
 
-  task->requires(Task::NewDW, residual_label);
+  task->needsLabel(Task::NewDW, residual_label);
   task->computes(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
@@ -152,7 +152,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
 
 //  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
-//  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//  task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
 //  task->computes(phi_label);
 //  task->computes(residual_label);
 //  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
@@ -161,7 +161,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
 // Portable approach:
 
   auto TaskDependencies = [&](Task* task) {
-    task->requires(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
+    task->needsLabel(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, POISSON1_GHOST_TYPE, 1);
     task->computes(residual_label);
   };

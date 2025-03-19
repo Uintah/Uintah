@@ -590,7 +590,7 @@ public: // class Task
 
   //////////
   // Most general case
-  void requires( WhichDW
+  void needsLabel( WhichDW
                , const VarLabel       *
                , const PatchSubset    * patches
                , PatchDomainSpec        patches_dom
@@ -604,7 +604,7 @@ public: // class Task
 
   //////////
   // Like general case, level_offset is not specified
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel           *
                , const PatchSubset        * patches
                ,       PatchDomainSpec      patches_dom
@@ -617,7 +617,7 @@ public: // class Task
 
   //////////
   //
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel         *
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
@@ -626,7 +626,7 @@ public: // class Task
 
   //////////
   //
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel         *
                , const PatchSubset      * patches
                , const MaterialSubset   * matls
@@ -637,7 +637,7 @@ public: // class Task
 
   //////////
   //
-  void requires( WhichDW
+  void needsLabel( WhichDW
                , const VarLabel         *
                , const PatchSubset      * patches
                ,       Ghost::GhostType   gtype
@@ -647,7 +647,7 @@ public: // class Task
 
   //////////
   //
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel        *
                , const MaterialSubset  * matls
                ,      Ghost::GhostType   gtype
@@ -657,7 +657,7 @@ public: // class Task
 
   //////////
   //
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel           *
                , const MaterialSubset     * matls
                ,       MaterialDomainSpec   matls_dom
@@ -668,7 +668,7 @@ public: // class Task
 
   //////////
   // Requires only for Reduction variables
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel           *
                , const Level              * level     = nullptr
                , const MaterialSubset     * matls     = nullptr
@@ -678,7 +678,7 @@ public: // class Task
 
   //////////
   // Requires for reduction variables or PerPatch variables
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel       *
                , const MaterialSubset * matls
                ,       SearchTG        whichTG = SearchTG::NewTG
@@ -686,7 +686,7 @@ public: // class Task
 
   //////////
   // Requires only for PerPatch variables
-  void requires(       WhichDW
+  void needsLabel(       WhichDW
                , const VarLabel       *
                , const PatchSubset    * patches
                , const MaterialSubset * matls = nullptr

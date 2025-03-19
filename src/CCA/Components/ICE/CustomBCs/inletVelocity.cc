@@ -153,7 +153,7 @@ void addRequires_inletVel(Task* t,
   //std::cout << " addRequires_inletVel: " << recursive <<  " where: " << where << endl;
   
   if(where == "implicitPressureSolve"){
-    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
+    t->needsLabel(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
   }
   else if(where == "velFC_Exchange"){
     
@@ -164,7 +164,7 @@ void addRequires_inletVel(Task* t,
       pOldDW  = Task::ParentOldDW;
     }
   
-    t->requires(pOldDW, lb->vel_CCLabel, ice_matls, gn);
+    t->needsLabel(pOldDW, lb->vel_CCLabel, ice_matls, gn);
   }
 }
 

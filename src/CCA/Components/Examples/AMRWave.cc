@@ -88,9 +88,9 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   if (!do_coarsen)
     return;
   Task* task = scinew Task("coarsen", this, &AMRWave::coarsen);
-  task->requires(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->needsLabel(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(phi_label);
-  task->requires(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->needsLabel(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(pi_label);
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
@@ -101,8 +101,8 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
   if (!do_refine)
     return;
   Task* task = scinew Task("refine", this, &AMRWave::refine);
-  task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
 
   // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
   if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
@@ -117,7 +117,7 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched)
 {
   Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
-  task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
+  task->needsLabel(Task::NewDW, phi_label, Ghost::AroundCells, 1);
   task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
   task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
@@ -385,10 +385,10 @@ void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
   Ghost::GhostType gc = Ghost::AroundCells;
 
   if(needCoarseOld)
-    task->requires(Task::CoarseOldDW, var,
+    task->needsLabel(Task::CoarseOldDW, var,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
   if(needCoarseNew)
-    task->requires(Task::CoarseNewDW, var,
+    task->needsLabel(Task::CoarseNewDW, var,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
 //______________________________________________________________________

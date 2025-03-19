@@ -173,7 +173,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     const LevelP l = level->getGrid()->getLevel(i);
     const PatchSubset* subset = l->eachPatch()->getUnion();
     
-    task->requires(which_A_dw, A, subset, Ghost::None, 0);
+    task->needsLabel(which_A_dw, A, subset, Ghost::None, 0);
     
     if (modifies_x) {
       task->modifies(x, subset, 0);
@@ -183,10 +183,10 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     
     if (guess) {
-      task->requires(which_guess_dw, guess, subset, Ghost::None, 0); 
+      task->needsLabel(which_guess_dw, guess, subset, Ghost::None, 0); 
     }
     
-    task->requires(which_b_dw, b, subset, Ghost::None, 0);
+    task->needsLabel(which_b_dw, b, subset, Ghost::None, 0);
   }// numLevels
   
   

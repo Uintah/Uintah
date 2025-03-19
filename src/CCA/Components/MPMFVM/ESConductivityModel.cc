@@ -95,10 +95,10 @@ void ESConductivityModel::scheduleComputeConductivity(SchedulerP& sched,
   Task* task = scinew Task("ESConductivityModel::computeConductivity", this,
                            &ESConductivityModel::computeConductivity);
 
-  //task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel, Ghost::AroundCells, 1);
-  //task->requires(Task::NewDW, d_mpm_lb->gMassLabel,          Ghost::AroundCells, 1);
-  task->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration, d_gac, 1);
-  task->requires(Task::OldDW, d_mpm_lb->pXLabel,             d_gac, 1);
+  //task->needsLabel(Task::NewDW, d_mpm_lb->gConcentrationLabel, Ghost::AroundCells, 1);
+  //task->needsLabel(Task::NewDW, d_mpm_lb->gMassLabel,          Ghost::AroundCells, 1);
+  task->needsLabel(Task::OldDW, d_mpm_lb->diffusion->pConcentration, d_gac, 1);
+  task->needsLabel(Task::OldDW, d_mpm_lb->pXLabel,             d_gac, 1);
 
   task->computes(d_fvm_lb->fcxConductivity, one_matl, Task::OutOfDomain);
   task->computes(d_fvm_lb->fcyConductivity, one_matl, Task::OutOfDomain);

@@ -97,7 +97,7 @@ void UnifiedSchedulerTest::scheduleComputeStableTimeStep( const LevelP     & lev
 {
   Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimeStep", this, &UnifiedSchedulerTest::computeStableTimeStep);
 
-  task->requires(Task::NewDW, m_residual_label);
+  task->needsLabel(Task::NewDW, m_residual_label);
   task->computes(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
@@ -112,7 +112,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance( const LevelP     & level
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP"    , this, &UnifiedSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP"    , this, &UnifiedSchedulerTest::timeAdvance3DP);
 
-  task->requires(Task::OldDW, m_phi_label, Ghost::AroundNodes, 1);
+  task->needsLabel(Task::OldDW, m_phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(m_phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(m_residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());

@@ -2014,27 +2014,27 @@ void Arenisca::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);
-  task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchDouble2Label, matlset, Ghost::None);
-  task->requires(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
-  task->requires(Task::OldDW, pepLabel,             matlset, Ghost::None);
-  task->requires(Task::OldDW, pevpLabel,            matlset, Ghost::None);
-  task->requires(Task::OldDW, pevvLabel,            matlset, Ghost::None);    //EG
-  task->requires(Task::OldDW, pev0Label,            matlset, Ghost::None);    //JG
-  task->requires(Task::OldDW, peqpsLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, peveLabel,            matlset, Ghost::None);
-  task->requires(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, pCapXDYLabel,         matlset, Ghost::None);
-  task->requires(Task::OldDW, pKappaLabel,          matlset, Ghost::None);
-  task->requires(Task::OldDW, pZetaLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, pZetaDYLabel,         matlset, Ghost::None);
-  task->requires(Task::OldDW, pIotaLabel,           matlset, Ghost::None);
-  task->requires(Task::OldDW, pIotaDYLabel,         matlset, Ghost::None);
-  task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
-  task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pScratchDouble2Label, matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pepLabel,             matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pevpLabel,            matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pevvLabel,            matlset, Ghost::None);    //EG
+  task->needsLabel(Task::OldDW, pev0Label,            matlset, Ghost::None);    //JG
+  task->needsLabel(Task::OldDW, peqpsLabel,           matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, peveLabel,            matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pCapXDYLabel,         matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pKappaLabel,          matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pZetaLabel,           matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pZetaDYLabel,         matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pIotaLabel,           matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pIotaDYLabel,         matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
   task->computes(peakI1IDistLabel_preReloc,     matlset);
   task->computes(pAreniscaFlagLabel_preReloc,   matlset);
   task->computes(pScratchDouble1Label_preReloc, matlset);

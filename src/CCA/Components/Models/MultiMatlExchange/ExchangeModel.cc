@@ -102,8 +102,8 @@ void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,
   printSchedule( patches, dbgExch, name );
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
-  t->requires( Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1 );
+  t->needsLabel( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
+  t->needsLabel( Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1 );
 
   t->computes( d_surfaceNormLabel,   mpm_matls );
   t->computes( d_isSurfaceCellLabel, d_zero_matl ); 

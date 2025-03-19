@@ -80,7 +80,7 @@ ShunnMoinMMSCont::sched_computeSource( const LevelP& level, SchedulerP& sched, i
 
   }
 
-  tsk->requires(Task::OldDW, _simulationTimeLabel);
+  tsk->needsLabel(Task::OldDW, _simulationTimeLabel);
   
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 

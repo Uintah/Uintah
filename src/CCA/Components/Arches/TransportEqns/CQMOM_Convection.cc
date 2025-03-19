@@ -216,33 +216,33 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
 
 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
 
   //requires updated weights and abscissas
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     if (timeSubStep == 0 ) {
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     } else {
-      tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
     }
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     if (timeSubStep == 0 ) {
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     } else {
-      tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
     }
   }
 
   if ( d_deposition ) {
     for ( int i = 0; i < nNodes; i++ ) {
-      tsk->requires( Task::NewDW, fStickLabels[i], Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, fStickLabels[i], Ghost::None, 0 );
     }
   }
 
-  tsk->requires( Task::NewDW, d_wallIntegerLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel( Task::NewDW, d_wallIntegerLabel, Ghost::AroundCells, 1);
 
   //computes convection terms
   for ( int i = 0; i < nMoments; i++ ) {
@@ -951,7 +951,7 @@ CQMOM_Convection::sched_initializeWalls( const LevelP& level, SchedulerP& sched,
   string taskname = "CQMOM_Convection::intializeWalls";
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::initializeWalls);
 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
 
   if (timeSubStep == 0) {
     tsk->computes(d_wallIntegerLabel);

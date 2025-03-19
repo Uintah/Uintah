@@ -325,7 +325,7 @@ CQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   }
 
   //Old
-  tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, gn, 0);
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
@@ -392,7 +392,7 @@ CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
 
   for ( unsigned int i = 0; i < d_sourceLabels.size(); i++ ) {
     const VarLabel* tempLabel = d_sourceLabels[i];
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0 );
   }
 
   if (timeSubStep == 0) {
@@ -452,38 +452,38 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_RHSLabel);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
 
   if (d_addSources) {
-    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
 
   if (d_usePartVel) {
-    tsk->requires( Task::NewDW, d_FconvLabel, Ghost::None, 0);
+    tsk->needsLabel( Task::NewDW, d_FconvLabel, Ghost::None, 0);
   } else {
     if (timeSubStep == 0 ) {
-      tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
 #ifdef YDIM
-      tsk->requires(Task::OldDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::OldDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
 #ifdef ZDIM
-      tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
     } else {
-      tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
 #ifdef YDIM
-      tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
 #ifdef ZDIM
-      tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
+      tsk->needsLabel(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
     }
     tsk->modifies(d_FconvLabel);
@@ -641,12 +641,12 @@ CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   //New
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel);
-  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_RHSLabel, Ghost::None, 0);
 
   //Old
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
-  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0 );
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
 }
@@ -718,23 +718,23 @@ CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int ti
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_tempLabel);
   tsk->modifies(d_FconvXLabel);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
 
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -823,22 +823,22 @@ CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int ti
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_tempLabel);
   tsk->modifies(d_FconvYLabel);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
 
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -921,22 +921,22 @@ CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int ti
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_tempLabel);
   tsk->modifies(d_FconvZLabel);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
 
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -1019,34 +1019,34 @@ CQMOMEqn::sched_buildSplitRHS( const LevelP& level, SchedulerP& sched, int timeS
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
-  tsk->requires(Task::NewDW, d_tempLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_tempLabel, Ghost::None, 0);
 
-  tsk->requires(Task::NewDW, d_FconvXLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_FconvYLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_FconvZLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_FconvXLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_FconvYLabel, Ghost::None, 0);
+  tsk->needsLabel(Task::NewDW, d_FconvZLabel, Ghost::None, 0);
 
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
 
   if (timeSubStep == 0) {
-    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::OldDW, d_sourceLabel, Ghost::None, 0);
   } else {
-    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
+    tsk->needsLabel(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
 
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));

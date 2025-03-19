@@ -588,14 +588,14 @@ SmallStrainPlastic::addComputesAndRequires(Task* task,
   }
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, pDamageLabel,           matlset, gnone);
-  task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
-  task->requires(Task::OldDW, pLocalizedLabel,        matlset, gnone);
+  task->needsLabel(Task::OldDW, pStrainRateLabel,       matlset, gnone);
+  task->needsLabel(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
+  task->needsLabel(Task::OldDW, pDamageLabel,           matlset, gnone);
+  task->needsLabel(Task::OldDW, pPorosityLabel,         matlset, gnone);
+  task->needsLabel(Task::OldDW, pLocalizedLabel,        matlset, gnone);
 
   task->computes(pStrainRateLabel_preReloc,     matlset);
   task->computes(pPlasticStrainLabel_preReloc,  matlset);
@@ -1360,17 +1360,17 @@ SmallStrainPlastic::addComputesAndRequires(Task* task,
   // Local stuff
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
-    task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->needsLabel(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->needsLabel(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
   }else{
-    task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
+    task->needsLabel(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->needsLabel(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->needsLabel(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->needsLabel(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->needsLabel(Task::OldDW, pPorosityLabel,          matlset, gnone);
   }
 
   // Add internal evolution variables computed by plasticity model
@@ -1519,12 +1519,12 @@ SmallStrainPlastic::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW, pStrainRateLabel_preReloc,     matlset, gnone);
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,  matlset, gnone);
-  task->requires(Task::NewDW, pPlasticStrainRateLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW, pDamageLabel_preReloc,         matlset, gnone);
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
-  task->requires(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
+  task->needsLabel(Task::NewDW, pStrainRateLabel_preReloc,     matlset, gnone);
+  task->needsLabel(Task::NewDW, pPlasticStrainLabel_preReloc,  matlset, gnone);
+  task->needsLabel(Task::NewDW, pPlasticStrainRateLabel_preReloc, matlset, gnone);
+  task->needsLabel(Task::NewDW, pDamageLabel_preReloc,         matlset, gnone);
+  task->needsLabel(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
+  task->needsLabel(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
   d_kinematic->allocateCMDataAddRequires(task,matl,patch,lb);
 }
@@ -1597,7 +1597,7 @@ SmallStrainPlastic::addRequiresDamageParameter(Task* task,
                                            const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+  task->needsLabel(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
 void 

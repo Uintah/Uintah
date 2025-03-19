@@ -124,7 +124,7 @@ ViscoSCRAMHotSpot::addInitialComputesAndRequires(Task* task,
   // Set up extra stuff needed for hotspot model
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  //task->requires(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
+  //task->needsLabel(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
 
   task->computes(pHotSpotT1Label,    matlset);
   task->computes(pHotSpotT2Label,    matlset);
@@ -187,11 +187,11 @@ ViscoSCRAMHotSpot::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, pHotSpotT1Label,    matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotT2Label,    matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotPhi1Label,  matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotPhi2Label,  matlset, gnone);
-  task->requires(Task::OldDW, pChemHeatRateLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, pHotSpotT1Label,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pHotSpotT2Label,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pHotSpotPhi1Label,  matlset, gnone);
+  task->needsLabel(Task::OldDW, pHotSpotPhi2Label,  matlset, gnone);
+  task->needsLabel(Task::OldDW, pChemHeatRateLabel, matlset, gnone);
 
   task->computes(pHotSpotT1Label_preReloc,    matlset);
   task->computes(pHotSpotT2Label_preReloc,    matlset);

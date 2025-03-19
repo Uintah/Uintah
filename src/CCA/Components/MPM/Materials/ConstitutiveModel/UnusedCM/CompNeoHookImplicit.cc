@@ -123,8 +123,8 @@ void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
+  task->needsLabel(Task::NewDW,lb->pStressLabel_preReloc, matlset, gnone);
+  task->needsLabel(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
                                                         matlset, gnone);
 }
 

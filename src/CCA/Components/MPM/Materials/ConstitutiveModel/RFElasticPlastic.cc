@@ -419,17 +419,17 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
+  task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->needsLabel(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
+  task->needsLabel(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
+  task->needsLabel(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
+  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+  task->needsLabel(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   //********** Concentration Component****************************
   if(flag->d_doScalarDiffusion){
-    task->requires(Task::OldDW, lb->diffusion->pConcPrevious, matlset, gnone);
-    task->requires(Task::OldDW, lb->diffusion->pConcentration, matlset, gnone);
+    task->needsLabel(Task::OldDW, lb->diffusion->pConcPrevious, matlset, gnone);
+    task->needsLabel(Task::OldDW, lb->diffusion->pConcentration, matlset, gnone);
   }
   //********** Concentration Component****************************
 

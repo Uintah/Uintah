@@ -264,7 +264,7 @@ Task::getMemorySpace() const
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::needsLabel(       WhichDW              dw
                    , const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
@@ -311,7 +311,7 @@ void Task::requires(       WhichDW              dw
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::needsLabel(       WhichDW              dw
                    , const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
@@ -326,12 +326,12 @@ void Task::requires(       WhichDW              dw
   if (patches_dom == CoarseLevel || patches_dom == FineLevel) {
     offset = 1;
   }
-  requires(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW            dw
+void Task::needsLabel(       WhichDW            dw
                    , const VarLabel         * var
                    , const PatchSubset      * patches
                    , const MaterialSubset   * matls
@@ -340,26 +340,26 @@ void Task::requires(       WhichDW            dw
                    ,       SearchTG           whichTG
                    )
 {
-  requires(dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW            dw
+Task::needsLabel(       WhichDW            dw
               , const VarLabel         * var
               ,       Ghost::GhostType   gtype
               ,       int                numGhostCells
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, nullptr, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW            dw
+Task::needsLabel(       WhichDW            dw
               , const VarLabel         * var
               , const MaterialSubset   * matls
               ,       Ghost::GhostType   gtype
@@ -367,13 +367,13 @@ Task::requires(       WhichDW            dw
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, nullptr, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW              dw
+Task::needsLabel(       WhichDW              dw
               , const VarLabel           * var
               , const MaterialSubset     * matls
               ,       MaterialDomainSpec   matls_dom
@@ -382,13 +382,13 @@ Task::requires(       WhichDW              dw
               ,       SearchTG             whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, matls, matls_dom, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, nullptr, ThisLevel, matls, matls_dom, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires( WhichDW                  dw
+Task::needsLabel( WhichDW                  dw
               , const VarLabel         * var
               , const PatchSubset      * patches
               ,       Ghost::GhostType   gtype
@@ -396,13 +396,13 @@ Task::requires( WhichDW                  dw
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, patches, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
+  needsLabel(dw, var, patches, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires( WhichDW                dw
+Task::needsLabel( WhichDW                dw
               , const VarLabel       * var
               , const PatchSubset    * patches
               , const MaterialSubset * matls
@@ -411,10 +411,10 @@ Task::requires( WhichDW                dw
   TypeDescription::Type vartype = var->typeDescription()->getType();
 
   if (vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*) nullptr, matls);
+    needsLabel(dw, var, (const Level*) nullptr, matls);
   }
   else if (vartype == TypeDescription::PerPatch) {
-    requires(dw, var, patches, ThisLevel, matls, NormalDomain, Ghost::None, 0);
+    needsLabel(dw, var, patches, ThisLevel, matls, NormalDomain, Ghost::None, 0);
   }
   else {
     SCI_THROW(InternalError("Requires should specify ghost type or level for this variable", __FILE__, __LINE__));
@@ -424,7 +424,7 @@ Task::requires( WhichDW                dw
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW          dw
+Task::needsLabel(       WhichDW          dw
               , const VarLabel       * var
               , const MaterialSubset * matls
               ,       SearchTG         whichTG
@@ -433,13 +433,13 @@ Task::requires(       WhichDW          dw
   TypeDescription::Type vartype = var->typeDescription()->getType();
 
   if(vartype == TypeDescription::ReductionVariable) {
-    requires(dw, var, (const Level*) nullptr, matls, NormalDomain, whichTG);
+    needsLabel(dw, var, (const Level*) nullptr, matls, NormalDomain, whichTG);
   }
   else if(vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*) nullptr, matls);
+    needsLabel(dw, var, (const Level*) nullptr, matls);
   }
   else if(vartype == TypeDescription::PerPatch) {
-    requires(dw, var, nullptr, ThisLevel, matls, NormalDomain, Ghost::None, 0, whichTG);
+    needsLabel(dw, var, nullptr, ThisLevel, matls, NormalDomain, Ghost::None, 0, whichTG);
   }
   else {
     SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
@@ -448,7 +448,7 @@ Task::requires(       WhichDW          dw
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::needsLabel(       WhichDW              dw
                    , const VarLabel           * var
                    , const Level              * level
                    , const MaterialSubset     * matls

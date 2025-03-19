@@ -286,17 +286,17 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
   Ghost::GhostType gac   = Ghost::AroundCells;
-  task->requires(Task::OldDW, d_lb->simulationTimeLabel);
+  task->needsLabel(Task::OldDW, d_lb->simulationTimeLabel);
 
-  task->requires(Task::OldDW, d_lb->pXLabel,                        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration,  matlset, gnone);
-  task->requires(Task::OldDW, d_lb->diffusion->pConcentration,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pStressLabel,                   matlset, gnone);
-  task->requires(Task::OldDW, d_lb->diffusion->pDiffusivity,        matlset, gnone);
-  task->requires(Task::NewDW, d_lb->pCurSizeLabel,                  matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pXLabel,                        matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->diffusion->pGradConcentration,  matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->diffusion->pConcentration,      matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->pStressLabel,                   matlset, gnone);
+  task->needsLabel(Task::OldDW, d_lb->diffusion->pDiffusivity,        matlset, gnone);
+  task->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,                  matlset, gnone);
 
-  task->requires(Task::NewDW, d_lb->diffusion->gConcentration,      matlset, gac, NGN);
-  task->requires(Task::NewDW, d_lb->diffusion->gHydrostaticStress,  matlset, gac, NGN);
+  task->needsLabel(Task::NewDW, d_lb->diffusion->gConcentration,      matlset, gac, NGN);
+  task->needsLabel(Task::NewDW, d_lb->diffusion->gHydrostaticStress,  matlset, gac, NGN);
 
   task->computes(d_lb->delTLabel,getLevel(patch));
 

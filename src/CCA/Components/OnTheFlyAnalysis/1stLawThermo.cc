@@ -279,13 +279,13 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t0, level, FL_lb->lastCompTimeLabel, false );
 
-  t0->requires( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->specific_heatLabel, ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->gammaLabel,         ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->uvel_FCMELabel,     ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->vvel_FCMELabel,     ice_ss, gn );
-  t0->requires( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->specific_heatLabel, ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->gammaLabel,         ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->uvel_FCMELabel,     ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->vvel_FCMELabel,     ice_ss, gn );
+  t0->needsLabel( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
 
   t0->computes( FL_lb->ICE_totalIntEngLabel );
   t0->computes( FL_lb->totalFluxesLabel );
@@ -302,8 +302,8 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t1, level, FL_lb->lastCompTimeLabel, false );
 
-  t1->requires( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
-  t1->requires( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
+  t1->needsLabel( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
+  t1->needsLabel( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
   t1->computes( FL_lb->MPM_totalIntEngLabel );
 
   sched->addTask( t1, level->eachPatch(), all_matls );
@@ -316,10 +316,10 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t2, level, FL_lb->lastCompTimeLabel, true );
 
-  t2->requires( Task::OldDW, FL_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
-  t2->requires( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
-  t2->requires( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
-  t2->requires( Task::NewDW, FL_lb->totalFluxesLabel );
+  t2->needsLabel( Task::OldDW, FL_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
+  t2->needsLabel( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
+  t2->needsLabel( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
+  t2->needsLabel( Task::NewDW, FL_lb->totalFluxesLabel );
 
   t2->computes( FL_lb->fileVarsStructLabel, m_zeroMatl );
 

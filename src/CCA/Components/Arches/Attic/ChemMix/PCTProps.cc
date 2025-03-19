@@ -126,13 +126,13 @@ PCTProps::sched_getState( const LevelP& level,
   if ( modify_ref_den ) {
     tsk->computes(time_labels->ref_density); 
   }
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
+  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+  tsk->needsLabel( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
 
   // for inert mixing 
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
     const VarLabel* label = VarLabel::find( iter->first ); 
-    tsk->requires( Task::NewDW, label, gn, 0 ); 
+    tsk->needsLabel( Task::NewDW, label, gn, 0 ); 
   } 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ) ); 

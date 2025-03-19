@@ -152,7 +152,7 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
-  task->requires( Uintah::Task::NewDW,pressureLabel_, gt, ng );
+  task->needsLabel( Uintah::Task::NewDW,pressureLabel_, gt, ng );
   //task->modifies( pressureLabel_);
   Uintah::LoadBalancer * lb = sched->getLoadBalancer();
   sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
@@ -171,7 +171,7 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
   if ( hasIntrusion_ ) {
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
-    task.requires(Uintah::Task::NewDW, Uintah::VarLabel::find(volFracTag_.name()), gt, ng);
+    task.needsLabel(Uintah::Task::NewDW, Uintah::VarLabel::find(volFracTag_.name()), gt, ng);
   }
 }
 

@@ -50,7 +50,7 @@ MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubSt
   for (vector<std::string>::iterator iter = _required_labels.begin(); 
        iter != _required_labels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
+    //tsk->needsLabel( Task::OldDW, .... ); 
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 

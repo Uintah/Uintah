@@ -505,7 +505,7 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
   const string taskName = "PassiveScalar::initialize_("+ d_scalar->fullName+")";
   Task* t = scinew Task(taskName, this, &PassiveScalar::initialize);
 
-  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  t->needsLabel(Task::NewDW, Ilb->timeStepLabel );
 
   if( d_withExpDecayModel ){
     t->computes( d_scalar->expDecayCoefLabel );
@@ -837,15 +837,15 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
 
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep() );
 
-  t->requires( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
-  t->requires( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
-  t->requires( Task::OldDW, d_scalar->RemovedScalarLabel,    gn, 0 );
+  t->needsLabel( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
+  t->needsLabel( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
+  t->needsLabel( Task::OldDW, d_scalar->RemovedScalarLabel,    gn, 0 );
   t->computes( d_scalar->RemovedScalarLabel );
 
   if ( d_withExpDecayModel ){
-    t->requires( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
+    t->needsLabel( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
     t->computes( d_scalar->expDecayCoefLabel );
   }
 
@@ -1019,12 +1019,12 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->requires(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
-    t->requires(Task::NewDW, d_scalar->Q_CCLabel,  gn,0);
-    t->requires(Task::NewDW, Ilb->rho_CCLabel,     gn,0);
-    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,  gn,0);
-    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,  gn,0);
-    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,  gn,0);
+    t->needsLabel(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
+    t->needsLabel(Task::NewDW, d_scalar->Q_CCLabel,  gn,0);
+    t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,     gn,0);
+    t->needsLabel(Task::NewDW, Ilb->uvel_FCMELabel,  gn,0);
+    t->needsLabel(Task::NewDW, Ilb->vvel_FCMELabel,  gn,0);
+    t->needsLabel(Task::NewDW, Ilb->wvel_FCMELabel,  gn,0);
 
     t->computes(d_scalar->sum_Q_CCLabel);
 
@@ -1096,7 +1096,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
 
-  t->requires(Task::NewDW, d_scalar->Q_CCLabel,  d_matl_sub, gac,1);
+  t->needsLabel(Task::NewDW, d_scalar->Q_CCLabel,  d_matl_sub, gac,1);
   t->computes(d_scalar->mag_grad_Q_CCLabel, d_matl_sub);
 
   t->modifies( m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials() );

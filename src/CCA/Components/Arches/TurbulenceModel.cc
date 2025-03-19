@@ -94,7 +94,7 @@ void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched,
 
   Task* tsk = scinew Task( "TurbulenceModel::computeFilterVol",this, &TurbulenceModel::computeFilterVol);
   tsk->computes( d_lab->d_filterVolumeLabel );
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 );
+  tsk->needsLabel( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 );
   //hacking in the dissipation rate here under the assumption that we are
   // recoding this turbulence models under the kokkos design
   tsk->computes( d_dissipationRateLabel );
@@ -141,7 +141,7 @@ void TurbulenceModel::sched_carryForwardFilterVol( SchedulerP& sched,
       this, &TurbulenceModel::carryForwardFilterVol);
   tsk->computes( d_lab->d_filterVolumeLabel );
   tsk->computes( d_dissipationRateLabel );
-  tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
+  tsk->needsLabel( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, patches, matls);
 }

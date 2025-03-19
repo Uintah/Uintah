@@ -604,9 +604,9 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
 
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(             lb->gVelocityLabel,       mss);
   
   sched->addTask(t, patches, ms);
@@ -625,15 +625,15 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, lb->delTLabel);
+  t->needsLabel(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
+  t->needsLabel(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   if(d_NormalOnly){
-   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
+   t->needsLabel(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   }
 
   t->modifies(             lb->gVelocityStarLabel,   mss);

@@ -260,7 +260,7 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   // do not checkpoint it.  Put it here so it will be registered during a restart
   sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
 
-  t->requires( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
+  t->needsLabel( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
   t->computes( m_lb->filePointerLabel_preReloc  );
 
   sched->addTask(t, level->eachPatch(),  d_matl_set);
@@ -332,13 +332,13 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
       throw InternalError("particleExtract: scheduleDoAnalysis label not found: "
                           + name , __FILE__, __LINE__);
     }
-    t->requires(Task::NewDW,d_varLabels[i], m_gn, 0);
+    t->needsLabel(Task::NewDW,d_varLabels[i], m_gn, 0);
   }
 
-  t->requires( Task::NewDW,  M_lb->pXLabel,           m_gn );
-  t->requires( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
-  t->requires( Task::NewDW,  M_lb->pColorLabel,       m_gn );
-  t->requires( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
+  t->needsLabel( Task::NewDW,  M_lb->pXLabel,           m_gn );
+  t->needsLabel( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
+  t->needsLabel( Task::NewDW,  M_lb->pColorLabel,       m_gn );
+  t->needsLabel( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
   t->modifies( m_lb->filePointerLabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);

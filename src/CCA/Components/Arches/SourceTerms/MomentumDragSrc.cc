@@ -67,7 +67,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0);
     }
 
     if ( _base_y_drag != "none" ) {
@@ -77,7 +77,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0);
     }
 
     if ( _base_z_drag != "none" ) {
@@ -87,7 +87,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0);
     }
   }
 

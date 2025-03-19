@@ -322,13 +322,13 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level, cout_doing,"MesoBurn::scheduleComputeParticleVariables");  
 
-  t1->requires(Task::OldDW, Ilb->timeStepLabel);
-  t1->requires(Task::OldDW, Ilb->delTLabel, level.get_rep());
-  t1->requires(Task::OldDW, Mlb->pXLabel, react_matl, gn);
-  t1->requires(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
-  t1->requires(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
-  t1->requires(Task::OldDW, inductionTimePartLabel, react_matl, gn);
-  t1->requires(Task::OldDW, timeInducedLabel, react_matl, gn);
+  t1->needsLabel(Task::OldDW, Ilb->timeStepLabel);
+  t1->needsLabel(Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t1->needsLabel(Task::OldDW, Mlb->pXLabel, react_matl, gn);
+  t1->needsLabel(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
+  t1->needsLabel(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
+  t1->needsLabel(Task::OldDW, inductionTimePartLabel, react_matl, gn);
+  t1->needsLabel(Task::OldDW, timeInducedLabel, react_matl, gn);
   t1->computes(numPPCLabel,            react_matl);
   t1->computes(inductionTimeLabel,     react_matl);
   t1->computes(inductionTimePartLabel, react_matl);
@@ -345,8 +345,8 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level,cout_doing,"MesoBurn::scheduleComputeModelSources");  
 
-  t->requires( Task::OldDW, Ilb->timeStepLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->needsLabel( Task::OldDW, Ilb->timeStepLabel );
+  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = m_materialManager->allMaterials();
@@ -358,20 +358,20 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
 
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
+  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
   /*     Reactants    */
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
-  t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
-  t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
-  t->requires(Task::NewDW, inducedLabel,          react_matl, gn);
-  t->requires(Task::NewDW, inducedMassLabel,      react_matl, gn);
+  t->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
+  t->needsLabel(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
+  t->needsLabel(Task::NewDW, numPPCLabel,           react_matl, gac,1);
+  t->needsLabel(Task::NewDW, inducedLabel,          react_matl, gn);
+  t->needsLabel(Task::NewDW, inducedMassLabel,      react_matl, gn);
   /*     Misc      */
-  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
+  t->needsLabel(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
   t->modifies(Ilb->modelMass_srcLabel);
   t->modifies(Ilb->modelMom_srcLabel);

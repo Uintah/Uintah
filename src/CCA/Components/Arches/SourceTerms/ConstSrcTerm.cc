@@ -61,12 +61,12 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   if ( _mult_by_variable ){
     if ( _NewDW_only ){
-      tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+      tsk->needsLabel( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
     } else {
       if (timeSubStep == 0) { 
-        tsk->requires( Task::OldDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+        tsk->needsLabel( Task::OldDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
       } else {
-        tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+        tsk->needsLabel( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
       }
     }
   }

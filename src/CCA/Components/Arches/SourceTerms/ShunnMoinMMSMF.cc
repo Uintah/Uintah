@@ -85,9 +85,9 @@ ShunnMoinMMSMF::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   }
 
-  tsk->requires(Task::OldDW, _simulationTimeLabel);
+  tsk->needsLabel(Task::OldDW, _simulationTimeLabel);
 
-  tsk->requires(which_dw, VarLabel::find("density"), Ghost::None, 0); 
+  tsk->needsLabel(which_dw, VarLabel::find("density"), Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 

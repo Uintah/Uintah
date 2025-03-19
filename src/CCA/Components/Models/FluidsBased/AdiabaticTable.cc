@@ -365,7 +365,7 @@ AdiabaticTable::scheduleInitialize(       SchedulerP & sched,
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
   Task* t = scinew Task( "AdiabaticTable::initialize", this, &AdiabaticTable::initialize );
 
-  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  t->needsLabel(Task::NewDW, Ilb->timeStepLabel );
   
   t->modifies(Ilb->sp_vol_CCLabel);
   t->modifies(Ilb->rho_micro_CCLabel);
@@ -535,13 +535,13 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
   Task* t = scinew Task("AdiabaticTable::modifyThermoTransportProperties", 
                    this,&AdiabaticTable::modifyThermoTransportProperties);
                    
-  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
+  t->needsLabel(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
   t->modifies(Ilb->specific_heatLabel);
   t->modifies(Ilb->gammaLabel);
   t->modifies(Ilb->thermalCondLabel);
   t->modifies(Ilb->viscosityLabel);
   if(d_useVariance){
-    t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
+    t->needsLabel(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
     t->computes(d_scalar->scaledVarianceLabel);
   }
   //t->computes(d_scalar->diffusionCoefLabel);
@@ -641,17 +641,17 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
                     
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, Ilb->simulationTimeLabel);
-  t->requires(Task::OldDW, Ilb->delTLabel,level.get_rep()); 
+  t->needsLabel(Task::OldDW, Ilb->simulationTimeLabel);
+  t->needsLabel(Task::OldDW, Ilb->delTLabel,level.get_rep()); 
  
-  //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
-  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
-  t->requires(Task::OldDW, Ilb->rho_CCLabel,          gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,         gn);
-  t->requires(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
+  //t->needsLabel(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->needsLabel(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
+  t->needsLabel(Task::OldDW, Ilb->rho_CCLabel,          gn);
+  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,         gn);
+  t->needsLabel(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
 
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,   gn);
-  t->requires(Task::NewDW, Ilb->gammaLabel,           gn);
+  t->needsLabel(Task::NewDW, Ilb->specific_heatLabel,   gn);
+  t->needsLabel(Task::NewDW, Ilb->gammaLabel,           gn);
 
   t->modifies(Ilb->modelEng_srcLabel);
   t->modifies(cumulativeEnergyReleased_src_CCLabel);
@@ -659,7 +659,7 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
     t->modifies(d_scalar->scalar_src_CCLabel);
   }
   if(d_useVariance){
-    t->requires(Task::NewDW, d_scalar->varianceLabel, gn, 0);
+    t->needsLabel(Task::NewDW, d_scalar->varianceLabel, gn, 0);
   }
 
   // Interpolated table values
@@ -898,14 +898,14 @@ void AdiabaticTable::scheduleTestConservation(SchedulerP& sched,
     Task* t = scinew Task("AdiabaticTable::testConservation", 
                      this,&AdiabaticTable::testConservation);
 
-    t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches)); 
+    t->needsLabel(Task::OldDW, Ilb->delTLabel,getLevel(patches)); 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
-    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
+    t->needsLabel(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->needsLabel(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->needsLabel(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->needsLabel(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
     t->computes(d_scalar->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
@@ -979,7 +979,7 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
                   this, &AdiabaticTable::errorEstimate, false);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
+  t->needsLabel(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
   t->computes(d_scalar->mag_grad_scalarLabel);
   t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials(), Task::OutOfDomain);

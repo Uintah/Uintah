@@ -232,7 +232,7 @@ CQMOM::sched_solveCQMOMInversion( const LevelP& level, SchedulerP& sched, int ti
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
   }
 
   //tsk computs on weights
@@ -562,7 +562,7 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+    tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computs on weights
@@ -724,7 +724,7 @@ CQMOM::sched_solveCQMOMInversion312( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computs on weights
@@ -892,7 +892,7 @@ CQMOM::sched_solveCQMOMInversion213( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computes on weights

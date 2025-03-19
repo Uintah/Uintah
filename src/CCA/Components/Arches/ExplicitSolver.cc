@@ -954,12 +954,12 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
     d_viscos_label = VarLabel::find("viscosityCTS");
     d_celltype_label = VarLabel::find("cellType");
 
-    tsk->requires(Task::NewDW, d_x_vel_label, gaf, 1);
-    tsk->requires(Task::NewDW, d_y_vel_label, gaf, 1);
-    tsk->requires(Task::NewDW, d_z_vel_label, gaf, 1);
-    tsk->requires(Task::NewDW, d_rho_label,     gac, 1);
-    tsk->requires(Task::NewDW, d_viscos_label,  gn,  0);
-    tsk->requires(Task::NewDW, d_celltype_label,  gac, 1);
+    tsk->needsLabel(Task::NewDW, d_x_vel_label, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_y_vel_label, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_z_vel_label, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_rho_label,     gac, 1);
+    tsk->needsLabel(Task::NewDW, d_viscos_label,  gn,  0);
+    tsk->needsLabel(Task::NewDW, d_celltype_label,  gac, 1);
   }
 
   tsk->computes(d_lab->d_delTLabel,level.get_rep());
@@ -969,10 +969,10 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   // exist so require the value from the new DW.  Otherwise for a
   // normal time step require the time step from the old DW.
   if(sched->get_dw(0) ) {
-    tsk->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+    tsk->needsLabel( Task::OldDW, VarLabel::find(timeStep_name) );
   }
   else if(sched->get_dw(1) ) {
-    tsk->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+    tsk->needsLabel( Task::NewDW, VarLabel::find(timeStep_name) );
   }
 
 #ifdef OUTPUT_WITH_BAD_DELTA_T
@@ -1220,13 +1220,13 @@ ExplicitSolver::sched_computeTaskGraphIndex(const LevelP& level, SchedulerP& sch
     // the value from the new DW.  Otherwise for a normal time step
     // require the time step from the old DW.
     if(sched->get_dw(0) ) {
-      task->requires( Task::OldDW, VarLabel::find(timeStep_name) );
+      task->needsLabel( Task::OldDW, VarLabel::find(timeStep_name) );
     }
     else if(sched->get_dw(1) ) {
-      task->requires( Task::NewDW, VarLabel::find(timeStep_name) );
+      task->needsLabel( Task::NewDW, VarLabel::find(timeStep_name) );
     }
 
-    task->requires(Task::NewDW, d_lab->d_delTLabel, level.get_rep());
+    task->needsLabel(Task::NewDW, d_lab->d_delTLabel, level.get_rep());
 
     const PatchSet* perProcPatchSet = sched->getLoadBalancer()->getPerProcessorPatchSet( level->getGrid() );
 
@@ -2463,15 +2463,15 @@ ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
   Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
+  tsk->needsLabel(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
   tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_cellTypeLabel);
@@ -2516,30 +2516,30 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
 
-    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-      tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-      tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+      tsk->needsLabel(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+      tsk->needsLabel(Task::OldDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+      tsk->needsLabel(Task::OldDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     // hat velocities are only interpolated for first substep, since they are
     // not really needed anyway
-      tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,  gaf, 1);
-      tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,  gaf, 1);
-      tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,  gaf, 1);
+      tsk->needsLabel(Task::NewDW, d_lab->d_uVelRhoHatLabel,  gaf, 1);
+      tsk->needsLabel(Task::NewDW, d_lab->d_vVelRhoHatLabel,  gaf, 1);
+      tsk->needsLabel(Task::NewDW, d_lab->d_wVelRhoHatLabel,  gaf, 1);
 
     }
 
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-    tsk->requires(Task::OldDW, d_lab->d_delTLabel);
+    tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
+    tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+    tsk->needsLabel(Task::OldDW, d_lab->d_delTLabel);
 
     if ( d_solvability ){
       std::stringstream strRKStage;
       strRKStage << curr_level;
-      tsk->requires(Task::NewDW, VarLabel::find("poisson_rhs_integral"+strRKStage.str()));
+      tsk->needsLabel(Task::NewDW, VarLabel::find("poisson_rhs_integral"+strRKStage.str()));
     }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -2562,7 +2562,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     // add access to sources:
     for (vector<std::string>::iterator iter = d_mass_sources.begin();
         iter != d_mass_sources.end(); iter++){
-      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
+      tsk->needsLabel( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
 
     sched->addTask(tsk, patches, matls);
@@ -2576,8 +2576,8 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,  gac, 1);
+    tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+    tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel,  gac, 1);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_vorticityXLabel);
       tsk->computes(d_lab->d_vorticityYLabel);
@@ -3113,7 +3113,7 @@ ExplicitSolver::sched_printTotalKE( SchedulerP& sched,
   Task* tsk = scinew Task( taskname,
                            this, &ExplicitSolver::printTotalKE );
 
-  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
+  tsk->needsLabel(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
   sched->addTask(tsk, patches, matls);
 }
 //______________________________________________________________________
@@ -3149,7 +3149,7 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
   tsk->modifies(d_lab->d_densityTempLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -3194,7 +3194,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
-  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+  tsk->needsLabel( Task::OldDW, d_lab->d_timeStepLabel );
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -3202,7 +3202,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   }else{
     parent_old_dw = Task::OldDW;
   }
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
+  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -3211,17 +3211,17 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
-    tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
+    tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
   }
 
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_volFractionLabel,   gac, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
 
   //__________________________________
@@ -3239,9 +3239,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   for ( auto iter = extra_sources.begin(); iter != extra_sources.end(); iter++){
 
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
-      tsk->requires( Task::OldDW, VarLabel::find( *iter ), gn, 0 );
+      tsk->needsLabel( Task::OldDW, VarLabel::find( *iter ), gn, 0 );
     } else {
-      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
+      tsk->needsLabel( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
   }
 
@@ -3495,9 +3495,9 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
     old_values_dw = Task::NewDW;
   }
 
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
+  tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
 
-  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
+  tsk->needsLabel(Task::NewDW, timelabels->negativeDensityGuess);
 
   tsk->modifies(d_lab->d_densityGuessLabel);
 
@@ -3572,7 +3572,7 @@ ExplicitSolver::sched_updateDensityGuess(SchedulerP& sched,
                           &ExplicitSolver::updateDensityGuess,
                           timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1);
   tsk->modifies(d_lab->d_densityGuessLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -3618,8 +3618,8 @@ ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
                           &ExplicitSolver::computeDensityLag,
                           timelabels, after_average);
   Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel,gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityGuessLabel,gn, 0);
+  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,   gn, 0);
 
   if (after_average){
     if ((timelabels->integrator_step_name == "Corrector")||
@@ -3701,12 +3701,12 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
   if (after_average){
     if ((timelabels->integrator_step_name == "Corrector")||
         (timelabels->integrator_step_name == "CorrectorRK3")){
-      tsk->requires(Task::NewDW, d_lab->d_densityLagAfterAverage_label);
+      tsk->needsLabel(Task::NewDW, d_lab->d_densityLagAfterAverage_label);
     }else{
-      tsk->requires(Task::NewDW, d_lab->d_densityLagAfterIntermAverage_label);
+      tsk->needsLabel(Task::NewDW, d_lab->d_densityLagAfterIntermAverage_label);
     }
   }else{
-    tsk->requires(Task::NewDW, timelabels->densityLag);
+    tsk->needsLabel(Task::NewDW, timelabels->densityLag);
   }
 
   tsk->computes( VarLabel::find(abortTimeStep_name) );
@@ -3761,7 +3761,7 @@ ExplicitSolver::sched_setInitVelCond( const LevelP& level,
   string taskname = "ExplicitSolver::setInitVelCond";
   Task* tsk = scinew Task( taskname, this, &ExplicitSolver::setInitVelCond );
 
-  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
+  tsk->needsLabel( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
   tsk->modifies( d_lab->d_uVelocitySPBCLabel );
   tsk->modifies( d_lab->d_vVelocitySPBCLabel );
   tsk->modifies( d_lab->d_wVelocitySPBCLabel );
@@ -3809,9 +3809,9 @@ void ExplicitSolver::sched_computeKE( SchedulerP& sched,
   tsk->computes(d_lab->d_totalKineticEnergyLabel);
   tsk->computes(d_lab->d_kineticEnergyLabel);
 
-  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 );
+  tsk->needsLabel( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 );
+  tsk->needsLabel( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 );
+  tsk->needsLabel( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 );
 
   sched->addTask( tsk, patches, matls );
 
@@ -3897,7 +3897,7 @@ ExplicitSolver::sched_weightInit( const LevelP& level,
     }
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
@@ -3982,7 +3982,7 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
       tsk->computes( tempVar_icv );
     } else {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
+      tsk->needsLabel( Task::NewDW, tempVar, Ghost::None, 0 );
     }
   }
 
@@ -3993,7 +3993,7 @@ ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
   CoalModelFactory& modelFactory = CoalModelFactory::self();
   modelFactory.sched_init_all_models( level, sched );
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
@@ -4098,7 +4098,7 @@ ExplicitSolver::sched_momentInit( const LevelP& level,
     tsk->computes( tempSource );
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 }
@@ -4178,7 +4178,7 @@ ExplicitSolver::sched_scalarInit( const LevelP     & level,
     tsk->computes( tempVar );
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ));
 
@@ -4245,10 +4245,10 @@ ExplicitSolver::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
                           &ExplicitSolver::getCCVelocities);
 
   Ghost::GhostType gaf = Ghost::AroundFaces;
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   tsk->modifies(d_lab->d_CCVelocityLabel);
   tsk->modifies(d_lab->d_CCUVelocityLabel);

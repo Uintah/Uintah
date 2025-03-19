@@ -120,7 +120,7 @@ void Heat::scheduleTimeAdvance( const LevelP&     level,
                                       SchedulerP& sched)
 {
   Task *task = scinew Task("Heat::timeAdvance", this, &Heat::timeAdvance);
-  task->requires(Task::OldDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
+  task->needsLabel(Task::OldDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
   task->computes(d_lb->temperature_nc);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 

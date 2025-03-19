@@ -67,7 +67,7 @@ NullDamage::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
 
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matls, gnone);
+  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,  matls, gnone);
   task->computes( d_lb->pLocalizedMPMLabel_preReloc,      matls);
 }
 //______________________________________________________________________

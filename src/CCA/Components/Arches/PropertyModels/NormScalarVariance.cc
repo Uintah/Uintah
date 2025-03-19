@@ -65,13 +65,13 @@ void NormScalarVariance::sched_computeProp( const LevelP& level, SchedulerP& sch
 
   tsk->modifies( _prop_label );
   if ( time_substep == 0 ){ 
-    tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1); 
-    tsk->requires( Task::OldDW, _mf_m2_label, Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, _vf_label, Ghost::AroundCells, 1); 
+    tsk->needsLabel( Task::OldDW, _mf_label, Ghost::AroundCells, 1); 
+    tsk->needsLabel( Task::OldDW, _mf_m2_label, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::OldDW, _vf_label, Ghost::AroundCells, 1); 
   } else { 
-    tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::NewDW, _mf_m2_label, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _vf_label, Ghost::AroundCells, 1); 
+    tsk->needsLabel( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->needsLabel( Task::NewDW, _mf_m2_label, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::NewDW, _vf_label, Ghost::AroundCells, 1); 
   } 
   
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 

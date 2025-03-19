@@ -119,19 +119,19 @@ MonoSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeS
   m_temperature_label     = VarLabel::find( m_temperature_name);
   m_rho_label             = VarLabel::find( m_rho_name);
 
-  tsk->requires( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
-  tsk->requires( which_dw, m_tar_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_Ysoot_label,                        Ghost::None, 0 );
-  tsk->requires( which_dw, m_Ns_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_o2_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_oh_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_co2_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2o_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_h_label,                            Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_c2h2_label,                         Ghost::None, 0 );
-  tsk->requires( which_dw, m_temperature_label,                  Ghost::None, 0 );
-  tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_tar_label,                          Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_Ysoot_label,                        Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_Ns_label,                           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_o2_label,                           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_oh_label,                           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_co2_label,                          Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_h2o_label,                          Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_h_label,                            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_h2_label,                           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_c2h2_label,                         Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_temperature_label,                  Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_rho_label,                          Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   

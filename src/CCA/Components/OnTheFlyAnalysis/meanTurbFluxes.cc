@@ -648,13 +648,13 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
   // u,v,w -> u',v',w'
-  t->requires( Task::NewDW, d_velocityVar->label, d_velocityVar->matSubSet, Ghost::None, 0 );
+  t->needsLabel( Task::NewDW, d_velocityVar->label, d_velocityVar->matSubSet, Ghost::None, 0 );
   t->computes ( d_velocityVar->primeLabel );
 
   // Q -> Q'
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
-    t->requires( Task::NewDW, Q->label, Q->matSubSet, m_gn, 0 );
+    t->needsLabel( Task::NewDW, Q->label, Q->matSubSet, m_gn, 0 );
     t->computes ( Q->primeLabel );
   }
 
@@ -778,13 +778,13 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   //  scalars
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
-    t->requires( Task::NewDW, Q->primeLabel, Q->matSubSet, gn, 0 );
+    t->needsLabel( Task::NewDW, Q->primeLabel, Q->matSubSet, gn, 0 );
     t->computes ( Q->turbFluxLabel );
   }
 
   //__________________________________
   //  velocity
-  t->requires( Task::NewDW, d_velocityVar->primeLabel, d_velocityVar->matSubSet, gn, 0 );
+  t->needsLabel( Task::NewDW, d_velocityVar->primeLabel, d_velocityVar->matSubSet, gn, 0 );
   t->computes ( d_velocityVar->normalTurbStrssLabel );
   t->computes ( d_velocityVar->shearTurbStrssLabel );
 

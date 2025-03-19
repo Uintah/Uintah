@@ -52,11 +52,11 @@ SecondMFMoment::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   scalarDissLabel = VarLabel::find(_scalarDissipation_name);
   
   if (timeSubStep == 0) {
-    tsk->requires( Task::OldDW, densityLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, scalarDissLabel, Ghost::None, 0 );
+    tsk->needsLabel( Task::OldDW, densityLabel, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::OldDW, scalarDissLabel, Ghost::None, 0 );
   } else {
-    tsk->requires( Task::NewDW, densityLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, scalarDissLabel, Ghost::None, 0 );
+    tsk->needsLabel( Task::NewDW, densityLabel, Ghost::None, 0 ); 
+    tsk->needsLabel( Task::NewDW, scalarDissLabel, Ghost::None, 0 );
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 

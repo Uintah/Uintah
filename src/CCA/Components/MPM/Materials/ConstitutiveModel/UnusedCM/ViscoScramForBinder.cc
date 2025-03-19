@@ -215,11 +215,11 @@ ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();  <- Unused
-  task->requires(Task::OldDW,pStatedataLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->needsLabel(Task::OldDW,pStatedataLabel, Ghost::None);
+  task->needsLabel(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->needsLabel(Task::OldDW,lb->pStressLabel, Ghost::None);
   if (d_doCrack)
-    task->requires(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
+    task->needsLabel(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
 }
 
 
@@ -984,24 +984,24 @@ ViscoScramForBinder::addComputesAndRequires(Task* task,
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, pStatedataLabel,             matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->delTLabel);
+  task->needsLabel(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, pStatedataLabel,             matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
+  task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
+    task->needsLabel(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
 
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
+  task->needsLabel(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
 
 #ifdef FRACTURE
-  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
+  task->needsLabel(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
+  task->needsLabel(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
 #endif
 
   task->computes(lb->pStressLabel_preReloc,                matlset);
@@ -1010,7 +1010,7 @@ ViscoScramForBinder::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
 
   if (d_doCrack) {
-    task->requires(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);
+    task->needsLabel(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);
     task->computes(lb->pCrackRadiusLabel_preReloc,     matlset);
   }
 }

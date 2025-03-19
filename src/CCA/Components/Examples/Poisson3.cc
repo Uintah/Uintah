@@ -101,7 +101,7 @@ void Poisson3::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Poisson3::computeStableTimeStep);
-  task->requires(Task::NewDW, residual_label, level.get_rep());
+  task->needsLabel(Task::NewDW, residual_label, level.get_rep());
   task->computes(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
@@ -114,10 +114,10 @@ Poisson3::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                            this, &Poisson3::timeAdvance,
                            level->getIndex() != 0);
   if(level->getIndex() == 0) {
-    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computes(phi_label);
   } else {
-    task->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
+    task->needsLabel(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
     task->modifies(phi_label);
   }
   task->computes(residual_label, level.get_rep());
@@ -247,7 +247,7 @@ void Poisson3::scheduleRefine(const LevelP& fineLevel, SchedulerP& sched)
 {
   dbg << "Poisson3::scheduleRefine\n";
   Task* task = scinew Task("refine", this, &Poisson3::refine);
-  task->requires(Task::NewDW, phi_label,
+  task->needsLabel(Task::NewDW, phi_label,
                  0, Task::CoarseLevel,
                  0, Task::NormalDomain, 
                  Ghost::AroundCells, interpolator_.getMaxSupportRefine());
@@ -318,13 +318,13 @@ void Poisson3::scheduleRefineInterface(const LevelP& fineLevel,
   dbg << "Poisson3::scheduleRefineInterface\n";
   Task* task = scinew Task("refineInterface", this, &Poisson3::refineInterface);
 
-  task->requires(Task::OldDW, phi_label, Ghost::None);
-  task->requires(Task::CoarseOldDW, phi_label,
+  task->needsLabel(Task::OldDW, phi_label, Ghost::None);
+  task->needsLabel(Task::CoarseOldDW, phi_label,
                  0, Task::CoarseLevel,
                  0, Task::NormalDomain, 
                  Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
   if(needCoarseNew)
-    task->requires(Task::CoarseNewDW, phi_label,
+    task->needsLabel(Task::CoarseNewDW, phi_label,
                    0, Task::CoarseLevel,
                    0, Task::NormalDomain, 
                    Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
@@ -416,7 +416,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 void Poisson3::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   Task* task = scinew Task("coarsen", this, &Poisson3::coarsen);
-  task->requires(Task::NewDW, phi_label,
+  task->needsLabel(Task::NewDW, phi_label,
                  0, Task::FineLevel,
                  0, Task::NormalDomain,
                  Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());

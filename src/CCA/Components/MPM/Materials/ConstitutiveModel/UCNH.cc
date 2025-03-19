@@ -386,23 +386,23 @@ void UCNH::addComputesAndRequires(Task* task,
     addSharedCRForImplicit(task, matlset, reset);
   } else {
     addSharedCRForExplicit(task, matlset, patches);
-    task->requires(Task::NewDW, lb->pJThermalLabel,    matlset, gnone);
+    task->needsLabel(Task::NewDW, lb->pJThermalLabel,    matlset, gnone);
   }
 
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
+  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
 
   // Plasticity
   if(d_usePlasticity) {
-    task->requires(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
-    task->requires(Task::OldDW, pYieldStressLabel,     matlset, gnone);
-    task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
+    task->needsLabel(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
+    task->needsLabel(Task::OldDW, pYieldStressLabel,     matlset, gnone);
+    task->needsLabel(Task::OldDW, bElBarLabel,           matlset, gnone);
     task->computes(pPlasticStrainLabel_preReloc,       matlset);
     task->computes(pYieldStressLabel_preReloc,         matlset);
     task->computes(bElBarLabel_preReloc,               matlset);
   }
 
   // Universal
-  task->requires(Task::OldDW, lb->pParticleIDLabel,    matlset, gnone);
+  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,    matlset, gnone);
 }
 //______________________________________________________________________
 //
@@ -422,11 +422,11 @@ void UCNH::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   if(d_usePlasticity){
     if(SchedParent){
-      task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
-      task->requires(Task::ParentOldDW,   bElBarLabel,       matlset, gnone);
+      task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+      task->needsLabel(Task::ParentOldDW,   bElBarLabel,       matlset, gnone);
     }else{
-      task->requires(Task::OldDW,       pPlasticStrainLabel, matlset, gnone);
-      task->requires(Task::OldDW,         bElBarLabel,       matlset, gnone);
+      task->needsLabel(Task::OldDW,       pPlasticStrainLabel, matlset, gnone);
+      task->needsLabel(Task::OldDW,         bElBarLabel,       matlset, gnone);
     }
   }
 }

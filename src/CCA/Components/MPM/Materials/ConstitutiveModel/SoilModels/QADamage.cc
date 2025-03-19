@@ -499,29 +499,29 @@ void QADamage::addComputesAndRequires(Task* task,
         // Other constitutive model and input dependent computes and requires
         Ghost::GhostType  gnone = Ghost::None;
 
-        task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
+        task->needsLabel(Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
 
         // Plasticity
         if (d_usePlasticity) {
 
-                task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
-                task->requires(Task::OldDW, pYieldStressLabel, matlset, gnone);
+                task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+                task->needsLabel(Task::OldDW, pYieldStressLabel, matlset, gnone);
                 task->computes(pPlasticStrainLabel_preReloc, matlset);
                 task->computes(pYieldStressLabel_preReloc, matlset);
         }
 
         if (flag->d_with_color) {
-                task->requires(Task::OldDW, lb->pColorLabel, Ghost::None);
+                task->needsLabel(Task::OldDW, lb->pColorLabel, Ghost::None);
         }
 
         // Universal
-        task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, gnone);
-        task->requires(Task::OldDW, bElBarLabel, matlset, gnone);
+        task->needsLabel(Task::OldDW, lb->pParticleIDLabel, matlset, gnone);
+        task->needsLabel(Task::OldDW, bElBarLabel, matlset, gnone);
         task->computes(bElBarLabel_preReloc, matlset);
 
         // Computes and requires for internal state data
         for (int i = 0; i < d_INPUT; i++) {
-                task->requires(Task::OldDW, ISVLabels[i], matlset, Ghost::None);
+                task->needsLabel(Task::OldDW, ISVLabels[i], matlset, Ghost::None);
                 task->computes(ISVLabels_preReloc[i], matlset);
         }
 }
@@ -543,18 +543,18 @@ void QADamage::addComputesAndRequires(Task* task,
         Ghost::GhostType  gnone = Ghost::None;
         if (d_usePlasticity) {
                 if (SchedParent) {
-                        task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+                        task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
                 }
                 else {
-                        task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+                        task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
                 }
         }
 
         if (SchedParent) {
-                task->requires(Task::ParentOldDW, bElBarLabel, matlset, gnone);
+                task->needsLabel(Task::ParentOldDW, bElBarLabel, matlset, gnone);
         }
         else {
-                task->requires(Task::OldDW, bElBarLabel, matlset, gnone);
+                task->needsLabel(Task::OldDW, bElBarLabel, matlset, gnone);
         }
 }
 //______________________________________________________________________

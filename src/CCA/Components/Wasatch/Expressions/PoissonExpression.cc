@@ -122,7 +122,7 @@ namespace WasatchCore {
                                              &PoissonExpression::process_bcs);
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
-    task->requires(Uintah::Task::NewDW,phiLabel_, gt, ng);
+    task->needsLabel(Uintah::Task::NewDW,phiLabel_, gt, ng);
     //task->modifies(phiLabel_);
     Uintah::LoadBalancer * lb = sched->getLoadBalancer();
     sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );

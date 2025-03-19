@@ -157,13 +157,13 @@ ZZNoxSolid::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
     std::string rho_coalqn_name;
     std::string coal_temperatureqn_name;
     const std::string rcmassqn_name = ArchesCore::append_qn_env( m_rcmass_root, i );             //weighted scaled rcmass
-    tsk->requires( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );
+    tsk->needsLabel( which_dw, VarLabel::find(rcmassqn_name), Ghost::None, 0 );
     rcmass_name = ArchesCore::append_env( m_rcmass_root, i );                                    //unweighted unscaled rcmass, original value of rcmass of per particle
-    tsk->requires( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 );
+    tsk->needsLabel( which_dw, VarLabel::find(rcmass_name), Ghost::None, 0 );
     rho_coalqn_name = ArchesCore::append_env( m_rho_coal_root, i );                              //unweighted unscaled density of coal particle, original value of coal particle density
-    tsk->requires( which_dw, VarLabel::find(rho_coalqn_name), Ghost::None, 0 );
+    tsk->needsLabel( which_dw, VarLabel::find(rho_coalqn_name), Ghost::None, 0 );
     coal_temperatureqn_name = ArchesCore::append_env( m_coal_temperature_root, i );              //unweighted unscaled coal temperature
-    tsk->requires( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 );
+    tsk->needsLabel( which_dw, VarLabel::find(coal_temperatureqn_name), Ghost::None, 0 );
   }
   // resolve some labels:
   oxi_label              = VarLabel::find( oxi_name);
@@ -179,20 +179,20 @@ ZZNoxSolid::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   m_NO_label             = VarLabel::find( NO_name);
   m_HCN_label            = VarLabel::find( HCN_name);
   m_NH3_label            = VarLabel::find( NH3_name);
-  tsk->requires( which_dw, oxi_label,             Ghost::None, 0 );
-  tsk->requires( which_dw, devol_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_o2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_n2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_co_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2o_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_temperature_label,   Ghost::None, 0 );
-  tsk->requires( which_dw, m_density_label,       Ghost::None, 0 );
-  tsk->requires( which_dw, m_mix_mol_weight_label,Ghost::None, 0 );
-  tsk->requires( which_dw, m_NO_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_HCN_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_NH3_label,           Ghost::None, 0 );
-  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 );
+  tsk->needsLabel( which_dw, oxi_label,             Ghost::None, 0 );
+  tsk->needsLabel( which_dw, devol_label,           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_o2_label,            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_n2_label,            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_co_label,            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_h2o_label,           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_h2_label,            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_temperature_label,   Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_density_label,       Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_mix_mol_weight_label,Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_NO_label,            Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_HCN_label,           Ghost::None, 0 );
+  tsk->needsLabel( which_dw, m_NH3_label,           Ghost::None, 0 );
+  tsk->needsLabel( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 );
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
