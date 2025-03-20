@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -332,17 +333,21 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
   new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
   new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
+#ifdef INCLUDE_THERMAL
   new_dw->allocateAndPut(pvars.pexternalhtrte,d_lb->pExternalHeatRateLabel,
                                                                         subset);
+  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
+  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
+  new_dw->allocateAndPut(pvars.pTempGrad,     d_lb->pTemperatureGradientLabel,
+                                                                        subset);
+#endif
   new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
   new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
-  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
   new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
   new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
   new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
   new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
-  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
   new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
   new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
   new_dw->allocateAndPut(pvars.psurfgrad,     d_lb->pSurfGradLabel,     subset);
@@ -350,8 +355,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
-  new_dw->allocateAndPut(pvars.pTempGrad,   d_lb->pTemperatureGradientLabel,
-                                                                        subset);
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
   }
@@ -698,7 +701,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
                                       0.,                               0.,1.);
 */
 
+#ifdef INCLUDE_THERMAL
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
+#endif
   pvars.plocalized[i]   = 0;
 
   // For AMR
@@ -728,7 +733,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
+#ifdef INCLUDE_THERMAL
     pvars.pTempGrad[i] = Vector(0.0);
+#endif
   
     if (d_coupledflow &&
         !matl->getIsRigid()) {  // mass is determined by incoming porosity
@@ -782,7 +789,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pLastLevel[i] = curLevel->getID();
   }
   
+#ifdef INCLUDE_THERMAL
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+#endif
   if(d_flags->d_useLogisticRegression ||
      d_useLoadCurves){
     GeometryPieceP piece = (*obj)->getPiece();
@@ -793,7 +802,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
   pvars.pexternalforce[i] = Vector(0.,0.,0.);
+#ifdef INCLUDE_THERMAL
   pvars.pexternalhtrte[i] = 0.;
+#endif
   pvars.pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
 
   ASSERT(cell_idx.x() <= 0xffff && 
@@ -847,10 +858,12 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pExternalForceLabel);
   particle_state_preReloc.push_back(d_lb->pExtForceLabel_preReloc);
 
+#ifdef INCLUDE_THERMAL
   if (d_flags->d_integrator_type == "explicit") {
     particle_state.push_back(d_lb->pExternalHeatRateLabel);
     particle_state_preReloc.push_back(d_lb->pExternalHeatRateLabel_preReloc);
   }
+#endif
 
   particle_state.push_back(d_lb->pMassLabel);
   particle_state_preReloc.push_back(d_lb->pMassLabel_preReloc);
@@ -858,12 +871,14 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pVolumeLabel);
   particle_state_preReloc.push_back(d_lb->pVolumeLabel_preReloc);
 
+#ifdef INCLUDE_THERMAL
   particle_state.push_back(d_lb->pTemperatureLabel);
   particle_state_preReloc.push_back(d_lb->pTemperatureLabel_preReloc);
 
   // for thermal stress
   particle_state.push_back(d_lb->pTempPreviousLabel);
   particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
+#endif
 
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
@@ -929,10 +944,12 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
   }
 
+#ifdef INCLUDE_THERMAL
   if(!d_flags->d_AMR){
     particle_state.push_back(d_lb->pTemperatureGradientLabel);
     particle_state_preReloc.push_back(d_lb->pTemperatureGradientLabel_preReloc);
   }
+#endif
 
   if (d_flags->d_refineParticles) {
     particle_state.push_back(d_lb->pRefinedLabel);

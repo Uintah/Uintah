@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/ImpMPMLabel.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -386,7 +387,9 @@ void UCNH::addComputesAndRequires(Task* task,
     addSharedCRForImplicit(task, matlset, reset);
   } else {
     addSharedCRForExplicit(task, matlset, patches);
+#ifdef INCLUDE_THERMAL
     task->requires(Task::NewDW, lb->pJThermalLabel,    matlset, gnone);
+#endif
   }
 
   task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
@@ -662,7 +665,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
+#ifdef INCLUDE_THERMAL
     new_dw->get(pJThermal,           lb->pJThermalLabel,           pset);
+#endif
 
     // Universal Allocations
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
@@ -750,7 +755,11 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
 
       // get the hydrostatic part of the stress
+#ifdef INCLUDE_THERMAL
       double p = 0.5*bulk*((J - 1.0/J) - (pJThermal[idx] - 1.0/pJThermal[idx]));
+#else
+      double p = 0.5*bulk*(J - 1.0/J);
+#endif
 
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
