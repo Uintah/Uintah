@@ -123,12 +123,12 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
   register_variable( "vcellY" , AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "wcellZ" , AFC::COMPUTES, variable_registry, m_task_name );
 
-  register_variable( "gridX" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
-  register_variable( "gridY" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
-  register_variable( "gridZ" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
-  register_variable( "ucellX" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
-  register_variable( "vcellY" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
-  register_variable( "wcellZ" , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "gridX" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "gridY" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "gridZ" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "ucellX" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "vcellY" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
+  register_variable( "wcellZ" , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry, m_task_name );
 
 }
 

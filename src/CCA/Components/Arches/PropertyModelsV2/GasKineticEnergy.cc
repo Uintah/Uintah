@@ -99,9 +99,9 @@ GasKineticEnergy::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
                                           variable_registry, const int time_substep,
                                           const bool packed_tasks ){
 
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_u_vel_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
 
   register_variable( m_kinetic_energy , ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
 

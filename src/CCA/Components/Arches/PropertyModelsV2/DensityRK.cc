@@ -150,7 +150,7 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
                                           const bool packed_tasks ){
 
   register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+  register_variable( m_label_density , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   register_variable( m_label_densityRK, ArchesFieldContainer::COMPUTES, variable_registry );
 

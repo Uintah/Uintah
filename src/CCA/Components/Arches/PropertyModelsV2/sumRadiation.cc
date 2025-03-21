@@ -162,10 +162,10 @@ sumRadiation::register_initialize( VIVec& variable_registry ,
                                    const bool pack_tasks){
 
   register_variable( m_abskt_name,  ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry);
+  register_variable("volFraction" , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::NEWDW,variable_registry);
 
   for (unsigned int i=0; i<m_absk_names.size(); i++){
-    register_variable(m_absk_names[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
+    register_variable(m_absk_names[i] , Uintah::ArchesFieldContainer::NEEDSLABEL, variable_registry);
   }
 }
 

@@ -310,7 +310,7 @@ private:
       register_variable( *i+"_x_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
       register_variable( *i+"_y_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
       register_variable( *i+"_z_psi", AFC::COMPUTES, variable_registry, time_substep, m_task_name, packed_tasks );
-      register_variable( *i, AFC::REQUIRES, 2, AFC::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( *i, AFC::NEEDSLABEL, 2, AFC::LATEST, variable_registry, time_substep, m_task_name );
     }
 
     int nGhosts = 1;
@@ -318,10 +318,10 @@ private:
       nGhosts = 2;
     }
 
-    register_variable( m_eps_name,   AFC::REQUIRES, 2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-    register_variable( m_u_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-    register_variable( m_v_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-    register_variable( m_w_vel_name, AFC::REQUIRES, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_eps_name,   AFC::NEEDSLABEL, 2, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_u_vel_name, AFC::NEEDSLABEL, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_v_vel_name, AFC::NEEDSLABEL, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_w_vel_name, AFC::NEEDSLABEL, nGhosts, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 
   }
 

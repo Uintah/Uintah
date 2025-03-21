@@ -208,9 +208,9 @@ private:
       std::string vp_i = ArchesCore::append_env(vp_root,i);
       std::string wp_i = ArchesCore::append_env(wp_root,i);
 
-      register_variable( up_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-      register_variable( vp_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-      register_variable( wp_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( up_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( vp_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( wp_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
 
@@ -277,9 +277,9 @@ private:
       std::string vp_i = ArchesCore::append_env(vp_root,ienv);
       std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-      register_variable( up_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( vp_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( wp_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( up_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( vp_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( wp_i, ArchesFieldContainer::NEEDSLABEL, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
 
   }

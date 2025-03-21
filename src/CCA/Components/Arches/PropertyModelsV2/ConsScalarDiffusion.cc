@@ -76,8 +76,8 @@ void ConsScalarDiffusion::register_initialize( AVarInfo& variable_registry , con
   typedef ArchesFieldContainer AFC;
 
   register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, m_task_name );
-  //register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,m_task_name );
-  //register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry ,m_task_name );
+  //register_variable( m_turb_viscosity_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry ,m_task_name );
+  //register_variable( m_density_name,        AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry ,m_task_name );
 
 }
 
@@ -117,8 +117,8 @@ void ConsScalarDiffusion::register_timestep_eval( VIVec& variable_registry, cons
   typedef ArchesFieldContainer AFC;
 
   register_variable( m_gamma_name,          AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( m_turb_viscosity_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
-  register_variable( m_density_name,        AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_turb_viscosity_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_density_name,        AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
 
 }
 

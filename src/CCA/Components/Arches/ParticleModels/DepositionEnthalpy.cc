@@ -146,10 +146,10 @@ DepositionEnthalpy::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( _cellType_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW , variable_registry );
   register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _ash_enthalpy_src, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _gasT_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _gasT_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string RateDepositionX = get_env_name(i, _ratedepx_name);
@@ -159,12 +159,12 @@ DepositionEnthalpy::register_timestep_eval(
     const std::string temperature_name = get_env_name( i, _temperature_base_name );
     const std::string density_name = get_env_name( i, _density_base_name );
 
-    register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( temperature_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( density_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionX, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionY, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionZ, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( diameter_name , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( temperature_name , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( density_name , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
   }
 
 }

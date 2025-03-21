@@ -248,10 +248,10 @@ namespace Uintah{
 
       //independent variables
       const std::string density_name = get_name( i, m_base_density_name );
-      register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( density_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
-    register_variable( m_gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_gas_density_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   }
 
   template <typename IT, typename DT>

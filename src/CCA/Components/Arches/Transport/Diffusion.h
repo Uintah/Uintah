@@ -243,7 +243,7 @@ private:
 
       if ( m_do_diff[ieqn] ){
         //should this be latest?
-        register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1,
+        register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 1,
                             ArchesFieldContainer::LATEST, variable_registry,
                             time_substep, m_task_name );
         register_variable(  m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
@@ -252,9 +252,9 @@ private:
       }
     }
     if ( m_has_D ){
-      register_variable( m_D_name, ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, m_task_name );
+      register_variable( m_D_name, ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep, m_task_name );
     }
-    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_eps_name, ArchesFieldContainer::NEEDSLABEL, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
   }
 
   //------------------------------------------------------------------------------------------------

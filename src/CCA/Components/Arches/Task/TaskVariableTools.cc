@@ -12,7 +12,7 @@ namespace {
       return "computes";
     } else if ( dep == Uintah::ArchesFieldContainer::MODIFIES ){
       return "modifies";
-    } else if ( dep == Uintah::ArchesFieldContainer::REQUIRES ){
+    } else if ( dep == Uintah::ArchesFieldContainer::NEEDSLABEL ){
       return "requires";
     } else if ( dep == Uintah::ArchesFieldContainer::COMPUTESCRATCHGHOST ){
       return "compute_with_scratch_ghosts";
@@ -73,7 +73,7 @@ namespace Uintah {
 
         //Deal with cases of computescratchghost + requires in a packed task.
         if ( (*i).depend == ArchesFieldContainer::COMPUTESCRATCHGHOST
-              && dep == ArchesFieldContainer::REQUIRES ){
+              && dep == ArchesFieldContainer::NEEDSLABEL ){
           //Don't add this variable because it is computed in this task upstream in a packed neighbor task
           add_variable = false;
         }
@@ -84,7 +84,7 @@ namespace Uintah {
           //Are they from the same DW?
           if ( (*i).dw == dw ) {
 
-            if ( dep == ArchesFieldContainer::REQUIRES ){
+            if ( dep == ArchesFieldContainer::NEEDSLABEL ){
 
               //default to the larger ghost requirement:
               if ( nGhost > (*i).nGhost ){
@@ -115,12 +115,12 @@ namespace Uintah {
                  "This only represents a problem for the task if the required variable must remain constant. \n"
           <<     "Otherwise, it *may* be a feature of the task (e.g., this is by design). Best to check with the author of this task. \n \n";
 
-          if ( dep == ArchesFieldContainer::REQUIRES && (*i).depend == ArchesFieldContainer::MODIFIES ){
+          if ( dep == ArchesFieldContainer::NEEDSLABEL && (*i).depend == ArchesFieldContainer::MODIFIES ){
 
             //throw InvalidValue(msg.str(), __FILE__, __LINE__ );
             proc0cout << msg.str();
 
-          } else if ( dep == ArchesFieldContainer::MODIFIES && (*i).depend == ArchesFieldContainer::REQUIRES ){
+          } else if ( dep == ArchesFieldContainer::MODIFIES && (*i).depend == ArchesFieldContainer::NEEDSLABEL ){
 
             //throw InvalidValue(msg.str(), __FILE__, __LINE__ );
             proc0cout << msg.str();
@@ -130,9 +130,9 @@ namespace Uintah {
           std::stringstream msg_kill;
           msg_kill << "Error: The task, " << task_name << ", is attempting to compute a variable: " <<
                        name << " that is already required for this (or some other if tasks are packed) task." << std::endl;
-          if ( dep == ArchesFieldContainer::COMPUTES && (*i).depend == ArchesFieldContainer::REQUIRES ){
+          if ( dep == ArchesFieldContainer::COMPUTES && (*i).depend == ArchesFieldContainer::NEEDSLABEL ){
             throw InvalidValue(msg_kill.str(), __FILE__, __LINE__ );
-          } else if ( dep == ArchesFieldContainer::REQUIRES && (*i).depend == ArchesFieldContainer::COMPUTES ){
+          } else if ( dep == ArchesFieldContainer::NEEDSLABEL && (*i).depend == ArchesFieldContainer::COMPUTES ){
             if ( nGhost > 0 ){
               throw InvalidValue(msg_kill.str(), __FILE__, __LINE__ );
             } else {
@@ -172,7 +172,7 @@ namespace Uintah {
       info.local = false;
 
       info.is_constant = false;
-      if ( dep == ArchesFieldContainer::REQUIRES ){
+      if ( dep == ArchesFieldContainer::NEEDSLABEL ){
         info.is_constant = true;
       }
 
@@ -227,9 +227,9 @@ namespace Uintah {
 
       info.ghost_type = Ghost::None;
 
-      // if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ||
+      // if ( dep == ArchesFieldContainer::NEEDSLABEL || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST ||
       //      dep == ArchesFieldContainer::MODIFIES || dep == ArchesFieldContainer::COMPUTES ) {
-      if ( dep == ArchesFieldContainer::REQUIRES || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST){
+      if ( dep == ArchesFieldContainer::NEEDSLABEL || dep == ArchesFieldContainer::COMPUTESCRATCHGHOST){
 
         if ( nGhost > 0 ){
           if ( type_desc == CCVariable<int>::getTypeDescription() ) {

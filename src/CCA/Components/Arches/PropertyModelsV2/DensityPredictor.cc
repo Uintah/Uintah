@@ -138,20 +138,20 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
   register_variable( "new_densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
   register_variable( "densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
-  register_variable( "densityCP"     , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable( "volFraction"   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( "uVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( "vVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( "wVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( "sm_cont" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( "densityCP"     , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( "volFraction"   , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "uVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "vVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "wVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "sm_cont" , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   if ( !m_use_exact_guess ){
     //typedef std::vector<std::string> SVec;
     //for (SVec::iterator i = m_mass_sources.begin(); i != m_mass_sources.end(); i++ ){
-      //register_variable( *i , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+      //register_variable( *i , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
     //}
   }
   if ( m_use_exact_guess )
-    register_variable( m_f_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+    register_variable( m_f_name     , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
 
 }
 

@@ -468,16 +468,16 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
     register_variable( RateImpactY_name, AFC::MODIFIES, variable_registry );
     register_variable( RateImpactZ_name, AFC::MODIFIES, variable_registry );
 
-    register_variable( MaxParticleTemperature_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-    register_variable( ParticleTemperature_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-    register_variable( weight_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-    register_variable( rho_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
-    register_variable( diameter_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
+    register_variable( MaxParticleTemperature_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
+    register_variable( ParticleTemperature_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
+    register_variable( weight_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
+    register_variable( rho_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
+    register_variable( diameter_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
 
 
-    register_variable( xvel_name, AFC::REQUIRES, 1 ,AFC::NEWDW, variable_registry );
-    register_variable( yvel_name, AFC::REQUIRES, 1 ,AFC::NEWDW, variable_registry );
-    register_variable( zvel_name, AFC::REQUIRES, 1 ,AFC::NEWDW, variable_registry );
+    register_variable( xvel_name, AFC::NEEDSLABEL, 1 ,AFC::NEWDW, variable_registry );
+    register_variable( yvel_name, AFC::NEEDSLABEL, 1 ,AFC::NEWDW, variable_registry );
+    register_variable( zvel_name, AFC::NEEDSLABEL, 1 ,AFC::NEWDW, variable_registry );
 
     register_variable( ProbParticleX_name, AFC::MODIFIES, variable_registry );
     register_variable( ProbParticleY_name, AFC::MODIFIES, variable_registry );
@@ -496,13 +496,13 @@ RateDeposition::register_timestep_eval( std::vector<AFC_VI>& variable_registry, 
   register_variable( _ProbSurfaceY_name, AFC::MODIFIES, variable_registry );
   register_variable( _ProbSurfaceZ_name, AFC::MODIFIES, variable_registry );
 
-  register_variable( "surf_out_normX", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "surf_out_normY", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "surf_out_normZ", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "surf_in_normX", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "surf_in_normY", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "surf_in_normZ", AFC::REQUIRES, 1, AFC::OLDDW, variable_registry , time_substep );
-  register_variable( "temperature", AFC::REQUIRES, 1, AFC::LATEST, variable_registry );
+  register_variable( "surf_out_normX", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "surf_out_normY", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "surf_out_normZ", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "surf_in_normX", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "surf_in_normY", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "surf_in_normZ", AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry , time_substep );
+  register_variable( "temperature", AFC::NEEDSLABEL, 1, AFC::LATEST, variable_registry );
 
 }
 

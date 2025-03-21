@@ -89,10 +89,10 @@ PartVariablesDQMOM::register_initialize(
     const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
     const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
+    register_variable( weight_name, ArchesFieldContainer::NEEDSLABEL, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
 
-    register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
+    register_variable( length_name, ArchesFieldContainer::NEEDSLABEL, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
 
     register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -124,10 +124,10 @@ PartVariablesDQMOM::register_timestep_eval(
     const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
     const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
+    register_variable( weight_name, ArchesFieldContainer::NEEDSLABEL, 0,
                        ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
-    register_variable( length_name, ArchesFieldContainer::REQUIRES, 0,
+    register_variable( length_name, ArchesFieldContainer::NEEDSLABEL, 0,
                        ArchesFieldContainer::LATEST, variable_registry, time_substep);
 
      register_variable( surfAreaF_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep);

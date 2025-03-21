@@ -74,9 +74,9 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_xmom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_ymom, AFC::MODIFIES, variable_registry, m_task_name );
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, m_task_name );
-  register_variable( m_uVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_vVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_wVel, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_uVel, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_vVel, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_wVel, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, time_substep, m_task_name );
 
 
 

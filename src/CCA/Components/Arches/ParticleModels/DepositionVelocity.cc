@@ -230,9 +230,9 @@ DepositionVelocity::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( _cellType_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW , variable_registry );
   register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
+  register_variable( m_task_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW, variable_registry  );
   register_variable( _ash_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _impact_mass_src, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _impact_org_wall_flow, ArchesFieldContainer::COMPUTES, variable_registry );
@@ -240,34 +240,34 @@ DepositionVelocity::register_timestep_eval(
 
 
   register_variable( _impact_velocity_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _impact_velocity_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
+  register_variable( _impact_velocity_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW, variable_registry  );
 
   for ( int n = 0; n < _Nenv; n++ ){
     const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
     const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
     register_variable( d_vol_ave_num_s, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( d_vol_ave_num_s, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( d_vol_ave_num_s, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
     register_variable( d_vol_ave_den_s, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( d_vol_ave_den_s, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( d_vol_ave_den_s, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     const std::string RateDepositionX = get_env_name(n, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(n, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(n, _ratedepz_name);
     const std::string diameter_name = get_env_name(n, _diameter_base_name );
     const std::string density_name = get_env_name(n, _density_base_name );
-    register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( density_name , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionX, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionY, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateDepositionZ, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( diameter_name , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( density_name , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
 
     const std::string RateImpactX = get_env_name(n, _rateImpactx_name);
     const std::string RateImpactY = get_env_name(n, _rateImpacty_name);
     const std::string RateImpactZ = get_env_name(n, _rateImpactz_name);
 
-    register_variable( RateImpactX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateImpactY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( RateImpactZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateImpactX, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateImpactY, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( RateImpactZ, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW , variable_registry );
 
 
 

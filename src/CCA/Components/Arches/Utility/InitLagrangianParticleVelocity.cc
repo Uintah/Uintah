@@ -97,16 +97,16 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldCont
   register_variable( _pv_label  , ArchesFieldContainer::MODIFIES, variable_registry );
   register_variable( _pw_label  , ArchesFieldContainer::MODIFIES, variable_registry );
 
-  register_variable( _px_label , ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable( _py_label , ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable( _pz_label , ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _px_label , ArchesFieldContainer::NEEDSLABEL, 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _py_label , ArchesFieldContainer::NEEDSLABEL, 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _pz_label , ArchesFieldContainer::NEEDSLABEL, 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
-  register_variable( _size_label , ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _size_label , ArchesFieldContainer::NEEDSLABEL, 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
   //gas velocity
-  register_variable( "uVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( "vVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( "wVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "uVelocitySPBC", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "vVelocitySPBC", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "wVelocitySPBC", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry );
 
 }
 

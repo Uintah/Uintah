@@ -653,61 +653,61 @@ CharOxidationps<T>::register_timestep_eval(       std::vector<ArchesFieldContain
 
   for ( int l = 0; l < _NUM_reactions; l++ ) {
     register_variable( m_reaction_rate_names[l], ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-    register_variable( m_reaction_rate_names[l], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    register_variable( m_reaction_rate_names[l], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
   }
 
   // gas variables
-  register_variable( m_cc_u_vel_name,         ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_cc_v_vel_name,         ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_cc_w_vel_name,         ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_density_gas_name,      ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_gas_temperature_label, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_MW_name,               ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_cc_u_vel_name,         ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_cc_v_vel_name,         ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_cc_w_vel_name,         ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_density_gas_name,      ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_gas_temperature_label, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_MW_name,               ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_volFraction_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   // gas species
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    register_variable( _species_names[ns], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _species_names[ns], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   }
 
   // other particle variables
-  register_variable( number_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( number_density_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
     // from devol model
-    register_variable( m_devolRC,        ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_surfAreaF_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_devolRC,        ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_surfAreaF_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
     //birth terms
 
     if ( m_add_char_birth ) {
-      register_variable( m_char_birth_qn_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( m_char_birth_qn_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
     if ( m_add_rawcoal_birth ) {
-      register_variable( m_rawcoal_birth_qn_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( m_rawcoal_birth_qn_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
     if ( m_add_length_birth ) {
-      register_variable( m_length_birth_qn_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( m_length_birth_qn_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
     // other models
-    register_variable( m_particle_temperature, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_particle_length,      ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_particle_length_qn,   ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_particle_density,     ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_rcmass,               ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_char_name,            ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_weight_name,          ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_up_name,              ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_vp_name,              ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( m_wp_name,              ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_particle_temperature, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_particle_length,      ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_particle_length_qn,   ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_particle_density,     ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_rcmass,               ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_char_name,            ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_weight_name,          ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_up_name,              ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_vp_name,              ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_wp_name,              ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
     // RHS
-    register_variable( m_RC_RHS,     ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_ic_RHS,     ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_w_RHS,      ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( m_length_RHS, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_RC_RHS,     ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_ic_RHS,     ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_w_RHS,      ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( m_length_RHS, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 }
 
 //--------------------------------------------------------------------------------------------------

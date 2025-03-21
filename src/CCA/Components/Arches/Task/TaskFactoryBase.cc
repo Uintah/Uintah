@@ -501,7 +501,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         tsk->modifies( ivar.label );
       }
       break;
-    case ArchesFieldContainer::REQUIRES:
+    case ArchesFieldContainer::NEEDSLABEL:
       {
         DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << " from DW: " << ivar.dw );
         tsk->needsLabel( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );

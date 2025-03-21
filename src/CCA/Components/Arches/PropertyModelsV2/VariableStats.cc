@@ -559,7 +559,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
   for (;i!=_ave_sum_names.end();i++){
 
     register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-    register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
   }
 
@@ -567,14 +567,14 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
   for (;i!=_sqr_variable_names.end();i++){
 
     register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-    register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
   }
 
   i = _base_var_names.begin();
   for (;i!=_base_var_names.end();i++){
 
-    register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
   }
 
@@ -583,7 +583,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_ave_x_flux_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
@@ -591,7 +591,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_ave_y_flux_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
@@ -599,7 +599,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_ave_z_flux_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
@@ -607,7 +607,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_x_flux_sqr_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
@@ -615,7 +615,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_y_flux_sqr_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
@@ -623,20 +623,20 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     for (;i!=_z_flux_sqr_sum_names.end();i++){
 
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+      register_variable( *i, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
     }
 
-    register_variable( "uVelocitySPBC" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( "vVelocitySPBC" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( "wVelocitySPBC" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( _rho_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( "uVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( "vVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( "wVelocitySPBC" , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( _rho_name       , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::NEWDW , variable_registry );
 
     std::vector<FluxInfo>::iterator ii = _flux_sum_info.begin();
     for (;ii!=_flux_sum_info.end();ii++){
 
       if ( (*ii).do_phi )
-        register_variable( (*ii).phi , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW , variable_registry );
+        register_variable( (*ii).phi , ArchesFieldContainer::NEEDSLABEL , 1 , ArchesFieldContainer::NEWDW , variable_registry );
 
     }
   }

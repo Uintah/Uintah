@@ -399,7 +399,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 {
 
   const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability;
-  const auto requires = Uintah::ArchesFieldContainer::REQUIRES;
+  const auto requires = Uintah::ArchesFieldContainer::NEEDSLABEL;
 
   register_variable( _abskp_name , computes, variable_registry, time_substep);
 

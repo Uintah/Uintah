@@ -140,11 +140,11 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
                                     const bool packed_tasks ){
 
   register_variable( "Twall",                ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-  register_variable( _incident_hf_label,     ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( _emissivity_label,      ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( _Tshell_label,          ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( _wall_resistance_label, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable( "wall_HF_area",         ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _incident_hf_label,     ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _emissivity_label,      ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _Tshell_label,          ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _wall_resistance_label, ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "wall_HF_area",         ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
 
 }
 

@@ -246,23 +246,23 @@ namespace Uintah{
     MultifractalSGS::register_timestep_eval( std::vector<AFC::VariableInformation>&
         variable_registry, const int time_substep , const bool packed_tasks){
 
-      register_variable( Ux_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Uy_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Uz_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Vx_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Vy_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Vz_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Wx_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Wy_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( Wz_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( m_u_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( m_v_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( m_w_vel_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
-      register_variable( "density",     ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
+      register_variable( Ux_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Uy_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Uz_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Vx_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Vy_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Vz_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Wx_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Wy_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( Wz_face_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( m_u_vel_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( m_v_vel_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( m_w_vel_name,    ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
+      register_variable( "density",     ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::OLDDW, variable_registry,time_substep );
       // UPDATE USER DEFINE VARIABLES
       // register Velocity Delta
       for (auto iter = m_VelDelta_names.begin(); iter != m_VelDelta_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
+        register_variable( *iter, ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
 
       }
 

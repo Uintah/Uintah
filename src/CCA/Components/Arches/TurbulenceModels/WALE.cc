@@ -151,15 +151,15 @@ void
 WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
                               variable_registry, const int time_substep, const bool packed_tasks){
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_u_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_v_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_w_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_cc_u_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_v_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_w_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name, AFC::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry, time_substep );
   if (m_create_labels_IsI_t_viscosity) {

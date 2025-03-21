@@ -87,9 +87,9 @@ BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry , const boo
   register_variable( "area_fraction_y", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "area_fraction_z", ArchesFieldContainer::COMPUTES, variable_registry );
 
-  register_variable( "area_fraction_x", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "area_fraction_y", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "area_fraction_z", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "area_fraction_x", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "area_fraction_y", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "area_fraction_z", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
 }
 

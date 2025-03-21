@@ -139,7 +139,7 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
   register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES, variable_registry );
 
-  register_variable( ind_var_name, ArchesFieldContainer::REQUIRES, 0 ,ArchesFieldContainer::NEWDW,
+  register_variable( ind_var_name, ArchesFieldContainer::NEEDSLABEL, 0 ,ArchesFieldContainer::NEWDW,
                     variable_registry );
 
 }
@@ -209,7 +209,7 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
   register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
 
-  register_variable(ind_var_name,     ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable(ind_var_name,     ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
 
 }
 

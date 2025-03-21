@@ -103,8 +103,8 @@ DensityStar::register_timestep_init( std::vector<ArchesFieldContainer::VariableI
                                           variable_registry, const bool packed_tasks ){
 
   register_variable( m_label_densityStar , ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-  //register_variable( m_label_densityStar , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
+  //register_variable( m_label_densityStar , ArchesFieldContainer::NEEDSLABEL,0, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
+  register_variable( m_label_density , ArchesFieldContainer::NEEDSLABEL,0, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
 
 }
 
@@ -128,9 +128,9 @@ DensityStar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
                                           variable_registry, const int time_substep,
                                           const bool packed_tasks ){
 
-  register_variable( ArchesCore::default_uMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( ArchesCore::default_vMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( ArchesCore::default_wMom_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_uMom_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_vMom_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( ArchesCore::default_wMom_name, ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_label_density , ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
 

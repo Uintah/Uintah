@@ -87,9 +87,9 @@ cloudBenchmark::register_initialize( VIVec& variable_registry , const bool pack_
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( "gridX", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( "gridY", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( "gridZ", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "gridX", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "gridY", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "gridZ", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
 }
 
@@ -152,9 +152,9 @@ void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManag
 void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_abskg_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( m_abskg_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( "temperature", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "temperature", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
 }
 

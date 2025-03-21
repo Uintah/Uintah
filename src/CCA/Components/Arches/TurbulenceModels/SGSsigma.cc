@@ -210,18 +210,18 @@ SGSsigma::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
-  //register_variable( "CsLabel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry);
-  register_variable( m_cc_u_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_v_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  //register_variable( "CCVelocity",      ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry);
-  //register_variable( "density",         ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
-  //register_variable( "volFraction",     ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( m_u_vel_name, ArchesFieldContainer::NEEDSLABEL,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
+  register_variable( m_v_vel_name, ArchesFieldContainer::NEEDSLABEL,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
+  register_variable( m_w_vel_name, ArchesFieldContainer::NEEDSLABEL,Nghost_cells , ArchesFieldContainer::NEWDW, variable_registry);
+  //register_variable( "CsLabel", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry);
+  register_variable( m_cc_u_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_v_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_w_vel_name, AFC::NEEDSLABEL, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name, AFC::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  //register_variable( "CCVelocity",      ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry);
+  //register_variable( "density",         ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+  //register_variable( "volFraction",     ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
   register_variable( m_IsI_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep , m_task_name, packed_tasks);
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_t_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );

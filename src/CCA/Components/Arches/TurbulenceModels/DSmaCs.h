@@ -246,15 +246,15 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
    nG = 3;
   }
 
-  register_variable( m_density_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_density_name, ArchesFieldContainer::NEEDSLABEL, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, ArchesFieldContainer::NEEDSLABEL, nG, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
   register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry, time_substep , m_task_name, packed_tasks);
 
-  register_variable("MM" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
-  register_variable("ML" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
-  register_variable(m_IsI_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable("MM" , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable("ML" , ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
+  register_variable(m_IsI_name , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name, packed_tasks );
 }
 
 //--------------------------------------------------------------------------------------------------

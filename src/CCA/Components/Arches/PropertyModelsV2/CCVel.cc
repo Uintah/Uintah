@@ -125,9 +125,9 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_u_vel_name, AFC::NEEDSLABEL,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_v_vel_name, AFC::NEEDSLABEL,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_w_vel_name, AFC::NEEDSLABEL,m_ghost_cells , AFC::NEWDW, variable_registry, m_task_name );
   register_variable( m_u_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
@@ -157,9 +157,9 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
   register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
 
-  register_variable( m_u_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( m_v_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( m_w_vel_name_cc, AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_u_vel_name_cc, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_v_vel_name_cc, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_w_vel_name_cc, AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, m_task_name );
 
 }
 
@@ -189,9 +189,9 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
-  register_variable( m_v_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
-  register_variable( m_w_vel_name, AFC::REQUIRES, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_u_vel_name, AFC::NEEDSLABEL, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_v_vel_name, AFC::NEEDSLABEL, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
+  register_variable( m_w_vel_name, AFC::NEEDSLABEL, m_ghost_cells, AFC::NEWDW, variable_registry, time_substep ,m_task_name );
 
   register_variable( m_u_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
   register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );

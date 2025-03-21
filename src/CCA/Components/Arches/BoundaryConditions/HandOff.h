@@ -278,7 +278,7 @@ private:
     const bool packed_tasks ){
 
     register_variable( m_task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( m_task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+    register_variable( m_task_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW,
                        variable_registry );
 
   }
@@ -305,7 +305,7 @@ private:
     const bool packed_tasks ){
 
     register_variable( m_task_name, ArchesFieldContainer::MODIFIES, variable_registry );
-    register_variable( m_default_label, ArchesFieldContainer::REQUIRES, 0,
+    register_variable( m_default_label, ArchesFieldContainer::NEEDSLABEL, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
 
   }

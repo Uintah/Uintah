@@ -96,7 +96,7 @@ void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
 //--------------------------------------------- timestep_init -----------------------------------------------------
 void
 Poisson1::register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){
-  register_variable( "phi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
+  register_variable( "phi", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW, variable_registry, m_task_name );
   register_variable( "phi", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 }
 
@@ -123,7 +123,7 @@ Poisson1::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 //--------------------------------------------- eval -----------------------------------------------------
 void
 Poisson1::register_timestep_eval( ArchesVIVector& variable_registry , const int time_substep, const bool packed_tasks){
-  register_variable( "phi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( "phi", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( "phi", ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
 }
 
@@ -164,7 +164,7 @@ Poisson1::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionOb
 //--------------------------------------------- compute_bcs -----------------------------------------------------
 void
 Poisson1::register_compute_bcs( ArchesVIVector& variable_registry, const int time_substep, const bool packed_tasks ){
-  register_variable( "phi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( "phi", ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( "phi", ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
 }
 

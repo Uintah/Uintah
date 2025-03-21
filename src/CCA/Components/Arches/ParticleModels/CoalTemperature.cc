@@ -177,21 +177,21 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( enthalpy_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( char_name , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( enthalpy_name , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rc_name   , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
 
     if ( !_const_size ) {
       const std::string diameter_name   = get_env_name( i, _diameter_base_name );
-      register_variable( diameter_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+      register_variable( diameter_name   , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     }
 
   }
 
   const std::string gas_temperature_name  = _gas_temperature_name;
-  register_variable( gas_temperature_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( gas_temperature_name   , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
 }
 
@@ -225,7 +225,7 @@ CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::Varia
     const std::string temperatureold_name  = get_env_name( i, m_task_name );
 
     register_variable( temperature_name , ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( temperatureold_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( temperatureold_name , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::LATEST, variable_registry );
 
   }
 
@@ -262,22 +262,22 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable( char_name, ArchesFieldContainer        ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( enthalpy_name, ArchesFieldContainer    ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( rc_name , ArchesFieldContainer         ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( temperature_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( char_name, ArchesFieldContainer       ::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( enthalpy_name, ArchesFieldContainer   ::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( rc_name , ArchesFieldContainer        ::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( temperature_name, ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
     if ( !_const_size ) {
       const std::string diameter_name   = get_env_name( i, _diameter_base_name );
-      register_variable( diameter_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( diameter_name, ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::NEWDW, variable_registry );
     }
 
   }
   const std::string gas_temperature_name   = _gas_temperature_name;
-  register_variable( gas_temperature_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
-  register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( gas_temperature_name , ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::LATEST , variable_registry );
+  register_variable( _vol_fraction_name, ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::OLDDW, variable_registry );
 }
 
 //--------------------------------------------------------------------------------------------------
