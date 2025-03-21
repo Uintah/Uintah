@@ -399,19 +399,19 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 {
 
   const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability;
-  const auto requires = Uintah::ArchesFieldContainer::NEEDSLABEL;
+  const auto needsLabel = Uintah::ArchesFieldContainer::NEEDSLABEL;
 
   register_variable( _abskp_name , computes, variable_registry, time_substep);
 
   for (int i=0; i< _nQn_part ; i++){
     register_variable( _abskp_name_vector[i] ,  computes, variable_registry, time_substep);
-    register_variable( _temperature_name_v[i] , requires, variable_registry, time_substep);
-    register_variable( _size_name_v[i] ,        requires, variable_registry, time_substep);
-    register_variable( _weight_name_v[i] ,      requires, variable_registry, time_substep);
+    register_variable( _temperature_name_v[i] , needsLabel, variable_registry, time_substep);
+    register_variable( _size_name_v[i] ,        needsLabel, variable_registry, time_substep);
+    register_variable( _weight_name_v[i] ,      needsLabel, variable_registry, time_substep);
 
     if(_isCoal){
-      register_variable( _RC_name_v[i] ,   requires, variable_registry, time_substep);
-      register_variable( _Char_name_v[i] , requires, variable_registry, time_substep);
+      register_variable( _RC_name_v[i] ,   needsLabel, variable_registry, time_substep);
+      register_variable( _Char_name_v[i] , needsLabel, variable_registry, time_substep);
     }
   }
 
@@ -424,7 +424,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
     register_variable( "partRadProps_temporary_"+std::to_string(i) , computes, variable_registry, time_substep);
   } 
 
-  register_variable("volFraction" , requires,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
+  register_variable("volFraction" , needsLabel,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 }
 
 //______________________________________________________________________
