@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/TriangleParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -587,7 +588,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
                0.,0.,1./((double) ppc.z()));
   Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
 
+#ifdef INCLUDE_THERMAL
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
+#endif
   pvars.plocalized[i]   = 0;
 
   pvars.position[i] = p;
@@ -596,7 +599,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   pvars.psize[i]      = size;  // Normalized by grid spacing
   pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
   pvars.pvelGrad[i]  = Matrix3(0.0);
+#ifdef INCLUDE_THERMAL
   pvars.pTempGrad[i] = Vector(0.0);
+#endif
   pvars.pmass[i]     = matl->getInitialDensity()*pvars.pvolume[i];
   pvars.pdisp[i]     = Vector(0.,0.,0.);
 
@@ -614,7 +619,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
     pvars.p_q[i] = 0.;
   }
 
+#ifdef INCLUDE_THERMAL
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+#endif
   if(d_flags->d_useLogisticRegression ||
      d_useLoadCurves){
     GeometryPieceP piece = (*obj)->getPiece();

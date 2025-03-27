@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -154,7 +155,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes        = 0;
     vector<Matrix3>* psizes        = 0;
+#ifdef INCLUDE_THERMAL
     vector<double>* temperatures   = 0;
+#endif
     vector<double>* colors         = 0;
     vector<double>* concentrations = 0;
     vector<Vector>* pforces        = 0;
@@ -163,7 +166,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pareas        = 0;
 
     volumes      = sgp->getVolume();
+#ifdef INCLUDE_THERMAL
     temperatures = sgp->getTemperature();
+#endif
     pforces      = sgp->getForces();
     pfiberdirs   = sgp->getFiberDirs();
     pvelocities  = sgp->getVelocity();  // gcd adds and new change name
@@ -194,9 +199,11 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
+#ifdef INCLUDE_THERMAL
     if (temperatures) {
       if (!temperatures->empty()) tempiter = vars.d_object_temps[*obj].begin();
     }
+#endif
 
     // For getting particle external forces (if they exist)
     vector<Vector>::const_iterator forceiter;
@@ -256,12 +263,14 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
       // One can also describe any of the fields below in the file as well.
       // See FileGeometryPiece for usage.
 
+#ifdef INCLUDE_THERMAL
       if (temperatures) {
         if (!temperatures->empty()) {
           pvars.ptemperature[pidx] = *tempiter;
           ++tempiter;
         }
       }
+#endif
 
       if (pforces) {                           
         if (!pforces->empty()) {
@@ -376,7 +385,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
                0.,0.,1./((double) ppc.z()));
   Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
 
+#ifdef INCLUDE_THERMAL
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
+#endif
   pvars.plocalized[i]   = 0;
 
   // For AMR
@@ -407,7 +418,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
+#ifdef INCLUDE_THERMAL
     pvars.pTempGrad[i] = Vector(0.0);
+#endif
   
     if (d_coupledflow &&
         !matl->getIsRigid()) {  // mass is determined by incoming porosity
@@ -460,7 +473,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
     pvars.pLastLevel[i] = curLevel->getID();
   }
   
+#ifdef INCLUDE_THERMAL
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+#endif
   GeometryPieceP piece = (*obj)->getPiece();
   FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
   if(fgp){
