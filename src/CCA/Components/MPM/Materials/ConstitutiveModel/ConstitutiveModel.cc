@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -167,7 +168,9 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
   task->requires(Task::OldDW, lb->pMassLabel,               matlset, gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,             matlset, gnone);
+#ifdef INCLUDE_THERMAL
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
+#endif
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
