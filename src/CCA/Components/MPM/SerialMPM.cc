@@ -47,6 +47,7 @@
 #include <CCA/Components/MPM/PhysicalBC/BodyForce.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
@@ -452,7 +453,9 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+#ifdef KEEP_VELGRAD
   t->computes(lb->pVelGradLabel);
+#endif
   t->computes(lb->pSizeLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pSurfLabel);
@@ -1165,7 +1168,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   if (flags->d_GEVelProj) {
+#ifdef KEEP_VELGRAD
     t->requires(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
+#endif
 #ifdef INCLUDE_THERMAL
     t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan,NGP);
 #endif
@@ -1789,7 +1794,10 @@ void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
 #endif
 
   t->computes(lb->pVolumeLabel_preReloc);
+
+#ifdef KEEP_VELGRAD
   t->computes(lb->pVelGradLabel_preReloc);
+#endif
   t->computes(lb->pDeformationMeasureLabel_preReloc);
 #ifdef INCLUDE_THERMAL
   t->computes(lb->pTemperatureGradientLabel_preReloc);
@@ -1920,7 +1928,9 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   if(flags->d_computeScaleFactor){
     t->modifies(lb->pScaleFactorLabel_preReloc);
   }
+#ifdef KEEP_VELGRAD
   t->modifies(lb->pVelGradLabel_preReloc);
+#endif
 
   t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
   t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
@@ -2114,7 +2124,9 @@ SerialMPM::scheduleRefine( const PatchSet   * patches,
   t->computes(lb->pExternalHeatRateLabel);
 #endif
   t->computes(lb->pVelocityLabel);
+#ifdef KEEP_VELGRAD
   t->computes(lb->pVelGradLabel);
+#endif
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
@@ -2574,6 +2586,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       }
     }
 
+
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = 
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
@@ -2842,7 +2855,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       if (flags->d_GEVelProj){
+#ifdef KEEP_VELGRAD
         old_dw->get(pVelGrad,     lb->pVelGradLabel,             pset);
+#endif
 #ifdef INCLUDE_THERMAL
         old_dw->get(pTempGrad,    lb->pTemperatureGradientLabel, pset);
 #endif
@@ -2978,6 +2993,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < NN; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
+#ifdef KEEP_VELGRAD
             if (flags->d_GEVelProj){
               Point gpos = patch->getNodePosition(node);
               Vector distance = px[idx] - gpos;
@@ -2987,6 +3003,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               ptemp_ext = pTemperature[idx] - Dot(pTempGrad[idx],distance);
 #endif
             }
+#endif
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -4939,7 +4956,9 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 #endif
 
       new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
+#ifdef KEEP_VELGRAD
       new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
+#endif
 #ifdef INCLUDE_THERMAL
       new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
                                                                           pset);
@@ -4992,7 +5011,9 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity_star,
                                                                    px[idx],NN);
         }
+#ifdef KEEP_VELGRAD
         pVelGrad[idx]=tensorL;
+#endif
 #ifdef INCLUDE_THERMAL
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
         if (flags->d_doExplicitHeatConduction){
@@ -5097,7 +5118,9 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           // the cell
           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
           // Change L such that it is consistent with the F
+#ifdef KEEP_VELGRAD
           pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
+#endif
 
           double JOld=pFOld[idx].Determinant();
           pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
@@ -5298,7 +5321,9 @@ void SerialMPM::addParticles(const ProcessorGroup*,
 #endif
       new_dw->getModifiable(pref,     lb->pRefinedLabel_preReloc,      pset);
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
+#ifdef KEEP_VELGRAD
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
+#endif
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
       if (flags->d_with_color) {
         new_dw->getModifiable(pcolor, lb->pColorLabel_preReloc,        pset);
@@ -5739,7 +5764,9 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
       new_dw->put(preftmp,  lb->pRefinedLabel_preReloc,              true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
+#ifdef KEEP_VELGRAD
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
+#endif
     }  // for matls
   }    // for patches
 }
@@ -6015,7 +6042,9 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
+#ifdef KEEP_VELGRAD
         new_dw->allocateAndPut(pVelGrad,       lb->pVelGradLabel,       pset);
+#endif
 #ifdef INCLUDE_THERMAL
         new_dw->allocateAndPut(pTempGrad,      lb->pTemperatureGradientLabel,
                                                                         pset);

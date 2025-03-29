@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -598,7 +599,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
   pvars.psize[i]      = size;  // Normalized by grid spacing
   pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+#ifdef KEEP_VELGRAD
   pvars.pvelGrad[i]  = Matrix3(0.0);
+#endif
 #ifdef INCLUDE_THERMAL
   pvars.pTempGrad[i] = Vector(0.0);
 #endif

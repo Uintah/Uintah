@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -176,7 +177,9 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,
                                                             matlset, gnone);
+#ifdef KEEP_VELGRAD
   task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
+#endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);

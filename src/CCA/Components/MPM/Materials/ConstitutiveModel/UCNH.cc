@@ -28,6 +28,7 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -662,7 +663,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pLocalizedOld,       d_lb->pLocalizedMPMLabel,     pset);
+#ifdef KEEP_VELGRAD
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
+#endif
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
 #ifdef INCLUDE_THERMAL
@@ -787,9 +790,16 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
+#ifdef KEEP_VELGRAD
         Matrix3 pDeformRate = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(pDeformRate.Trace(), c_bulk,
                                            rho_cur, dx_ave);
+#else
+        ostringstream desc;
+        desc << "Can't use artificial viscosity if velGrad is not stored at the particles" << endl;
+        throw InvalidValue(desc.str(), __FILE__, __LINE__);
+        p_q[idx] = 0.;
+#endif
       } else {
         p_q[idx] = 0.;
       }

@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -352,9 +353,11 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.psurface,      d_lb->pSurfLabel,         subset);
   new_dw->allocateAndPut(pvars.psurfgrad,     d_lb->pSurfGradLabel,     subset);
 
+#ifdef KEEP_VELGRAD
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
+#endif
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
   }
@@ -730,9 +733,11 @@ ParticleCreator::initializeParticle(const Patch* patch,
     Vector tang = Vector(-X.y(),X.x(),0.);
     pvars.pvelocity[i]  = omega*tang;
 #endif
+#ifdef KEEP_VELGRAD
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
+#endif
 #ifdef INCLUDE_THERMAL
     pvars.pTempGrad[i] = Vector(0.0);
 #endif
@@ -939,10 +944,12 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pDeformationMeasureLabel);
   particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
 
+#ifdef KEEP_VELGRAD
   if(d_flags->d_integrator_type=="explicit"){
     particle_state.push_back(d_lb->pVelGradLabel);
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
   }
+#endif
 
 #ifdef INCLUDE_THERMAL
   if(!d_flags->d_AMR){
