@@ -392,11 +392,8 @@ private:
 
 #if defined(KOKKOS_USING_GPU)
 
-  using TaskPool = Lockfree::Pool< DetailedTask *
-                                 , uint64_t
-                                 , 1
-                                 , std::allocator
-                                 >;
+  // Use Lockfree::Pool with the template defaults.
+  using TaskPool = Lockfree::Pool< DetailedTask * >;
 
   TaskPool             device_validateRequiresAndModifiesCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};

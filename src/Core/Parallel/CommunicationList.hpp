@@ -190,12 +190,8 @@ private:
 
 };
 
-
-using CommRequestPool = Lockfree::Pool< CommRequest
-                                      , uint64_t
-                                      , 1
-                                      , std::allocator
-                                      >;
+  // Use Lockfree::Pool with the template defaults.
+  using CommRequestPool = Lockfree::Pool< CommRequest >;
 
 } // end namespace Uintah
 
