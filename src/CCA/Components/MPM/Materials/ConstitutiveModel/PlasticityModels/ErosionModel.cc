@@ -154,7 +154,7 @@ ErosionModel::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matls = matl->thisMaterial();
-  task->computes( pTimeOfLocLabel, matls );
+  task->computesVar( pTimeOfLocLabel, matls );
 }
 //______________________________________________________________________
 //
@@ -198,9 +198,9 @@ ErosionModel::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
   
-  task->needsLabel(Task::OldDW, pTimeOfLocLabel, matls, gnone);
-  task->modifies(d_lb->pStressLabel_preReloc,  matls); 
-  task->computes(pTimeOfLocLabel_preReloc,     matls);
+  task->requiresVar(Task::OldDW, pTimeOfLocLabel, matls, gnone);
+  task->modifiesVar(d_lb->pStressLabel_preReloc,  matls); 
+  task->computesVar(pTimeOfLocLabel_preReloc,     matls);
 }
 
 //______________________________________________________________________

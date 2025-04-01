@@ -96,7 +96,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry , const bool packe
   register_variable( "surf_in_normY" , ArchesFieldContainer::COMPUTES , variable_registry );
   register_variable( "surf_in_normZ" , ArchesFieldContainer::COMPUTES , variable_registry );
 
-  register_variable( "volFraction", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW,
+  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW,
                       variable_registry );
 
 }
@@ -169,18 +169,18 @@ void SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_
 void
 SurfaceNormals::register_timestep_init( VIVec& variable_registry, const bool packed_tasks){
 
-  register_variable( "surf_out_normX" , ArchesFieldContainer::NEEDSLABEL , 0,
+  register_variable( "surf_out_normX" , ArchesFieldContainer::REQUIRES , 0,
                       ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "surf_out_normY" , ArchesFieldContainer::NEEDSLABEL , 0,
+  register_variable( "surf_out_normY" , ArchesFieldContainer::REQUIRES , 0,
                       ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "surf_out_normZ" , ArchesFieldContainer::NEEDSLABEL , 0,
+  register_variable( "surf_out_normZ" , ArchesFieldContainer::REQUIRES , 0,
                       ArchesFieldContainer::OLDDW, variable_registry );
 
-  register_variable( "surf_in_normX" , ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( "surf_in_normX" , ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( "surf_in_normY" , ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( "surf_in_normY" , ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( "surf_in_normZ" , ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( "surf_in_normZ" , ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::OLDDW , variable_registry );
 
   register_variable( "surf_out_normX" , ArchesFieldContainer::COMPUTES , variable_registry );

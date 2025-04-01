@@ -316,20 +316,20 @@ NonAdiabaticTable::scheduleInitialize(       SchedulerP & sched,
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
   Task* t = scinew Task("NonAdiabaticTable::initialize", this, &NonAdiabaticTable::initialize);
 
-  t->needsLabel(Task::NewDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::NewDW, Ilb->timeStepLabel );
   
-  t->modifies(Ilb->sp_vol_CCLabel);
-  t->modifies(Ilb->rho_micro_CCLabel);
-  t->modifies(Ilb->rho_CCLabel);
-  t->modifies(Ilb->specific_heatLabel);
-  t->modifies(Ilb->gammaLabel);
-  t->modifies(Ilb->thermalCondLabel);
-  t->modifies(Ilb->temp_CCLabel);
-  t->modifies(Ilb->viscosityLabel);
+  t->modifiesVar(Ilb->sp_vol_CCLabel);
+  t->modifiesVar(Ilb->rho_micro_CCLabel);
+  t->modifiesVar(Ilb->rho_CCLabel);
+  t->modifiesVar(Ilb->specific_heatLabel);
+  t->modifiesVar(Ilb->gammaLabel);
+  t->modifiesVar(Ilb->thermalCondLabel);
+  t->modifiesVar(Ilb->temp_CCLabel);
+  t->modifiesVar(Ilb->viscosityLabel);
   
-  t->computes(d_scalar->scalar_CCLabel);
-  t->computes(cumulativeEnergyReleased_CCLabel);
-  t->computes(cumulativeEnergyReleased_src_CCLabel);
+  t->computesVar(d_scalar->scalar_CCLabel);
+  t->computesVar(cumulativeEnergyReleased_CCLabel);
+  t->computesVar(cumulativeEnergyReleased_src_CCLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -471,16 +471,16 @@ void NonAdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sche
   Task* t = scinew Task("NonAdiabaticTable::modifyThermoTransportProperties", 
                    this,&NonAdiabaticTable::modifyThermoTransportProperties);
                    
-  t->needsLabel(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
-  t->modifies(Ilb->specific_heatLabel);
-  t->modifies(Ilb->gammaLabel);
-  t->modifies(Ilb->thermalCondLabel);
-  t->modifies(Ilb->viscosityLabel);
+  t->requiresVar(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
+  t->modifiesVar(Ilb->specific_heatLabel);
+  t->modifiesVar(Ilb->gammaLabel);
+  t->modifiesVar(Ilb->thermalCondLabel);
+  t->modifiesVar(Ilb->viscosityLabel);
   if(useVariance){
-    t->needsLabel(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
-    t->computes(d_scalar->scaledVarianceLabel);
+    t->requiresVar(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
+    t->computesVar(d_scalar->scaledVarianceLabel);
   }
-  //t->computes(d_scalar->diffusionCoefLabel);
+  //t->computesVar(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -608,30 +608,30 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
  
-  //t->needsLabel(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
-  t->needsLabel(Task::OldDW, Ilb->simulationTimeLabel);
-  t->needsLabel(Task::OldDW, Ilb->delTLabel,           level.get_rep());
-  t->needsLabel(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
-  t->needsLabel(Task::OldDW, Ilb->rho_CCLabel,          gn);
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,         gn);
-  t->needsLabel(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
+  //t->requiresVar(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->requiresVar(Task::OldDW, Ilb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,           level.get_rep());
+  t->requiresVar(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,          gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,         gn);
+  t->requiresVar(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
 
-  t->needsLabel(Task::NewDW, Ilb->specific_heatLabel,   gn);
-  t->needsLabel(Task::NewDW, Ilb->gammaLabel,           gn);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel,   gn);
+  t->requiresVar(Task::NewDW, Ilb->gammaLabel,           gn);
 
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(cumulativeEnergyReleased_src_CCLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(cumulativeEnergyReleased_src_CCLabel);
   if(d_scalar->scalar_src_CCLabel){
-    t->modifies(d_scalar->scalar_src_CCLabel);
+    t->modifiesVar(d_scalar->scalar_src_CCLabel);
   }
   if(useVariance){
-    t->needsLabel(Task::NewDW, d_scalar->varianceLabel, gn, 0);
+    t->requiresVar(Task::NewDW, d_scalar->varianceLabel, gn, 0);
   }
 
   // Interpolated table values
   for(int i=0;i<(int)tablevalues.size();i++){
     TableValue* tv = tablevalues[i];
-    t->computes(tv->label);
+    t->computesVar(tv->label);
   }
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -857,13 +857,13 @@ void NonAdiabaticTable::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->needsLabel(Task::OldDW, Ilb->delTLabel, getLevel(patches));
-    t->needsLabel(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
-    t->needsLabel(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
-    t->computes(d_scalar->sum_scalar_fLabel);
+    t->requiresVar(Task::OldDW, Ilb->delTLabel, getLevel(patches));
+    t->requiresVar(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requiresVar(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
+    t->computesVar(d_scalar->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
   }

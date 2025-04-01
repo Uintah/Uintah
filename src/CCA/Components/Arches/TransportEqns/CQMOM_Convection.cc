@@ -159,10 +159,10 @@ CQMOM_Convection::sched_initializeVariables( const LevelP& level, SchedulerP& sc
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::initializeVariables);
 
   for ( int i = 0; i < nMoments; i++ ) {
-    tsk->computes( convLabels[i] );
-    tsk->computes( xConvLabels[i] );
-    tsk->computes( yConvLabels[i] );
-    tsk->computes( zConvLabels[i] );
+    tsk->computesVar( convLabels[i] );
+    tsk->computesVar( xConvLabels[i] );
+    tsk->computesVar( yConvLabels[i] );
+    tsk->computesVar( zConvLabels[i] );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -216,40 +216,40 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
 
 
-  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
 
   //requires updated weights and abscissas
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     if (timeSubStep == 0 ) {
-      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     } else {
-      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->requiresVar( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
     }
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     if (timeSubStep == 0 ) {
-      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     } else {
-      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      tsk->requiresVar( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
     }
   }
 
   if ( d_deposition ) {
     for ( int i = 0; i < nNodes; i++ ) {
-      tsk->needsLabel( Task::NewDW, fStickLabels[i], Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, fStickLabels[i], Ghost::None, 0 );
     }
   }
 
-  tsk->needsLabel( Task::NewDW, d_wallIntegerLabel, Ghost::AroundCells, 1);
+  tsk->requiresVar( Task::NewDW, d_wallIntegerLabel, Ghost::AroundCells, 1);
 
   //computes convection terms
   for ( int i = 0; i < nMoments; i++ ) {
-    tsk->modifies( convLabels[i] );
-    tsk->modifies( xConvLabels[i] );
-    tsk->modifies( yConvLabels[i] );
-    tsk->modifies( zConvLabels[i] );
+    tsk->modifiesVar( convLabels[i] );
+    tsk->modifiesVar( xConvLabels[i] );
+    tsk->modifiesVar( yConvLabels[i] );
+    tsk->modifiesVar( zConvLabels[i] );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -951,12 +951,12 @@ CQMOM_Convection::sched_initializeWalls( const LevelP& level, SchedulerP& sched,
   string taskname = "CQMOM_Convection::intializeWalls";
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::initializeWalls);
 
-  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
 
   if (timeSubStep == 0) {
-    tsk->computes(d_wallIntegerLabel);
+    tsk->computesVar(d_wallIntegerLabel);
   } else {
-    tsk->modifies(d_wallIntegerLabel);
+    tsk->modifiesVar(d_wallIntegerLabel);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));

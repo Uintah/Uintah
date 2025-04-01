@@ -188,9 +188,9 @@ BirthDeath::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "BirthDeath::initVars";
   Task* tsk = scinew Task(taskname, this, &BirthDeath::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_model_impactLabel);
-  tsk->computes(d_gasLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_model_impactLabel);
+  tsk->computesVar(d_gasLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -250,47 +250,47 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   }
 
   if (timeSubStep == 0) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_model_impactLabel);
-    tsk->computes(d_gasLabel);
-    tsk->needsLabel(Task::OldDW, _w_label, Ghost::None, 0);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_model_impactLabel);
+    tsk->computesVar(d_gasLabel);
+    tsk->requiresVar(Task::OldDW, _w_label, Ghost::None, 0);
     if ( _deposition ){
-      tsk->needsLabel(Task::OldDW, _rate_depX_varlabel, gaf, 1);
-      tsk->needsLabel(Task::OldDW, _rate_depY_varlabel, gaf, 1);
-      tsk->needsLabel(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
-      tsk->needsLabel(Task::OldDW, _length_varlabel, gn, 0 );
-      tsk->needsLabel(Task::OldDW, _particle_density_varlabel, gn, 0 );
+      tsk->requiresVar(Task::OldDW, _rate_depX_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _rate_depY_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _length_varlabel, gn, 0 );
+      tsk->requiresVar(Task::OldDW, _particle_density_varlabel, gn, 0 );
 
-      tsk->needsLabel(Task::OldDW, _rate_impactX_varlabel, gaf, 1);
-      tsk->needsLabel(Task::OldDW, _rate_impactY_varlabel, gaf, 1);
-      tsk->needsLabel(Task::OldDW, _rate_impactZ_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _rate_impactX_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _rate_impactY_varlabel, gaf, 1);
+      tsk->requiresVar(Task::OldDW, _rate_impactZ_varlabel, gaf, 1);
 
     }
     if ( !_is_weight )
-      tsk->needsLabel(Task::OldDW, _abscissa_label, Ghost::None, 0);
+      tsk->requiresVar(Task::OldDW, _abscissa_label, Ghost::None, 0);
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_model_impactLabel);
-    tsk->modifies(d_gasLabel);
-    tsk->needsLabel(Task::NewDW, _w_label, Ghost::None, 0);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_model_impactLabel);
+    tsk->modifiesVar(d_gasLabel);
+    tsk->requiresVar(Task::NewDW, _w_label, Ghost::None, 0);
     if ( _deposition ){
-      tsk->needsLabel(Task::NewDW, _rate_depX_varlabel, gaf, 1);
-      tsk->needsLabel(Task::NewDW, _rate_depY_varlabel, gaf, 1);
-      tsk->needsLabel(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
-      tsk->needsLabel(Task::NewDW, _length_varlabel, gn, 0 );
-      tsk->needsLabel(Task::NewDW, _particle_density_varlabel, gn, 0 );
+      tsk->requiresVar(Task::NewDW, _rate_depX_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _rate_depY_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _length_varlabel, gn, 0 );
+      tsk->requiresVar(Task::NewDW, _particle_density_varlabel, gn, 0 );
 
-      tsk->needsLabel(Task::NewDW, _rate_impactX_varlabel, gaf, 1);
-      tsk->needsLabel(Task::NewDW, _rate_impactY_varlabel, gaf, 1);
-      tsk->needsLabel(Task::NewDW, _rate_impactZ_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _rate_impactX_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _rate_impactY_varlabel, gaf, 1);
+      tsk->requiresVar(Task::NewDW, _rate_impactZ_varlabel, gaf, 1);
     }
     if ( !_is_weight )
-      tsk->needsLabel(Task::NewDW, _abscissa_label, Ghost::None, 0);
+      tsk->requiresVar(Task::NewDW, _abscissa_label, Ghost::None, 0);
   }
 
-  tsk->needsLabel(Task::NewDW, _w_rhs_label, Ghost::None, 0);
-  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
-  tsk->needsLabel(Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 );
+  tsk->requiresVar(Task::NewDW, _w_rhs_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

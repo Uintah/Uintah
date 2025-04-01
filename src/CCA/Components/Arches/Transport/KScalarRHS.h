@@ -538,7 +538,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
       register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
     }
 
-    register_variable( m_eps_name, ArchesFieldContainer::NEEDSLABEL, 1 , ArchesFieldContainer::NEWDW, variable_registry, m_task_name   );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, m_task_name   );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
@@ -616,30 +616,30 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
         register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, time_substep, m_task_name );
         register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       }
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
       register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       if ( m_do_diff[ieqn] ){
-        register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
-        register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
-        register_variable( m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn]+"_z_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
 
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
-        register_variable( i->name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
 
     }
 
     //globally common variables
-    register_variable( m_x_velocity_name, ArchesFieldContainer::NEEDSLABEL, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-    register_variable( m_y_velocity_name, ArchesFieldContainer::NEEDSLABEL, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-    register_variable( m_z_velocity_name, ArchesFieldContainer::NEEDSLABEL, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-    register_variable( m_eps_name, ArchesFieldContainer::NEEDSLABEL, 2 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 2 , ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
 
   }
 
@@ -888,12 +888,12 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
     ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names_BC, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
-      register_variable( (*i).variable_name, ArchesFieldContainer::NEEDSLABEL, (*i).n_ghosts , (*i).dw,
+      register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
                          variable_registry, m_task_name );
     }
 
     std::vector<std::string> bc_mod;
-    m_boundary_functors->get_bc_modifies( m_eqn_names_BC, m_bcHelper, bc_mod );
+    m_boundary_functors->get_bc_modifiesVar( m_eqn_names_BC, m_bcHelper, bc_mod );
     for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
     }

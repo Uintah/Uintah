@@ -412,12 +412,12 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( (i->second).type == INLET ){
-      tsk->computes( i->second.inlet_bc_area);
+      tsk->computesVar( i->second.inlet_bc_area);
     }
 
-    tsk->computes( i->second.wetted_surface_area);
+    tsk->computesVar( i->second.wetted_surface_area);
 
-    tsk->needsLabel( Task::NewDW, _lab->d_volFractionLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::NewDW, _lab->d_volFractionLabel, Ghost::AroundCells, 1 );
 
   }
 
@@ -570,13 +570,13 @@ IntrusionBC::sched_setAlphaG( SchedulerP& sched,
 {
 
   Task* tsk = scinew Task("IntrusionBC::setAlphaG", this, &IntrusionBC::setAlphaG, carryForward);
-  tsk->computes( m_alpha_geom_label );
+  tsk->computesVar( m_alpha_geom_label );
 
   if ( carryForward ){
-    tsk->needsLabel( Task::OldDW, m_alpha_geom_label, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, m_alpha_geom_label, Ghost::None, 0 );
   } else {
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
-      tsk->needsLabel( Task::NewDW, iter->second.wetted_surface_area );
+      tsk->requiresVar( Task::NewDW, iter->second.wetted_surface_area );
     }
   }
 
@@ -941,7 +941,7 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( (i->second).type == INLET ){
-      tsk->needsLabel( Task::NewDW, i->second.inlet_bc_area );
+      tsk->requiresVar( Task::NewDW, i->second.inlet_bc_area );
       found_inlet_intrusion = true;
     }
 
@@ -1011,9 +1011,9 @@ IntrusionBC::sched_setCellType( SchedulerP& sched,
   Task* tsk = scinew Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType, doing_restart);
 
   if ( !doing_restart ){
-    tsk->modifies( _lab->d_cellTypeLabel );
-    tsk->modifies( _lab->d_areaFractionLabel );
-    tsk->modifies( _lab->d_volFractionLabel );
+    tsk->modifiesVar( _lab->d_cellTypeLabel );
+    tsk->modifiesVar( _lab->d_areaFractionLabel );
+    tsk->modifiesVar( _lab->d_volFractionLabel );
   }
   sched->addTask(tsk, level->eachPatch(), matls);
 }
@@ -1344,9 +1344,9 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map_org.begin(); i != _intrusion_map_org.end(); ++i ){
 
     if ( i->second.type == INLET ){
-      tsk0->needsLabel( Task::NewDW, i->second.inlet_bc_area );
+      tsk0->requiresVar( Task::NewDW, i->second.inlet_bc_area );
     }
-    tsk0->needsLabel( Task::NewDW, i->second.wetted_surface_area );
+    tsk0->requiresVar( Task::NewDW, i->second.wetted_surface_area );
   }
 
   sched->addTask(tsk0, zeroPatch, matls);
@@ -1357,9 +1357,9 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map_org.begin(); i != _intrusion_map_org.end(); ++i ){
 
     if ( i->second.type == INLET ){
-      tsk1->needsLabel( Task::NewDW, i->second.inlet_bc_area );
+      tsk1->requiresVar( Task::NewDW, i->second.inlet_bc_area );
     }
-    tsk1->needsLabel( Task::NewDW, i->second.wetted_surface_area );
+    tsk1->requiresVar( Task::NewDW, i->second.wetted_surface_area );
   }
 
   sched->addTask(tsk1, zeroPatch, matls);
@@ -1974,8 +1974,8 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
 
     _T_label = VarLabel::find("temperature");
 
-    tsk->modifies( _T_label );
-    tsk->modifies( _lab->d_densityCPLabel );
+    tsk->modifiesVar( _T_label );
+    tsk->modifiesVar( _lab->d_densityCPLabel );
 
     sched->addTask( tsk, level->eachPatch(), matls );
   }

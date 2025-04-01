@@ -54,15 +54,15 @@ namespace Uintah {
     Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
                                     this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel,
                                     rhsIntegralLabel);
-    tskIntegral->computes( rhsIntegralLabel );
-    tskIntegral->needsLabel( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
+    tskIntegral->computesVar( rhsIntegralLabel );
+    tskIntegral->requiresVar( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
     sched->addTask(tskIntegral, level->eachPatch(), matls);
     
     Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
                                        this, &SolverInterface::enforceSolvability<FieldT>, bLabel,
                                        rhsIntegralLabel);
-    tskSolvability->needsLabel( Uintah::Task::NewDW, rhsIntegralLabel );
-    tskSolvability->modifies( bLabel );
+    tskSolvability->requiresVar( Uintah::Task::NewDW, rhsIntegralLabel );
+    tskSolvability->modifiesVar( bLabel );
     sched->addTask(tskSolvability, level->eachPatch(), matls);
   }
 
@@ -88,15 +88,15 @@ namespace Uintah {
     Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
                                     this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
                                     refValueLabel, refCell, refValue);
-    tskFindDiff->computes( refValueLabel );
-    tskFindDiff->needsLabel( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
+    tskFindDiff->computesVar( refValueLabel );
+    tskFindDiff->requiresVar( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
     sched->addTask(tskFindDiff, level->eachPatch(), matls);
     
     Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
                                        this, &SolverInterface::setRefValue<FieldT>, xLabel,
                                        refValueLabel);
-    tskSetRefValue->needsLabel( Uintah::Task::NewDW, refValueLabel );
-    tskSetRefValue->modifies( xLabel );
+    tskSetRefValue->requiresVar( Uintah::Task::NewDW, refValueLabel );
+    tskSetRefValue->modifiesVar( xLabel );
     sched->addTask(tskSetRefValue, level->eachPatch(), matls);
   }
 

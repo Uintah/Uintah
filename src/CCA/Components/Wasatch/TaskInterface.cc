@@ -544,7 +544,7 @@ namespace WasatchCore{
 
         case Expr::REQUIRES:
           dbg_fields << std::setw(10) << "REQUIRES";
-          task.needsLabel( dw,
+          task.requiresVar( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,

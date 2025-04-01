@@ -80,23 +80,23 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
   
   if ( time_substep == 0 ) {
     
-    tsk->computes( _absorp_label ); 
+    tsk->computesVar( _absorp_label ); 
 
-    tsk->needsLabel( Task::OldDW, _T_label,   gn, 0 ); 
-    tsk->needsLabel( Task::OldDW, _den_label, gn, 0 ); 
-    tsk->needsLabel( Task::OldDW, _f_label,   gn, 0 ); 
+    tsk->requiresVar( Task::OldDW, _T_label,   gn, 0 ); 
+    tsk->requiresVar( Task::OldDW, _den_label, gn, 0 ); 
+    tsk->requiresVar( Task::OldDW, _f_label,   gn, 0 ); 
     
   } else {
 
-    tsk->modifies( _absorp_label ); 
+    tsk->modifiesVar( _absorp_label ); 
 
-    tsk->needsLabel( Task::NewDW, _T_label,   gn, 0 ); 
-    tsk->needsLabel( Task::NewDW, _den_label, gn, 0 ); 
-    tsk->needsLabel( Task::NewDW, _f_label,   gn, 0 ); 
+    tsk->requiresVar( Task::NewDW, _T_label,   gn, 0 ); 
+    tsk->requiresVar( Task::NewDW, _den_label, gn, 0 ); 
+    tsk->requiresVar( Task::NewDW, _f_label,   gn, 0 ); 
 
   }
 
-  tsk->modifies( _prop_label ); 
+  tsk->modifiesVar( _prop_label ); 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
 }
@@ -200,8 +200,8 @@ void EmpSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
   }
 
   Task* tsk = scinew Task(taskname, this, &EmpSoot::initialize);
-  tsk->computes(_prop_label); 
-  tsk->computes(_absorp_label); 
+  tsk->computesVar(_prop_label); 
+  tsk->computesVar(_absorp_label); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

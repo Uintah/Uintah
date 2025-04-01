@@ -378,15 +378,15 @@ void FrictionContactLRVar::addComputesAndRequiresInterpolated(SchedulerP & sched
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->needsLabel(Task::OldDW, lb->delTLabel);
-  t->needsLabel(Task::NewDW, lb->gMassLabel,                  Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gColorLabel,                 Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
-  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
-  t->modifies(lb->gVelocityLabel,      mss);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,                  Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gColorLabel,                 Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
+  t->modifiesVar(lb->gVelocityLabel,      mss);
 
   sched->addTask(t, patches, ms);
 
@@ -406,15 +406,15 @@ void FrictionContactLRVar::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->needsLabel(Task::OldDW, lb->delTLabel);
-  t->needsLabel(Task::NewDW, lb->gMassLabel,                  Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gColorLabel,                 Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
-  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
-  t->modifies(             lb->gVelocityStarLabel,  mss);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,                  Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gColorLabel,                 Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,     Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel,z_matl,Ghost::None);
+  t->modifiesVar(             lb->gVelocityStarLabel,  mss);
 
   sched->addTask(t, patches, ms);
 

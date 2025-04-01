@@ -83,5 +83,5 @@ void NullThermalContact::addComputesAndRequires(Task* t,
                                             const PatchSet*,
                                             const MaterialSet*) const
 {
-  t->computes(lb->gThermalContactTemperatureRateLabel);
+  t->computesVar(lb->gThermalContactTemperatureRateLabel);
 }

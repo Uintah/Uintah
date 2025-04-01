@@ -590,150 +590,150 @@ public: // class Task
 
   //////////
   // Most general case
-  void needsLabel( WhichDW
-               , const VarLabel       *
-               , const PatchSubset    * patches
-               , PatchDomainSpec        patches_dom
-               , int                    level_offset
-               , const MaterialSubset * matls
-               , MaterialDomainSpec     matls_dom
-               , Ghost::GhostType       gtype
-               , int                    numGhostCells = 0
-               , SearchTG               whichTG = SearchTG::NewTG
-               );
+  void requiresVar( WhichDW
+                  , const VarLabel       *
+                  , const PatchSubset    * patches
+                  , PatchDomainSpec        patches_dom
+                  , int                    level_offset
+                  , const MaterialSubset * matls
+                  , MaterialDomainSpec     matls_dom
+                  , Ghost::GhostType       gtype
+                  , int                    numGhostCells = 0
+                  , SearchTG               whichTG = SearchTG::NewTG
+                  );
 
   //////////
   // Like general case, level_offset is not specified
-  void needsLabel(       WhichDW
-               , const VarLabel           *
-               , const PatchSubset        * patches
-               ,       PatchDomainSpec      patches_dom
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_dom
-               ,       Ghost::GhostType     gtype
-               ,       int                  numGhostCells = 0
-               ,       SearchTG             whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel           *
+                  , const PatchSubset        * patches
+                  ,       PatchDomainSpec      patches_dom
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_dom
+                  ,       Ghost::GhostType     gtype
+                  ,       int                  numGhostCells = 0
+                  ,       SearchTG             whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void needsLabel(       WhichDW
-               , const VarLabel         *
-               ,       Ghost::GhostType   gtype
-               ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel         *
+                  ,       Ghost::GhostType   gtype
+                  ,       int                numGhostCells = 0
+                  ,       SearchTG           whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void needsLabel(       WhichDW
-               , const VarLabel         *
-               , const PatchSubset      * patches
-               , const MaterialSubset   * matls
-               ,       Ghost::GhostType   gtype
-               ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel         *
+                  , const PatchSubset      * patches
+                  , const MaterialSubset   * matls
+                  ,       Ghost::GhostType   gtype
+                  ,       int                numGhostCells = 0
+                  ,       SearchTG           whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void needsLabel( WhichDW
-               , const VarLabel         *
-               , const PatchSubset      * patches
-               ,       Ghost::GhostType   gtype
-               ,       int                numGhostCells = 0
-               ,       SearchTG           whichTG = SearchTG::NewTG
-               );
+  void requiresVar( WhichDW
+                  , const VarLabel         *
+                  , const PatchSubset      * patches
+                  ,       Ghost::GhostType   gtype
+                  ,       int                numGhostCells = 0
+                  ,       SearchTG           whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void needsLabel(       WhichDW
-               , const VarLabel        *
-               , const MaterialSubset  * matls
-               ,      Ghost::GhostType   gtype
-               ,      int                numGhostCells = 0
-               ,      SearchTG           whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel        *
+                  , const MaterialSubset  * matls
+                  ,      Ghost::GhostType   gtype
+                  ,      int                numGhostCells = 0
+                  ,      SearchTG           whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void needsLabel(       WhichDW
-               , const VarLabel           *
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_dom
-               ,       Ghost::GhostType     gtype
-               ,       int                  numGhostCells = 0
-               ,       SearchTG             whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel           *
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_dom
+                  ,       Ghost::GhostType     gtype
+                  ,       int                  numGhostCells = 0
+                  ,       SearchTG             whichTG = SearchTG::NewTG
+                  );
 
   //////////
   // Requires only for Reduction variables
-  void needsLabel(       WhichDW
-               , const VarLabel           *
-               , const Level              * level     = nullptr
-               , const MaterialSubset     * matls     = nullptr
-               ,       MaterialDomainSpec   matls_dom = NormalDomain
-               ,       SearchTG             whichTG   = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel           *
+                  , const Level              * level     = nullptr
+                  , const MaterialSubset     * matls     = nullptr
+                  ,       MaterialDomainSpec   matls_dom = NormalDomain
+                  ,       SearchTG             whichTG   = SearchTG::NewTG
+                  );
 
   //////////
   // Requires for reduction variables or PerPatch variables
-  void needsLabel(       WhichDW
-               , const VarLabel       *
-               , const MaterialSubset * matls
-               ,       SearchTG        whichTG = SearchTG::NewTG
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel       *
+                  , const MaterialSubset * matls
+                  ,       SearchTG        whichTG = SearchTG::NewTG
+                  );
 
   //////////
   // Requires only for PerPatch variables
-  void needsLabel(       WhichDW
-               , const VarLabel       *
-               , const PatchSubset    * patches
-               , const MaterialSubset * matls = nullptr
-               );
+  void requiresVar(       WhichDW
+                  , const VarLabel       *
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls = nullptr
+                  );
 
   //////////
   // Most general case
-  void computes( const VarLabel           *
-               , const PatchSubset        * patches
-               ,       PatchDomainSpec      patches_domain
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_domain
-               );
+  void computesVar( const VarLabel           *
+                  , const PatchSubset        * patches
+                  ,       PatchDomainSpec      patches_domain
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_domain
+                  );
 
   //////////
   //
-  void computes( const VarLabel       *
-               , const PatchSubset    * patches = nullptr
-               , const MaterialSubset * matls   = nullptr
-               );
+  void computesVar( const VarLabel       *
+                  , const PatchSubset    * patches = nullptr
+                  , const MaterialSubset * matls   = nullptr
+                  );
 
   //////////
   //
-  void computes( const VarLabel       *
-               , const MaterialSubset * matls
-               );
+  void computesVar( const VarLabel       *
+                  , const MaterialSubset * matls
+                  );
 
   //////////
   //
-  void computes( const VarLabel           *
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_domain
-               );
+  void computesVar( const VarLabel           *
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_domain
+                  );
 
   //////////
   //
-  void computes( const VarLabel        *
-               , const PatchSubset     * patches
-               ,       PatchDomainSpec   patches_domain
-               );
+  void computesVar( const VarLabel        *
+                  , const PatchSubset     * patches
+                  ,       PatchDomainSpec   patches_domain
+                  );
 
   //////////
   //
-  void computes( const VarLabel           *
-               , const Level              * level
-               , const MaterialSubset     * matls        = nullptr
-               ,       MaterialDomainSpec   matls_domain = NormalDomain);
+  void computesVar( const VarLabel           *
+                  , const Level              * level
+                  , const MaterialSubset     * matls        = nullptr
+                  ,       MaterialDomainSpec   matls_domain = NormalDomain);
 
   //////////
   /*! \brief Allows a task to do a computes and modify with ghost cell specification.
@@ -775,51 +775,51 @@ public: // class Task
 
   //////////
   // Most general case
-  void modifies( const VarLabel           *
-               , const PatchSubset        * patches
-               ,       PatchDomainSpec      patches_domain
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_domain
-               ,       SearchTG             whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel           *
+                  , const PatchSubset        * patches
+                  ,       PatchDomainSpec      patches_domain
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_domain
+                  ,       SearchTG             whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void modifies( const VarLabel       *
-               , const PatchSubset    * patches
-               , const MaterialSubset * matls
-               ,       SearchTG         whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel       *
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       SearchTG         whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void modifies( const VarLabel       *
-               , const MaterialSubset * matls
-               ,       SearchTG         whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel       *
+                  , const MaterialSubset * matls
+                  ,       SearchTG         whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void modifies( const VarLabel           *
-               , const MaterialSubset     * matls
-               ,       MaterialDomainSpec   matls_domain
-               ,       SearchTG             whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel           *
+                  , const MaterialSubset     * matls
+                  ,       MaterialDomainSpec   matls_domain
+                  ,       SearchTG             whichTG = SearchTG::NewTG
+                  );
 
   //////////
   //
-  void modifies( const VarLabel *
-               ,       SearchTG         whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel *
+                  ,       SearchTG         whichTG = SearchTG::NewTG
+                  );
 
   //////////
   // Modify reduction vars
-  void modifies( const VarLabel         *
-               , const Level            * level
-               , const MaterialSubset   * matls = nullptr
-               ,       MaterialDomainSpec matls_domain = NormalDomain
-               ,       SearchTG           whichTG = SearchTG::NewTG
-               );
+  void modifiesVar( const VarLabel         *
+                  , const Level            * level
+                  , const MaterialSubset   * matls = nullptr
+                  ,       MaterialDomainSpec matls_domain = NormalDomain
+                  ,       SearchTG           whichTG = SearchTG::NewTG
+                  );
 
   //////////
   // Tells the task to actually execute the function assigned to it.

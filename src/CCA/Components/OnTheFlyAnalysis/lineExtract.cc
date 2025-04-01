@@ -271,8 +271,8 @@ void lineExtract::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("lineExtract::initialize",
                   this, &lineExtract::initialize);
 
-  t->computes( m_lb->lastWriteTimeLabel );
-  t->computes( m_lb->fileVarsStructLabel, m_zeroMatl );
+  t->computesVar( m_lb->lastWriteTimeLabel );
+  t->computesVar( m_lb->fileVarsStructLabel, m_zeroMatl );
   sched->addTask(t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
@@ -336,7 +336,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t, level, m_lb->lastWriteTimeLabel, true );
 
-  t->needsLabel(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
+  t->requiresVar(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
 
   //__________________________________
   //
@@ -351,14 +351,14 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
 
-    t->needsLabel(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
+    t->requiresVar(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
   }
 
-  t->computes(m_lb->fileVarsStructLabel, m_zeroMatl);
+  t->computesVar(m_lb->fileVarsStructLabel, m_zeroMatl);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }

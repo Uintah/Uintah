@@ -84,12 +84,12 @@ void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   if(level->hasFinerLevel() == false){  // only on finest level
-    t->needsLabel(Task::NewDW, Mlb->gMassLabel,                gac, 1);
-    t->needsLabel(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
-    t->needsLabel(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
+    t->requiresVar(Task::NewDW, Mlb->gMassLabel,                gac, 1);
+    t->requiresVar(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
+    t->requiresVar(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
   }
 
-  t->computes(d_switch_label);
+  t->computesVar(d_switch_label);
 
   sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 

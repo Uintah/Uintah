@@ -131,18 +131,18 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
       
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-    tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
+    tsk->computesVar(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
                   oams);
   }else{ 
-    tsk->modifies(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
+    tsk->modifiesVar(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
                   oams);
   }
     
@@ -161,24 +161,24 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
   
-  tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_strainTensorCompLabel,
+  tsk->requiresVar(Task::NewDW, d_lab->d_strainTensorCompLabel,
                 d_lab->d_symTensorMatl, oams, gac, 1);
   
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_filterVolumeLabel, gac, 1);
   
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_strainMagnitudeLabel);
-    tsk->computes(d_lab->d_strainMagnitudeMLLabel);
-    tsk->computes(d_lab->d_strainMagnitudeMMLabel);
+    tsk->computesVar(d_lab->d_strainMagnitudeLabel);
+    tsk->computesVar(d_lab->d_strainMagnitudeMLLabel);
+    tsk->computesVar(d_lab->d_strainMagnitudeMMLabel);
   }
   else {
-    tsk->modifies(d_lab->d_strainMagnitudeLabel);
-    tsk->modifies(d_lab->d_strainMagnitudeMLLabel);
-    tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
+    tsk->modifiesVar(d_lab->d_strainMagnitudeLabel);
+    tsk->modifiesVar(d_lab->d_strainMagnitudeMLLabel);
+    tsk->modifiesVar(d_lab->d_strainMagnitudeMMLabel);
   }
     
   sched->addTask(tsk, level->eachPatch(), matls);
@@ -190,32 +190,32 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
                     timelabels);
 
   // Requires
-  tsk->needsLabel(Task::OldDW, d_lab->d_simulationTimeLabel);
+  tsk->requiresVar(Task::OldDW, d_lab->d_simulationTimeLabel);
   // Assuming one layer of ghost cells
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as an array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,         gac,1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeLabel,   gn, 0);
-  tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,         gac,1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeLabel,   gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1); 
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1); 
 
   // for multimaterial
   if (d_MAlab){
-    tsk->needsLabel(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
   
   // Computes
-  tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_turbViscosLabel);
+  tsk->modifiesVar(d_lab->d_viscosityCTSLabel);
+  tsk->modifiesVar(d_lab->d_turbViscosLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_CsLabel);
+    tsk->computesVar(d_lab->d_CsLabel);
   }else{ 
-    tsk->modifies(d_lab->d_CsLabel);
+    tsk->modifiesVar(d_lab->d_CsLabel);
   }  
   sched->addTask(tsk, level->eachPatch(), matls);
 }

@@ -88,8 +88,8 @@ void PortableDependencyTest::scheduleInitialize( const LevelP     & level
 {
   Task* task = scinew Task("PortableDependencyTest::initialize", this, &PortableDependencyTest::initialize);
 
-  task->computes(phi_label);
-  task->computes(residual_label);
+  task->computesVar(phi_label);
+  task->computesVar(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -109,8 +109,8 @@ void PortableDependencyTest::scheduleComputeStableTimeStep( const LevelP     & l
 {
   Task* task = scinew Task("PortableDependencyTest::computeStableTimeStep", this, &PortableDependencyTest::computeStableTimeStep);
 
-  task->needsLabel(Task::NewDW, residual_label);
-  task->computes(getDelTLabel(), level.get_rep());
+  task->requiresVar(Task::NewDW, residual_label);
+  task->computesVar(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -131,7 +131,7 @@ void PortableDependencyTest::scheduleTask1Computes( const LevelP     & level
                                                   )
 {
   auto TaskDependencies = [&](Task* task) {
-        task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+        task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   };
 
@@ -168,9 +168,9 @@ void PortableDependencyTest::scheduleTask3Modifies( const LevelP     & level
   const Uintah::PatchSubset* const localPatches = level->allPatches()->getSubset( Uintah::Parallel::getMPIRank());
 
   auto TaskDependencies = [&](Task* task) {
-    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->modifiesWithScratchGhost(phi_label, localPatches, Uintah::Task::ThisLevel, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
-    task->computes(residual_label);
+    task->computesVar(residual_label);
   };
 
   create_portable_tasks(TaskDependencies, this,
@@ -186,7 +186,7 @@ void PortableDependencyTest::scheduleTask4Requires( const LevelP     & level
                                                   )
 {
   auto Task4Dependencies = [&](Task* task4) {
-    task4->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task4->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   };
 
   create_portable_tasks(Task4Dependencies, this,

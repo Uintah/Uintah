@@ -267,7 +267,7 @@ SampleTask::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   // Register all data warehouse variables used in SampleTask::eval
   register_variable( "a_sample_field", ArchesFieldContainer::COMPUTES, /* Ghost Cell Quantity, Data Warehouse, */            variable_registry, time_substep, m_task_name );
   register_variable( "a_result_field", ArchesFieldContainer::COMPUTES, /* Ghost Cell Quantity, Data Warehouse, */            variable_registry, time_substep, m_task_name );
-  register_variable( "density",        ArchesFieldContainer::NEEDSLABEL, 1,                      ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( "density",        ArchesFieldContainer::REQUIRES, 1,                      ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
 
   // NOTES:
   // * Pass underlying strings into register_variable where possible to improve searchability (e.g., "a_sample_field")

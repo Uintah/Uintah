@@ -112,8 +112,8 @@ void
 sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks)
 {
   register_variable( _fvSoot, Uintah::ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable(_den_label_name , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
-  register_variable(_Ys_label_name , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+  register_variable(_den_label_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+  register_variable(_Ys_label_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
 }
 
 //--------------------------------------------------------------------------------------------------

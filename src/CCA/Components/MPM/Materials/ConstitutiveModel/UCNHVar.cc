@@ -304,19 +304,19 @@ void UCNHVar::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
-  task->needsLabel( Task::OldDW, d_lb->pColorLabel,        matlset, gnone);
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
+  task->requiresVar( Task::OldDW, d_lb->pColorLabel,        matlset, gnone);
 
   // Plasticity
   if(d_usePlasticity) {
-    task->needsLabel(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
-    task->needsLabel(Task::OldDW, bElBarLabel,           matlset, gnone);
-    task->computes(pPlasticStrainLabel_preReloc,       matlset);
-    task->computes(bElBarLabel_preReloc,               matlset);
+    task->requiresVar(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
+    task->requiresVar(Task::OldDW, bElBarLabel,           matlset, gnone);
+    task->computesVar(pPlasticStrainLabel_preReloc,       matlset);
+    task->computesVar(bElBarLabel_preReloc,               matlset);
   }
 
   // Universal
-  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,     matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,     matlset, gnone);
 }
 //______________________________________________________________________
 //
@@ -336,11 +336,11 @@ void UCNHVar::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   if(d_usePlasticity){
     if(SchedParent){
-      task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
-      task->needsLabel(Task::ParentOldDW,   bElBarLabel,       matlset, gnone);
+      task->requiresVar(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+      task->requiresVar(Task::ParentOldDW,   bElBarLabel,       matlset, gnone);
     }else{
-      task->needsLabel(Task::OldDW,       pPlasticStrainLabel, matlset, gnone);
-      task->needsLabel(Task::OldDW,         bElBarLabel,       matlset, gnone);
+      task->requiresVar(Task::OldDW,       pPlasticStrainLabel, matlset, gnone);
+      task->requiresVar(Task::OldDW,         bElBarLabel,       matlset, gnone);
     }
   }
 }
@@ -353,8 +353,8 @@ void UCNHVar::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   // Plasticity
   if(d_usePlasticity){
-    task->computes(pPlasticStrainLabel, matlset);
-    task->computes(bElBarLabel,         matlset);
+    task->computesVar(pPlasticStrainLabel, matlset);
+    task->computesVar(bElBarLabel,         matlset);
   }
 }
 
@@ -1948,7 +1948,7 @@ void UCNHVar::addSplitParticlesComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->modifies(bElBarLabel_preReloc,      matlset);
+  task->modifiesVar(bElBarLabel_preReloc,      matlset);
 }
 //______________________________________________________________________
 //

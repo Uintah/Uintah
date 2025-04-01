@@ -200,7 +200,7 @@ void Mixing3::scheduleInitialize(SchedulerP& sched,
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->computes(stream->massFraction_CCLabel);
+    t->computesVar(stream->massFraction_CCLabel);
   }
   sched->addTask(t, level->eachPatch(), mymatls);
 }
@@ -267,17 +267,17 @@ void Mixing3::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("Mixing3::computeModelSources", this, 
                         &Mixing3::computeModelSources);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->needsLabel(Task::OldDW, Ilb->rho_CCLabel,   Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->press_CCLabel, Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,  Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->delTLabel,    level.get_rep());
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,   Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->press_CCLabel, Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,  Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,    level.get_rep());
   
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->needsLabel(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
-    t->modifies(stream->massFraction_source_CCLabel);
+    t->requiresVar(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
+    t->modifiesVar(stream->massFraction_source_CCLabel);
   }
 
   sched->addTask(t, level->eachPatch(), mymatls);

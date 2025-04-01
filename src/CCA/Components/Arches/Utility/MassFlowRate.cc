@@ -251,29 +251,29 @@ void MassFlowRate::register_timestep_eval(
     register_variable( m_task_name+"_mdot_p_organics_in"    , AFC::COMPUTES, variable_registry, m_task_name );
   }
 
-  register_variable( "density"       , AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_g_uVel_name   , AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_g_vVel_name   , AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_g_wVel_name   , AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_volFraction_name, AFC::NEEDSLABEL, 1, AFC::OLDDW, variable_registry, time_substep, m_task_name );
+  register_variable( "density"       , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_g_uVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_g_vVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_g_wVel_name   , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_volFraction_name, AFC::REQUIRES, 1, AFC::OLDDW, variable_registry, time_substep, m_task_name );
 
   if(m_particleMethod_bool){
 
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
-      register_variable( m_w_names[qn] , AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-      register_variable( m_RC_names[qn], AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-      register_variable( m_CH_names[qn], AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_w_names[qn] , AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_RC_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_CH_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 
-      register_variable( m_p_uVel_names[qn], AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-      register_variable( m_p_vVel_names[qn], AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-      register_variable( m_p_wVel_names[qn], AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_p_uVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_p_vVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_p_wVel_names[qn], AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 
     }
   }
 
   if (m_scalar_name != "NULL"){
-    register_variable(m_scalar_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name);
+    register_variable(m_scalar_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name);
   }
 
 }

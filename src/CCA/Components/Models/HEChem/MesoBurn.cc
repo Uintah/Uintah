@@ -251,12 +251,12 @@ void MesoBurn::scheduleInitialize(SchedulerP& sched,
   
   Task* t = scinew Task("MesoBurn::initialize", this, &MesoBurn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
-  t->computes(TsLabel, react_matl);
-  t->computes(inductionTimeLabel, react_matl);
-  t->computes(inducedLabel, react_matl);
-  t->computes(inductionTimePartLabel, react_matl);
-  t->computes(timeInducedLabel, react_matl);
-  t->computes(inducedMassLabel, react_matl);
+  t->computesVar(TsLabel, react_matl);
+  t->computesVar(inductionTimeLabel, react_matl);
+  t->computesVar(inducedLabel, react_matl);
+  t->computesVar(inductionTimePartLabel, react_matl);
+  t->computesVar(timeInducedLabel, react_matl);
+  t->computesVar(inducedMassLabel, react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -322,19 +322,19 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level, cout_doing,"MesoBurn::scheduleComputeParticleVariables");  
 
-  t1->needsLabel(Task::OldDW, Ilb->timeStepLabel);
-  t1->needsLabel(Task::OldDW, Ilb->delTLabel, level.get_rep());
-  t1->needsLabel(Task::OldDW, Mlb->pXLabel, react_matl, gn);
-  t1->needsLabel(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
-  t1->needsLabel(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
-  t1->needsLabel(Task::OldDW, inductionTimePartLabel, react_matl, gn);
-  t1->needsLabel(Task::OldDW, timeInducedLabel, react_matl, gn);
-  t1->computes(numPPCLabel,            react_matl);
-  t1->computes(inductionTimeLabel,     react_matl);
-  t1->computes(inductionTimePartLabel, react_matl);
-  t1->computes(inducedLabel,           react_matl);
-  t1->computes(inducedMassLabel,       react_matl);
-  t1->computes(timeInducedLabel,       react_matl);
+  t1->requiresVar(Task::OldDW, Ilb->timeStepLabel);
+  t1->requiresVar(Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t1->requiresVar(Task::OldDW, Mlb->pXLabel, react_matl, gn);
+  t1->requiresVar(Task::OldDW, Mlb->pMassLabel, react_matl, gn);
+  t1->requiresVar(Task::OldDW, Mlb->pTemperatureLabel, react_matl, gn);
+  t1->requiresVar(Task::OldDW, inductionTimePartLabel, react_matl, gn);
+  t1->requiresVar(Task::OldDW, timeInducedLabel, react_matl, gn);
+  t1->computesVar(numPPCLabel,            react_matl);
+  t1->computesVar(inductionTimeLabel,     react_matl);
+  t1->computesVar(inductionTimePartLabel, react_matl);
+  t1->computesVar(inducedLabel,           react_matl);
+  t1->computesVar(inducedMassLabel,       react_matl);
+  t1->computesVar(timeInducedLabel,       react_matl);
 
   sched->addTask(t1, level->eachPatch(), mymatls);
 
@@ -345,8 +345,8 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level,cout_doing,"MesoBurn::scheduleComputeModelSources");  
 
-  t->needsLabel( Task::OldDW, Ilb->timeStepLabel );
-  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->requiresVar( Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = m_materialManager->allMaterials();
@@ -358,38 +358,38 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
 
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
-  t->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
   /*     Reactants    */
-  t->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->needsLabel(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->needsLabel(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
-  t->needsLabel(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
-  t->needsLabel(Task::NewDW, numPPCLabel,           react_matl, gac,1);
-  t->needsLabel(Task::NewDW, inducedLabel,          react_matl, gn);
-  t->needsLabel(Task::NewDW, inducedMassLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
+  t->requiresVar(Task::NewDW, numPPCLabel,           react_matl, gac,1);
+  t->requiresVar(Task::NewDW, inducedLabel,          react_matl, gn);
+  t->requiresVar(Task::NewDW, inducedMassLabel,      react_matl, gn);
   /*     Misc      */
-  t->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->needsLabel(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requiresVar(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
+  t->requiresVar(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
   
-  t->computes(BurningCellLabel, react_matl);
-  t->computes(TsLabel,          react_matl);
+  t->computesVar(BurningCellLabel, react_matl);
+  t->computesVar(TsLabel,          react_matl);
      
   // Reduction variables
   if(d_saveConservedVars->mass ){
-    t->computes(MesoBurn::totalMassBurnedLabel);
+    t->computesVar(MesoBurn::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-    t->computes(MesoBurn::totalHeatReleasedLabel);
+    t->computesVar(MesoBurn::totalHeatReleasedLabel);
   } 
   if(d_saveConservedVars->surfaceArea){
-    t->computes(MesoBurn::totalSurfaceAreaLabel);
+    t->computesVar(MesoBurn::totalSurfaceAreaLabel);
   } 
   
   sched->addTask(t, level->eachPatch(), mymatls);

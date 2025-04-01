@@ -82,16 +82,16 @@ void SimpleSDInterface::addComputesAndRequiresDivergence(
   // Everthing needs to register to calculate the basic interface flux rate
   setBaseComputesAndRequiresDivergence(task, matls->getUnion());
 
-  task->needsLabel(Task::OldDW, d_mpm_lb->delTLabel);
+  task->requiresVar(Task::OldDW, d_mpm_lb->delTLabel);
 
-  task->needsLabel(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
-  task->needsLabel(Task::NewDW, d_mpm_lb->gVolumeLabel,
+  task->requiresVar(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
+  task->requiresVar(Task::NewDW, d_mpm_lb->gVolumeLabel,
                  d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
-  task->needsLabel(Task::NewDW, d_mpm_lb->diffusion->gConcentration,     gnone);
-  task->needsLabel(Task::NewDW, d_mpm_lb->diffusion->gConcentration,
+  task->requiresVar(Task::NewDW, d_mpm_lb->diffusion->gConcentration,     gnone);
+  task->requiresVar(Task::NewDW, d_mpm_lb->diffusion->gConcentration,
                  d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
 
-//  task->computes(sdInterfaceRate, mss);
+//  task->computesVar(sdInterfaceRate, mss);
 
   sched->addTask(task, patches, matls);
 }

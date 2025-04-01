@@ -1678,8 +1678,8 @@ PureMetal<VAR, DIM, STN, AMR>::scheduleCoarsen_solution (
     task->requires ( Task::NewDW, u_label, nullptr, Task::FineLevel, nullptr, Task::NormalDomain, Ghost::None, 0 );
     task->requires ( Task::NewDW, subproblems_label, Ghost::None, 0 );
     task->requires ( Task::NewDW, subproblems_label, nullptr, Task::FineLevel, nullptr, Task::NormalDomain, Ghost::None, 0 );
-    task->modifies ( psi_label );
-    task->modifies ( u_label );
+    task->modifiesVar( psi_label );
+    task->modifiesVar( u_label );
     sched->addTask ( task, level_coarse->eachPatch(), this->m_materialManager->allMaterials() );
 }
 
@@ -1705,8 +1705,8 @@ PureMetal<VAR, DIM, STN, AMR>::scheduleErrorEstimate_grad_psi (
     Task * task = scinew Task ( "PureMetal::task_error_estimate_grad_psi", this, &PureMetal::task_error_estimate_grad_psi );
     task->requires ( Task::NewDW, subproblems_label, Ghost::None, 0 );
     task->requires ( Task::NewDW, psi_label, FGT, FGN );
-    task->modifies ( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
-    task->modifies ( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
+    task->modifiesVar( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
+    task->modifiesVar( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
     task->computes ( grad_psi_norm2_label );
     for ( size_t d = 0; d < DIM; ++d )
         task->computes ( grad_psi_label[d] );
@@ -1729,8 +1729,8 @@ PureMetal<VAR, DIM, STN, AMR>::scheduleErrorEstimate_grad_psi (
         task->requires ( Task::NewDW, subproblems_label, nullptr, Task::CoarseLevel, nullptr, Task::NormalDomain, CGT, CGN );
         task->requires ( Task::NewDW, psi_label, FGT, FGN );
         task->requires ( Task::NewDW, psi_label, nullptr, Task::CoarseLevel, nullptr, Task::NormalDomain, CGT, CGN );
-        task->modifies ( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
-        task->modifies ( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
+        task->modifiesVar( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
+        task->modifiesVar( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
         task->computes ( grad_psi_norm2_label );
         for ( size_t d = 0; d < DIM; ++d )
             task->computes ( grad_psi_label[d] );

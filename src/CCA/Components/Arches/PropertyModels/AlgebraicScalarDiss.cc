@@ -75,16 +75,16 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
 
   if ( time_substep == 0 ){ 
 
-    tsk->needsLabel( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::OldDW, _mu_t_label, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::OldDW, _volfrac_label, Ghost::AroundCells, 1);
+    tsk->requiresVar( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::OldDW, _mu_t_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::OldDW, _volfrac_label, Ghost::AroundCells, 1);
   } else { 
 
-    tsk->needsLabel( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::NewDW, _mu_t_label, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::NewDW, _volfrac_label, Ghost::AroundCells, 1);
+    tsk->requiresVar( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::NewDW, _mu_t_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::NewDW, _volfrac_label, Ghost::AroundCells, 1);
   } 
-  tsk->modifies( _prop_label ); 
+  tsk->modifiesVar( _prop_label ); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 }
@@ -170,7 +170,7 @@ void AlgebraicScalarDiss::sched_initialize( const LevelP& level, SchedulerP& sch
   std::string taskname = "AlgebraicScalarDiss::initialize"; 
 
   Task* tsk = scinew Task(taskname, this, &AlgebraicScalarDiss::initialize);
-  tsk->computes(_prop_label); 
+  tsk->computesVar(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

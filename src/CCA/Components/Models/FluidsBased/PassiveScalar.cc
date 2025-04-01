@@ -505,13 +505,13 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
   const string taskName = "PassiveScalar::initialize_("+ d_scalar->fullName+")";
   Task* t = scinew Task(taskName, this, &PassiveScalar::initialize);
 
-  t->needsLabel(Task::NewDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::NewDW, Ilb->timeStepLabel );
 
   if( d_withExpDecayModel ){
-    t->computes( d_scalar->expDecayCoefLabel );
+    t->computesVar( d_scalar->expDecayCoefLabel );
   }
-  t->computes(d_scalar->Q_CCLabel);
-  t->computes(d_scalar->RemovedScalarLabel);
+  t->computesVar(d_scalar->Q_CCLabel);
+  t->computesVar(d_scalar->RemovedScalarLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 
@@ -726,7 +726,7 @@ void PassiveScalar::scheduleRestartInitialize(SchedulerP   & sched,
     const string taskName = "PassiveScalar::restartInitialize_("+ d_scalar->fullName+")";
     Task* t = scinew Task(taskName, this, &PassiveScalar::restartInitialize);
 
-    t->computes( d_scalar->expDecayCoefLabel );
+    t->computesVar( d_scalar->expDecayCoefLabel );
 
     sched->addTask(t, level->eachPatch(), d_matl_set);
   }
@@ -791,7 +791,7 @@ void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
 
   Task* t = scinew Task( taskName, this,&PassiveScalar::modifyThermoTransportProperties);
 
-  t->computes( d_scalar->diffusionCoef_CCLabel );
+  t->computesVar( d_scalar->diffusionCoef_CCLabel );
   sched->addTask( t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -837,19 +837,19 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
 
-  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep() );
 
-  t->needsLabel( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
-  t->needsLabel( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
-  t->needsLabel( Task::OldDW, d_scalar->RemovedScalarLabel,    gn, 0 );
-  t->computes( d_scalar->RemovedScalarLabel );
+  t->requiresVar( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
+  t->requiresVar( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
+  t->requiresVar( Task::OldDW, d_scalar->RemovedScalarLabel,    gn, 0 );
+  t->computesVar( d_scalar->RemovedScalarLabel );
 
   if ( d_withExpDecayModel ){
-    t->needsLabel( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
-    t->computes( d_scalar->expDecayCoefLabel );
+    t->requiresVar( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
+    t->computesVar( d_scalar->expDecayCoefLabel );
   }
 
-  t->modifies( d_scalar->Q_src_CCLabel );
+  t->modifiesVar( d_scalar->Q_src_CCLabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -1019,14 +1019,14 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->needsLabel(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
-    t->needsLabel(Task::NewDW, d_scalar->Q_CCLabel,  gn,0);
-    t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,     gn,0);
-    t->needsLabel(Task::NewDW, Ilb->uvel_FCMELabel,  gn,0);
-    t->needsLabel(Task::NewDW, Ilb->vvel_FCMELabel,  gn,0);
-    t->needsLabel(Task::NewDW, Ilb->wvel_FCMELabel,  gn,0);
+    t->requiresVar(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
+    t->requiresVar(Task::NewDW, d_scalar->Q_CCLabel,  gn,0);
+    t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,     gn,0);
+    t->requiresVar(Task::NewDW, Ilb->uvel_FCMELabel,  gn,0);
+    t->requiresVar(Task::NewDW, Ilb->vvel_FCMELabel,  gn,0);
+    t->requiresVar(Task::NewDW, Ilb->wvel_FCMELabel,  gn,0);
 
-    t->computes(d_scalar->sum_Q_CCLabel);
+    t->computesVar(d_scalar->sum_Q_CCLabel);
 
     sched->addTask(t, patches, d_matl_set);
   }
@@ -1096,11 +1096,11 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
 
-  t->needsLabel(Task::NewDW, d_scalar->Q_CCLabel,  d_matl_sub, gac,1);
-  t->computes(d_scalar->mag_grad_Q_CCLabel, d_matl_sub);
+  t->requiresVar(Task::NewDW, d_scalar->Q_CCLabel,  d_matl_sub, gac,1);
+  t->computesVar(d_scalar->mag_grad_Q_CCLabel, d_matl_sub);
 
-  t->modifies( m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials() );
-  t->modifies( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
+  t->modifiesVar( m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials() );
+  t->modifiesVar( m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials() );
 
   // define the material set of 0 and whatever the passive scalar index is
   vector<int> m;

@@ -79,9 +79,9 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   Task* tsk = scinew Task(taskname, this, &CoalGasHeat::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -102,7 +102,7 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
     if (m_dest_flag){
       // require enthalpy birth/death
@@ -112,15 +112,15 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       const std::string enthalpy_birth_name = enthalpy_eqn.get_model_by_type( "BirthDeath" );
       std::string enthalpy_birth_qn_name = ArchesCore::append_qn_env(enthalpy_birth_name, iqn);
       const VarLabel* enthalpy_birthdeath_varlabel=VarLabel::find(enthalpy_birth_qn_name);
-      tsk->needsLabel( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, enthalpy_birthdeath_varlabel, Ghost::None, 0 );
       // find unscaled unweighted particle enthalpy
       std::string enthalpy_name = ArchesCore::append_env(m_enthalpy_root, iqn );
       const VarLabel* particle_enthalpy_varlabel = VarLabel::find(enthalpy_name);
-      tsk->needsLabel( Task::NewDW, particle_enthalpy_varlabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, particle_enthalpy_varlabel, Ghost::None, 0 );
       // find particle temperature
       std::string temperature_name = ArchesCore::append_env( m_temperature_root, iqn );
       const VarLabel* particle_temperature_varlabel = VarLabel::find(temperature_name);
-      tsk->needsLabel( Task::NewDW, particle_temperature_varlabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, particle_temperature_varlabel, Ghost::None, 0 );
     }
 
 
@@ -308,10 +308,10 @@ CoalGasHeat::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasHeat::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

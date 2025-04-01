@@ -1094,29 +1094,29 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
   if(SchedParent){
-    task->needsLabel(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
   }else{
-    task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   }
   //
-  task->computes(lb->pFiberDirLabel_preReloc,matlset);
-  task->computes(pStretchLabel_preReloc,     matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,matlset);
+  task->computesVar(pStretchLabel_preReloc,     matlset);
 }
 
 void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
@@ -1129,27 +1129,27 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                                                 
   addSharedCRForImplicit(task, matlset, reset);
 
-  task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
-  task->needsLabel(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
+  task->requiresVar(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   //
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
-  task->computes(pFailureLabel_preReloc,                matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
+  task->computesVar(pFailureLabel_preReloc,                matlset);
   
-  task->computes(pElasticStressLabel_preReloc,          matlset);//visco
-  task->computes(pHistory1Label_preReloc,               matlset);
-  task->computes(pHistory2Label_preReloc,               matlset);
-  task->computes(pHistory3Label_preReloc,               matlset);
-  task->computes(pHistory4Label_preReloc,               matlset);
-  task->computes(pHistory5Label_preReloc,               matlset);
-  task->computes(pHistory6Label_preReloc,               matlset);
+  task->computesVar(pElasticStressLabel_preReloc,          matlset);//visco
+  task->computesVar(pHistory1Label_preReloc,               matlset);
+  task->computesVar(pHistory2Label_preReloc,               matlset);
+  task->computesVar(pHistory3Label_preReloc,               matlset);
+  task->computesVar(pHistory4Label_preReloc,               matlset);
+  task->computesVar(pHistory5Label_preReloc,               matlset);
+  task->computesVar(pHistory6Label_preReloc,               matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

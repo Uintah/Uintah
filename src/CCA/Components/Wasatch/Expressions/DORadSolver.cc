@@ -213,8 +213,8 @@ namespace WasatchCore {
                                     const Uintah::MaterialSubset* const materials,
                                     const int rkStage )
   {
-  if( rkStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
-  else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  if( rkStage == 1 ) task.computesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  else               task.modifiesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   }
 
   //--------------------------------------------------------------------

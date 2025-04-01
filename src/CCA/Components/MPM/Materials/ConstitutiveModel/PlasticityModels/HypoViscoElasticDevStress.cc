@@ -104,7 +104,7 @@ HypoViscoElasticDevStress::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
-    task->computes( d_sigmaDevLabel[j], matlset );
+    task->computesVar( d_sigmaDevLabel[j], matlset );
   }
 }
 //______________________________________________________________________
@@ -117,8 +117,8 @@ HypoViscoElasticDevStress::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
     
-    task->needsLabel( Task::OldDW, d_sigmaDevLabel[j], matlset,Ghost::None );
-    task->computes( d_sigmaDevLabel_preReloc[j], matlset );
+    task->requiresVar( Task::OldDW, d_sigmaDevLabel[j], matlset,Ghost::None );
+    task->computesVar( d_sigmaDevLabel_preReloc[j], matlset );
   }
 }
 //______________________________________________________________________
@@ -133,9 +133,9 @@ HypoViscoElasticDevStress::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
     if(SchedParent){
-      task->needsLabel( Task::ParentOldDW, d_sigmaDevLabel[j], matlset,Ghost::None );
+      task->requiresVar( Task::ParentOldDW, d_sigmaDevLabel[j], matlset,Ghost::None );
     }else{
-      task->needsLabel( Task::OldDW,       d_sigmaDevLabel[j], matlset,Ghost::None );
+      task->requiresVar( Task::OldDW,       d_sigmaDevLabel[j], matlset,Ghost::None );
     }
   }
 }

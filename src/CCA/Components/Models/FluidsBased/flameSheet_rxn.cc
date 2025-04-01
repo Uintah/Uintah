@@ -232,7 +232,7 @@ void flameSheet_rxn::scheduleInitialize(SchedulerP& sched,
   cout_doing << "FLAMESHEET::scheduleInitialize " << endl;
   Task* t = scinew Task("flameSheet_rxn::initialize",
                   this, &flameSheet_rxn::initialize);
- t->computes(d_scalar->scalar_CCLabel);
+ t->computesVar(d_scalar->scalar_CCLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -291,15 +291,15 @@ void flameSheet_rxn::scheduleComputeModelSources(SchedulerP& sched,
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells; 
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->needsLabel(Task::OldDW, Ilb->rho_CCLabel,         gn);
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,        gn);
-  t->needsLabel(Task::NewDW, Ilb->specific_heatLabel,  gn);
-  t->needsLabel(Task::NewDW, Ilb->gammaLabel,          gn);
-  t->needsLabel(Task::OldDW, d_scalar->scalar_CCLabel, gac,1);
-  //t->needsLabel(Task::OldDW, Ilb->delTLabel);   AMR
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,         gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,        gn);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel,  gn);
+  t->requiresVar(Task::NewDW, Ilb->gammaLabel,          gn);
+  t->requiresVar(Task::OldDW, d_scalar->scalar_CCLabel, gac,1);
+  //t->requiresVar(Task::OldDW, Ilb->delTLabel);   AMR
   
-  t->modifies(d_scalar->scalar_source_CCLabel);
+  t->modifiesVar(d_scalar->scalar_source_CCLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -451,12 +451,12 @@ void flameSheet_rxn::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
-    t->needsLabel(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
-    t->needsLabel(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
-    t->needsLabel(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
-    t->computes(d_scalar->sum_scalar_fLabel);
+    t->requiresVar(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requiresVar(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0); 
+    t->requiresVar(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0); 
+    t->computesVar(d_scalar->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
   }

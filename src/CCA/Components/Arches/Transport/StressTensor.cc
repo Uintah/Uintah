@@ -124,13 +124,13 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
   for (auto iter = m_sigma_t_names.begin(); iter != m_sigma_t_names.end(); iter++ ){
     register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
   }
-  register_variable( m_u_vel_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
-  register_variable( m_v_vel_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
-  register_variable( m_w_vel_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
-  register_variable( m_t_vis_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_eps_x_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
-  register_variable( m_eps_y_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
-  register_variable( m_eps_z_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep);
+  register_variable( m_t_vis_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_eps_x_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
+  register_variable( m_eps_y_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
+  register_variable( m_eps_z_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::OLDDW, variable_registry, time_substep);
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -103,25 +103,25 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->needsLabel(Task::OldDW, d_lb->delTLabel);
-  task->needsLabel(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pSizeLabel,        matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pDeformationMeasureLabel,
+  task->requiresVar(Task::OldDW, d_lb->delTLabel);
+  task->requiresVar(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pSizeLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
-  task->needsLabel(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
-    task->needsLabel(Task::NewDW, Il->dispNewLabel,      matlset,gac,1);
+    task->requiresVar(Task::NewDW, Il->dispNewLabel,      matlset,gac,1);
   } else {
-    task->needsLabel(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
+    task->requiresVar(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
   }
 
-  task->computes(d_lb->pStressLabel_preReloc,             matlset);  
-  task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(d_lb->pVolumeDeformedLabel,              matlset);
-  task->computes(d_lb->pdTdtLabel,                        matlset);
+  task->computesVar(d_lb->pStressLabel_preReloc,             matlset);  
+  task->computesVar(d_lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computesVar(d_lb->pVolumeDeformedLabel,              matlset);
+  task->computesVar(d_lb->pdTdtLabel,                        matlset);
 }
 
 void
@@ -131,7 +131,7 @@ ImplicitCM::addSharedCRForImplicitHypo(Task* task,
 {
 
   addSharedCRForImplicit(task,matlset,reset);
-  task->needsLabel(Task::OldDW, d_lb->pStressLabel,      matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, d_lb->pStressLabel,      matlset, Ghost::None);
 }
 
 void 
@@ -146,32 +146,32 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
 
   if(SchedParent){
     // For subscheduler
-    task->needsLabel(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
+    task->requiresVar(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                                matlset, gnone);
 
-    task->computes(d_lb->pStressLabel_preReloc,                 matlset);  
-    task->computes(d_lb->pDeformationMeasureLabel_preReloc,     matlset);
-    task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
-    task->computes(d_lb->pdTdtLabel,                            matlset);
+    task->computesVar(d_lb->pStressLabel_preReloc,                 matlset);  
+    task->computesVar(d_lb->pDeformationMeasureLabel_preReloc,     matlset);
+    task->computesVar(d_lb->pVolumeDeformedLabel,                  matlset);
+    task->computesVar(d_lb->pdTdtLabel,                            matlset);
     if(reset){
-      task->needsLabel(Task::OldDW,     Il->dispNewLabel,      matlset, gac,1);
+      task->requiresVar(Task::OldDW,     Il->dispNewLabel,      matlset, gac,1);
     }else {
-      task->needsLabel(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
+      task->requiresVar(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
     }
   }
   else{
     // For scheduleIterate
-    task->needsLabel(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
-    task->needsLabel(Task::OldDW, d_lb->pSizeLabel,               matlset, gnone);
-    task->needsLabel(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
-    task->needsLabel(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
-    task->needsLabel(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
-    task->needsLabel(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pSizeLabel,               matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
+    task->requiresVar(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
   }
 
 }
@@ -186,9 +186,9 @@ ImplicitCM::addSharedCRForImplicitHypo(Task* task,
   addSharedCRForImplicit(task,matlset,reset,true,SchedParent);
   if(SchedParent){
     // For subscheduler
-    task->needsLabel(Task::ParentOldDW, d_lb->pStressLabel, matlset, Ghost::None);
+    task->requiresVar(Task::ParentOldDW, d_lb->pStressLabel, matlset, Ghost::None);
   }else{
-    task->needsLabel(Task::OldDW,       d_lb->pStressLabel, matlset, Ghost::None);
+    task->requiresVar(Task::OldDW,       d_lb->pStressLabel, matlset, Ghost::None);
   }
 }
 

@@ -235,12 +235,12 @@ void TongeRameshPTR::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
   for (int i=0; i<d_numHistVar; ++i){
-    task->needsLabel(Task::OldDW, histVarVect[i], matlset, gnone);
-    task->computes(histVarVect_preReloc[i],     matlset);
+    task->requiresVar(Task::OldDW, histVarVect[i], matlset, gnone);
+    task->computesVar(histVarVect_preReloc[i],     matlset);
   }
-  task->needsLabel(Task::OldDW, pSSELabel, matlset, gnone);
-  task->computes(pSSELabel_preReloc, matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pSSELabel, matlset, gnone);
+  task->computesVar(pSSELabel_preReloc, matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 
 void TongeRameshPTR::addComputesAndRequires(Task* task,
@@ -259,11 +259,11 @@ void TongeRameshPTR::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   // Other constitutive model and input dependent computes and requires
-  // task->needsLabel(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
+  // task->requiresVar(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
   for (int i=0; i<d_numHistVar; ++i){
-    task->computes(histVarVect[i],     matlset);
+    task->computesVar(histVarVect[i],     matlset);
   }
-  task->computes(pSSELabel, matlset);
+  task->computesVar(pSSELabel, matlset);
 }
 
 // Compute Functions //

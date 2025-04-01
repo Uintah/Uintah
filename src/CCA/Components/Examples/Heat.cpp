@@ -50,7 +50,7 @@ void Heat::scheduleInitialize(const LevelP&     level,
                                     SchedulerP& sched)
 {
   Task *task = scinew Task("Heat::initialize", this, &Heat::initialize);
-  task->computes(d_lb->temperature_nc);
+  task->computesVar(d_lb->temperature_nc);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -103,7 +103,7 @@ void Heat::scheduleComputeStableTimeStep(const LevelP&     level,
 {
   Task *task = scinew Task("Heat::computeStableTimeStep", this,
                            &Heat::computeStableTimeStep);
-  task->computes(getDelTLabel(), level.get_rep());
+  task->computesVar(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -120,8 +120,8 @@ void Heat::scheduleTimeAdvance( const LevelP&     level,
                                       SchedulerP& sched)
 {
   Task *task = scinew Task("Heat::timeAdvance", this, &Heat::timeAdvance);
-  task->needsLabel(Task::OldDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
-  task->computes(d_lb->temperature_nc);
+  task->requiresVar(Task::OldDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
+  task->computesVar(d_lb->temperature_nc);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
 }

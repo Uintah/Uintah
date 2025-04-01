@@ -82,12 +82,12 @@ void SDInterfaceModel::addComputesAndRequiresDivergence(      SchedulerP  & sche
 void SDInterfaceModel::setBaseComputesAndRequiresDivergence(        Task            * task
                                                            ,  const MaterialSubset  * matls )
 {
-  task->computes(sdInterfaceRate, matls);
-  task->computes(sdInterfaceRate, d_materialManager->getAllInOneMatls(),
+  task->computesVar(sdInterfaceRate, matls);
+  task->computesVar(sdInterfaceRate, d_materialManager->getAllInOneMatls(),
                  Task::OutOfDomain);
 
-  task->computes(sdInterfaceFlag, matls);
-  task->computes(sdInterfaceFlag, d_materialManager->getAllInOneMatls(),
+  task->computesVar(sdInterfaceFlag, matls);
+  task->computesVar(sdInterfaceFlag, d_materialManager->getAllInOneMatls(),
                  Task::OutOfDomain);
 }
 

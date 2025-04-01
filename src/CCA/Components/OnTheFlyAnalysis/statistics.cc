@@ -361,19 +361,19 @@ void statistics::scheduleInitialize(SchedulerP& sched,
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     const Qstats Q = d_Qstats[i];
 
-    t->computes ( Q.Qsum_Label );
-    t->computes ( Q.Qsum2_Label );
+    t->computesVar( Q.Qsum_Label );
+    t->computesVar( Q.Qsum2_Label );
 
     if( d_doHigherOrderStats ){
-      t->computes ( Q.Qsum3_Label );
-      t->computes ( Q.Qsum4_Label );
+      t->computesVar( Q.Qsum3_Label );
+      t->computesVar( Q.Qsum4_Label );
     }
   }
 
   //__________________________________
   //  For Reynolds Stress components
   if( d_computeReynoldsStress ){
-    t->computes ( d_velSum_Label );
+    t->computesVar( d_velSum_Label );
   }
 
   sched->addTask(t, level->eachPatch(), d_matlSet);
@@ -450,15 +450,15 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
 
     // if the Q.sum was not in previous checkpoint compute it
     if( !Q.isInitialized[lowOrder] ){
-      t->computes ( Q.Qsum_Label );
-      t->computes ( Q.Qsum2_Label );
+      t->computesVar( Q.Qsum_Label );
+      t->computesVar( Q.Qsum2_Label );
       addTask = true;
       proc0cout << "    Statistics: Adding lowOrder computes for " << Q.Q_Label->getName() << endl;
     }
 
     if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
-      t->computes ( Q.Qsum3_Label );
-      t->computes ( Q.Qsum4_Label );
+      t->computesVar( Q.Qsum3_Label );
+      t->computesVar( Q.Qsum4_Label );
       addTask = true;
       proc0cout << "    Statistics: Adding highOrder computes for " << Q.Q_Label->getName() << endl;
     }
@@ -472,7 +472,7 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
       d_isReynoldsStressInitialized = true;
     }
     else {
-      t->computes ( d_velSum_Label );
+      t->computesVar( d_velSum_Label );
       addTask = true;
       proc0cout << "    Statistics: Adding computes for Reynolds Stress (u'v', u'w', w'u') terms "  << endl;
     }
@@ -519,8 +519,8 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
-  t->needsLabel(Task::OldDW, m_timeStepLabel);
-  t->needsLabel(Task::OldDW, m_simulationTimeLabel);
+  t->requiresVar(Task::OldDW, m_timeStepLabel);
+  t->requiresVar(Task::OldDW, m_simulationTimeLabel);
 
   Ghost::GhostType  gn  = Ghost::None;
 
@@ -534,48 +534,48 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 
     //__________________________________
     //  Lower order statistics
-    t->needsLabel( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
-    t->needsLabel( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
-    t->needsLabel( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
+    t->requiresVar( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
+    t->requiresVar( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
+    t->requiresVar( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
 
 #ifdef HAVE_VISIT
     if( required )
     {
-      t->needsLabel( Task::OldDW, Q.Qmean_Label,     matSubSet, gn, 0 );
-      t->needsLabel( Task::OldDW, Q.Qmean2_Label,    matSubSet, gn, 0 );
-      t->needsLabel( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, Q.Qmean_Label,     matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, Q.Qmean2_Label,    matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
     }
 #endif
 
-    t->computes ( Q.Qsum_Label,       matSubSet );
-    t->computes ( Q.Qsum2_Label,      matSubSet );
-    t->computes ( Q.Qmean_Label,      matSubSet );
-    t->computes ( Q.Qmean2_Label,     matSubSet );
-    t->computes ( Q.Qvariance_Label,  matSubSet );
+    t->computesVar( Q.Qsum_Label,       matSubSet );
+    t->computesVar( Q.Qsum2_Label,      matSubSet );
+    t->computesVar( Q.Qmean_Label,      matSubSet );
+    t->computesVar( Q.Qmean2_Label,     matSubSet );
+    t->computesVar( Q.Qvariance_Label,  matSubSet );
 
     //__________________________________
     // Higher order statistics
     if( d_doHigherOrderStats ){
 
-      t->needsLabel( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
-      t->needsLabel( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
 
 #ifdef HAVE_VISIT
       if( required )
       {
-        t->needsLabel( Task::OldDW, Q.Qmean3_Label,    matSubSet, gn, 0 );
-        t->needsLabel( Task::OldDW, Q.Qmean4_Label,    matSubSet, gn, 0 );
-        t->needsLabel( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
-        t->needsLabel( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
+        t->requiresVar( Task::OldDW, Q.Qmean3_Label,    matSubSet, gn, 0 );
+        t->requiresVar( Task::OldDW, Q.Qmean4_Label,    matSubSet, gn, 0 );
+        t->requiresVar( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
+        t->requiresVar( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
       }
 #endif
 
-      t->computes ( Q.Qsum3_Label,     matSubSet );
-      t->computes ( Q.Qsum4_Label,     matSubSet );
-      t->computes ( Q.Qmean3_Label,    matSubSet );
-      t->computes ( Q.Qmean4_Label,    matSubSet );
-      t->computes ( Q.Qskewness_Label, matSubSet );
-      t->computes ( Q.Qkurtosis_Label, matSubSet );
+      t->computesVar( Q.Qsum3_Label,     matSubSet );
+      t->computesVar( Q.Qsum4_Label,     matSubSet );
+      t->computesVar( Q.Qmean3_Label,    matSubSet );
+      t->computesVar( Q.Qmean4_Label,    matSubSet );
+      t->computesVar( Q.Qskewness_Label, matSubSet );
+      t->computesVar( Q.Qkurtosis_Label, matSubSet );
     }
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -590,19 +590,19 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add( d_RS_matl );
     matSubSet->addReference();
 
-    t->needsLabel( Task::OldDW, d_velSum_Label,  matSubSet, gn, 0 );
+    t->requiresVar( Task::OldDW, d_velSum_Label,  matSubSet, gn, 0 );
 
 #ifdef HAVE_VISIT
     if( required )
     {
-      t->needsLabel( Task::OldDW, d_velPrime_Label, matSubSet, gn, 0 );
-      t->needsLabel( Task::OldDW, d_velMean_Label,  matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, d_velPrime_Label, matSubSet, gn, 0 );
+      t->requiresVar( Task::OldDW, d_velMean_Label,  matSubSet, gn, 0 );
     }
 #endif
 
-    t->computes ( d_velPrime_Label,  matSubSet );
-    t->computes ( d_velSum_Label,    matSubSet );
-    t->computes ( d_velMean_Label,   matSubSet );
+    t->computesVar( d_velPrime_Label,  matSubSet );
+    t->computesVar( d_velSum_Label,    matSubSet );
+    t->computesVar( d_velMean_Label,   matSubSet );
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }

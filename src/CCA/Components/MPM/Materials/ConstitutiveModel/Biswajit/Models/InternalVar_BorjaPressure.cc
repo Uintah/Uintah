@@ -81,7 +81,7 @@ InternalVar_BorjaPressure::addInitialComputesAndRequires(Task* task,
                                                    const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pPcLabel, matlset);
+  task->computesVar(pPcLabel, matlset);
 }
 
 void 
@@ -90,8 +90,8 @@ InternalVar_BorjaPressure::addComputesAndRequires(Task* task,
                                    const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, pPcLabel, matlset,Ghost::None);
-  task->computes(pPcLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pPcLabel, matlset,Ghost::None);
+  task->computesVar(pPcLabel_preReloc, matlset);
 }
 
 void 
@@ -109,7 +109,7 @@ InternalVar_BorjaPressure::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::NewDW, pPcLabel_preReloc, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pPcLabel_preReloc, matlset, Ghost::None);
 }
 
 void 

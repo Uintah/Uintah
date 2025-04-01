@@ -107,7 +107,7 @@ public:
 
         virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched){
                 Task* task = scinew Task("PortableDependencyTest1::initialize", this, &PortableDependencyTest1::initialize);
-                task->computes(phi_label);
+                task->computesVar(phi_label);
                 sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
         }
 
@@ -115,7 +115,7 @@ public:
 
         virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched){
                 Task* task = scinew Task("PortableDependencyTest1::computeStableTimeStep", this, &PortableDependencyTest1::computeStableTimeStep);
-                task->computes(getDelTLabel(), level.get_rep());
+                task->computesVar(getDelTLabel(), level.get_rep());
                 sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
         }
 

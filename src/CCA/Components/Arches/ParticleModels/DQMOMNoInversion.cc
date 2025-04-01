@@ -160,7 +160,7 @@ void DQMOMNoInversion::register_timestep_eval(
 
     for ( auto imodel = models.begin(); imodel != models.end(); imodel++ ){
 
-      register_variable( *imodel, ArchesFieldContainer::NEEDSLABEL, 0,
+      register_variable( *imodel, ArchesFieldContainer::REQUIRES, 0,
                          ArchesFieldContainer::NEWDW, variable_registry,
                          time_substep, m_task_name );
 

@@ -1035,15 +1035,15 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
   if(SchedParent){
-    task->needsLabel(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->needsLabel(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
   }else{
-    task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->needsLabel(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
   }
 
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
 }
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
@@ -1056,12 +1056,12 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                                                 
   addSharedCRForImplicit(task, matlset, reset);
 
-  task->needsLabel(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
 
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
-  task->computes(pFailureLabel_preReloc,                matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
+  task->computesVar(pFailureLabel_preReloc,                matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

@@ -911,7 +911,7 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
   auto TaskDependencies = [&](Task* tsk) {
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
-      tsk->computes( iter->second );
+      tsk->computesVar( iter->second );
     }
    };
 
@@ -1002,7 +1002,7 @@ void WBCHelper::sched_bindBCAreaHelper( SchedulerP& sched,
                              &WBCHelper::bindBCAreaHelper );
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
-      tsk->needsLabel( Task::NewDW, iter->second );
+      tsk->requiresVar( Task::NewDW, iter->second );
     }
 
     sched->addTask( tsk, level->eachPatch(), matls );

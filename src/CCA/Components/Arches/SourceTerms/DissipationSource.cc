@@ -44,9 +44,9 @@ DissipationSource::sched_computeSource( const LevelP& level, SchedulerP& sched, 
   Task* tsk = scinew Task(taskname, this, &DissipationSource::computeSource, timeSubStep);
   
   if (timeSubStep == 0 ) { 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label); 
+    tsk->modifiesVar(_src_label); 
   }
   
   _densityLabel = VarLabel::find(_density);
@@ -57,19 +57,19 @@ DissipationSource::sched_computeSource( const LevelP& level, SchedulerP& sched, 
   _volfrac_label = VarLabel::find("volFraction");
   
   if (timeSubStep == 0) {
-    tsk->needsLabel( Task::OldDW, _densityLabel, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::OldDW, _mixFracLabel, Ghost::AroundCells, 1 );
-    tsk->needsLabel( Task::OldDW, _gradMixFrac2Label, Ghost::None, 0 );
-    tsk->needsLabel( Task::OldDW, _turbViscLabel, Ghost::None, 0 );
-    tsk->needsLabel( Task::OldDW, _volfrac_label, Ghost::AroundCells, 1 );
-    tsk->needsLabel( Task::OldDW, _ccVelocityLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::OldDW, _densityLabel, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::OldDW, _mixFracLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::OldDW, _gradMixFrac2Label, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, _turbViscLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, _volfrac_label, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::OldDW, _ccVelocityLabel, Ghost::AroundCells, 1 );
   } else {
-    tsk->needsLabel( Task::NewDW, _densityLabel, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::NewDW, _mixFracLabel, Ghost::AroundCells, 1 );
-    tsk->needsLabel( Task::NewDW, _gradMixFrac2Label, Ghost::None, 0 );
-    tsk->needsLabel( Task::NewDW, _turbViscLabel, Ghost::None, 0 );
-    tsk->needsLabel( Task::NewDW, _volfrac_label, Ghost::AroundCells, 1 );
-    tsk->needsLabel( Task::NewDW, _ccVelocityLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::NewDW, _densityLabel, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::NewDW, _mixFracLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::NewDW, _gradMixFrac2Label, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, _turbViscLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, _volfrac_label, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::NewDW, _ccVelocityLabel, Ghost::AroundCells, 1 );
   }
   
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
@@ -232,10 +232,10 @@ DissipationSource::sched_initialize( const LevelP& level, SchedulerP& sched )
   
   Task* tsk = scinew Task(taskname, this, &DissipationSource::initialize);
   
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
   
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
+    tsk->computesVar(*iter); 
   }
   
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) );

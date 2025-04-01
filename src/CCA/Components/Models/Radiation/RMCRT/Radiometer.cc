@@ -284,8 +284,8 @@ Radiometer::sched_initialize_VRFlux( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, taskname);
 
-  tsk->computes( d_VRFluxLabel );
-  tsk->computes( d_VRIntensityLabel );
+  tsk->computesVar( d_VRFluxLabel );
+  tsk->computesVar( d_VRIntensityLabel );
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
@@ -366,12 +366,12 @@ Radiometer::sched_radiometer( const LevelP & level,
 
   Ghost::GhostType gac = Ghost::AroundCells;
 
-  tsk->needsLabel( abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
-  tsk->needsLabel( sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
-  tsk->needsLabel( celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
+  tsk->requiresVar( abskg_dw,    d_abskgLabel,    gac, SHRT_MAX);
+  tsk->requiresVar( sigma_dw,    d_sigmaT4Label,  gac, SHRT_MAX);
+  tsk->requiresVar( celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
-  tsk->modifies( d_VRFluxLabel );
-  tsk->modifies( d_VRIntensityLabel );
+  tsk->modifiesVar( d_VRFluxLabel );
+  tsk->modifiesVar( d_VRIntensityLabel );
 
   sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
 

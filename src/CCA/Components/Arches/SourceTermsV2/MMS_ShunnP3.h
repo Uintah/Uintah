@@ -297,8 +297,8 @@ void MMS_ShunnP3<T>::register_initialize( std::vector<VarInfo>&
   register_variable( m_MMS_drhodt_label,        ArchesFieldContainer::COMPUTES ,  variable_registry );
   register_variable( m_MMS_continuity_label,        ArchesFieldContainer::COMPUTES ,  variable_registry );
 
-  register_variable( m_x_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
-  register_variable( m_y_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( m_x_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( m_y_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
 }
 
@@ -342,8 +342,8 @@ void MMS_ShunnP3<T>::register_timestep_eval( std::vector<VarInfo>&
  // register_variable( m_MMS_source_diff_label, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
  // register_variable( m_MMS_source_t_label,    ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
 
-  register_variable( m_x_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-  register_variable( m_y_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_x_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_y_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
 }
 

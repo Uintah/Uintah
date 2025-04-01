@@ -113,7 +113,7 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
   }
 
-  register_variable( m_mixfrac_label, ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::NEWDW, variable_registry );
 
 }
@@ -136,7 +136,7 @@ void ColdFlowProperties::register_timestep_init( VIVec& variable_registry , cons
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     register_variable( i->first, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( i->first, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( i->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
   }
 
 }
@@ -178,7 +178,7 @@ void ColdFlowProperties::register_timestep_eval( VIVec& variable_registry, const
     register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );
   }
 
-  register_variable( m_mixfrac_label, ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::NEWDW, variable_registry );
 
 }
@@ -196,7 +196,7 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
     register_variable( i->first, ArchesFieldContainer::MODIFIES, variable_registry );
   }
 
-  register_variable( m_mixfrac_label, ArchesFieldContainer::NEEDSLABEL, 0,
+  register_variable( m_mixfrac_label, ArchesFieldContainer::REQUIRES, 0,
                      ArchesFieldContainer::NEWDW, variable_registry );
 
 }

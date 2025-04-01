@@ -111,12 +111,12 @@ void SGS_ReynoldsStress::scheduleDoAnalysis(SchedulerP  & sched,
 
   Ghost::GhostType m_gac = Ghost::AroundCells;
 
-  t->needsLabel( Task::NewDW, I_lb->tau_X_FCLabel, m_matl_sub, m_gac,1);
-  t->needsLabel( Task::NewDW, I_lb->tau_Y_FCLabel, m_matl_sub, m_gac,1);
-  t->needsLabel( Task::NewDW, I_lb->tau_Z_FCLabel, m_matl_sub, m_gac,1);
+  t->requiresVar( Task::NewDW, I_lb->tau_X_FCLabel, m_matl_sub, m_gac,1);
+  t->requiresVar( Task::NewDW, I_lb->tau_Y_FCLabel, m_matl_sub, m_gac,1);
+  t->requiresVar( Task::NewDW, I_lb->tau_Z_FCLabel, m_matl_sub, m_gac,1);
 
 
-  t->computes( SGS_ReynoldsStressLabel, m_matl_sub);
+  t->computesVar( SGS_ReynoldsStressLabel, m_matl_sub);
   sched->addTask(t, level->eachPatch(), m_matl_set);
 }
 

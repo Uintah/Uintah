@@ -73,7 +73,7 @@ void Burger::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("Burger::initialize",
                      this, &Burger::initialize);
-  task->computes(u_label);
+  task->computesVar(u_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -91,7 +91,7 @@ void Burger::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("Burger::computeStableTimeStep",
                      this, &Burger::computeStableTimeStep);
                      
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -102,10 +102,10 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Burger::timeAdvance",
                      this, &Burger::timeAdvance);
                      
-  task->needsLabel(Task::OldDW, u_label, Ghost::AroundNodes, 1);
-  task->needsLabel(Task::OldDW, getDelTLabel());
+  task->requiresVar(Task::OldDW, u_label, Ghost::AroundNodes, 1);
+  task->requiresVar(Task::OldDW, getDelTLabel());
   
-  task->computes(u_label);
+  task->computesVar(u_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 

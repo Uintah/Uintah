@@ -141,7 +141,7 @@ TableLookup::sched_setDependBCs( const LevelP& level,
     std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
 
     for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
   };
 

@@ -110,7 +110,7 @@ CompositeContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   if (!flag->d_fracture) {
     Task * t = scinew Task("Contact::initFriction", 
                         this, &CompositeContact::initFriction);
-    t->computes(lb->frictionalWorkLabel);
+    t->computesVar(lb->frictionalWorkLabel);
     sched->addTask(t, patches, matls);
   }
   for(list<Contact*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++)

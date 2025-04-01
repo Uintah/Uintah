@@ -86,23 +86,23 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
     throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);             
   } 
 
-  tsk->modifies( _prop_label ); 
+  tsk->modifiesVar( _prop_label ); 
   if ( time_substep == 0 ){ 
 
-    tsk->needsLabel( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } else { 
 
-    tsk->needsLabel( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } 
 
-  tsk->needsLabel( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
-  tsk->needsLabel( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
+  tsk->requiresVar( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
+  tsk->requiresVar( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 
@@ -218,7 +218,7 @@ void ScalarVarianceScaleSim::sched_initialize( const LevelP& level, SchedulerP& 
   std::string taskname = "ScalarVarianceScaleSim::initialize"; 
 
   Task* tsk = scinew Task(taskname, this, &ScalarVarianceScaleSim::initialize);
-  tsk->computes(_prop_label); 
+  tsk->computesVar(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

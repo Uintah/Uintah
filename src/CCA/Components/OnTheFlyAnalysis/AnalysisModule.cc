@@ -138,13 +138,13 @@ void AnalysisModule::sched_TimeVars( Task* t,
                                      const VarLabel * prev_AnlysTimeLabel,
                                      const bool addComputes )
 {
-  t->needsLabel( Task::OldDW, m_simulationTimeLabel );
-  t->needsLabel( Task::OldDW, prev_AnlysTimeLabel );
-  t->needsLabel( Task::OldDW, m_delTLabel, level.get_rep() );
-  t->needsLabel( Task::OldDW, m_timeStepLabel );
+  t->requiresVar( Task::OldDW, m_simulationTimeLabel );
+  t->requiresVar( Task::OldDW, prev_AnlysTimeLabel );
+  t->requiresVar( Task::OldDW, m_delTLabel, level.get_rep() );
+  t->requiresVar( Task::OldDW, m_timeStepLabel );
 
   if( addComputes ){
-    t->computes( prev_AnlysTimeLabel );
+    t->computesVar( prev_AnlysTimeLabel );
   }
 }
 

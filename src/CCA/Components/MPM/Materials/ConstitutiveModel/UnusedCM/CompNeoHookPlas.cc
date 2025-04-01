@@ -175,9 +175,9 @@ void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
   addSharedRForConvertExplicit(task, matlset, patches);
 
   // Add requires local to this model
-  task->needsLabel(Task::NewDW,p_statedata_label_preReloc, 
+  task->requiresVar(Task::NewDW,p_statedata_label_preReloc, 
                  matlset, Ghost::None);
-  task->needsLabel(Task::NewDW,bElBarLabel_preReloc, 
+  task->requiresVar(Task::NewDW,bElBarLabel_preReloc, 
                  matlset, Ghost::None);
 }
 
@@ -583,8 +583,8 @@ void CompNeoHookPlas::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(p_statedata_label, matlset);
-  task->computes(bElBarLabel,       matlset);
+  task->computesVar(p_statedata_label, matlset);
+  task->computesVar(bElBarLabel,       matlset);
 }
 
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
@@ -600,11 +600,11 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->needsLabel(Task::OldDW, p_statedata_label, matlset,gnone);
-  task->needsLabel(Task::OldDW, bElBarLabel,       matlset,gnone);
+  task->requiresVar(Task::OldDW, p_statedata_label, matlset,gnone);
+  task->requiresVar(Task::OldDW, bElBarLabel,       matlset,gnone);
 
-  task->computes(bElBarLabel_preReloc,       matlset);
-  task->computes(p_statedata_label_preReloc, matlset);
+  task->computesVar(bElBarLabel_preReloc,       matlset);
+  task->computesVar(p_statedata_label_preReloc, matlset);
 }
 
 void 

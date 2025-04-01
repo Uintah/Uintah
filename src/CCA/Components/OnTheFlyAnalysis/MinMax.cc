@@ -324,8 +324,8 @@ void MinMax::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("MinMax::initialize",
                   this, &MinMax::initialize);
 
-  t->computes( d_lb->lastCompTimeLabel );
-  t->computes( d_lb->fileVarsStructLabel, m_zeroMatl );
+  t->computesVar( d_lb->lastCompTimeLabel );
+  t->computesVar( d_lb->fileVarsStructLabel, m_zeroMatl );
   sched->addTask( t, level->eachPatch(),  d_matl_set );
 }
 //______________________________________________________________________
@@ -411,10 +411,10 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
       }
 
       MaterialSubset* matSubSet = d_analyzeVars[i].matSubSet;
-      t0->needsLabel( Task::NewDW, label, matSubSet, gn, 0 );
+      t0->requiresVar( Task::NewDW, label, matSubSet, gn, 0 );
 
-      t0->computes( d_analyzeVars[i].reductionMinLabel, level, matSubSet );
-      t0->computes( d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
+      t0->computesVar( d_analyzeVars[i].reductionMinLabel, level, matSubSet );
+      t0->computesVar( d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
     }
   }
 
@@ -429,7 +429,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t1, levelP, d_lb->lastCompTimeLabel, true );
 
-  t1->needsLabel( Task::OldDW, d_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
+  t1->requiresVar( Task::OldDW, d_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
 
   // schedule the reduction variables
   for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
@@ -439,12 +439,12 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
 
       MaterialSubset* matSubSet = d_analyzeVars[i].matSubSet;
 
-      t1->needsLabel( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level, matSubSet );
-      t1->needsLabel( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
+      t1->requiresVar( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level, matSubSet );
+      t1->requiresVar( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
     }
   }
 
-  t1->computes( d_lb->fileVarsStructLabel, m_zeroMatl );
+  t1->computesVar( d_lb->fileVarsStructLabel, m_zeroMatl );
 
   // first patch on this level
   const Patch* p = level->getPatch(0);

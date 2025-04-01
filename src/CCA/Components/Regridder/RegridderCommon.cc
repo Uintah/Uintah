@@ -750,15 +750,15 @@ RegridderCommon::scheduleDilation(const LevelP& level, const bool isLockstepAMR)
   int ngc_regrid = Max(regrid_depth.x(), regrid_depth.y());
   ngc_regrid = Max(ngc_regrid, regrid_depth.z());
 
-  dilate_stability_task->needsLabel(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
-  dilate_regrid_task->needsLabel(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
+  dilate_stability_task->requiresVar(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_stability);
+  dilate_regrid_task->requiresVar(Task::NewDW, m_refineFlagLabel, refine_flag_matls, Ghost::AroundCells, ngc_regrid);
 
   const MaterialSet* all_matls = d_materialManager->allMaterials();
 
-  dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refine_flag_matls);
+  dilate_stability_task->computesVar(d_dilatedCellsStabilityLabel, refine_flag_matls);
   m_scheduler->addTask(dilate_stability_task, level->eachPatch(), all_matls);
 
-  dilate_regrid_task->computes(d_dilatedCellsRegridLabel, refine_flag_matls);
+  dilate_regrid_task->computesVar(d_dilatedCellsRegridLabel, refine_flag_matls);
   m_scheduler->addTask(dilate_regrid_task, level->eachPatch(), all_matls);
 }
 
@@ -890,9 +890,9 @@ RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
 {
   Task* task = scinew Task("RegridderCommon::initializeErrorEstimate", this, &RegridderCommon::initializeErrorEstimate);
 
-  task->computes(     m_refineFlagLabel, refine_flag_matls);
-  task->computes(  m_oldRefineFlagLabel, refine_flag_matls);
-  task->computes(m_refinePatchFlagLabel, refine_flag_matls);
+  task->computesVar(     m_refineFlagLabel, refine_flag_matls);
+  task->computesVar(  m_oldRefineFlagLabel, refine_flag_matls);
+  task->computesVar(m_refinePatchFlagLabel, refine_flag_matls);
 
   m_scheduler->addTask(task, level->eachPatch(), d_materialManager->allMaterials());
 }

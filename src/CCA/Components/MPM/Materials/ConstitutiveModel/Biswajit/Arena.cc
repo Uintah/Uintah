@@ -1710,7 +1710,7 @@ void Arena::addRequiresDamageParameter(Task* task,
 
   // Require the damage parameter
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+  task->requiresVar(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
 
@@ -1804,13 +1804,13 @@ void Arena::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pPlasticStrainVolLabel, matlset);
-  task->computes(pElasticStrainVolLabel, matlset);
-  task->computes(pBackStressLabel, matlset);
-  task->computes(pBackStressIsoLabel, matlset);
-  task->computes(pKappaStateLabel,    matlset);
-  task->computes(pLocalizedLabel,     matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainVolLabel, matlset);
+  task->computesVar(pElasticStrainVolLabel, matlset);
+  task->computesVar(pBackStressLabel, matlset);
+  task->computesVar(pBackStressIsoLabel, matlset);
+  task->computesVar(pKappaStateLabel,    matlset);
+  task->computesVar(pLocalizedLabel,     matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addInitialComputesAndRequires(task, matl, patch);
@@ -1826,21 +1826,21 @@ void Arena::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel,       matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pBackStressLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pBackStressIsoLabel, matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pKappaStateLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pLocalizedLabel,     matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc,     matlset);
-  task->computes(pPlasticStrainVolLabel_preReloc,  matlset);
-  task->computes(pElasticStrainVolLabel_preReloc,  matlset);
-  task->computes(pBackStressLabel_preReloc,        matlset);
-  task->computes(pBackStressIsoLabel_preReloc,     matlset);
-  task->computes(pKappaStateLabel_preReloc,        matlset);
-  task->computes(pLocalizedLabel_preReloc,         matlset);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,       matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pBackStressLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pBackStressIsoLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pKappaStateLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pLocalizedLabel,     matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
+  task->computesVar(pPlasticStrainLabel_preReloc,     matlset);
+  task->computesVar(pPlasticStrainVolLabel_preReloc,  matlset);
+  task->computesVar(pElasticStrainVolLabel_preReloc,  matlset);
+  task->computesVar(pBackStressLabel_preReloc,        matlset);
+  task->computesVar(pBackStressIsoLabel_preReloc,     matlset);
+  task->computesVar(pKappaStateLabel_preReloc,        matlset);
+  task->computesVar(pLocalizedLabel_preReloc,         matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addComputesAndRequires(task, matl, patches);

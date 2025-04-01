@@ -80,13 +80,13 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  t->needsLabel(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  t->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
-  t->needsLabel(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
-  t->needsLabel(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
-  t->needsLabel(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
-  t->needsLabel(Task::NewDW, d_lb->gMassLabel,                      gnone);
-  t->computes(d_lb->gdTdtLabel);
+  t->requiresVar(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
+  t->requiresVar(Task::NewDW, d_lb->pCurSizeLabel,                   gan, NGP);
+  t->requiresVar(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
+  t->requiresVar(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  t->requiresVar(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
+  t->requiresVar(Task::NewDW, d_lb->gMassLabel,                      gnone);
+  t->computesVar(d_lb->gdTdtLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -110,12 +110,12 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
-  t->needsLabel(Task::OldDW, d_lb->pXLabel,             gan, NGP);
-  t->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
-  t->needsLabel(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
-  t->needsLabel(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
-  t->needsLabel(Task::NewDW, d_lb->gMassLabel,          gnone);
-  t->computes(d_lb->gHeatFluxLabel);
+  t->requiresVar(Task::OldDW, d_lb->pXLabel,             gan, NGP);
+  t->requiresVar(Task::NewDW, d_lb->pCurSizeLabel,       gan, NGP);
+  t->requiresVar(Task::OldDW, d_lb->pMassLabel,          gan, NGP);
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureLabel,   gac, 2*NGP);
+  t->requiresVar(Task::NewDW, d_lb->gMassLabel,          gnone);
+  t->computesVar(d_lb->gHeatFluxLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -135,12 +135,12 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
                         this, &HeatConduction::solveHeatEquations);
 
   Ghost::GhostType  gnone = Ghost::None;
-  t->needsLabel(Task::NewDW, d_lb->gMassLabel,                           gnone);
-  t->needsLabel(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
-  t->needsLabel(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
-  t->needsLabel(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
-  t->needsLabel(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel,  gnone);
-  t->modifies(d_lb->gTemperatureRateLabel);
+  t->requiresVar(Task::NewDW, d_lb->gMassLabel,                           gnone);
+  t->requiresVar(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
+  t->requiresVar(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
+  t->requiresVar(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
+  t->requiresVar(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel,  gnone);
+  t->modifiesVar(d_lb->gTemperatureRateLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -162,12 +162,12 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
   const MaterialSubset* mss = matls->getUnion();
 
-  t->needsLabel(Task::OldDW, d_lb->delTLabel );
+  t->requiresVar(Task::OldDW, d_lb->delTLabel );
 
-  t->needsLabel(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
-  t->needsLabel(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
-  t->modifies(             d_lb->gTemperatureRateLabel, mss);
-  t->computes(d_lb->gTemperatureStarLabel);
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
+  t->modifiesVar(             d_lb->gTemperatureRateLabel, mss);
+  t->computesVar(d_lb->gTemperatureStarLabel);
 
   sched->addTask(t, patches, matls);
 }

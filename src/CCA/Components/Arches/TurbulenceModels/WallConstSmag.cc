@@ -152,13 +152,13 @@ void
 WallConstSmag::register_timestep_eval( std::vector<AFC::VariableInformation>&
                               variable_registry, const int time_substep , const bool packed_tasks){
 
-  register_variable( m_u_vel_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_v_vel_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_w_vel_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_u_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_v_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_w_vel_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep);
 
-  register_variable( m_density_name,     AFC::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_IsI_name,         AFC::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, AFC::NEEDSLABEL, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+  register_variable( m_density_name,     AFC::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_IsI_name,         AFC::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   register_variable( m_sigma_t_names[0], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   register_variable( m_sigma_t_names[1], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );

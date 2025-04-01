@@ -111,7 +111,7 @@ UpdateParticleSize::register_timestep_eval(
 
   register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
-  register_variable( _size_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW,
+  register_variable( _size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
       variable_registry, m_task_name );
 
 }

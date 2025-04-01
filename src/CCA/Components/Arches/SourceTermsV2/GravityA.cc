@@ -104,7 +104,7 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
   } else if (m_gravity[2] != 0.0) {
      register_variable( m_gz_label,             ArchesFieldContainer::COMPUTES, variable_registry );
   }
-  register_variable( m_density_label, ArchesFieldContainer::NEEDSLABEL, 1 ,ArchesFieldContainer::NEWDW,
+  register_variable( m_density_label, ArchesFieldContainer::REQUIRES, 1 ,ArchesFieldContainer::NEWDW,
                     variable_registry );
 
 }
@@ -174,7 +174,7 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
   } else if (m_gravity[2] != 0.0) {
      register_variable( m_gz_label,             ArchesFieldContainer::COMPUTES, variable_registry, time_substep  );
   }
-  register_variable( m_density_label, ArchesFieldContainer::NEEDSLABEL, 1 ,ArchesFieldContainer::NEWDW,
+  register_variable( m_density_label, ArchesFieldContainer::REQUIRES, 1 ,ArchesFieldContainer::NEWDW,
                     variable_registry, time_substep  );
 
 

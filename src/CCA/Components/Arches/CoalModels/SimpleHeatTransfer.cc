@@ -304,13 +304,13 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel); 
+    tsk->computesVar(d_abskpLabel);
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);  
+    tsk->modifiesVar(d_abskpLabel);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -326,23 +326,23 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  tsk->needsLabel(Task::OldDW, d_weight_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_weight_label, Ghost::None, 0);
   
   // also require paticle velocity, gas velocity, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->needsLabel(Task::OldDW, iQuad->second, Ghost::None, 0);
-  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
-  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, iQuad->second, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   d_gas_cp_label = VarLabel::find( "specificheat" ); 
   if ( d_gas_cp_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas specific heat label.",__FILE__,__LINE__);
   }
-  tsk->needsLabel(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
  
   if( d_radiation){
-    tsk->needsLabel(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
-    tsk->needsLabel(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
-    tsk->needsLabel(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
+    tsk->requiresVar(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
+    tsk->requiresVar(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
+    tsk->requiresVar(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
   }
 
   // always require the gas-phase temperature
@@ -350,7 +350,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   if ( d_gas_temperature_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
   }
-  tsk->needsLabel(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
 
   // For each required variable, determine what role it plays
   // - "particle_temperature" - look in DQMOMEqnFactory
@@ -370,7 +370,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
           d_pt_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given particle temperature variable \"";
@@ -385,7 +385,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_length_label = current_eqn.getTransportEqnLabel();
           d_pl_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_particle_length_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_length_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given particle length variable \"";
@@ -400,7 +400,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: SimpleHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for SimpleHeatTransfer model.";
           errmsg += "\nCould not find given coal mass  variable \"";

@@ -625,19 +625,19 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     printSchedule( level, dbg, taskName.str() );
 
     // all levels
-    tsk->computes(VarLabel::find("radiationVolq"));
-    tsk->computes(VarLabel::find("RMCRTboundFlux"));
+    tsk->computesVar(VarLabel::find("radiationVolq"));
+    tsk->computesVar(VarLabel::find("RMCRTboundFlux"));
 
     // only cfd level
     if ( L_index == m_archesLevelIndex) {
-      tsk->computes( _src_label );
+      tsk->computesVar( _src_label );
     }
 
     // coarse levels
     if ( L_index != m_archesLevelIndex) {
       // divQ computed on all levels
       if ( m_whichAlgo == coarseLevel ) {
-        tsk->computes( _src_label );
+        tsk->computesVar( _src_label );
       }
     }
     sched->addTask( tsk, myLevel->eachPatch(), m_matlSet );
@@ -759,12 +759,12 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
     Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this,
                            &RMCRT_Radiation::restartInitializeHack);
-    t1->computes( m_radFluxE_Label );
-    t1->computes( m_radFluxW_Label );
-    t1->computes( m_radFluxN_Label );   // Before you can require something from the new_dw
-    t1->computes( m_radFluxS_Label );   // there must be a compute() for that variable.
-    t1->computes( m_radFluxT_Label );
-    t1->computes( m_radFluxB_Label );
+    t1->computesVar( m_radFluxE_Label );
+    t1->computesVar( m_radFluxW_Label );
+    t1->computesVar( m_radFluxN_Label );   // Before you can require something from the new_dw
+    t1->computesVar( m_radFluxS_Label );   // there must be a compute() for that variable.
+    t1->computesVar( m_radFluxT_Label );
+    t1->computesVar( m_radFluxB_Label );
 
     sched->addTask( t1, archesLevel->eachPatch(), m_matlSet );
 
@@ -812,7 +812,7 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
     Task* t2 = scinew Task( taskname, this, &RMCRT_Radiation::restartInitialize);
 
     for ( auto  iter = m_missingCkPt_Labels.begin(); iter != m_missingCkPt_Labels.end(); iter++){
-      t2->computes( iter->first );
+      t2->computesVar( iter->first );
     }
 
     sched->addTask( t2, archesLevel->eachPatch(), m_matlSet );
@@ -840,12 +840,12 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
 
       const VarLabel * abskLabel  = m_partGas_absk_Labels[i];
       if( computedVars.find( abskLabel ) == computedVars.end() ) {
-        t3->computes( abskLabel );
+        t3->computesVar( abskLabel );
       }
 
       const VarLabel * tempLabel  = m_partGas_temp_Labels[i];
       if( computedVars.find( tempLabel ) == computedVars.end() ) {
-        t3->computes( tempLabel );
+        t3->computesVar( tempLabel );
       }
     }
 
@@ -922,14 +922,14 @@ RMCRT_Radiation::sched_sigmaT4( const LevelP & level,
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sigmaT4 (" +type+")");
 
-  tsk->needsLabel( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
+  tsk->requiresVar( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->needsLabel( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
-    tsk->needsLabel( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
+    tsk->requiresVar( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requiresVar( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
   }
 
-  tsk->computes( m_RMCRT->d_sigmaT4Label );
+  tsk->computesVar( m_RMCRT->d_sigmaT4Label );
   sched->addTask( tsk, level->eachPatch(), m_matlSet, RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
@@ -1045,13 +1045,13 @@ RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sumAbsk (" +type+")");
 
-  tsk->needsLabel( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
+  tsk->requiresVar( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->needsLabel( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requiresVar( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
   }
 
-  tsk->computes( m_sumAbsk_Label );
+  tsk->computesVar( m_sumAbsk_Label );
   sched->addTask( tsk, level->eachPatch(), m_matlSet, RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
@@ -1168,11 +1168,11 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   printSchedule(level, dbg, "RMCRT_radiation::sched_setBoundaryConditions");
 
   if (!backoutTemp) {
-    tsk->needsLabel( temp_dw, m_gasTemp_Label, m_gn, 0 );
+    tsk->requiresVar( temp_dw, m_gasTemp_Label, m_gn, 0 );
   }
 
-  tsk->modifies( m_RMCRT->d_sigmaT4Label );
-  tsk->modifies( m_RMCRT->d_abskgLabel );
+  tsk->modifiesVar( m_RMCRT->d_sigmaT4Label );
+  tsk->modifiesVar( m_RMCRT->d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), m_matlSet, RMCRT_Radiation::TG_RMCRT );
 }
@@ -1308,12 +1308,12 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
 
     printSchedule( level, dbg, "RMCRT_Radiation::sched_fluxInit" );
 
-    tsk->computes( m_radFluxE_Label );
-    tsk->computes( m_radFluxW_Label );
-    tsk->computes( m_radFluxN_Label );
-    tsk->computes( m_radFluxS_Label );
-    tsk->computes( m_radFluxT_Label );
-    tsk->computes( m_radFluxB_Label );
+    tsk->computesVar( m_radFluxE_Label );
+    tsk->computesVar( m_radFluxW_Label );
+    tsk->computesVar( m_radFluxN_Label );
+    tsk->computesVar( m_radFluxS_Label );
+    tsk->computesVar( m_radFluxT_Label );
+    tsk->computesVar( m_radFluxB_Label );
 
     sched->addTask( tsk, level->eachPatch(), m_matlSet );
   }
@@ -1369,14 +1369,14 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
 
     //  only schedule task on arches level
-    tsk->needsLabel(Task::NewDW, VarLabel::find("RMCRTboundFlux"), m_gn, 0);
+    tsk->requiresVar(Task::NewDW, VarLabel::find("RMCRTboundFlux"), m_gn, 0);
 
-    tsk->computes( m_radFluxE_Label );
-    tsk->computes( m_radFluxW_Label );
-    tsk->computes( m_radFluxN_Label );
-    tsk->computes( m_radFluxS_Label );
-    tsk->computes( m_radFluxT_Label );
-    tsk->computes( m_radFluxB_Label );
+    tsk->computesVar( m_radFluxE_Label );
+    tsk->computesVar( m_radFluxW_Label );
+    tsk->computesVar( m_radFluxN_Label );
+    tsk->computesVar( m_radFluxS_Label );
+    tsk->computesVar( m_radFluxT_Label );
+    tsk->computesVar( m_radFluxB_Label );
 
     sched->addTask( tsk, level->eachPatch(), m_matlSet );
   }
@@ -1440,14 +1440,14 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
     printSchedule( level, dbg, "RMCRT_Radiation::sched_DBLsToStencil" );
 
     //  only schedule task on arches level
-    tsk->needsLabel(Task::NewDW, m_radFluxE_Label, m_gn, 0);
-    tsk->needsLabel(Task::NewDW, m_radFluxW_Label, m_gn, 0);
-    tsk->needsLabel(Task::NewDW, m_radFluxN_Label, m_gn, 0);
-    tsk->needsLabel(Task::NewDW, m_radFluxS_Label, m_gn, 0);
-    tsk->needsLabel(Task::NewDW, m_radFluxT_Label, m_gn, 0);
-    tsk->needsLabel(Task::NewDW, m_radFluxB_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxE_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxW_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxN_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxS_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxT_Label, m_gn, 0);
+    tsk->requiresVar(Task::NewDW, m_radFluxB_Label, m_gn, 0);
 
-    tsk->computes( m_RMCRT->d_boundFluxLabel );
+    tsk->computesVar( m_RMCRT->d_boundFluxLabel );
 
     sched->addTask( tsk, level->eachPatch(), m_matlSet );
   }

@@ -285,10 +285,10 @@ EnthalpyShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "EnthalpyShaddix::initVars";
   Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
-  tsk->computes(d_qconvLabel);
-  tsk->computes(d_qradLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
+  tsk->computesVar(d_qconvLabel);
+  tsk->computesVar(d_qradLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -340,45 +340,45 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
-    tsk->computes(d_qconvLabel);
-    tsk->computes(d_qradLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
+    tsk->computesVar(d_qconvLabel);
+    tsk->computesVar(d_qradLabel);
     which_dw = Task::OldDW;
   }
   else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);
-    tsk->modifies(d_qconvLabel);
-    tsk->modifies(d_qradLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);
+    tsk->modifiesVar(d_qconvLabel);
+    tsk->modifiesVar(d_qradLabel);
     which_dw = Task::NewDW;
   }
 
   // require gas phase variables
-  tsk->needsLabel( which_dw, _gas_temperature_varlabel, Ghost::None, 0);
-  tsk->needsLabel( which_dw, _gas_cp_varlabel, Ghost::None, 0);
-  tsk->needsLabel( Task::NewDW, _devolgas_varlabel, Ghost::None, 0 );
-  tsk->needsLabel( Task::NewDW, _chargas_varlabel, Ghost::None, 0 );
-  tsk->needsLabel( which_dw, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
-  tsk->needsLabel( which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->requiresVar( which_dw, _gas_temperature_varlabel, Ghost::None, 0);
+  tsk->requiresVar( which_dw, _gas_cp_varlabel, Ghost::None, 0);
+  tsk->requiresVar( Task::NewDW, _devolgas_varlabel, Ghost::None, 0 );
+  tsk->requiresVar( Task::NewDW, _chargas_varlabel, Ghost::None, 0 );
+  tsk->requiresVar( which_dw, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
+  tsk->requiresVar( which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   if ( d_radiation ){
-    tsk->needsLabel( which_dw, _volq_varlabel, Ghost::None, 0);
+    tsk->requiresVar( which_dw, _volq_varlabel, Ghost::None, 0);
 
-    tsk->needsLabel( which_dw, _abskp_varlabel, Ghost::None, 0);
+    tsk->requiresVar( which_dw, _abskp_varlabel, Ghost::None, 0);
   }
-  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_delTLabel);
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel);
 
   // require particle phase variables
-  tsk->needsLabel( which_dw, _rcmass_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _char_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _particle_temperature_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _length_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _weight_varlabel, gn, 0 );
-  tsk->needsLabel( Task::NewDW, _surfacerate_varlabel, Ghost::None, 0 );
-  tsk->needsLabel( Task::NewDW, _charoxiTemp_varlabel, Ghost::None, 0 );
+  tsk->requiresVar( which_dw, _rcmass_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _char_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _length_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _weight_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, _surfacerate_varlabel, Ghost::None, 0 );
+  tsk->requiresVar( Task::NewDW, _charoxiTemp_varlabel, Ghost::None, 0 );
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->needsLabel( Task::NewDW, i->second, gn, 0 );
+  tsk->requiresVar( Task::NewDW, i->second, gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }

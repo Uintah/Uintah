@@ -235,13 +235,13 @@ void HyperElasticPlastic::allocateCMDataAddRequires(Task* task,
                                                    MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pStressLabel,             Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pStressLabel,             Ghost::None);
 
   // Local variables
-  task->needsLabel(Task::OldDW, pBbarElasticLabel,            Ghost::None);
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel,          Ghost::None);
-  task->needsLabel(Task::OldDW, pDamageLabel,                 Ghost::None);
+  task->requiresVar(Task::OldDW, pBbarElasticLabel,            Ghost::None);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,          Ghost::None);
+  task->requiresVar(Task::OldDW, pDamageLabel,                 Ghost::None);
 }
 
 
@@ -742,9 +742,9 @@ HyperElasticPlastic::addInitialComputesAndRequires(Task* task,
                                                    const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pBbarElasticLabel,   matlset);
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pDamageLabel,        matlset);
+  task->computesVar(pBbarElasticLabel,   matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(pDamageLabel,        matlset);
  
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addInitialComputesAndRequires(task, matl, patch);
@@ -757,35 +757,35 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, lb->delTLabel);
-  task->needsLabel(Task::OldDW, lb->pXLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pXLabel, matlset,Ghost::None);
   if(d_8or27==27)
-    task->needsLabel(Task::OldDW, lb->pSizeLabel, matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pMassLabel,  matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pVolumeLabel,  matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pTemperatureLabel, matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pVelocityLabel, matlset,Ghost::None);
-  task->needsLabel(Task::NewDW, lb->gVelocityLabel,  matlset,gac, NGN);
+    task->requiresVar(Task::OldDW, lb->pSizeLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,  matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVolumeLabel,  matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pTemperatureLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVelocityLabel, matlset,Ghost::None);
+  task->requiresVar(Task::NewDW, lb->gVelocityLabel,  matlset,gac, NGN);
 
-  task->needsLabel(Task::OldDW, lb->pStressLabel, matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pStressLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
 #ifdef FRACTURE
-  task->needsLabel(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
+  task->requiresVar(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
 #endif
 
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computesVar(lb->pStressLabel_preReloc,             matlset);
+  task->computesVar(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,              matlset);
 
   // Variables local to this model
-  task->needsLabel(Task::OldDW, pBbarElasticLabel,   matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
-  task->needsLabel(Task::OldDW, pDamageLabel,        matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pBbarElasticLabel,   matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pDamageLabel,        matlset,Ghost::None);
 
-  task->computes(pBbarElasticLabel_preReloc,            matlset);
-  task->computes(pPlasticStrainLabel_preReloc,          matlset);
-  task->computes(pDamageLabel_preReloc,                 matlset);
+  task->computesVar(pBbarElasticLabel_preReloc,            matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,          matlset);
+  task->computesVar(pDamageLabel_preReloc,                 matlset);
 
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addComputesAndRequires(task, matl, patch);

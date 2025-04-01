@@ -114,11 +114,11 @@ void addRequires_Sine(Task* t,
   press_matl->addReference();
   
   if(where == "CC_Exchange"){
-    t->needsLabel(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0); 
+    t->requiresVar(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0); 
    
   }
   if(where == "Advection"){
-    t->needsLabel(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0);    
+    t->requiresVar(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0);    
   }
 }
 /*______________________________________________________________________ 

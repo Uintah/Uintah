@@ -137,13 +137,13 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name , ArchesFieldContainer::NEEDSLABEL , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( rc_name   , ArchesFieldContainer::NEEDSLABEL , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( char_name , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rho_name  , ArchesFieldContainer::COMPUTES , variable_registry );
 
     if ( _model_type != "constant_volume_dqmom" ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
-      register_variable( diameter_name , ArchesFieldContainer::NEEDSLABEL , 0              , ArchesFieldContainer::NEWDW , variable_registry );
+      register_variable( diameter_name , ArchesFieldContainer::REQUIRES , 0              , ArchesFieldContainer::NEWDW , variable_registry );
     }
 
   }
@@ -232,13 +232,13 @@ CoalDensity::register_timestep_eval(
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
-    register_variable( rc_name  , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
     register_variable( rho_name , ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
     if ( _model_type != "constant_volume_dqmom" ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
-      register_variable( diameter_name , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
     }
   }
 }

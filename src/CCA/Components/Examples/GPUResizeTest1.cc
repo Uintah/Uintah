@@ -95,9 +95,9 @@ void GPUResizeTest1::scheduleInitialize( const LevelP     & level
 {
   Task* task = scinew Task("GPUResizeTest1::initialize", this, &GPUResizeTest1::initialize);
 
-  task->computes(phi_label, nullptr, Uintah::Task::NormalDomain);
-  task->computes(density_label);
-  task->computes(residual_label);
+  task->computesVar(phi_label, nullptr, Uintah::Task::NormalDomain);
+  task->computesVar(density_label);
+  task->computesVar(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -117,8 +117,8 @@ void GPUResizeTest1::scheduleComputeStableTimeStep( const LevelP     & level
 {
   Task* task = scinew Task("GPUResizeTest1::computeStableTimeStep", this, &GPUResizeTest1::computeStableTimeStep);
 
-  task->needsLabel(Task::NewDW, residual_label);
-  task->computes(getDelTLabel(), level.get_rep());
+  task->requiresVar(Task::NewDW, residual_label);
+  task->computesVar(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -131,10 +131,10 @@ void GPUResizeTest1::scheduleTimeAdvance( const LevelP     & level
   //part 1
 
   auto TaskDependencies = [&](Task* task) {
-    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-    task->computes(phi_label, nullptr, Uintah::Task::NormalDomain);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task->computesVar(phi_label, nullptr, Uintah::Task::NormalDomain);
     //task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 2);
-    task->computes(residual_label);
+    task->computesVar(residual_label);
   };
 
   create_portable_tasks(TaskDependencies, this,
@@ -148,8 +148,8 @@ void GPUResizeTest1::scheduleTimeAdvance( const LevelP     & level
 
    //part 2
   auto TaskDependencies1 = [&](Task* task) {
-    task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 2);
-    task->computes(density_label, nullptr, Uintah::Task::NormalDomain);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 2);
+    task->computesVar(density_label, nullptr, Uintah::Task::NormalDomain);
   };
 
   create_portable_tasks(TaskDependencies1, this,

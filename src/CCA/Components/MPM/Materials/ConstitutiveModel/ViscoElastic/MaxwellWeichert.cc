@@ -163,9 +163,9 @@ namespace Uintah {
     size_t numModes = m_stressDecayTrackers.size();
 
     for (size_t mode=0; mode < numModes; ++mode) {
-      task->computes(m_stressDecayTrackers[mode], matlSubset);
+      task->computesVar(m_stressDecayTrackers[mode], matlSubset);
     }  // We calculate the initial value for our stress decay history variables here.
-    task->computes(m_pInitialStress, matlSubset);
+    task->computesVar(m_pInitialStress, matlSubset);
 
   }
 
@@ -251,24 +251,24 @@ namespace Uintah {
                                __FILE__, __LINE__);
     }
     else {
-      task->needsLabel(Task::OldDW, lb->delTLabel);
-      task->needsLabel(Task::OldDW, lb->pStressLabel,   matlSubset, gnone);
-      task->needsLabel(Task::OldDW, lb->pMassLabel,     matlSubset, gnone);
-      task->needsLabel(Task::OldDW, lb->pVelocityLabel, matlSubset, gnone);
-      task->needsLabel(Task::OldDW, m_pInitialStress,   matlSubset, gnone);
-      task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,  matlSubset, gnone);
+      task->requiresVar(Task::OldDW, lb->delTLabel);
+      task->requiresVar(Task::OldDW, lb->pStressLabel,   matlSubset, gnone);
+      task->requiresVar(Task::OldDW, lb->pMassLabel,     matlSubset, gnone);
+      task->requiresVar(Task::OldDW, lb->pVelocityLabel, matlSubset, gnone);
+      task->requiresVar(Task::OldDW, m_pInitialStress,   matlSubset, gnone);
+      task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,  matlSubset, gnone);
 
-      task->needsLabel(Task::NewDW, lb->pVelGradLabel_preReloc,             matlSubset, gnone);
-      task->needsLabel(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlSubset, gnone);
+      task->requiresVar(Task::NewDW, lb->pVelGradLabel_preReloc,             matlSubset, gnone);
+      task->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlSubset, gnone);
 
-      task->computes(lb->pdTdtLabel, matlSubset);
-      task->computes(lb->pStressLabel_preReloc, matlSubset);
-      task->computes(m_pInitialStress_preReloc, matlSubset);
+      task->computesVar(lb->pdTdtLabel, matlSubset);
+      task->computesVar(lb->pStressLabel_preReloc, matlSubset);
+      task->computesVar(m_pInitialStress_preReloc, matlSubset);
 
       size_t numModes = m_stressDecayTrackers.size();
       for (size_t mode = 0; mode < numModes; ++mode) {
-        task->needsLabel(Task::OldDW, m_stressDecayTrackers[mode], matlSubset, gnone);
-        task->computes(m_stressDecayTrackers_preReloc[mode], matlSubset);
+        task->requiresVar(Task::OldDW, m_stressDecayTrackers[mode], matlSubset, gnone);
+        task->computesVar(m_stressDecayTrackers_preReloc[mode], matlSubset);
       }
     }
   }

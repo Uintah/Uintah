@@ -105,9 +105,9 @@ namespace Uintah {
       addSharedCRForExplicit(task, matlset, patches);
     }
 
-    task->needsLabel(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
     if (flag->d_with_color) {
-      task->needsLabel(Task::OldDW, lb->pColorLabel, Ghost::None);
+      task->requiresVar(Task::OldDW, lb->pColorLabel, Ghost::None);
     }
   }
 

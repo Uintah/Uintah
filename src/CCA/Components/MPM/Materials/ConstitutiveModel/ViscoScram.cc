@@ -264,13 +264,13 @@ ViscoScram::addInitialComputesAndRequires(Task* task,
                                           const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pVolChangeHeatRateLabel, matlset);
-  task->computes(pViscousHeatRateLabel,   matlset);
-  task->computes(pCrackHeatRateLabel,     matlset);
-  task->computes(pCrackRadiusLabel,       matlset);
-  task->computes(pStatedataLabel,         matlset);
-  task->computes(pRandLabel,              matlset);
-  task->computes(pStrainRateLabel,        matlset);
+  task->computesVar(pVolChangeHeatRateLabel, matlset);
+  task->computesVar(pViscousHeatRateLabel,   matlset);
+  task->computesVar(pCrackHeatRateLabel,     matlset);
+  task->computesVar(pCrackRadiusLabel,       matlset);
+  task->computesVar(pStatedataLabel,         matlset);
+  task->computesVar(pRandLabel,              matlset);
+  task->computesVar(pStrainRateLabel,        matlset);
 }
 
 void 
@@ -379,19 +379,19 @@ ViscoScram::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->needsLabel(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
-  task->needsLabel(Task::OldDW, pStatedataLabel,   matlset, gnone);
-  task->needsLabel(Task::OldDW, pRandLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, pStatedataLabel,   matlset, gnone);
+  task->requiresVar(Task::OldDW, pRandLabel,        matlset, gnone);
 
-  task->computes(pVolChangeHeatRateLabel_preReloc, matlset);
-  task->computes(pViscousHeatRateLabel_preReloc,   matlset);
-  task->computes(pCrackHeatRateLabel_preReloc,     matlset);
-  task->computes(pCrackRadiusLabel_preReloc,       matlset);
-  task->computes(pStatedataLabel_preReloc,         matlset);
-  task->computes(pRandLabel_preReloc,              matlset);
-  task->computes(pStrainRateLabel_preReloc,        matlset);
+  task->computesVar(pVolChangeHeatRateLabel_preReloc, matlset);
+  task->computesVar(pViscousHeatRateLabel_preReloc,   matlset);
+  task->computesVar(pCrackHeatRateLabel_preReloc,     matlset);
+  task->computesVar(pCrackRadiusLabel_preReloc,       matlset);
+  task->computesVar(pStatedataLabel_preReloc,         matlset);
+  task->computesVar(pRandLabel_preReloc,              matlset);
+  task->computesVar(pStrainRateLabel_preReloc,        matlset);
 }
 
 void 

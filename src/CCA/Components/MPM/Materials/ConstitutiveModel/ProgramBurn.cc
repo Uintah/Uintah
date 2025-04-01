@@ -405,11 +405,11 @@ void ProgramBurn::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
 
-  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
-  task->computes(pProgressFLabel_preReloc,            matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc,     matlset);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
+  task->computesVar(pProgressFLabel_preReloc,            matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc,     matlset);
 }
 
 void ProgramBurn::addInitialComputesAndRequires(Task* task,
@@ -417,7 +417,7 @@ void ProgramBurn::addInitialComputesAndRequires(Task* task,
                                          const PatchSet*) const
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pProgressFLabel,       matlset);
+  task->computesVar(pProgressFLabel,       matlset);
 }
 
 

@@ -461,60 +461,60 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   Task* t = scinew Task("AMRMPM::actuallyInitialize",
                   this, &AMRMPM::actuallyInitialize);
 
-  t->computes(lb->partCountLabel);
-  t->computes(lb->pXLabel);
-  t->computes(lb->pDispLabel);
-  t->computes(lb->pFiberDirLabel);
-  t->computes(lb->pMassLabel);
-  t->computes(lb->pVolumeLabel);
-  t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for therma  stress analysis
-  t->computes(lb->pdTdtLabel);
-  t->computes(lb->pVelocityLabel);
-  t->computes(lb->pExternalForceLabel);
-  t->computes(lb->pParticleIDLabel);
-  t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pStressLabel);
-  t->computes(lb->pVelGradLabel);
-  t->computes(lb->pTemperatureGradientLabel);
-  t->computes(lb->pSizeLabel);
-  t->computes(lb->pRefinedLabel);
-  t->computes(lb->pLastLevelLabel);
-  t->computes(lb->delTLabel,level.get_rep());
-  t->computes(lb->pCellNAPIDLabel,d_one_matl);
-  t->computes(lb->NC_CCweightLabel,d_one_matl);
+  t->computesVar(lb->partCountLabel);
+  t->computesVar(lb->pXLabel);
+  t->computesVar(lb->pDispLabel);
+  t->computesVar(lb->pFiberDirLabel);
+  t->computesVar(lb->pMassLabel);
+  t->computesVar(lb->pVolumeLabel);
+  t->computesVar(lb->pTemperatureLabel);
+  t->computesVar(lb->pTempPreviousLabel); // for therma  stress analysis
+  t->computesVar(lb->pdTdtLabel);
+  t->computesVar(lb->pVelocityLabel);
+  t->computesVar(lb->pExternalForceLabel);
+  t->computesVar(lb->pParticleIDLabel);
+  t->computesVar(lb->pDeformationMeasureLabel);
+  t->computesVar(lb->pStressLabel);
+  t->computesVar(lb->pVelGradLabel);
+  t->computesVar(lb->pTemperatureGradientLabel);
+  t->computesVar(lb->pSizeLabel);
+  t->computesVar(lb->pRefinedLabel);
+  t->computesVar(lb->pLastLevelLabel);
+  t->computesVar(lb->delTLabel,level.get_rep());
+  t->computesVar(lb->pCellNAPIDLabel,d_one_matl);
+  t->computesVar(lb->NC_CCweightLabel,d_one_matl);
 
   // Debugging Scalar
   if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
+    t->computesVar(lb->pColorLabel);
   }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
+    t->computesVar(lb->pLoadCurveIDLabel);
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
+    t->computesVar(lb->AccStrainEnergyLabel);
   }
   
   if(flags->d_artificial_viscosity){
-    t->computes(lb->p_qLabel);
+    t->computesVar(lb->p_qLabel);
   }
 
   if (flags->d_doScalarDiffusion){
-    t->computes(lb->diffusion->pArea);
-    t->computes(lb->diffusion->pConcentration);
-    t->computes(lb->diffusion->pConcPrevious);
-    t->computes(lb->diffusion->pGradConcentration);
-    t->computes(lb->diffusion->pExternalScalarFlux);
+    t->computesVar(lb->diffusion->pArea);
+    t->computesVar(lb->diffusion->pConcentration);
+    t->computesVar(lb->diffusion->pConcPrevious);
+    t->computesVar(lb->diffusion->pGradConcentration);
+    t->computesVar(lb->diffusion->pExternalScalarFlux);
   }
 
   if(flags->d_withGaussSolver){
-    t->computes(Al->pPosChargeLabel);
-    t->computes(Al->pNegChargeLabel);
-    t->computes(Al->pPermittivityLabel);
+    t->computesVar(Al->pPosChargeLabel);
+    t->computesVar(Al->pNegChargeLabel);
+    t->computesVar(Al->pPermittivityLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -561,7 +561,7 @@ void AMRMPM::schedulePrintParticleCount(const LevelP& level,
 {
   Task* t = scinew Task("AMRMPM::printParticleCount",
                   this, &AMRMPM::printParticleCount);
-  t->needsLabel(Task::NewDW, lb->partCountLabel);
+  t->requiresVar(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
 
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level), m_materialManager->allMaterials( "MPM" ));
@@ -777,16 +777,16 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::partitionOfUnity",
                   this, &AMRMPM::partitionOfUnity);
                   
-  t->needsLabel(Task::OldDW, lb->pXLabel,    Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pXLabel,    Ghost::None);
 
   // Carry forward and update pSize if particles change levels
-  t->needsLabel(Task::OldDW, lb->pSizeLabel, Ghost::None);
-  t->needsLabel(Task::OldDW, lb->pLastLevelLabel, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pLastLevelLabel, Ghost::None);
 
-  t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pLastLevelLabel_preReloc);
-  t->computes(Al->pPartitionUnityLabel);
-  t->computes(Al->MPMRefineCellLabel, d_one_matl);
+  t->computesVar(lb->pSizeLabel_preReloc);
+  t->computesVar(lb->pLastLevelLabel_preReloc);
+  t->computesVar(Al->pPartitionUnityLabel);
+  t->computesVar(Al->MPMRefineCellLabel, d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -806,7 +806,7 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
     Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
                     this, &AMRMPM::computeZoneOfInfluence);
 
-    t->computes(Al->gZOILabel, d_one_matl);
+    t->computesVar(Al->gZOILabel, d_one_matl);
 
     sched->addTask(t, patches, matls);
 
@@ -831,45 +831,45 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::interpolateParticlesToGrid",
                    this,&AMRMPM::interpolateParticlesToGrid);
 
-  t->needsLabel(Task::OldDW, lb->pMassLabel,               d_gan,NGP);
-  t->needsLabel(Task::OldDW, lb->pVolumeLabel,             d_gan,NGP);
-  t->needsLabel(Task::OldDW, lb->pVelocityLabel,           d_gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               d_gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             d_gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,           d_gan,NGP);
   if (flags->d_GEVelProj) {
-    t->needsLabel(Task::OldDW, lb->pVelGradLabel,          d_gan,NGP);
+    t->requiresVar(Task::OldDW, lb->pVelGradLabel,          d_gan,NGP);
   }
-  t->needsLabel(Task::OldDW, lb->pXLabel,                  d_gan,NGP);
-  t->needsLabel(Task::NewDW, lb->pExtForceLabel_preReloc,  d_gan,NGP);
-  t->needsLabel(Task::OldDW, lb->pTemperatureLabel,        d_gan,NGP);
-  t->needsLabel(Task::NewDW, lb->pCurSizeLabel,            d_gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  d_gan,NGP);
+  t->requiresVar(Task::NewDW, lb->pExtForceLabel_preReloc,  d_gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pTemperatureLabel,        d_gan,NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            d_gan,NGP);
 
-  t->computes(lb->gMassLabel);
-  t->computes(lb->gVolumeLabel);
-  t->computes(lb->gVelocityLabel);
-  t->computes(lb->gTemperatureLabel);
-  t->computes(lb->gTemperatureRateLabel);
-  t->computes(lb->gExternalForceLabel);
+  t->computesVar(lb->gMassLabel);
+  t->computesVar(lb->gVolumeLabel);
+  t->computesVar(lb->gVelocityLabel);
+  t->computesVar(lb->gTemperatureLabel);
+  t->computesVar(lb->gTemperatureRateLabel);
+  t->computesVar(lb->gExternalForceLabel);
 
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::OldDW, lb->pStressLabel,             d_gan, NGP);
-    t->needsLabel(Task::OldDW, lb->diffusion->pConcentration,      d_gan, NGP);
+    t->requiresVar(Task::OldDW, lb->pStressLabel,             d_gan, NGP);
+    t->requiresVar(Task::OldDW, lb->diffusion->pConcentration,      d_gan, NGP);
     if (flags->d_GEVelProj) {
-      t->needsLabel(Task::OldDW, lb->diffusion->pGradConcentration, d_gan, NGP);
+      t->requiresVar(Task::OldDW, lb->diffusion->pGradConcentration, d_gan, NGP);
     }  
-    t->needsLabel(Task::NewDW, lb->diffusion->pExternalScalarFlux_preReloc, d_gan, NGP);
-    t->computes(lb->diffusion->gConcentration);
-    t->computes(lb->diffusion->gHydrostaticStress);
-    t->computes(lb->diffusion->gExternalScalarFlux);
+    t->requiresVar(Task::NewDW, lb->diffusion->pExternalScalarFlux_preReloc, d_gan, NGP);
+    t->computesVar(lb->diffusion->gConcentration);
+    t->computesVar(lb->diffusion->gHydrostaticStress);
+    t->computesVar(lb->diffusion->gExternalScalarFlux);
 #ifdef CBDI_FLUXBCS
     if (flags->d_useLoadCurves) {
-      t->needsLabel(Task::OldDW, lb->pLoadCurveIDLabel,      d_gan, NGP);
+      t->requiresVar(Task::OldDW, lb->pLoadCurveIDLabel,      d_gan, NGP);
     }
 #endif
   }
   if(flags->d_withGaussSolver){
-    t->needsLabel(Task::OldDW, Al->pPosChargeLabel, d_gan, NGP);
-    t->needsLabel(Task::OldDW, Al->pNegChargeLabel, d_gan, NGP);
-    t->computes(Al->gPosChargeLabel);
-    t->computes(Al->gNegChargeLabel);
+    t->requiresVar(Task::OldDW, Al->pPosChargeLabel, d_gan, NGP);
+    t->requiresVar(Task::OldDW, Al->pNegChargeLabel, d_gan, NGP);
+    t->computesVar(Al->gPosChargeLabel);
+    t->computesVar(Al->gNegChargeLabel);
   }
   
   sched->addTask(t, patches, matls);
@@ -911,31 +911,31 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->needsLabel(Task::NewDW, Al->gZOILabel,                d_one_matl,  Ghost::None, 0);
-    t->needsLabel(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::NewDW, Al->gZOILabel,                d_one_matl,  Ghost::None, 0);
+    t->requiresVar(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
 
-    t->modifies(lb->gMassLabel);
-    t->modifies(lb->gVolumeLabel);
-    t->modifies(lb->gVelocityLabel);
-    t->modifies(lb->gTemperatureLabel);
-    t->modifies(lb->gExternalForceLabel);
+    t->modifiesVar(lb->gMassLabel);
+    t->modifiesVar(lb->gVolumeLabel);
+    t->modifiesVar(lb->gVelocityLabel);
+    t->modifiesVar(lb->gTemperatureLabel);
+    t->modifiesVar(lb->gExternalForceLabel);
 
     if(flags->d_doScalarDiffusion) {
-      t->needsLabel(Task::OldDW, lb->diffusion->pConcentration,                 allPatches,
+      t->requiresVar(Task::OldDW, lb->diffusion->pConcentration,                 allPatches,
                                       Task::CoarseLevel,  allMatls, ND, d_gac, npc);
-      t->needsLabel(Task::OldDW, lb->pStressLabel,                              allPatches,
+      t->requiresVar(Task::OldDW, lb->pStressLabel,                              allPatches,
                                       Task::CoarseLevel,  allMatls, ND, d_gac, npc);
-      t->needsLabel(Task::NewDW, lb->diffusion->pExternalScalarFlux_preReloc,   allPatches,
+      t->requiresVar(Task::NewDW, lb->diffusion->pExternalScalarFlux_preReloc,   allPatches,
                                       Task::CoarseLevel,  allMatls, ND, d_gac, npc);
  
-      t->modifies(lb->diffusion->gConcentration);
-      t->modifies(lb->diffusion->gHydrostaticStress);
-      t->modifies(lb->diffusion->gExternalScalarFlux);
+      t->modifiesVar(lb->diffusion->gConcentration);
+      t->modifiesVar(lb->diffusion->gHydrostaticStress);
+      t->modifiesVar(lb->diffusion->gExternalScalarFlux);
     }
 
     sched->addTask(t, patches, matls);
@@ -966,30 +966,30 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   #define allPatches 0
   #define allMatls 0
 
-  t->needsLabel(Task::NewDW, lb->gMassLabel,          allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
-  t->needsLabel(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
-  t->needsLabel(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
-  t->needsLabel(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
-  t->needsLabel(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,          allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
+  t->requiresVar(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
+  t->requiresVar(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, d_gn,0);
   
-  t->modifies(lb->gMassLabel);
-  t->modifies(lb->gVolumeLabel);
-  t->modifies(lb->gVelocityLabel);
-  t->modifies(lb->gTemperatureLabel);
-  t->modifies(lb->gExternalForceLabel);
+  t->modifiesVar(lb->gMassLabel);
+  t->modifiesVar(lb->gVolumeLabel);
+  t->modifiesVar(lb->gVelocityLabel);
+  t->modifiesVar(lb->gTemperatureLabel);
+  t->modifiesVar(lb->gExternalForceLabel);
 
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentration,      allPatches,
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentration,      allPatches,
                               Task::FineLevel,allMatls, ND, d_gn, 0);
-    t->modifies(lb->diffusion->gConcentration);
-    t->needsLabel(Task::NewDW, lb->diffusion->gExternalScalarFlux, allPatches,
+    t->modifiesVar(lb->diffusion->gConcentration);
+    t->requiresVar(Task::NewDW, lb->diffusion->gExternalScalarFlux, allPatches,
                               Task::FineLevel,allMatls, ND, d_gn, 0);
-    t->modifies(lb->diffusion->gExternalScalarFlux);
+    t->modifiesVar(lb->diffusion->gExternalScalarFlux);
   }
 
   if (flag == zeroData){
-    t->modifies(lb->gAccelerationLabel);
-    t->modifies(lb->gVelocityStarLabel);
+    t->modifiesVar(lb->gAccelerationLabel);
+    t->modifiesVar(lb->gVelocityStarLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1010,16 +1010,16 @@ void AMRMPM::scheduleCoarsenNodalData_CFI2(SchedulerP& sched,
   #define allPatches 0
   #define allMatls 0
 
-  t->needsLabel(Task::NewDW, lb->gMassLabel,          allPatches,
+  t->requiresVar(Task::NewDW, lb->gMassLabel,          allPatches,
                                            Task::FineLevel,allMatls, ND, d_gn,0);
-  t->needsLabel(Task::NewDW, lb->gInternalForceLabel, allPatches,
+  t->requiresVar(Task::NewDW, lb->gInternalForceLabel, allPatches,
                                            Task::FineLevel,allMatls, ND, d_gn,0);
   
-  t->modifies(lb->gInternalForceLabel);
+  t->modifiesVar(lb->gInternalForceLabel);
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentrationRate, allPatches,
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentrationRate, allPatches,
                                            Task::FineLevel,allMatls, ND, d_gn,0);
-    t->modifies(lb->diffusion->gConcentrationRate);
+    t->modifiesVar(lb->diffusion->gConcentrationRate);
   }
 
   sched->addTask(t, patches, matls);
@@ -1037,20 +1037,20 @@ void AMRMPM::scheduleNormalizeNodalVelTempConc(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::normalizeNodalVelTempConc",
                    this,&AMRMPM::normalizeNodalVelTempConc);
                    
-  t->needsLabel(Task::NewDW, lb->gMassLabel,  d_gn);
-  t->modifies(lb->gVelocityLabel);
-  t->modifies(lb->gTemperatureLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,  d_gn);
+  t->modifiesVar(lb->gVelocityLabel);
+  t->modifiesVar(lb->gTemperatureLabel);
   
   if(flags->d_doScalarDiffusion){
-    t->modifies(lb->diffusion->gConcentration);
-    t->computes(lb->diffusion->gConcentrationNoBC);
-    t->modifies(lb->diffusion->gHydrostaticStress);
+    t->modifiesVar(lb->diffusion->gConcentration);
+    t->computesVar(lb->diffusion->gConcentrationNoBC);
+    t->modifiesVar(lb->diffusion->gHydrostaticStress);
   }
   if(flags->d_withGaussSolver){
-    t->modifies(Al->gPosChargeLabel);
-    t->modifies(Al->gNegChargeLabel);
-    t->computes(Al->gPosChargeNoBCLabel);
-    t->computes(Al->gNegChargeNoBCLabel);
+    t->modifiesVar(Al->gPosChargeLabel);
+    t->modifiesVar(Al->gNegChargeLabel);
+    t->computesVar(Al->gPosChargeNoBCLabel);
+    t->computesVar(Al->gNegChargeNoBCLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1086,12 +1086,12 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
        
-    t->computes(lb->p_qLabel_preReloc, matlset);
+    t->computesVar(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->needsLabel(Task::OldDW,lb->simulationTimeLabel);
-  t->computes(lb->delTLabel,getLevel(patches));
-  t->computes(lb->StrainEnergyLabel);
+  t->requiresVar(Task::OldDW,lb->simulationTimeLabel);
+  t->computesVar(lb->delTLabel,getLevel(patches));
+  t->computesVar(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
   
@@ -1119,19 +1119,19 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeInternalForce",
                   this, &AMRMPM::computeInternalForce);
 
-  t->needsLabel(Task::NewDW,lb->gVolumeLabel, d_gn);
-  t->needsLabel(Task::OldDW,lb->pStressLabel,               d_gan,NGP);
-  t->needsLabel(Task::OldDW,lb->pVolumeLabel,               d_gan,NGP);
-  t->needsLabel(Task::OldDW,lb->pXLabel,                    d_gan,NGP);
-  t->needsLabel(Task::NewDW,lb->pCurSizeLabel,              d_gan,NGP);
+  t->requiresVar(Task::NewDW,lb->gVolumeLabel, d_gn);
+  t->requiresVar(Task::OldDW,lb->pStressLabel,               d_gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pVolumeLabel,               d_gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pXLabel,                    d_gan,NGP);
+  t->requiresVar(Task::NewDW,lb->pCurSizeLabel,              d_gan,NGP);
   if(flags->d_artificial_viscosity){
-    t->needsLabel(Task::OldDW, lb->p_qLabel,                d_gan,NGP);
+    t->requiresVar(Task::OldDW, lb->p_qLabel,                d_gan,NGP);
   }
   
-  t->computes( gSumSLabel );
-  t->computes(lb->gInternalForceLabel);
-  t->computes(lb->TotalVolumeDeformedLabel);
-  t->computes(lb->gStressForSavingLabel);
+  t->computesVar( gSumSLabel );
+  t->computesVar(lb->gInternalForceLabel);
+  t->computesVar(lb->TotalVolumeDeformedLabel);
+  t->computesVar(lb->gStressForSavingLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -1164,17 +1164,17 @@ void AMRMPM::scheduleComputeInternalForce_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->needsLabel(Task::NewDW, Al->gZOILabel,     d_one_matl, Ghost::None,0);
-    t->needsLabel(Task::OldDW, lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pStressLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
-    t->needsLabel(Task::OldDW, lb->pVolumeLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::NewDW, Al->gZOILabel,     d_one_matl, Ghost::None,0);
+    t->requiresVar(Task::OldDW, lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pStressLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+    t->requiresVar(Task::OldDW, lb->pVolumeLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     
     if(flags->d_artificial_viscosity){
-      t->needsLabel(Task::OldDW, lb->p_qLabel,    allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
+      t->requiresVar(Task::OldDW, lb->p_qLabel,    allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     }
     
-    t->modifies( gSumSLabel );
-    t->modifies(lb->gInternalForceLabel);
+    t->modifiesVar( gSumSLabel );
+    t->modifiesVar(lb->gInternalForceLabel);
 
     sched->addTask(t, patches, matls);
   }
@@ -1197,35 +1197,35 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("AMRMPM::computeAndIntegrateAcceleration",
                   this, &AMRMPM::computeAndIntegrateAcceleration);
 
-  t->needsLabel(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->needsLabel(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
 
-  t->computes(lb->gVelocityStarLabel);
-  t->computes(lb->gAccelerationLabel);
+  t->computesVar(lb->gVelocityStarLabel);
+  t->computesVar(lb->gAccelerationLabel);
 
   // This stuff should probably go in its own task, but for expediency...JG
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentrationNoBC,  Ghost::None);
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentration,      Ghost::None);
-    t->needsLabel(Task::NewDW, lb->diffusion->gExternalScalarFlux, Ghost::None);
-    t->needsLabel(Task::NewDW, d_sdInterfaceModel->getInterfaceFluxLabel(), Ghost::None);
-    t->modifies(lb->diffusion->gConcentrationRate);
-    t->computes(lb->diffusion->gConcentrationStar);
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentrationNoBC,  Ghost::None);
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentration,      Ghost::None);
+    t->requiresVar(Task::NewDW, lb->diffusion->gExternalScalarFlux, Ghost::None);
+    t->requiresVar(Task::NewDW, d_sdInterfaceModel->getInterfaceFluxLabel(), Ghost::None);
+    t->modifiesVar(lb->diffusion->gConcentrationRate);
+    t->computesVar(lb->diffusion->gConcentrationStar);
   }
 
   if(flags->d_withGaussSolver){
-    t->needsLabel(Task::NewDW, Al->gPosChargeNoBCLabel, Ghost::None);
-    t->needsLabel(Task::NewDW, Al->gNegChargeNoBCLabel, Ghost::None);
-    t->needsLabel(Task::NewDW, Al->gPosChargeLabel,     Ghost::None);
-    t->needsLabel(Task::NewDW, Al->gNegChargeLabel,     Ghost::None);
-    t->computes(Al->gPosChargeStarLabel);
-    t->computes(Al->gNegChargeStarLabel);
-    t->modifies(Al->gPosChargeRateLabel);
-    t->modifies(Al->gNegChargeRateLabel);
+    t->requiresVar(Task::NewDW, Al->gPosChargeNoBCLabel, Ghost::None);
+    t->requiresVar(Task::NewDW, Al->gNegChargeNoBCLabel, Ghost::None);
+    t->requiresVar(Task::NewDW, Al->gPosChargeLabel,     Ghost::None);
+    t->requiresVar(Task::NewDW, Al->gNegChargeLabel,     Ghost::None);
+    t->computesVar(Al->gPosChargeStarLabel);
+    t->computesVar(Al->gNegChargeStarLabel);
+    t->modifiesVar(Al->gPosChargeRateLabel);
+    t->modifiesVar(Al->gNegChargeRateLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1248,11 +1248,11 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                this,  &AMRMPM::setGridBoundaryConditions);
 
   const MaterialSubset* mss = matls->getUnion();
-  t->needsLabel(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
   
-  t->modifies(             lb->gAccelerationLabel,     mss);
-  t->modifies(             lb->gVelocityStarLabel,     mss);
-  t->needsLabel(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
+  t->modifiesVar(             lb->gAccelerationLabel,     mss);
+  t->modifiesVar(             lb->gVelocityStarLabel,     mss);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
   sched->addTask(t, patches, matls);
 }
@@ -1273,31 +1273,31 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::computeLAndF",
                 this, &AMRMPM::computeLAndF);
 
-  t->needsLabel(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->needsLabel(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
   
-  t->needsLabel(Task::OldDW, lb->pXLabel,                         d_gn);
-  t->needsLabel(Task::OldDW, lb->pMassLabel,                      d_gn);
-  t->needsLabel(Task::NewDW, lb->pCurSizeLabel,                   d_gn);
-  t->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         d_gn);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                      d_gn);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   d_gn);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn);
 
-  t->computes(lb->pVelGradLabel_preReloc);
-  t->computes(lb->pDeformationMeasureLabel_preReloc);
-  t->computes(lb->pVolumeLabel_preReloc);
+  t->computesVar(lb->pVelGradLabel_preReloc);
+  t->computesVar(lb->pDeformationMeasureLabel_preReloc);
+  t->computesVar(lb->pVolumeLabel_preReloc);
 
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentrationStar,       d_gac,NGN);
-    t->needsLabel(Task::OldDW, lb->diffusion->pArea,                    d_gn);
-    t->computes(lb->diffusion->pGradConcentration_preReloc);
-    t->computes(lb->diffusion->pArea_preReloc);
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentrationStar,       d_gac,NGN);
+    t->requiresVar(Task::OldDW, lb->diffusion->pArea,                    d_gn);
+    t->computesVar(lb->diffusion->pGradConcentration_preReloc);
+    t->computesVar(lb->diffusion->pArea_preReloc);
   }
 
   if(flags->d_withGaussSolver){
-    t->needsLabel(Task::NewDW, Al->gPosChargeStarLabel, d_gac, NGN);
-    t->needsLabel(Task::NewDW, Al->gNegChargeStarLabel, d_gac, NGN);
-    t->computes(Al->pPosChargeGradLabel_preReloc);
-    t->computes(Al->pNegChargeGradLabel_preReloc);
+    t->requiresVar(Task::NewDW, Al->gPosChargeStarLabel, d_gac, NGN);
+    t->requiresVar(Task::NewDW, Al->gNegChargeStarLabel, d_gac, NGN);
+    t->computesVar(Al->pPosChargeGradLabel_preReloc);
+    t->computesVar(Al->pNegChargeGradLabel_preReloc);
   }
 
   sched->addTask(t, patches, matls);
@@ -1320,78 +1320,78 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
                 this, &AMRMPM::interpolateToParticlesAndUpdate);
                 
-  t->needsLabel(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->needsLabel(Task::NewDW, lb->gAccelerationLabel,              d_gac,NGN);
-  t->needsLabel(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
-  t->needsLabel(Task::NewDW, lb->gTemperatureRateLabel,           d_gac,NGN);
-  t->needsLabel(Task::NewDW, lb->frictionalWorkLabel,             d_gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gAccelerationLabel,              d_gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarLabel,              d_gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gTemperatureRateLabel,           d_gac,NGN);
+  t->requiresVar(Task::NewDW, lb->frictionalWorkLabel,             d_gac,NGN);
   
-  t->needsLabel(Task::OldDW, lb->pXLabel,                         d_gn);   
-  t->needsLabel(Task::OldDW, lb->pMassLabel,                      d_gn);   
-  t->needsLabel(Task::OldDW, lb->pParticleIDLabel,                d_gn);   
-  t->needsLabel(Task::OldDW, lb->pTemperatureLabel,               d_gn);   
-  t->needsLabel(Task::OldDW, lb->pVelocityLabel,                  d_gn);   
-  t->needsLabel(Task::OldDW, lb->pDispLabel,                      d_gn);   
-  t->needsLabel(Task::NewDW, lb->pCurSizeLabel,                   d_gn);   
-  t->needsLabel(Task::OldDW, lb->pVolumeLabel,                    d_gn);   
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         d_gn);   
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                      d_gn);   
+  t->requiresVar(Task::OldDW, lb->pParticleIDLabel,                d_gn);   
+  t->requiresVar(Task::OldDW, lb->pTemperatureLabel,               d_gn);   
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,                  d_gn);   
+  t->requiresVar(Task::OldDW, lb->pDispLabel,                      d_gn);   
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   d_gn);   
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,                    d_gn);   
 
-  t->computes(lb->pDispLabel_preReloc);
-  t->computes(lb->pVelocityLabel_preReloc);
-  t->computes(lb->pXLabel_preReloc);
-  t->computes(lb->pParticleIDLabel_preReloc);
-  t->computes(lb->pTemperatureLabel_preReloc);
-  t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
-  t->computes(lb->pMassLabel_preReloc);
+  t->computesVar(lb->pDispLabel_preReloc);
+  t->computesVar(lb->pVelocityLabel_preReloc);
+  t->computesVar(lb->pXLabel_preReloc);
+  t->computesVar(lb->pParticleIDLabel_preReloc);
+  t->computesVar(lb->pTemperatureLabel_preReloc);
+  t->computesVar(lb->pTempPreviousLabel_preReloc); // for thermal stress
+  t->computesVar(lb->pMassLabel_preReloc);
 
   // Carry Forward particle refinement flag
   if(flags->d_refineParticles){
-    t->needsLabel(Task::OldDW, lb->pRefinedLabel,                d_gn);
-    t->computes(             lb->pRefinedLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pRefinedLabel,                d_gn);
+    t->computesVar(             lb->pRefinedLabel_preReloc);
   }
 
-  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
-  t->computes(             lb->NC_CCweightLabel, d_one_matl);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
+  t->computesVar(             lb->NC_CCweightLabel, d_one_matl);
 
   if(flags->d_doScalarDiffusion){
-    t->needsLabel(Task::OldDW, lb->diffusion->pConcentration,           d_gn);
-    t->needsLabel(Task::NewDW, lb->diffusion->gConcentrationRate,       d_gac, NGN);
+    t->requiresVar(Task::OldDW, lb->diffusion->pConcentration,           d_gn);
+    t->requiresVar(Task::NewDW, lb->diffusion->gConcentrationRate,       d_gac, NGN);
 
-    t->computes(lb->diffusion->pConcentration_preReloc);
-    t->computes(lb->diffusion->pConcPrevious_preReloc);
+    t->computesVar(lb->diffusion->pConcentration_preReloc);
+    t->computesVar(lb->diffusion->pConcPrevious_preReloc);
     if(flags->d_doAutoCycleBC){
       if(flags->d_autoCycleUseMinMax){
-        t->computes(lb->diffusion->rMinConcentration);
-        t->computes(lb->diffusion->rMaxConcentration);
+        t->computesVar(lb->diffusion->rMinConcentration);
+        t->computesVar(lb->diffusion->rMaxConcentration);
       }else{
-        t->computes(lb->diffusion->rTotalConcentration);
+        t->computesVar(lb->diffusion->rTotalConcentration);
       }
     }
   }
 
   if(flags->d_withGaussSolver){
-    t->needsLabel(Task::OldDW, Al->pPosChargeLabel, d_gn);
-    t->needsLabel(Task::OldDW, Al->pNegChargeLabel, d_gn);
-    t->needsLabel(Task::OldDW, Al->pPermittivityLabel, d_gn);
-    t->needsLabel(Task::NewDW, Al->gPosChargeRateLabel, d_gac, NGN);
-    t->needsLabel(Task::NewDW, Al->gNegChargeRateLabel, d_gac, NGN);
+    t->requiresVar(Task::OldDW, Al->pPosChargeLabel, d_gn);
+    t->requiresVar(Task::OldDW, Al->pNegChargeLabel, d_gn);
+    t->requiresVar(Task::OldDW, Al->pPermittivityLabel, d_gn);
+    t->requiresVar(Task::NewDW, Al->gPosChargeRateLabel, d_gac, NGN);
+    t->requiresVar(Task::NewDW, Al->gNegChargeRateLabel, d_gac, NGN);
 
-    t->computes(Al->pPosChargeLabel_preReloc);
-    t->computes(Al->pNegChargeLabel_preReloc);
-    t->computes(Al->pPermittivityLabel_preReloc);
+    t->computesVar(Al->pPosChargeLabel_preReloc);
+    t->computesVar(Al->pNegChargeLabel_preReloc);
+    t->computesVar(Al->pPermittivityLabel_preReloc);
   }
 
-  t->computes(lb->TotalMassLabel);
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
+  t->computesVar(lb->TotalMassLabel);
+  t->computesVar(lb->KineticEnergyLabel);
+  t->computesVar(lb->ThermalEnergyLabel);
+  t->computesVar(lb->CenterOfMassPositionLabel);
+  t->computesVar(lb->TotalMomentumLabel);
 
 #ifndef USE_DEBUG_TASK
   // debugging scalar
   if(flags->d_with_color) {
-    t->needsLabel(Task::OldDW, lb->pColorLabel,  d_gn);
-    t->computes(lb->pColorLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pColorLabel,  d_gn);
+    t->computesVar(lb->pColorLabel_preReloc);
   }
 #endif  
   sched->addTask(t, patches, matls);
@@ -1413,9 +1413,9 @@ void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::computeParticleScaleFactor",this,
                       &AMRMPM::computeParticleScaleFactor);
 
-  t->needsLabel(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
-  t->needsLabel(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
-  t->computes(lb->pScaleFactorLabel_preReloc);
+  t->requiresVar(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
+  t->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
+  t->computesVar(lb->pScaleFactorLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1434,12 +1434,12 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   Task* t=scinew Task("AMRMPM::finalParticleUpdate",
                       this, &AMRMPM::finalParticleUpdate);
 
-  t->needsLabel(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->needsLabel(Task::NewDW, lb->pdTdtLabel,           d_gn);
-  t->needsLabel(Task::NewDW, lb->pMassLabel_preReloc,  d_gn);
+  t->requiresVar(Task::NewDW, lb->pdTdtLabel,           d_gn);
+  t->requiresVar(Task::NewDW, lb->pMassLabel_preReloc,  d_gn);
 
-  t->modifies(lb->pTemperatureLabel_preReloc);
+  t->modifiesVar(lb->pTemperatureLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1459,43 +1459,43 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     Task* t=scinew Task("AMRMPM::addParticles",this,
                         &AMRMPM::addParticles);
 
-    t->modifies(lb->pParticleIDLabel_preReloc);
-    t->modifies(lb->pXLabel_preReloc);
-    t->modifies(lb->pVolumeLabel_preReloc);
-    t->modifies(lb->pVelocityLabel_preReloc);
-    t->modifies(lb->pMassLabel_preReloc);
-    t->modifies(lb->pSizeLabel_preReloc);
-    t->modifies(lb->pDispLabel_preReloc);
-    t->modifies(lb->pStressLabel_preReloc);
+    t->modifiesVar(lb->pParticleIDLabel_preReloc);
+    t->modifiesVar(lb->pXLabel_preReloc);
+    t->modifiesVar(lb->pVolumeLabel_preReloc);
+    t->modifiesVar(lb->pVelocityLabel_preReloc);
+    t->modifiesVar(lb->pMassLabel_preReloc);
+    t->modifiesVar(lb->pSizeLabel_preReloc);
+    t->modifiesVar(lb->pDispLabel_preReloc);
+    t->modifiesVar(lb->pStressLabel_preReloc);
     if (flags->d_with_color) {
-      t->modifies(lb->pColorLabel_preReloc);
+      t->modifiesVar(lb->pColorLabel_preReloc);
     }
     if(flags->d_doScalarDiffusion){
-      t->modifies(lb->diffusion->pConcentration_preReloc);
-      t->modifies(lb->diffusion->pConcPrevious_preReloc);
-      t->modifies(lb->diffusion->pGradConcentration_preReloc);
-      t->modifies(lb->diffusion->pExternalScalarFlux_preReloc);
-      t->modifies(lb->diffusion->pArea_preReloc);
-      t->modifies(lb->diffusion->pDiffusivity_preReloc);
+      t->modifiesVar(lb->diffusion->pConcentration_preReloc);
+      t->modifiesVar(lb->diffusion->pConcPrevious_preReloc);
+      t->modifiesVar(lb->diffusion->pGradConcentration_preReloc);
+      t->modifiesVar(lb->diffusion->pExternalScalarFlux_preReloc);
+      t->modifiesVar(lb->diffusion->pArea_preReloc);
+      t->modifiesVar(lb->diffusion->pDiffusivity_preReloc);
     }
     if (flags->d_useLoadCurves) {
-      t->modifies(lb->pLoadCurveIDLabel_preReloc);
+      t->modifiesVar(lb->pLoadCurveIDLabel_preReloc);
     }
-    t->modifies(lb->pLocalizedMPMLabel_preReloc);
-    t->modifies(lb->pExtForceLabel_preReloc);
-    t->modifies(lb->pTemperatureLabel_preReloc);
-    t->modifies(lb->pTempPreviousLabel_preReloc);
-    t->modifies(lb->pDeformationMeasureLabel_preReloc);
-    t->modifies(lb->pRefinedLabel_preReloc);
+    t->modifiesVar(lb->pLocalizedMPMLabel_preReloc);
+    t->modifiesVar(lb->pExtForceLabel_preReloc);
+    t->modifiesVar(lb->pTemperatureLabel_preReloc);
+    t->modifiesVar(lb->pTempPreviousLabel_preReloc);
+    t->modifiesVar(lb->pDeformationMeasureLabel_preReloc);
+    t->modifiesVar(lb->pRefinedLabel_preReloc);
     if(flags->d_computeScaleFactor){
-     t->modifies(lb->pScaleFactorLabel_preReloc);
+     t->modifiesVar(lb->pScaleFactorLabel_preReloc);
     }
-    t->modifies(lb->pLastLevelLabel_preReloc);
-    t->modifies(lb->pVelGradLabel_preReloc);
-    t->modifies(Al->MPMRefineCellLabel, d_one_matl);
+    t->modifiesVar(lb->pLastLevelLabel_preReloc);
+    t->modifiesVar(lb->pVelGradLabel_preReloc);
+    t->modifiesVar(Al->MPMRefineCellLabel, d_one_matl);
 
-    t->needsLabel(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
-    t->computes(             lb->pCellNAPIDLabel, d_one_matl);
+    t->requiresVar(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
+    t->computesVar(             lb->pCellNAPIDLabel, d_one_matl);
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMatls; m++){
@@ -1526,14 +1526,14 @@ void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
     Task* t=scinew Task("AMRMPM::reduceFlagsExtents",
                         this, &AMRMPM::reduceFlagsExtents);
 
-    t->needsLabel(Task::NewDW, Al->MPMRefineCellLabel, d_one_matl, Ghost::None);
+    t->requiresVar(Task::NewDW, Al->MPMRefineCellLabel, d_one_matl, Ghost::None);
 
-    t->computes(RefineFlagXMaxLabel);
-    t->computes(RefineFlagXMinLabel);
-    t->computes(RefineFlagYMaxLabel);
-    t->computes(RefineFlagYMinLabel);
-    t->computes(RefineFlagZMaxLabel);
-    t->computes(RefineFlagZMinLabel);
+    t->computesVar(RefineFlagXMaxLabel);
+    t->computesVar(RefineFlagXMinLabel);
+    t->computesVar(RefineFlagYMaxLabel);
+    t->computesVar(RefineFlagYMinLabel);
+    t->computesVar(RefineFlagZMaxLabel);
+    t->computesVar(RefineFlagZMinLabel);
 
     sched->addTask(t, patches, matls);
   }
@@ -1546,50 +1546,50 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   printSchedule(patches,cout_doing,"AMRMPM::scheduleRefine");
   Task* t = scinew Task("AMRMPM::refineGrid", this, &AMRMPM::refineGrid);
 
-  t->computes(lb->pXLabel);
-  t->computes(lb->pDispLabel);
-  t->computes(lb->pMassLabel);
-  t->computes(lb->pVolumeLabel);
-  t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for thermal  stress analysis
-  t->computes(lb->pdTdtLabel);
-  t->computes(lb->pVelocityLabel);
-  t->computes(lb->pExternalForceLabel);
-  t->computes(lb->diffusion->pExternalScalarFlux_preReloc);
-  t->computes(lb->pParticleIDLabel);
-  t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pStressLabel);
+  t->computesVar(lb->pXLabel);
+  t->computesVar(lb->pDispLabel);
+  t->computesVar(lb->pMassLabel);
+  t->computesVar(lb->pVolumeLabel);
+  t->computesVar(lb->pTemperatureLabel);
+  t->computesVar(lb->pTempPreviousLabel); // for thermal  stress analysis
+  t->computesVar(lb->pdTdtLabel);
+  t->computesVar(lb->pVelocityLabel);
+  t->computesVar(lb->pExternalForceLabel);
+  t->computesVar(lb->diffusion->pExternalScalarFlux_preReloc);
+  t->computesVar(lb->pParticleIDLabel);
+  t->computesVar(lb->pDeformationMeasureLabel);
+  t->computesVar(lb->pStressLabel);
   if(flags->d_doScalarDiffusion){
-    t->computes(lb->diffusion->pConcentration);
-    t->computes(lb->diffusion->pConcPrevious);
-    t->computes(lb->diffusion->pGradConcentration);
-    t->computes(lb->diffusion->pArea);
+    t->computesVar(lb->diffusion->pConcentration);
+    t->computesVar(lb->diffusion->pConcPrevious);
+    t->computesVar(lb->diffusion->pGradConcentration);
+    t->computesVar(lb->diffusion->pArea);
   }
-  t->computes(lb->pLastLevelLabel);
-  t->computes(lb->pLocalizedMPMLabel);
-  t->computes(lb->pRefinedLabel);
-  t->computes(lb->pSizeLabel);
-  t->computes(lb->pVelGradLabel);
-  t->computes(lb->pCellNAPIDLabel, d_one_matl);
-  t->computes(lb->NC_CCweightLabel);
+  t->computesVar(lb->pLastLevelLabel);
+  t->computesVar(lb->pLocalizedMPMLabel);
+  t->computesVar(lb->pRefinedLabel);
+  t->computesVar(lb->pSizeLabel);
+  t->computesVar(lb->pVelGradLabel);
+  t->computesVar(lb->pCellNAPIDLabel, d_one_matl);
+  t->computesVar(lb->NC_CCweightLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
+    t->computesVar(lb->pColorLabel);
   }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
+    t->computesVar(lb->pLoadCurveIDLabel);
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
+    t->computesVar(lb->AccStrainEnergyLabel);
   }
   
   if(flags->d_artificial_viscosity){
-    t->computes(lb->p_qLabel);
+    t->computesVar(lb->p_qLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -1605,7 +1605,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
     ErosionModel* em = mpm_matl->getErosionModel();
     em->addInitialComputesAndRequires(t, mpm_matl);
   }
-  t->computes(lb->delTLabel,getLevel(patches));
+  t->computesVar(lb->delTLabel,getLevel(patches));
 
 
   sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
@@ -1635,17 +1635,17 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
 
   Task::SearchTG OldTG = Task::SearchTG::OldTG;  // possibly search old TG for computes
 
-  task->needsLabel(Task::NewDW, Al->MPMRefineCellLabel,
+  task->requiresVar(Task::NewDW, Al->MPMRefineCellLabel,
                0, Task::FineLevel,  d_one_matl,oims, d_gn, 0, OldTG);
 
-  task->needsLabel(Task::NewDW, RefineFlagXMaxLabel);
-  task->needsLabel(Task::NewDW, RefineFlagXMinLabel);
-  task->needsLabel(Task::NewDW, RefineFlagYMaxLabel);
-  task->needsLabel(Task::NewDW, RefineFlagYMinLabel);
-  task->needsLabel(Task::NewDW, RefineFlagZMaxLabel);
-  task->needsLabel(Task::NewDW, RefineFlagZMinLabel);
+  task->requiresVar(Task::NewDW, RefineFlagXMaxLabel);
+  task->requiresVar(Task::NewDW, RefineFlagXMinLabel);
+  task->requiresVar(Task::NewDW, RefineFlagYMaxLabel);
+  task->requiresVar(Task::NewDW, RefineFlagYMinLabel);
+  task->requiresVar(Task::NewDW, RefineFlagZMaxLabel);
+  task->requiresVar(Task::NewDW, RefineFlagZMinLabel);
 
-  task->modifies(Al->MPMRefineCellLabel, d_one_matl, oims, OldTG);
+  task->modifiesVar(Al->MPMRefineCellLabel, d_one_matl, oims, OldTG);
 
   sched->addTask(task, patch_set, all_matls);
 }
@@ -1740,11 +1740,11 @@ void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   Task* task = scinew Task("AMRMPM::errorEstimate", this, 
                            &AMRMPM::errorEstimate);
 
-  task->modifies(m_regridder->getRefineFlagLabel(),
+  task->modifiesVar(m_regridder->getRefineFlagLabel(),
                                         m_regridder->refineFlagMaterials());
-  task->modifies(m_regridder->getRefinePatchFlagLabel(),
+  task->modifiesVar(m_regridder->getRefinePatchFlagLabel(),
                                         m_regridder->refineFlagMaterials());
-  task->needsLabel(Task::NewDW, Al->MPMRefineCellLabel, Ghost::None);
+  task->requiresVar(Task::NewDW, Al->MPMRefineCellLabel, Ghost::None);
 
   sched->addTask(task, coarseLevel->eachPatch(),
                                         m_materialManager->allMaterials( "MPM" ));
@@ -4971,7 +4971,7 @@ void AMRMPM::scheduleCountParticles(const PatchSet* patches,
   printSchedule(patches,cout_doing,"AMRMPM::scheduleCountParticles");
   Task* t = scinew Task("AMRMPM::countParticles",this, 
                         &AMRMPM::countParticles);
-  t->computes(lb->partCountLabel);
+  t->computesVar(lb->partCountLabel);
   sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 }
 //______________________________________________________________________
@@ -5024,13 +5024,13 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
                    this,&AMRMPM::debug_CFI);
   printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
   if(level->hasFinerLevel()){ 
-    t->needsLabel(Task::NewDW, Al->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, d_gn, 0);
+    t->requiresVar(Task::NewDW, Al->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, d_gn, 0);
   }
 
-  t->needsLabel(Task::OldDW, lb->pXLabel,                  d_gn,0);
-  t->needsLabel(Task::NewDW, lb->pCurSizeLabel,            d_gn,0);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  d_gn,0);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            d_gn,0);
   
-  t->computes(lb->pColorLabel_preReloc);
+  t->computesVar(lb->pColorLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -5269,16 +5269,16 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    t->needsLabel(Task::OldDW, lb->delTLabel );
+    t->requiresVar(Task::OldDW, lb->delTLabel );
     
-    t->needsLabel(Task::OldDW, lb->pXLabel, gn);
-    t->needsLabel(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
-    t->needsLabel(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
-    t->needsLabel(Task::NewDW, Al->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, d_gn,0);
+    t->requiresVar(Task::OldDW, lb->pXLabel, gn);
+    t->requiresVar(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
+    t->requiresVar(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
+    t->requiresVar(Task::NewDW, Al->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, d_gn,0);
     
-    t->modifies(lb->pXLabel_preReloc);
-    t->modifies(lb->pDispLabel_preReloc);
-    t->modifies(lb->pVelocityLabel_preReloc);
+    t->modifiesVar(lb->pXLabel_preReloc);
+    t->modifiesVar(lb->pDispLabel_preReloc);
+    t->modifiesVar(lb->pVelocityLabel_preReloc);
 
     sched->addTask(t, patches, matls);
   }

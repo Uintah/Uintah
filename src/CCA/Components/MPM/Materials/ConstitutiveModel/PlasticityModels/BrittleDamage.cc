@@ -149,8 +149,8 @@ BrittleDamage::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes( pFailureStressOrStrainLabel, matlset );
-  task->computes( pDamageLabel,                matlset );
+  task->computesVar( pFailureStressOrStrainLabel, matlset );
+  task->computesVar( pDamageLabel,                matlset );
 }
 //______________________________________________________________________
 //
@@ -194,18 +194,18 @@ BrittleDamage::addComputesAndRequires(Task* task,
   // VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
 
-  task->needsLabel( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
-  task->needsLabel( Task::OldDW, pParticleIDLabel,            matls, gnone);   
-  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
-  task->needsLabel( Task::NewDW, pDefGradLabel,               matls, gnone);   
-  task->needsLabel( Task::NewDW, pVolumeLabel,                matls, gnone);
-  task->needsLabel( Task::OldDW, pDamageLabel,                matls, gnone);   
+  task->requiresVar( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
+  task->requiresVar( Task::OldDW, pParticleIDLabel,            matls, gnone);   
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
+  task->requiresVar( Task::NewDW, pDefGradLabel,               matls, gnone);   
+  task->requiresVar( Task::NewDW, pVolumeLabel,                matls, gnone);
+  task->requiresVar( Task::OldDW, pDamageLabel,                matls, gnone);   
     
-  task->modifies( pStressLabel,                         matls );
-  task->computes( pFailureStressOrStrainLabel_preReloc, matls );
-  task->computes( d_lb->pLocalizedMPMLabel_preReloc,    matls );
-  task->computes( pDamageLabel_preReloc,                matls );
-//  task->computes( TotalLocalizedParticleLabel );
+  task->modifiesVar( pStressLabel,                         matls );
+  task->computesVar( pFailureStressOrStrainLabel_preReloc, matls );
+  task->computesVar( d_lb->pLocalizedMPMLabel_preReloc,    matls );
+  task->computesVar( pDamageLabel_preReloc,                matls );
+//  task->computesVar( TotalLocalizedParticleLabel );
 }
 //______________________________________________________________________
 //

@@ -198,10 +198,10 @@ FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "FOWYDevol::initVars";
   Task* tsk = scinew Task(taskname, this, &FOWYDevol::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
-  tsk->computes(d_charLabel);
-  tsk->computes(_v_inf_label);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
+  tsk->computesVar(d_charLabel);
+  tsk->computesVar(_v_inf_label);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 
@@ -279,29 +279,29 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
-    tsk->computes(d_charLabel);
-    tsk->computes(_v_inf_label);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
+    tsk->computesVar(d_charLabel);
+    tsk->computesVar(_v_inf_label);
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);
-    tsk->modifies(d_charLabel);
-    tsk->modifies(_v_inf_label);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);
+    tsk->modifiesVar(d_charLabel);
+    tsk->modifiesVar(_v_inf_label);
     which_dw = Task::NewDW;
   }
-  tsk->needsLabel( which_dw, _particle_temperature_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _rcmass_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _char_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _weight_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 );
-  tsk->needsLabel( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
-  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_delTLabel);
-  tsk->needsLabel( Task::NewDW, _RHS_source_varlabel, gn, 0 );
-  tsk->needsLabel( Task::NewDW, _char_RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _rcmass_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _char_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel);
+  tsk->requiresVar( Task::NewDW, _RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, _char_RHS_source_varlabel, gn, 0 );
   if ( _rawcoal_birth_label != nullptr )
-    tsk->needsLabel( Task::NewDW, _rawcoal_birth_label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

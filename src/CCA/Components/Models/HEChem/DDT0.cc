@@ -232,8 +232,8 @@ void DDT0::scheduleInitialize(SchedulerP& sched,
   printSchedule(level,cout_doing,"DDT0::scheduleInitialize");
   Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
-  t->computes(reactedFractionLabel, react_matl);
-  t->computes(burningLabel,         react_matl);
+  t->computesVar(reactedFractionLabel, react_matl);
+  t->computesVar(burningLabel,         react_matl);
   sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
@@ -296,56 +296,56 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Requires
   //__________________________________
-  t->needsLabel(Task::OldDW, Ilb->timeStepLabel );
-  t->needsLabel(Task::OldDW, Ilb->delTLabel,        level.get_rep());
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
-  t->needsLabel(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
-  t->needsLabel(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,        level.get_rep());
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,     ice_matls, oms, gn);
+  t->requiresVar(Task::NewDW, Ilb->temp_CCLabel,     mpm_matls, oms, gn);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel, all_matls, oms, gn);
   if(d_useCrackModel){
-    t->needsLabel(Task::OldDW, Mlb->pXLabel,        mpm_matls,  gn);
-    t->needsLabel(Task::OldDW, pCrackRadiusLabel,   react_matl, gn);
+    t->requiresVar(Task::OldDW, Mlb->pXLabel,        mpm_matls,  gn);
+    t->requiresVar(Task::OldDW, pCrackRadiusLabel,   react_matl, gn);
   }
 
   //__________________________________
   // Products
-  t->needsLabel(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
-  t->needsLabel(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
-  t->needsLabel(Task::OldDW,  Mlb->NC_CCweightLabel,    d_one_matl,  gac, 1);
+  t->requiresVar(Task::NewDW,  Ilb->rho_CCLabel,         prod_matl,   gn); 
+  t->requiresVar(Task::NewDW,  Ilb->press_equil_CCLabel, d_one_matl,  gn);
+  t->requiresVar(Task::OldDW,  Mlb->NC_CCweightLabel,    d_one_matl,  gac, 1);
 
   //__________________________________
   // Reactants
-  t->needsLabel(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->needsLabel(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->needsLabel(Task::NewDW, Ilb->rho_CCLabel,      react_matl, gn);
-  t->needsLabel(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
 
   //__________________________________
   // Computes
   //__________________________________
-  t->computes(reactedFractionLabel,    react_matl);
-  t->computes(delFLabel,               react_matl);
-  t->computes(burningLabel,            react_matl);
-  t->computes(detonatingLabel,         react_matl);
-  t->computes(onSurfaceLabel,    react_matl);
-  t->computes(surfaceTempLabel,  react_matl);
+  t->computesVar(reactedFractionLabel,    react_matl);
+  t->computesVar(delFLabel,               react_matl);
+  t->computesVar(burningLabel,            react_matl);
+  t->computesVar(detonatingLabel,         react_matl);
+  t->computesVar(onSurfaceLabel,    react_matl);
+  t->computesVar(surfaceTempLabel,  react_matl);
 
   //__________________________________
   // Conserved Variables
   //__________________________________
   if(d_saveConservedVars->mass ){
-      t->computes(DDT0::totalMassBurnedLabel);
+      t->computesVar(DDT0::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-      t->computes(DDT0::totalHeatReleasedLabel);
+      t->computesVar(DDT0::totalHeatReleasedLabel);
   }
 
   //__________________________________
   // Modifies  
   //__________________________________
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
 
   sched->addTask(t, level->eachPatch(), d_mymatls);
 }

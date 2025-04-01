@@ -263,20 +263,20 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
-  t->computes(d_lb->pXLabel);
-  t->computes(d_Cl->czAreaLabel);
-  t->computes(d_Cl->czNormLabel);
-  t->computes(d_Cl->czTangLabel);
-  t->computes(d_Cl->czDispTopLabel);
-  t->computes(d_Cl->czDispBottomLabel);
-  t->computes(d_Cl->czSeparationLabel);
-  t->computes(d_Cl->czForceLabel);
-  t->computes(d_Cl->czTopMatLabel);
-  t->computes(d_Cl->czBotMatLabel);
-  t->computes(d_Cl->czFailedLabel);
-  t->computes(d_Cl->czIDLabel);
-  t->computes(d_Cl->czCountLabel);
-  t->computes(d_Cl->pCellNACZIDLabel,zeroth_matl);
+  t->computesVar(d_lb->pXLabel);
+  t->computesVar(d_Cl->czAreaLabel);
+  t->computesVar(d_Cl->czNormLabel);
+  t->computesVar(d_Cl->czTangLabel);
+  t->computesVar(d_Cl->czDispTopLabel);
+  t->computesVar(d_Cl->czDispBottomLabel);
+  t->computesVar(d_Cl->czSeparationLabel);
+  t->computesVar(d_Cl->czForceLabel);
+  t->computesVar(d_Cl->czTopMatLabel);
+  t->computesVar(d_Cl->czBotMatLabel);
+  t->computesVar(d_Cl->czFailedLabel);
+  t->computesVar(d_Cl->czIDLabel);
+  t->computesVar(d_Cl->czCountLabel);
+  t->computesVar(d_Cl->pCellNACZIDLabel,zeroth_matl);
 
   vector<int> m(1);
   m[0] = czmat->getDWIndex();

@@ -1310,7 +1310,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches on this proc when scheduling
 
-    task->computes(m_hypre_solver_label);
+    task->computesVar(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1330,7 +1330,7 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches  on this proc when scheduling restarts with regridding
 
-    task->computes(m_hypre_solver_label);
+    task->computesVar(m_hypre_solver_label);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1449,34 +1449,34 @@ namespace Uintah {
     auto TaskDependencies = [&](Task* task) {
 
       // Matrix A
-      task->needsLabel(which_A_dw, A_label, Ghost::None, 0);
+      task->requiresVar(which_A_dw, A_label, Ghost::None, 0);
 
       // Solution X
       if(modifies_X) {
-        task->modifies( x_label );
+        task->modifiesVar( x_label );
       } else {
-        task->computes( x_label );
+        task->computesVar( x_label );
       }
 
       // Initial Guess
       if(guess_label) {
-        task->needsLabel(which_guess_dw, guess_label, Ghost::None, 0);
+        task->requiresVar(which_guess_dw, guess_label, Ghost::None, 0);
       }
 
       // RHS  B
-      task->needsLabel(which_b_dw, b_label, Ghost::None, 0);
+      task->requiresVar(which_b_dw, b_label, Ghost::None, 0);
 
       // timestep
       // it could come from old_dw or parentOldDw
       Task::WhichDW old_dw = m_params->getWhichOldDW();
-      task->needsLabel( old_dw, m_timeStepLabel );
+      task->requiresVar( old_dw, m_timeStepLabel );
 
       // solve struct
       if (isFirstSolve) {
-        task->needsLabel( Task::OldDW, m_hypre_solver_label);
-        task->computes( m_hypre_solver_label);
+        task->requiresVar( Task::OldDW, m_hypre_solver_label);
+        task->computesVar( m_hypre_solver_label);
       }  else {
-        task->needsLabel( Task::NewDW, m_hypre_solver_label);
+        task->requiresVar( Task::NewDW, m_hypre_solver_label);
       }
 
       sched->overrideVariableBehavior(m_hypre_solver_label->getName(),false,true,false,false,true);
@@ -1484,8 +1484,8 @@ namespace Uintah {
       task->setType(Task::Hypre);
 
       if( m_params->getRecomputeTimeStepOnFailure() ) {
-        task->computes( VarLabel::find(abortTimeStep_name) );
-        task->computes( VarLabel::find(recomputeTimeStep_name) );
+        task->computesVar( VarLabel::find(abortTimeStep_name) );
+        task->computesVar( VarLabel::find(recomputeTimeStep_name) );
       }
     };
 

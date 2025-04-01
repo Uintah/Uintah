@@ -232,16 +232,16 @@ CQMOM::sched_solveCQMOMInversion( const LevelP& level, SchedulerP& sched, int ti
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0);
   }
 
   //tsk computs on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     if( timeSubStep == 0) {
-      tsk->computes(tempLabel);
+      tsk->computesVar(tempLabel);
     } else {
-      tsk->modifies(tempLabel);
+      tsk->modifiesVar(tempLabel);
     }
   }
 
@@ -249,9 +249,9 @@ CQMOM::sched_solveCQMOMInversion( const LevelP& level, SchedulerP& sched, int ti
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     if( timeSubStep == 0) {
-      tsk->computes(tempLabel);
+      tsk->computesVar(tempLabel);
     } else {
-      tsk->modifies(tempLabel);
+      tsk->modifiesVar(tempLabel);
     }
   }
 
@@ -393,19 +393,19 @@ CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeS
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   //tsk requires on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   //tsk modifies on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -562,16 +562,16 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0);
+    tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computs on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     if( timeSubStep == 0) {
-      tsk->computes(tempLabel);
+      tsk->computesVar(tempLabel);
     } else {
-      tsk->modifies(tempLabel);
+      tsk->modifiesVar(tempLabel);
     }
   }
   
@@ -579,9 +579,9 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     if( timeSubStep == 0) {
-      tsk->computes(tempLabel);
+      tsk->computesVar(tempLabel);
     } else {
-      tsk->modifies(tempLabel);
+      tsk->modifiesVar(tempLabel);
     }
   }
   
@@ -724,19 +724,19 @@ CQMOM::sched_solveCQMOMInversion312( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computs on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   //tsk computes on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -892,19 +892,19 @@ CQMOM::sched_solveCQMOMInversion213( const LevelP& level, SchedulerP& sched, int
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0);
   }
   
   //tsk computes on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   //tsk computes on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->modifies(tempLabel);
+    tsk->modifiesVar(tempLabel);
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));

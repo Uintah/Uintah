@@ -519,9 +519,9 @@ void TransIsoHyper::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pFailureLabel,              matlset);
-  task->computes(pStretchLabel,              matlset);
-  task->computes(lb->pStressLabel_preReloc,  matlset);
+  task->computesVar(pFailureLabel,              matlset);
+  task->computesVar(pStretchLabel,              matlset);
+  task->computesVar(lb->pStressLabel_preReloc,  matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* task,
@@ -539,12 +539,12 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
-  task->needsLabel(Task::OldDW, pFailureLabel,      matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+  task->requiresVar(Task::OldDW, pFailureLabel,      matlset,gnone);
 
-  task->computes(lb->pFiberDirLabel_preReloc, matlset);
-  task->computes(pStretchLabel_preReloc,      matlset);
-  task->computes(pFailureLabel_preReloc,      matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc, matlset);
+  task->computesVar(pStretchLabel_preReloc,      matlset);
+  task->computesVar(pFailureLabel_preReloc,      matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,

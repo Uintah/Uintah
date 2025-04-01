@@ -183,8 +183,8 @@ void particleExtract::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("particleExtract::initialize",
                   this, &particleExtract::initialize);
 
-  t->computes( m_lb->lastWriteTimeLabel );
-  t->computes( m_lb->filePointerLabel ) ;
+  t->computesVar( m_lb->lastWriteTimeLabel );
+  t->computesVar( m_lb->filePointerLabel ) ;
   sched->addTask( t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
@@ -260,8 +260,8 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   // do not checkpoint it.  Put it here so it will be registered during a restart
   sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
 
-  t->needsLabel( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
-  t->computes( m_lb->filePointerLabel_preReloc  );
+  t->requiresVar( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
+  t->computesVar( m_lb->filePointerLabel_preReloc  );
 
   sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
@@ -332,14 +332,14 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
       throw InternalError("particleExtract: scheduleDoAnalysis label not found: "
                           + name , __FILE__, __LINE__);
     }
-    t->needsLabel(Task::NewDW,d_varLabels[i], m_gn, 0);
+    t->requiresVar(Task::NewDW,d_varLabels[i], m_gn, 0);
   }
 
-  t->needsLabel( Task::NewDW,  M_lb->pXLabel,           m_gn );
-  t->needsLabel( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
-  t->needsLabel( Task::NewDW,  M_lb->pColorLabel,       m_gn );
-  t->needsLabel( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
-  t->modifies( m_lb->filePointerLabel );
+  t->requiresVar( Task::NewDW,  M_lb->pXLabel,           m_gn );
+  t->requiresVar( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
+  t->requiresVar( Task::NewDW,  M_lb->pColorLabel,       m_gn );
+  t->requiresVar( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
+  t->modifiesVar( m_lb->filePointerLabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }

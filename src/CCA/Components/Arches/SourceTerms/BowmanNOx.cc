@@ -70,9 +70,9 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   nGhosts = 0;
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
   }
 
   // resolve some labels:
@@ -82,11 +82,11 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   _temperature_label = VarLabel::find( _temperature_name );
 
 
-  tsk->needsLabel( Task::OldDW, _n2_label, gType, nGhosts );
-  tsk->needsLabel( Task::OldDW, _o2_label, gType, nGhosts );
-  tsk->needsLabel( Task::OldDW, _rho_label, gType, nGhosts );
-  tsk->needsLabel( Task::OldDW, _temperature_label, gType, nGhosts );
-  tsk->needsLabel( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts );
+  tsk->requiresVar( Task::OldDW, _n2_label, gType, nGhosts );
+  tsk->requiresVar( Task::OldDW, _o2_label, gType, nGhosts );
+  tsk->requiresVar( Task::OldDW, _rho_label, gType, nGhosts );
+  tsk->requiresVar( Task::OldDW, _temperature_label, gType, nGhosts );
+  tsk->requiresVar( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
@@ -171,10 +171,10 @@ BowmanNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &BowmanNOx::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter, _materialManager->allMaterials( "Arches" )->getUnion());
+    tsk->computesVar(*iter, _materialManager->allMaterials( "Arches" )->getUnion());
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

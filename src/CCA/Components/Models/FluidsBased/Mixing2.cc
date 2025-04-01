@@ -258,7 +258,7 @@ void Mixing2::scheduleInitialize(SchedulerP& sched,
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->computes(stream->massFraction_CCLabel);
+    t->computesVar(stream->massFraction_CCLabel);
   }
   sched->addTask(t, level->eachPatch(), mymatls);
 }
@@ -326,20 +326,20 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("Mixing2::computeModelSources",this, 
                         &Mixing2::computeModelSources);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->needsLabel(Task::OldDW, Ilb->rho_CCLabel,        Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->press_CCLabel,      Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->temp_CCLabel,       Ghost::None);
-  t->needsLabel(Task::NewDW, Ilb->specific_heatLabel, Ghost::None);
-  t->needsLabel(Task::NewDW, Ilb->gammaLabel,         Ghost::None);
-  t->needsLabel(Task::OldDW, Ilb->delTLabel,         level.get_rep());
-  t->needsLabel(Task::OldDW, Ilb->simulationTimeLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,        Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->press_CCLabel,      Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,       Ghost::None);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel, Ghost::None);
+  t->requiresVar(Task::NewDW, Ilb->gammaLabel,         Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,         level.get_rep());
+  t->requiresVar(Task::OldDW, Ilb->simulationTimeLabel);
   
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->needsLabel(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
-    t->modifies(stream->massFraction_source_CCLabel);
+    t->requiresVar(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
+    t->modifiesVar(stream->massFraction_source_CCLabel);
   }
 
   sched->addTask(t, level->eachPatch(), mymatls);

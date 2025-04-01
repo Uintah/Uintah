@@ -178,9 +178,9 @@ void CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
 void CO::register_timestep_init( VIVec& variable_registry , const bool packed_tasks){
 
   register_variable( m_CO_model_name , AFC::COMPUTES, variable_registry);
-  register_variable( m_CO_model_name , AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry );
+  register_variable( m_CO_model_name , AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
   register_variable( m_defect_name, AFC::COMPUTES, variable_registry );
-    register_variable( m_defect_name , AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry );
+    register_variable( m_defect_name , AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
   register_variable( m_CO_diff_name, AFC::COMPUTES, variable_registry );
   register_variable( m_CO_conv_name, AFC::COMPUTES, variable_registry );
   register_variable( m_rate_name, AFC::COMPUTES, variable_registry );
@@ -223,24 +223,24 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
   register_variable( m_CO_conv_name  , AFC::MODIFIES , 0 , AFC::NEWDW , variable_registry , time_substep );
 
   // OLDDW variables
-    register_variable( m_CO_model_name          , AFC::NEEDSLABEL , 2 , AFC::OLDDW , variable_registry , time_substep );
-    register_variable( m_defect_name            , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_CO_table_name          , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_H2O_table_name         , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_O2_table_name          , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_rho_table_name         , AFC::NEEDSLABEL , 1 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_MW_table_name          , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_temperature_table_name , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_u_vel                  , AFC::NEEDSLABEL , 1 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_v_vel                  , AFC::NEEDSLABEL , 1 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_w_vel                  , AFC::NEEDSLABEL , 1 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_area_frac              , AFC::NEEDSLABEL , 2 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_turb_visc              , AFC::NEEDSLABEL , 1 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_vol_frac               , AFC::NEEDSLABEL , 0 , AFC::OLDDW , variable_registry , time_substep );
+    register_variable( m_CO_model_name          , AFC::REQUIRES , 2 , AFC::OLDDW , variable_registry , time_substep );
+    register_variable( m_defect_name            , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_CO_table_name          , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_H2O_table_name         , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_O2_table_name          , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_rho_table_name         , AFC::REQUIRES , 1 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_MW_table_name          , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_temperature_table_name , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_u_vel                  , AFC::REQUIRES , 1 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_v_vel                  , AFC::REQUIRES , 1 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_w_vel                  , AFC::REQUIRES , 1 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_area_frac              , AFC::REQUIRES , 2 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_turb_visc              , AFC::REQUIRES , 1 , AFC::OLDDW , variable_registry , time_substep );
+  register_variable( m_vol_frac               , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
 
   // NEWDW variables
-  register_variable( m_CO_table_name  , AFC::NEEDSLABEL , 0 , AFC::NEWDW , variable_registry , time_substep );
-  register_variable( m_rho_table_name , AFC::NEEDSLABEL , 0 , AFC::NEWDW , variable_registry , time_substep );
+  register_variable( m_CO_table_name  , AFC::REQUIRES , 0 , AFC::NEWDW , variable_registry , time_substep );
+  register_variable( m_rho_table_name , AFC::REQUIRES , 0 , AFC::NEWDW , variable_registry , time_substep );
 
 }
 

@@ -1108,7 +1108,7 @@ SchedulerCommon::addTask(       Task        * task
       int matlIdx = -1;
       if (dep->m_matls != nullptr) {
 
-        reduction_task->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
+        reduction_task->modifiesVar(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
 
         for (int i = 0; i < dep->m_matls->size(); i++) {
 
@@ -1138,7 +1138,7 @@ SchedulerCommon::addTask(       Task        * task
 
           const MaterialSubset* matlSubset = task->getMaterialSet()->getSubset(m);
 
-          reduction_task->modifies(dep->m_var, dep->m_reduction_level, matlSubset, Task::OutOfDomain);
+          reduction_task->modifiesVar(dep->m_var, dep->m_reduction_level, matlSubset, Task::OutOfDomain);
 
           for (int i = 0; i < matlSubset->size(); ++i) {
 
@@ -1885,9 +1885,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         const VarLabel* var = iter->first;
         MaterialSubset* matls = iter->second;
 
-        dataTasks.back()->needsLabel(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dataTasks.back()->requiresVar(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
         DOUTR(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
-        dataTasks.back()->computes(var, matls);
+        dataTasks.back()->computesVar(var, matls);
       }
       addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_materialManager->allMaterials());
 
@@ -1904,9 +1904,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         const VarLabel* var = iter->first;
         MaterialSubset* matls = iter->second;
 
-        dataTasks.back()->needsLabel(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dataTasks.back()->requiresVar(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
         DOUTR(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
-        dataTasks.back()->modifies(var, matls);
+        dataTasks.back()->modifiesVar(var, matls);
       }
       addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_materialManager->allMaterials());
 
@@ -2368,7 +2368,7 @@ SchedulerCommon::scheduleTaskMonitoring( const LevelP& level )
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
-      t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
+      t->computesVar( it.second, m_dummy_matl, Task::OutOfDomain );
 
       // treatAsOld copyData noScrub notCopyData noCheckpoint
       overrideVariableBehavior(it.second->getName(), false, false, true, true, true);
@@ -2400,7 +2400,7 @@ SchedulerCommon::scheduleTaskMonitoring( const PatchSet* patches )
   {
     for( const auto &it : m_monitoring_tasks[i] )
     {
-      t->computes( it.second, m_dummy_matl, Task::OutOfDomain );
+      t->computesVar( it.second, m_dummy_matl, Task::OutOfDomain );
 
       // treatAsOld copyData noScrub notCopyData noCheckpoint
       overrideVariableBehavior(it.second->getName(), false, false, true, true, true);

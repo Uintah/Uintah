@@ -119,7 +119,7 @@ CNHPDamage::addInitialComputesAndRequires(Task* task,
   CNHDamage::addInitialComputesAndRequires(task, matl, patches);
 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
 }
 
 void 
@@ -149,8 +149,8 @@ CNHPDamage::addComputesAndRequires(Task* task,
 
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
-  task->computes(pPlasticStrainLabel_preReloc,     matlset);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+  task->computesVar(pPlasticStrainLabel_preReloc,     matlset);
 }
 
 void 
@@ -608,9 +608,9 @@ CNHPDamage::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
-    task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
   }else{
-    task->needsLabel(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+    task->requiresVar(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
   }
 }
 
@@ -975,7 +975,7 @@ CNHPDamage::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
+  task->requiresVar(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
                  Ghost::None);
 }
 

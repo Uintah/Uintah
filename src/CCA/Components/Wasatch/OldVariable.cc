@@ -234,9 +234,9 @@ namespace WasatchCore {
     Uintah::Task* oldVarTask = scinew Uintah::Task( "set old variables", this, &OldVariable::populate_old_variable, rkStage );
     
     BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
-      oldVarTask->needsLabel( Uintah::Task::OldDW, vh->get_var_label(), vh->get_ghost_type() );
-      if (rkStage == 1) oldVarTask->computes( vh->get_old_var_label() );
-      else              oldVarTask->modifies( vh->get_old_var_label() );
+      oldVarTask->requiresVar( Uintah::Task::OldDW, vh->get_var_label(), vh->get_ghost_type() );
+      if (rkStage == 1) oldVarTask->computesVar( vh->get_old_var_label() );
+      else              oldVarTask->modifiesVar( vh->get_old_var_label() );
     }
     sched->addTask( oldVarTask, patches, materials );
     hasDoneSetup_ = true;

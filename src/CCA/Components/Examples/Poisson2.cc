@@ -76,7 +76,7 @@ void Poisson2::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
                            this, &Poisson2::initialize);
-  task->computes(phi_label);
+  task->computesVar(phi_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -90,7 +90,7 @@ void Poisson2::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Poisson2::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -101,8 +101,8 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                            this, &Poisson2::timeAdvance,
                            level, sched.get_rep());
   task->hasSubScheduler();
-  task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
+  task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computesVar(phi_label);
   const PatchSet* perproc_patches =
     m_loadBalancer->getPerProcessorPatchSet(level);
   sched->addTask(task, perproc_patches, m_materialManager->allMaterials());
@@ -178,9 +178,9 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   // Create the tasks
   Task* task = scinew Task("iterate",
                            this, &Poisson2::iterate);
-  task->needsLabel(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
+  task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computesVar(phi_label);
+  task->computesVar(residual_label);
   subsched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
   // Compile the scheduler

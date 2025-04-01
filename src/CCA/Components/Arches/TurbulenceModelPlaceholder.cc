@@ -102,13 +102,13 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel( SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
-  //tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
+  //tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
-  tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_turbViscosLabel);
+  tsk->modifiesVar(d_lab->d_viscosityCTSLabel);
+  tsk->modifiesVar(d_lab->d_turbViscosLabel);
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }

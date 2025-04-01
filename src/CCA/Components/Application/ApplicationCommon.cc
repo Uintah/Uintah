@@ -397,10 +397,10 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // TODO: Look into this - APH 02/27/17
 
   // Coarsen delT computes the global delT variable
-  task->computes(m_delTLabel);
+  task->computesVar(m_delTLabel);
 
   for (int i = 0; i < grid->numLevels(); i++) {
-    task->needsLabel(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
+    task->requiresVar(Task::NewDW, m_delTLabel, grid->getLevel(i).get_rep());
   }
 
   // These are the application reduction variables. An application may
@@ -416,8 +416,8 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
         scheduler->getComputedVars().end() ) {
       activateReductionVariable(var.first, true);
 
-      task->needsLabel(Task::NewDW, label);
-      task->computes(label);
+      task->requiresVar(Task::NewDW, label);
+      task->computesVar(label);
     }
     else {
       activateReductionVariable(var.first, false);
@@ -580,8 +580,8 @@ ApplicationCommon::scheduleInitializeSystemVars( const GridP      & grid,
 
   task->setType(Task::OncePerProc);
   
-  task->computes(m_timeStepLabel);
-  task->computes(m_simulationTimeLabel);
+  task->computesVar(m_timeStepLabel);
+  task->computesVar(m_simulationTimeLabel);
 
   // treatAsOld copyData noScrub notCopyData noCheckpoint
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(), false, false, false, true, true);
@@ -622,9 +622,9 @@ ApplicationCommon::scheduleUpdateSystemVars(const GridP& grid,
 
   // This task really should be last as the simulation time gets
   // updated. Without the requires it could be first.
-  task->needsLabel(Task::NewDW, m_delTLabel);
-  task->computes(m_timeStepLabel);
-  task->computes(m_simulationTimeLabel);
+  task->requiresVar(Task::NewDW, m_delTLabel);
+  task->computesVar(m_timeStepLabel);
+  task->computesVar(m_simulationTimeLabel);
 
   // treatAsOld copyData noScrub notCopyData noCheckpoint
   scheduler->overrideVariableBehavior(m_timeStepLabel->getName(), false, false, false, true, true);

@@ -646,15 +646,15 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
-  t->needsLabel(Task::OldDW, lb->delTLabel);
-  t->needsLabel(Task::NewDW, lb->gMassLabel,                    Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
-  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,                    Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
 
-  t->modifies(             lb->gVelocityLabel,   mss);
+  t->modifiesVar(             lb->gVelocityLabel,   mss);
 
   sched->addTask(t, patches, ms);
 
@@ -676,16 +676,16 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->needsLabel(Task::OldDW, lb->simulationTimeLabel);
-  t->needsLabel(Task::OldDW, lb->delTLabel);
-  t->needsLabel(Task::NewDW, lb->gMassLabel,                    Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
-  t->needsLabel(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,                    Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
 
-  t->modifies(             lb->gVelocityStarLabel,   mss);
+  t->modifiesVar(             lb->gVelocityStarLabel,   mss);
 
   //__________________________________
   //  Create reductionMatlSubSet that includes all mss matls
@@ -705,11 +705,11 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
 
   reduction_mss->addReference();
 
-  t->computes( lb->RigidReactionForceLabel,  reduction_mss );
-  t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
+  t->computesVar( lb->RigidReactionForceLabel,  reduction_mss );
+  t->computesVar( lb->RigidReactionTorqueLabel, reduction_mss );
 
   if(flag->d_reductionVars->sumTransmittedForce){
-    t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
+    t->computesVar(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
   sched->addTask(t, patches, ms);

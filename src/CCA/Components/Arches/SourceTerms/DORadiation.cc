@@ -442,50 +442,50 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     if (timeSubStep == 0) {
 
-      tsk->computes(_src_label);
-      tsk->needsLabel( Task::NewDW, _T_label,     gac, 1 );
-      tsk->needsLabel( Task::OldDW, _abskt_label, gac, 1 );
-      tsk->needsLabel( Task::OldDW, _abskg_label, gn, 0 );
-      tsk->needsLabel( Task::OldDW, _src_label,   gn, 0 ); // should be removed, for temporal scheduling
+      tsk->computesVar(_src_label);
+      tsk->requiresVar( Task::NewDW, _T_label,     gac, 1 );
+      tsk->requiresVar( Task::OldDW, _abskt_label, gac, 1 );
+      tsk->requiresVar( Task::OldDW, _abskg_label, gn, 0 );
+      tsk->requiresVar( Task::OldDW, _src_label,   gn, 0 ); // should be removed, for temporal scheduling
 
       _DO_model->setLabels();
 
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk->needsLabel( Task::OldDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
-        tsk->needsLabel( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+        tsk->requiresVar( Task::OldDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
+        tsk->requiresVar( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
       if (_DO_model->ScatteringOnBool()){
-        tsk->needsLabel( Task::OldDW, _scatktLabel,   gn, 0 );
-        tsk->needsLabel( Task::OldDW,_asymmetryLabel, gn, 0 );
+        tsk->requiresVar( Task::OldDW, _scatktLabel,   gn, 0 );
+        tsk->requiresVar( Task::OldDW,_asymmetryLabel, gn, 0 );
       }
 
       for ( auto  iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-        tsk->computes( *iter );
+        tsk->computesVar( *iter );
         //if (*(*iter)=="radiationVolq"){
         //continue;
         //}
-        tsk->needsLabel( Task::OldDW, *iter, gn, 0 );
+        tsk->requiresVar( Task::OldDW, *iter, gn, 0 );
       }
     } else {
 
-      tsk->modifies(_src_label);
-      tsk->needsLabel( Task::NewDW, _T_label,     gac, 1 );
-      tsk->needsLabel( Task::OldDW, _abskt_label, gac, 1 );
-      tsk->needsLabel( Task::OldDW, _abskg_label, gn, 0 );
+      tsk->modifiesVar(_src_label);
+      tsk->requiresVar( Task::NewDW, _T_label,     gac, 1 );
+      tsk->requiresVar( Task::OldDW, _abskt_label, gac, 1 );
+      tsk->requiresVar( Task::OldDW, _abskg_label, gn, 0 );
 
       for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-        tsk->needsLabel( Task::NewDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
-        tsk->needsLabel( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+        tsk->requiresVar( Task::NewDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
+        tsk->requiresVar( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 );
       }
 
       for ( auto iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-        tsk->modifies( *iter );
+        tsk->modifiesVar( *iter );
       }
     }
 
-    tsk->needsLabel( Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
-    tsk->needsLabel( Task::NewDW, _labels->d_cellInfoLabel, gn);
+    tsk->requiresVar( Task::OldDW, _labels->d_cellTypeLabel, gac, 1 );
+    tsk->requiresVar( Task::NewDW, _labels->d_cellInfoLabel, gn);
 
     sched->addTask(tsk, level->eachPatch(), m_matls ,Rad_TG);
 
@@ -496,23 +496,23 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
       Task* tsk_noRad = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
 
-      tsk_noRad->needsLabel( Task::OldDW, _src_label,gn,0);
-      tsk_noRad->computes( _src_label);
+      tsk_noRad->requiresVar( Task::OldDW, _src_label,gn,0);
+      tsk_noRad->computesVar( _src_label);
 
       // fluxes and intensities and radvolq
       for ( auto iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-        tsk_noRad->needsLabel( Task::OldDW, *iter, gn, 0 );
-        tsk_noRad->computes( *iter );
+        tsk_noRad->requiresVar( Task::OldDW, *iter, gn, 0 );
+        tsk_noRad->computesVar( *iter );
       }
 
       if (_dynamicSolveFrequency ) {
-        tsk_noRad->needsLabel( Task::OldDW, _dynamicSolveCountPatchLabel, gn, 0 );
-        tsk_noRad->needsLabel( Task::OldDW, _lastRadSolvePatchLabel,      gn, 0 );
-        tsk_noRad->needsLabel( Task::OldDW, _simulationTimeLabel, gn, 0 );
-        tsk_noRad->needsLabel( Task::OldDW, _labels->d_delTLabel,         gn, 0 );
+        tsk_noRad->requiresVar( Task::OldDW, _dynamicSolveCountPatchLabel, gn, 0 );
+        tsk_noRad->requiresVar( Task::OldDW, _lastRadSolvePatchLabel,      gn, 0 );
+        tsk_noRad->requiresVar( Task::OldDW, _simulationTimeLabel, gn, 0 );
+        tsk_noRad->requiresVar( Task::OldDW, _labels->d_delTLabel,         gn, 0 );
 
-        tsk_noRad->computes( _dynamicSolveCountPatchLabel );
-        tsk_noRad->computes( _lastRadSolvePatchLabel );
+        tsk_noRad->computesVar( _dynamicSolveCountPatchLabel );
+        tsk_noRad->computesVar( _lastRadSolvePatchLabel );
       }
 
       sched->addTask(tsk_noRad, level->eachPatch(), m_matls ,no_Rad_TG);
@@ -526,11 +526,11 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     std::string taskname4 = "DORadiation::profileDynamicRadiation";
     Task* tsk4 = scinew Task(taskname4, this, &DORadiation::profileDynamicRadiation);
 
-    tsk4->needsLabel( Task::NewDW, VarLabel::find("radiationVolq"), gn, 0 );
-    tsk4->needsLabel( Task::NewDW, VarLabel::find("divQ"), gn, 0 );
-    tsk4->needsLabel( Task::NewDW, _T_label, gn, 0 );
+    tsk4->requiresVar( Task::NewDW, VarLabel::find("radiationVolq"), gn, 0 );
+    tsk4->requiresVar( Task::NewDW, VarLabel::find("divQ"), gn, 0 );
+    tsk4->requiresVar( Task::NewDW, _T_label, gn, 0 );
 
-    tsk4->computes(VarLabel::find("min_time"));
+    tsk4->computesVar(VarLabel::find("min_time"));
     sched->addTask(tsk4, level->eachPatch(), m_matls, Rad_TG);
 
 
@@ -538,13 +538,13 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     //
     std::string taskname5 = "DORadiation::checkReductionVars";
     Task* tsk5 = scinew Task(taskname5, this, &DORadiation::checkReductionVars);
-    tsk5->needsLabel( Task::NewDW, VarLabel::find("min_time"), gn,0 );
-    tsk5->needsLabel( Task::OldDW, _simulationTimeLabel,       gn,0 );
-    tsk5->needsLabel( Task::OldDW, _labels->d_timeStepLabel,    gn,0 );
-    tsk5->needsLabel( Task::OldDW, _labels->d_delTLabel,       gn,0 );
+    tsk5->requiresVar( Task::NewDW, VarLabel::find("min_time"), gn,0 );
+    tsk5->requiresVar( Task::OldDW, _simulationTimeLabel,       gn,0 );
+    tsk5->requiresVar( Task::OldDW, _labels->d_timeStepLabel,    gn,0 );
+    tsk5->requiresVar( Task::OldDW, _labels->d_delTLabel,       gn,0 );
 
-    tsk5->computes( _dynamicSolveCountPatchLabel );
-    tsk5->computes( _lastRadSolvePatchLabel );
+    tsk5->computesVar( _dynamicSolveCountPatchLabel );
+    tsk5->computesVar( _lastRadSolvePatchLabel );
 
     timeStep_vartype timeStep(0);
 
@@ -729,15 +729,15 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
   //
   Task* tsk = scinew Task("DORadiation::initialize", this, &DORadiation::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (auto iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   if(_dynamicSolveFrequency) {
-    tsk->computes(_dynamicSolveCountPatchLabel);
-    tsk->computes( _lastRadSolvePatchLabel );
+    tsk->computesVar(_dynamicSolveCountPatchLabel);
+    tsk->computesVar( _lastRadSolvePatchLabel );
   }
 
   sched->addTask(tsk, level->eachPatch(), m_matls);
@@ -830,12 +830,12 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 
     std::string taskNoCom = "DORadiation::restartInitialize";
     Task* tsk = scinew Task(taskNoCom, this, &DORadiation::restartInitialize);
-    //tsk->needsLabel( Task::NewDW, _dynamicSolveCountPatchLabel, Ghost::None, 0 );  // These appear to cause problems.  Perhaps it is best to ignore requires since the simulation doesn't care about satifying needsLabel() on restart. NEW is the only DW present on restart.
-    //tsk->needsLabel( Task::NewDW, _lastRadSolvePatchLabel, Ghost::None, 0 );
-    //tsk->needsLabel( Task::NewDW, _simulationTimeLabel,Ghost::None,0);
+    //tsk->requiresVar( Task::NewDW, _dynamicSolveCountPatchLabel, Ghost::None, 0 );  // These appear to cause problems.  Perhaps it is best to ignore requires since the simulation doesn't care about satifying requiresVar() on restart. NEW is the only DW present on restart.
+    //tsk->requiresVar( Task::NewDW, _lastRadSolvePatchLabel, Ghost::None, 0 );
+    //tsk->requiresVar( Task::NewDW, _simulationTimeLabel,Ghost::None,0);
 
     for ( auto  iter = _missingCkPt_labels.begin(); iter != _missingCkPt_labels.end(); iter++){
-      tsk->computes( *iter );
+      tsk->computesVar( *iter );
     }
 
     sched->addTask(tsk, level->eachPatch(), m_matls);
@@ -988,45 +988,45 @@ if (timeSubStep==0){
   std::string taskNoCom = "DORadiation::TransferRadFieldsFromOldDW";
   Task* tsk_noRadiation = scinew Task(taskNoCom, this, &DORadiation::TransferRadFieldsFromOldDW);
 
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxELabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxWLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxNLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxSLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxTLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationFluxBLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW, _radiationVolqLabel, gn, 0);
-  tsk_noRadiation->needsLabel( Task::OldDW,  _src_label, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxELabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxWLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxNLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxSLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxTLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationFluxBLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW, _radiationVolqLabel, gn, 0);
+  tsk_noRadiation->requiresVar( Task::OldDW,  _src_label, gn, 0);
 
-  tsk_noRadiation->computes(_radiationFluxELabel);
-  tsk_noRadiation->computes(_radiationFluxWLabel);
-  tsk_noRadiation->computes(_radiationFluxNLabel);
-  tsk_noRadiation->computes(_radiationFluxSLabel);
-  tsk_noRadiation->computes(_radiationFluxTLabel);
-  tsk_noRadiation->computes(_radiationFluxBLabel);
-  tsk_noRadiation->computes(_radiationVolqLabel);
-  tsk_noRadiation->computes( _src_label);
+  tsk_noRadiation->computesVar(_radiationFluxELabel);
+  tsk_noRadiation->computesVar(_radiationFluxWLabel);
+  tsk_noRadiation->computesVar(_radiationFluxNLabel);
+  tsk_noRadiation->computesVar(_radiationFluxSLabel);
+  tsk_noRadiation->computesVar(_radiationFluxTLabel);
+  tsk_noRadiation->computesVar(_radiationFluxBLabel);
+  tsk_noRadiation->computesVar(_radiationVolqLabel);
+  tsk_noRadiation->computesVar( _src_label);
 
   if (_DO_model->ScatteringOnBool()){
     for (int iband=0; iband<d_nbands; iband++){
       for (int j=0; j< _nDir; j++){
         const int idx = intensityIndx(j, iband);
-        tsk_noRadiation->needsLabel( Task::OldDW,_IntensityLabels[idx], gn, 0 );
-        tsk_noRadiation->computes( _IntensityLabels[idx]);
+        tsk_noRadiation->requiresVar( Task::OldDW,_IntensityLabels[idx], gn, 0 );
+        tsk_noRadiation->computesVar( _IntensityLabels[idx]);
       }
     }
   } else if ( m_user_intensity_save ){
     for ( auto i = m_user_intensity_save_labels.begin(); i != m_user_intensity_save_labels.end(); i++ ){
-      tsk_noRadiation->needsLabel( Task::OldDW, *i, gn, 0 );
-      tsk_noRadiation->computes( *i );
+      tsk_noRadiation->requiresVar( Task::OldDW, *i, gn, 0 );
+      tsk_noRadiation->computesVar( *i );
     }
   }
 
   if (_dynamicSolveFrequency ) {
-    tsk_noRadiation->needsLabel( Task::OldDW, _dynamicSolveCountPatchLabel, gn, 0 );
-    tsk_noRadiation->needsLabel( Task::OldDW, _lastRadSolvePatchLabel,      gn, 0 );
+    tsk_noRadiation->requiresVar( Task::OldDW, _dynamicSolveCountPatchLabel, gn, 0 );
+    tsk_noRadiation->requiresVar( Task::OldDW, _lastRadSolvePatchLabel,      gn, 0 );
 
-    tsk_noRadiation->computes( _dynamicSolveCountPatchLabel );
-    tsk_noRadiation->computes( _lastRadSolvePatchLabel );
+    tsk_noRadiation->computesVar( _dynamicSolveCountPatchLabel );
+    tsk_noRadiation->computesVar( _lastRadSolvePatchLabel );
   }
 
   sched->addTask(tsk_noRadiation, level->eachPatch(), m_matls, no_Rad_TG);
@@ -1139,14 +1139,14 @@ if (timeSubStep==0){
     std::string taskname1 = "DORadiation::init_all_intensities";
     Task* tsk1 = scinew Task(taskname1, this, &DORadiation::init_all_intensities);
 
-    tsk1->needsLabel( Task::OldDW,_abskg_label, gn, 0 );
-    tsk1->needsLabel( Task::OldDW,_abskt_label, gn, 0 );
-    tsk1->needsLabel( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
-    tsk1->needsLabel( Task::NewDW,_T_label, gn, 0 );
+    tsk1->requiresVar( Task::OldDW,_abskg_label, gn, 0 );
+    tsk1->requiresVar( Task::OldDW,_abskt_label, gn, 0 );
+    tsk1->requiresVar( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
+    tsk1->requiresVar( Task::NewDW,_T_label, gn, 0 );
 
     for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
-      tsk1->needsLabel( Task::OldDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
-      tsk1->needsLabel( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
+      tsk1->requiresVar( Task::OldDW,_DO_model->getAbskpLabels()[i],    gn, 0 );
+      tsk1->requiresVar( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 );
     }
 
     if (_DO_model->ScatteringOnBool()){
@@ -1154,31 +1154,31 @@ if (timeSubStep==0){
         for (int iband=0; iband<d_nbands; iband++){
           const int idx = intensityIndx(j, iband);
 
-          tsk1->needsLabel( Task::OldDW,_IntensityLabels[idx], gn, 0 );
-          tsk1->computes( _emiss_plus_scat_source_label[idx]);
+          tsk1->requiresVar( Task::OldDW,_IntensityLabels[idx], gn, 0 );
+          tsk1->computesVar( _emiss_plus_scat_source_label[idx]);
         }
-        tsk1->needsLabel( Task::OldDW, _scatktLabel,   gn, 0 );
-        tsk1->needsLabel( Task::OldDW,_asymmetryLabel, gn, 0 );
+        tsk1->requiresVar( Task::OldDW, _scatktLabel,   gn, 0 );
+        tsk1->requiresVar( Task::OldDW,_asymmetryLabel, gn, 0 );
       }
     }
 
     for (int iband=0; iband<d_nbands; iband++){
-      tsk1->computes( _radIntSource[iband]);
+      tsk1->computesVar( _radIntSource[iband]);
     }
 
     for (int iband=0; iband<d_nbands; iband++){
-      tsk1->needsLabel( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
+      tsk1->requiresVar( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
       if(d_nbands>1){
-        tsk1->needsLabel( Task::OldDW,spectral_gas_weight[iband], gn, 0 );
+        tsk1->requiresVar( Task::OldDW,spectral_gas_weight[iband], gn, 0 );
       }
     }
 
     if(_DO_model->spectralSootOn()){
-      tsk1->needsLabel( Task::OldDW,VarLabel::find("absksoot"), gn, 0 );
+      tsk1->requiresVar( Task::OldDW,VarLabel::find("absksoot"), gn, 0 );
     }
 
     for (int iband=0; iband<d_nbands; iband++){
-      tsk1->needsLabel( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
+      tsk1->requiresVar( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
     }
 
     sched->addTask(tsk1, level->eachPatch(), m_matls, Radiation_TG);
@@ -1192,12 +1192,12 @@ if (timeSubStep==0){
       tasknamec << "DORadiation::sweeping_initialize_" <<ord;
       Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC, ord);
 
-      tskc->needsLabel( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
-      tskc->needsLabel( Task::NewDW,_T_label, gn, 0 );
+      tskc->requiresVar( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
+      tskc->requiresVar( Task::NewDW,_T_label, gn, 0 );
 
       for (int iband=0; iband<d_nbands; iband++){
         const int idx = intensityIndx( ord, iband);
-        tskc->computes( _IntensityLabels[idx]);
+        tskc->computesVar( _IntensityLabels[idx]);
       }
       sched->addTask(tskc, level->eachPatch(), m_matls, Radiation_TG);
     }
@@ -1238,28 +1238,28 @@ if (timeSubStep==0){
 
           Task* tsk2 = scinew Task(taskname2.str(), this, &DORadiation::doSweepAdvanced,intensity_iter);
 
-          tsk2->needsLabel( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
-          tsk2->needsLabel( Task::OldDW,_abskt_label,             gn, 0 );
+          tsk2->requiresVar( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
+          tsk2->requiresVar( Task::OldDW,_abskt_label,             gn, 0 );
 
           if (_DO_model->ScatteringOnBool()){
             for (int iband=0; iband<d_nbands; iband++){
               const int idx = intensityIndx(intensity_iter, iband);
 
-              tsk2->needsLabel( Task::NewDW, _emiss_plus_scat_source_label[idx],gn,0);
+              tsk2->requiresVar( Task::NewDW, _emiss_plus_scat_source_label[idx],gn,0);
             }
           }else{
             for (int iband=0; iband<d_nbands; iband++){
-              tsk2->needsLabel( Task::NewDW, _radIntSource[iband], gn, 0 );
+              tsk2->requiresVar( Task::NewDW, _radIntSource[iband], gn, 0 );
             }
           }
           if (d_nbands > 1){
             for (int iband=0; iband<d_nbands; iband++){
-              tsk2->needsLabel( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
+              tsk2->requiresVar( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
             }
           }
 
           // requires->modifies chaining to facilitate inter-patch communication.
-          // We may be able to use wrapped needsLabel() due to using the reduced patchset when calling addTask (True spatial scheduling)
+          // We may be able to use wrapped requiresVar() due to using the reduced patchset when calling addTask (True spatial scheduling)
 
 
           const Task::PatchDomainSpec thisLevel = Task::ThisLevel;   // for readability
@@ -1269,7 +1269,7 @@ if (timeSubStep==0){
 
             const int idx = intensityIndx( intensity_iter, iband);
 
-            tsk2->modifies( _IntensityLabels[idx]);
+            tsk2->modifiesVar( _IntensityLabels[idx]);
 
             Task::SearchTG NewTG = Task::SearchTG::NewTG;  // possibly search new TG for computes
 
@@ -1279,42 +1279,42 @@ if (timeSubStep==0){
                  _DO_model->zDir(first_intensity) ==1){
 
 
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){ // Adding bands, made this logic painful. To fit the original abstraction, the bands loop should be merged with int_x loop.
                 sched->addTask( tsk2,_RelevantPatchesXpYpZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYpZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYmZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==1 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXpYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXpYmZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==1){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYpZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==1 && _DO_model->zDir(first_intensity)==0){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYpZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYpZm2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==1){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZp[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYmZp2[istage-int_x] , m_matls, Radiation_TG);
               }
             }else if (_DO_model->xDir(first_intensity) ==0 && _DO_model->yDir(first_intensity)==0 && _DO_model->zDir(first_intensity)==0){
-              tsk2->needsLabel( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
+              tsk2->requiresVar( Task::NewDW, _IntensityLabels[idx] ,_RelevantPatchesXmYmZm[istage-int_x], thisLevel, matlDS, ND, _gv[_DO_model->xDir(intensity_iter)][_DO_model->yDir(intensity_iter)][_DO_model->zDir(intensity_iter)], 1, NewTG);
               if((iband+1)==d_nbands){
                 sched->addTask( tsk2,_RelevantPatchesXmYmZm2[istage-int_x] , m_matls, Radiation_TG);
               }
@@ -1338,31 +1338,31 @@ if (timeSubStep==0){
     for (int iband=0; iband<d_nbands; iband++){
       for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
         const int idx = intensityIndx(ord, iband);
-        tsk3->needsLabel( Task::NewDW, _IntensityLabels[idx], gn, 0 );
+        tsk3->requiresVar( Task::NewDW, _IntensityLabels[idx], gn, 0 );
       }
     }
 
     for (int iband=0; iband<d_nbands; iband++){
-      tsk3->needsLabel( Task::NewDW,_radIntSource[iband], gn, 0 );
+      tsk3->requiresVar( Task::NewDW,_radIntSource[iband], gn, 0 );
     }
 
     if(d_nbands>1){
       for (int iband=0; iband<d_nbands; iband++){
-        tsk3->needsLabel( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
+        tsk3->requiresVar( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
       }
     }
 
-    tsk3->needsLabel( Task::NewDW,_T_label, gn, 0 );
-    tsk3->needsLabel( Task::OldDW,_abskt_label, gn, 0 );
+    tsk3->requiresVar( Task::NewDW,_T_label, gn, 0 );
+    tsk3->requiresVar( Task::OldDW,_abskt_label, gn, 0 );
 
-    tsk3->computes(_radiationFluxELabel);
-    tsk3->computes(_radiationFluxWLabel);
-    tsk3->computes(_radiationFluxNLabel);
-    tsk3->computes(_radiationFluxSLabel);
-    tsk3->computes(_radiationFluxTLabel);
-    tsk3->computes(_radiationFluxBLabel);
-    tsk3->computes(_radiationVolqLabel);
-    tsk3->computes( _src_label);
+    tsk3->computesVar(_radiationFluxELabel);
+    tsk3->computesVar(_radiationFluxWLabel);
+    tsk3->computesVar(_radiationFluxNLabel);
+    tsk3->computesVar(_radiationFluxSLabel);
+    tsk3->computesVar(_radiationFluxTLabel);
+    tsk3->computesVar(_radiationFluxBLabel);
+    tsk3->computesVar(_radiationVolqLabel);
+    tsk3->computesVar( _src_label);
 
     sched->addTask(tsk3, level->eachPatch(), _materialManager->allMaterials( "Arches" ),Radiation_TG);
 

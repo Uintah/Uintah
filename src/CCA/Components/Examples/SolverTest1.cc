@@ -112,7 +112,7 @@ void SolverTest1::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",this,
                            &SolverTest1::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //__________________________________
@@ -123,8 +123,8 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
                            this, &SolverTest1::timeAdvance,
                            level, sched.get_rep());
-  task->computes(lb_->pressure_matrix);
-  task->computes(lb_->pressure_rhs);
+  task->computesVar(lb_->pressure_matrix);
+  task->computesVar(lb_->pressure_rhs);
 
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 

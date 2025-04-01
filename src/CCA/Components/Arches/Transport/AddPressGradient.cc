@@ -74,8 +74,8 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
   register_variable( m_xmom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
   register_variable( m_ymom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
-  register_variable( m_press, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_eps_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name  );
+  register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name  );
   register_variable("uHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable("vHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable("wHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );

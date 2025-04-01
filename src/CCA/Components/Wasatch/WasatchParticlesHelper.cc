@@ -64,8 +64,8 @@ namespace WasatchCore {
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task( "initialize particles",
                                               this, &WasatchParticlesHelper::initialize );
-    task->computes(pPosLabel_);
-    task->computes(pIDLabel_);
+    task->computesVar(pPosLabel_);
+    task->computesVar(pIDLabel_);
     sched->addTask(task, level->eachPatch(), materials_);    
     parse_boundary_conditions(level, sched);
   }

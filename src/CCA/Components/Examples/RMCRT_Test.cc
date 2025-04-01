@@ -329,9 +329,9 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 
   printSchedule(level, g_rmcrt_test_dbg, "RMCRT_Test::scheduleInitialize");
 
-  task->computes( d_colorLabel );
-  task->computes( d_compAbskgLabel );
-  task->computes( d_cellTypeLabel );
+  task->computesVar( d_colorLabel );
+  task->computesVar( d_compAbskgLabel );
+  task->computesVar( d_cellTypeLabel );
   sched->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
   
   Radiometer* radiometer = d_RMCRT->getRadiometer();
@@ -357,7 +357,7 @@ void RMCRT_Test::scheduleComputeStableTimeStep ( const LevelP& level, SchedulerP
 
   Task* task = scinew Task( "RMCRT_Test::computeStableTimeStep", this, &RMCRT_Test::computeStableTimeStep );
 
-  task->computes( getDelTLabel(),level.get_rep() );
+  task->computesVar( getDelTLabel(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), m_materialManager->allMaterials() );
 }

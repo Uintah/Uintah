@@ -148,7 +148,7 @@ void ESMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level,cout_doing,"ESMPM::scheduleInitialize");
   Task* task = scinew Task("ESMPM::initialize", this, &ESMPM::initialize);
-  task->computes(d_fvm_lb->ccESPotential);
+  task->computesVar(d_fvm_lb->ccESPotential);
   sched->addTask(task, level->eachPatch(), d_es_matlset);
 
   d_amrmpm->scheduleInitialize(level, sched);
@@ -345,10 +345,10 @@ void ESMPM::scheduleInterpESPotentialToPart(SchedulerP& sched,
   Task* task = scinew Task("ESMPM::interpESPotentialToPart", this,
                            &ESMPM::interpESPotentialToPart);
 
-  task->needsLabel(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
-  task->needsLabel(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
-  task->computes(d_mpm_lb->pESPotential,     mpm_matls);
-  task->computes(d_mpm_lb->pESGradPotential, mpm_matls);
+  task->requiresVar(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
+  task->requiresVar(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
+  task->computesVar(d_mpm_lb->pESPotential,     mpm_matls);
+  task->computesVar(d_mpm_lb->pESGradPotential, mpm_matls);
 
   sched->addTask(task, patches, all_matls);
 

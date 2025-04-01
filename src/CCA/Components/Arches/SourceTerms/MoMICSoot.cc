@@ -527,35 +527,35 @@ MoMICSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   Task* tsk = scinew Task(taskname, this, &MoMICSoot::computeSource, timeSubStep);
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
-    tsk->computes(m_PAH0_src_label);
-    tsk->computes(m_PAH1_src_label);
-    tsk->computes(m_PAH2_src_label);
-    tsk->computes(m_PAH3_src_label);
-    tsk->computes(m_PAH4_src_label);
-    tsk->computes(m_Msoot0_src_label);
-    tsk->computes(m_Msoot1_src_label);
-    tsk->computes(m_Msoot2_src_label);
-    tsk->computes(m_Msoot3_src_label);
-    tsk->computes(m_Msoot4_src_label);
-    tsk->computes(m_Msoot5_src_label);
-    tsk->computes(m_Msurface_src_label);
-    tsk->computes(m_balance_src_label);
+    tsk->computesVar(m_PAH0_src_label);
+    tsk->computesVar(m_PAH1_src_label);
+    tsk->computesVar(m_PAH2_src_label);
+    tsk->computesVar(m_PAH3_src_label);
+    tsk->computesVar(m_PAH4_src_label);
+    tsk->computesVar(m_Msoot0_src_label);
+    tsk->computesVar(m_Msoot1_src_label);
+    tsk->computesVar(m_Msoot2_src_label);
+    tsk->computesVar(m_Msoot3_src_label);
+    tsk->computesVar(m_Msoot4_src_label);
+    tsk->computesVar(m_Msoot5_src_label);
+    tsk->computesVar(m_Msurface_src_label);
+    tsk->computesVar(m_balance_src_label);
     which_dw = Task::OldDW;
   } else {
     which_dw = Task::NewDW;
-    tsk->modifies(m_PAH0_src_label);
-    tsk->modifies(m_PAH1_src_label);
-    tsk->modifies(m_PAH2_src_label);
-    tsk->modifies(m_PAH3_src_label);
-    tsk->modifies(m_PAH4_src_label);
-    tsk->modifies(m_Msoot0_src_label);
-    tsk->modifies(m_Msoot1_src_label);
-    tsk->modifies(m_Msoot2_src_label);
-    tsk->modifies(m_Msoot3_src_label);
-    tsk->modifies(m_Msoot4_src_label);
-    tsk->modifies(m_Msoot5_src_label);
-    tsk->modifies(m_Msurface_src_label);
-    tsk->modifies(m_balance_src_label);
+    tsk->modifiesVar(m_PAH0_src_label);
+    tsk->modifiesVar(m_PAH1_src_label);
+    tsk->modifiesVar(m_PAH2_src_label);
+    tsk->modifiesVar(m_PAH3_src_label);
+    tsk->modifiesVar(m_PAH4_src_label);
+    tsk->modifiesVar(m_Msoot0_src_label);
+    tsk->modifiesVar(m_Msoot1_src_label);
+    tsk->modifiesVar(m_Msoot2_src_label);
+    tsk->modifiesVar(m_Msoot3_src_label);
+    tsk->modifiesVar(m_Msoot4_src_label);
+    tsk->modifiesVar(m_Msoot5_src_label);
+    tsk->modifiesVar(m_Msurface_src_label);
+    tsk->modifiesVar(m_balance_src_label);
   }
   // resolve some labels:
   m_mix_mol_weight_label  = VarLabel::find( m_mix_mol_weight_name);
@@ -582,29 +582,29 @@ MoMICSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   m_temperature_label     = VarLabel::find( m_temperature_name);
   m_rho_label             = VarLabel::find( m_rho_name);
 
-  tsk->needsLabel( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_PAH0_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_PAH1_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_PAH2_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_PAH3_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_PAH4_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot0_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot1_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot2_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot3_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot4_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msoot5_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_Msurface_label,                     Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_o2_label,                           Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_oh_label,                           Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_co2_label,                          Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_h2o_label,                          Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_h_label,                            Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_h2_label,                           Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_c2h2_label,                         Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_pyrene_label,                       Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_temperature_label,                  Ghost::None, 0 );
-  tsk->needsLabel( which_dw, m_rho_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_PAH0_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_PAH1_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_PAH2_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_PAH3_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_PAH4_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot0_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot1_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot2_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot3_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot4_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msoot5_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Msurface_label,                     Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_o2_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_oh_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_co2_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h2o_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h_label,                            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h2_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_c2h2_label,                         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_pyrene_label,                       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_temperature_label,                  Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_rho_label,                          Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   
@@ -971,19 +971,19 @@ MoMICSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
 
     Task* tsk = scinew Task(taskname, this, &MoMICSoot::initialize);
 
-    tsk->computes(m_PAH0_src_label);
-    tsk->computes(m_PAH1_src_label);
-    tsk->computes(m_PAH2_src_label);
-    tsk->computes(m_PAH3_src_label);
-    tsk->computes(m_PAH4_src_label);
-    tsk->computes(m_Msoot0_src_label);
-    tsk->computes(m_Msoot1_src_label);
-    tsk->computes(m_Msoot2_src_label);
-    tsk->computes(m_Msoot3_src_label);
-    tsk->computes(m_Msoot4_src_label);
-    tsk->computes(m_Msoot5_src_label);
-    tsk->computes(m_Msurface_src_label);
-    tsk->computes(m_balance_src_label);
+    tsk->computesVar(m_PAH0_src_label);
+    tsk->computesVar(m_PAH1_src_label);
+    tsk->computesVar(m_PAH2_src_label);
+    tsk->computesVar(m_PAH3_src_label);
+    tsk->computesVar(m_PAH4_src_label);
+    tsk->computesVar(m_Msoot0_src_label);
+    tsk->computesVar(m_Msoot1_src_label);
+    tsk->computesVar(m_Msoot2_src_label);
+    tsk->computesVar(m_Msoot3_src_label);
+    tsk->computesVar(m_Msoot4_src_label);
+    tsk->computesVar(m_Msoot5_src_label);
+    tsk->computesVar(m_Msurface_src_label);
+    tsk->computesVar(m_balance_src_label);
 
     sched->addTask(tsk, level->eachPatch(),_materialManager->allMaterials( "Arches" ));
 

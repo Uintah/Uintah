@@ -115,7 +115,7 @@ JohnsonCookDamage::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matls = matl->thisMaterial();
-  task->computes(pDamageLabel, matls);
+  task->computesVar(pDamageLabel, matls);
 }
 //______________________________________________________________________
 //
@@ -165,16 +165,16 @@ JohnsonCookDamage::addComputesAndRequires(Task* task,
 
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
-  task->needsLabel( Task::OldDW, pDamageLabel,                     matls, gnone);
-  task->needsLabel( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
-  task->needsLabel( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
+  task->requiresVar( Task::OldDW, pDamageLabel,                     matls, gnone);
+  task->requiresVar( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
 
-  task->needsLabel( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
-  task->needsLabel( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
+  task->requiresVar( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
+  task->requiresVar( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
 
-  task->computes( pDamageLabel_preReloc, matls );
+  task->computesVar( pDamageLabel_preReloc, matls );
 
-//  task->computes(TotalLocalizedParticleLabel);
+//  task->computesVar(TotalLocalizedParticleLabel);
 }
 
 //______________________________________________________________________

@@ -318,17 +318,17 @@ ViscoPlastic::addInitialComputesAndRequires(Task* task,
                                                   const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pLeftStretchLabel, matlset);
-  task->computes(pRotationLabel, matlset);
-  task->computes(pStrainRateLabel, matlset);
-  task->computes(pPlasticStrainLabel, matlset);
-//   task->computes(pDamageLabel, matlset);
-//   task->computes(pPorosityLabel, matlset);
-  task->computes(pLocalizedLabel, matlset);
-  task->computes(pPlasticTempLabel, matlset);
-  task->computes(pPlasticTempIncLabel, matlset);
-  task->computes(pFailureVariableLabel, matlset);
-  task->computes(lb->TotalLocalizedParticleLabel);
+  task->computesVar(pLeftStretchLabel, matlset);
+  task->computesVar(pRotationLabel, matlset);
+  task->computesVar(pStrainRateLabel, matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+//   task->computesVar(pDamageLabel, matlset);
+//   task->computesVar(pPorosityLabel, matlset);
+  task->computesVar(pLocalizedLabel, matlset);
+  task->computesVar(pPlasticTempLabel, matlset);
+  task->computesVar(pPlasticTempIncLabel, matlset);
+  task->computesVar(pFailureVariableLabel, matlset);
+  task->computesVar(lb->TotalLocalizedParticleLabel);
 
   // Add internal evolution variables computed by plasticity model
   d_plastic->addInitialComputesAndRequires(task, matl, patch);
@@ -468,31 +468,31 @@ ViscoPlastic::addComputesAndRequires(Task* task,
 
 
   // Other constitutive model and input dependent computes and requires
-  task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->needsLabel(Task::OldDW, pLeftStretchLabel,     matlset, gnone);
-  task->needsLabel(Task::OldDW, pRotationLabel,        matlset, gnone);
-  task->needsLabel(Task::OldDW, pStrainRateLabel,      matlset, gnone);
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
-//   task->needsLabel(Task::OldDW, pDamageLabel,          matlset, gnone);
-//   task->needsLabel(Task::OldDW, pPorosityLabel,        matlset, gnone);
-  task->needsLabel(Task::OldDW, pLocalizedLabel,       matlset, gnone);
-  task->needsLabel(Task::OldDW, pPlasticTempLabel,     matlset, gnone);
-  task->needsLabel(Task::OldDW, pPlasticTempIncLabel,  matlset, gnone);
-  task->needsLabel(Task::OldDW, pFailureVariableLabel,  matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pLeftStretchLabel,     matlset, gnone);
+  task->requiresVar(Task::OldDW, pRotationLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, pStrainRateLabel,      matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
+//   task->requiresVar(Task::OldDW, pDamageLabel,          matlset, gnone);
+//   task->requiresVar(Task::OldDW, pPorosityLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, pLocalizedLabel,       matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticTempLabel,     matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticTempIncLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pFailureVariableLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
 
-  task->computes(pLeftStretchLabel_preReloc,    matlset);
-  task->computes(pRotationLabel_preReloc,       matlset);
-  task->computes(pStrainRateLabel_preReloc,     matlset);
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
-//   task->computes(pDamageLabel_preReloc,         matlset);
-//   task->computes(pPorosityLabel_preReloc,       matlset);
-  task->computes(pLocalizedLabel_preReloc,      matlset);
-  task->computes(pPlasticTempLabel_preReloc,    matlset);
-  task->computes(pPlasticTempIncLabel_preReloc, matlset);
-  task->computes(pFailureVariableLabel_preReloc, matlset);
-  task->computes(lb->TotalLocalizedParticleLabel);
+  task->computesVar(pLeftStretchLabel_preReloc,    matlset);
+  task->computesVar(pRotationLabel_preReloc,       matlset);
+  task->computesVar(pStrainRateLabel_preReloc,     matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,  matlset);
+//   task->computesVar(pDamageLabel_preReloc,         matlset);
+//   task->computesVar(pPorosityLabel_preReloc,       matlset);
+  task->computesVar(pLocalizedLabel_preReloc,      matlset);
+  task->computesVar(pPlasticTempLabel_preReloc,    matlset);
+  task->computesVar(pPlasticTempIncLabel_preReloc, matlset);
+  task->computesVar(pFailureVariableLabel_preReloc, matlset);
+  task->computesVar(lb->TotalLocalizedParticleLabel);
   // Add internal evolution variables computed by plasticity model
   d_plastic->addComputesAndRequires(task, matl, patches);
 
@@ -1353,15 +1353,15 @@ ViscoPlastic::addComputesAndRequires(Task* task,
   // Local stuff
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
-    task->needsLabel(Task::ParentOldDW, lb->pTempPreviousLabel, matlset, gnone); 
-    task->needsLabel(Task::ParentOldDW, lb->pTemperatureLabel,  matlset, gnone);
-    task->needsLabel(Task::ParentOldDW, pPlasticStrainLabel,    matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, lb->pTempPreviousLabel, matlset, gnone); 
+    task->requiresVar(Task::ParentOldDW, lb->pTemperatureLabel,  matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPlasticStrainLabel,    matlset, gnone);
   }else{
-    task->needsLabel(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-    task->needsLabel(Task::OldDW, lb->pTemperatureLabel,  matlset, gnone);
-    task->needsLabel(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+    task->requiresVar(Task::OldDW, lb->pTemperatureLabel,  matlset, gnone);
+    task->requiresVar(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
   }
-//   task->needsLabel(Task::ParentOldDW, pPorosityLabel,         matlset, gnone);
+//   task->requiresVar(Task::ParentOldDW, pPorosityLabel,         matlset, gnone);
 //JONAHDEBUG
   d_plastic->addComputesAndRequires(task, matl, patches, recurse);
 }
@@ -2533,7 +2533,7 @@ ViscoPlastic::addRequiresDamageParameter(Task* task,
                                                const PatchSet* ) const
 {
 //const MaterialSubset* matlset = matl->thisMaterial();
-//task-*/>needsLabel(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+//task-*/>requiresVar(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
 void

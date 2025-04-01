@@ -3701,7 +3701,7 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel * label
           }
           if (replace) {
             has += " datawarehouse put";
-            needs = "task computes(replace)";
+            needs = "task computesVar(replace)";
           }
           else {
             has += " datawarehouse put";

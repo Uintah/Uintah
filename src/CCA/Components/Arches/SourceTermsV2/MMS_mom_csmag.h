@@ -224,8 +224,8 @@ void MMS_mom_csmag<T>::register_initialize( std::vector<VarInfo>&
   register_variable( m_MMS_source_diff_label, AFC::COMPUTES, variable_registry );
   register_variable( m_MMS_source_t_label,    AFC::COMPUTES, variable_registry );
 
-  register_variable( m_x_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry );
-  register_variable( m_y_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry );
+  register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry );
+  register_variable( m_y_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry );
 
 }
 
@@ -272,8 +272,8 @@ void MMS_mom_csmag<T>::register_timestep_eval( std::vector<VarInfo>&
   register_variable( m_MMS_source_diff_label, AFC::MODIFIES ,  variable_registry, time_substep );
   register_variable( m_MMS_source_t_label,    AFC::MODIFIES ,  variable_registry, time_substep );
 
-  register_variable( m_x_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep );
-  register_variable( m_y_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_x_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_y_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep );
 
 }
 

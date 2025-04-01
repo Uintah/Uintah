@@ -78,15 +78,15 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   Task* tsk = scinew Task(taskname, this, &CoalGasDevol::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
-    tsk->computes(m_tar_src_label);
-    tsk->computes(m_devol_for_nox_src_label);
-    tsk->computes(m_devol_bd_src_label);
+    tsk->computesVar(_src_label);
+    tsk->computesVar(m_tar_src_label);
+    tsk->computesVar(m_devol_for_nox_src_label);
+    tsk->computesVar(m_devol_bd_src_label);
   } else {
-    tsk->modifies(_src_label);
-    tsk->modifies(m_tar_src_label);
-    tsk->modifies(m_devol_for_nox_src_label);
-    tsk->modifies(m_devol_bd_src_label);
+    tsk->modifiesVar(_src_label);
+    tsk->modifiesVar(m_tar_src_label);
+    tsk->modifiesVar(m_devol_for_nox_src_label);
+    tsk->modifiesVar(m_devol_bd_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -105,7 +105,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->needsLabel( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
   
     if (m_dest_flag){
       // require RCmass birth/death   
@@ -115,7 +115,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
       const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "BirthDeath" );
       std::string rawcoal_birth_qn_name = ArchesCore::append_qn_env(rawcoal_birth_name, iqn);
       const VarLabel* rcmass_birthdeath_varlabel=VarLabel::find(rawcoal_birth_qn_name);
-      tsk->needsLabel( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, rcmass_birthdeath_varlabel, Ghost::None, 0 );
     }
     
 
@@ -244,13 +244,13 @@ CoalGasDevol::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasDevol::initialize);
 
-  tsk->computes(_src_label);
-  tsk->computes(m_tar_src_label);
-  tsk->computes(m_devol_for_nox_src_label);
-  tsk->computes(m_devol_bd_src_label);
+  tsk->computesVar(_src_label);
+  tsk->computesVar(m_tar_src_label);
+  tsk->computesVar(m_devol_for_nox_src_label);
+  tsk->computesVar(m_devol_bd_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

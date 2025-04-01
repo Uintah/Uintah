@@ -130,13 +130,13 @@ GUVMaterial::addInitialComputesAndRequires(Task* task,
   debug_doing << "GUVMaterial:: Adding Initial Computes and Requires." << endl;
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(lb->pTypeLabel,            matlset);
-  task->computes(lb->pThickTopLabel,        matlset);
-  task->computes(lb->pInitialThickTopLabel, matlset);
-  task->computes(lb->pNormalLabel,          matlset);
-  task->computes(lb->pInitialNormalLabel,   matlset);
+  task->computesVar(lb->pTypeLabel,            matlset);
+  task->computesVar(lb->pThickTopLabel,        matlset);
+  task->computesVar(lb->pInitialThickTopLabel, matlset);
+  task->computesVar(lb->pNormalLabel,          matlset);
+  task->computesVar(lb->pInitialNormalLabel,   matlset);
 
-  task->computes(pNormalRotRateLabel, matlset);
+  task->computesVar(pNormalRotRateLabel, matlset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,14 +181,14 @@ GUVMaterial::allocateCMDataAddRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->needsLabel(Task::OldDW,pNormalRotRateLabel,         matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pTypeLabel,              matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pThickTopLabel,          matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pInitialThickTopLabel,   matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pNormalLabel,            matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pInitialNormalLabel,     matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pStressLabel,            matlset,Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,pNormalRotRateLabel,         matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pTypeLabel,              matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pThickTopLabel,          matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pInitialThickTopLabel,   matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pNormalLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pInitialNormalLabel,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pStressLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pDeformationMeasureLabel,matlset,Ghost::None);
 
 }
 
@@ -330,33 +330,33 @@ GUVMaterial::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, lb->pXLabel,                  matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pMassLabel,               matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pXLabel,                  matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,               matlset, gnone);
   if (d_8or27 == 27)
-    task->needsLabel(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pTypeLabel,               matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pThickTopLabel,           matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pInitialThickTopLabel,    matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pNormalLabel,             matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
-  task->needsLabel(Task::OldDW, pNormalRotRateLabel,          matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pStressLabel,             matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->needsLabel(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
-  task->needsLabel(Task::NewDW, lb->gNormalRotRateLabel,      matlset, gac, NGN);
-  task->needsLabel(Task::OldDW, lb->delTLabel);
+    task->requiresVar(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pTypeLabel,               matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pThickTopLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pInitialThickTopLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pNormalLabel,             matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, pNormalRotRateLabel,          matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pStressLabel,             matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
+  task->requiresVar(Task::NewDW, lb->gNormalRotRateLabel,      matlset, gac, NGN);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
 
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computesVar(lb->pStressLabel_preReloc,             matlset);
+  task->computesVar(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,              matlset);
 
-  task->computes(lb->pTypeLabel_preReloc,               matlset);
-  task->computes(lb->pThickTopLabel_preReloc,           matlset);
-  task->computes(lb->pInitialThickTopLabel_preReloc,    matlset);
+  task->computesVar(lb->pTypeLabel_preReloc,               matlset);
+  task->computesVar(lb->pThickTopLabel_preReloc,           matlset);
+  task->computesVar(lb->pInitialThickTopLabel_preReloc,    matlset);
 
-  task->computes(pAverageMomentLabel,                   matlset);
-  task->computes(pNormalDotAvStressLabel,               matlset);
-  task->computes(pRotMassLabel,                         matlset);
+  task->computesVar(pAverageMomentLabel,                   matlset);
+  task->computesVar(pNormalDotAvStressLabel,               matlset);
+  task->computesVar(pRotMassLabel,                         matlset);
 }
 
 
@@ -651,18 +651,18 @@ GUVMaterial::addComputesRequiresRotRateUpdate(Task* task,
               << endl;
   Ghost::GhostType gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, lb->delTLabel);
-  task->needsLabel(Task::OldDW, lb->pMassLabel,              matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pNormalLabel,            matlset, gnone);
-  task->needsLabel(Task::OldDW, lb->pInitialNormalLabel,     matlset, gnone);
-  task->needsLabel(Task::OldDW, pNormalRotRateLabel,         matlset, gnone);
-  task->needsLabel(Task::NewDW, lb->pVolumeDeformedLabel,    matlset, gnone);
-  task->needsLabel(Task::NewDW, lb->pThickTopLabel_preReloc, matlset, gnone);
-  task->needsLabel(Task::NewDW, pNormalRotAccLabel,          matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,              matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pNormalLabel,            matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pInitialNormalLabel,     matlset, gnone);
+  task->requiresVar(Task::OldDW, pNormalRotRateLabel,         matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->pVolumeDeformedLabel,    matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->pThickTopLabel_preReloc, matlset, gnone);
+  task->requiresVar(Task::NewDW, pNormalRotAccLabel,          matlset, gnone);
 
-  task->computes(lb->pNormalLabel_preReloc,             matlset);
-  task->computes(lb->pInitialNormalLabel_preReloc,      matlset);
-  task->computes(pNormalRotRateLabel_preReloc,          matlset);
+  task->computesVar(lb->pNormalLabel_preReloc,             matlset);
+  task->computesVar(lb->pInitialNormalLabel_preReloc,      matlset);
+  task->computesVar(pNormalRotRateLabel_preReloc,          matlset);
 }
 
 ///////////////////////////////////////////////////////////////////////////

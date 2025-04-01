@@ -60,10 +60,10 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
   // create a Uintah task to populate the reduction variable with values calculated by this expression
   Uintah::Task* reductionVarTask = scinew Uintah::Task( "set reduction variables", this, &ReductionBase::populate_reduction_variable, RKStage );
   // we require this perpatch variable
-  reductionVarTask->needsLabel( Uintah::Task::NewDW, thisVarLabel_,
+  reductionVarTask->requiresVar( Uintah::Task::NewDW, thisVarLabel_,
                               WasatchCore::get_uintah_ghost_type<so::SingleValueField>() );
   // we compute the reduction on this per patch variable
-  reductionVarTask->computes( rkRedVarLbls_[RKStage - 1] ); // RKStage starts at 1
+  reductionVarTask->computesVar( rkRedVarLbls_[RKStage - 1] ); // RKStage starts at 1
   sched->addTask( reductionVarTask,
                   sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                   materials );
@@ -75,9 +75,9 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
                            this, &ReductionBase::get_reduction_variable,
                            RKStage );
   // get the reduction variable value
-  getReductionVarTask->needsLabel( Uintah::Task::NewDW, rkRedVarLbls_[RKStage - 1] );
+  getReductionVarTask->requiresVar( Uintah::Task::NewDW, rkRedVarLbls_[RKStage - 1] );
   // modify the value for the perpatch expression
-  getReductionVarTask->modifies( thisVarLabel_ );
+  getReductionVarTask->modifiesVar( thisVarLabel_ );
   sched->addTask( getReductionVarTask,
                   sched->getLoadBalancer()->getPerProcessorPatchSet(level),
                   materials );

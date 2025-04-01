@@ -88,10 +88,10 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   if (!do_coarsen)
     return;
   Task* task = scinew Task("coarsen", this, &AMRWave::coarsen);
-  task->needsLabel(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-  task->modifies(phi_label);
-  task->needsLabel(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-  task->modifies(pi_label);
+  task->requiresVar(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->modifiesVar(phi_label);
+  task->requiresVar(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  task->modifiesVar(pi_label);
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -101,13 +101,13 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
   if (!do_refine)
     return;
   Task* task = scinew Task("refine", this, &AMRWave::refine);
-  task->needsLabel(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
-  task->needsLabel(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  task->requiresVar(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+  task->requiresVar(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
 
   // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
   if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
-    task->computes(phi_label);
-    task->computes(pi_label);
+    task->computesVar(phi_label);
+    task->computesVar(pi_label);
   }
   sched->addTask(task, patches, m_materialManager->allMaterials());
 }
@@ -117,9 +117,9 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched)
 {
   Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
-  task->needsLabel(Task::NewDW, phi_label, Ghost::AroundCells, 1);
-  task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
-  task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  task->requiresVar(Task::NewDW, phi_label, Ghost::AroundCells, 1);
+  task->modifiesVar(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
+  task->modifiesVar(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -385,10 +385,10 @@ void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
   Ghost::GhostType gc = Ghost::AroundCells;
 
   if(needCoarseOld)
-    task->needsLabel(Task::CoarseOldDW, var,
+    task->requiresVar(Task::CoarseOldDW, var,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
   if(needCoarseNew)
-    task->needsLabel(Task::CoarseNewDW, var,
+    task->requiresVar(Task::CoarseNewDW, var,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
 //______________________________________________________________________

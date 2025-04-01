@@ -113,7 +113,7 @@ void DOSweep::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &DOSweep::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //__________________________________
@@ -124,8 +124,8 @@ DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
                            this, &DOSweep::timeAdvance,
                            level, sched.get_rep());
-  task->computes(lb_->pressure_matrix);
-  task->computes(lb_->pressure_rhs);
+  task->computesVar(lb_->pressure_matrix);
+  task->computesVar(lb_->pressure_rhs);
 
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 

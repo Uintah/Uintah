@@ -281,22 +281,22 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel); 
-    tsk->computes(d_qconvLabel);
-    tsk->computes(d_qradLabel);
-    tsk->computes(d_pTLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel); 
+    tsk->computesVar(d_abskpLabel); 
+    tsk->computesVar(d_qconvLabel);
+    tsk->computesVar(d_qradLabel);
+    tsk->computesVar(d_pTLabel);
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel); 
-    tsk->modifies(d_qconvLabel);
-    tsk->modifies(d_qradLabel);
-    tsk->modifies(d_pTLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);  
+    tsk->modifiesVar(d_abskpLabel); 
+    tsk->modifiesVar(d_qconvLabel);
+    tsk->modifiesVar(d_qradLabel);
+    tsk->modifiesVar(d_pTLabel);
   }
 
-  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -307,9 +307,9 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
       d_surfacerateLabel = iModel->second->getSurfaceRateLabel();
       d_charoxiTempLabel = iModel->second->getParticleTempSourceLabel();
       d_chargasLabel = iModel->second->getGasSourceLabel();
-      tsk->needsLabel( Task::OldDW, d_surfacerateLabel, Ghost::None, 0 );
-      tsk->needsLabel( Task::OldDW, d_charoxiTempLabel, Ghost::None, 0 );
-      tsk->needsLabel( Task::OldDW, d_chargasLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, d_surfacerateLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, d_charoxiTempLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, d_chargasLabel, Ghost::None, 0 );
     }
   }
 
@@ -318,7 +318,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     int modelNode = iModel->second->getquadNode();
     if( modelNode == d_quadNode) {
       d_devolgasLabel = iModel->second->getGasSourceLabel();
-      tsk->needsLabel( Task::OldDW, d_devolgasLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, d_devolgasLabel, Ghost::None, 0 );
     }
   }
 
@@ -332,24 +332,24 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  tsk->needsLabel(Task::OldDW, d_weight_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_weight_label, Ghost::None, 0);
   
   // also require paticle velocity, gas velocity, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->needsLabel(Task::NewDW, iQuad->second, Ghost::None, 0);
-  tsk->needsLabel( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
-  tsk->needsLabel(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::NewDW, iQuad->second, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   d_gas_cp_label = VarLabel::find( "specificheat" ); 
   if ( d_gas_cp_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas specific heat label.",__FILE__,__LINE__);
   }
-  tsk->needsLabel(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
 
 /* 
   if(_radiation){
-    //tsk->needsLabel(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
-    tsk->needsLabel(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
-    tsk->needsLabel(Task::OldDW, d_volq_label, Ghost::None, 0);
+    //tsk->requiresVar(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
+    tsk->requiresVar(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
+    tsk->requiresVar(Task::OldDW, d_volq_label, Ghost::None, 0);
   }
 */
 
@@ -363,10 +363,10 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   if ( d_gas_temperature_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
   }
-  tsk->needsLabel(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
 
   const VarLabel* d_specificheat_label = VarLabel::find("specificheat");
-  tsk->needsLabel(Task::OldDW, d_specificheat_label, Ghost::None, 0 );
+  tsk->requiresVar(Task::OldDW, d_specificheat_label, Ghost::None, 0 );
 
   // For each required variable, determine what role it plays
   // - "particle_temperature" - look in DQMOMEqnFactory
@@ -386,7 +386,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
           d_pt_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: ShaddixHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for ShaddixHeatTransfer model.";
           errmsg += "\nCould not find given particle temperature variable \"";
@@ -401,7 +401,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_length_label = current_eqn.getTransportEqnLabel();
           d_pl_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_particle_length_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_length_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: ShaddixHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for ShaddixHeatTransfer model.";
           errmsg += "\nCould not find given particle length variable \"";
@@ -416,7 +416,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: ShaddixHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for ShaddixHeatTransfer model.";
           errmsg += "\nCould not find given coal mass  variable \"";
@@ -430,7 +430,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_char_mass_label = current_eqn.getTransportEqnLabel();
           d_rh_scaling_constant = current_eqn.getScalingConstant();
-          tsk->needsLabel(Task::OldDW, d_char_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_char_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: ShaddixHeatTransfer: sched_computeModel(): Invalid variable given in <ICVars> block, for <variable> tag for ShaddixHeatTransfer model.";
           errmsg += "\nCould not find given coal mass  variable \"";

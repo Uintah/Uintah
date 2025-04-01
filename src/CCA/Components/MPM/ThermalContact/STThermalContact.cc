@@ -113,8 +113,8 @@ void STThermalContact::initializeThermalContact(const Patch* /*patch*/,
 void STThermalContact::addComputesAndRequires(Task* t, const PatchSet*,
                                               const MaterialSet*) const
 {
-  t->needsLabel(Task::OldDW, lb->delTLabel);  
-  t->needsLabel(Task::NewDW, lb->gMassLabel,        Ghost::None);
-  t->needsLabel(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
-  t->computes(lb->gThermalContactTemperatureRateLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel);  
+  t->requiresVar(Task::NewDW, lb->gMassLabel,        Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
+  t->computesVar(lb->gThermalContactTemperatureRateLabel);
 }

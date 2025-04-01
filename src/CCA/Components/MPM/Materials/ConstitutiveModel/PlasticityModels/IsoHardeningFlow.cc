@@ -73,7 +73,7 @@ IsoHardeningFlow::addInitialComputesAndRequires(Task* task,
                                                    const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pAlphaLabel, matlset);
+  task->computesVar(pAlphaLabel, matlset);
 }
 
 void 
@@ -82,8 +82,8 @@ IsoHardeningFlow::addComputesAndRequires(Task* task,
                                             const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
-  task->computes(pAlphaLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
+  task->computesVar(pAlphaLabel_preReloc, matlset);
 }
 
 void 
@@ -95,9 +95,9 @@ IsoHardeningFlow::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   if(SchedParent){
-    task->needsLabel(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
   }else{
-    task->needsLabel(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
   }
 }
 
@@ -116,8 +116,8 @@ IsoHardeningFlow::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
-  //task->needsLabel(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
+  //task->requiresVar(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
 }
 
 void IsoHardeningFlow::allocateCMDataAdd(DataWarehouse* new_dw,

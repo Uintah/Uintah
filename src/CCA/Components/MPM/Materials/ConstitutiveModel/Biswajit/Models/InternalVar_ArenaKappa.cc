@@ -99,7 +99,7 @@ InternalVar_ArenaKappa::addInitialComputesAndRequires(Task* task,
                                                          const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pKappaLabel, matlset);
+  task->computesVar(pKappaLabel, matlset);
 }
 
 void 
@@ -108,8 +108,8 @@ InternalVar_ArenaKappa::addComputesAndRequires(Task* task,
                                                   const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, pKappaLabel, matlset,Ghost::None);
-  task->computes(pKappaLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pKappaLabel, matlset,Ghost::None);
+  task->computesVar(pKappaLabel_preReloc, matlset);
 }
 
 void 
@@ -127,7 +127,7 @@ InternalVar_ArenaKappa::allocateCMDataAddRequires(Task* task,
                                                      MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::NewDW, pKappaLabel_preReloc, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pKappaLabel_preReloc, matlset, Ghost::None);
 }
 
 void 

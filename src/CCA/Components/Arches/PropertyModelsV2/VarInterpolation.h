@@ -202,7 +202,7 @@ void VarInterpolation<T,IT>::register_initialize(
   variable_registry , const bool pack_tasks )
 {
 
-  register_variable( m_var_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry );
   register_variable( m_inter_var_name, ArchesFieldContainer::COMPUTES ,  variable_registry );
 
 }
@@ -225,7 +225,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 {
 
   register_variable( m_inter_var_name, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-  register_variable( m_var_name, ArchesFieldContainer::NEEDSLABEL, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( m_var_name, ArchesFieldContainer::REQUIRES, Nghost_cells, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
 }
 

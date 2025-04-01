@@ -92,17 +92,17 @@ namespace Uintah {
                               __FILE__, __LINE__);
     }
     else {
-      task->needsLabel(Task::OldDW, lb->delTLabel);
-      task->needsLabel(Task::OldDW, lb->pStressLabel,                       matlset, gnone);
-      task->needsLabel(Task::OldDW, lb->pMassLabel,                         matlset, gnone);
-      task->needsLabel(Task::OldDW, lb->pVelocityLabel,                     matlset, gnone);
-      task->needsLabel(Task::OldDW, lb->pDeformationMeasureLabel,           matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->delTLabel);
+      task->requiresVar(Task::OldDW, lb->pStressLabel,                       matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->pMassLabel,                         matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->pVelocityLabel,                     matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,           matlset, gnone);
 
-      task->needsLabel(Task::NewDW, lb->pVelGradLabel_preReloc,             matlset, gnone);
-      task->needsLabel(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlset, gnone);
+      task->requiresVar(Task::NewDW, lb->pVelGradLabel_preReloc,             matlset, gnone);
+      task->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  matlset, gnone);
 
-      task->computes(lb->pdTdtLabel, matlset);
-      task->computes(lb->pStressLabel_preReloc, matlset);
+      task->computesVar(lb->pdTdtLabel, matlset);
+      task->computesVar(lb->pStressLabel_preReloc, matlset);
     }
 
   }

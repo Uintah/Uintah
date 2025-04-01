@@ -758,15 +758,15 @@ void ViscoTransIsoHyper::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pStretchLabel,              matlset);
-  task->computes(pFailureLabel,              matlset);
-  task->computes(pElasticStressLabel,        matlset);//visco_label
-  task->computes(pHistory1Label,             matlset);
-  task->computes(pHistory2Label,             matlset);
-  task->computes(pHistory3Label,             matlset);
-  task->computes(pHistory4Label,             matlset);
-  task->computes(pHistory5Label,             matlset);
-  task->computes(pHistory6Label,             matlset);
+  task->computesVar(pStretchLabel,              matlset);
+  task->computesVar(pFailureLabel,              matlset);
+  task->computesVar(pElasticStressLabel,        matlset);//visco_label
+  task->computesVar(pHistory1Label,             matlset);
+  task->computesVar(pHistory2Label,             matlset);
+  task->computesVar(pHistory3Label,             matlset);
+  task->computesVar(pHistory4Label,             matlset);
+  task->computesVar(pHistory5Label,             matlset);
+  task->computesVar(pHistory6Label,             matlset);
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
@@ -785,27 +785,27 @@ void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
-  task->needsLabel(Task::OldDW, pFailureLabel,      matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+  task->requiresVar(Task::OldDW, pFailureLabel,      matlset,gnone);
 
-  task->needsLabel(Task::OldDW, pElasticStressLabel,matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory1Label,     matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory2Label,     matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory3Label,     matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory4Label,     matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory5Label,     matlset,gnone);
-  task->needsLabel(Task::OldDW, pHistory6Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pElasticStressLabel,matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory1Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory2Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory3Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory4Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory5Label,     matlset,gnone);
+  task->requiresVar(Task::OldDW, pHistory6Label,     matlset,gnone);
 
-  task->computes(lb->pFiberDirLabel_preReloc, matlset);
-  task->computes(pStretchLabel_preReloc,      matlset);
-  task->computes(pFailureLabel_preReloc,      matlset);
-  task->computes(pElasticStressLabel_preReloc,          matlset);//visco_label
-  task->computes(pHistory1Label_preReloc,               matlset);
-  task->computes(pHistory2Label_preReloc,               matlset);
-  task->computes(pHistory3Label_preReloc,               matlset);
-  task->computes(pHistory4Label_preReloc,               matlset);
-  task->computes(pHistory5Label_preReloc,               matlset);
-  task->computes(pHistory6Label_preReloc,               matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc, matlset);
+  task->computesVar(pStretchLabel_preReloc,      matlset);
+  task->computesVar(pFailureLabel_preReloc,      matlset);
+  task->computesVar(pElasticStressLabel_preReloc,          matlset);//visco_label
+  task->computesVar(pHistory1Label_preReloc,               matlset);
+  task->computesVar(pHistory2Label_preReloc,               matlset);
+  task->computesVar(pHistory3Label_preReloc,               matlset);
+  task->computesVar(pHistory4Label_preReloc,               matlset);
+  task->computesVar(pHistory5Label_preReloc,               matlset);
+  task->computesVar(pHistory6Label_preReloc,               matlset);
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* ,

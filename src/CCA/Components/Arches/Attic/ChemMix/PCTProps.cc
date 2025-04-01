@@ -104,35 +104,35 @@ PCTProps::sched_getState( const LevelP& level,
   if ( initialize_me ) {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->computes( i->second ); 
+      tsk->computesVar( i->second ); 
     }
 
     if (d_MAlab)
-      tsk->computes( d_lab->d_densityMicroLabel ); 
+      tsk->computesVar( d_lab->d_densityMicroLabel ); 
 
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->modifies( i->second ); 
+      tsk->modifiesVar( i->second ); 
     }
 
     if (d_MAlab)
-      tsk->modifies( d_lab->d_densityMicroLabel ); 
+      tsk->modifiesVar( d_lab->d_densityMicroLabel ); 
 
   }
 
   // other variables 
-  tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
+  tsk->modifiesVar( d_lab->d_densityCPLabel );  // lame .... fix me
   if ( modify_ref_den ) {
-    tsk->computes(time_labels->ref_density); 
+    tsk->computesVar(time_labels->ref_density); 
   }
-  tsk->needsLabel( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
-  tsk->needsLabel( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
+  tsk->requiresVar( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+  tsk->requiresVar( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
 
   // for inert mixing 
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
     const VarLabel* label = VarLabel::find( iter->first ); 
-    tsk->needsLabel( Task::NewDW, label, gn, 0 ); 
+    tsk->requiresVar( Task::NewDW, label, gn, 0 ); 
   } 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_materialManager->allMaterials( "Arches" ) ); 

@@ -180,13 +180,13 @@ gasRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
       if ( label != 0 ){
-        register_variable(*iter , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+        register_variable(*iter , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
       } else {
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
-  register_variable(_temperature_name , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
-  register_variable("volFraction" , ArchesFieldContainer::NEEDSLABEL,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
+  register_variable(_temperature_name , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
+  register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 
 
 

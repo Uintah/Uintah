@@ -229,8 +229,8 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::DoubleToFloat");
 
-  tsk->needsLabel( abskgDW,       d_compAbskgLabel, d_gn, 0 );
-  tsk->computes(d_abskgLabel);
+  tsk->requiresVar( abskgDW,       d_compAbskgLabel, d_gn, 0 );
+  tsk->computesVar(d_abskgLabel);
 
   // shedule on all taskgraphs not just TG_RMCRT.  The output task needs d_abskgLabel
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -293,8 +293,8 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
-  tsk->needsLabel( temp_dw, d_compTempLabel,    d_gn, 0 );
-  tsk->computes( d_sigmaT4Label );
+  tsk->requiresVar( temp_dw, d_compTempLabel,    d_gn, 0 );
+  tsk->computesVar( d_sigmaT4Label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
@@ -360,11 +360,11 @@ RMCRTCommon::sched_combineAbskgSigmaT4CellType( const LevelP& level,
 
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_combineAbskgSigmaT4CellType");
 
-  tsk->needsLabel( temp_dw, d_abskgLabel,    d_gn, 0 );
-  tsk->needsLabel( temp_dw, d_sigmaT4Label,    d_gn, 0 );
-  tsk->needsLabel( temp_dw, d_cellTypeLabel,    d_gn, 0 );
+  tsk->requiresVar( temp_dw, d_abskgLabel,    d_gn, 0 );
+  tsk->requiresVar( temp_dw, d_sigmaT4Label,    d_gn, 0 );
+  tsk->requiresVar( temp_dw, d_cellTypeLabel,    d_gn, 0 );
 
-  tsk->computes(d_abskgSigmaT4CellTypeLabel);
+  tsk->computesVar(d_abskgSigmaT4CellTypeLabel);
   
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
@@ -448,7 +448,7 @@ RMCRTCommon::sched_initialize_VarLabel( const LevelP  & level,
   std::string mesg = "RMCRTCommon::initialize_VarLabel (" + label->getName() + ")";
   printSchedule( level, g_ray_dbg, mesg );
 
-  tsk->computes( label );
+  tsk->computesVar( label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -916,15 +916,15 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
 
   Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
 
-  tsk->needsLabel( Task::OldDW, d_divQLabel,          d_gn, 0 );
-  tsk->needsLabel( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
-  tsk->needsLabel( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
-  tsk->needsLabel( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_divQLabel,          d_gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
 
-  tsk->computes( d_divQLabel );
-  tsk->computes( d_boundFluxLabel );
-  tsk->computes( d_radiationVolqLabel );
-  tsk->computes( d_sigmaT4Label );
+  tsk->computesVar( d_divQLabel );
+  tsk->computesVar( d_boundFluxLabel );
+  tsk->computesVar( d_radiationVolqLabel );
+  tsk->computesVar( d_sigmaT4Label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
 }
@@ -944,8 +944,8 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
   Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_VarLabels<UintahSpaces::CPU, UintahSpaces::HostSpace>, varLabels );
 
   for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
-    tsk->needsLabel( Task::OldDW, *iter, d_gn, 0 );
-    tsk->computes( *iter );
+    tsk->requiresVar( Task::OldDW, *iter, d_gn, 0 );
+    tsk->computesVar( *iter );
   }
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
@@ -967,8 +967,8 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 
   Task* task = scinew Task( taskName, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
 
-  task->needsLabel(Task::OldDW, variable,   d_gn, 0);
-  task->computes(variable);
+  task->requiresVar(Task::OldDW, variable,   d_gn, 0);
+  task->computesVar(variable);
 
   sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);
 }

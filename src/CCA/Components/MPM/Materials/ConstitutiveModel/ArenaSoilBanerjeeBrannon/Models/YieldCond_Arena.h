@@ -475,14 +475,14 @@ namespace Vaango {
                                        const Uintah::PatchSet* patch) const 
       {
         const Uintah::MaterialSubset* matlset = matl->thisMaterial(); 
-        task->computes(pPEAKI1Label,    matlset);
-        task->computes(pFSLOPELabel,    matlset);
-        task->computes(pSTRENLabel,     matlset);
-        task->computes(pYSLOPELabel,    matlset);
-        task->computes(pBETALabel,      matlset);
-        task->computes(pCRLabel,        matlset);
-        task->computes(pT1Label,        matlset);
-        task->computes(pT2Label,        matlset);
+        task->computesVar(pPEAKI1Label,    matlset);
+        task->computesVar(pFSLOPELabel,    matlset);
+        task->computesVar(pSTRENLabel,     matlset);
+        task->computesVar(pYSLOPELabel,    matlset);
+        task->computesVar(pBETALabel,      matlset);
+        task->computesVar(pCRLabel,        matlset);
+        task->computesVar(pT1Label,        matlset);
+        task->computesVar(pT2Label,        matlset);
       }
 
     /**
@@ -537,23 +537,23 @@ namespace Vaango {
                                 const Uintah::PatchSet* patches) const 
       {
         const Uintah::MaterialSubset* matlset = matl->thisMaterial(); 
-        task->needsLabel(Uintah::Task::OldDW, pPEAKI1Label,    matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pFSLOPELabel,    matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pSTRENLabel,     matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pYSLOPELabel,    matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pBETALabel,      matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pCRLabel,        matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pT1Label,        matlset, Uintah::Ghost::None);
-        task->needsLabel(Uintah::Task::OldDW, pT2Label,        matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pPEAKI1Label,    matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pFSLOPELabel,    matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pSTRENLabel,     matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pYSLOPELabel,    matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pBETALabel,      matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pCRLabel,        matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pT1Label,        matlset, Uintah::Ghost::None);
+        task->requiresVar(Uintah::Task::OldDW, pT2Label,        matlset, Uintah::Ghost::None);
 
-        task->computes(pPEAKI1Label_preReloc,    matlset);
-        task->computes(pFSLOPELabel_preReloc,    matlset);
-        task->computes(pSTRENLabel_preReloc,     matlset);
-        task->computes(pYSLOPELabel_preReloc,    matlset);
-        task->computes(pBETALabel_preReloc,      matlset);
-        task->computes(pCRLabel_preReloc,        matlset);
-        task->computes(pT1Label_preReloc,        matlset);
-        task->computes(pT2Label_preReloc,        matlset);
+        task->computesVar(pPEAKI1Label_preReloc,    matlset);
+        task->computesVar(pFSLOPELabel_preReloc,    matlset);
+        task->computesVar(pSTRENLabel_preReloc,     matlset);
+        task->computesVar(pYSLOPELabel_preReloc,    matlset);
+        task->computesVar(pBETALabel_preReloc,      matlset);
+        task->computesVar(pCRLabel_preReloc,        matlset);
+        task->computesVar(pT1Label_preReloc,        matlset);
+        task->computesVar(pT2Label_preReloc,        matlset);
       }
 
     /**

@@ -100,7 +100,7 @@ void ForcingTurbulence::register_initialize( std::vector<ArchesFieldContainer::V
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_density_name    , AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry);
+  register_variable( m_density_name    , AFC::REQUIRES, 0, AFC::NEWDW, variable_registry);
   register_variable( m_uVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, m_task_name );
   register_variable( m_vVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, m_task_name );
   register_variable( m_wVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, m_task_name );
@@ -125,7 +125,7 @@ void ForcingTurbulence::register_timestep_eval( std::vector<ArchesFieldContainer
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_density_name    , AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_density_name    , AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_uVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_vVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_wVel_name       , AFC::MODIFIES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );

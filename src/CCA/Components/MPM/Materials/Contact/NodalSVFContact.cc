@@ -197,8 +197,8 @@ void NodalSVFContact::addComputesAndRequiresIntegrated(
   Task * t = scinew Task("NodalSVFContact::exMomIntegrated", this, &NodalSVFContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->needsLabel(Task::OldDW, lb->delTLabel);    
-  t->needsLabel(Task::NewDW, lb->gMassLabel,         Ghost::None);
-  t->modifies(             lb->gVelocityStarLabel, mss);
+  t->requiresVar(Task::OldDW, lb->delTLabel);    
+  t->requiresVar(Task::NewDW, lb->gMassLabel,         Ghost::None);
+  t->modifiesVar(             lb->gVelocityStarLabel, mss);
   sched->addTask(t, patches, ms);
 }

@@ -749,10 +749,10 @@ void TransIsoHypoFrictional::carryForward(const PatchSubset* patches,
                                                      const PatchSet*) const
  {
    const MaterialSubset* matlset = matl->thisMaterial();
-   task->computes(pStretchLabel,              matlset);
-   task->computes(pCrimpLabel,                matlset);
-   task->computes(pPorosityLabel,             matlset);
-   task->computes(lb->pStressLabel_preReloc,  matlset);
+   task->computesVar(pStretchLabel,              matlset);
+   task->computesVar(pCrimpLabel,                matlset);
+   task->computesVar(pPorosityLabel,             matlset);
+   task->computesVar(lb->pStressLabel_preReloc,  matlset);
  }
 
  void TransIsoHypoFrictional::addComputesAndRequires(Task* task,
@@ -770,15 +770,15 @@ void TransIsoHypoFrictional::carryForward(const PatchSubset* patches,
    // Other constitutive model and input dependent computes and requires
    Ghost::GhostType  gnone = Ghost::None;
 
-   task->needsLabel(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
-   task->needsLabel(Task::OldDW, pStretchLabel,      matlset,gnone);
-   task->needsLabel(Task::OldDW, pCrimpLabel,        matlset,gnone);
-   task->needsLabel(Task::OldDW, pPorosityLabel,     matlset,gnone);
+   task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+   task->requiresVar(Task::OldDW, pStretchLabel,      matlset,gnone);
+   task->requiresVar(Task::OldDW, pCrimpLabel,        matlset,gnone);
+   task->requiresVar(Task::OldDW, pPorosityLabel,     matlset,gnone);
 
-   task->computes(lb->pFiberDirLabel_preReloc, matlset);
-   task->computes(pStretchLabel_preReloc,      matlset);
-   task->computes(pCrimpLabel_preReloc,        matlset);
-   task->computes(pPorosityLabel_preReloc,     matlset);
+   task->computesVar(lb->pFiberDirLabel_preReloc, matlset);
+   task->computesVar(pStretchLabel_preReloc,      matlset);
+   task->computesVar(pCrimpLabel_preReloc,        matlset);
+   task->computesVar(pPorosityLabel_preReloc,     matlset);
  }
 
  void TransIsoHypoFrictional::addComputesAndRequires(Task* ,

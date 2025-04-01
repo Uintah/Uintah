@@ -643,9 +643,9 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
-    task->computes(ISVLabels[i], matlset);
+    task->computesVar(ISVLabels[i], matlset);
   }
-  task->computes(peakI1IDistLabel, matlset);
+  task->computesVar(peakI1IDistLabel, matlset);
 }
 void Kayenta::addComputesAndRequires(Task* task,
                                      const MPMMaterial* matl,
@@ -658,16 +658,16 @@ void Kayenta::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
   // Computes and requires for internal state data
   for(int i=0;i<d_NINSV;i++){
-    task->needsLabel(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
-    task->computes(             ISVLabels_preReloc[i], matlset);
+    task->requiresVar(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+    task->computesVar(             ISVLabels_preReloc[i], matlset);
   }
   
-  task->needsLabel(Task::OldDW, lb->pLocalizedMPMLabel,   matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, peakI1IDistLabel,         matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel,   matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, peakI1IDistLabel,         matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
   
-  task->computes(peakI1IDistLabel_preReloc,       matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
+  task->computesVar(peakI1IDistLabel_preReloc,       matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 void Kayenta::addComputesAndRequires(Task*,
                                      const MPMMaterial*,

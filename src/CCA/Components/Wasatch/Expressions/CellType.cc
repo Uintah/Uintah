@@ -64,7 +64,7 @@ CellType::schedule_compute_celltype (Uintah::Ray* rmcrt,
 {
   // create the Uintah task to accomplish this.
   Uintah::Task* computeCellTypeTask = scinew Uintah::Task( "WasatchCore::compute_celltype", this, &CellType::compute_celltype, rmcrt );
-  computeCellTypeTask->computes(cellTypeVarLabel_);
+  computeCellTypeTask->computesVar(cellTypeVarLabel_);
   sched->addTask( computeCellTypeTask, patches, materials );
 }
 
@@ -96,8 +96,8 @@ void CellType::schedule_carry_forward(const Uintah::PatchSet* const patches,
                                       Uintah::SchedulerP& sched)
 {
   Uintah::Task* tsk = scinew Uintah::Task( "WasatchCore::CellType::carry_forward", this, &CellType::carry_forward );
-  tsk->needsLabel(Uintah::Task::OldDW, cellTypeVarLabel_, Uintah::Ghost::None, 0);
-  tsk->computes(cellTypeVarLabel_);
+  tsk->requiresVar(Uintah::Task::OldDW, cellTypeVarLabel_, Uintah::Ghost::None, 0);
+  tsk->computesVar(cellTypeVarLabel_);
   sched->addTask( tsk, patches, materials );
 }
 

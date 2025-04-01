@@ -127,7 +127,7 @@ ShrinkageRate::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "ShrinkageRate::initVars";
   Task* tsk = scinew Task(taskname, this, &ShrinkageRate::initVars);
 
-  tsk->computes(d_modelLabel);
+  tsk->computesVar(d_modelLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -171,16 +171,16 @@ ShrinkageRate::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
+    tsk->computesVar(d_modelLabel);
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
+    tsk->modifiesVar(d_modelLabel);
     which_dw = Task::NewDW;
   }
 
-  //tsk->needsLabel( Task::NewDW, _surfacerate_varlabel, gn, 0 );
-  tsk->needsLabel( Task::NewDW, m_charoxiSize_varlabel, gn, 0 ); 
-  tsk->needsLabel( which_dw, m_weight_scaled_varlabel, gn, 0 ); 
+  //tsk->requiresVar( Task::NewDW, _surfacerate_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_charoxiSize_varlabel, gn, 0 ); 
+  tsk->requiresVar( which_dw, m_weight_scaled_varlabel, gn, 0 ); 
   
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

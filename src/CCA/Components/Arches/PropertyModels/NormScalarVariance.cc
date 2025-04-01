@@ -63,15 +63,15 @@ void NormScalarVariance::sched_computeProp( const LevelP& level, SchedulerP& sch
   if ( _mf_m2_label == 0 )
     throw InvalidValue("Error: Cannot match mixture fraction sencond moment name with label.",__FILE__, __LINE__);             
 
-  tsk->modifies( _prop_label );
+  tsk->modifiesVar( _prop_label );
   if ( time_substep == 0 ){ 
-    tsk->needsLabel( Task::OldDW, _mf_label, Ghost::AroundCells, 1); 
-    tsk->needsLabel( Task::OldDW, _mf_m2_label, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::OldDW, _vf_label, Ghost::AroundCells, 1); 
+    tsk->requiresVar( Task::OldDW, _mf_label, Ghost::AroundCells, 1); 
+    tsk->requiresVar( Task::OldDW, _mf_m2_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::OldDW, _vf_label, Ghost::AroundCells, 1); 
   } else { 
-    tsk->needsLabel( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->needsLabel( Task::NewDW, _mf_m2_label, Ghost::None, 0 ); 
-    tsk->needsLabel( Task::NewDW, _vf_label, Ghost::AroundCells, 1); 
+    tsk->requiresVar( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
+    tsk->requiresVar( Task::NewDW, _mf_m2_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::NewDW, _vf_label, Ghost::AroundCells, 1); 
   } 
   
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
@@ -156,7 +156,7 @@ void NormScalarVariance::sched_initialize( const LevelP& level, SchedulerP& sche
   std::string taskname = "NormScalarVariance::initialize"; 
 
   Task* tsk = scinew Task(taskname, this, &NormScalarVariance::initialize);
-  tsk->computes(_prop_label); 
+  tsk->computesVar(_prop_label); 
   
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

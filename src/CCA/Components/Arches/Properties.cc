@@ -161,10 +161,10 @@ Properties::sched_averageRKProps( SchedulerP& sched, const PatchSet* patches,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
-  tsk->needsLabel(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityTempLabel,   gn, 0);
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
-  tsk->modifies(d_lab->d_densityGuessLabel);
+  tsk->requiresVar(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityTempLabel,   gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->modifiesVar(d_lab->d_densityGuessLabel);
 
 
 
@@ -254,8 +254,8 @@ Properties::sched_saveTempDensity(SchedulerP& sched,
                           &Properties::saveTempDensity,
                           timelabels);
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0);
-  tsk->modifies(d_lab->d_densityTempLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0);
+  tsk->modifiesVar(d_lab->d_densityTempLabel);
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -298,7 +298,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
                           &Properties::computeDrhodt,
                           timelabels);
 
-  tsk->needsLabel( Task::OldDW, d_lab->d_timeStepLabel );
+  tsk->requiresVar( Task::OldDW, d_lab->d_timeStepLabel );
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -310,23 +310,23 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  ga = Ghost::AroundCells;
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
-  tsk->needsLabel(parent_old_dw, d_lab->d_oldDeltaTLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requiresVar(parent_old_dw, d_lab->d_delTLabel);
+  tsk->requiresVar(parent_old_dw, d_lab->d_oldDeltaTLabel);
 
-  tsk->needsLabel(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
-  tsk->needsLabel(parent_old_dw , d_lab->d_densityCPLabel    , gn , 0);
-  tsk->needsLabel(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
-  tsk->needsLabel(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
+  tsk->requiresVar(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requiresVar(parent_old_dw , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requiresVar(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
+  tsk->requiresVar(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
 
-  //tsk->needsLabel(Task::NewDW, VarLabel::find("mixture_fraction"), gn, 0);
+  //tsk->requiresVar(Task::NewDW, VarLabel::find("mixture_fraction"), gn, 0);
 
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-    tsk->computes(d_lab->d_filterdrhodtLabel);
-    tsk->computes(d_lab->d_oldDeltaTLabel);
+    tsk->computesVar(d_lab->d_filterdrhodtLabel);
+    tsk->computesVar(d_lab->d_oldDeltaTLabel);
   }
   else{
-    tsk->modifies(d_lab->d_filterdrhodtLabel);
+    tsk->modifiesVar(d_lab->d_filterdrhodtLabel);
   }
   sched->addTask(tsk, patches, matls);
 }

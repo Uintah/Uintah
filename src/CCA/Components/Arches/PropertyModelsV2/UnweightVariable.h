@@ -308,10 +308,10 @@ void UnweightVariable<T>::register_initialize(
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    register_variable( m_un_eqn_names[ieqn] , ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
+    register_variable( m_un_eqn_names[ieqn] , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
     register_variable( m_eqn_names[ieqn],     ArchesFieldContainer::MODIFIES ,  variable_registry, m_task_name );
   }
-  register_variable( m_rho_name, ArchesFieldContainer::NEEDSLABEL, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
+  register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -382,25 +382,25 @@ void UnweightVariable<T>::register_compute_bcs(
     // scalar at cc
 
     if (m_eqn_class ==ArchesCore::DQMOM) {
-      register_variable( m_volFraction_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
+      register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
         register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep, m_task_name );
-        register_variable( m_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
     } else {
       for (int ieqn = istart; ieqn < iend; ieqn++ ){
         register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep, m_task_name );
-        register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+        register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       }
     }
   } else {
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
     }
   }
-  register_variable( m_rho_name, ArchesFieldContainer::NEEDSLABEL, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
 
 }
 
@@ -580,7 +580,7 @@ void UnweightVariable<T>::register_timestep_eval(
     register_variable( m_un_eqn_names[ieqn], ArchesFieldContainer::MODIFIES ,  variable_registry, m_task_name );
     register_variable( m_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
   }
-  register_variable( m_rho_name, ArchesFieldContainer::NEEDSLABEL, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, m_Nghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
 
 }
 

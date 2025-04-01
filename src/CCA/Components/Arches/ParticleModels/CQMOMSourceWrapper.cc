@@ -163,7 +163,7 @@ CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& 
 
   //New
   for ( int i = 0; i < nMoments*nSources; i++ ) {
-    tsk->computes(d_sourceLabels[i]);
+    tsk->computesVar(d_sourceLabels[i]);
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -205,27 +205,27 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
 
   //----NEW----
   for ( int i = 0; i < nMoments*nSources; i++ ) {
-    tsk->modifies(d_sourceLabels[i]);
+    tsk->modifiesVar(d_sourceLabels[i]);
   }
 
   volfrac_label = VarLabel::find( "volFraction" );
-  tsk->needsLabel( Task::OldDW, volfrac_label, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, volfrac_label, Ghost::None, 0);
   
   //loop over requires for weights and abscissas needed
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     if (timeSubStep == 0 ) {
-      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0 );
     } else {
-      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0 );
     }
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     if (timeSubStep == 0 ) {
-      tsk->needsLabel( Task::OldDW, tempLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0 );
     } else {
-      tsk->needsLabel( Task::NewDW, tempLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0 );
     }
   }
 
@@ -238,7 +238,7 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
   }
   for ( int i = 0; i < _N * nSources; i++ ) {
     const VarLabel* tempLabel = d_nodeSources[i];
-    tsk->needsLabel( which_dw, tempLabel, Ghost::None, 0 );
+    tsk->requiresVar( which_dw, tempLabel, Ghost::None, 0 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));

@@ -102,7 +102,7 @@ namespace Uintah{
     std::string taskname = "ConstProperty::computeProp"; 
     Task* tsk = scinew Task( taskname, this, &ConstProperty::computeProp, time_substep ); 
 
-    tsk->modifies( _prop_label ); 
+    tsk->modifiesVar( _prop_label ); 
 
     sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
 
@@ -137,7 +137,7 @@ namespace Uintah{
     std::string taskname = "ConstProperty::initialize"; 
 
     Task* tsk = scinew Task(taskname, this, &ConstProperty::initialize);
-    tsk->computes(_prop_label); 
+    tsk->computesVar(_prop_label); 
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   }

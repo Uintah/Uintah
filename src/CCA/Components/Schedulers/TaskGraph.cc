@@ -1607,7 +1607,7 @@ CompTable::findcomp(       Task::Dependency   * req
     // TODO - fix why this assert is tripped when the gold standard,
     // MPM/ARL/NanoPillar2D_FBC_sym.ups is run using a non-optimized build.
     // On a debug, inputs/MPMdisks_complex.ups also hits this.
-    // Clue: This assertion is tripped if there are two modifies() in a single task.
+    // Clue: This assertion is tripped if there are two modifiesVar() in a single task.
     //ASSERT(!result || p->m_comp->m_task->getSortedOrder() != result->m_comp->m_task->getSortedOrder());
 
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder()) {
@@ -2046,11 +2046,11 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
 
           // compute and require for all patches but some set of materials (maybe global material, but not necessarily)
           if (comp->m_matls != nullptr) {
-            newtask->modifies( comp->m_var, level, comp->m_matls, Task::OutOfDomain);
+            newtask->modifiesVar( comp->m_var, level, comp->m_matls, Task::OutOfDomain);
           }
           else {
             for (int m = 0; m < matlSet->size(); m++) {
-              newtask->modifies( comp->m_var, level, matlSet->getSubset(m), Task::OutOfDomain);
+              newtask->modifiesVar( comp->m_var, level, matlSet->getSubset(m), Task::OutOfDomain);
             }
           }
           reductionTasks[key] = newtask;

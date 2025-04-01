@@ -90,14 +90,14 @@ void UFromRhoU::register_initialize( AVarInfo& variable_registry , const bool pa
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_density_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, m_task_name );
-  register_variable( m_xmom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, m_task_name );
-  register_variable( m_ymom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, m_task_name );
-  register_variable( m_zmom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_density_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_xmom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_ymom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_zmom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, m_task_name );
   register_variable( m_u_vel_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_v_vel_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_w_vel_name, AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( m_eps_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, m_task_name );
 
 }
 
@@ -118,9 +118,9 @@ void UFromRhoU::register_timestep_init( AVarInfo& variable_registry , const bool
   register_variable( m_v_vel_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_w_vel_name, AFC::COMPUTES, variable_registry, m_task_name );
 
-  register_variable( m_u_vel_name, AFC::NEEDSLABEL,0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( m_v_vel_name, AFC::NEEDSLABEL,0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( m_w_vel_name, AFC::NEEDSLABEL,0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_u_vel_name, AFC::REQUIRES,0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_v_vel_name, AFC::REQUIRES,0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( m_w_vel_name, AFC::REQUIRES,0, AFC::OLDDW, variable_registry, m_task_name );
 
 }
 
@@ -147,11 +147,11 @@ void UFromRhoU::register_timestep_eval( VIVec& variable_registry, const int time
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_density_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_xmom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_ymom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_zmom, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_eps_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_density_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_xmom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_ymom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_zmom, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_u_vel_name, AFC::MODIFIES , variable_registry, time_substep, m_task_name );
   register_variable( m_v_vel_name, AFC::MODIFIES , variable_registry, time_substep, m_task_name );
   register_variable( m_w_vel_name, AFC::MODIFIES , variable_registry, time_substep, m_task_name );

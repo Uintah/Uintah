@@ -121,22 +121,22 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
-  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
 
   if( sched->get_dw(0) )
-    tsk->needsLabel(Task::OldDW, d_lab->d_simulationTimeLabel);
+    tsk->requiresVar(Task::OldDW, d_lab->d_simulationTimeLabel);
   else if( sched->get_dw(1) )
-    tsk->needsLabel(Task::NewDW, d_lab->d_simulationTimeLabel);
+    tsk->requiresVar(Task::NewDW, d_lab->d_simulationTimeLabel);
 
-  tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_turbViscosLabel);
+  tsk->modifiesVar(d_lab->d_viscosityCTSLabel);
+  tsk->modifiesVar(d_lab->d_turbViscosLabel);
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }

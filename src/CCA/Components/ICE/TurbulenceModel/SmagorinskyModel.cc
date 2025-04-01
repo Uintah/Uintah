@@ -164,9 +164,9 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
                                &Smagorinsky_Model::computeVariance, s);
                                
-      task->needsLabel(Task::OldDW, VarLabel::find( timeStep_name) );
-      task->needsLabel(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
-      task->computes(s->scalarVariance);
+      task->requiresVar(Task::OldDW, VarLabel::find( timeStep_name) );
+      task->requiresVar(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
+      task->computesVar(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
     }
   }

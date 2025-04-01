@@ -240,7 +240,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
   
-  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
+  tsk->requiresVar(parent_old_dw, d_lab->d_delTLabel);
   
   // This task requires scalar and density from old time step for transient
   // calculation
@@ -250,9 +250,9 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;  
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 2);
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityCPLabel, gac, 2);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 2);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, gac, 2);
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
@@ -260,26 +260,26 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->needsLabel(old_values_dw, d_lab->d_scalarSPLabel,  gn, 0);
-  tsk->needsLabel(old_values_dw, d_lab->d_densityCPLabel, gn, 0);
+  tsk->requiresVar(old_values_dw, d_lab->d_scalarSPLabel,  gn, 0);
+  tsk->requiresVar(old_values_dw, d_lab->d_densityCPLabel, gn, 0);
   
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   
   if (d_dynScalarModel){
-    tsk->needsLabel(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 2);
   }else{
-    tsk->needsLabel(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 2);
   }
-  tsk->needsLabel(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->needsLabel(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+      tsk->requiresVar(Task::OldDW, d_lab->d_scalarFluxCompLabel,
           d_lab->d_vectorMatl, oams, gac, 1);
     }else{
-      tsk->needsLabel(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+      tsk->requiresVar(Task::NewDW, d_lab->d_scalarFluxCompLabel,
           d_lab->d_vectorMatl, oams,gac, 1);
     }
   }
@@ -288,17 +288,17 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
 
     // -------- New Coefficient Stuff -------------
-    tsk->computes(d_lab->d_scalarTotCoefLabel); 
+    tsk->computesVar(d_lab->d_scalarTotCoefLabel); 
 
     // --------------------------------------------
 
-    tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
-    tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
-    tsk->computes(d_lab->d_scalNonLinSrcSBLMLabel);
+    tsk->computesVar(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->computesVar(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
+    tsk->computesVar(d_lab->d_scalNonLinSrcSBLMLabel);
 //#ifdef divergenceconstraint
-    tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
+    tsk->computesVar(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
-    tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+    tsk->modifiesVar(d_lab->d_scalarBoundarySrcLabel);
 
     // Adding new sources from factory:
     SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -307,23 +307,23 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
       SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      tsk->needsLabel(Task::OldDW, srcLabel, gn, 0); 
+      tsk->requiresVar(Task::OldDW, srcLabel, gn, 0); 
 
     }
   }else {
 
     // -------- New Coefficient Stuff -------------
-    tsk->modifies(d_lab->d_scalarTotCoefLabel); 
+    tsk->modifiesVar(d_lab->d_scalarTotCoefLabel); 
 
     // --------------------------------------------
 
-    tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
-    tsk->modifies(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
-    tsk->modifies(d_lab->d_scalNonLinSrcSBLMLabel);
+    tsk->modifiesVar(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifiesVar(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifiesVar(d_lab->d_scalNonLinSrcSBLMLabel);
 //#ifdef divergenceconstraint
-    tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
+    tsk->modifiesVar(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
-    tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+    tsk->modifiesVar(d_lab->d_scalarBoundarySrcLabel);
 
     // Adding new sources from factory:
     SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -332,7 +332,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
       SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      tsk->needsLabel(Task::NewDW, srcLabel, gn, 0); 
+      tsk->requiresVar(Task::NewDW, srcLabel, gn, 0); 
 
     }
   }       
@@ -641,33 +641,33 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->needsLabel(parent_old_dw, d_lab->d_delTLabel);
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
-  tsk->needsLabel(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
+  tsk->requiresVar(parent_old_dw, d_lab->d_delTLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
   
-  tsk->needsLabel(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   
   if (timelabels->multiple_steps){
-    tsk->needsLabel(Task::NewDW, d_lab->d_scalarTempLabel, gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_scalarTempLabel, gac, 1);
   }else{
-    tsk->needsLabel(Task::OldDW, d_lab->d_scalarSPLabel,   gac, 1);
+    tsk->requiresVar(Task::OldDW, d_lab->d_scalarSPLabel,   gac, 1);
   }
-  tsk->needsLabel(Task::NewDW, d_lab->d_scalCoefSBLMLabel,  
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalCoefSBLMLabel,  
                              d_lab->d_stencilMatl, oams, gn, 0);
                              
-  tsk->needsLabel(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, gn, 0);
 
-  tsk->needsLabel(Task::NewDW, d_lab->d_scalarTotCoefLabel, gn, 0);
-  //tsk->modifies(d_lab->d_scalarTotCoefLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarTotCoefLabel, gn, 0);
+  //tsk->modifiesVar(d_lab->d_scalarTotCoefLabel);
 
   if (d_MAlab) {
-    tsk->needsLabel(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }    
  
-  tsk->modifies(d_lab->d_scalarSPLabel);
+  tsk->modifiesVar(d_lab->d_scalarSPLabel);
 
   if (timelabels->recursion){
-    tsk->computes(d_lab->d_ScalarClippedLabel);
+    tsk->computesVar(d_lab->d_ScalarClippedLabel);
   }
   
   sched->addTask(tsk, patches, matls);

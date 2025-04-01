@@ -200,8 +200,8 @@ FirstLawThermo::scheduleInitialize( SchedulerP   & sched,
 
   Task* t = scinew Task( "FirstLawThermo::initialize", this, &FirstLawThermo::initialize );
 
-  t->computes(FL_lb->lastCompTimeLabel);
-  t->computes(FL_lb->fileVarsStructLabel, m_zeroMatl);
+  t->computesVar(FL_lb->lastCompTimeLabel);
+  t->computesVar(FL_lb->fileVarsStructLabel, m_zeroMatl);
 
   sched->addTask(t, level->eachPatch(), m_zeroMatlSet);
 }
@@ -279,16 +279,16 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t0, level, FL_lb->lastCompTimeLabel, false );
 
-  t0->needsLabel( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->specific_heatLabel, ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->gammaLabel,         ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->uvel_FCMELabel,     ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->vvel_FCMELabel,     ice_ss, gn );
-  t0->needsLabel( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->specific_heatLabel, ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->gammaLabel,         ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->uvel_FCMELabel,     ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->vvel_FCMELabel,     ice_ss, gn );
+  t0->requiresVar( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
 
-  t0->computes( FL_lb->ICE_totalIntEngLabel );
-  t0->computes( FL_lb->totalFluxesLabel );
+  t0->computesVar( FL_lb->ICE_totalIntEngLabel );
+  t0->computesVar( FL_lb->totalFluxesLabel );
 
   sched->addTask( t0, level->eachPatch(), all_matls );
 
@@ -302,9 +302,9 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t1, level, FL_lb->lastCompTimeLabel, false );
 
-  t1->needsLabel( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
-  t1->needsLabel( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
-  t1->computes( FL_lb->MPM_totalIntEngLabel );
+  t1->requiresVar( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
+  t1->requiresVar( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
+  t1->computesVar( FL_lb->MPM_totalIntEngLabel );
 
   sched->addTask( t1, level->eachPatch(), all_matls );
 
@@ -316,12 +316,12 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t2, level, FL_lb->lastCompTimeLabel, true );
 
-  t2->needsLabel( Task::OldDW, FL_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
-  t2->needsLabel( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
-  t2->needsLabel( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
-  t2->needsLabel( Task::NewDW, FL_lb->totalFluxesLabel );
+  t2->requiresVar( Task::OldDW, FL_lb->fileVarsStructLabel, m_zeroMatl, gn, 0 );
+  t2->requiresVar( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
+  t2->requiresVar( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
+  t2->requiresVar( Task::NewDW, FL_lb->totalFluxesLabel );
 
-  t2->computes( FL_lb->fileVarsStructLabel, m_zeroMatl );
+  t2->computesVar( FL_lb->fileVarsStructLabel, m_zeroMatl );
 
   // you only need to schedule this  patch 0 since you're writing out data
   sched->addTask( t2, d_zeroPatch, m_zeroMatlSet);

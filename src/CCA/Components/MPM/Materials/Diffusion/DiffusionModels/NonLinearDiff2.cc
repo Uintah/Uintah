@@ -62,9 +62,9 @@ void NonLinearDiff2::addInitialComputesAndRequires(
                                                   ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->diffusion->pDiffusivity,   matlset);
-  task->computes(d_Al->pPosChargeFluxLabel, matlset);
-  task->computes(d_Al->pNegChargeFluxLabel, matlset);
+  task->computesVar(d_lb->diffusion->pDiffusivity,   matlset);
+  task->computesVar(d_Al->pPosChargeFluxLabel, matlset);
+  task->computesVar(d_Al->pNegChargeFluxLabel, matlset);
 }
 
 void NonLinearDiff2::initializeSDMData(const Patch          * patch,
@@ -112,19 +112,19 @@ void NonLinearDiff2::scheduleComputeFlux(
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
 
-  // task->needsLabel(Task::OldDW, d_lb->simulationTimeLabel,);
+  // task->requiresVar(Task::OldDW, d_lb->simulationTimeLabel,);
 
-  task->needsLabel(Task::OldDW, d_Al->pPosChargeLabel, matlset, gnone);
-  task->needsLabel(Task::OldDW, d_Al->pNegChargeLabel, matlset, gnone);
-  task->needsLabel(Task::OldDW, d_Al->pPosChargeGradLabel, matlset, gnone);
-  task->needsLabel(Task::OldDW, d_Al->pNegChargeGradLabel, matlset, gnone);
-  task->needsLabel(Task::NewDW, d_Al->pESGradPotential, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_Al->pPosChargeLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_Al->pNegChargeLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_Al->pPosChargeGradLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_Al->pNegChargeGradLabel, matlset, gnone);
+  task->requiresVar(Task::NewDW, d_Al->pESGradPotential, matlset, gnone);
 
-  task->computes(d_lb->delTLabel,getLevel(patch));
+  task->computesVar(d_lb->delTLabel,getLevel(patch));
 
-  task->computes(d_Al->pPosChargeFluxLabel_preReloc, matlset);
-  task->computes(d_Al->pNegChargeFluxLabel_preReloc, matlset);
-  task->computes(d_lb->diffusion->pDiffusivity_preReloc,   matlset);
+  task->computesVar(d_Al->pPosChargeFluxLabel_preReloc, matlset);
+  task->computesVar(d_Al->pNegChargeFluxLabel_preReloc, matlset);
+  task->computesVar(d_lb->diffusion->pDiffusivity_preReloc,   matlset);
 }
 
 void NonLinearDiff2::computeFlux(const Patch          * patch,
@@ -189,19 +189,19 @@ void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->needsLabel(Task::OldDW, d_lb->delTLabel);
-  task->needsLabel(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
-  task->needsLabel(Task::NewDW, d_lb->pCurSizeLabel,             gan, NGP);
-  task->needsLabel(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
-  task->needsLabel(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
+  task->requiresVar(Task::OldDW, d_lb->delTLabel);
+  task->requiresVar(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
+  task->requiresVar(Task::NewDW, d_lb->pCurSizeLabel,             gan, NGP);
+  task->requiresVar(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
+  task->requiresVar(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
 
-  task->needsLabel(Task::NewDW, d_Al->pPosChargeFluxLabel_preReloc, gan, NGP);
-  task->needsLabel(Task::NewDW, d_Al->pNegChargeFluxLabel_preReloc, gan, NGP);
+  task->requiresVar(Task::NewDW, d_Al->pPosChargeFluxLabel_preReloc, gan, NGP);
+  task->requiresVar(Task::NewDW, d_Al->pNegChargeFluxLabel_preReloc, gan, NGP);
 
-  task->computes(d_Al->gPosChargeRateLabel, matlset);
-  task->computes(d_Al->gNegChargeRateLabel, matlset);
+  task->computesVar(d_Al->gPosChargeRateLabel, matlset);
+  task->computesVar(d_Al->gNegChargeRateLabel, matlset);
 
-  task->computes(d_lb->diffusion->gConcentrationRate, matlset);
+  task->computesVar(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void NonLinearDiff2::computeDivergence(const Patch          * patch,
@@ -291,8 +291,8 @@ void NonLinearDiff2::addSplitParticlesComputesAndRequires(
                                                          ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->modifies(d_lb->diffusion->pDiffusivity_preReloc, matlset);
-  task->modifies(d_lb->diffusion->pFlux_preReloc,        matlset);
+  task->modifiesVar(d_lb->diffusion->pDiffusivity_preReloc, matlset);
+  task->modifiesVar(d_lb->diffusion->pFlux_preReloc,        matlset);
 }
 
 void NonLinearDiff2::splitSDMSpecificParticleData(

@@ -55,7 +55,7 @@ void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
-  t->computes(d_switch_label);
+  t->computesVar(d_switch_label);
   sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 }
 

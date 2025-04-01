@@ -81,10 +81,10 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
                            this, &ParticleTest1::initialize);
-  task->computes(lb_->pXLabel);
-  task->computes(lb_->pMassLabel);
-  task->computes(lb_->pParticleIDLabel);
-  task->computes(lb_->dummyLabel);
+  task->computesVar(lb_->pXLabel);
+  task->computesVar(lb_->pMassLabel);
+  task->computesVar(lb_->pParticleIDLabel);
+  task->computesVar(lb_->dummyLabel);
   
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
@@ -103,7 +103,7 @@ void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &ParticleTest1::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
 }
@@ -122,28 +122,28 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
   // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost
   // atound-node, and 2 mixes them
   if (doGhostCells_ == 0) {
-    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
-    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::None, 0);
+    task->requiresVar(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
+    task->requiresVar(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
+    task->requiresVar(Task::OldDW, lb_->pMassLabel, Ghost::None, 0);
   }
   
   else if (doGhostCells_ == 1) {
-    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::AroundNodes, 1);
-    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::AroundNodes, 1);
+    task->requiresVar(Task::OldDW, lb_->pXLabel, Ghost::AroundNodes, 1);
+    task->requiresVar(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
+    task->requiresVar(Task::OldDW, lb_->pParticleIDLabel, Ghost::AroundNodes, 1);
   }
   else if (doGhostCells_ == 2) {
-    task->needsLabel(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->needsLabel(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->needsLabel(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
+    task->requiresVar(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
+    task->requiresVar(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
+    task->requiresVar(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
   }
 
-  task->needsLabel(Task::OldDW, lb_->timeStepLabel);
+  task->requiresVar(Task::OldDW, lb_->timeStepLabel);
   
-  task->computes(lb_->dummyLabel);
-  task->computes(lb_->pXLabel_preReloc);
-  task->computes(lb_->pMassLabel_preReloc);
-  task->computes(lb_->pParticleIDLabel_preReloc);
+  task->computesVar(lb_->dummyLabel);
+  task->computesVar(lb_->pXLabel_preReloc);
+  task->computesVar(lb_->pMassLabel_preReloc);
+  task->computesVar(lb_->pParticleIDLabel_preReloc);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
   //__________________________________

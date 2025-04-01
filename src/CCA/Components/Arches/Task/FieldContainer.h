@@ -33,7 +33,7 @@ namespace Uintah{
 
     public:
 
-      enum VAR_DEPEND { COMPUTES, MODIFIES, NEEDSLABEL, COMPUTESCRATCHGHOST };
+      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, COMPUTESCRATCHGHOST };
       enum WHICH_DW { OLDDW, NEWDW, LATEST };
 
       /** @brief The variable registry information. Each task variable has one of these.

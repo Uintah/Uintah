@@ -293,7 +293,7 @@ PressureEqn::register_timestep_init(
 
   register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "A_press", AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( "A_press", AFC::NEEDSLABEL, 0, AFC::OLDDW, variable_registry, m_task_name );
+  register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
   register_variable( "guess_press", AFC::COMPUTES, variable_registry, m_task_name );
 }
 
@@ -323,11 +323,11 @@ PressureEqn::register_timestep_eval(
   const int time_substep, const bool packed_tasks ) {
 
   register_variable( "b_press", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
-  register_variable( m_eps_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( ArchesCore::default_uMom_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( ArchesCore::default_vMom_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( ArchesCore::default_wMom_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
-  register_variable( m_drhodt_name, AFC::NEEDSLABEL, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_uMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_vMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( ArchesCore::default_wMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
+  register_variable( m_drhodt_name, AFC::REQUIRES, 0, AFC::NEWDW, variable_registry, time_substep, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -376,7 +376,7 @@ PressureEqn::register_compute_bcs(
 
   register_variable( "b_press", AFC::MODIFIES, variable_registry );
   register_variable( "A_press", AFC::MODIFIES, variable_registry );
-  register_variable( m_eps_name, AFC::NEEDSLABEL, 1, AFC::NEWDW, variable_registry );
+  register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -514,7 +514,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
     xLabel = x_label;
 
     auto taskDependencies = [&](Task* tsk) {
-      tsk->modifies(xLabel);
+      tsk->modifiesVar(xLabel);
     };
 
     create_portable_tasks(taskDependencies, this,

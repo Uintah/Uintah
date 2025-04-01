@@ -144,9 +144,9 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
     register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
   }
-  register_variable( m_u_vel_name, ArchesFieldContainer::NEEDSLABEL,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-  register_variable( m_v_vel_name, ArchesFieldContainer::NEEDSLABEL,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-  register_variable( m_w_vel_name, ArchesFieldContainer::NEEDSLABEL,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES,m_ghost_cells , ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------

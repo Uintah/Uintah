@@ -896,10 +896,10 @@ void NonLocalDruckerPrager::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
-  task->computes(etaLabel,        matlset);
-  task->computes(eta_nlLabel,     matlset);
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(k_o_distLabel,   matlset);
+  task->computesVar(etaLabel,        matlset);
+  task->computesVar(eta_nlLabel,     matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(k_o_distLabel,   matlset);
 
 }
 
@@ -914,15 +914,15 @@ void NonLocalDruckerPrager::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->needsLabel(Task::OldDW, etaLabel, matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, eta_nlLabel, matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
-  task->needsLabel(Task::OldDW,k_o_distLabel, matlset, Ghost::None);
-  task->needsLabel(Task::OldDW,lb->pSizeLabel, matlset, Ghost::None);
-  task->computes(etaLabel_preReloc,matlset);
-  task->computes(eta_nlLabel_preReloc,matlset);
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
-  task->computes(k_o_distLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, etaLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, eta_nlLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW,k_o_distLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pSizeLabel, matlset, Ghost::None);
+  task->computesVar(etaLabel_preReloc,matlset);
+  task->computesVar(eta_nlLabel_preReloc,matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,  matlset);
+  task->computesVar(k_o_distLabel_preReloc, matlset);
 
 
 }

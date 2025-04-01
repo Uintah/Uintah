@@ -165,9 +165,9 @@ private:
     Task* tsk = scinew Task(taskname, this, &Inject::computeSource, timeSubStep);
 
     if (timeSubStep == 0) {
-      tsk->computes(_src_label);
+      tsk->computesVar(_src_label);
     } else {
-      tsk->modifies(_src_label);
+      tsk->modifiesVar(_src_label);
     }
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
@@ -307,10 +307,10 @@ private:
 
     Task* tsk = scinew Task(taskname, this, &Inject::initialize);
 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-      tsk->computes(*iter);
+      tsk->computesVar(*iter);
     }
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

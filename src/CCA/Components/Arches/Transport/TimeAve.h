@@ -322,10 +322,10 @@ private:
     int ieqn =0;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
       ieqn += 1;
     }
-    register_variable( m_volFraction_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
@@ -400,11 +400,11 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const int time_substep , const bool packed_tasks){
 
-    register_variable( m_volFraction_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
-      register_variable(ieqn->first, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
   }
 //--------------------------------------------------------------------------------------------------

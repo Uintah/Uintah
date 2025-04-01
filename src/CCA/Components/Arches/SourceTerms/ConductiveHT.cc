@@ -93,21 +93,21 @@ ConductiveHT::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
 
-    tsk->computes(_src_label);
-    tsk->computes(ConWallHT_src_label);
+    tsk->computesVar(_src_label);
+    tsk->computesVar(ConWallHT_src_label);
     which_dw = Task::OldDW;
 
   } else {
 
     which_dw = Task::NewDW;
-    tsk->modifies(ConWallHT_src_label);
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(ConWallHT_src_label);
+    tsk->modifiesVar(_src_label);
 
   }
 
-  tsk->needsLabel( Task::NewDW, VarLabel::find("alpha_geom"), gac, 1 );
-  tsk->needsLabel( Task::OldDW, _volFraction_varlabel,      gac, 1 );
-  tsk->needsLabel( which_dw,     _gas_temperature_varlabel, gac, 1 );
+  tsk->requiresVar( Task::NewDW, VarLabel::find("alpha_geom"), gac, 1 );
+  tsk->requiresVar( Task::OldDW, _volFraction_varlabel,      gac, 1 );
+  tsk->requiresVar( which_dw,     _gas_temperature_varlabel, gac, 1 );
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
@@ -354,8 +354,8 @@ ConductiveHT::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ConductiveHT::initialize);
 
-  tsk->computes(_src_label);
-  tsk->computes(ConWallHT_src_label);
+  tsk->computesVar(_src_label);
+  tsk->computesVar(ConWallHT_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

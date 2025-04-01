@@ -147,32 +147,32 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("TestModel::computeModelSources",this, 
                         &TestModel::computeModelSources);
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel);
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel);
   Ghost::GhostType  gn  = Ghost::None;
   
   Task::WhichDW DW;
   Task::WhichDW NDW =Task::NewDW;   
   if(d_is_mpm_matl){              // MPM (pull data from newDW)
     DW = Task::NewDW;
-    t->needsLabel( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
+    t->requiresVar( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
   } else { 
     DW = Task::OldDW;             // ICE (pull data from old DW)
-    t->needsLabel( DW, Ilb->rho_CCLabel,        matl0->thisMaterial(), gn);
-    t->needsLabel( NDW,Ilb->specific_heatLabel, matl0->thisMaterial(), gn);
+    t->requiresVar( DW, Ilb->rho_CCLabel,        matl0->thisMaterial(), gn);
+    t->requiresVar( NDW,Ilb->specific_heatLabel, matl0->thisMaterial(), gn);
   } 
                                   // All matls
-  t->needsLabel( DW,  Ilb->vel_CCLabel,    matl0->thisMaterial(), gn);
-  t->needsLabel( DW,  Ilb->temp_CCLabel,   matl0->thisMaterial(), gn); 
-  t->needsLabel( NDW, Ilb->sp_vol_CCLabel, matl0->thisMaterial(), gn);
+  t->requiresVar( DW,  Ilb->vel_CCLabel,    matl0->thisMaterial(), gn);
+  t->requiresVar( DW,  Ilb->temp_CCLabel,   matl0->thisMaterial(), gn); 
+  t->requiresVar( NDW, Ilb->sp_vol_CCLabel, matl0->thisMaterial(), gn);
   
-  t->computes(TestModel::totalMassXLabel);
-  t->computes(TestModel::totalIntEngXLabel);
+  t->computesVar(TestModel::totalMassXLabel);
+  t->computesVar(TestModel::totalIntEngXLabel);
   
-  t->needsLabel( Task::OldDW, Ilb->delTLabel, level.get_rep());
-  t->needsLabel( Task::OldDW, Ilb->simulationTimeLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->requiresVar( Task::OldDW, Ilb->simulationTimeLabel );
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 

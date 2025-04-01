@@ -541,14 +541,14 @@ void JWLppMPM::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
 
-  task->needsLabel(Task::OldDW, lb->pVelGradLabel,      matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
-  task->needsLabel(Task::OldDW, pProgressdelFLabel,     matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVelGradLabel,      matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pProgressdelFLabel,     matlset, Ghost::None);
   
-  task->computes(pProgressFLabel_preReloc,        matlset);
-  task->computes(pProgressdelFLabel_preReloc,     matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
+  task->computesVar(pProgressFLabel_preReloc,        matlset);
+  task->computesVar(pProgressdelFLabel_preReloc,     matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 
 void JWLppMPM::addInitialComputesAndRequires(Task* task,
@@ -556,8 +556,8 @@ void JWLppMPM::addInitialComputesAndRequires(Task* task,
                                              const PatchSet*) const
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pProgressFLabel,       matlset);
-  task->computes(pProgressdelFLabel,    matlset);
+  task->computesVar(pProgressFLabel,       matlset);
+  task->computesVar(pProgressdelFLabel,    matlset);
 }
 
 void 

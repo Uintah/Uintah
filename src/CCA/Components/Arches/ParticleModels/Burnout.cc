@@ -138,12 +138,12 @@ void
 Burnout::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
 
   for ( int qn = 0; qn < _Nenv; qn++ ){
-    register_variable( m_weight_names[qn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( m_rc_names[qn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( m_char_names[qn], ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( m_weight_names[qn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( m_rc_names[qn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( m_char_names[qn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
   register_variable( m_task_name, ArchesFieldContainer::MODIFIES, variable_registry );
-  register_variable( m_vol_fraction_name, ArchesFieldContainer::NEEDSLABEL , 0 , ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( m_vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW, variable_registry );
   register_variable( m_denominator_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_numerator_name, ArchesFieldContainer::COMPUTES, variable_registry );
 

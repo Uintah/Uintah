@@ -233,11 +233,11 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel); 
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);  
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -255,14 +255,14 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   d_weight_label = weight_eqn.getTransportEqnLabel();
   d_w_small = weight_eqn.getSmallClipCriteria();
   d_w_scaling_factor = weight_eqn.getScalingConstant(d_quad_node);
-  tsk->needsLabel(Task::OldDW, d_weight_label, gn, 0);
+  tsk->requiresVar(Task::OldDW, d_weight_label, gn, 0);
 
   // require gas temperature
   d_gas_temperature_label = VarLabel::find( "temperature" ); 
   if ( d_gas_temperature_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
   }
-  tsk->needsLabel(Task::OldDW, d_gas_temperature_label, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, d_gas_temperature_label, Ghost::AroundCells, 1);
 
   // For each required variable, determine what role it plays
   // - "particle_temperature" - look in DQMOMEqnFactory
@@ -282,7 +282,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
           d_pt_scaling_factor = current_eqn.getScalingConstant(d_quad_node);
-          tsk->needsLabel(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";
           errmsg += "\nCould not find given particle temperature variable \"";
@@ -297,7 +297,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_factor = current_eqn.getScalingConstant(d_quad_node);
-          tsk->needsLabel(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
@@ -327,7 +327,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
         if( eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
           d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->needsLabel(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <scalarVars> block for <variable> tag for BadHawkDevol model.";
           errmsg += "\nCould not find given <insert role name here> variable \"";

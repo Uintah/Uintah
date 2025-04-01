@@ -88,7 +88,7 @@ TotNumDensity::register_initialize(
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ArchesCore::append_env( "w", ienv);
     register_variable(
-      weight_name, ArchesFieldContainer::NEEDSLABEL, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
 }
@@ -125,7 +125,7 @@ TotNumDensity::register_timestep_eval(
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
     const std::string weight_name  = ArchesCore::append_env( "w", ienv);
-    register_variable( weight_name, ArchesFieldContainer::NEEDSLABEL, 0,
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0,
                        ArchesFieldContainer::NEWDW, variable_registry );
   }
 
