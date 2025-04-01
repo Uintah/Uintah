@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToStorePartSize.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -597,7 +598,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
   pvars.position[i] = p;
   // standard voxel volume
   pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
+#ifdef KEEP_PSIZE
   pvars.psize[i]      = size;  // Normalized by grid spacing
+#endif
   pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
 #ifdef KEEP_VELGRAD
   pvars.pvelGrad[i]  = Matrix3(0.0);

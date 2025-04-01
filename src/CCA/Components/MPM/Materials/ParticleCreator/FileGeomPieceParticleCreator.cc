@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToStorePartSize.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -155,7 +156,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     // For SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes        = 0;
+#ifdef KEEP_PSIZE
     vector<Matrix3>* psizes        = 0;
+#endif
 #ifdef INCLUDE_THERMAL
     vector<double>* temperatures   = 0;
 #endif
@@ -173,7 +176,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     pforces      = sgp->getForces();
     pfiberdirs   = sgp->getFiberDirs();
     pvelocities  = sgp->getVelocity();  // gcd adds and new change name
+#ifdef KEEP_PSIZE
     psizes       = sgp->getSize();
+#endif
 
     if(d_with_color){
       colors      = sgp->getColors();
@@ -191,12 +196,14 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
       if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
     }
 
+#ifdef KEEP_PSIZE
     // For getting particle sizes (if they exist)
     vector<Matrix3>::const_iterator sizeiter;
     if (psizes) {
       if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
     sizeiter = vars.d_object_size[*obj].begin();
     }
+#endif
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
@@ -302,6 +309,7 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
+#ifdef KEEP_PSIZE
       if (psizes) {
         // Read psize from file or get from a smooth geometry piece
         if (!psizes->empty()) {
@@ -309,6 +317,7 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
           ++sizeiter;
         }
       }
+#endif
 
       if (pareas) {
         // Read parea from file or get from a smooth geometry piece
@@ -413,7 +422,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
       pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
 
+#ifdef KEEP_PSIZE
     pvars.psize[i]      = size;  // Normalized by grid spacing
+#endif
 
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
 #ifdef KEEP_VELGRAD
@@ -536,7 +547,9 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
   vector<Vector>*   pforces         = sgp->getForces();
   vector<Vector>*   pfiberdirs      = sgp->getFiberDirs();
   vector<Vector>*   pvelocities     = sgp->getVelocity();
+#ifdef KEEP_PSIZE
   vector<Matrix3>*  psizes          = sgp->getSize();
+#endif
   vector<double>*   concentrations  = sgp->getConcentration();
   vector<Vector>*   pareas          = sgp->getArea();
 
@@ -591,10 +604,12 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
           Vector pvel = pvelocities->at(ii); 
           vars.d_object_velocity[obj].push_back(pvel);
         }
+#ifdef KEEP_PSIZE
         if (!psizes->empty()) {
           Matrix3 psz = psizes->at(ii); 
           vars.d_object_size[obj].push_back(psz);
         }
+#endif
         if (!pareas->empty() && d_doScalarDiffusion) {
           Vector psz = pareas->at(ii); 
           vars.d_object_area[obj].push_back(psz);

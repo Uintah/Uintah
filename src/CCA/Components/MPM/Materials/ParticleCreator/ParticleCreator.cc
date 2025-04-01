@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToStorePartSize.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -192,7 +193,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       pvars.pvolume[pidx] = *voliter;
       ++voliter;
 
+#ifdef KEEP_PSIZE
       pvars.psize[pidx] = *sizeiter;
+#endif
       ++sizeiter;
 
       // This initializes the remaining particle values
@@ -345,7 +348,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
   new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
   new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
+#ifdef KEEP_PSIZE
   new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
+#endif
   new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
   new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
@@ -504,7 +509,9 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       vector<Point> pointsInCell;
       vector<Vector> DXP;
       vector<double> pvolume;
+#ifdef KEEP_PSIZE
       vector<Matrix3> psize;
+#endif
       for(int ix=0;ix < ppc.x(); ix++){
         for(int iy=0;iy < ppc.y(); iy++){
           for(int iz=0;iz < ppc.z(); iz++){
@@ -533,7 +540,9 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
               } else{
                 pvolume.push_back(AS_size.Determinant()*c_vol);
               }
+#ifdef KEEP_PSIZE
               psize.push_back(AS_size);
+#endif
               numInCell++;
             }
           }  // z
@@ -572,7 +581,9 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
             pointsInCell.erase(pointsInCell.begin() + toRemove[ipo]);
             DXP.erase(DXP.begin() + toRemove[ipo]);
             pvolume.erase(pvolume.begin() + toRemove[ipo]);
+#ifdef KEEP_PSIZE
             psize.erase(psize.begin() + toRemove[ipo]);
+#endif
             numInCell--;
           }
         }  // if numLevelsParticleFilling < 0
@@ -625,7 +636,9 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
                   } else{
                     pvolume.push_back(AS_size.Determinant()*dfCubed*c_vol);
                   }
+#ifdef KEEP_PSIZE
                   psize.push_back(dfactor*AS_size);
+#endif
                   numInCell++;
                 }
               }
@@ -637,7 +650,9 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       for(int ifc = 0; ifc<numInCell; ifc++){
         vars.d_object_points[obj].push_back(pointsInCell[ifc]);
         vars.d_object_vols[obj].push_back(pvolume[ifc]);
+#ifdef KEEP_PSIZE
         vars.d_object_size[obj].push_back(psize[ifc]);
+#endif
       }
     }  // do recursive particle filling
   }  // CellIterator
@@ -933,8 +948,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
       }
   }
 
+#ifdef KEEP_PSIZE
   particle_state.push_back(d_lb->pSizeLabel);
   particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
+#endif
 
   if (d_useLoadCurves) {
     particle_state.push_back(d_lb->pLoadCurveIDLabel);
