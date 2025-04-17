@@ -256,7 +256,6 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleUseInPenalty[pidx] = useInPenVector[i];
 
         triangleSize[pidx]    = Identity;
-        triangleDefGrad[pidx] = Identity;
         start++;
 #if 0
       Vector r0 = P1 - P0;
@@ -294,7 +293,6 @@ Triangle::allocateVariables(particleIndex numTriangles,
   new_dw->allocateAndPut(triangle_pos,   d_lb->pXLabel,                 subset);
   new_dw->allocateAndPut(triangleID,     d_Tl->triangleIDLabel,         subset);
   new_dw->allocateAndPut(triangleSize,   d_lb->pSizeLabel,              subset);
-  new_dw->allocateAndPut(triangleDefGrad,d_lb->pDeformationMeasureLabel,subset);
   new_dw->allocateAndPut(triangleMidToNode0,
                                          d_Tl->triMidToN0VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode1,
@@ -409,7 +407,8 @@ Triangle::countTriangles(const Patch* patch, const string fileroot)
           warn << "Triangle " << numtri << " in " << trifilename 
                << " is too large relative to the grid cell size\n"
                << "Its points are = \n"
-               << P0 << "\n" << P1 << "\n" << P2 << "\n";
+               << P0 << "\n" << P1 << "\n" << P2 << "\n"
+               << A.length() << "\n" << B.length() << "\n" << C.length() << "\n";
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
         }
         sum++;
@@ -440,8 +439,6 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
 {
   d_triangle_state.push_back(d_Tl->triangleIDLabel);
   d_triangle_state.push_back(d_lb->pSizeLabel);
-  d_triangle_state.push_back(d_lb->pDeformationMeasureLabel);
-  d_triangle_state.push_back(d_lb->pScaleFactorLabel);
   d_triangle_state.push_back(d_Tl->triMidToN0VectorLabel);
   d_triangle_state.push_back(d_Tl->triMidToN1VectorLabel);
   d_triangle_state.push_back(d_Tl->triMidToN2VectorLabel);
@@ -456,8 +453,6 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMidToN0VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMidToN1VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMidToN2VectorLabel_preReloc);
@@ -480,7 +475,6 @@ void Triangle::scheduleInitialize(const LevelP& level,
 
   t->computes(d_lb->pXLabel);
   t->computes(d_lb->pSizeLabel);
-  t->computes(d_lb->pDeformationMeasureLabel);
   t->computes(d_Tl->triangleIDLabel);
   t->computes(d_Tl->triMidToN0VectorLabel);
   t->computes(d_Tl->triMidToN1VectorLabel);

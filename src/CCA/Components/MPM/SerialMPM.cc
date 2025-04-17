@@ -980,10 +980,12 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     if(flags->d_useLineSegments){
       lsTasks->scheduleComputeLineSegScaleFactor(sched, patches, lineseg_matls);
     }
+#if 0
     if(flags->d_useTriangles){
       triangleTasks->scheduleComputeTriangleScaleFactor(sched, patches, 
                                                                 triangle_matls);
     }
+#endif
   }
   if(flags->d_changeGrainMaterials){
     scheduleChangeGrainMaterials(         sched, patches, matls);

@@ -88,7 +88,6 @@ namespace Uintah {
     ParticleVariable<Point>   triangle_pos;
     ParticleVariable<long64>  triangleID;
     ParticleVariable<Matrix3> triangleSize;
-    ParticleVariable<Matrix3> triangleDefGrad;
     ParticleVariable<Vector>  triangleMidToNode0;
     ParticleVariable<Vector>  triangleMidToNode1;
     ParticleVariable<Vector>  triangleMidToNode2;

@@ -159,8 +159,6 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,  triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,  triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,  triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-                                                         triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triUseInPenaltyLabel,   triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
@@ -175,7 +173,6 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triMidToN0VectorLabel_preReloc,      triangle_matls);
   t->computes(TriL->triMidToN1VectorLabel_preReloc,      triangle_matls);
   t->computes(TriL->triMidToN2VectorLabel_preReloc,      triangle_matls);
-  t->computes(lb->pDeformationMeasureLabel_preReloc,     triangle_matls);
   t->computes(TriL->triUseInPenaltyLabel_preReloc,       triangle_matls);
   t->computes(TriL->triAreaLabel_preReloc,               triangle_matls);
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
@@ -267,8 +264,8 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> tx;
       ParticleVariable<Point> tx_new;
-      constParticleVariable<Matrix3> tsize, tF;
-      ParticleVariable<Matrix3> tsize_new, tF_new;
+      constParticleVariable<Matrix3> tsize;
+      ParticleVariable<Matrix3> tsize_new;
       constParticleVariable<long64> triangle_ids;
       ParticleVariable<long64> tri_ids_new;
       constParticleVariable<Vector> triMidToN0Vec, triMidToN1Vec, triMidToN2Vec;
@@ -287,7 +284,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
       old_dw->get(triangle_ids,    TriL->triangleIDLabel,               pset);
-      old_dw->get(tF,              lb->pDeformationMeasureLabel,        pset);
       old_dw->get(triMidToN0Vec,   TriL->triMidToN0VectorLabel,         pset);
       old_dw->get(triMidToN1Vec,   TriL->triMidToN1VectorLabel,         pset);
       old_dw->get(triMidToN2Vec,   TriL->triMidToN2VectorLabel,         pset);
@@ -302,7 +298,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
       new_dw->allocateAndPut(tri_ids_new,  TriL->triangleIDLabel_preReloc,pset);
-      new_dw->allocateAndPut(tF_new,lb->pDeformationMeasureLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN0Vec_new,
                                   TriL->triMidToN0VectorLabel_preReloc,   pset);
       new_dw->allocateAndPut(triMidToN1Vec_new,
@@ -327,7 +322,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
                                    TriL->triNearbyMatsLabel_preReloc,     pset);
 
       tri_ids_new.copyData(triangle_ids);
-      tF_new.copyData(tF);
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
@@ -1288,7 +1282,6 @@ TriangleTasks::scheduleComputeTriangleScaleFactor(SchedulerP  & sched,
                           &TriangleTasks::computeTriangleScaleFactor);
 
   t->requires(Task::NewDW, lb->pSizeLabel_preReloc,              Ghost::None);
-  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,Ghost::None);
   t->computes(lb->pScaleFactorLabel_preReloc );
 
   sched->addTask( t, patches, matls );
@@ -1457,7 +1450,6 @@ void TriangleTasks::scheduleRefineTriangles(SchedulerP& sched,
   t->modifies(TriL->triAreaAtNodesLabel_preReloc);
   t->modifies(TriL->triMassDispLabel_preReloc);
   t->modifies(TriL->triNearbyMatsLabel_preReloc);
-  t->modifies(TriL->triMassDispLabel_preReloc);
   t->modifies(TriL->triCementThicknessLabel_preReloc);
 
   sched->addTask(t, patches, matls);
