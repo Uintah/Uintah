@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  * Copyright (c) 2013-2014 Callaghan Innovation, New Zealand
  * Copyright (c) 2015-2017 Parresia Research Limited, New Zealand
  *
