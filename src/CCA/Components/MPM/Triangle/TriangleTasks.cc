@@ -862,6 +862,10 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
 
           Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
 
+          // Assume the normal at the point is the same as the triangle
+          // with which the point is associated.  Ideally, we would use all
+          // triangles associated with the point to compute a weighted average
+          // but the data structures here won't allow it.
           Vector ptNormal =Cross(triMidToN0Vec[tmo][idx0],
                                  triMidToN1Vec[tmo][idx0]);
           double pNL = ptNormal.length();
@@ -875,14 +879,18 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
           vector<double> triOverlap;
           vector<Point> triInPlane;
           vector<Vector> triTriNormal;
-          // Loop over other particle subset
+          // Loop over other triangle subset to find triangles that are
+          // first "near" the point, and then, within those, to find triangles
+          // whose planes are penetrated by the point.
           for(ParticleSubset::iterator iter1 = pset1->begin();
               iter1 != pset1->end(); iter1++){
             particleIndex idx1 = *iter1;
-            // AP is a vector from the test point px0 
-            // to the centroid of the test triangle
+            // AP is a vector from the centroid of the test triangle
+            // to the test point px0 
             Vector AP = px0 - tx0[tmi][idx1];
             double sep = AP.length2();
+            // check to see if the triangle is even in the neighborhood
+            // of the test point
             if(sep < 0.25*cell_length2){
               Vector triNormal =Cross(triMidToN0Vec[tmi][idx1],
                                       triMidToN1Vec[tmi][idx1]);
@@ -891,6 +899,11 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
                 triNormal /= tNL;
               }
               double overlap = Dot(AP,triNormal);
+              // The first conditional means the point is past the plane
+              // of the triangle.  The second is attempting to prevent
+              // detecting overlaps where "thin" objects are present,
+              // namely, making sure that the ptNormal and triNormal are
+              // pointing in substantially different directions.
               if(overlap < 0.0 && Dot(ptNormal,triNormal) < -.2){
                 // Point is past the plane of the triangle
                 numOverlap++;
@@ -904,7 +917,9 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
             }  // point is in the neighborhood
           } // inner loop over triangles
 
-          // Sort the triangles according to triSep.
+          // Sort the triangles found above according to triSep, i.e.
+          // the triangle centroid that is nearest the point px0 is
+          // first, and so on.
           int aLength = triSep.size(); // initialise to a's length
           int numSorted = min(aLength, 6);
 
@@ -933,6 +948,9 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
           } // for loop over unsorted vector
 
           // Loop over all triangles that the point px0 overlaps
+          // (from the sorted list found above)
+          // Use the algorithm described in:
+          // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
           for (int i = 0; i < numSorted; i++) {
             //Now, see if that point is inside the triangle or not
             int vecIdx = triIndex[i];
@@ -945,6 +963,12 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
             Vector u = Cross(b,c);
             Vector v = Cross(c,a);
             Vector w = Cross(a,b);
+
+            // If the following conditional is true, this means that the
+            // normals of the three triangle made using "triInPlane" and the
+            // three vertices of the triangle all point in the same direction
+            // Thus, the point is inside the triangle.  If they don't point
+            // in the same direction, the point is outside the triangle
             if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
               numInside++;
 //              triInContact[tmi][closest] = tmo;
@@ -1092,6 +1116,10 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
             }
           } // loop over overlapped triangles
 
+          // Here, we consider possible "corner cases" in which the 
+          // point px0 projected to the plane of the closest triangle
+          // actually lands inside a neighboring triangle.  This 
+          // possitiblity is fairly easy to illustrate in 2D with line segments.
           if(!foundOne && triIndex.size()>1){
             // check to see if "triInPlane[0]" is inside another triangle
             // that is overlapped
@@ -1107,6 +1135,12 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
               Vector u = Cross(b,c);
               Vector v = Cross(c,a);
               Vector w = Cross(a,b);
+
+              // If the following conditional is true, this means that the
+              // normals of the three triangle made using "triInPlane" and the
+              // three vertices of the triangle all point in the same direction
+              // Thus, the point is inside the triangle.  If they don't point
+              // in the same direction, the point is outside the triangle
               if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
                 numInside++;
                 foundOne=true;
