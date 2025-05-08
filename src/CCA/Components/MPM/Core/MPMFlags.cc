@@ -122,6 +122,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_outputDataOnLoadCurveChange        =  true;
   d_currentPhase                       =  "null";
   d_useTimeAveragedKE                  =  false;
+  d_triangleSearchDistance             =  0.5;
+  d_triangleDotProductMax              =  -.2;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -211,6 +213,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
   mpm_flag_ps->get("CanAddParticles",          d_canAddParticles);
   mpm_flag_ps->get("RefineTriangles",          d_RefineTriangles);
+  mpm_flag_ps->get("TriangleSearchDistance",   d_triangleSearchDistance);
+  mpm_flag_ps->get("TriangleDotProductMax",    d_triangleDotProductMax);
   mpm_flag_ps->get("XPIC2",                    d_XPIC2);
   if(d_artificial_viscosity){
     d_artificial_viscosity_heating=true;
@@ -412,6 +416,8 @@ else{
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " CanAddParticles             = " << d_canAddParticles << endl;
     dbg << " RefineTriangles             = " << d_RefineTriangles << endl;
+    dbg << " TriangleSearchDistance      = " << d_triangleSearchDistance;
+    dbg << " TriangleDotProductMax       = " << d_triangleDotProductMax;
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
@@ -451,6 +457,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff2",        d_artificialViscCoeff2);
   ps->appendElement("CanAddParticles",                    d_canAddParticles);
   ps->appendElement("RefineTriangles",                    d_RefineTriangles);
+  ps->appendElement("TriangleSearchDistance",             d_triangleSearchDistance);
+  ps->appendElement("TriangleDotProductMax",              d_triangleDotProductMax);
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);

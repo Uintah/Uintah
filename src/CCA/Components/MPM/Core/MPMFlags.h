@@ -92,6 +92,8 @@ class Output;
     bool        d_canAddParticles;                             // Needed to enable particle addition
     bool        d_refineParticles;                             // Needed to enable particle addition
     bool        d_RefineTriangles;                             // Needed to enable triangle refinement
+    double      d_triangleSearchDistance;                      // Fraction of a cell below which neighboring triangles will be further considered for penetration
+    double      d_triangleDotProductMax;                       // Maximum dot product between triangle and point to be considered penetrated
     bool        d_XPIC2;                                       // Use Nairn's XPIC2 algorithm
 
     double      d_artificialDampCoeff;

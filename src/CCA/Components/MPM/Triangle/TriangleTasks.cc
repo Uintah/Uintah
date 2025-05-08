@@ -769,6 +769,9 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
     double totalContactAreaTri = 0.0;
     Vector totalForce(0.);
     double timefactor=1.0;
+    double searchDistanceSq = d_flags->d_triangleSearchDistance*
+                              d_flags->d_triangleSearchDistance;
+    double triangleDotProductMax = d_flags->d_triangleDotProductMax;
 //    double timefactor=min(1.0, time/1.0);
 //    proc0cout << "timefactor = " << timefactor << endl;
 
@@ -891,7 +894,7 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
             double sep = AP.length2();
             // check to see if the triangle is even in the neighborhood
             // of the test point
-            if(sep < 0.25*cell_length2){
+            if(sep < searchDistanceSq*cell_length2){
               Vector triNormal =Cross(triMidToN0Vec[tmi][idx1],
                                       triMidToN1Vec[tmi][idx1]);
               double tNL = triNormal.length();
@@ -904,7 +907,8 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
               // detecting overlaps where "thin" objects are present,
               // namely, making sure that the ptNormal and triNormal are
               // pointing in substantially different directions.
-              if(overlap < 0.0 && Dot(ptNormal,triNormal) < -.2){
+              if(overlap < 0.0 && 
+                 Dot(ptNormal,triNormal) < triangleDotProductMax){
                 // Point is past the plane of the triangle
                 numOverlap++;
                 triSep.push_back(sep);
