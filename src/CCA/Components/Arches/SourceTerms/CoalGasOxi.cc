@@ -70,13 +70,13 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   Task* tsk = scinew Task(taskname, this, &CoalGasOxi::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
-    tsk->computes(m_char_for_nox_src_label);
-    tsk->computes(m_char_bd_src_label);
+    tsk->computesVar(_src_label);
+    tsk->computesVar(m_char_for_nox_src_label);
+    tsk->computesVar(m_char_bd_src_label);
   } else {
-    tsk->modifies(_src_label);
-    tsk->modifies(m_char_for_nox_src_label);
-    tsk->modifies(m_char_bd_src_label);
+    tsk->modifiesVar(_src_label);
+    tsk->modifiesVar(m_char_for_nox_src_label);
+    tsk->modifiesVar(m_char_bd_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -95,7 +95,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
   
     if (m_dest_flag){
       // require Charmass birth/death   
@@ -105,7 +105,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
       const std::string char_birth_name = charmass_eqn.get_model_by_type( "BirthDeath" );
       std::string char_birth_qn_name = ArchesCore::append_qn_env(char_birth_name, iqn);
       const VarLabel* charmass_birthdeath_varlabel=VarLabel::find(char_birth_qn_name);
-      tsk->requires( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, charmass_birthdeath_varlabel, Ghost::None, 0 );
     }
     
 
@@ -227,12 +227,12 @@ CoalGasOxi::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasOxi::initialize);
 
-  tsk->computes(_src_label);
-  tsk->computes(m_char_for_nox_src_label);
-  tsk->computes(m_char_bd_src_label);
+  tsk->computesVar(_src_label);
+  tsk->computesVar(m_char_for_nox_src_label);
+  tsk->computesVar(m_char_bd_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

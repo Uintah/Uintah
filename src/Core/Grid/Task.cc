@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -264,7 +264,7 @@ Task::getMemorySpace() const
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::requiresVar(       WhichDW              dw
                    , const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
@@ -311,7 +311,7 @@ void Task::requires(       WhichDW              dw
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::requiresVar(       WhichDW              dw
                    , const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
@@ -326,12 +326,12 @@ void Task::requires(       WhichDW              dw
   if (patches_dom == CoarseLevel || patches_dom == FineLevel) {
     offset = 1;
   }
-  requires(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, patches, patches_dom, offset, matls, matls_dom, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW            dw
+void Task::requiresVar(       WhichDW            dw
                    , const VarLabel         * var
                    , const PatchSubset      * patches
                    , const MaterialSubset   * matls
@@ -340,26 +340,26 @@ void Task::requires(       WhichDW            dw
                    ,       SearchTG           whichTG
                    )
 {
-  requires(dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW            dw
+Task::requiresVar(       WhichDW            dw
               , const VarLabel         * var
               ,       Ghost::GhostType   gtype
               ,       int                numGhostCells
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, nullptr, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW            dw
+Task::requiresVar(       WhichDW            dw
               , const VarLabel         * var
               , const MaterialSubset   * matls
               ,       Ghost::GhostType   gtype
@@ -367,13 +367,13 @@ Task::requires(       WhichDW            dw
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, nullptr, ThisLevel, matls, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW              dw
+Task::requiresVar(       WhichDW              dw
               , const VarLabel           * var
               , const MaterialSubset     * matls
               ,       MaterialDomainSpec   matls_dom
@@ -382,13 +382,13 @@ Task::requires(       WhichDW              dw
               ,       SearchTG             whichTG
               )
 {
-  requires(dw, var, nullptr, ThisLevel, matls, matls_dom, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, nullptr, ThisLevel, matls, matls_dom, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires( WhichDW                  dw
+Task::requiresVar( WhichDW                  dw
               , const VarLabel         * var
               , const PatchSubset      * patches
               ,       Ghost::GhostType   gtype
@@ -396,13 +396,13 @@ Task::requires( WhichDW                  dw
               ,       SearchTG           whichTG
               )
 {
-  requires(dw, var, patches, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
+  requiresVar(dw, var, patches, ThisLevel, nullptr, NormalDomain, gtype, numGhostCells, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::requires( WhichDW                dw
+Task::requiresVar( WhichDW                dw
               , const VarLabel       * var
               , const PatchSubset    * patches
               , const MaterialSubset * matls
@@ -411,10 +411,10 @@ Task::requires( WhichDW                dw
   TypeDescription::Type vartype = var->typeDescription()->getType();
 
   if (vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*) nullptr, matls);
+    requiresVar(dw, var, (const Level*) nullptr, matls);
   }
   else if (vartype == TypeDescription::PerPatch) {
-    requires(dw, var, patches, ThisLevel, matls, NormalDomain, Ghost::None, 0);
+    requiresVar(dw, var, patches, ThisLevel, matls, NormalDomain, Ghost::None, 0);
   }
   else {
     SCI_THROW(InternalError("Requires should specify ghost type or level for this variable", __FILE__, __LINE__));
@@ -424,7 +424,7 @@ Task::requires( WhichDW                dw
 //______________________________________________________________________
 //
 void
-Task::requires(       WhichDW          dw
+Task::requiresVar(       WhichDW          dw
               , const VarLabel       * var
               , const MaterialSubset * matls
               ,       SearchTG         whichTG
@@ -433,13 +433,13 @@ Task::requires(       WhichDW          dw
   TypeDescription::Type vartype = var->typeDescription()->getType();
 
   if(vartype == TypeDescription::ReductionVariable) {
-    requires(dw, var, (const Level*) nullptr, matls, NormalDomain, whichTG);
+    requiresVar(dw, var, (const Level*) nullptr, matls, NormalDomain, whichTG);
   }
   else if(vartype == TypeDescription::SoleVariable) {
-    requires(dw, var, (const Level*) nullptr, matls);
+    requiresVar(dw, var, (const Level*) nullptr, matls);
   }
   else if(vartype == TypeDescription::PerPatch) {
-    requires(dw, var, nullptr, ThisLevel, matls, NormalDomain, Ghost::None, 0, whichTG);
+    requiresVar(dw, var, nullptr, ThisLevel, matls, NormalDomain, Ghost::None, 0, whichTG);
   }
   else {
     SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
@@ -448,7 +448,7 @@ Task::requires(       WhichDW          dw
 
 //______________________________________________________________________
 //
-void Task::requires(       WhichDW              dw
+void Task::requiresVar(       WhichDW              dw
                    , const VarLabel           * var
                    , const Level              * level
                    , const MaterialSubset     * matls
@@ -496,7 +496,7 @@ void Task::requires(       WhichDW              dw
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel           * var
+void Task::computesVar( const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
                    , const MaterialSubset     * matls
@@ -528,7 +528,7 @@ void Task::computes( const VarLabel           * var
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel       * var
+void Task::computesVar( const VarLabel       * var
                    , const PatchSubset    * patches
                    , const MaterialSubset * matls
                    )
@@ -537,44 +537,44 @@ void Task::computes( const VarLabel       * var
 
   if (vartype == TypeDescription::ReductionVariable ||
       vartype == TypeDescription::SoleVariable) {
-    computes(var, (const Level*) nullptr, matls);
+    computesVar(var, (const Level*) nullptr, matls);
   }
   else {
-    computes(var, patches, ThisLevel, matls, NormalDomain);
+    computesVar(var, patches, ThisLevel, matls, NormalDomain);
   }
 }
 
 //______________________________________________________________________
 //
 void
-Task::computes( const VarLabel * var, const MaterialSubset * matls )
+Task::computesVar( const VarLabel * var, const MaterialSubset * matls )
 {
-  computes(var, nullptr, ThisLevel, matls, NormalDomain);
+  computesVar(var, nullptr, ThisLevel, matls, NormalDomain);
 }
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel           * var
+void Task::computesVar( const VarLabel           * var
                    , const MaterialSubset     * matls
                    ,       MaterialDomainSpec   matls_dom
                    )
 {
-  computes(var, nullptr, ThisLevel, matls, matls_dom);
+  computesVar(var, nullptr, ThisLevel, matls, matls_dom);
 }
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel        * var
+void Task::computesVar( const VarLabel        * var
                    , const PatchSubset     * patches
                    ,       PatchDomainSpec   patches_dom
                    )
 {
-  computes(var, patches, patches_dom, nullptr, NormalDomain);
+  computesVar(var, patches, patches_dom, nullptr, NormalDomain);
 }
 
 //______________________________________________________________________
 //
-void Task::computes( const VarLabel           * var
+void Task::computesVar( const VarLabel           * var
                    , const Level              * level
                    , const MaterialSubset     * matls
                    ,       MaterialDomainSpec   matls_dom
@@ -679,7 +679,7 @@ void Task::modifiesWithScratchGhost( const VarLabel           * var
 
 //______________________________________________________________________
 //
-void Task::modifies( const VarLabel           * var
+void Task::modifiesVar( const VarLabel           * var
                    , const PatchSubset        * patches
                    ,       PatchDomainSpec      patches_dom
                    , const MaterialSubset     * matls
@@ -711,7 +711,7 @@ void Task::modifies( const VarLabel           * var
 
 //______________________________________________________________________
 //
-void Task::modifies( const VarLabel       * var
+void Task::modifiesVar( const VarLabel       * var
                    , const Level          * level
                    , const MaterialSubset * matls
                    , MaterialDomainSpec     matls_domain
@@ -747,43 +747,43 @@ void Task::modifies( const VarLabel       * var
 
 //______________________________________________________________________
 //
-void Task::modifies( const VarLabel       * var
+void Task::modifiesVar( const VarLabel       * var
                    , const PatchSubset    * patches
                    , const MaterialSubset * matls
                    ,       SearchTG         whichTG
                    )
 {
-  modifies(var, patches, ThisLevel, matls, NormalDomain, whichTG);
+  modifiesVar(var, patches, ThisLevel, matls, NormalDomain, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::modifies( const VarLabel * var, SearchTG whichTG )
+Task::modifiesVar( const VarLabel * var, SearchTG whichTG )
 {
-  modifies(var, nullptr, ThisLevel, nullptr, NormalDomain, whichTG);
+  modifiesVar(var, nullptr, ThisLevel, nullptr, NormalDomain, whichTG);
 }
 
 //______________________________________________________________________
 //
 void
-Task::modifies( const VarLabel       * var
+Task::modifiesVar( const VarLabel       * var
               , const MaterialSubset * matls
               , SearchTG               whichTG
               )
 {
-  modifies(var, nullptr, ThisLevel, matls, NormalDomain, whichTG);
+  modifiesVar(var, nullptr, ThisLevel, matls, NormalDomain, whichTG);
 }
 
 //______________________________________________________________________
 //
-void Task::modifies( const VarLabel           * var
+void Task::modifiesVar( const VarLabel           * var
                    , const MaterialSubset     * matls
                    ,       MaterialDomainSpec   matls_dom
                    ,       SearchTG             whichTG
                    )
 {
-  modifies(var, nullptr, ThisLevel, matls, matls_dom, whichTG);
+  modifiesVar(var, nullptr, ThisLevel, matls, matls_dom, whichTG);
 }
 
 //______________________________________________________________________

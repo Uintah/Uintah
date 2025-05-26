@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,7 +76,7 @@ void UnifiedSchedulerTest::scheduleInitialize( const LevelP     & level
   Task* task = scinew Task("UnifiedSchedulerTest::initialize", this, &UnifiedSchedulerTest::initialize);
 
   task->computesWithScratchGhost(m_phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
-  task->computes(m_residual_label);
+  task->computesVar(m_residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -97,8 +97,8 @@ void UnifiedSchedulerTest::scheduleComputeStableTimeStep( const LevelP     & lev
 {
   Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimeStep", this, &UnifiedSchedulerTest::computeStableTimeStep);
 
-  task->requires(Task::NewDW, m_residual_label);
-  task->computes(getDelTLabel(), level.get_rep());
+  task->requiresVar(Task::NewDW, m_residual_label);
+  task->computesVar(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -112,9 +112,9 @@ void UnifiedSchedulerTest::scheduleTimeAdvance( const LevelP     & level
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP"    , this, &UnifiedSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP"    , this, &UnifiedSchedulerTest::timeAdvance3DP);
 
-  task->requires(Task::OldDW, m_phi_label, Ghost::AroundNodes, 1);
+  task->requiresVar(Task::OldDW, m_phi_label, Ghost::AroundNodes, 1);
   task->computesWithScratchGhost(m_phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
-  task->computes(m_residual_label);
+  task->computesVar(m_residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 

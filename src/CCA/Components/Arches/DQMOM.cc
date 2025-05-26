@@ -321,23 +321,23 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   CoalModelFactory& model_factory = CoalModelFactory::self();
   Task::WhichDW which_dw;
 
-  tsk->requires( Task::OldDW, m_fieldLabels->d_timeStepLabel );
+  tsk->requiresVar( Task::OldDW, m_fieldLabels->d_timeStepLabel );
 
   if (timeSubStep == 0) {
-    tsk->computes(m_normBLabel);
-    tsk->computes(m_normXLabel);
-    tsk->computes(m_normResLabel);
-    tsk->computes(m_normRedNormalizedLabelB);
-    tsk->computes(m_normRedNormalizedLabelX);
-    tsk->computes(m_conditionNumberLabel);
+    tsk->computesVar(m_normBLabel);
+    tsk->computesVar(m_normXLabel);
+    tsk->computesVar(m_normResLabel);
+    tsk->computesVar(m_normRedNormalizedLabelB);
+    tsk->computesVar(m_normRedNormalizedLabelX);
+    tsk->computesVar(m_conditionNumberLabel);
     which_dw = Task::NewDW;
   } else {
-    tsk->modifies(m_normBLabel);
-    tsk->modifies(m_normXLabel);
-    tsk->modifies(m_normResLabel);
-    tsk->modifies(m_normRedNormalizedLabelB);
-    tsk->modifies(m_normRedNormalizedLabelX);
-    tsk->modifies(m_conditionNumberLabel);
+    tsk->modifiesVar(m_normBLabel);
+    tsk->modifiesVar(m_normXLabel);
+    tsk->modifiesVar(m_normResLabel);
+    tsk->modifiesVar(m_normRedNormalizedLabelB);
+    tsk->modifiesVar(m_normRedNormalizedLabelX);
+    tsk->modifiesVar(m_conditionNumberLabel);
     which_dw = Task::OldDW;
   }
 
@@ -347,7 +347,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
 
     // require weights
-    tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
+    tsk->requiresVar( which_dw, tempLabel, Ghost::None, 0 );
 
     //const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     std::string eqn_label = (*iEqn)->getEqnName();
@@ -355,9 +355,9 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     mod_label << eqn_label << "_src";
     const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
     if (timeSubStep == 0) {
-      tsk->computes(sourceterm_label);
+      tsk->computesVar(sourceterm_label);
     } else {
-      tsk->modifies(sourceterm_label);
+      tsk->modifiesVar(sourceterm_label);
     }
 
     // require model terms
@@ -365,7 +365,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
-      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
 
@@ -374,7 +374,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
 
     // require weighted abscissas
-    tsk->requires(which_dw, tempLabel, Ghost::None, 0);
+    tsk->requiresVar(which_dw, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
     //const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
@@ -383,9 +383,9 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     mod_label << eqn_label << "_src";
     const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
     if (timeSubStep == 0) {
-      tsk->computes(sourceterm_label);
+      tsk->computesVar(sourceterm_label);
     } else {
-      tsk->modifies(sourceterm_label);
+      tsk->modifiesVar(sourceterm_label);
     }
 
     // require model terms
@@ -393,7 +393,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
-      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
 
@@ -1916,9 +1916,9 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
   //for( ArchesLabel::MomentMap::iterator iMoment = m_fieldLabels->DQMOMMoments.begin();
        //iMoment != m_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
     //if( timeSubStep == 0 )
-      //tsk->computes( iMoment->second );
+      //tsk->computesVar( iMoment->second );
     //else
-      //tsk->modifies( iMoment->second );
+      //tsk->modifiesVar( iMoment->second );
   //}
 
   //// require the weights and weighted abscissas
@@ -1926,13 +1926,13 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
     //// require weights
     //const VarLabel* tempLabel;
     //tempLabel = (*iEqn)->getTransportEqnLabel();
-    //tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    //tsk->requiresVar( Task::NewDW, tempLabel, Ghost::None, 0 );
   //}
   //for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
     //// require weighted abscissas
     //const VarLabel* tempLabel;
     //tempLabel = (*iEqn)->getTransportEqnLabel();
-    //tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
+    //tsk->requiresVar(Task::NewDW, tempLabel, Ghost::None, 0);
   //}
 
   //sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_materialManager->allMaterials( "Arches" ));

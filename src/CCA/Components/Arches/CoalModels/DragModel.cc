@@ -164,8 +164,8 @@ DragModel::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "DragModel::initVars";
   Task* tsk = scinew Task(taskname, this, &DragModel::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -220,45 +220,45 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   }
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);
     which_dw = Task::NewDW;
   }
 
   if ( _dir == 0 ){
     std::string name = ArchesCore::append_qn_env("ux", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
-    tsk->requires( which_dw, label, gn, 0 );
+    tsk->requiresVar( which_dw, label, gn, 0 );
   } else if ( _dir == 1 ){
     std::string name = ArchesCore::append_qn_env("uy", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
-    tsk->requires( which_dw, label, gn, 0 );
+    tsk->requiresVar( which_dw, label, gn, 0 );
   } else {
     std::string name = ArchesCore::append_qn_env("uz", d_quadNode );
     const VarLabel* label = VarLabel::find(name);
-    tsk->requires( which_dw, label, gn, 0 );
+    tsk->requiresVar( which_dw, label, gn, 0 );
   }
-  tsk->requires( which_dw, _rhop_varlabel, gn, 0 );
-  tsk->requires( which_dw, _length_varlabel, gn, 0 );
-  tsk->requires( which_dw, _weight_varlabel, gn, 0 );
-  tsk->requires( which_dw, _scaled_weight_varlabel, gn, 0 );
-  tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
-  tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _RHS_weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _rhop_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _length_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _scaled_weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+  tsk->requiresVar( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, _RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, _RHS_weight_varlabel, gn, 0 );
   if ( _birth_label != nullptr )
-    tsk->requires( Task::NewDW, _birth_label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, _birth_label, gn, 0 );
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::NewDW, i->second, gn, 0 );
+  tsk->requiresVar( Task::NewDW, i->second, gn, 0 );
 
   // get time step size for model clipping
-  tsk->requires( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

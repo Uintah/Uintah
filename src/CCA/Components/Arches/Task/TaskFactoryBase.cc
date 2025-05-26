@@ -437,13 +437,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
               //                                ivar.ghost_type, ivar.nGhost );
               // end uncomment
               DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-              tsk->modifies( ivar.label );   // was computed upstream
+              tsk->modifiesVar( ivar.label );   // was computed upstream
             } else {
               DOUT( dbg_arches_task, "[TaskFactoryBase]      computing: " << ivar.name );
               // tsk->computesWithScratchGhost( ivar.label, matls->getSubset(0),
               //                                Uintah::Task::NormalDomain, ivar.ghost_type,
               //                                ivar.nGhost );
-              tsk->computes( ivar.label );   //only compute on the zero time substep
+              tsk->computesVar( ivar.label );   //only compute on the zero time substep
             }
           } else {
             // Uncomment this code to fix all ghost cells.
@@ -459,7 +459,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
             //                                ivar.ghost_type, ivar.nGhost );
             // end ucomment
             DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-            tsk->modifies( ivar.label );
+            tsk->modifiesVar( ivar.label );
         }}
         break;
     case ArchesFieldContainer::COMPUTESCRATCHGHOST:
@@ -498,13 +498,13 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         //                                 ivar.ghost_type, ivar.nGhost );
         // end uncomment
         DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
-        tsk->modifies( ivar.label );
+        tsk->modifiesVar( ivar.label );
       }
       break;
     case ArchesFieldContainer::REQUIRES:
       {
         DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << " from DW: " << ivar.dw );
-        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        tsk->requiresVar( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       }
       break;
     default:
@@ -520,8 +520,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
     //other variables:
     if ( sched->get_dw(0) != nullptr ){
-      tsk->requires(Task::OldDW, VarLabel::find("delT"));
-      tsk->requires(Task::OldDW, VarLabel::find(simTime_name));
+      tsk->requiresVar(Task::OldDW, VarLabel::find("delT"));
+      tsk->requiresVar(Task::OldDW, VarLabel::find(simTime_name));
     }
 
     // This task had no work to perform.  Delete it.

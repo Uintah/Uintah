@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -123,8 +123,8 @@ void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
+  task->requiresVar(Task::NewDW,lb->pStressLabel_preReloc, matlset, gnone);
+  task->requiresVar(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
                                                         matlset, gnone);
 }
 

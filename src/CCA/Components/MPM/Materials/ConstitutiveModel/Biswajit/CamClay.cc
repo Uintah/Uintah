@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -201,9 +201,9 @@ CamClay::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(pStrainLabel, matlset);
-  task->computes(pElasticStrainLabel, matlset);
-  task->computes(pDeltaGammaLabel, matlset);
+  task->computesVar(pStrainLabel, matlset);
+  task->computesVar(pElasticStrainLabel, matlset);
+  task->computesVar(pDeltaGammaLabel, matlset);
  
   // Add internal evolution variables computed by internal variable model
   d_intvar->addInitialComputesAndRequires(task, matl, patch);
@@ -306,13 +306,13 @@ CamClay::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, pStrainLabel,      matlset, gnone);
-  task->requires(Task::OldDW, pElasticStrainLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pDeltaGammaLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pStrainLabel,      matlset, gnone);
+  task->requiresVar(Task::OldDW, pElasticStrainLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pDeltaGammaLabel,    matlset, gnone);
 
-  task->computes(pStrainLabel_preReloc,    matlset);
-  task->computes(pElasticStrainLabel_preReloc,  matlset);
-  task->computes(pDeltaGammaLabel_preReloc,  matlset);
+  task->computesVar(pStrainLabel_preReloc,    matlset);
+  task->computesVar(pElasticStrainLabel_preReloc,  matlset);
+  task->computesVar(pDeltaGammaLabel_preReloc,  matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addComputesAndRequires(task, matl, patches);

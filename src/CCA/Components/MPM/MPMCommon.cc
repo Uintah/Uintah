@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -116,7 +116,7 @@ void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP   & sched,
   Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
                         &MPMCommon::updateStress_DamageErosionModels);
 
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
   
   int numMatls = d_matlManager->getNumMatls( "MPM" );
   for(int m = 0; m < numMatls; m++){

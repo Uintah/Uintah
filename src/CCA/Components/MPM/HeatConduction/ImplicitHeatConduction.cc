@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -116,7 +116,7 @@ void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::createHCMatrix",this,
                         &ImplicitHeatConduction::createHCMatrix);
                                                                                 
-  t->requires(Task::OldDW, d_lb->pXLabel,Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW, d_lb->pXLabel,Ghost::AroundNodes,1);
 
   d_perproc_patches=patches;
   d_perproc_patches->addReference();
@@ -134,8 +134,8 @@ void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
   Task* t = scinew Task("ImpMPM::applyHCBoundaryCondition", this,
                         &ImplicitHeatConduction::applyHCBoundaryConditions);
                                                                                 
-  t->computes(d_lb->gTemperatureStarLabel,one_matl);
-  t->requires(Task::NewDW, d_lb->gExternalHeatFluxLabel, Ghost::None, 0);
+  t->computesVar(d_lb->gTemperatureStarLabel,one_matl);
+  t->requiresVar(Task::NewDW, d_lb->gExternalHeatFluxLabel, Ghost::None, 0);
                                                                                  
   t->setType(Task::OncePerProc);
   schd->addTask(t, patches, matls);
@@ -150,7 +150,7 @@ void ImplicitHeatConduction::scheduleFindFixedHCDOF(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::findFixedHCDOF", this,
                         &ImplicitHeatConduction::findFixedHCDOF);
                                                                                 
-  t->requires(Task::NewDW, d_lb->gMassLabel, Ghost::None, 0);
+  t->requiresVar(Task::NewDW, d_lb->gMassLabel, Ghost::None, 0);
 
 
   t->setType(Task::OncePerProc);
@@ -166,10 +166,10 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::formHCStiffnessMatrix",this,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
 
-  t->requires(Task::OldDW,d_lb->delTLabel);
-  t->requires(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pTemperatureLabel,          Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW,d_lb->delTLabel);
+  t->requiresVar(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW,d_lb->pTemperatureLabel,          Ghost::AroundNodes,1);
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
@@ -183,11 +183,11 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::formHCQ", this,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
-  t->requires(Task::OldDW,d_lb->delTLabel);
-  t->requires(Task::NewDW,d_lb->gTemperatureLabel, one_matl,Ghost::AroundCells,1);
-  t->requires(Task::NewDW,d_lb->gExternalHeatRateLabel,     Ghost::AroundCells,1);
-  t->requires(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW,d_lb->delTLabel);
+  t->requiresVar(Task::NewDW,d_lb->gTemperatureLabel, one_matl,Ghost::AroundCells,1);
+  t->requiresVar(Task::NewDW,d_lb->gExternalHeatRateLabel,     Ghost::AroundCells,1);
+  t->requiresVar(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
+  t->requiresVar(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -204,7 +204,7 @@ void ImplicitHeatConduction::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
 
   Ghost::GhostType  gnone = Ghost::None;
 
-  t->requires(Task::NewDW, d_lb->gTemperatureStarLabel,one_matl,gnone,0);
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureStarLabel,one_matl,gnone,0);
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -221,7 +221,7 @@ void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
   
 #if 0
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,one_matl,gnone,0); 
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureLabel,one_matl,gnone,0); 
 #endif
 
   t->setType(Task::OncePerProc);
@@ -237,9 +237,9 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
 
-  t->requires(Task::OldDW, d_lb->delTLabel);
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,one_matl,Ghost::None,0);
-  t->computes(d_lb->gTemperatureRateLabel,one_matl);
+  t->requiresVar(Task::OldDW, d_lb->delTLabel);
+  t->requiresVar(Task::NewDW, d_lb->gTemperatureLabel,one_matl,Ghost::None,0);
+  t->computesVar(d_lb->gTemperatureRateLabel,one_matl);
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -248,7 +248,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::fillgTemperatureRate", this,
                         &ImplicitHeatConduction::fillgTemperatureRate);
 
-  t->computes(d_lb->gTemperatureRateLabel,one_matl);
+  t->computesVar(d_lb->gTemperatureRateLabel,one_matl);
 
   sched->addTask(t, patches, matls);
  }

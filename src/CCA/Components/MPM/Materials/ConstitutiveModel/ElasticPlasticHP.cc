@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -394,12 +394,12 @@ ElasticPlasticHP::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(pRotationLabel,      matlset);
-  task->computes(pStrainRateLabel,    matlset);
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pPlasticStrainRateLabel, matlset);
-  task->computes(pPorosityLabel,      matlset);
-  task->computes(pEnergyLabel,        matlset);
+  task->computesVar(pRotationLabel,      matlset);
+  task->computesVar(pStrainRateLabel,    matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainRateLabel, matlset);
+  task->computesVar(pPorosityLabel,      matlset);
+  task->computesVar(pEnergyLabel,        matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -542,23 +542,23 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   }
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
-  task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requiresVar(Task::OldDW, pRotationLabel,         matlset, gnone);
+  task->requiresVar(Task::OldDW, pStrainRateLabel,       matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
+  task->requiresVar(Task::OldDW, pPorosityLabel,         matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+  task->requiresVar(Task::OldDW, pEnergyLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
 
-  task->computes(pRotationLabel_preReloc,       matlset);
-  task->computes(pStrainRateLabel_preReloc,     matlset);
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
-  task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->computes(pPorosityLabel_preReloc,       matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
-  task->computes(pEnergyLabel_preReloc,         matlset);
+  task->computesVar(pRotationLabel_preReloc,       matlset);
+  task->computesVar(pStrainRateLabel_preReloc,     matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,  matlset);
+  task->computesVar(pPlasticStrainRateLabel_preReloc,  matlset);
+  task->computesVar(pPorosityLabel_preReloc,       matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc, matlset);
+  task->computesVar(pEnergyLabel_preReloc,         matlset);
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
@@ -1760,22 +1760,22 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
     // For subscheduler
-    task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->requiresVar(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
 
-    task->computes(pPlasticStrainLabel_preReloc,               matlset);
-    task->computes(pPlasticStrainRateLabel_preReloc,           matlset);
-    task->computes(pPorosityLabel_preReloc,                    matlset);
+    task->computesVar(pPlasticStrainLabel_preReloc,               matlset);
+    task->computesVar(pPlasticStrainRateLabel_preReloc,           matlset);
+    task->computesVar(pPorosityLabel_preReloc,                    matlset);
   }else{
     // For scheduleIterate
-    task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
+    task->requiresVar(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requiresVar(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requiresVar(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requiresVar(Task::OldDW, pPorosityLabel,          matlset, gnone);
   }
 
   // Add internal evolution variables computed by flow model

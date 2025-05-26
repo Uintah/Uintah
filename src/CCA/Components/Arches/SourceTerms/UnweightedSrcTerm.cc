@@ -45,13 +45,13 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
 
   if (timeSubStep == 0) { 
 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label); 
+    tsk->modifiesVar(_src_label); 
   }
 
   const VarLabel* d_areaFractionLabel = VarLabel::find( "areaFraction" );
-  tsk->requires(Task::OldDW, d_areaFractionLabel, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, d_areaFractionLabel, Ghost::AroundCells, 1);
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
 
@@ -62,7 +62,7 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( label_name );
 
     const VarLabel* unwaLabel = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, unwaLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, unwaLabel, Ghost::None, 0 );
 
     //DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
 
@@ -81,7 +81,7 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     partVel_name += node;
 
     const VarLabel* partVelLabel = VarLabel::find( partVel_name );
-    tsk->requires( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
+    tsk->requiresVar( Task::NewDW, partVelLabel, Ghost::AroundCells, 1 );
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
@@ -178,10 +178,10 @@ UnweightedSrcTerm::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
+    tsk->computesVar(*iter); 
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

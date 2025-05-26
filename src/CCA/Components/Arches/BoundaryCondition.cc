@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1415,34 +1415,34 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
   if ( timesubstep == 0 ) {
 
-    tsk->computes( d_lab->d_areaFractionLabel );
-    tsk->computes( d_lab->d_volFractionLabel );
-    tsk->computes(d_lab->d_areaFractionFXLabel);
-    tsk->computes(d_lab->d_areaFractionFYLabel);
-    tsk->computes(d_lab->d_areaFractionFZLabel);
+    tsk->computesVar( d_lab->d_areaFractionLabel );
+    tsk->computesVar( d_lab->d_volFractionLabel );
+    tsk->computesVar(d_lab->d_areaFractionFXLabel);
+    tsk->computesVar(d_lab->d_areaFractionFYLabel);
+    tsk->computesVar(d_lab->d_areaFractionFZLabel);
 
   } else {
 
     //only in cases where geometry moves.
-    tsk->modifies( d_lab->d_areaFractionLabel );
-    tsk->modifies( d_lab->d_volFractionLabel);
-    tsk->modifies(d_lab->d_areaFractionFXLabel);
-    tsk->modifies(d_lab->d_areaFractionFYLabel);
-    tsk->modifies(d_lab->d_areaFractionFZLabel);
+    tsk->modifiesVar( d_lab->d_areaFractionLabel );
+    tsk->modifiesVar( d_lab->d_volFractionLabel);
+    tsk->modifiesVar(d_lab->d_areaFractionFXLabel);
+    tsk->modifiesVar(d_lab->d_areaFractionFYLabel);
+    tsk->modifiesVar(d_lab->d_areaFractionFZLabel);
 
   }
 
   if ( !reinitialize ) {
 
-    tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_areaFractionFYLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_areaFractionFZLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_areaFractionFYLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_areaFractionFZLabel, Ghost::None, 0 );
 
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 );
+  tsk->requiresVar( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 );
 
   sched->addTask(tsk, level->eachPatch(), matls);
 
@@ -2026,7 +2026,7 @@ BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
                           this, &BoundaryCondition::cellTypeInit, lo, hi);
 
-  tsk->computes(d_lab->d_cellTypeLabel);
+  tsk->computesVar(d_lab->d_cellTypeLabel);
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }
@@ -2207,8 +2207,8 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
 // This Task helps the infrastructure to find variables in the NEWDW on a restart.
     Task* tskh = scinew Task("BoundaryCondition::setupBCInletVelocitiesHack",
         this, &BoundaryCondition::setupBCInletVelocitiesHack );
-    //tskh->computes(  d_lab->d_volFractionLabel );
-    tskh->computes(  d_lab->d_densityCPLabel );
+    //tskh->computesVar(  d_lab->d_volFractionLabel );
+    tskh->computesVar(  d_lab->d_densityCPLabel );
     sched->addTask(tskh, level->eachPatch(), matls);
   }
 
@@ -2216,13 +2216,13 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
                           this, &BoundaryCondition::setupBCInletVelocities,doing_regrid);
 
   if(doing_regrid){
-    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
   }else{
-    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
-    tsk->modifies(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
-    tsk->modifies(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
+    tsk->requiresVar( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+    tsk->modifiesVar(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
+    tsk->modifiesVar(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
   }
 
   sched->addTask(tsk, level->eachPatch(), matls);
@@ -2440,19 +2440,19 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
                           this, &BoundaryCondition::setInitProfile);
 
-  tsk->requires(Task::NewDW, d_lab->d_timeStepLabel);
-  tsk->requires(Task::NewDW, d_lab->d_simulationTimeLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_timeStepLabel);
+  tsk->requiresVar(Task::NewDW, d_lab->d_simulationTimeLabel);
 
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifiesVar(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifiesVar(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifiesVar(d_lab->d_wVelocitySPBCLabel);
 
-  tsk->modifies(d_lab->d_uVelRhoHatLabel);
-  tsk->modifies(d_lab->d_vVelRhoHatLabel);
-  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+  tsk->modifiesVar(d_lab->d_uVelRhoHatLabel);
+  tsk->modifiesVar(d_lab->d_vVelRhoHatLabel);
+  tsk->modifiesVar(d_lab->d_wVelRhoHatLabel);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0);
 
 
   MixingRxnModel* mixingTable = d_table_lookup->get_table();
@@ -2460,7 +2460,7 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
 
   for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ) {
 
-    tsk->requires( Task::NewDW, i->second, Ghost::AroundCells, 0 );
+    tsk->requiresVar( Task::NewDW, i->second, Ghost::AroundCells, 0 );
 
   }
 
@@ -3609,8 +3609,8 @@ BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched,
 {
   Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity",
                            this, &BoundaryCondition::setIntrusionDensity);
-  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
-  tsk->modifies( d_lab->d_densityCPLabel );
+  tsk->requiresVar( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
+  tsk->modifiesVar( d_lab->d_densityCPLabel );
   sched->addTask( tsk, level->eachPatch(), matls );
 
 }
@@ -3662,7 +3662,7 @@ BoundaryCondition::sched_wallStressConstSmag( Task::WhichDW dw, Task* tsk ){
 
   const VarLabel* IsImag_label = VarLabel::find("strainMagnitudeLabel");
   if ( IsImag_label != nullptr ){
-    tsk->requires( dw, IsImag_label, Ghost::AroundCells, 1 );
+    tsk->requiresVar( dw, IsImag_label, Ghost::AroundCells, 1 );
   } else {
     throw InvalidValue("Error: Strain rate mag. not found for const Smag. wall model.", __FILE__, __LINE__ );
   }
@@ -5058,7 +5058,7 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
 
     Task* t = scinew Task("BoundaryCondition::create_radiation_temperatureHack", this,
                           &BoundaryCondition::create_radiation_temperatureHack );
-    t->computes( d_temperature_label );
+    t->computesVar( d_temperature_label );
     sched->addTask(t, level->eachPatch(), matls);
   }
 
@@ -5070,12 +5070,12 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP       & sched,
 
   //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
   if ( use_old_dw ) {
-    tsk->requires(Task::OldDW, d_temperature_label, Ghost::None, 0);
+    tsk->requiresVar(Task::OldDW, d_temperature_label, Ghost::None, 0);
   } else {
-    tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0);
+    tsk->requiresVar(Task::NewDW, d_temperature_label, Ghost::None, 0);
   }
 
-  tsk->computes(d_radiation_temperature_label);
+  tsk->computesVar(d_radiation_temperature_label);
 
   sched->addTask( tsk, level->eachPatch(), matls );
 }

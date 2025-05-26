@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -111,7 +111,7 @@ void logLawModel::sched_Initialize(SchedulerP& sched,
   Task* t = scinew Task("logLawModel::Initialize",
                   this, &logLawModel::Initialize);
 
-  t->computes(d_roughnessLabel);
+  t->computesVar(d_roughnessLabel);
   sched->addTask(t, level->eachPatch(), d_materialManager->allMaterials( "ICE" ));
 }
 //______________________________________________________________________
@@ -144,8 +144,8 @@ void logLawModel::sched_AddComputeRequires(Task* task,
                                            const MaterialSubset* matls)
 {
  // printSchedule(level,dbg,"logLawModel::schedcomputeWallShearStresses");
-  task->requires(Task::OldDW, d_roughnessLabel, matls, Ghost::None, 0);
-  task->computes(d_roughnessLabel);
+  task->requiresVar(Task::OldDW, d_roughnessLabel, matls, Ghost::None, 0);
+  task->computesVar(d_roughnessLabel);
 }
 
 

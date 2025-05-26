@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -153,7 +153,7 @@ void addRequires_inletVel(Task* t,
   //std::cout << " addRequires_inletVel: " << recursive <<  " where: " << where << endl;
   
   if(where == "implicitPressureSolve"){
-    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
+    t->requiresVar(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
   }
   else if(where == "velFC_Exchange"){
     
@@ -164,7 +164,7 @@ void addRequires_inletVel(Task* t,
       pOldDW  = Task::ParentOldDW;
     }
   
-    t->requires(pOldDW, lb->vel_CCLabel, ice_matls, gn);
+    t->requiresVar(pOldDW, lb->vel_CCLabel, ice_matls, gn);
   }
 }
 

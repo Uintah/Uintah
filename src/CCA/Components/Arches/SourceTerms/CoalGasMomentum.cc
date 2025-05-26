@@ -53,9 +53,9 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
   if (timeSubStep == 0 ) {
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -74,7 +74,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_x = modelx.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_x, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_x, Ghost::None, 0 );
 
     model_name = "ydragforce";
     model_name += "_qn";
@@ -83,7 +83,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modely = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_y = modely.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_y, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_y, Ghost::None, 0 );
 
     model_name = "zdragforce";
     model_name += "_qn";
@@ -92,7 +92,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_z = modelz.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_z, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_z, Ghost::None, 0 );
 
   }
 
@@ -211,7 +211,7 @@ CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

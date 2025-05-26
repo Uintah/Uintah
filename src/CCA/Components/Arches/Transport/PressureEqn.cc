@@ -514,7 +514,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
     xLabel = x_label;
 
     auto taskDependencies = [&](Task* tsk) {
-      tsk->modifies(xLabel);
+      tsk->modifiesVar(xLabel);
     };
 
     create_portable_tasks(taskDependencies, this,

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -308,9 +308,9 @@ RFElasticPlastic::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pPlasticStrainRateLabel, matlset);
-  task->computes(pEnergyLabel,        matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainRateLabel, matlset);
+  task->computesVar(pEnergyLabel,        matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -419,24 +419,24 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+  task->requiresVar(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   //********** Concentration Component****************************
   if(flag->d_doScalarDiffusion){
-    task->requires(Task::OldDW, lb->diffusion->pConcPrevious, matlset, gnone);
-    task->requires(Task::OldDW, lb->diffusion->pConcentration, matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->diffusion->pConcPrevious, matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->diffusion->pConcentration, matlset, gnone);
   }
   //********** Concentration Component****************************
 
-  task->computes(pPlasticStrainLabel_preReloc,      matlset);
-  task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc,   matlset);
-  task->computes(pEnergyLabel_preReloc,             matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,      matlset);
+  task->computesVar(pPlasticStrainRateLabel_preReloc,  matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc,   matlset);
+  task->computesVar(pEnergyLabel_preReloc,             matlset);
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
@@ -1304,9 +1304,9 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->modifies(pPlasticStrainLabel_preReloc,      matlset);
-  task->modifies(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->modifies(pEnergyLabel_preReloc,             matlset);
+  task->modifiesVar(pPlasticStrainLabel_preReloc,      matlset);
+  task->modifiesVar(pPlasticStrainRateLabel_preReloc,  matlset);
+  task->modifiesVar(pEnergyLabel_preReloc,             matlset);
 }
 
 void 

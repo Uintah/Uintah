@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -215,8 +215,8 @@ void momentumAnalysis::scheduleInitialize( SchedulerP   & sched,
   Task* t = scinew Task("momentumAnalysis::initialize",
                   this, &momentumAnalysis::initialize);
 
-  t->computes( labels->lastCompTime );
-  t->computes( labels->fileVarsStruct, m_zeroMatl );
+  t->computesVar( labels->lastCompTime );
+  t->computesVar( labels->fileVarsStruct, m_zeroMatl );
   sched->addTask(t, d_zeroPatch, m_zeroMatlSet);
 }
 
@@ -292,25 +292,25 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t0, level, labels->lastCompTime, false );
 
-  t0->requires( Task::NewDW, labels->vel_CC,    matl_SS, gn );
-  t0->requires( Task::NewDW, labels->rho_CC,    matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->vel_CC,    matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->rho_CC,    matl_SS, gn );
 
-  t0->requires( Task::NewDW, labels->uvel_FC,   matl_SS, gn );
-  t0->requires( Task::NewDW, labels->vvel_FC,   matl_SS, gn );
-  t0->requires( Task::NewDW, labels->wvel_FC,   matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->uvel_FC,   matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->vvel_FC,   matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->wvel_FC,   matl_SS, gn );
 
-  t0->requires( Task::NewDW, labels->pressX_FC, d_pressMatl, gn );
-  t0->requires( Task::NewDW, labels->pressY_FC, d_pressMatl, gn );
-  t0->requires( Task::NewDW, labels->pressZ_FC, d_pressMatl, gn );
+  t0->requiresVar( Task::NewDW, labels->pressX_FC, d_pressMatl, gn );
+  t0->requiresVar( Task::NewDW, labels->pressY_FC, d_pressMatl, gn );
+  t0->requiresVar( Task::NewDW, labels->pressZ_FC, d_pressMatl, gn );
 
-  t0->requires( Task::NewDW, labels->tau_X_FC,  matl_SS, gn );
-  t0->requires( Task::NewDW, labels->tau_Y_FC,  matl_SS, gn );
-  t0->requires( Task::NewDW, labels->tau_Z_FC,  matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->tau_X_FC,  matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->tau_Y_FC,  matl_SS, gn );
+  t0->requiresVar( Task::NewDW, labels->tau_Z_FC,  matl_SS, gn );
 
-  t0->computes( labels->totalCVMomentum );
-  t0->computes( labels->convectMom_fluxes );
-  t0->computes( labels->viscousMom_fluxes );
-  t0->computes( labels->pressForces );
+  t0->computesVar( labels->totalCVMomentum );
+  t0->computesVar( labels->convectMom_fluxes );
+  t0->computesVar( labels->viscousMom_fluxes );
+  t0->computesVar( labels->pressForces );
 
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
@@ -320,14 +320,14 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
                     this,&momentumAnalysis::doAnalysis );
 
   sched_TimeVars( t1, level, labels->lastCompTime, true );
-  t1->requires( Task::OldDW, labels->fileVarsStruct, m_zeroMatl, gn, 0 );
+  t1->requiresVar( Task::OldDW, labels->fileVarsStruct, m_zeroMatl, gn, 0 );
 
-  t1->requires( Task::NewDW, labels->totalCVMomentum );
-  t1->requires( Task::NewDW, labels->convectMom_fluxes );
-  t1->requires( Task::NewDW, labels->viscousMom_fluxes );
-  t1->requires( Task::NewDW, labels->pressForces );
+  t1->requiresVar( Task::NewDW, labels->totalCVMomentum );
+  t1->requiresVar( Task::NewDW, labels->convectMom_fluxes );
+  t1->requiresVar( Task::NewDW, labels->viscousMom_fluxes );
+  t1->requiresVar( Task::NewDW, labels->pressForces );
 
-  t1->computes( labels->fileVarsStruct, m_zeroMatl );
+  t1->computesVar( labels->fileVarsStruct, m_zeroMatl );
   sched->addTask( t1, d_zeroPatch, m_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
 

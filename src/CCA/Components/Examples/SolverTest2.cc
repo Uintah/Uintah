@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -127,7 +127,7 @@ void SolverTest2::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &SolverTest2::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //__________________________________
@@ -138,8 +138,8 @@ SolverTest2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
                            this, &SolverTest2::timeAdvance,
                            level, sched.get_rep());
-  task->computes(lb_->pressure_matrix);
-  task->computes(lb_->pressure_rhs);
+  task->computesVar(lb_->pressure_matrix);
+  task->computesVar(lb_->pressure_rhs);
 
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 

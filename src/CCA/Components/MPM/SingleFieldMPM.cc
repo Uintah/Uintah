@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -373,48 +373,48 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
-  t->computes(lb->partCountLabel);
-  t->computes(lb->pXLabel);
-  t->computes(lb->pDispLabel);
-  t->computes(lb->pFiberDirLabel);
-  t->computes(lb->pMassLabel);
-  t->computes(lb->pVolumeLabel);
-  t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
-  t->computes(lb->pdTdtLabel);
-  t->computes(lb->pVelocityLabel);
-  t->computes(lb->pExternalForceLabel);
-  t->computes(lb->pParticleIDLabel);
-  t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pStressLabel);
-  t->computes(lb->pVelGradLabel);
-  t->computes(lb->pTemperatureGradientLabel);
-  t->computes(lb->pSizeLabel);
-  t->computes(lb->pLocalizedMPMLabel);
-  t->computes(lb->pRefinedLabel);
-  t->computes(lb->delTLabel,level.get_rep());
-  t->computes(lb->pCellNAPIDLabel,zeroth_matl);
-  t->computes(lb->NC_CCweightLabel,zeroth_matl);
-  t->computes(lb->pSurfLabel);
-  t->computes(lb->pSurfGradLabel);
+  t->computesVar(lb->partCountLabel);
+  t->computesVar(lb->pXLabel);
+  t->computesVar(lb->pDispLabel);
+  t->computesVar(lb->pFiberDirLabel);
+  t->computesVar(lb->pMassLabel);
+  t->computesVar(lb->pVolumeLabel);
+  t->computesVar(lb->pTemperatureLabel);
+  t->computesVar(lb->pTempPreviousLabel); // for therma  stresm analysis
+  t->computesVar(lb->pdTdtLabel);
+  t->computesVar(lb->pVelocityLabel);
+  t->computesVar(lb->pExternalForceLabel);
+  t->computesVar(lb->pParticleIDLabel);
+  t->computesVar(lb->pDeformationMeasureLabel);
+  t->computesVar(lb->pStressLabel);
+  t->computesVar(lb->pVelGradLabel);
+  t->computesVar(lb->pTemperatureGradientLabel);
+  t->computesVar(lb->pSizeLabel);
+  t->computesVar(lb->pLocalizedMPMLabel);
+  t->computesVar(lb->pRefinedLabel);
+  t->computesVar(lb->delTLabel,level.get_rep());
+  t->computesVar(lb->pCellNAPIDLabel,zeroth_matl);
+  t->computesVar(lb->NC_CCweightLabel,zeroth_matl);
+  t->computesVar(lb->pSurfLabel);
+  t->computesVar(lb->pSurfGradLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
+    t->computesVar(lb->pColorLabel);
   }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
+    t->computesVar(lb->pLoadCurveIDLabel);
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
+    t->computesVar(lb->AccStrainEnergyLabel);
   }
 
   if(flags->d_artificial_viscosity){
-    t->computes(lb->p_qLabel);
+    t->computesVar(lb->p_qLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -472,7 +472,7 @@ void SingleFieldMPM::schedulePrintParticleCount(const LevelP& level,
 {
   Task* t = scinew Task("MPM::printParticleCount",
                         this, &SingleFieldMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
+  t->requiresVar(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "MPM" ));
@@ -490,7 +490,7 @@ void SingleFieldMPM::scheduleTotalParticleCount(SchedulerP& sched,
 
   Task* t = scinew Task("SingleFieldMPM::totalParticleCount",
                   this, &SingleFieldMPM::totalParticleCount);
-  t->computes(lb->partCountLabel);
+  t->computesVar(lb->partCountLabel);
 
   sched->addTask(t, patches,matls);
 }
@@ -542,8 +542,8 @@ void SingleFieldMPM::scheduleInitializePressureBCs(const LevelP& level,
     // associated with each load curve.
     Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
                           this, &SingleFieldMPM::countMaterialPointsPerLoadCurve);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
+    t->requiresVar(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->computesVar(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
     sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 
@@ -551,13 +551,13 @@ void SingleFieldMPM::scheduleInitializePressureBCs(const LevelP& level,
     // each particle based on the pressure BCs
     t = scinew Task("MPM::initializePressureBC",
                     this, &SingleFieldMPM::initializePressureBC);
-    t->requires(Task::NewDW, lb->pXLabel,                        Ghost::None);
-    t->requires(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
-    t->requires(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
-    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
+    t->requiresVar(Task::NewDW, lb->pXLabel,                        Ghost::None);
+    t->requiresVar(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
+    t->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
+    t->requiresVar(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
+    t->requiresVar(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
-    t->modifies(lb->pExternalForceLabel);
+    t->modifiesVar(lb->pExternalForceLabel);
     sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
   }
 
@@ -590,7 +590,7 @@ void SingleFieldMPM::scheduleComputeStableTimeStep(const LevelP& level,
 
   const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
 
-  t->computes(lb->delTLabel,level.get_rep());
+  t->computesVar(lb->delTLabel,level.get_rep());
   sched->addTask(t,level->eachPatch(), mpm_matls);
 }
 
@@ -670,10 +670,10 @@ void SingleFieldMPM::scheduleComputeCurrentParticleSize(SchedulerP& sched,
   Task* t=scinew Task("MPM::computeCurrentParticleSize",
                     this, &SingleFieldMPM::computeCurrentParticleSize);
 
-  t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::None);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,               Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
 
-  t->computes(             lb->pCurSizeLabel);
+  t->computesVar(             lb->pCurSizeLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -691,20 +691,20 @@ void SingleFieldMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &SingleFieldMPM::applyExternalLoads);
 
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
 
   if (!flags->d_mms_type.empty()) {
     //MMS problems need displacements
-    t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
+    t->requiresVar(Task::OldDW, lb->pDispLabel,            Ghost::None);
   }
 
   if (flags->d_useLoadCurves) {
-    t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
-    t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
-    t->computes(                lb->pLoadCurveIDLabel_preReloc);
+    t->requiresVar(Task::OldDW,    lb->pXLabel,                  Ghost::None);
+    t->requiresVar(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
+    t->computesVar(                lb->pLoadCurveIDLabel_preReloc);
   }
-//  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
-  t->computes(             lb->pExtForceLabel_preReloc);
+//  t->computesVar(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
+  t->computesVar(             lb->pExtForceLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -723,41 +723,41 @@ void SingleFieldMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                         this,&SingleFieldMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
-  t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-//  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
-  t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,             gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
+//  t->requiresVar(Task::OldDW, lb->pColorLabel,            gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   if (flags->d_GEVelProj) {
-    t->requires(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
-    t->requires(Task::OldDW, lb->pTemperatureGradientLabel, gan,NGP);
+    t->requiresVar(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
+    t->requiresVar(Task::OldDW, lb->pTemperatureGradientLabel, gan,NGP);
   }
-  t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
-  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                gan,NGP);
+  t->requiresVar(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
 
-  t->computes(lb->gMassLabel,        m_materialManager->getAllInOneMatls(),
+  t->computesVar(lb->gMassLabel,        m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gTemperatureLabel, m_materialManager->getAllInOneMatls(),
+  t->computesVar(lb->gTemperatureLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gVolumeLabel,      m_materialManager->getAllInOneMatls(),
+  t->computesVar(lb->gVolumeLabel,      m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gVelocityLabel,    m_materialManager->getAllInOneMatls(),
+  t->computesVar(lb->gVelocityLabel,    m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
-  t->computes(lb->gMassLabel);
-  t->computes(lb->gSp_volLabel);
-  t->computes(lb->gVolumeLabel);
-//  t->computes(lb->gColorLabel);
-  t->computes(lb->gVelocityLabel);
-  t->computes(lb->gExternalForceLabel);
-  t->computes(lb->gTemperatureLabel);
-  t->computes(lb->gTemperatureNoBCLabel);
-  t->computes(lb->gTemperatureRateLabel);
-  t->computes(lb->gExternalHeatRateLabel);
+  t->computesVar(lb->gMassLabel);
+  t->computesVar(lb->gSp_volLabel);
+  t->computesVar(lb->gVolumeLabel);
+//  t->computesVar(lb->gColorLabel);
+  t->computesVar(lb->gVelocityLabel);
+  t->computesVar(lb->gExternalForceLabel);
+  t->computesVar(lb->gTemperatureLabel);
+  t->computesVar(lb->gTemperatureNoBCLabel);
+  t->computesVar(lb->gTemperatureRateLabel);
+  t->computesVar(lb->gExternalHeatRateLabel);
 
   if(flags->d_with_ice){
-    t->computes(lb->gVelocityBCLabel);
+    t->computesVar(lb->gVelocityBCLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -778,13 +778,13 @@ void SingleFieldMPM::scheduleInterpolateSurfaceToGrid(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
-  t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
-  t->requires(Task::OldDW, lb->pMassLabel,               gan, NGP);
-  t->requires(Task::OldDW, lb->pSurfLabel,               gan, NGP);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,            gan, NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pSurfLabel,               gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 
-  t->computes(lb->gSurfLabel,     d_one_matl);
+  t->computesVar(lb->gSurfLabel,     d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -890,13 +890,13 @@ void SingleFieldMPM::scheduleComputeSSPlusVp(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   gnone);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
-  t->requires(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
 
-  t->computes(lb->pVelocitySSPlusLabel);
+  t->computesVar(lb->pVelocitySSPlusLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -916,14 +916,14 @@ void SingleFieldMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
 
   Ghost::GhostType gan = Ghost::AroundNodes;
   Ghost::GhostType gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
-  t->requires(Task::OldDW, lb->pMassLabel,                  gan, NGP);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,               gan, NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
-  t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
-  t->requires(Task::NewDW, lb->gMassLabel,                  gac, NGN);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                     gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                  gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,                  gac, NGN);
 
-  t->computes(lb->gVelSPSSPLabel);
+  t->computesVar(lb->gVelSPSSPLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -989,15 +989,15 @@ void SingleFieldMPM::scheduleComputeStressTensor(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
 
-    t->computes(lb->p_qLabel_preReloc, matlset);
+    t->computesVar(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->computes(lb->delTLabel,getLevel(patches));
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+  t->computesVar(lb->delTLabel,getLevel(patches));
 
   if (flags->d_reductionVars->accStrainEnergy ||
       flags->d_reductionVars->strainEnergy) {
-    t->computes(lb->StrainEnergyLabel);
+    t->computesVar(lb->StrainEnergyLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1026,9 +1026,9 @@ void SingleFieldMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
 
   Task* t = scinew Task("MPM::computeAccStrainEnergy",
                         this, &SingleFieldMPM::computeAccStrainEnergy);
-  t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
-  t->requires(Task::NewDW, lb->StrainEnergyLabel);
-  t->computes(lb->AccStrainEnergyLabel);
+  t->requiresVar(Task::OldDW, lb->AccStrainEnergyLabel);
+  t->requiresVar(Task::NewDW, lb->StrainEnergyLabel);
+  t->computesVar(lb->AccStrainEnergyLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -1047,11 +1047,11 @@ void SingleFieldMPM::scheduleComputeContactArea(SchedulerP& sched,
                           this, &SingleFieldMPM::computeContactArea);
 
     Ghost::GhostType  gnone = Ghost::None;
-    t->requires(Task::NewDW, lb->gVolumeLabel, gnone);
+    t->requiresVar(Task::NewDW, lb->gVolumeLabel, gnone);
     for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
         ftit!=d_bndy_traction_faces.end();ftit++) {
       int iface = (int)(*ftit);
-      t->computes(lb->BndyContactCellAreaLabel[iface]);
+      t->computesVar(lb->BndyContactCellAreaLabel[iface]);
     }
     sched->addTask(t, patches, matls);
 }
@@ -1071,36 +1071,36 @@ void SingleFieldMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
-  t->requires(Task::NewDW,lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
+  t->requiresVar(Task::NewDW,lb->gVolumeLabel, gnone);
+  t->requiresVar(Task::NewDW,lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain, gnone);
-  t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
-  t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
-  t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
-  t->requires(Task::NewDW,lb->pCurSizeLabel,              gan,NGP);
-  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,   gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pStressLabel,               gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pXLabel,                    gan,NGP);
+  t->requiresVar(Task::NewDW,lb->pCurSizeLabel,              gan,NGP);
+  t->requiresVar(Task::OldDW,lb->pDeformationMeasureLabel,   gan,NGP);
 
   if(flags->d_with_ice){
-    t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
+    t->requiresVar(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
 
   if(flags->d_artificial_viscosity){
-    t->requires(Task::OldDW, lb->p_qLabel,                gan,NGP);
+    t->requiresVar(Task::OldDW, lb->p_qLabel,                gan,NGP);
   }
 
-  t->computes(lb->gInternalForceLabel);
+  t->computesVar(lb->gInternalForceLabel);
 
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
     int iface = (int)(*ftit);
-//    t->requires(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
-    t->computes(lb->BndyForceLabel[iface]);
-    t->computes(lb->BndyContactAreaLabel[iface]);
-    t->computes(lb->BndyTractionLabel[iface]);
+//    t->requiresVar(Task::NewDW, lb->BndyContactCellAreaLabel[iface]);
+    t->computesVar(lb->BndyForceLabel[iface]);
+    t->computesVar(lb->BndyContactAreaLabel[iface]);
+    t->computesVar(lb->BndyTractionLabel[iface]);
   }
 
-  t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
+  t->computesVar(lb->gStressForSavingLabel);
+  t->computesVar(lb->gStressForSavingLabel, m_materialManager->getAllInOneMatls(),
               Task::OutOfDomain);
 
   sched->addTask(t, patches, matls);
@@ -1152,30 +1152,30 @@ void SingleFieldMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &SingleFieldMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-//  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-//  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
-//  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-//  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
+//  t->requiresVar(Task::NewDW, lb->gMassLabel,          Ghost::None);
+//  t->requiresVar(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+//  t->requiresVar(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+//  t->requiresVar(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
 
-  t->requires(Task::NewDW, lb->gMassF0Label,           d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityF0Label,       d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceF0Label,  d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gExternalForceF0Label,  d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassF0Label,           d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityF0Label,       d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gInternalForceF0Label,  d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gExternalForceF0Label,  d_one_matl, Ghost::None);
 
-  t->requires(Task::NewDW, lb->gMassF1Label,           d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityF1Label,       d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceF1Label,  d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gExternalForceF1Label,  d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassF1Label,           d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityF1Label,       d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gInternalForceF1Label,  d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gExternalForceF1Label,  d_one_matl, Ghost::None);
 
-//  t->computes(lb->gVelocityStarLabel);
-//  t->computes(lb->gAccelerationLabel);
+//  t->computesVar(lb->gVelocityStarLabel);
+//  t->computesVar(lb->gAccelerationLabel);
 
-  t->computes(lb->gVelocityStarF0Label, d_one_matl);
-  t->computes(lb->gVelocityStarF1Label, d_one_matl);
-  t->computes(lb->gAccelerationF0Label, d_one_matl);
-  t->computes(lb->gAccelerationF1Label, d_one_matl);
+  t->computesVar(lb->gVelocityStarF0Label, d_one_matl);
+  t->computesVar(lb->gVelocityStarF1Label, d_one_matl);
+  t->computesVar(lb->gAccelerationF0Label, d_one_matl);
+  t->computesVar(lb->gAccelerationF1Label, d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -1221,18 +1221,18 @@ void SingleFieldMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   Task* t=scinew Task("MPM::setGridBoundaryConditions",
                       this, &SingleFieldMPM::setGridBoundaryConditions);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->modifies(             lb->gAccelerationF0Label,   d_one_matl);
-  t->modifies(             lb->gVelocityStarF0Label,   d_one_matl);
-  t->requires(Task::NewDW, lb->gVelocityF0Label,       d_one_matl, Ghost::None);
+  t->modifiesVar(             lb->gAccelerationF0Label,   d_one_matl);
+  t->modifiesVar(             lb->gVelocityStarF0Label,   d_one_matl);
+  t->requiresVar(Task::NewDW, lb->gVelocityF0Label,       d_one_matl, Ghost::None);
 #ifdef RIGID
-  t->requires(Task::NewDW, lb->gMassLabel,             d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,             d_one_matl, Ghost::None);
 #endif
 
-  t->modifies(             lb->gAccelerationF1Label,   d_one_matl);
-  t->modifies(             lb->gVelocityStarF1Label,   d_one_matl);
-  t->requires(Task::NewDW, lb->gVelocityF1Label,       d_one_matl, Ghost::None);
+  t->modifiesVar(             lb->gAccelerationF1Label,   d_one_matl);
+  t->modifiesVar(             lb->gVelocityStarF1Label,   d_one_matl);
+  t->requiresVar(Task::NewDW, lb->gVelocityF1Label,       d_one_matl, Ghost::None);
 
   sched->addTask(t, patches, matls);
 }
@@ -1251,85 +1251,85 @@ void SingleFieldMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &SingleFieldMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, lb->delTLabel );
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-//  t->requires(Task::NewDW, lb->gAccelerationLabel,               gac,NGN);
-//  t->requires(Task::NewDW, lb->gVelocityStarLabel,               gac,NGN);
-//  t->requires(Task::NewDW, lb->gTemperatureRateLabel,            gac,NGN);
-//  t->requires(Task::NewDW, lb->frictionalWorkLabel,              gac,NGN);
-  t->requires(Task::NewDW, lb->gAccelerationF0Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gAccelerationF1Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarF0Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarF1Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gSurfGradLabel,       d_one_matl, gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->gAccelerationLabel,               gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->gVelocityStarLabel,               gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->gTemperatureRateLabel,            gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->frictionalWorkLabel,              gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gAccelerationF0Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gAccelerationF1Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarF0Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarF1Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gSurfGradLabel,       d_one_matl, gac,NGN);
 //  if(flags->d_XPIC2){
-//    t->requires(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
-//    t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,          gnone);
+//    t->requiresVar(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
+//    t->requiresVar(Task::NewDW, lb->pVelocitySSPlusLabel,          gnone);
 //  }
-  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
-  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
-  t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
-  t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
-  t->requires(Task::OldDW, lb->pDispLabel,                      gnone);
-  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
-  t->requires(Task::OldDW, lb->pSurfLabel,                      gnone);
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requiresVar(Task::OldDW, lb->pParticleIDLabel,                gnone);
+  t->requiresVar(Task::OldDW, lb->pTemperatureLabel,               gnone);
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,                  gnone);
+  t->requiresVar(Task::OldDW, lb->pDispLabel,                      gnone);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   gnone);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,                    gnone);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+  t->requiresVar(Task::OldDW, lb->pSurfLabel,                      gnone);
+  t->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requiresVar(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
 
 //  if(flags->d_with_ice){
-//    t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
-//    t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
+//    t->requiresVar(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
+//    t->requiresVar(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
 //  }
 
-  t->computes(lb->pDispLabel_preReloc);
-  t->computes(lb->pVelocityLabel_preReloc);
-  t->computes(lb->pXLabel_preReloc);
-  t->computes(lb->pParticleIDLabel_preReloc);
-  t->computes(lb->pTemperatureLabel_preReloc);
-  t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
-  t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pSurfLabel_preReloc);
+  t->computesVar(lb->pDispLabel_preReloc);
+  t->computesVar(lb->pVelocityLabel_preReloc);
+  t->computesVar(lb->pXLabel_preReloc);
+  t->computesVar(lb->pParticleIDLabel_preReloc);
+  t->computesVar(lb->pTemperatureLabel_preReloc);
+  t->computesVar(lb->pTempPreviousLabel_preReloc); // for thermal stress
+  t->computesVar(lb->pMassLabel_preReloc);
+  t->computesVar(lb->pSizeLabel_preReloc);
+  t->computesVar(lb->pSurfLabel_preReloc);
 
   //__________________________________
   //  reduction variables
   if(flags->d_reductionVars->momentum){
-    t->computes(lb->TotalMomentumLabel);
+    t->computesVar(lb->TotalMomentumLabel);
   }
   if(flags->d_reductionVars->KE){
-    t->computes(lb->KineticEnergyLabel);
+    t->computesVar(lb->KineticEnergyLabel);
   }
   if(flags->d_reductionVars->thermalEnergy){
-    t->computes(lb->ThermalEnergyLabel);
+    t->computesVar(lb->ThermalEnergyLabel);
   }
   if(flags->d_reductionVars->centerOfMass){
-    t->computes(lb->CenterOfMassPositionLabel);
+    t->computesVar(lb->CenterOfMassPositionLabel);
   }
   if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel);
+    t->computesVar(lb->TotalMassLabel);
   }
 
   // debugging scalar
   if(flags->d_with_color) {
-    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
-    t->computes(lb->pColorLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->computesVar(lb->pColorLabel_preReloc);
   }
 
   // Carry Forward particle refinement flag
   if(flags->d_refineParticles){
-    t->requires(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
-    t->computes(             lb->pRefinedLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
+    t->computesVar(             lb->pRefinedLabel_preReloc);
   }
 
-  t->requires(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
-  t->computes(             lb->NC_CCweightLabel, d_one_matl);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
+  t->computesVar(             lb->NC_CCweightLabel, d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -1348,33 +1348,33 @@ void SingleFieldMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   Task* t=scinew Task("MPM::computeParticleGradients",
                       this, &SingleFieldMPM::computeParticleGradients);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-//  t->requires(Task::NewDW, lb->gVelocityStarLabel,               gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarF0Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarF1Label, d_one_matl, gac,NGN);
-  t->requires(Task::NewDW, lb->gSurfGradLabel,       d_one_matl, gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->gVelocityStarLabel,               gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarF0Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gVelocityStarF1Label, d_one_matl, gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gSurfGradLabel,       d_one_matl, gac,NGN);
 //  if (flags->d_doExplicitHeatConduction){
-//    t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
+//    t->requiresVar(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
 //  }
-  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
-  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requiresVar(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   gnone);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,                    gnone);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+  t->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requiresVar(Task::NewDW, lb->pSurfGradLabel_preReloc,         gnone);
 
-  t->computes(lb->pVolumeLabel_preReloc);
-  t->computes(lb->pVelGradLabel_preReloc);
-  t->computes(lb->pDeformationMeasureLabel_preReloc);
-  t->computes(lb->pTemperatureGradientLabel_preReloc);
+  t->computesVar(lb->pVolumeLabel_preReloc);
+  t->computesVar(lb->pVelGradLabel_preReloc);
+  t->computesVar(lb->pDeformationMeasureLabel_preReloc);
+  t->computesVar(lb->pTemperatureGradientLabel_preReloc);
 
   if(flags->d_reductionVars->volDeformed){
-    t->computes(lb->TotalVolumeDeformedLabel);
+    t->computesVar(lb->TotalVolumeDeformedLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1394,14 +1394,14 @@ void SingleFieldMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::finalParticleUpdate",
                       this, &SingleFieldMPM::finalParticleUpdate);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
-  t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requiresVar(Task::NewDW, lb->pdTdtLabel,                      gnone);
+  t->requiresVar(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
+  t->requiresVar(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
-  t->modifies(lb->pTemperatureLabel_preReloc);
+  t->modifiesVar(lb->pTemperatureLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1421,12 +1421,12 @@ void SingleFieldMPM::scheduleInsertParticles(SchedulerP& sched,
     Task* t=scinew Task("MPM::insertParticles",this,
                   &SingleFieldMPM::insertParticles);
 
-    t->requires(Task::OldDW, lb->simulationTimeLabel);
-    t->requires(Task::OldDW, lb->delTLabel );
+    t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+    t->requiresVar(Task::OldDW, lb->delTLabel );
 
-    t->modifies(lb->pXLabel_preReloc);
-    t->modifies(lb->pVelocityLabel_preReloc);
-    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->modifiesVar(lb->pXLabel_preReloc);
+    t->modifiesVar(lb->pVelocityLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
 
     sched->addTask(t, patches, matls);
   }
@@ -1449,35 +1449,35 @@ void SingleFieldMPM::scheduleAddParticles(SchedulerP& sched,
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
-  t->modifies(lb->pParticleIDLabel_preReloc);
-  t->modifies(lb->pXLabel_preReloc);
-  t->modifies(lb->pVolumeLabel_preReloc);
-  t->modifies(lb->pVelocityLabel_preReloc);
-  t->modifies(lb->pMassLabel_preReloc);
-  t->modifies(lb->pSizeLabel_preReloc);
-  t->modifies(lb->pDispLabel_preReloc);
-  t->modifies(lb->pStressLabel_preReloc);
+  t->modifiesVar(lb->pParticleIDLabel_preReloc);
+  t->modifiesVar(lb->pXLabel_preReloc);
+  t->modifiesVar(lb->pVolumeLabel_preReloc);
+  t->modifiesVar(lb->pVelocityLabel_preReloc);
+  t->modifiesVar(lb->pMassLabel_preReloc);
+  t->modifiesVar(lb->pSizeLabel_preReloc);
+  t->modifiesVar(lb->pDispLabel_preReloc);
+  t->modifiesVar(lb->pStressLabel_preReloc);
   
   if (flags->d_with_color) {
-    t->modifies(lb->pColorLabel_preReloc);
+    t->modifiesVar(lb->pColorLabel_preReloc);
   }
   if (flags->d_useLoadCurves) {
-    t->modifies(lb->pLoadCurveIDLabel_preReloc);
+    t->modifiesVar(lb->pLoadCurveIDLabel_preReloc);
   }
-  t->modifies(lb->pLocalizedMPMLabel_preReloc);
-  t->modifies(lb->pExtForceLabel_preReloc);
-  t->modifies(lb->pTemperatureLabel_preReloc);
-  t->modifies(lb->pTemperatureGradientLabel_preReloc);
-  t->modifies(lb->pTempPreviousLabel_preReloc);
-  t->modifies(lb->pDeformationMeasureLabel_preReloc);
-  t->modifies(lb->pRefinedLabel_preReloc);
+  t->modifiesVar(lb->pLocalizedMPMLabel_preReloc);
+  t->modifiesVar(lb->pExtForceLabel_preReloc);
+  t->modifiesVar(lb->pTemperatureLabel_preReloc);
+  t->modifiesVar(lb->pTemperatureGradientLabel_preReloc);
+  t->modifiesVar(lb->pTempPreviousLabel_preReloc);
+  t->modifiesVar(lb->pDeformationMeasureLabel_preReloc);
+  t->modifiesVar(lb->pRefinedLabel_preReloc);
   if(flags->d_computeScaleFactor){
-    t->modifies(lb->pScaleFactorLabel_preReloc);
+    t->modifiesVar(lb->pScaleFactorLabel_preReloc);
   }
-  t->modifies(lb->pVelGradLabel_preReloc);
+  t->modifiesVar(lb->pVelGradLabel_preReloc);
 
-  t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
-  t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
+  t->requiresVar(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
+  t->computesVar(             lb->pCellNAPIDLabel, zeroth_matl);
 
   unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMatls; m++){
@@ -1503,9 +1503,9 @@ SingleFieldMPM::scheduleComputeParticleScaleFactor(       SchedulerP  & sched,
 
   Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, &SingleFieldMPM::computeParticleScaleFactor );
 
-  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None );
-  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None );
-  t->computes( lb->pScaleFactorLabel_preReloc );
+  t->requiresVar( Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None );
+  t->requiresVar( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None );
+  t->computesVar( lb->pScaleFactorLabel_preReloc );
 
   sched->addTask( t, patches, matls );
 }
@@ -1526,10 +1526,10 @@ SingleFieldMPM::scheduleSetPrescribedMotion(       SchedulerP  & sched,
                            &SingleFieldMPM::setPrescribedMotion );
 
   const MaterialSubset* mss = matls->getUnion();
-  t->modifies(             lb->gAccelerationLabel,     mss);
-  t->modifies(             lb->gVelocityStarLabel,     mss);
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->modifiesVar(             lb->gAccelerationLabel,     mss);
+  t->modifiesVar(             lb->gVelocityStarLabel,     mss);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
   sched->addTask(t, patches, matls);
 }
@@ -1541,39 +1541,39 @@ SingleFieldMPM::scheduleRefine( const PatchSet   * patches,
   printSchedule(patches,cout_doing,"MPM::scheduleRefine");
   Task* t = scinew Task( "SingleFieldMPM::refine", this, &SingleFieldMPM::refine );
 
-  t->computes(lb->pXLabel);
-  t->computes(lb->p_qLabel);
-  t->computes(lb->pDispLabel);
-  t->computes(lb->pMassLabel);
-  t->computes(lb->pVolumeLabel);
-  t->computes(lb->pTemperatureLabel);
-  t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
-  t->computes(lb->pdTdtLabel);
-  t->computes(lb->pVelocityLabel);
-  t->computes(lb->pVelGradLabel);
-  t->computes(lb->pTemperatureGradientLabel);
-  t->computes(lb->pExternalForceLabel);
-  t->computes(lb->pParticleIDLabel);
-  t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pStressLabel);
-  t->computes(lb->pSizeLabel);
-  t->computes(lb->pLocalizedMPMLabel);
-  t->computes(lb->NC_CCweightLabel);
-  t->computes(lb->delTLabel,getLevel(patches));
+  t->computesVar(lb->pXLabel);
+  t->computesVar(lb->p_qLabel);
+  t->computesVar(lb->pDispLabel);
+  t->computesVar(lb->pMassLabel);
+  t->computesVar(lb->pVolumeLabel);
+  t->computesVar(lb->pTemperatureLabel);
+  t->computesVar(lb->pTempPreviousLabel); // for therma  stresm analysis
+  t->computesVar(lb->pdTdtLabel);
+  t->computesVar(lb->pVelocityLabel);
+  t->computesVar(lb->pVelGradLabel);
+  t->computesVar(lb->pTemperatureGradientLabel);
+  t->computesVar(lb->pExternalForceLabel);
+  t->computesVar(lb->pParticleIDLabel);
+  t->computesVar(lb->pDeformationMeasureLabel);
+  t->computesVar(lb->pStressLabel);
+  t->computesVar(lb->pSizeLabel);
+  t->computesVar(lb->pLocalizedMPMLabel);
+  t->computesVar(lb->NC_CCweightLabel);
+  t->computesVar(lb->delTLabel,getLevel(patches));
 
   // Debugging Scalar
   if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
+    t->computesVar(lb->pColorLabel);
   }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
-    t->computes(lb->pLoadCurveIDLabel);
+    t->computesVar(lb->pLoadCurveIDLabel);
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
     // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
+    t->computesVar(lb->AccStrainEnergyLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -1624,15 +1624,15 @@ void SingleFieldMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
 
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
-    task->requires(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
+    task->requiresVar(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
   }
   else {
-    task->requires(Task::NewDW, m_regridder->getRefineFlagLabel(),
+    task->requiresVar(Task::NewDW, m_regridder->getRefineFlagLabel(),
                    0, Task::FineLevel, m_regridder->refineFlagMaterials(),
                    Task::NormalDomain, Ghost::None, 0);
   }
-  task->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
-  task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  task->modifiesVar(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
+  task->modifiesVar(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials( "MPM" ));
 
 }
@@ -4543,22 +4543,22 @@ void SingleFieldMPM::scheduleComputeNormals(SchedulerP   & sched,
   Task* t = scinew Task("MPM::computeNormals", this, 
                         &SingleFieldMPM::computeNormals);
 
-  t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pDispLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,d_one_matl,Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pDispLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,d_one_matl,Ghost::None);
 
-  t->computes(lb->gSurfNormLabel);
-  t->computes(lb->gStressLabel);
-  t->computes(lb->gNormTractionLabel);
-  t->computes(lb->gPositionLabel);
-  t->computes(lb->gDisplacementLabel);
+  t->computesVar(lb->gSurfNormLabel);
+  t->computesVar(lb->gStressLabel);
+  t->computesVar(lb->gNormTractionLabel);
+  t->computesVar(lb->gPositionLabel);
+  t->computesVar(lb->gDisplacementLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -4734,16 +4734,16 @@ void SingleFieldMPM::scheduleComputeParticleSurfaceGradient(SchedulerP   & sched
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType gnone = Ghost::None;
 
-  t->requires(Task::OldDW, lb->timeStepLabel);
-  t->requires(Task::OldDW, lb->pXLabel,                  gan, NGP);
-  t->requires(Task::OldDW, lb->pMassLabel,               gan, NGP);
-  t->requires(Task::OldDW, lb->pSurfLabel,               gan, NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
-  t->requires(Task::OldDW, lb->pSurfGradLabel,           gnone);
-//t->requires(Task::NewDW, lb->gSurfLabel, d_one_matl, Ghost::AroundCells, NGN);
+  t->requiresVar(Task::OldDW, lb->timeStepLabel);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pSurfLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pSurfGradLabel,           gnone);
+//t->requiresVar(Task::NewDW, lb->gSurfLabel, d_one_matl, Ghost::AroundCells, NGN);
 
-  t->computes(lb->pSurfGradLabel_preReloc);
+  t->computesVar(lb->pSurfGradLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -4862,37 +4862,37 @@ void SingleFieldMPM::scheduleComputeGridSurfaceGradient(SchedulerP   & sched,
   Task* t = scinew Task("MPM::computeGridSurfaceGradient", this, 
                         &SingleFieldMPM::computeGridSurfaceGradient);
 
-  t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pSurfLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pVelocityLabel,           particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,      particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::NewDW, lb->pSurfGradLabel_preReloc,  particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pSurfLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,           particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::OldDW, lb->pExternalForceLabel,      particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::NewDW, lb->pSurfGradLabel_preReloc,  particle_ghost_type, particle_ghost_layer);
 
-  t->computes(lb->gSurfGradLabel,          d_one_matl);
-  t->computes(lb->gSurfNormF0Label,        d_one_matl);
-  t->computes(lb->gSurfNormF1Label,        d_one_matl);
-  t->computes(lb->gMassF0Label,            d_one_matl);
-  t->computes(lb->gMassF1Label,            d_one_matl);
-  t->computes(lb->gStressF0Label,          d_one_matl);
-  t->computes(lb->gStressF1Label,          d_one_matl);
-  t->computes(lb->gVolumeF0Label,          d_one_matl);
-  t->computes(lb->gVolumeF1Label,          d_one_matl);
-  t->computes(lb->gPositionF0Label,        d_one_matl);
-  t->computes(lb->gPositionF1Label,        d_one_matl);
-  t->computes(lb->gVelocityF0Label,        d_one_matl);
-  t->computes(lb->gVelocityF1Label,        d_one_matl);
-  t->computes(lb->gNormTractionF0Label,    d_one_matl);
-  t->computes(lb->gNormTractionF1Label,    d_one_matl);
-  t->computes(lb->gInternalForceF0Label,   d_one_matl);
-  t->computes(lb->gInternalForceF1Label,   d_one_matl);
-  t->computes(lb->gExternalForceF0Label,   d_one_matl);
-  t->computes(lb->gExternalForceF1Label,   d_one_matl);
+  t->computesVar(lb->gSurfGradLabel,          d_one_matl);
+  t->computesVar(lb->gSurfNormF0Label,        d_one_matl);
+  t->computesVar(lb->gSurfNormF1Label,        d_one_matl);
+  t->computesVar(lb->gMassF0Label,            d_one_matl);
+  t->computesVar(lb->gMassF1Label,            d_one_matl);
+  t->computesVar(lb->gStressF0Label,          d_one_matl);
+  t->computesVar(lb->gStressF1Label,          d_one_matl);
+  t->computesVar(lb->gVolumeF0Label,          d_one_matl);
+  t->computesVar(lb->gVolumeF1Label,          d_one_matl);
+  t->computesVar(lb->gPositionF0Label,        d_one_matl);
+  t->computesVar(lb->gPositionF1Label,        d_one_matl);
+  t->computesVar(lb->gVelocityF0Label,        d_one_matl);
+  t->computesVar(lb->gVelocityF1Label,        d_one_matl);
+  t->computesVar(lb->gNormTractionF0Label,    d_one_matl);
+  t->computesVar(lb->gNormTractionF1Label,    d_one_matl);
+  t->computesVar(lb->gInternalForceF0Label,   d_one_matl);
+  t->computesVar(lb->gInternalForceF1Label,   d_one_matl);
+  t->computesVar(lb->gExternalForceF0Label,   d_one_matl);
+  t->computesVar(lb->gExternalForceF1Label,   d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -5113,25 +5113,25 @@ void SingleFieldMPM::scheduleSingleFieldContact(SchedulerP   & sched,
   Task* t = scinew Task("MPM::computeSingleFieldContact", this, 
                         &SingleFieldMPM::computeSingleFieldContact);
 
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,     d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gSurfLabel,           d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gSurfNormF0Label,     d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gSurfNormF1Label,     d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gMassF0Label,         d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gMassF1Label,         d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeF0Label,       d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeF1Label,       d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gPositionF0Label,     d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gPositionF1Label,     d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gNormTractionF0Label, d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gNormTractionF1Label, d_one_matl, Ghost::None);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,     d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gSurfLabel,           d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gSurfNormF0Label,     d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gSurfNormF1Label,     d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassF0Label,         d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassF1Label,         d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeF0Label,       d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeF1Label,       d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gPositionF0Label,     d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gPositionF1Label,     d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormTractionF0Label, d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gNormTractionF1Label, d_one_matl, Ghost::None);
 #ifdef RIGID
-  t->requires(Task::NewDW, lb->gMassLabel,           d_one_matl, Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel,       d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,           d_one_matl, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,       d_one_matl, Ghost::None);
 #endif
-  t->modifies(             lb->gVelocityStarF0Label, d_one_matl);
-  t->modifies(             lb->gVelocityStarF1Label, d_one_matl);
+  t->modifiesVar(             lb->gVelocityStarF0Label, d_one_matl);
+  t->modifiesVar(             lb->gVelocityStarF1Label, d_one_matl);
 
   sched->addTask(t, patches, matls);
 }

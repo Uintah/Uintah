@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -853,39 +853,39 @@ void HyperelasticPlastic::addComputesAndRequires(Task* task,
   
   // Plasticity
   if(d_usePlasticity) {
-    task->requires(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
-    task->requires(Task::OldDW, pYieldStress_label,     matlset, gnone);
-    task->computes(pPlasticStrain_label_preReloc,       matlset);
-    task->computes(pYieldStress_label_preReloc,         matlset);
+    task->requiresVar(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
+    task->requiresVar(Task::OldDW, pYieldStress_label,     matlset, gnone);
+    task->computesVar(pPlasticStrain_label_preReloc,       matlset);
+    task->computesVar(pYieldStress_label_preReloc,         matlset);
   }
   
   if(d_useDamage) {
     //for pParticleID
-    task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
     
     // Other constitutive model and input dependent computes and requires
-    task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matlset, gnone);
-    task->requires(Task::OldDW, pLocalizedLabel,                matlset, gnone);
-    task->requires(Task::OldDW, pTimeOfLocLabel,                matlset, gnone);
-    task->requires(Task::OldDW, pDamageLabel,                   matlset, gnone);
+    task->requiresVar(Task::OldDW, pFailureStressOrStrainLabel,    matlset, gnone);
+    task->requiresVar(Task::OldDW, pLocalizedLabel,                matlset, gnone);
+    task->requiresVar(Task::OldDW, pTimeOfLocLabel,                matlset, gnone);
+    task->requiresVar(Task::OldDW, pDamageLabel,                   matlset, gnone);
     
-    task->computes(pFailureStressOrStrainLabel_preReloc,        matlset);
-    task->computes(pLocalizedLabel_preReloc,                    matlset);
-    task->computes(pTimeOfLocLabel_preReloc,                    matlset);
-    task->computes(pDamageLabel_preReloc,                       matlset);
-    task->computes(lb->TotalLocalizedParticleLabel);   
+    task->computesVar(pFailureStressOrStrainLabel_preReloc,        matlset);
+    task->computesVar(pLocalizedLabel_preReloc,                    matlset);
+    task->computesVar(pTimeOfLocLabel_preReloc,                    matlset);
+    task->computesVar(pDamageLabel_preReloc,                       matlset);
+    task->computesVar(lb->TotalLocalizedParticleLabel);   
   } else {
-    task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+    task->requiresVar(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   }
 
   if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
   }
   
   // Universal
-  task->requires(Task::OldDW, bElBarLabel,              matlset, gnone);
-  task->computes(bElBarLabel_preReloc,                  matlset);
-  task->computes(pDeformRateLabel_preReloc,             matlset);
+  task->requiresVar(Task::OldDW, bElBarLabel,              matlset, gnone);
+  task->computesVar(bElBarLabel_preReloc,                  matlset);
+  task->computesVar(pDeformRateLabel_preReloc,             matlset);
 }
 
 void HyperelasticPlastic::addComputesAndRequires(Task* task,
@@ -904,16 +904,16 @@ void HyperelasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   if(d_usePlasticity){
     if(SchedParent){
-      task->requires(Task::ParentOldDW, pPlasticStrain_label, matlset, gnone);
+      task->requiresVar(Task::ParentOldDW, pPlasticStrain_label, matlset, gnone);
     }else{
-      task->requires(Task::OldDW,       pPlasticStrain_label, matlset, gnone);
+      task->requiresVar(Task::OldDW,       pPlasticStrain_label, matlset, gnone);
     }
   }
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW,   bElBarLabel,          matlset, gnone);
+    task->requiresVar(Task::ParentOldDW,   bElBarLabel,          matlset, gnone);
   }else{
-    task->requires(Task::OldDW,         bElBarLabel,          matlset, gnone);
+    task->requiresVar(Task::OldDW,         bElBarLabel,          matlset, gnone);
   }
 }
 
@@ -924,22 +924,22 @@ void HyperelasticPlastic::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   // Plasticity
   if(d_usePlasticity){
-    task->computes(pPlasticStrain_label, matlset);
-    task->computes(pYieldStress_label,   matlset);
+    task->computesVar(pPlasticStrain_label, matlset);
+    task->computesVar(pYieldStress_label,   matlset);
   }
   
   // Damage
   if(d_useDamage) {
-    task->computes(pFailureStressOrStrainLabel, matlset);
-    task->computes(pLocalizedLabel,             matlset);
-    task->computes(pTimeOfLocLabel,             matlset);
-    task->computes(pDamageLabel,                matlset);
-    task->computes(lb->TotalLocalizedParticleLabel);
+    task->computesVar(pFailureStressOrStrainLabel, matlset);
+    task->computesVar(pLocalizedLabel,             matlset);
+    task->computesVar(pTimeOfLocLabel,             matlset);
+    task->computesVar(pDamageLabel,                matlset);
+    task->computesVar(lb->TotalLocalizedParticleLabel);
   }
   
   // Universal
-  task->computes(bElBarLabel,           matlset);
-  task->computes(pDeformRateLabel,      matlset);
+  task->computesVar(bElBarLabel,           matlset);
+  task->computesVar(pDeformRateLabel,      matlset);
 }
 
 
@@ -949,9 +949,9 @@ void HyperelasticPlastic::addRequiresDamageParameter(Task* task,
 {
   if(d_useDamage) {
     const MaterialSubset* matlset = matl->thisMaterial();
-    task->requires(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
-    task->requires(Task::NewDW, pTimeOfLocLabel_preReloc, matlset, Ghost::None);
-    task->requires(Task::NewDW, pDamageLabel_preReloc, matlset, Ghost::None);
+    task->requiresVar(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
+    task->requiresVar(Task::NewDW, pTimeOfLocLabel_preReloc, matlset, Ghost::None);
+    task->requiresVar(Task::NewDW, pDamageLabel_preReloc, matlset, Ghost::None);
   }
 }
 

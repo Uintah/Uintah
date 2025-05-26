@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -132,10 +132,10 @@ void P_Alpha::addInitialComputesAndRequires(Task* task,
                                          const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(alphaMinLabel,  matlset);
-  task->computes(tempAlpha1Label,matlset);
-  task->computes(bElBarLabel,    matlset);
-  task->computes(pPlasticStrainLabel, matlset);
+  task->computesVar(alphaMinLabel,  matlset);
+  task->computesVar(tempAlpha1Label,matlset);
+  task->computesVar(bElBarLabel,    matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
 }
 
 void P_Alpha::initializeCMData(const Patch* patch,
@@ -501,17 +501,17 @@ void P_Alpha::addComputesAndRequires(Task* task,
   addSharedCRForExplicit(task, matlset, patches);
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, alphaMinLabel,  matlset, gnone);
-  task->requires(Task::OldDW, tempAlpha1Label,matlset, gnone);
-  task->requires(Task::OldDW, bElBarLabel,    matlset, gnone);
-  task->requires(Task::OldDW, pPlasticStrainLabel,
+  task->requiresVar(Task::OldDW, alphaMinLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, tempAlpha1Label,matlset, gnone);
+  task->requiresVar(Task::OldDW, bElBarLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,
                                               matlset, gnone);
 
-  task->computes(alphaMinLabel_preReloc,      matlset);
-  task->computes(alphaLabel,                  matlset);
-  task->computes(tempAlpha1Label_preReloc,    matlset);
-  task->computes(bElBarLabel_preReloc,        matlset);
-  task->computes(pPlasticStrainLabel_preReloc,matlset);
+  task->computesVar(alphaMinLabel_preReloc,      matlset);
+  task->computesVar(alphaLabel,                  matlset);
+  task->computesVar(tempAlpha1Label_preReloc,    matlset);
+  task->computesVar(bElBarLabel_preReloc,        matlset);
+  task->computesVar(pPlasticStrainLabel_preReloc,matlset);
 }
 
 void 

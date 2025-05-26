@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -129,8 +129,8 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   // require pStress so it will be saved in a checkpoint, 
   // allowing the user to restart using mpmice
-  t->requires(Task::OldDW,lb->pStressLabel, Ghost::None);                
-  t->computes(lb->gInternalForceLabel);
+  t->requiresVar(Task::OldDW,lb->pStressLabel, Ghost::None);                
+  t->computesVar(lb->gInternalForceLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -172,12 +172,12 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("RigidMPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
-  t->computes(lb->gVelocityStarLabel);
-  t->computes(lb->gAccelerationLabel);
+  t->computesVar(lb->gVelocityStarLabel);
+  t->computesVar(lb->gAccelerationLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -232,26 +232,26 @@ void RigidMPM::scheduleComputeParticleGradients(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
-//  t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   if (flags->d_doExplicitHeatConduction){
-    t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
+    t->requiresVar(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
   }
-  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
-  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
-//  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requiresVar(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,                   gnone);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,                    gnone);
+//  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+//  t->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
-  t->computes(lb->pVolumeLabel_preReloc);
-  t->computes(lb->pVelGradLabel_preReloc);
-  t->computes(lb->pDeformationMeasureLabel_preReloc);
-  t->computes(lb->pTemperatureGradientLabel_preReloc);
-  t->computes(lb->pJThermalLabel);
+  t->computesVar(lb->pVolumeLabel_preReloc);
+  t->computesVar(lb->pVelGradLabel_preReloc);
+  t->computesVar(lb->pDeformationMeasureLabel_preReloc);
+  t->computesVar(lb->pTemperatureGradientLabel_preReloc);
+  t->computesVar(lb->pJThermalLabel);
 
   if(flags->d_reductionVars->volDeformed){
-    t->computes(lb->TotalVolumeDeformedLabel);
+    t->computesVar(lb->TotalVolumeDeformedLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -383,52 +383,52 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("RigidMPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, lb->delTLabel );
+  t->requiresVar(Task::OldDW, lb->delTLabel );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->gAccelerationLabel,     gac,NGN);
-  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
-  t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
-  t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->pCurSizeLabel,          Ghost::None);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
+  t->requiresVar(Task::NewDW, lb->gAccelerationLabel,     gac,NGN);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pDispLabel,             Ghost::None);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,          Ghost::None);
+//  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
 
   if(flags->d_with_ice){
-    t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
+    t->requiresVar(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
   }
 
-  t->computes(lb->pXLabel_preReloc);
-  t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pDispLabel_preReloc);
-  t->computes(lb->pVelocityLabel_preReloc);
-  t->computes(lb->pParticleIDLabel_preReloc);
-  t->computes(lb->pTemperatureLabel_preReloc);
-  t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
+  t->computesVar(lb->pXLabel_preReloc);
+  t->computesVar(lb->pMassLabel_preReloc);
+  t->computesVar(lb->pSizeLabel_preReloc);
+  t->computesVar(lb->pDispLabel_preReloc);
+  t->computesVar(lb->pVelocityLabel_preReloc);
+  t->computesVar(lb->pParticleIDLabel_preReloc);
+  t->computesVar(lb->pTemperatureLabel_preReloc);
+  t->computesVar(lb->pTempPreviousLabel_preReloc); // for thermal stress 
 
-  t->computes(lb->KineticEnergyLabel);
-  t->computes(lb->ThermalEnergyLabel);
-  t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->TotalMomentumLabel);
+  t->computesVar(lb->KineticEnergyLabel);
+  t->computesVar(lb->ThermalEnergyLabel);
+  t->computesVar(lb->CenterOfMassPositionLabel);
+  t->computesVar(lb->TotalMomentumLabel);
   
   // debugging scalar
   if(flags->d_with_color) {
-    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
-    t->computes(lb->pColorLabel_preReloc);
+    t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->computesVar(lb->pColorLabel_preReloc);
   }
 
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
-  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl, Ghost::None);
-  t->computes(             lb->NC_CCweightLabel, z_matl);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel, z_matl, Ghost::None);
+  t->computesVar(             lb->NC_CCweightLabel, z_matl);
 
   sched->addTask(t, patches, matls);
 

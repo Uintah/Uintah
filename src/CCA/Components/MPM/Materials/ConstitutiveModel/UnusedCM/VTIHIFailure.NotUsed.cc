@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -282,19 +282,19 @@ void ViscoTransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
                                                     MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,lb->pStressLabel_preReloc,matlset, Ghost::None);
 
   // Add requires local to this model
-  task->requires(Task::NewDW,pFailureLabel_preReloc,    matlset, Ghost::None);
-  task->requires(Task::NewDW,pStretchLabel_preReloc,    matlset, Ghost::None);
-  task->requires(Task::NewDW,pElasticStressLabel_preReloc,matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory1Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory2Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory3Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory4Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory5Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory6Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pFailureLabel_preReloc,    matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pStretchLabel_preReloc,    matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pElasticStressLabel_preReloc,matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory1Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory2Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory3Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory4Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory5Label_preReloc,   matlset, Ghost::None);
+  task->requiresVar(Task::NewDW,pHistory6Label_preReloc,   matlset, Ghost::None);
 }
 
 void ViscoTransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -1424,33 +1424,33 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::ParentOldDW, lb->pXLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,   matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
+  task->requiresVar(Task::ParentOldDW, lb->pXLabel,      matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pMassLabel,   matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pVolumeLabel, matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                       matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->delTLabel);
+  task->requiresVar(Task::ParentOldDW, lb->delTLabel);
   if(flag->d_doGridReset){
-    task->requires(Task::OldDW,lb->dispNewLabel,        matlset,gac,1);
+    task->requiresVar(Task::OldDW,lb->dispNewLabel,        matlset,gac,1);
   }
   if(!flag->d_doGridReset){
-    task->requires(Task::OldDW, lb->gDisplacementLabel, matlset,gac,1);
+    task->requiresVar(Task::OldDW, lb->gDisplacementLabel, matlset,gac,1);
   }
 
-  task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pElasticStressLabel,matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory1Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory2Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory3Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory4Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
   //
-  task->computes(lb->pStressLabel_preReloc,  matlset);
-  task->computes(lb->pVolumeDeformedLabel,   matlset);
-  task->computes(lb->pFiberDirLabel_preReloc,matlset);
-  task->computes(pStretchLabel_preReloc,     matlset);
+  task->computesVar(lb->pStressLabel_preReloc,  matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,   matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,matlset);
+  task->computesVar(pStretchLabel_preReloc,     matlset);
 }
 
 void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
@@ -1461,42 +1461,42 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,               matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel,          matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pFailureLabel,               matlset,Ghost::None);
 
   if(flag->d_doGridReset){
-    task->requires(Task::NewDW,lb->dispNewLabel,           matlset,gac,1);
+    task->requiresVar(Task::NewDW,lb->dispNewLabel,           matlset,gac,1);
   }
   if(!flag->d_doGridReset){
-    task->requires(Task::NewDW,lb->gDisplacementLabel,     matlset,gac,1);
+    task->requiresVar(Task::NewDW,lb->gDisplacementLabel,     matlset,gac,1);
   }
   
-  task->requires(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
-  task->requires(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
-  task->requires(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
+  task->requiresVar(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory3Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory4Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   //
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
-  task->computes(pFailureLabel_preReloc,                matlset);
+  task->computesVar(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,              matlset);
+  task->computesVar(lb->pStressLabel_preReloc,             matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
+  task->computesVar(pFailureLabel_preReloc,                matlset);
   
-  task->computes(pElasticStressLabel_preReloc,          matlset);//visco
-  task->computes(pHistory1Label_preReloc,               matlset);
-  task->computes(pHistory2Label_preReloc,               matlset);
-  task->computes(pHistory3Label_preReloc,               matlset);
-  task->computes(pHistory4Label_preReloc,               matlset);
-  task->computes(pHistory5Label_preReloc,               matlset);
-  task->computes(pHistory6Label_preReloc,               matlset);
+  task->computesVar(pElasticStressLabel_preReloc,          matlset);//visco
+  task->computesVar(pHistory1Label_preReloc,               matlset);
+  task->computesVar(pHistory2Label_preReloc,               matlset);
+  task->computesVar(pHistory3Label_preReloc,               matlset);
+  task->computesVar(pHistory4Label_preReloc,               matlset);
+  task->computesVar(pHistory5Label_preReloc,               matlset);
+  task->computesVar(pHistory6Label_preReloc,               matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

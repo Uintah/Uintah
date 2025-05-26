@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,7 +73,7 @@ void Burger::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("Burger::initialize",
                      this, &Burger::initialize);
-  task->computes(u_label);
+  task->computesVar(u_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -91,7 +91,7 @@ void Burger::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("Burger::computeStableTimeStep",
                      this, &Burger::computeStableTimeStep);
                      
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -102,10 +102,10 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Burger::timeAdvance",
                      this, &Burger::timeAdvance);
                      
-  task->requires(Task::OldDW, u_label, Ghost::AroundNodes, 1);
-  task->requires(Task::OldDW, getDelTLabel());
+  task->requiresVar(Task::OldDW, u_label, Ghost::AroundNodes, 1);
+  task->requiresVar(Task::OldDW, getDelTLabel());
   
-  task->computes(u_label);
+  task->computesVar(u_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 

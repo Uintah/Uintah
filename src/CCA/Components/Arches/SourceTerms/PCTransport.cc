@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -201,18 +201,18 @@ PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   if (timeSubStep == 0 ) {
 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
 
     for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){
-      tsk->requires( Task::OldDW, iter->second, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, iter->second, Ghost::None, 0 );
     }
 
   } else {
 
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
 
     for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){
-      tsk->requires( Task::NewDW, iter->second, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, iter->second, Ghost::None, 0 );
     }
 
   }

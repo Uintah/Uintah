@@ -89,17 +89,17 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
 
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
-    tsk->computes(m_tar_src_label);
-    tsk->computes(m_nd_src_label);
-    tsk->computes(m_soot_mass_src_label);
-    tsk->computes(m_balance_src_label);
+    tsk->computesVar(m_tar_src_label);
+    tsk->computesVar(m_nd_src_label);
+    tsk->computesVar(m_soot_mass_src_label);
+    tsk->computesVar(m_balance_src_label);
     which_dw = Task::OldDW;
   } else {
     which_dw = Task::NewDW;
-    tsk->modifies(m_tar_src_label);
-    tsk->modifies(m_nd_src_label);
-    tsk->modifies(m_soot_mass_src_label);
-    tsk->modifies(m_balance_src_label);
+    tsk->modifiesVar(m_tar_src_label);
+    tsk->modifiesVar(m_nd_src_label);
+    tsk->modifiesVar(m_soot_mass_src_label);
+    tsk->modifiesVar(m_balance_src_label);
   }
   // resolve some labels:
   m_mix_mol_weight_label  = VarLabel::find( m_mix_mol_weight_name);
@@ -113,17 +113,17 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   m_temperature_label     = VarLabel::find( m_temperature_name);
   m_rho_label             = VarLabel::find( m_rho_name);
 
-  tsk->requires( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
-  tsk->requires( which_dw, m_tar_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_Ysoot_label,                        Ghost::None, 0 );
-  tsk->requires( which_dw, m_Ns_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_o2_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_oh_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_co2_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2o_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, m_temperature_label,                  Ghost::None, 0 );
-  tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
-  tsk->requires( Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
+  tsk->requiresVar( which_dw, m_mix_mol_weight_label,               Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_tar_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Ysoot_label,                        Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_Ns_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_o2_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_oh_label,                           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_co2_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h2o_label,                          Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_temperature_label,                  Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_rho_label,                          Ghost::None, 0 );
+  tsk->requiresVar( Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   
@@ -345,10 +345,10 @@ BrownSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
 
     Task* tsk = scinew Task(taskname, this, &BrownSoot::initialize);
 
-    tsk->computes(m_tar_src_label);
-    tsk->computes(m_nd_src_label);
-    tsk->computes(m_soot_mass_src_label);
-    tsk->computes(m_balance_src_label);
+    tsk->computesVar(m_tar_src_label);
+    tsk->computesVar(m_nd_src_label);
+    tsk->computesVar(m_soot_mass_src_label);
+    tsk->computesVar(m_balance_src_label);
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -99,7 +99,7 @@ InternalVar_ArenaKappa::addInitialComputesAndRequires(Task* task,
                                                          const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pKappaLabel, matlset);
+  task->computesVar(pKappaLabel, matlset);
 }
 
 void 
@@ -108,8 +108,8 @@ InternalVar_ArenaKappa::addComputesAndRequires(Task* task,
                                                   const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pKappaLabel, matlset,Ghost::None);
-  task->computes(pKappaLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pKappaLabel, matlset,Ghost::None);
+  task->computesVar(pKappaLabel_preReloc, matlset);
 }
 
 void 
@@ -127,7 +127,7 @@ InternalVar_ArenaKappa::allocateCMDataAddRequires(Task* task,
                                                      MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pKappaLabel_preReloc, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pKappaLabel_preReloc, matlset, Ghost::None);
 }
 
 void 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -208,20 +208,20 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   d_timeSubStep = timeSubStep; 
 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-    tsk->computes(d_charLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel); 
+    tsk->computesVar(d_charLabel);
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_charLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);  
+    tsk->modifiesVar(d_charLabel);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -237,14 +237,14 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  tsk->requires(Task::OldDW, d_weight_label, gn, 0);
+  tsk->requiresVar(Task::OldDW, d_weight_label, gn, 0);
 
   // always require gas temperature
   d_gas_temperature_label = VarLabel::find( "temperature" ); 
   if ( d_gas_temperature_label == 0 ){ 
     throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
   }
-  tsk->requires(Task::OldDW, d_gas_temperature_label, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, d_gas_temperature_label, Ghost::AroundCells, 1);
 
   // For each required variable, determine what role it plays
   // - "particle_temperature" - look in DQMOMEqnFactory
@@ -263,7 +263,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
           d_pt_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
-          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
           errmsg += "\nCould not find given particle temperature variable \"";
@@ -276,7 +276,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
       } else if ( iMap->second == "particle_temperature_from_enthalpy") {
           d_particle_temperature_label = VarLabel::find(iMap->first);
           d_pt_scaling_factor = 1;
-          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
 
       } else if ( iMap->second == "raw_coal_mass") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
@@ -284,7 +284,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
-          tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
 
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
@@ -300,7 +300,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_char_mass_label = current_eqn.getTransportEqnLabel();
           d_rh_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
-          tsk->requires(Task::OldDW, d_char_mass_label, Ghost::None, 0);
+          tsk->requiresVar(Task::OldDW, d_char_mass_label, Ghost::None, 0);
 
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";

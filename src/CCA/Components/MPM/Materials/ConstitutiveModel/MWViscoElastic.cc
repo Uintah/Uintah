@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -363,11 +363,11 @@ void MWViscoElastic::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pStress_ve_vLabel, matlset);
-  task->computes(pStress_ve_dLabel, matlset);
-  task->computes(pStress_e_vLabel,  matlset);
-  task->computes(pStress_e_dLabel,  matlset);
-  task->computes(pStress_eLabel,    matlset);
+  task->computesVar(pStress_ve_vLabel, matlset);
+  task->computesVar(pStress_ve_dLabel, matlset);
+  task->computesVar(pStress_e_vLabel,  matlset);
+  task->computesVar(pStress_e_dLabel,  matlset);
+  task->computesVar(pStress_eLabel,    matlset);
 
 }
 
@@ -383,17 +383,17 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
 
   // Add requires local to this model
   Ghost::GhostType  gnone = Ghost::None;
-  task->computes(pStress_ve_vLabel_preReloc, matlset);
-  task->computes(pStress_ve_dLabel_preReloc, matlset);
-  task->computes(pStress_e_vLabel_preReloc,  matlset);
-  task->computes(pStress_e_dLabel_preReloc,  matlset);
-  task->computes(pStress_eLabel_preReloc,    matlset);
+  task->computesVar(pStress_ve_vLabel_preReloc, matlset);
+  task->computesVar(pStress_ve_dLabel_preReloc, matlset);
+  task->computesVar(pStress_e_vLabel_preReloc,  matlset);
+  task->computesVar(pStress_e_dLabel_preReloc,  matlset);
+  task->computesVar(pStress_eLabel_preReloc,    matlset);
 
-  task->requires(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStress_e_vLabel,  matlset, gnone);
-  task->requires(Task::OldDW, pStress_e_dLabel,  matlset, gnone);
-  task->requires(Task::OldDW, pStress_eLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, pStress_e_vLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pStress_e_dLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pStress_eLabel,    matlset, gnone);
 }
 
 void 

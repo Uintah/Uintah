@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -80,8 +80,8 @@ void Benchmark::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("Benchmark::initialize",
                      this, &Benchmark::initialize);
                      
-  task->computes(phi_label);
-  task->computes(residual_label);
+  task->computesVar(phi_label);
+  task->computesVar(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -98,8 +98,8 @@ void Benchmark::scheduleComputeStableTimeStep(const LevelP& level,
   Task* task = scinew Task("Benchmark::computeStableTimeStep",
                      this, &Benchmark::computeStableTimeStep);
                      
-  task->requires(Task::NewDW, residual_label);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->requiresVar(Task::NewDW, residual_label);
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -111,9 +111,9 @@ Benchmark::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Benchmark::timeAdvance",
                      this, &Benchmark::timeAdvance);
                      
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
+  task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computesVar(phi_label);
+  task->computesVar(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________

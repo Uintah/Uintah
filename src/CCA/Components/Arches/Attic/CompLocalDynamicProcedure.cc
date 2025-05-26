@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -172,7 +172,7 @@ CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched,
                           &CompLocalDynamicProcedure::initializeSmagCoeff,
                           timelabels);
 
-  tsk->computes(d_lab->d_CsLabel);
+  tsk->computesVar(d_lab->d_CsLabel);
   sched->addTask(tsk, patches, matls);
 }
 
@@ -198,55 +198,55 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                             &CompLocalDynamicProcedure::reComputeTurbSubmodel,
                             timelabels);
     // Requires
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
 
     if (d_dynScalarModel) {
       if (d_calcScalar){
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,     gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,     gac, 1);
       }
       if (d_calcEnthalpy){
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,   gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpySPLabel,   gac, 1);
       }
       if (d_calcReactingScalar){
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
       }
     }
 
     int mmWallID = d_boundaryCondition->getMMWallId();
     if (mmWallID > 0){
-      tsk->requires(Task::NewDW, timelabels->ref_density);
+      tsk->requiresVar(Task::NewDW, timelabels->ref_density);
     }
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_filterRhoULabel);
-    tsk->computes(d_lab->d_filterRhoVLabel);
-    tsk->computes(d_lab->d_filterRhoWLabel);
-    tsk->computes(d_lab->d_filterRhoLabel);
+    tsk->computesVar(d_lab->d_filterRhoULabel);
+    tsk->computesVar(d_lab->d_filterRhoVLabel);
+    tsk->computesVar(d_lab->d_filterRhoWLabel);
+    tsk->computesVar(d_lab->d_filterRhoLabel);
     if (d_dynScalarModel) {
       if (d_calcScalar)
-        tsk->computes(d_lab->d_filterRhoFLabel);
+        tsk->computesVar(d_lab->d_filterRhoFLabel);
       if (d_calcEnthalpy)
-        tsk->computes(d_lab->d_filterRhoELabel);
+        tsk->computesVar(d_lab->d_filterRhoELabel);
       if (d_calcReactingScalar)
-        tsk->computes(d_lab->d_filterRhoRFLabel);
+        tsk->computesVar(d_lab->d_filterRhoRFLabel);
     }
   }
   else {
-    tsk->modifies(d_lab->d_filterRhoULabel);
-    tsk->modifies(d_lab->d_filterRhoVLabel);
-    tsk->modifies(d_lab->d_filterRhoWLabel);
-    tsk->modifies(d_lab->d_filterRhoLabel);
+    tsk->modifiesVar(d_lab->d_filterRhoULabel);
+    tsk->modifiesVar(d_lab->d_filterRhoVLabel);
+    tsk->modifiesVar(d_lab->d_filterRhoWLabel);
+    tsk->modifiesVar(d_lab->d_filterRhoLabel);
     if (d_dynScalarModel) {
       if (d_calcScalar)
-        tsk->modifies(d_lab->d_filterRhoFLabel);
+        tsk->modifiesVar(d_lab->d_filterRhoFLabel);
       if (d_calcEnthalpy)
-        tsk->modifies(d_lab->d_filterRhoELabel);
+        tsk->modifiesVar(d_lab->d_filterRhoELabel);
       if (d_calcReactingScalar)
-        tsk->modifies(d_lab->d_filterRhoRFLabel);
+        tsk->modifiesVar(d_lab->d_filterRhoRFLabel);
     }
   }  
 
@@ -265,77 +265,77 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
       }
     }
         
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_strainTensorCompLabel,
+    tsk->computesVar(d_lab->d_strainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams);
-    tsk->computes(d_lab->d_filterStrainTensorCompLabel,
+    tsk->computesVar(d_lab->d_filterStrainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->computes(d_lab->d_scalarGradientCompLabel,
+        tsk->computesVar(d_lab->d_scalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->computes(d_lab->d_filterScalarGradientCompLabel,
+        tsk->computesVar(d_lab->d_filterScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
       if (d_calcEnthalpy) {
-        tsk->computes(d_lab->d_enthalpyGradientCompLabel,
+        tsk->computesVar(d_lab->d_enthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->computes(d_lab->d_filterEnthalpyGradientCompLabel,
+        tsk->computesVar(d_lab->d_filterEnthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
       if (d_calcReactingScalar) {
-        tsk->computes(d_lab->d_reactScalarGradientCompLabel,
+        tsk->computesVar(d_lab->d_reactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->computes(d_lab->d_filterReactScalarGradientCompLabel,
+        tsk->computesVar(d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
     }  
   }
   else {
-    tsk->modifies(d_lab->d_strainTensorCompLabel,
+    tsk->modifiesVar(d_lab->d_strainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams);
-    tsk->modifies(d_lab->d_filterStrainTensorCompLabel,
+    tsk->modifiesVar(d_lab->d_filterStrainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->modifies(d_lab->d_scalarGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_scalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->modifies(d_lab->d_filterScalarGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_filterScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
       if (d_calcEnthalpy) {
-        tsk->modifies(d_lab->d_enthalpyGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_enthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->modifies(d_lab->d_filterEnthalpyGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_filterEnthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
       if (d_calcReactingScalar) {
-        tsk->modifies(d_lab->d_reactScalarGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_reactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
-        tsk->modifies(d_lab->d_filterReactScalarGradientCompLabel,
+        tsk->modifiesVar(d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
     }  
@@ -358,89 +358,89 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
     
-    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
-    tsk->requires(Task::OldDW, d_lab->d_CsLabel,             gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
+    tsk->requiresVar(Task::OldDW, d_lab->d_CsLabel,             gac, 1);
     
-    tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
+    tsk->requiresVar(Task::NewDW, d_lab->d_strainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_scalarGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterScalarGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterEnthalpyGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterEnthalpyGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_reactScalarGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterReactScalarGradientCompLabel,
+        tsk->requiresVar(Task::NewDW, d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
       }
     }  
     
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_strainMagnitudeLabel);
-    tsk->computes(d_lab->d_strainMagnitudeMLLabel);
-    tsk->computes(d_lab->d_strainMagnitudeMMLabel);
-    tsk->computes(d_lab->d_LalphaLabel);
-    tsk->computes(d_lab->d_alphaalphaLabel);
-    tsk->computes(d_lab->d_cbetaHATalphaLabel);
-    tsk->computes(d_lab->d_LIJCompLabel,
+    tsk->computesVar(d_lab->d_strainMagnitudeLabel);
+    tsk->computesVar(d_lab->d_strainMagnitudeMLLabel);
+    tsk->computesVar(d_lab->d_strainMagnitudeMMLabel);
+    tsk->computesVar(d_lab->d_LalphaLabel);
+    tsk->computesVar(d_lab->d_alphaalphaLabel);
+    tsk->computesVar(d_lab->d_cbetaHATalphaLabel);
+    tsk->computesVar(d_lab->d_LIJCompLabel,
                   d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->computes(d_lab->d_scalarNumeratorLabel);
-        tsk->computes(d_lab->d_scalarDenominatorLabel);
+        tsk->computesVar(d_lab->d_scalarNumeratorLabel);
+        tsk->computesVar(d_lab->d_scalarDenominatorLabel);
       }
       if (d_calcEnthalpy) {
-        tsk->computes(d_lab->d_enthalpyNumeratorLabel);
-        tsk->computes(d_lab->d_enthalpyDenominatorLabel);
+        tsk->computesVar(d_lab->d_enthalpyNumeratorLabel);
+        tsk->computesVar(d_lab->d_enthalpyDenominatorLabel);
       }
       if (d_calcReactingScalar) {
-        tsk->computes(d_lab->d_reactScalarNumeratorLabel);
-        tsk->computes(d_lab->d_reactScalarDenominatorLabel);
+        tsk->computesVar(d_lab->d_reactScalarNumeratorLabel);
+        tsk->computesVar(d_lab->d_reactScalarDenominatorLabel);
       }
     }      
   }
   else {
-    tsk->modifies(d_lab->d_strainMagnitudeLabel);
-    tsk->modifies(d_lab->d_strainMagnitudeMLLabel);
-    tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
-    tsk->modifies(d_lab->d_LalphaLabel);
-    tsk->modifies(d_lab->d_alphaalphaLabel);
-    tsk->modifies(d_lab->d_cbetaHATalphaLabel);
-    tsk->modifies(d_lab->d_LIJCompLabel,
+    tsk->modifiesVar(d_lab->d_strainMagnitudeLabel);
+    tsk->modifiesVar(d_lab->d_strainMagnitudeMLLabel);
+    tsk->modifiesVar(d_lab->d_strainMagnitudeMMLabel);
+    tsk->modifiesVar(d_lab->d_LalphaLabel);
+    tsk->modifiesVar(d_lab->d_alphaalphaLabel);
+    tsk->modifiesVar(d_lab->d_cbetaHATalphaLabel);
+    tsk->modifiesVar(d_lab->d_LIJCompLabel,
                   d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->modifies(d_lab->d_scalarNumeratorLabel);
-        tsk->modifies(d_lab->d_scalarDenominatorLabel);
+        tsk->modifiesVar(d_lab->d_scalarNumeratorLabel);
+        tsk->modifiesVar(d_lab->d_scalarDenominatorLabel);
       }
       if (d_calcEnthalpy) {
-        tsk->modifies(d_lab->d_enthalpyNumeratorLabel);
-        tsk->modifies(d_lab->d_enthalpyDenominatorLabel);
+        tsk->modifiesVar(d_lab->d_enthalpyNumeratorLabel);
+        tsk->modifiesVar(d_lab->d_enthalpyDenominatorLabel);
       }
       if (d_calcReactingScalar) {
-        tsk->modifies(d_lab->d_reactScalarNumeratorLabel);
-        tsk->modifies(d_lab->d_reactScalarDenominatorLabel);
+        tsk->modifiesVar(d_lab->d_reactScalarNumeratorLabel);
+        tsk->modifiesVar(d_lab->d_reactScalarDenominatorLabel);
       }
     }      
   }
@@ -457,86 +457,86 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                             timelabels);
 
     // Requires
-    tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+    tsk->requiresVar( Task::OldDW, d_lab->d_timeStepLabel );
     
     // Assuming one layer of ghost cells
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterRhoLabel, gac, 1);
 
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,  gn,  0);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_LalphaLabel,           gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_alphaalphaLabel,       gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_cbetaHATalphaLabel,    gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
+    tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeLabel,  gn,  0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_LalphaLabel,           gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_alphaalphaLabel,       gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_cbetaHATalphaLabel,    gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_LIJCompLabel,
+    tsk->requiresVar(Task::NewDW, d_lab->d_LIJCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarNumeratorLabel,  gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_scalarDenominatorLabel,gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarNumeratorLabel,  gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_scalarDenominatorLabel,gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyNumeratorLabel,  gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyDenominatorLabel,gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpyNumeratorLabel,  gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_enthalpyDenominatorLabel,gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactScalarNumeratorLabel,  gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_reactScalarDenominatorLabel,gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactScalarNumeratorLabel,  gac, 1);
+        tsk->requiresVar(Task::NewDW, d_lab->d_reactScalarDenominatorLabel,gac, 1);
       }
     }      
 
     // for multimaterial
     if (d_MAlab){
-      tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+      tsk->requiresVar(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
     }
     
     // Computes
-    tsk->modifies(d_lab->d_viscosityCTSLabel);
+    tsk->modifiesVar(d_lab->d_viscosityCTSLabel);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->modifies(d_lab->d_scalarDiffusivityLabel);
+        tsk->modifiesVar(d_lab->d_scalarDiffusivityLabel);
       }
       if (d_calcEnthalpy) {
-        tsk->modifies(d_lab->d_enthalpyDiffusivityLabel);
+        tsk->modifiesVar(d_lab->d_enthalpyDiffusivityLabel);
       }
       if (d_calcReactingScalar) {
-        tsk->modifies(d_lab->d_reactScalarDiffusivityLabel);
+        tsk->modifiesVar(d_lab->d_reactScalarDiffusivityLabel);
       }
     }      
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_CsLabel);
+    tsk->computesVar(d_lab->d_CsLabel);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->computes(d_lab->d_ShFLabel);
+        tsk->computesVar(d_lab->d_ShFLabel);
       }
       if (d_calcEnthalpy) {
-        tsk->computes(d_lab->d_ShELabel);
+        tsk->computesVar(d_lab->d_ShELabel);
       }
       if (d_calcReactingScalar) {
-        tsk->computes(d_lab->d_ShRFLabel);
+        tsk->computesVar(d_lab->d_ShRFLabel);
       }
     }      
   }
   else {
-    tsk->modifies(d_lab->d_CsLabel);
+    tsk->modifiesVar(d_lab->d_CsLabel);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->modifies(d_lab->d_ShFLabel);
+        tsk->modifiesVar(d_lab->d_ShFLabel);
       }
       if (d_calcEnthalpy) {
-        tsk->modifies(d_lab->d_ShELabel);
+        tsk->modifiesVar(d_lab->d_ShELabel);
       }
       if (d_calcReactingScalar) {
-        tsk->modifies(d_lab->d_ShRFLabel);
+        tsk->modifiesVar(d_lab->d_ShRFLabel);
       }
     }      
   }
@@ -2857,14 +2857,14 @@ CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-     tsk->computes(d_lab->d_scalarVarSPLabel);
+     tsk->computesVar(d_lab->d_scalarVarSPLabel);
   }else{
-     tsk->modifies(d_lab->d_scalarVarSPLabel);
+     tsk->modifiesVar(d_lab->d_scalarVarSPLabel);
   }
   sched->addTask(tsk, patches, matls);
 }
@@ -3044,19 +3044,19 @@ CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   // assuming scalar dissipation is computed before turbulent viscosity calculation
   Ghost::GhostType  gac = Ghost::AroundCells;
    
-  tsk->requires(Task::NewDW,   d_lab->d_scalarSPLabel,        gac, 1);
+  tsk->requiresVar(Task::NewDW,   d_lab->d_scalarSPLabel,        gac, 1);
   if (d_dynScalarModel)
-    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 1);
   else
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 1);
 
-  tsk->requires(Task::NewDW,  d_lab->d_cellTypeLabel,          gac, 1);
+  tsk->requiresVar(Task::NewDW,  d_lab->d_cellTypeLabel,          gac, 1);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-     tsk->computes(d_lab->d_scalarDissSPLabel);
+     tsk->computesVar(d_lab->d_scalarDissSPLabel);
   else
-     tsk->modifies(d_lab->d_scalarDissSPLabel);
+     tsk->modifiesVar(d_lab->d_scalarDissSPLabel);
 
   sched->addTask(tsk, patches, matls);
 }

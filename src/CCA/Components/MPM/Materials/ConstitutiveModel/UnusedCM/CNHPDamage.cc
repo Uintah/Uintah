@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -119,7 +119,7 @@ CNHPDamage::addInitialComputesAndRequires(Task* task,
   CNHDamage::addInitialComputesAndRequires(task, matl, patches);
 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
 }
 
 void 
@@ -149,8 +149,8 @@ CNHPDamage::addComputesAndRequires(Task* task,
 
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
-  task->computes(pPlasticStrainLabel_preReloc,     matlset);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+  task->computesVar(pPlasticStrainLabel_preReloc,     matlset);
 }
 
 void 
@@ -608,9 +608,9 @@ CNHPDamage::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
   if(SchedParent){
-    task->requires(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
+    task->requiresVar(Task::ParentOldDW, pPlasticStrainLabel, matlset, gnone);
   }else{
-    task->requires(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
+    task->requiresVar(Task::OldDW, pPlasticStrainLabel, matlset, gnone);
   }
 }
 
@@ -975,7 +975,7 @@ CNHPDamage::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
+  task->requiresVar(Task::NewDW, pPlasticStrainLabel_preReloc, matlset, 
                  Ghost::None);
 }
 

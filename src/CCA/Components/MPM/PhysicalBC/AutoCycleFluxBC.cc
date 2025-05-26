@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -77,8 +77,8 @@ void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, Sched
     // associated with each load curve.
     Task* t = scinew Task("AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve", this,
                           &AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve);
-    t->requires(Task::NewDW, d_mpm_lb->pLoadCurveIDLabel, Ghost::None);
-    t->computes(d_mpm_lb->materialPointsPerLoadCurveLabel, d_load_curve_index, Task::OutOfDomain);
+    t->requiresVar(Task::NewDW, d_mpm_lb->pLoadCurveIDLabel, Ghost::None);
+    t->computesVar(d_mpm_lb->materialPointsPerLoadCurveLabel, d_load_curve_index, Task::OutOfDomain);
     sched->addTask(t, patches, d_materialManager->allMaterials( "MPM" ));
 
 #if 1
@@ -86,7 +86,7 @@ void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, Sched
     // each particle based on the pressure BCs
     t = scinew Task("AutoCycleFluxBC::initializeScalarFluxBC", this,
                     &AutoCycleFluxBC::initializeScalarFluxBC);
-    t->requires(Task::NewDW, d_mpm_lb->materialPointsPerLoadCurveLabel,
+    t->requiresVar(Task::NewDW, d_mpm_lb->materialPointsPerLoadCurveLabel,
                 d_load_curve_index, Task::OutOfDomain, Ghost::None);
     sched->addTask(t, patches, d_materialManager->allMaterials( "MPM" ));
 #endif
@@ -145,33 +145,33 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   Task* t=scinew Task("AutoCycleFluxBC::applyExternalScalarFlux", this,
                       &AutoCycleFluxBC::applyExternalScalarFlux);
 
-  t->requires(Task::OldDW, d_mpm_lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, d_mpm_lb->simulationTimeLabel);
 
-  t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
+  t->requiresVar(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   if(d_mpm_flags->d_doScalarDiffusion){
     // JBH -- Fixme -- TODO -- Fold into diffusion sublabel?
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->pArea,            Ghost::None);
+    t->requiresVar(Task::OldDW, d_mpm_lb->diffusion->pArea,            Ghost::None);
   }
-  t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
+  t->requiresVar(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   if(d_mpm_flags->d_autoCycleUseMinMax){
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->rMaxConcentration,    gnone);
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->rMinConcentration,    gnone);
+    t->requiresVar(Task::OldDW, d_mpm_lb->diffusion->rMaxConcentration,    gnone);
+    t->requiresVar(Task::OldDW, d_mpm_lb->diffusion->rMinConcentration,    gnone);
   }else{
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->rTotalConcentration,  gnone);
+    t->requiresVar(Task::OldDW, d_mpm_lb->diffusion->rTotalConcentration,  gnone);
     // JBH -- FIXME -- TODO  Fold into diffusion sublabel?
-    t->requires(Task::OldDW, d_mpm_lb->partCountLabel,        Ghost::None);
+    t->requiresVar(Task::OldDW, d_mpm_lb->partCountLabel,        Ghost::None);
   }
 
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
-    t->requires(Task::OldDW, d_mpm_lb->diffusion->pConcentration,       gnone);
+    t->requiresVar(Task::OldDW, d_mpm_lb->diffusion->pConcentration,       gnone);
   }
 #endif
 
-  t->computes(d_mpm_lb->diffusion->pExternalScalarFlux_preReloc);
+  t->computesVar(d_mpm_lb->diffusion->pExternalScalarFlux_preReloc);
 
   if (d_mpm_flags->d_useLoadCurves) {
-    t->requires(Task::OldDW, d_mpm_lb->pLoadCurveIDLabel,     Ghost::None);
+    t->requiresVar(Task::OldDW, d_mpm_lb->pLoadCurveIDLabel,     Ghost::None);
   }
 
   sched->addTask(t, patches, matls);

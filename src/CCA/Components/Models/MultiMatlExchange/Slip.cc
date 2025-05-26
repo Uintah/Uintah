@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -146,9 +146,9 @@ void SlipExch::addExchangeModelRequires ( Task* t,
                                           const MaterialSubset * mpm_matls)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1 );
-  t->requires( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1 );
-  t->requires( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1 );
+  t->requiresVar( Task::NewDW, d_meanFreePathLabel,   ice_matls, gac, 1 );
+  t->requiresVar( Task::NewDW, d_isSurfaceCellLabel,  zeroMatl,  gac, 1 );
+  t->requiresVar( Task::NewDW, d_surfaceNormLabel,    mpm_matls, gac, 1 );
 }
 
 
@@ -170,9 +170,9 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   printSchedule( patches, dbgExch, "SlipExch::sched_AddExch_VelFC" );
 
   if(recursion) {
-    t->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
+    t->requiresVar(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
   } else {
-    t->requires(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
+    t->requiresVar(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
   }
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -192,28 +192,28 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->rho_CCLabel,     gac,   1);
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
+  t->requiresVar( pNewDW,      Ilb->rho_CCLabel,     gac,   1);
+  t->requiresVar( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
+  t->requiresVar( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
+  t->requiresVar( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
+  t->requiresVar( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
+  t->requiresVar( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
 
-  t->requires( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1 );
-  t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1 );
-  t->requires( pNewDW,      d_isSurfaceCellLabel,  d_zero_matl,gac, 1 );
-  t->requires( pOldDW,      Ilb->vel_CCLabel,      ice_matls,  gac, 1 );
-  t->requires( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1 );
+  t->requiresVar( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1 );
+  t->requiresVar( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1 );
+  t->requiresVar( pNewDW,      d_isSurfaceCellLabel,  d_zero_matl,gac, 1 );
+  t->requiresVar( pOldDW,      Ilb->vel_CCLabel,      ice_matls,  gac, 1 );
+  t->requiresVar( pNewDW,      Ilb->vel_CCLabel,      mpm_matls,  gac, 1 );
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
                              BC_globalVars, recursion);
 
-  t->computes( Ilb->sp_volX_FCLabel );
-  t->computes( Ilb->sp_volY_FCLabel );
-  t->computes( Ilb->sp_volZ_FCLabel );
-  t->computes( Ilb->uvel_FCMELabel );
-  t->computes( Ilb->vvel_FCMELabel );
-  t->computes( Ilb->wvel_FCMELabel );
+  t->computesVar( Ilb->sp_volX_FCLabel );
+  t->computesVar( Ilb->sp_volY_FCLabel );
+  t->computesVar( Ilb->sp_volZ_FCLabel );
+  t->computesVar( Ilb->uvel_FCMELabel );
+  t->computesVar( Ilb->vvel_FCMELabel );
+  t->computesVar( Ilb->wvel_FCMELabel );
 
   sched->addTask(t, patches, all_matls);
 }
@@ -702,30 +702,30 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  t->requires( Task::OldDW,  Ilb->delTLabel,getLevel(patches));
-  t->requires( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
-  t->requires( Task::NewDW,  d_isSurfaceCellLabel,  d_zero_matl, gn, 0 );
+  t->requiresVar( Task::OldDW,  Ilb->delTLabel,getLevel(patches));
+  t->requiresVar( Task::NewDW,  d_surfaceNormLabel,    mpm_matls,   gn, 0 );
+  t->requiresVar( Task::NewDW,  d_isSurfaceCellLabel,  d_zero_matl, gn, 0 );
                                 // I C E
-  t->requires( Task::OldDW,  Ilb->temp_CCLabel,       ice_matls, gn );
-  t->requires( Task::NewDW,  Ilb->specific_heatLabel, ice_matls, gn );
-  t->requires( Task::NewDW,  Ilb->gammaLabel,         ice_matls, gn );
-  t->requires( Task::NewDW,  d_meanFreePathLabel,     ice_matls, gn );
+  t->requiresVar( Task::OldDW,  Ilb->temp_CCLabel,       ice_matls, gn );
+  t->requiresVar( Task::NewDW,  Ilb->specific_heatLabel, ice_matls, gn );
+  t->requiresVar( Task::NewDW,  Ilb->gammaLabel,         ice_matls, gn );
+  t->requiresVar( Task::NewDW,  d_meanFreePathLabel,     ice_matls, gn );
                                 // A L L  M A T L S
-  t->requires( Task::NewDW,  Ilb->mass_L_CCLabel,    gn );
-  t->requires( Task::NewDW,  Ilb->mom_L_CCLabel,     gn );
-  t->requires( Task::NewDW,  Ilb->int_eng_L_CCLabel, gn );
-  t->requires( Task::NewDW,  Ilb->sp_vol_CCLabel,    gn );
-  t->requires( Task::NewDW,  Ilb->vol_frac_CCLabel,  gn );
+  t->requiresVar( Task::NewDW,  Ilb->mass_L_CCLabel,    gn );
+  t->requiresVar( Task::NewDW,  Ilb->mom_L_CCLabel,     gn );
+  t->requiresVar( Task::NewDW,  Ilb->int_eng_L_CCLabel, gn );
+  t->requiresVar( Task::NewDW,  Ilb->sp_vol_CCLabel,    gn );
+  t->requiresVar( Task::NewDW,  Ilb->vol_frac_CCLabel,  gn );
 
   computesRequires_CustomBCs(t, "CC_Exchange", Ilb, ice_matls, BC_globalVars);
 
-  t->computes( Ilb->Tdot_CCLabel );
-  t->computes( Ilb->mom_L_ME_CCLabel );
-  t->computes( Ilb->eng_L_ME_CCLabel );
-  t->computes( d_vel_CCTransLabel );
+  t->computesVar( Ilb->Tdot_CCLabel );
+  t->computesVar( Ilb->mom_L_ME_CCLabel );
+  t->computesVar( Ilb->eng_L_ME_CCLabel );
+  t->computesVar( d_vel_CCTransLabel );
 
-  t->modifies( Ilb->temp_CCLabel, mpm_matls );
-  t->modifies( Ilb->vel_CCLabel,  mpm_matls );
+  t->modifiesVar( Ilb->temp_CCLabel, mpm_matls );
+  t->modifiesVar( Ilb->vel_CCLabel,  mpm_matls );
 
   sched->addTask(t, patches, all_matls);
 }
@@ -1005,12 +1005,12 @@ void SlipExch::schedComputeMeanFreePath(SchedulerP       & sched,
   printSchedule(patches, dbgExch, tName);
 
   Ghost::GhostType  gn = Ghost::None;
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,       gn);
-  t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,     gn);
-  t->requires(Task::NewDW, Ilb->gammaLabel,         gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel, gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,       gn);
+  t->requiresVar(Task::OldDW, Ilb->sp_vol_CCLabel,     gn);
+  t->requiresVar(Task::NewDW, Ilb->gammaLabel,         gn);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel, gn);
 
-  t->computes(d_meanFreePathLabel);
+  t->computesVar(d_meanFreePathLabel);
 
   const MaterialSet* ice_matls = d_matlManager->allMaterials( "ICE" );
   sched->addTask(t, patches, ice_matls);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -392,11 +392,8 @@ private:
 
 #if defined(KOKKOS_USING_GPU)
 
-  using TaskPool = Lockfree::Pool< DetailedTask *
-                                 , uint64_t
-                                 , 1
-                                 , std::allocator
-                                 >;
+  // Use Lockfree::Pool with the template defaults.
+  using TaskPool = Lockfree::Pool< DetailedTask * >;
 
   TaskPool             device_validateRequiresAndModifiesCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};

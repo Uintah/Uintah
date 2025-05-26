@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -215,11 +215,11 @@ ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();  <- Unused
-  task->requires(Task::OldDW,pStatedataLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requiresVar(Task::OldDW,pStatedataLabel, Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requiresVar(Task::OldDW,lb->pStressLabel, Ghost::None);
   if (d_doCrack)
-    task->requires(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
+    task->requiresVar(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
 }
 
 
@@ -972,9 +972,9 @@ ViscoScramForBinder::addInitialComputesAndRequires(Task* task,
                                                const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pStatedataLabel,    matlset);
+  task->computesVar(pStatedataLabel,    matlset);
   if (d_doCrack) 
-    task->computes(lb->pCrackRadiusLabel,matlset);
+    task->computesVar(lb->pCrackRadiusLabel,matlset);
 }
 
 void 
@@ -984,34 +984,34 @@ ViscoScramForBinder::addComputesAndRequires(Task* task,
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, pStatedataLabel,             matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pStatedataLabel,             matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
 
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
+  task->requiresVar(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
 
 #ifdef FRACTURE
-  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
+  task->requiresVar(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
+  task->requiresVar(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
 #endif
 
-  task->computes(lb->pStressLabel_preReloc,                matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
-  task->computes(pStatedataLabel_preReloc,                 matlset);
-  task->computes(lb->pVolumeDeformedLabel,                 matlset);
+  task->computesVar(lb->pStressLabel_preReloc,                matlset);
+  task->computesVar(lb->pDeformationMeasureLabel_preReloc,    matlset);
+  task->computesVar(pStatedataLabel_preReloc,                 matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,                 matlset);
 
   if (d_doCrack) {
-    task->requires(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);
-    task->computes(lb->pCrackRadiusLabel_preReloc,     matlset);
+    task->requiresVar(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);
+    task->computesVar(lb->pCrackRadiusLabel_preReloc,     matlset);
   }
 }
 

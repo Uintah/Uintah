@@ -386,7 +386,7 @@ def generateGS() :
                 os.symlink( inputs, "inputs" )
 
 
-            MALLOC_FLAG = ""
+            MALLOC_FLAG = None
 
             if debug_build :
                 if no_sci_malloc :
@@ -412,21 +412,28 @@ def generateGS() :
                 continue;
 
             #__________________________________
-            # adjustments for openmpi and mvapich
-            # openmpi
-            rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
-            if rc == 0:
-              MPIHEAD="%s %s " % (MPIRUN, MALLOC_FLAG)
+            MPIHEAD="%s -n" % MPIRUN       #default
 
-            # mvapich
-            rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
-            if rc == 0:
-              MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN
+            # pass in environmental variables to mpirun
+            if MALLOC_FLAG is not None:
+
+              if environ['OS'] == "Linux":
+                MPIHEAD="%s %s -n" % (MPIRUN, MALLOC_FLAG)
+
+                                             # openmpi
+              rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+              if rc == 0:
+                MPIHEAD="%s %s -n" % (MPIRUN, MALLOC_FLAG)
+
+                                             #  mvapich and mpich
+              rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+              if rc == 0:
+                MPIHEAD="%s -genvlist MALLOC_STATS -n" % MPIRUN
 
             #__________________________________
             #  Run sus and check return codes
             np = int( getMPISize( test ) )
-            my_mpirun = "%s -n %s  " % (MPIHEAD, np)
+            my_mpirun = "%s %s  " % (MPIHEAD, np)
 
             command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " >> sus_log.txt 2>&1 "
 

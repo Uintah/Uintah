@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -195,11 +195,11 @@ CNHDamage::addInitialComputesAndRequires(Task* task,
                                          const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(bElBarLabel,         matlset);
-  task->computes(pFailureStrainLabel, matlset);
-  task->computes(pLocalizedLabel,     matlset);
+  task->computesVar(bElBarLabel,         matlset);
+  task->computesVar(pFailureStrainLabel, matlset);
+  task->computesVar(pLocalizedLabel,     matlset);
   if (flag->d_integrator != MPMFlags::Implicit) {
-    task->computes(pDeformRateLabel,  matlset);
+    task->computesVar(pDeformRateLabel,  matlset);
   }
 }
 
@@ -280,21 +280,21 @@ CNHDamage::addComputesAndRequires(Task* task,
     addSharedCRForImplicit(task, matlset, patches);
   } else {
     addSharedCRForExplicit(task, matlset, patches);
-    task->requires(Task::OldDW, lb->pErosionLabel,     matlset, gnone);
-    task->computes(pDeformRateLabel_preReloc,          matlset);
+    task->requiresVar(Task::OldDW, lb->pErosionLabel,     matlset, gnone);
+    task->computesVar(pDeformRateLabel_preReloc,          matlset);
   }
 
   //for pParticleID
-  task->requires(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
-  task->requires(Task::OldDW, pFailureStrainLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pLocalizedLabel,       matlset, gnone);
+  task->requiresVar(Task::OldDW, bElBarLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, pFailureStrainLabel,   matlset, gnone);
+  task->requiresVar(Task::OldDW, pLocalizedLabel,       matlset, gnone);
 
-  task->computes(bElBarLabel_preReloc,               matlset);
-  task->computes(pFailureStrainLabel_preReloc,       matlset);
-  task->computes(pLocalizedLabel_preReloc,           matlset);
+  task->computesVar(bElBarLabel_preReloc,               matlset);
+  task->computesVar(pFailureStrainLabel_preReloc,       matlset);
+  task->computesVar(pLocalizedLabel_preReloc,           matlset);
 }
 
 void 
@@ -807,7 +807,7 @@ CNHDamage::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, patches, recurse,SchedParent);
 
   // Local stuff
-  task->requires(Task::ParentOldDW, bElBarLabel, matlset, Ghost::None);
+  task->requiresVar(Task::ParentOldDW, bElBarLabel, matlset, Ghost::None);
 }
 
 void 
@@ -1098,7 +1098,7 @@ CNHDamage::addRequiresDamageParameter(Task* task,
                                       const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
 }
 
 void 
@@ -1128,14 +1128,14 @@ CNHDamage::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, bElBarLabel_preReloc,         matlset, 
+  task->requiresVar(Task::NewDW, bElBarLabel_preReloc,         matlset, 
                  Ghost::None);
-  task->requires(Task::NewDW, pFailureStrainLabel_preReloc, matlset, 
+  task->requiresVar(Task::NewDW, pFailureStrainLabel_preReloc, matlset, 
                  Ghost::None);
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,     matlset, 
+  task->requiresVar(Task::NewDW, pLocalizedLabel_preReloc,     matlset, 
                  Ghost::None);
   if (flag->d_integrator != MPMFlags::Implicit) {
-    task->requires(Task::NewDW, pDeformRateLabel_preReloc,  matlset, 
+    task->requiresVar(Task::NewDW, pDeformRateLabel_preReloc,  matlset, 
                    Ghost::None);
   }
 }

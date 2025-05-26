@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -183,8 +183,8 @@ void particleExtract::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("particleExtract::initialize",
                   this, &particleExtract::initialize);
 
-  t->computes( m_lb->lastWriteTimeLabel );
-  t->computes( m_lb->filePointerLabel ) ;
+  t->computesVar( m_lb->lastWriteTimeLabel );
+  t->computesVar( m_lb->filePointerLabel ) ;
   sched->addTask( t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
@@ -260,8 +260,8 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   // do not checkpoint it.  Put it here so it will be registered during a restart
   sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
 
-  t->requires( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
-  t->computes( m_lb->filePointerLabel_preReloc  );
+  t->requiresVar( Task::OldDW,  m_lb->filePointerLabel, m_gn, 0 );
+  t->computesVar( m_lb->filePointerLabel_preReloc  );
 
   sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
@@ -332,14 +332,14 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
       throw InternalError("particleExtract: scheduleDoAnalysis label not found: "
                           + name , __FILE__, __LINE__);
     }
-    t->requires(Task::NewDW,d_varLabels[i], m_gn, 0);
+    t->requiresVar(Task::NewDW,d_varLabels[i], m_gn, 0);
   }
 
-  t->requires( Task::NewDW,  M_lb->pXLabel,           m_gn );
-  t->requires( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
-  t->requires( Task::NewDW,  M_lb->pColorLabel,       m_gn );
-  t->requires( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
-  t->modifies( m_lb->filePointerLabel );
+  t->requiresVar( Task::NewDW,  M_lb->pXLabel,           m_gn );
+  t->requiresVar( Task::NewDW,  M_lb->pParticleIDLabel,  m_gn );
+  t->requiresVar( Task::NewDW,  M_lb->pColorLabel,       m_gn );
+  t->requiresVar( Task::NewDW,  m_lb->filePointerLabel,  m_gn );
+  t->modifiesVar( m_lb->filePointerLabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }

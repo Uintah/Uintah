@@ -33,7 +33,7 @@ void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
    t->requires(Task::NewDW, Ilb->wvel_FCMELabel, Ghost::None);
    t->requires(Task::NewDW, Mlb->gVelocityLabel, Ghost::None);
 
-   t->computes(Mlb->gMomExedVelocityLabel);
+   t->computesVar(Mlb->gMomExedVelocityLabel);
 
    sched->addTask(t, patches, mpm_matls);
 }
@@ -333,10 +333,10 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gac,1);
   t->requires(Task::OldDW, Mlb->heatFlux_CCLabel,       gac,1);
                                                                                 
-  t->modifies(Mlb->gVelocityStarLabel, mss);
-  t->modifies(Mlb->gAccelerationLabel, mss);
-  t->computes(Mlb->dTdt_NCLabel);
-  t->computes(Mlb->heatFlux_CCLabel);
+  t->modifiesVar(Mlb->gVelocityStarLabel, mss);
+  t->modifiesVar(Mlb->gAccelerationLabel, mss);
+  t->computesVar(Mlb->dTdt_NCLabel);
+  t->computesVar(Mlb->heatFlux_CCLabel);
                                                                                 
   sched->addTask(t, patches, mpm_matls);
 }
@@ -462,7 +462,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to

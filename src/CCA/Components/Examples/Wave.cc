@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -127,8 +127,8 @@ void Wave::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
                            this, &Wave::initialize);
-  task->computes(phi_label);
-  task->computes(pi_label);
+  task->computesVar(phi_label);
+  task->computesVar(pi_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -145,7 +145,7 @@ void Wave::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Wave::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 //______________________________________________________________________
@@ -156,26 +156,26 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(integration == "Euler"){
     Task* task = scinew Task("timeAdvance",
                              this, &Wave::timeAdvanceEuler);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->requiresVar(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       addRefineDependencies(task, phi_label, true, true);
     }
-    //task->requires(Task::OldDW, getDelTLabel());
-    task->computes(phi_label);
-    task->computes(pi_label);
+    //task->requiresVar(Task::OldDW, getDelTLabel());
+    task->computesVar(phi_label);
+    task->computesVar(pi_label);
     sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
                              this, &Wave::setupRK4);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->requiresVar(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       // TODO, fix calls to addRefineDependencies and refineFaces
       addRefineDependencies(task, phi_label, true, true);
     }
-    task->computes(phi_label);
-    task->computes(pi_label);
+    task->computesVar(phi_label);
+    task->computesVar(pi_label);
     sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
     for(int i=0;i<4;i++){
@@ -183,19 +183,19 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       Task* task = scinew Task("timeAdvance",
                                this, &Wave::timeAdvanceRK4, s);
                                
-      task->requires(Task::OldDW, getDelTLabel(), level.get_rep());
-      task->requires(Task::OldDW, phi_label,      Ghost::None);
-      task->requires(Task::OldDW, pi_label,       Ghost::None);
-      task->requires(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
-      task->requires(s->cur_dw, s->curpi_label,   Ghost::None, 0);
+      task->requiresVar(Task::OldDW, getDelTLabel(), level.get_rep());
+      task->requiresVar(Task::OldDW, phi_label,      Ghost::None);
+      task->requiresVar(Task::OldDW, pi_label,       Ghost::None);
+      task->requiresVar(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
+      task->requiresVar(s->cur_dw, s->curpi_label,   Ghost::None, 0);
 
       if(level->getIndex()>0){        // REFINE 
         addRefineDependencies(task, s->curphi_label, true, true);
       }
-      task->computes(s->newphi_label);
-      task->computes(s->newpi_label);
-      task->modifies(phi_label);
-      task->modifies(pi_label);
+      task->computesVar(s->newphi_label);
+      task->computesVar(s->newpi_label);
+      task->modifiesVar(phi_label);
+      task->modifiesVar(pi_label);
       sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
     }
   } else {

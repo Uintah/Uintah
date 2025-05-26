@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -266,7 +266,7 @@ void PostProcessUda::sched_readDataArchive( const LevelP & level,
   Task* t = scinew Task("PostProcessUda::readDataArchive", this,
                         &PostProcessUda::readDataArchive);
 
-  t->requires(Task::OldDW, getTimeStepLabel());
+  t->requiresVar(Task::OldDW, getTimeStepLabel());
 
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);
@@ -305,7 +305,7 @@ void PostProcessUda::sched_readDataArchive( const LevelP & level,
     // schedule the computes for each patch that
     // this processor owns. The DataArchiver::output task
     // will then pick and choose which variables to write to the new uda based on the input file
-    t->computes(label, patches, matlSet->getUnion());
+    t->computesVar(label, patches, matlSet->getUnion());
     delete matlSet;
 
   }  // loop savedLabels
@@ -371,7 +371,7 @@ void PostProcessUda::scheduleComputeStableTimeStep(const LevelP& level,
   Task* t = scinew Task("PostProcessUda::computeDelT",
                   this, &PostProcessUda::computeDelT);
 
-  t->computes( getDelTLabel(), level.get_rep() );
+  t->computesVar( getDelTLabel(), level.get_rep() );
 
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = m_loadBalancer->getPerProcessorPatchSet(grid);

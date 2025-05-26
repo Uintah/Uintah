@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2024 The University of Utah
+ * Copyright (c) 2013-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,8 +60,8 @@ namespace Uintah{
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("initialize particles",
                                              this, &ArchesParticlesHelper::initialize);
-    task->computes(pPosLabel_);
-    task->computes(pIDLabel_);
+    task->computesVar(pPosLabel_);
+    task->computesVar(pIDLabel_);
     sched->addTask(task, level->eachPatch(), materials_);    
     parse_boundary_conditions(level, sched);
 

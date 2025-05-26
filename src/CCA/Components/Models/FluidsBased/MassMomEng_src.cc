@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -214,27 +214,27 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("MassMomEng_src::computeModelSources",this,
                         &MassMomEng_src::computeModelSources);
-  t->modifies( Ilb->modelMass_srcLabel );
-  t->modifies( Ilb->modelMom_srcLabel );
-  t->modifies( Ilb->modelEng_srcLabel );
-  t->modifies( Ilb->modelVol_srcLabel );
+  t->modifiesVar( Ilb->modelMass_srcLabel );
+  t->modifiesVar( Ilb->modelMom_srcLabel );
+  t->modifiesVar( Ilb->modelEng_srcLabel );
+  t->modifiesVar( Ilb->modelVol_srcLabel );
 
   Ghost::GhostType  gn  = Ghost::None;
-  t->requires( Task::OldDW, Ilb->simulationTimeLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep() );
+  t->requiresVar( Task::OldDW, Ilb->simulationTimeLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel,        level.get_rep() );
 
-  t->requires( Task::OldDW, Ilb->rho_CCLabel,        gn );
-  t->requires( Task::OldDW, Ilb->temp_CCLabel,       gn );
-  t->requires( Task::OldDW, Ilb->vel_CCLabel,        gn );
-  t->requires( Task::OldDW, Ilb->specific_heatLabel, gn );
+  t->requiresVar( Task::OldDW, Ilb->rho_CCLabel,        gn );
+  t->requiresVar( Task::OldDW, Ilb->temp_CCLabel,       gn );
+  t->requiresVar( Task::OldDW, Ilb->vel_CCLabel,        gn );
+  t->requiresVar( Task::OldDW, Ilb->specific_heatLabel, gn );
 
-  t->requires( Task::NewDW, Ilb->specific_heatLabel, gn );
-  t->requires( Task::NewDW, Ilb->sp_vol_CCLabel,     gn );
-  t->requires( Task::NewDW, Ilb->vol_frac_CCLabel,   gn );
+  t->requiresVar( Task::NewDW, Ilb->specific_heatLabel, gn );
+  t->requiresVar( Task::NewDW, Ilb->sp_vol_CCLabel,     gn );
+  t->requiresVar( Task::NewDW, Ilb->vol_frac_CCLabel,   gn );
 
-  t->computes( MassMomEng_src::totalMass_srcLabel );
-  t->computes( MassMomEng_src::totalMom_srcLabel );
-  t->computes( MassMomEng_src::totalEng_srcLabel );
+  t->computesVar( MassMomEng_src::totalMass_srcLabel );
+  t->computesVar( MassMomEng_src::totalMom_srcLabel );
+  t->computesVar( MassMomEng_src::totalEng_srcLabel );
 
 
   sched->addTask(t, level->eachPatch(), d_matlSet );

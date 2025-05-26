@@ -151,11 +151,11 @@ namespace Uintah{
 
     if ( time_substep == 0 ) {
       
-      tsk->computes( _prop_label ); 
+      tsk->computesVar( _prop_label ); 
 
     } else {
 
-      tsk->modifies( _prop_label ); 
+      tsk->modifiesVar( _prop_label ); 
 
     }
 
@@ -235,7 +235,7 @@ namespace Uintah{
     std::string taskname = "CLASSNAME::initialize"; 
 
     Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
-    tsk->computes(_prop_label); 
+    tsk->computesVar(_prop_label); 
 
     sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
   }

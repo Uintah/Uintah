@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,8 +67,8 @@ NullDamage::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
 
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matls, gnone);
-  task->computes( d_lb->pLocalizedMPMLabel_preReloc,      matls);
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel,  matls, gnone);
+  task->computesVar( d_lb->pLocalizedMPMLabel_preReloc,      matls);
 }
 //______________________________________________________________________
 //

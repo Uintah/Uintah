@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -422,7 +422,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
   if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
   }
 }
 

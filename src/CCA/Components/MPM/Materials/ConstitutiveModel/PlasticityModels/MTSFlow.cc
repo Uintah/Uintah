@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -175,7 +175,7 @@ MTSFlow::addInitialComputesAndRequires(Task* ,
                                           const PatchSet*)
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  //task->computes(pMTSLabel, matlset);
+  //task->computesVar(pMTSLabel, matlset);
 }
 
 void 
@@ -184,8 +184,8 @@ MTSFlow::addComputesAndRequires(Task* ,
                                    const PatchSet*)
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  //task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
-  //task->computes(pMTSLabel_preReloc, matlset);
+  //task->requiresVar(Task::OldDW, pMTSLabel, matlset,Ghost::None);
+  //task->computesVar(pMTSLabel_preReloc, matlset);
 }
 
 void 
@@ -196,7 +196,7 @@ MTSFlow::addComputesAndRequires(Task* ,
                                    bool )
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  //task->requires(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
+  //task->requiresVar(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
 }
 
 void 
@@ -214,7 +214,7 @@ MTSFlow::allocateCMDataAddRequires(Task* ,
                                       MPMLabel* )
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  //task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
+  //task->requiresVar(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
 }
 
 void 

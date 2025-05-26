@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -749,10 +749,10 @@ void TransIsoHypoFrictional::carryForward(const PatchSubset* patches,
                                                      const PatchSet*) const
  {
    const MaterialSubset* matlset = matl->thisMaterial();
-   task->computes(pStretchLabel,              matlset);
-   task->computes(pCrimpLabel,                matlset);
-   task->computes(pPorosityLabel,             matlset);
-   task->computes(lb->pStressLabel_preReloc,  matlset);
+   task->computesVar(pStretchLabel,              matlset);
+   task->computesVar(pCrimpLabel,                matlset);
+   task->computesVar(pPorosityLabel,             matlset);
+   task->computesVar(lb->pStressLabel_preReloc,  matlset);
  }
 
  void TransIsoHypoFrictional::addComputesAndRequires(Task* task,
@@ -770,15 +770,15 @@ void TransIsoHypoFrictional::carryForward(const PatchSubset* patches,
    // Other constitutive model and input dependent computes and requires
    Ghost::GhostType  gnone = Ghost::None;
 
-   task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
-   task->requires(Task::OldDW, pStretchLabel,      matlset,gnone);
-   task->requires(Task::OldDW, pCrimpLabel,        matlset,gnone);
-   task->requires(Task::OldDW, pPorosityLabel,     matlset,gnone);
+   task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+   task->requiresVar(Task::OldDW, pStretchLabel,      matlset,gnone);
+   task->requiresVar(Task::OldDW, pCrimpLabel,        matlset,gnone);
+   task->requiresVar(Task::OldDW, pPorosityLabel,     matlset,gnone);
 
-   task->computes(lb->pFiberDirLabel_preReloc, matlset);
-   task->computes(pStretchLabel_preReloc,      matlset);
-   task->computes(pCrimpLabel_preReloc,        matlset);
-   task->computes(pPorosityLabel_preReloc,     matlset);
+   task->computesVar(lb->pFiberDirLabel_preReloc, matlset);
+   task->computesVar(pStretchLabel_preReloc,      matlset);
+   task->computesVar(pCrimpLabel_preReloc,        matlset);
+   task->computesVar(pPorosityLabel_preReloc,     matlset);
  }
 
  void TransIsoHypoFrictional::addComputesAndRequires(Task* ,

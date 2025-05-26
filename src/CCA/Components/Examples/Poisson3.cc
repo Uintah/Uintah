@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -83,8 +83,8 @@ void Poisson3::scheduleInitialize(const LevelP& level,
     dbg << "scheduleInitialize\n";
     Task* task = scinew Task("initialize",
                              this, &Poisson3::initialize);
-    task->computes(phi_label);
-    task->computes(residual_label, level.get_rep());
+    task->computesVar(phi_label);
+    task->computesVar(residual_label, level.get_rep());
     sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
   } else {
     scheduleRefine(level, sched);
@@ -101,8 +101,8 @@ void Poisson3::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",
                            this, &Poisson3::computeStableTimeStep);
-  task->requires(Task::NewDW, residual_label, level.get_rep());
-  task->computes(getDelTLabel(),level.get_rep());
+  task->requiresVar(Task::NewDW, residual_label, level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -114,13 +114,13 @@ Poisson3::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                            this, &Poisson3::timeAdvance,
                            level->getIndex() != 0);
   if(level->getIndex() == 0) {
-    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-    task->computes(phi_label);
+    task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task->computesVar(phi_label);
   } else {
-    task->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
-    task->modifies(phi_label);
+    task->requiresVar(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
+    task->modifiesVar(phi_label);
   }
-  task->computes(residual_label, level.get_rep());
+  task->computesVar(residual_label, level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -247,12 +247,12 @@ void Poisson3::scheduleRefine(const LevelP& fineLevel, SchedulerP& sched)
 {
   dbg << "Poisson3::scheduleRefine\n";
   Task* task = scinew Task("refine", this, &Poisson3::refine);
-  task->requires(Task::NewDW, phi_label,
+  task->requiresVar(Task::NewDW, phi_label,
                  0, Task::CoarseLevel,
                  0, Task::NormalDomain, 
                  Ghost::AroundCells, interpolator_.getMaxSupportRefine());
-  task->computes(phi_label);
-  task->computes(residual_label, fineLevel.get_rep());
+  task->computesVar(phi_label);
+  task->computesVar(residual_label, fineLevel.get_rep());
   sched->addTask(task, fineLevel->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -318,17 +318,17 @@ void Poisson3::scheduleRefineInterface(const LevelP& fineLevel,
   dbg << "Poisson3::scheduleRefineInterface\n";
   Task* task = scinew Task("refineInterface", this, &Poisson3::refineInterface);
 
-  task->requires(Task::OldDW, phi_label, Ghost::None);
-  task->requires(Task::CoarseOldDW, phi_label,
+  task->requiresVar(Task::OldDW, phi_label, Ghost::None);
+  task->requiresVar(Task::CoarseOldDW, phi_label,
                  0, Task::CoarseLevel,
                  0, Task::NormalDomain, 
                  Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
   if(needCoarseNew)
-    task->requires(Task::CoarseNewDW, phi_label,
+    task->requiresVar(Task::CoarseNewDW, phi_label,
                    0, Task::CoarseLevel,
                    0, Task::NormalDomain, 
                    Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
-  task->computes(phi_label);
+  task->computesVar(phi_label);
   sched->addTask(task, fineLevel->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -416,11 +416,11 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 void Poisson3::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   Task* task = scinew Task("coarsen", this, &Poisson3::coarsen);
-  task->requires(Task::NewDW, phi_label,
+  task->requiresVar(Task::NewDW, phi_label,
                  0, Task::FineLevel,
                  0, Task::NormalDomain,
                  Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
-  task->modifies(phi_label);
+  task->modifiesVar(phi_label);
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 

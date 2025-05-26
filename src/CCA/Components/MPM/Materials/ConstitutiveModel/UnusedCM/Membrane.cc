@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -509,7 +509,7 @@ void Membrane::addInitialComputesAndRequires(Task* task,
                                              const PatchSet*) const
 {
    const MaterialSubset* matlset = matl->thisMaterial();
-   task->computes(defGradInPlaneLabel,matlset);
+   task->computesVar(defGradInPlaneLabel,matlset);
 }
 
 void Membrane::addComputesAndRequires(Task* task,
@@ -525,15 +525,15 @@ void Membrane::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW,defGradInPlaneLabel,   matlset, gnone);
-  task->requires(Task::OldDW,pTang1Label,       matlset, gnone);
-  task->requires(Task::OldDW,pTang2Label,       matlset, gnone);
-  task->requires(Task::OldDW,pNormLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW,defGradInPlaneLabel,   matlset, gnone);
+  task->requiresVar(Task::OldDW,pTang1Label,       matlset, gnone);
+  task->requiresVar(Task::OldDW,pTang2Label,       matlset, gnone);
+  task->requiresVar(Task::OldDW,pNormLabel,        matlset, gnone);
 
-  task->computes(defGradInPlaneLabel_preReloc,      matlset);
-  task->computes(pTang1Label_preReloc,          matlset);
-  task->computes(pTang2Label_preReloc,          matlset);
-  task->computes(pNormLabel_preReloc,           matlset);
+  task->computesVar(defGradInPlaneLabel_preReloc,      matlset);
+  task->computesVar(pTang1Label_preReloc,          matlset);
+  task->computesVar(pTang2Label_preReloc,          matlset);
+  task->computesVar(pNormLabel_preReloc,           matlset);
 }
 
 void 

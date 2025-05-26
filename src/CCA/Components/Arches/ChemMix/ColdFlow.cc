@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -225,14 +225,14 @@ ColdFlow::sched_getState( const LevelP& level,
   // independent variables :: these must have been computed previously
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
 
-    tsk->requires( Task::NewDW, i->second, gn, 0 );
+    tsk->requiresVar( Task::NewDW, i->second, gn, 0 );
 
   }
 
   if ( initialize_me ) {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->computes( i->second );
+      tsk->computesVar( i->second );
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
         // int timeStep = m_materialManager->getCurrentTopLevelTimeStep();
@@ -244,46 +244,46 @@ ColdFlow::sched_getState( const LevelP& level,
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
 
         if ( timeStep != 0 ){
-          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
+          tsk->requiresVar( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
     }
 
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->computes( i->second );
+      tsk->computesVar( i->second );
     }
 
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
 
   }
 
   // other variables
-  tsk->modifies( m_densityLabel );  // lame .... fix me
+  tsk->modifiesVar( m_densityLabel );  // lame .... fix me
 
   if ( modify_ref_den ){
     if ( time_substep == 0 ){
-      tsk->computes( m_denRefArrayLabel );
+      tsk->computesVar( m_denRefArrayLabel );
     }
   } else {
     if ( time_substep == 0 ){
-      tsk->computes( m_denRefArrayLabel );
-      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
+      tsk->computesVar( m_denRefArrayLabel );
+      tsk->requiresVar( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
     }
   }
 
-  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_volFractionLabel, gn, 0 );
 
   // for inert mixing
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){
     const VarLabel* label = VarLabel::find( iter->first );
-    tsk->requires( Task::NewDW, label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, label, gn, 0 );
   }
 
   sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );

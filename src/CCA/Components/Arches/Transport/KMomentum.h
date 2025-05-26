@@ -4,7 +4,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -748,7 +748,7 @@ private:
     }
 
     std::vector<std::string> bc_mod;
-    m_boundary_functors->get_bc_modifies( m_eqn_names, m_bcHelper, bc_mod );
+    m_boundary_functors->get_bc_modifiesVar( m_eqn_names, m_bcHelper, bc_mod );
     for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }

@@ -56,13 +56,13 @@ void ScalarDissipation::sched_computeProp( const LevelP& level, SchedulerP& sche
   std::string taskname = "ScalarDissipation::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &ScalarDissipation::computeProp, time_substep ); 
   
-  tsk->modifies( _prop_label );
+  tsk->modifiesVar( _prop_label );
   if ( time_substep == 0 ){ 
     
-    tsk->requires( Task::OldDW, _gradmf2_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::OldDW, _gradmf2_label, Ghost::None, 0 ); 
   } else { 
     
-    tsk->requires( Task::NewDW, _gradmf2_label, Ghost::None, 0 ); 
+    tsk->requiresVar( Task::NewDW, _gradmf2_label, Ghost::None, 0 ); 
   } 
   
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
@@ -115,7 +115,7 @@ void ScalarDissipation::sched_initialize( const LevelP& level, SchedulerP& sched
   std::string taskname = "ScalarDissipation::initialize"; 
   
   Task* tsk = scinew Task(taskname, this, &ScalarDissipation::initialize);
-  tsk->computes(_prop_label); 
+  tsk->computesVar(_prop_label); 
   
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

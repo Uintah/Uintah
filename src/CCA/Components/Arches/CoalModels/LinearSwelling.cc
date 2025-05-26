@@ -154,7 +154,7 @@ LinearSwelling::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "LinearSwelling::initVars";
   Task* tsk = scinew Task(taskname, this, &LinearSwelling::initVars);
 
-  tsk->computes(d_modelLabel);
+  tsk->computesVar(d_modelLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -196,22 +196,22 @@ LinearSwelling::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
+    tsk->computesVar(d_modelLabel);
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
+    tsk->modifiesVar(d_modelLabel);
     which_dw = Task::NewDW;
   }
-  tsk->requires( Task::NewDW, m_devolRCLabel, gn, 0 );
-  tsk->requires( Task::NewDW, m_RHS_source_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, m_RHS_weight_varlabel, gn, 0 );
-  tsk->requires( which_dw, m_scaled_weight_varlabel, gn, 0 );
-  tsk->requires( which_dw, m_weighted_length_label, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_devolRCLabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_RHS_weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, m_scaled_weight_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, m_weighted_length_label, gn, 0 );
   if ( m_birth_label != nullptr )
-    tsk->requires( Task::NewDW, m_birth_label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, m_birth_label, gn, 0 );
 
   // get time step size for model clipping
-  tsk->requires( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW,d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

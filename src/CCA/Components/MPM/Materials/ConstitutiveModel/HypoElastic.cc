@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -610,7 +610,7 @@ void HypoElastic::addComputesAndRequires(Task* task,
   if(d_initialData.alpha>0){
     Ghost::GhostType gnone = Ghost::None;
     // for thermal stress
-    task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+    task->requiresVar(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
   }
 }
 

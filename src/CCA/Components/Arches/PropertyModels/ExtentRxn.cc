@@ -55,20 +55,20 @@ void ExtentRxn::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
 
   if ( time_substep == 0 ) {
     
-    tsk->computes( _prop_label ); 
-    tsk->computes( _strip_label ); 
+    tsk->computesVar( _prop_label ); 
+    tsk->computesVar( _strip_label ); 
 
   } else {
 
-    tsk->modifies( _prop_label ); 
-    tsk->modifies( _strip_label );
+    tsk->modifiesVar( _prop_label ); 
+    tsk->modifiesVar( _strip_label );
 
   }
 
   const VarLabel* the_label = VarLabel::find(_mixture_fraction_name); 
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->requiresVar( Task::NewDW, the_label, Ghost::None, 0 ); 
   the_label = VarLabel::find(_scalar_name);
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->requiresVar( Task::NewDW, the_label, Ghost::None, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
@@ -144,8 +144,8 @@ void ExtentRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
   std::string taskname = "ExtentRxn::initialize"; 
 
   Task* tsk = scinew Task(taskname, this, &ExtentRxn::initialize);
-  tsk->computes(_prop_label); 
-  tsk->computes(_strip_label); 
+  tsk->computesVar(_prop_label); 
+  tsk->computesVar(_strip_label); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

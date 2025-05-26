@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -66,7 +66,7 @@ void ConstantRate::addInitialComputesAndRequires(      Task         * task,
                                                 ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->diffusion->pFlux, matlset);
+  task->computesVar(d_lb->diffusion->pFlux, matlset);
 }
 
 void ConstantRate::addParticleState(
@@ -138,9 +138,9 @@ void ConstantRate::scheduleComputeFlux(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  // task->requires(Task::OldDW, d_lb->simulationTimeLabel,);
+  // task->requiresVar(Task::OldDW, d_lb->simulationTimeLabel,);
 
-  task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
+  task->computesVar(d_lb->diffusion->pFlux_preReloc, matlset);
 }
 
 void ConstantRate::addSplitParticlesComputesAndRequires(
@@ -174,9 +174,9 @@ void ConstantRate::scheduleComputeDivergence(
                                             ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, d_lb->gMassLabel, Ghost::None);
+  task->requiresVar(Task::NewDW, d_lb->gMassLabel, Ghost::None);
 
-  task->computes(d_lb->diffusion->gConcentrationRate, matlset);
+  task->computesVar(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
 void ConstantRate::computeDivergence(

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,7 +57,7 @@ void JGConcentrationDiffusion::addInitialComputesAndRequires(      Task         
                                                             ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->diffusion->pFlux,        matlset);
+  task->computesVar(d_lb->diffusion->pFlux,        matlset);
 }
 
 void JGConcentrationDiffusion::addParticleState(
@@ -128,10 +128,10 @@ void JGConcentrationDiffusion::scheduleComputeFlux(      Task         * task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType        gnone = Ghost::None;
 
-  task->requires(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
+  task->requiresVar(Task::OldDW, d_lb->diffusion->pGradConcentration, matlset, gnone);
 
-  task->computes(d_lb->diffusion->pFlux_preReloc, matlset);
-  task->computes(d_lb->delTLabel,getLevel(patch));
+  task->computesVar(d_lb->diffusion->pFlux_preReloc, matlset);
+  task->computesVar(d_lb->delTLabel,getLevel(patch));
 }
 
 void JGConcentrationDiffusion::addSplitParticlesComputesAndRequires(

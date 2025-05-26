@@ -80,8 +80,8 @@ ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
   std::string taskname = "ConstantModel::initVars";
   Task* tsk = scinew Task(taskname, this, &ConstantModel::initVars);
   
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
   
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 }
@@ -131,11 +131,11 @@ ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
   } else {
-    tsk->modifies(d_modelLabel); 
-    tsk->modifies(d_gasLabel); 
+    tsk->modifiesVar(d_modelLabel); 
+    tsk->modifiesVar(d_gasLabel); 
   }
 
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 

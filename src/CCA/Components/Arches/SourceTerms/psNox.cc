@@ -247,42 +247,42 @@ psNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   Task* tsk = scinew Task(taskname, this, &psNOx::computeSource, timeSubStep);
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
-    tsk->computes(NO_src_label);
-    tsk->computes(HCN_src_label);
-    tsk->computes(NH3_src_label);
+    tsk->computesVar(NO_src_label);
+    tsk->computesVar(HCN_src_label);
+    tsk->computesVar(NH3_src_label);
     which_dw = Task::OldDW;
   } else {
     which_dw = Task::NewDW;
-    tsk->modifies(NO_src_label);
-    tsk->modifies(HCN_src_label);
-    tsk->modifies(NH3_src_label);
+    tsk->modifiesVar(NO_src_label);
+    tsk->modifiesVar(HCN_src_label);
+    tsk->modifiesVar(NH3_src_label);
   }
 
   for ( int i = 0; i < m_num_env; i++){
 
     std::string coal_temperature_name = ArchesCore::append_env( m_coal_temperature_root, i );
     m_coal_temperature_label.push_back(  VarLabel::find(coal_temperature_name));
-    tsk->requires( which_dw, m_coal_temperature_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_coal_temperature_label[i], Ghost::None, 0 );
 
     std::string weight_name = ArchesCore::append_env( m_weight_root, i );
     m_weight_label.push_back(  VarLabel::find(weight_name));
-    tsk->requires( which_dw, m_weight_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_weight_label[i], Ghost::None, 0 );
 
     std::string length_name = ArchesCore::append_env( m_length_root, i );
     m_length_label.push_back(  VarLabel::find(length_name));
-    tsk->requires( which_dw, m_length_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_length_label[i], Ghost::None, 0 );
 
     std::string p_rho_name = ArchesCore::append_env( m_p_rho_root, i );
     m_p_rho_label.push_back(  VarLabel::find(p_rho_name));
-    tsk->requires( which_dw, m_p_rho_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_p_rho_label[i], Ghost::None, 0 );
 
     std::string rc_mass_name = ArchesCore::append_env( m_rc_mass_root, i );
     m_rc_mass_label.push_back(  VarLabel::find(rc_mass_name));
-    tsk->requires( which_dw, m_rc_mass_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_rc_mass_label[i], Ghost::None, 0 );
 
     std::string char_mass_name = ArchesCore::append_env( m_char_mass_root, i );
     m_char_mass_label.push_back(  VarLabel::find(char_mass_name));
-    tsk->requires( which_dw, m_char_mass_label[i], Ghost::None, 0 );
+    tsk->requiresVar( which_dw, m_char_mass_label[i], Ghost::None, 0 );
   }
   // resolve some labels:
   oxi_label              = VarLabel::find( oxi_name);
@@ -304,26 +304,26 @@ psNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubS
   m_NO_RHS_label         = VarLabel::find( NO_name+"_RHS");
   m_NH3_RHS_label        = VarLabel::find( NH3_name+"_RHS");
   m_HCN_RHS_label        = VarLabel::find( HCN_name+"_RHS");
-  tsk->requires( which_dw, oxi_label,             Ghost::None, 0 );
-  tsk->requires( which_dw, devol_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, bd_oxi_label,             Ghost::None, 0 );
-  tsk->requires( which_dw, bd_devol_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, tar_src_label,         Ghost::None, 0 );
-  tsk->requires( which_dw, m_o2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_n2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_co_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2o_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_h2_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_temperature_label,   Ghost::None, 0 );
-  tsk->requires( which_dw, m_density_label,       Ghost::None, 0 );
-  tsk->requires( which_dw, m_mix_mol_weight_label,Ghost::None, 0 );
-  tsk->requires( which_dw, m_NO_label,            Ghost::None, 0 );
-  tsk->requires( which_dw, m_HCN_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_NH3_label,           Ghost::None, 0 );
-  tsk->requires( which_dw, m_NO_RHS_label,        Ghost::None, 0 );
-  tsk->requires( which_dw, m_NH3_RHS_label,       Ghost::None, 0 );
-  tsk->requires( which_dw, m_HCN_RHS_label,       Ghost::None, 0 );
-  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 );
+  tsk->requiresVar( which_dw, oxi_label,             Ghost::None, 0 );
+  tsk->requiresVar( which_dw, devol_label,           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, bd_oxi_label,             Ghost::None, 0 );
+  tsk->requiresVar( which_dw, bd_devol_label,           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, tar_src_label,         Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_o2_label,            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_n2_label,            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_co_label,            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h2o_label,           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_h2_label,            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_temperature_label,   Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_density_label,       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_mix_mol_weight_label,Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_NO_label,            Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_HCN_label,           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_NH3_label,           Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_NO_RHS_label,        Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_NH3_RHS_label,       Ghost::None, 0 );
+  tsk->requiresVar( which_dw, m_HCN_RHS_label,       Ghost::None, 0 );
+  tsk->requiresVar( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 );
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }
 //---------------------------------------------------------------------------
@@ -785,9 +785,9 @@ psNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &psNOx::initialize);
 
-  tsk->computes(NO_src_label);
-  tsk->computes(HCN_src_label);
-  tsk->computes(NH3_src_label);
+  tsk->computesVar(NO_src_label);
+  tsk->computesVar(HCN_src_label);
+  tsk->computesVar(NH3_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

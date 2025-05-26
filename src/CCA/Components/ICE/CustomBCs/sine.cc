@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -114,11 +114,11 @@ void addRequires_Sine(Task* t,
   press_matl->addReference();
   
   if(where == "CC_Exchange"){
-    t->requires(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0); 
+    t->requiresVar(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0); 
    
   }
   if(where == "Advection"){
-    t->requires(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0);    
+    t->requiresVar(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0);    
   }
 }
 /*______________________________________________________________________ 

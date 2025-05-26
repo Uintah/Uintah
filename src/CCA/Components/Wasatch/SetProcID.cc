@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,7 +47,7 @@ namespace WasatchCore{
                                      Uintah::IntVector(0,0,0) );
 
     Uintah::Task* task = scinew Uintah::Task( "set_rank", this, &SetProcID::set_rank );
-    task->computes( pid_,
+    task->computesVar( pid_,
                     patches->getUnion(), Uintah::Task::NormalDomain,
                     materials->getUnion(), Uintah::Task::NormalDomain );
     sched->addTask( task, patches, materials );

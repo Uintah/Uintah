@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -119,16 +119,16 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,   gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_CCVelocityLabel,     gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_filterVolumeLabel,   gac, 1);
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
+    tsk->computesVar(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
   }
   else {
-    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
+    tsk->modifiesVar(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
   }
 
   sched->addTask(tsk, level->eachPatch(), matls);

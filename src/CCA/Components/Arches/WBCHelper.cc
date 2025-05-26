@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2024 The University of Utah
+ * Copyright (c) 2013-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -911,7 +911,7 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
   auto TaskDependencies = [&](Task* tsk) {
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
-      tsk->computes( iter->second );
+      tsk->computesVar( iter->second );
     }
    };
 
@@ -1002,7 +1002,7 @@ void WBCHelper::sched_bindBCAreaHelper( SchedulerP& sched,
                              &WBCHelper::bindBCAreaHelper );
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
-      tsk->requires( Task::NewDW, iter->second );
+      tsk->requiresVar( Task::NewDW, iter->second );
     }
 
     sched->addTask( tsk, level->eachPatch(), matls );

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -579,27 +579,27 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   const string taskName = "TracerParticles::initializeTask_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::initializeTask);
 
-  t->requires( Task::OldDW,    simTimeLabel );
-  t->computes( nPPCLabel,      d_matl_mss );
-  t->computes( pXLabel,        d_matl_mss );
-  t->computes( pDispLabel,     d_matl_mss );
-  t->computes( pVelocityLabel, d_matl_mss );
-  t->computes( pIDLabel,       d_matl_mss );
+  t->requiresVar( Task::OldDW,    simTimeLabel );
+  t->computesVar( nPPCLabel,      d_matl_mss );
+  t->computesVar( pXLabel,        d_matl_mss );
+  t->computesVar( pDispLabel,     d_matl_mss );
+  t->computesVar( pVelocityLabel, d_matl_mss );
+  t->computesVar( pIDLabel,       d_matl_mss );
 
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
-    t->computes ( Q->pQLabel, d_matl_mss );
+    t->computesVar( Q->pQLabel, d_matl_mss );
   }
 
   //__________________________________
   //  scalars
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
-    t->computes( S->label, d_matl_mss );
+    t->computesVar( S->label, d_matl_mss );
 
     if( S->withExpDecayModel ){
-      t->computes( S->expDecayCoefLabel, d_matl_mss );
-      t->computes( S->totalDecayLabel,   d_matl_mss );
+      t->computesVar( S->expDecayCoefLabel, d_matl_mss );
+      t->computesVar( S->totalDecayLabel,   d_matl_mss );
     }
   }
 
@@ -608,7 +608,7 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
 
 //______________________________________________________________________
 //    Task:  On a restart if the values are going to be modified there must first
-//           be computes( label ) before it can be modified.  This is a hack
+//           be computesVar( label ) before it can be modified.  This is a hack
 void TracerParticles::sched_restartInitializeHACK( SchedulerP   & sched,
                                                    const LevelP & level)
 {
@@ -620,28 +620,28 @@ void TracerParticles::sched_restartInitializeHACK( SchedulerP   & sched,
 
   //__________________________________
   //     core variables
-  t->computes( nPPCLabel,      d_matl_mss );
-  t->computes( pXLabel,        d_matl_mss );
-  t->computes( pDispLabel,     d_matl_mss );
-  t->computes( pVelocityLabel, d_matl_mss );
-  t->computes( pIDLabel,       d_matl_mss );
+  t->computesVar( nPPCLabel,      d_matl_mss );
+  t->computesVar( pXLabel,        d_matl_mss );
+  t->computesVar( pDispLabel,     d_matl_mss );
+  t->computesVar( pVelocityLabel, d_matl_mss );
+  t->computesVar( pIDLabel,       d_matl_mss );
 
   //__________________________________
   //      clone Q_CC vars
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
-    t->computes ( Q->pQLabel, d_matl_mss );
+    t->computesVar( Q->pQLabel, d_matl_mss );
   }
 
   //__________________________________
   //      scalars
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
-    t->computes( S->label, d_matl_mss );
+    t->computesVar( S->label, d_matl_mss );
 
     if( S->withExpDecayModel ){
-      t->computes( S->expDecayCoefLabel, d_matl_mss );
-      t->computes( S->totalDecayLabel,   d_matl_mss );
+      t->computesVar( S->expDecayCoefLabel, d_matl_mss );
+      t->computesVar( S->totalDecayLabel,   d_matl_mss );
     }
   }
 
@@ -681,29 +681,29 @@ void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
   const string taskName = "TracerParticles::restartInitializeTask_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::restartInitializeTask);
 
-  t->requires( Task::OldDW,    simTimeLabel );
-  t->modifies( nPPCLabel,      d_matl_mss );
-  t->modifies( pXLabel,        d_matl_mss );
-  t->modifies( pDispLabel,     d_matl_mss );
-  t->modifies( pVelocityLabel, d_matl_mss );
-  t->modifies( pIDLabel,       d_matl_mss );
+  t->requiresVar( Task::OldDW,    simTimeLabel );
+  t->modifiesVar( nPPCLabel,      d_matl_mss );
+  t->modifiesVar( pXLabel,        d_matl_mss );
+  t->modifiesVar( pDispLabel,     d_matl_mss );
+  t->modifiesVar( pVelocityLabel, d_matl_mss );
+  t->modifiesVar( pIDLabel,       d_matl_mss );
 
   //__________________________________
   //    clone variables
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
-    t->modifies ( Q->pQLabel, d_matl_mss );
+    t->modifiesVar( Q->pQLabel, d_matl_mss );
   }
 
   //__________________________________
   //    tracer scalars
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
-    t->modifies( S->label, d_matl_mss );
+    t->modifiesVar( S->label, d_matl_mss );
 
     if( S->withExpDecayModel ){
-      t->modifies( S->expDecayCoefLabel, d_matl_mss );
-      t->modifies( S->totalDecayLabel,   d_matl_mss );
+      t->modifiesVar( S->expDecayCoefLabel, d_matl_mss );
+      t->modifiesVar( S->totalDecayLabel,   d_matl_mss );
     }
   }
 
@@ -1242,19 +1242,19 @@ void TracerParticles::sched_moveParticles(SchedulerP  & sched,
   const string taskName = "TracerParticles::moveParticles_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::moveParticles);
 
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-  t->requires( Task::OldDW, simTimeLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->requiresVar( Task::OldDW, simTimeLabel );
 
-  t->requires( Task::OldDW, pXLabel,        d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pDispLabel,     d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pIDLabel,       d_matl_mss, d_gn );
+  t->requiresVar( Task::OldDW, pXLabel,        d_matl_mss, d_gn );
+  t->requiresVar( Task::OldDW, pDispLabel,     d_matl_mss, d_gn );
+  t->requiresVar( Task::OldDW, pIDLabel,       d_matl_mss, d_gn );
 
-  t->requires( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );   // hardwired to use ICE's velocity
+  t->requiresVar( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );   // hardwired to use ICE's velocity
 
-  t->computes( pXLabel_preReloc,        d_matl_mss );
-  t->computes( pDispLabel_preReloc,     d_matl_mss );
-  t->computes( pVelocityLabel_preReloc, d_matl_mss );
-  t->computes( pIDLabel_preReloc,       d_matl_mss );
+  t->computesVar( pXLabel_preReloc,        d_matl_mss );
+  t->computesVar( pDispLabel_preReloc,     d_matl_mss );
+  t->computesVar( pVelocityLabel_preReloc, d_matl_mss );
+  t->computesVar( pIDLabel_preReloc,       d_matl_mss );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -1352,28 +1352,28 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   const string taskName = "TracerParticles::addParticles_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::addParticles);
 
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-  t->requires( Task::OldDW, nPPCLabel,     d_matl_mss, d_gn );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->requiresVar( Task::OldDW, nPPCLabel,     d_matl_mss, d_gn );
 
-  t->modifies( pXLabel_preReloc,        d_matl_mss );
-  t->modifies( pDispLabel_preReloc,     d_matl_mss );
-  t->modifies( pVelocityLabel_preReloc, d_matl_mss );
-  t->modifies( pIDLabel_preReloc,       d_matl_mss );
-  t->modifies( nPPCLabel,               d_matl_mss );
+  t->modifiesVar( pXLabel_preReloc,        d_matl_mss );
+  t->modifiesVar( pDispLabel_preReloc,     d_matl_mss );
+  t->modifiesVar( pVelocityLabel_preReloc, d_matl_mss );
+  t->modifiesVar( pIDLabel_preReloc,       d_matl_mss );
+  t->modifiesVar( nPPCLabel,               d_matl_mss );
 
                 // Clone of CC variables
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
-    t->modifies( Q->pQLabel_preReloc,   d_matl_mss );
+    t->modifiesVar( Q->pQLabel_preReloc,   d_matl_mss );
   }
 
                 // scalar variables
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
-    t->modifies( S->label_preReloc,           d_matl_mss );
+    t->modifiesVar( S->label_preReloc,           d_matl_mss );
 
     if (S->withExpDecayModel ){
-      t->modifies( S->totalDecayLabel_preReloc, d_matl_mss );
+      t->modifiesVar( S->totalDecayLabel_preReloc, d_matl_mss );
     }
   }
 
@@ -1539,17 +1539,17 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   const string taskName = "TracerParticles::setParticleVars_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::setParticleVars);
 
-  t->requires( Task::OldDW, pXLabel,   d_matl_mss, d_gn, 0 );
-  t->requires( Task::OldDW, nPPCLabel, d_matl_mss, d_gn, 0 );
-  t->computes( nPPCLabel,              d_matl_mss );
+  t->requiresVar( Task::OldDW, pXLabel,   d_matl_mss, d_gn, 0 );
+  t->requiresVar( Task::OldDW, nPPCLabel, d_matl_mss, d_gn, 0 );
+  t->computesVar( nPPCLabel,              d_matl_mss );
 
   //__________________________________
   //    clone variables
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
     std::shared_ptr<cloneVar> Q = d_cloneVars[i];
 
-    t->requires( Task::OldDW, Q->CCVarLabel, d_matl_mss, d_gn, 0 );
-    t->computes ( Q->pQLabel_preReloc, d_matl_mss );
+    t->requiresVar( Task::OldDW, Q->CCVarLabel, d_matl_mss, d_gn, 0 );
+    t->computesVar( Q->pQLabel_preReloc, d_matl_mss );
   }
 
   //__________________________________
@@ -1557,17 +1557,17 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
     std::shared_ptr<scalar> S = d_scalars[i];
 
-    t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
-    t->requires( Task::OldDW, S->label,   d_matl_mss, d_gn, 0 );
+    t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+    t->requiresVar( Task::OldDW, S->label,   d_matl_mss, d_gn, 0 );
 
-    t->computes( S->label_preReloc,       d_matl_mss );
+    t->computesVar( S->label_preReloc,       d_matl_mss );
 
     if ( S->withExpDecayModel ){
-      t->requires( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
-      t->requires( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
+      t->requiresVar( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
+      t->requiresVar( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
 
-      t->computes( S->totalDecayLabel_preReloc, d_matl_mss );
-      t->computes( S->expDecayCoefLabel,         d_matl_mss );
+      t->computesVar( S->totalDecayLabel_preReloc, d_matl_mss );
+      t->computesVar( S->expDecayCoefLabel,         d_matl_mss );
     }
   }
 

@@ -92,7 +92,7 @@ namespace Uintah { namespace ArchesCore{
     void get_bc_dependencies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                               FunctorDepList& dep );
 
-    void get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
+    void get_bc_modifiesVar( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                           std::vector<std::string>& mod );
 
 
@@ -1191,7 +1191,7 @@ void BCFunctors<T>::get_bc_dependencies( std::vector<std::string>& varnames, WBC
 
 //--------------------------------------------------------------------------------------------------
 template <typename T>
-void BCFunctors<T>::get_bc_modifies( std::vector<std::string>& varnames, WBCHelper* bc_helper,
+void BCFunctors<T>::get_bc_modifiesVar( std::vector<std::string>& varnames, WBCHelper* bc_helper,
                                      std::vector<std::string>& mod ){
 
   const BndMapT& bc_info = bc_helper->get_boundary_information();

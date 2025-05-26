@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,7 +46,7 @@ template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleComputeTask(const LevelP& level, SchedulerP& sched){
         std::string name = "PortableDependencyTest1::computeTask" + to_string(cid++);
         auto TaskDependencies = [&](Task* task) {
-                task->computes(phi_label, nullptr, Uintah::Task::NormalDomain);
+                task->computesVar(phi_label, nullptr, Uintah::Task::NormalDomain);
         };
         create_portable_tasks(TaskDependencies, this, name.data(),
                         &PortableDependencyTest1::computeTask<ExecSpace, MemSpace>,
@@ -57,7 +57,7 @@ template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleModifyTask( const LevelP& level, SchedulerP& sched){
         std::string name = "PortableDependencyTest1::modifyTask" + to_string(mid++);
         auto TaskDependencies = [&](Task* task) {
-                task->modifies(phi_label);
+                task->modifiesVar(phi_label);
         };
         create_portable_tasks(TaskDependencies, this, name.data(),
                         &PortableDependencyTest1::modifyTask<ExecSpace, MemSpace>,
@@ -68,7 +68,7 @@ template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleRequireTask( const LevelP& level, SchedulerP& sched){
         std::string name = "PortableDependencyTest1::requireTask" + to_string(rid++);
         auto TaskDependencies = [&](Task* task) {
-                task->requires(Task::NewDW, phi_label, Ghost::None, 0);
+                task->requiresVar(Task::NewDW, phi_label, Ghost::None, 0);
         };
         create_portable_tasks(TaskDependencies, this, name.data(),
                         &PortableDependencyTest1::requireTask<ExecSpace, MemSpace>,

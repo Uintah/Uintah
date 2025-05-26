@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -541,14 +541,14 @@ void JWLppMPM::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
 
-  task->requires(Task::OldDW, lb->pVelGradLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, pProgressdelFLabel,     matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pVelGradLabel,      matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pProgressdelFLabel,     matlset, Ghost::None);
   
-  task->computes(pProgressFLabel_preReloc,        matlset);
-  task->computes(pProgressdelFLabel_preReloc,     matlset);
-  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
+  task->computesVar(pProgressFLabel_preReloc,        matlset);
+  task->computesVar(pProgressdelFLabel_preReloc,     matlset);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 
 void JWLppMPM::addInitialComputesAndRequires(Task* task,
@@ -556,8 +556,8 @@ void JWLppMPM::addInitialComputesAndRequires(Task* task,
                                              const PatchSet*) const
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pProgressFLabel,       matlset);
-  task->computes(pProgressdelFLabel,    matlset);
+  task->computesVar(pProgressFLabel,       matlset);
+  task->computesVar(pProgressdelFLabel,    matlset);
 }
 
 void 

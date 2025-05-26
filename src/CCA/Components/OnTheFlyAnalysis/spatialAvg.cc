@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -260,8 +260,8 @@ void spatialAvg::scheduleInitialize(SchedulerP   & sched,
 
   for ( unsigned int i =0 ; i < d_QavgVars.size(); i++ ) {
     const QavgVar Q = d_QavgVars[i];
-    t->computes ( Q.avgLabel );
-    t->computes ( Q.varianceLabel );
+    t->computesVar( Q.avgLabel );
+    t->computesVar( Q.varianceLabel );
   }
   sched->addTask(t, level->eachPatch(), d_matlSet);
 }
@@ -313,8 +313,8 @@ void spatialAvg::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t = scinew Task("spatialAvg::doAnalysis",
                    this,&spatialAvg::doAnalysis);
 
-  t->requires( Task::OldDW, m_timeStepLabel);
-  t->requires( Task::OldDW, m_simulationTimeLabel);
+  t->requiresVar( Task::OldDW, m_timeStepLabel);
+  t->requiresVar( Task::OldDW, m_simulationTimeLabel);
 
   Ghost::GhostType  gn  = Ghost::None;
 
@@ -326,9 +326,9 @@ void spatialAvg::scheduleDoAnalysis(SchedulerP   & sched,
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
-    t->requires( Task::NewDW, Q.Q_Label, matSubSet, gn, 0 );
-    t->computes ( Q.avgLabel,       matSubSet );
-    t->computes ( Q.varianceLabel,  matSubSet );
+    t->requiresVar( Task::NewDW, Q.Q_Label, matSubSet, gn, 0 );
+    t->computesVar( Q.avgLabel,       matSubSet );
+    t->computesVar( Q.varianceLabel,  matSubSet );
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;

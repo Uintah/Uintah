@@ -55,12 +55,12 @@ void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, 
   std::string taskname = "TabStripFactor::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &TabStripFactor::computeProp, time_substep ); 
 
-  tsk->modifies( _prop_label ); 
+  tsk->modifiesVar( _prop_label ); 
 
   const VarLabel* the_label = VarLabel::find(_co2_label);
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->requiresVar( Task::NewDW, the_label, Ghost::None, 0 ); 
   the_label = VarLabel::find(_f_label); 
-  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  tsk->requiresVar( Task::NewDW, the_label, Ghost::None, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ) ); 
     
@@ -125,7 +125,7 @@ void TabStripFactor::sched_initialize( const LevelP& level, SchedulerP& sched )
   std::string taskname = "TabStripFactor::initialize"; 
 
   Task* tsk = scinew Task(taskname, this, &TabStripFactor::initialize);
-  tsk->computes(_prop_label); 
+  tsk->computesVar(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 }

@@ -52,21 +52,21 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   if (timeSubStep == 0) { 
 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
 
   } else {
-    tsk->modifies(_src_label); 
+    tsk->modifiesVar(_src_label); 
 
   }
 
   if ( _mult_by_variable ){
     if ( _NewDW_only ){
-      tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+      tsk->requiresVar( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
     } else {
       if (timeSubStep == 0) { 
-        tsk->requires( Task::OldDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+        tsk->requiresVar( Task::OldDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
       } else {
-        tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+        tsk->requiresVar( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
       }
     }
   }
@@ -140,10 +140,10 @@ ConstSrcTerm::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
+    tsk->computesVar(*iter); 
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

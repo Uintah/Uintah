@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -205,10 +205,10 @@ ThresholdDamageVar::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matls = matl->thisMaterial();
-  task->computes( pFailureStressOrStrainLabel, matls );
+  task->computesVar( pFailureStressOrStrainLabel, matls );
   
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
-//  task->computes(TotalLocalizedParticleLabel);
+//  task->computesVar(TotalLocalizedParticleLabel);
 }
 
 //______________________________________________________________________
@@ -301,25 +301,25 @@ ThresholdDamageVar::addComputesAndRequires(Task* task,
 
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
-  task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
-  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
+  task->requiresVar(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
+  task->requiresVar(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
                                                               matls, gnone);
-  task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
+  task->requiresVar(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
   
-  task->modifies(d_lb->pStressLabel_preReloc,          matls);
+  task->modifiesVar(d_lb->pStressLabel_preReloc,          matls);
 
-  task->computes(pFailureStressOrStrainLabel_preReloc, matls);
+  task->computesVar(pFailureStressOrStrainLabel_preReloc, matls);
   
   //pLocalizedMPM+ _can_ be computed upstream
   if( matl->is_pLocalizedPreComputed() ){
-    task->modifies(d_lb->pLocalizedMPMLabel_preReloc,    matls);
+    task->modifiesVar(d_lb->pLocalizedMPMLabel_preReloc,    matls);
   } else { 
-    task->computes(d_lb->pLocalizedMPMLabel_preReloc,    matls);    
+    task->computesVar(d_lb->pLocalizedMPMLabel_preReloc,    matls);    
   }
        
   
-//  task->computes(TotalLocalizedParticleLabel);
+//  task->computesVar(TotalLocalizedParticleLabel);
 }
 //______________________________________________________________________
 //
