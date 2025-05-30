@@ -8,7 +8,7 @@ set( TAB_PROPS_TAG      eca0dc5f26b20d4f6b1cebe51b1ae97e11871e83 )
 set( RAD_PROPS_TAG      bd95421430fc266ee88d0480069f7d20be1414f6 )
 set( EXPR_LIB_TAG       b8082547bd44c3435fdde9aa278b72e6c0518bf7 )
 set( NSCBC_TAG          2e355b392f750f99c29b52baa7d64245bcdd0df1 )
-set( POKITT_TAG         fdfdaa225a950384da1234c1be4e03e6dc2604cc )
+set( POKITT_TAG         a24e29a1d87cb2cf8bac02deaf5269c3aed8dcea )
 ####################################################################################
 
 
