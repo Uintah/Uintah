@@ -30,6 +30,7 @@
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -86,8 +87,18 @@ namespace Uintah {
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    void createFile( const std::string& filename, FILE*& fp);
+    void isCommonBaseVarType();
 
+    std::vector<std::string>desc( FILE*& fp );
+
+    Point findCellOffset( const Level* level );
+
+    void createFile( const std::string& filename,
+                     FILE*& fp,
+                     const Level* level );
+
+    void printHeader(FILE*& fp,
+                     const Vector dx );
 
     void printHeader( FILE*& fp,
                       const Uintah::TypeDescription::Type myType);
@@ -115,15 +126,27 @@ namespace Uintah {
       int loopDir;    // direction to loop over
     };
 
+    struct varProperty{
+      const VarLabel* varLabel {nullptr};
+      const std::string name {};
+      const int matl;
+      const TypeDescription* td;
+      const TypeDescription::Type baseType;
+      const TypeDescription::Type subType;
+    };
+
+    enum allVarLocations { CC, NC, SFCX, SFCY, SFCZ, mixed, undefined };             // where are the variables
+
     //__________________________________
     // global constants
-    std::vector<VarLabel*> d_varLabels;
-    std::vector<int>       d_varMatl;
-    std::vector<line*>     d_lines;
-    int                    d_col_width = 16;    //  column width
+    std::vector<line*>     m_liness;
+    int                    m_col_width = 16;    //  column width
+    TypeDescription::Type  m_allVarsBaseType {TypeDescription::Other};
 
-    const Material  * d_matl         {nullptr};
-    MaterialSet     * d_matl_set     {nullptr};
+    std::vector<varProperty> m_varProperties;   //
+
+    const Material  * m_matl      {nullptr};
+    MaterialSet     * m_matl_set  {nullptr};
   };
 }
 
