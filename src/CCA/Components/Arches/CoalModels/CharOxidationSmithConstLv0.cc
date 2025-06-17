@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -337,13 +337,13 @@ CharOxidationSmithConstLv0::sched_initVars( const LevelP& level, SchedulerP& sch
   std::string taskname = "CharOxidationSmithConstLv0::initVars";
   Task* tsk = scinew Task(taskname, this, &CharOxidationSmithConstLv0::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
-  tsk->computes(d_particletempLabel);
-  tsk->computes(d_surfacerateLabel);
-  tsk->computes(d_PO2surfLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
+  tsk->computesVar(d_particletempLabel);
+  tsk->computesVar(d_surfacerateLabel);
+  tsk->computesVar(d_PO2surfLabel);
   for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
@@ -469,59 +469,59 @@ CharOxidationSmithConstLv0::sched_computeModel( const LevelP& level, SchedulerP&
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
-    tsk->computes(d_particletempLabel);
-    tsk->computes(d_surfacerateLabel);
-    tsk->computes(d_PO2surfLabel);
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
+    tsk->computesVar(d_particletempLabel);
+    tsk->computesVar(d_surfacerateLabel);
+    tsk->computesVar(d_PO2surfLabel);
     for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
-      tsk->computes(*iter);
+      tsk->computesVar(*iter);
     }
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);
-    tsk->modifies(d_particletempLabel);
-    tsk->modifies(d_surfacerateLabel);
-    tsk->modifies(d_PO2surfLabel);
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);
+    tsk->modifiesVar(d_particletempLabel);
+    tsk->modifiesVar(d_surfacerateLabel);
+    tsk->modifiesVar(d_PO2surfLabel);
     for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
-      tsk->modifies(*iter);
+      tsk->modifiesVar(*iter);
     }
     which_dw = Task::NewDW;
   }
 
   for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
-    tsk->requires( which_dw, *iter, gn, 0 );
+    tsk->requiresVar( which_dw, *iter, gn, 0 );
   }
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( which_dw, _number_density_varlabel, gn, 0 );
-  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
-  tsk->requires( which_dw, _char_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _number_density_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _rcmass_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _char_varlabel, gn, 0 );
 
   for (int i=0; i<_nQn_part;i++ ){
-  tsk->requires( which_dw, _length_varlabel[i], gn, 0 );
-  tsk->requires( which_dw, _weight_varlabel[i], gn, 0 );
+  tsk->requiresVar( which_dw, _length_varlabel[i], gn, 0 );
+  tsk->requiresVar( which_dw, _weight_varlabel[i], gn, 0 );
   }
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::NewDW, i->second, gn, 0 );
-  tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
-  tsk->requires( which_dw, _gas_temperature_varlabel, gn, 0);
+  tsk->requiresVar( Task::NewDW, i->second, gn, 0 );
+  tsk->requiresVar( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+  tsk->requiresVar( which_dw, _gas_temperature_varlabel, gn, 0);
   for (int l=0; l<_NUM_species; l++) {
-    tsk->requires( which_dw, _species_varlabels[l], gn, 0 );
+    tsk->requiresVar( which_dw, _species_varlabels[l], gn, 0 );
   }
-  tsk->requires( which_dw, _MW_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel);
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
-  tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _MW_varlabel, gn, 0 );
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel);
+  tsk->requiresVar( Task::NewDW, _RHS_source_varlabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
 
-  tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
-  tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
+  tsk->requiresVar( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
+  tsk->requiresVar( Task::NewDW, _devolRCLabel, gn, 0);
   if ( _char_birth_label != nullptr )
-    tsk->requires( Task::NewDW, _char_birth_label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, _char_birth_label, gn, 0 );
   if ( _rawcoal_birth_label != nullptr )
-    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
+    tsk->requiresVar( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }

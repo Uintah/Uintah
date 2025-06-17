@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -203,6 +203,12 @@ template bool is_NanInf_V( SFCXVariable<Vector> &, IntVector & );
 template bool is_NanInf_V( SFCYVariable<Vector> &, IntVector & );
 template bool is_NanInf_V( SFCZVariable<Vector> &, IntVector & );
 template bool is_NanInf_V( NCVariable<Vector> &, IntVector & );
+
+template bool is_NanInf_V( constCCVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCXVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCYVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constSFCZVariable<Vector> &, IntVector & );
+template bool is_NanInf_V( constNCVariable<Vector> &, IntVector & );
 
 
 //template bool areAllNodeValuesNumbers( NCVariable<double> &, IntVector & );

@@ -70,7 +70,7 @@ foreach T (t*)
 
       @ rc = 0       # keep track of the return codes from each command
       
-      cat [0-9]*:$X > All_$X
+      cat [0-9]*:$X > All_$X     # file names are <pathID>:<X>.dat
       @ rc += $status
       
       # save file header

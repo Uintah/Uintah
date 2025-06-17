@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -193,30 +193,30 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
   
-  t->requires( Task::OldDW, Ilb->timeStepLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep());
+  t->requiresVar( Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel,        level.get_rep());
   //__________________________________
   // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->requiresVar(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
   
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
   
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
-  t->computes(reactedFractionLabel, react_matl);
-  t->computes(IandGterm1Label, react_matl);
-  t->computes(IandGterm2Label, react_matl);
-  t->computes(IandGterm3Label, react_matl);
+  t->requiresVar(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+  t->computesVar(reactedFractionLabel, react_matl);
+  t->computesVar(IandGterm1Label, react_matl);
+  t->computesVar(IandGterm2Label, react_matl);
+  t->computesVar(IandGterm3Label, react_matl);
 
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
 
   if (one_matl->removeReference())

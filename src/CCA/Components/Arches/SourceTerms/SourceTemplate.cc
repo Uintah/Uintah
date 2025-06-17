@@ -78,18 +78,18 @@ CLASSNAME::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
 
   if (timeSubStep == 0) {
     
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
 
   } else {
 
-    tsk->modifies(_src_label); 
+    tsk->modifiesVar(_src_label); 
 
   }
 
   for (vector<std::string>::iterator iter = _required_labels.begin(); 
        iter != _required_labels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
+    //tsk->requiresVar( Task::OldDW, .... ); 
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
@@ -128,12 +128,12 @@ CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
        iter != _extra_local_labels.end(); iter++){
 
-    tsk->computes(*iter); 
+    tsk->computesVar(*iter); 
 
   }
 

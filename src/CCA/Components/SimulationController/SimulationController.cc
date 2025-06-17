@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -566,8 +566,8 @@ SimulationController::ScheduleReportStats( bool header )
 
   task->setType(Task::OncePerProc);
 
-  task->requires(Task::NewDW, m_application->getSimTimeLabel() );
-  task->requires(Task::NewDW, m_application->getDelTLabel() );
+  task->requiresVar(Task::NewDW, m_application->getSimTimeLabel() );
+  task->requiresVar(Task::NewDW, m_application->getDelTLabel() );
 
   m_scheduler->addTask(task,
                        m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
@@ -1045,7 +1045,7 @@ SimulationController::ScheduleCheckInSitu( bool first )
     // Require delta T so that the task gets scheduled
     // correctly. Otherwise the scheduler/taskgraph will toss an error
     // : Caught std exception: map::at: key not found
-    task->requires(Task::NewDW, m_application->getDelTLabel() );
+    task->requiresVar(Task::NewDW, m_application->getDelTLabel() );
 
     m_scheduler->addTask(task,
                          m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),

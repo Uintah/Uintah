@@ -50,9 +50,9 @@ CoalGasDevolMom::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   Task* tsk = scinew Task(taskname, this, &CoalGasDevolMom::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -71,10 +71,10 @@ CoalGasDevolMom::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& model = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
     ArchesLabel::PartVelMap::const_iterator i = _field_labels->partVel.find(iqn);
-    tsk->requires( Task::NewDW, i->second, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, i->second, Ghost::None, 0 );
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
@@ -173,7 +173,7 @@ CoalGasDevolMom::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &CoalGasDevolMom::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -104,7 +104,7 @@ namespace WasatchCore {
     // hack in a task to apply boundary condition on the pressure after the pressure solve
     Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this, &RadiationSource::setup_bndflux );
     
-    task->computes(Uintah::VarLabel::find("RMCRTboundFlux"));
+    task->computesVar(Uintah::VarLabel::find("RMCRTboundFlux"));
     sched->addTask(task, level->eachPatch(), materials, Uintah::RMCRTCommon::TG_RMCRT);
   }
 

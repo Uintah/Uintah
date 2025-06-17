@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -173,7 +173,8 @@ Arches::problemSetup( const ProblemSpecP     & params,
 
   m_analysis_modules = AnalysisModuleFactory::create(d_myworld,
                                                      m_materialManager,
-                                                     params);
+                                                     params,
+                                                     "DataAnalysis");
 
   if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;

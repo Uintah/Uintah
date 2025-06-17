@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -327,6 +327,11 @@ public:
   /// emplace( args... )
   ///
   /// return an iterator to the newly created value
+
+  // Note with C++20 std::allocator::construct is depreciated so use
+  // std::construct_at. It is unknown what will happen if the default
+  // std::allocator is not used.
+
   template <typename NodeAllocator, typename... Args>
   static iterator emplace_helper( size_t pid
                                 , void * pool
@@ -352,8 +357,14 @@ public:
     // Allocate node and insert the value
     if ( !itr ) {
       // allocate and construct
+      // With C++20 construct is depreciated so use construct_at
+#if __cplusplus >= 202002L
+      node_type * new_node = allocator.allocate(1);
+      std::construct_at( new_node, pid, pool );
+#else
       node_type * new_node = allocator.allocate(1, curr);
       allocator.construct( new_node, pid, pool );
+#endif
 
       // will always succeed since the node is not in the pool
       itr = new_node->try_atomic_emplace( 0, std::forward<Args>(args)... );

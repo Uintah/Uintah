@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1035,15 +1035,15 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
 
   if(SchedParent){
-    task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
   }else{
-    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
-    task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
   }
 
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
 }
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
@@ -1056,12 +1056,12 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                                                 
   addSharedCRForImplicit(task, matlset, reset);
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, lb->pFiberDirLabel,       matlset,Ghost::None);
+  task->requiresVar(Task::OldDW, pFailureLabel,            matlset,Ghost::None);
 
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
-  task->computes(pFailureLabel_preReloc,                matlset);
+  task->computesVar(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computesVar(pStretchLabel_preReloc,                matlset);
+  task->computesVar(pFailureLabel_preReloc,                matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -540,7 +540,7 @@ void HypoplasticB::addInitialComputesAndRequires(Task* task,
 
         // Other constitutive model and input dependent computes and requires
         for (int i = 0; i < d_NINSV; i++) {
-                task->computes(ISVLabels[i], matlset);
+                task->computesVar(ISVLabels[i], matlset);
         }
 }
 
@@ -554,12 +554,12 @@ void HypoplasticB::addComputesAndRequires(Task* task,
         const MaterialSubset* matlset = matl->thisMaterial();
         addSharedCRForHypoExplicit(task, matlset, patches);
 
-        //task->computes(lb->pVoidRatioLabel, matlset);
+        //task->computesVar(lb->pVoidRatioLabel, matlset);
 
         // Computes and requires for internal state data
         for (int i = 0; i < d_NINSV; i++) {
-                task->requires(Task::OldDW, ISVLabels[i], matlset, Ghost::None);
-                task->computes(ISVLabels_preReloc[i], matlset);
+                task->requiresVar(Task::OldDW, ISVLabels[i], matlset, Ghost::None);
+                task->computesVar(ISVLabels_preReloc[i], matlset);
         }
 }
 

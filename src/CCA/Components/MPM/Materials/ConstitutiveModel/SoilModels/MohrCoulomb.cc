@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 1997-2024 The University of Utah Fires and
+Copyright (c) 1997-2025 The University of Utah Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
 University of Utah.
 
@@ -910,7 +910,7 @@ void MohrCoulomb::addInitialComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   for(int i=0;i<d_NINSV;i++){
-    task->computes(ISVLabels[i], matlset);
+    task->computesVar(ISVLabels[i], matlset);
   }
 }
 
@@ -926,8 +926,8 @@ void MohrCoulomb::addComputesAndRequires(Task* task,
 
   // Computes and requires for internal state data
   for(int i=0;i<d_NINSV;i++){
-    task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
-    task->computes(             ISVLabels_preReloc[i], matlset);
+    task->requiresVar(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+    task->computesVar(             ISVLabels_preReloc[i], matlset);
   }
 }
 

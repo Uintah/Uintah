@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -544,7 +544,7 @@ namespace WasatchCore{
 
         case Expr::REQUIRES:
           dbg_fields << std::setw(10) << "REQUIRES";
-          task.requires( dw,
+          task.requiresVar( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,

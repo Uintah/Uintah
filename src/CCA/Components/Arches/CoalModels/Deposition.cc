@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -177,8 +177,8 @@ Deposition::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "Deposition::initVars";
   Task* tsk = scinew Task(taskname, this, &Deposition::initVars);
 
-  tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel);
+  tsk->computesVar(d_modelLabel);
+  tsk->computesVar(d_gasLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -231,30 +231,30 @@ Deposition::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   }
 
   if (timeSubStep == 0) {
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel);
-    tsk->requires(Task::OldDW, _w_label, gn, 0);
-    tsk->requires(Task::OldDW, _rate_depX_varlabel, gaf, 1);
-    tsk->requires(Task::OldDW, _rate_depY_varlabel, gaf, 1);
-    tsk->requires(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
-    tsk->requires(Task::OldDW, _length_varlabel, gn, 0 );
-    tsk->requires(Task::OldDW, _particle_density_varlabel, gn, 0 );
+    tsk->computesVar(d_modelLabel);
+    tsk->computesVar(d_gasLabel);
+    tsk->requiresVar(Task::OldDW, _w_label, gn, 0);
+    tsk->requiresVar(Task::OldDW, _rate_depX_varlabel, gaf, 1);
+    tsk->requiresVar(Task::OldDW, _rate_depY_varlabel, gaf, 1);
+    tsk->requiresVar(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
+    tsk->requiresVar(Task::OldDW, _length_varlabel, gn, 0 );
+    tsk->requiresVar(Task::OldDW, _particle_density_varlabel, gn, 0 );
     if ( !_is_weight )
-      tsk->requires(Task::OldDW, _abscissa_label, gn, 0);
+      tsk->requiresVar(Task::OldDW, _abscissa_label, gn, 0);
   } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);
-    tsk->requires(Task::NewDW, _w_label, gn, 0);
-    tsk->requires(Task::NewDW, _rate_depX_varlabel, gaf, 1);
-    tsk->requires(Task::NewDW, _rate_depY_varlabel, gaf, 1);
-    tsk->requires(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
-    tsk->requires(Task::NewDW, _length_varlabel, gn, 0 );
-    tsk->requires(Task::NewDW, _particle_density_varlabel, gn, 0 );
+    tsk->modifiesVar(d_modelLabel);
+    tsk->modifiesVar(d_gasLabel);
+    tsk->requiresVar(Task::NewDW, _w_label, gn, 0);
+    tsk->requiresVar(Task::NewDW, _rate_depX_varlabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, _rate_depY_varlabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
+    tsk->requiresVar(Task::NewDW, _length_varlabel, gn, 0 );
+    tsk->requiresVar(Task::NewDW, _particle_density_varlabel, gn, 0 );
     if ( !_is_weight )
-      tsk->requires(Task::NewDW, _abscissa_label, gn, 0);
+      tsk->requiresVar(Task::NewDW, _abscissa_label, gn, 0);
   }
 
-  tsk->requires(Task::OldDW, VarLabel::find("volFraction"), gn, 0 );
+  tsk->requiresVar(Task::OldDW, VarLabel::find("volFraction"), gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

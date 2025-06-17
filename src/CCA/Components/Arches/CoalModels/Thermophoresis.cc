@@ -173,7 +173,7 @@ Thermophoresis::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "Thermophoresis::initVars";
   Task* tsk = scinew Task(taskname, this, &Thermophoresis::initVars);
 
-  tsk->computes(d_modelLabel);
+  tsk->computesVar(d_modelLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -217,19 +217,19 @@ Thermophoresis::sched_computeModel( const LevelP& level, SchedulerP& sched, int 
   Task::WhichDW which_dw;
 
   if (timeSubStep == 0 ) {
-    tsk->computes(d_modelLabel);
+    tsk->computesVar(d_modelLabel);
     which_dw = Task::OldDW;
   } else {
-    tsk->modifies(d_modelLabel);
+    tsk->modifiesVar(d_modelLabel);
     which_dw = Task::NewDW;
   }
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 );
-  tsk->requires( which_dw, _particle_density_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, _volFraction_varlabel, gac, 1 );
-  tsk->requires( which_dw, _gas_temperature_varlabel, gac, 1 );
-  tsk->requires( which_dw, _length_varlabel, gn, 0 );
-  tsk->requires( which_dw, _weight_scaled_varlabel, gn, 0 );
-  tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
+  tsk->requiresVar( which_dw, _particle_temperature_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _particle_density_varlabel, gn, 0 );
+  tsk->requiresVar( Task::OldDW, _volFraction_varlabel, gac, 1 );
+  tsk->requiresVar( which_dw, _gas_temperature_varlabel, gac, 1 );
+  tsk->requiresVar( which_dw, _length_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, _weight_scaled_varlabel, gn, 0 );
+  tsk->requiresVar( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 

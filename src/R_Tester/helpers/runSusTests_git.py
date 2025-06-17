@@ -705,7 +705,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       unsetenv('MALLOC_STATS')
 
   if getenv('MALLOC_STATS') == None:
-    MALLOCSTATS = ""
+    MALLOCSTATS = None
   else:
     MALLOCSTATS = "-x MALLOC_STATS"
 
@@ -725,18 +725,16 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   MPIHEAD="%s -n" % MPIRUN       #default
 
   # pass in environmental variables to mpirun
-  if environ['OS'] == "Linux":
-    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
-
+  if MALLOCSTATS is not None:
                                    # openmpi
-  rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
-  if rc == 0:
-    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
+    rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+    if rc == 0:
+      MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
-                                   #  mvapich
-  rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
-  if rc == 0:
-    MPIHEAD="%s -genvlist MALLOC_STATS -n" % MPIRUN
+                                   #  mvapich and mpich
+    rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+    if rc == 0:
+      MPIHEAD="%s -genvlist MALLOC_STATS -n" % MPIRUN
 
 
   # if running performance tests, strip the output and checkpoints portions

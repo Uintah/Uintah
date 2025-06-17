@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -375,8 +375,8 @@ void meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
   Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
                     this,&meanTurbFluxes::populateVerifyLabels );
 
-  t->computes ( d_verifyVectorLabel );
-  t->computes ( d_verifyScalarLabel );
+  t->computesVar( d_verifyVectorLabel );
+  t->computesVar( d_verifyScalarLabel );
   sched->addTask( t, level->eachPatch() , d_matl_set );
 }
 //______________________________________________________________________
@@ -648,14 +648,14 @@ void meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
   // u,v,w -> u',v',w'
-  t->requires( Task::NewDW, d_velocityVar->label, d_velocityVar->matSubSet, Ghost::None, 0 );
-  t->computes ( d_velocityVar->primeLabel );
+  t->requiresVar( Task::NewDW, d_velocityVar->label, d_velocityVar->matSubSet, Ghost::None, 0 );
+  t->computesVar( d_velocityVar->primeLabel );
 
   // Q -> Q'
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
-    t->requires( Task::NewDW, Q->label, Q->matSubSet, m_gn, 0 );
-    t->computes ( Q->primeLabel );
+    t->requiresVar( Task::NewDW, Q->label, Q->matSubSet, m_gn, 0 );
+    t->computesVar( Q->primeLabel );
   }
 
   sched->addTask( t, level->eachPatch() , d_matl_set );
@@ -778,15 +778,15 @@ void meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
   //  scalars
   for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
     shared_ptr< Qvar > Q = d_Qvars[i];
-    t->requires( Task::NewDW, Q->primeLabel, Q->matSubSet, gn, 0 );
-    t->computes ( Q->turbFluxLabel );
+    t->requiresVar( Task::NewDW, Q->primeLabel, Q->matSubSet, gn, 0 );
+    t->computesVar( Q->turbFluxLabel );
   }
 
   //__________________________________
   //  velocity
-  t->requires( Task::NewDW, d_velocityVar->primeLabel, d_velocityVar->matSubSet, gn, 0 );
-  t->computes ( d_velocityVar->normalTurbStrssLabel );
-  t->computes ( d_velocityVar->shearTurbStrssLabel );
+  t->requiresVar( Task::NewDW, d_velocityVar->primeLabel, d_velocityVar->matSubSet, gn, 0 );
+  t->computesVar( d_velocityVar->normalTurbStrssLabel );
+  t->computesVar( d_velocityVar->shearTurbStrssLabel );
 
   sched->addTask( t, level->eachPatch() , d_matl_set );
 }

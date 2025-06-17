@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -195,13 +195,13 @@ void ViscoScramImplicit::addInitialComputesAndRequires(Task* task,
                                                 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pVolChangeHeatRateLabel, matlset);
-  task->computes(pViscousHeatRateLabel,   matlset);
-  task->computes(pCrackHeatRateLabel,     matlset);
-  task->computes(pCrackRadiusLabel,       matlset);
-  task->computes(pStatedataLabel,         matlset);
-  task->computes(pRandLabel,              matlset);
-  task->computes(pStrainRateLabel,        matlset);
+  task->computesVar(pVolChangeHeatRateLabel, matlset);
+  task->computesVar(pViscousHeatRateLabel,   matlset);
+  task->computesVar(pCrackHeatRateLabel,     matlset);
+  task->computesVar(pCrackRadiusLabel,       matlset);
+  task->computesVar(pStatedataLabel,         matlset);
+  task->computesVar(pRandLabel,              matlset);
+  task->computesVar(pStrainRateLabel,        matlset);
 }
 
 void ViscoScramImplicit::initializeCMData(const Patch* patch,
@@ -648,17 +648,17 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pSizeLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
+  task->requiresVar(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pSizeLabel,      matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
+  task->requiresVar(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
-  task->requires(Task::OldDW,Il->dispNewLabel,matlset,Ghost::AroundCells,1);
+  task->requiresVar(Task::OldDW,Il->dispNewLabel,matlset,Ghost::AroundCells,1);
 
-  task->computes(lb->pStressLabel_preReloc,matlset);  
-  task->computes(lb->pdTdtLabel,           matlset);  
-  task->computes(lb->pVolumeDeformedLabel, matlset);
+  task->computesVar(lb->pStressLabel_preReloc,matlset);  
+  task->computesVar(lb->pdTdtLabel,           matlset);  
+  task->computesVar(lb->pVolumeDeformedLabel, matlset);
 
 }
 
@@ -669,30 +669,30 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,gnone);
-  task->requires(Task::OldDW, lb->pSizeLabel,              matlset,gnone);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,gnone);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
-  task->requires(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
-  task->requires(Task::OldDW, pStatedataLabel,             matlset,gnone);
-  task->requires(Task::OldDW, pRandLabel,                  matlset,gnone);
-  task->requires(Task::NewDW, Il->dispNewLabel,   matlset,Ghost::AroundCells,1);
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pXLabel,                 matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pSizeLabel,              matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,              matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pStressLabel,            matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
+  task->requiresVar(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
+  task->requiresVar(Task::OldDW, pStatedataLabel,             matlset,gnone);
+  task->requiresVar(Task::OldDW, pRandLabel,                  matlset,gnone);
+  task->requiresVar(Task::NewDW, Il->dispNewLabel,   matlset,Ghost::AroundCells,1);
                                                                                 
-  task->computes(lb->pStressLabel_preReloc,                matlset);
-  task->computes(lb->pdTdtLabel,                           matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
-  task->computes(lb->pVolumeDeformedLabel,                 matlset);
-  task->computes(pVolChangeHeatRateLabel_preReloc,         matlset);
-  task->computes(pViscousHeatRateLabel_preReloc,           matlset);
-  task->computes(pCrackHeatRateLabel_preReloc,             matlset);
-  task->computes(pCrackRadiusLabel_preReloc,               matlset);
-  task->computes(pStatedataLabel_preReloc,                 matlset);
-  task->computes(pRandLabel_preReloc,                      matlset);
-  task->computes(pStrainRateLabel_preReloc,                matlset);
+  task->computesVar(lb->pStressLabel_preReloc,                matlset);
+  task->computesVar(lb->pdTdtLabel,                           matlset);
+  task->computesVar(lb->pDeformationMeasureLabel_preReloc,    matlset);
+  task->computesVar(lb->pVolumeDeformedLabel,                 matlset);
+  task->computesVar(pVolChangeHeatRateLabel_preReloc,         matlset);
+  task->computesVar(pViscousHeatRateLabel_preReloc,           matlset);
+  task->computesVar(pCrackHeatRateLabel_preReloc,             matlset);
+  task->computesVar(pCrackRadiusLabel_preReloc,               matlset);
+  task->computesVar(pStatedataLabel_preReloc,                 matlset);
+  task->computesVar(pRandLabel_preReloc,                      matlset);
+  task->computesVar(pStrainRateLabel_preReloc,                matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

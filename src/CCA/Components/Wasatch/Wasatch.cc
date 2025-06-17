@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2024 The University of Utah
+ * Copyright (c) 2010-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1217,16 +1217,16 @@ namespace WasatchCore{
       // exist so require the value from the new DW.  Otherwise for a
       // normal time step require the time step from the old DW.
       if(sched->get_dw(0) ) {
-        task->requires( Uintah::Task::OldDW, getTimeStepLabel() );
-        task->requires( Uintah::Task::OldDW, getSimTimeLabel() );
+        task->requiresVar( Uintah::Task::OldDW, getTimeStepLabel() );
+        task->requiresVar( Uintah::Task::OldDW, getSimTimeLabel() );
       }
       else if(sched->get_dw(1) ) {
-        task->requires( Uintah::Task::NewDW, getTimeStepLabel() );
-        task->requires( Uintah::Task::NewDW, getSimTimeLabel() );
+        task->requiresVar( Uintah::Task::NewDW, getTimeStepLabel() );
+        task->requiresVar( Uintah::Task::NewDW, getSimTimeLabel() );
       }
       
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      task->computes( getDelTLabel(),
+      task->computesVar( getDelTLabel(),
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
@@ -1239,7 +1239,7 @@ namespace WasatchCore{
 
       if( timeStep > 0 ){
         if( useStableDT ){
-          task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
+          task->requiresVar(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
         }
       }
                   
@@ -1257,8 +1257,8 @@ namespace WasatchCore{
     
     Uintah::Task* t = scinew Uintah::Task("Wasatch::computeDualTimeResidual", this, &Wasatch::computeDualTimeResidual, level, subsched.get_rep());
     
-    t->requires( Uintah::Task::NewDW, Uintah::VarLabel::find("convergence"), Uintah::Ghost::None, 0);
-    t->computes(Uintah::VarLabel::find("DualtimeResidual"));
+    t->requiresVar( Uintah::Task::NewDW, Uintah::VarLabel::find("convergence"), Uintah::Ghost::None, 0);
+    t->computesVar(Uintah::VarLabel::find("DualtimeResidual"));
     subsched->addTask(t, level->eachPatch(), materials_);
   }
 
@@ -1308,8 +1308,8 @@ namespace WasatchCore{
       dualTimeTask->hasSubScheduler();
 
       // we need the "outer" timestep
-      dualTimeTask->requires( Uintah::Task::OldDW, getTimeStepLabel() );
-      dualTimeTask->requires( Uintah::Task::OldDW, getDelTLabel() );
+      dualTimeTask->requiresVar( Uintah::Task::OldDW, getTimeStepLabel() );
+      dualTimeTask->requiresVar( Uintah::Task::OldDW, getDelTLabel() );
       
       Expr::TagList timeTags;
       timeTags.push_back( TagNames::self().time     );
@@ -1321,7 +1321,7 @@ namespace WasatchCore{
       
       // figure out how to deal with the convergence criterion (reduction)
       Uintah::VarLabel* convLabel = Uintah::VarLabel::create( "DualtimeResidual", Uintah::max_vartype::getTypeDescription() );
-      dualTimeTask->requires( Uintah::Task::NewDW, convLabel );
+      dualTimeTask->requiresVar( Uintah::Task::NewDW, convLabel );
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
@@ -1387,7 +1387,7 @@ namespace WasatchCore{
       const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
       for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
       {
-        dualTimeTask->requires(Uintah::Task::OldDW, *it, Uintah::Ghost::AroundCells, 1);
+        dualTimeTask->requiresVar(Uintah::Task::OldDW, *it, Uintah::Ghost::AroundCells, 1);
       }
 
       const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
@@ -1395,7 +1395,7 @@ namespace WasatchCore{
       {
         std::string varname = (*it)->getName();
         if (varname == "dt" || varname == "rkstage" || varname == "timestep" || varname == "time" )  continue;
-        dualTimeTask->computes(*it);
+        dualTimeTask->computesVar(*it);
       }
       //----------------------------------------------------------------------------------------------
       
@@ -1658,15 +1658,15 @@ namespace WasatchCore{
                            this,
                            &Wasatch::set_initial_time );
 
-      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getTimeStepLabel() );
-      updateCurrentTimeTask->requires( Uintah::Task::NewDW, getSimTimeLabel() );
+      updateCurrentTimeTask->requiresVar( Uintah::Task::NewDW, getTimeStepLabel() );
+      updateCurrentTimeTask->requiresVar( Uintah::Task::NewDW, getSimTimeLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       tLabel_     = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_    ;
       tStepLabel_ = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_;
       
-      updateCurrentTimeTask->computes( tLabel_     );
-      updateCurrentTimeTask->computes( tStepLabel_ );
+      updateCurrentTimeTask->computesVar( tLabel_     );
+      updateCurrentTimeTask->computesVar( tStepLabel_ );
         
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
@@ -1741,9 +1741,9 @@ namespace WasatchCore{
                            this,
                            &Wasatch::update_current_time,
                           rkStage );
-      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getTimeStepLabel() );
-      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getSimTimeLabel() );
-      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getDelTLabel() );
+      updateCurrentTimeTask->requiresVar( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getTimeStepLabel() );
+      updateCurrentTimeTask->requiresVar( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getSimTimeLabel() );
+      updateCurrentTimeTask->requiresVar( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), getDelTLabel() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
       dtLabel_      = (!dtLabel_     ) ? Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD )       : dtLabel_     ;
@@ -1751,16 +1751,16 @@ namespace WasatchCore{
       tStepLabel_   = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_  ;
       rkStageLabel_ = (!rkStageLabel_) ? Uintah::VarLabel::create( TagNames::self().rkstage.name(), perPatchTD )  : rkStageLabel_;
       if( rkStage < 2 ){
-        updateCurrentTimeTask->computes( dtLabel_      );
-        updateCurrentTimeTask->computes( tLabel_       );
-        updateCurrentTimeTask->computes( tStepLabel_   );
-        updateCurrentTimeTask->computes( rkStageLabel_ );
+        updateCurrentTimeTask->computesVar( dtLabel_      );
+        updateCurrentTimeTask->computesVar( tLabel_       );
+        updateCurrentTimeTask->computesVar( tStepLabel_   );
+        updateCurrentTimeTask->computesVar( rkStageLabel_ );
       }
       else {
-        updateCurrentTimeTask->modifies( dtLabel_      );
-        updateCurrentTimeTask->modifies( tLabel_       );
-        updateCurrentTimeTask->modifies( tStepLabel_   );
-        updateCurrentTimeTask->modifies( rkStageLabel_ );
+        updateCurrentTimeTask->modifiesVar( dtLabel_      );
+        updateCurrentTimeTask->modifiesVar( tLabel_       );
+        updateCurrentTimeTask->modifiesVar( tStepLabel_   );
+        updateCurrentTimeTask->modifiesVar( rkStageLabel_ );
       }
       
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );

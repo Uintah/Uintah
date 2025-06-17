@@ -7,7 +7,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,16 +82,16 @@ void SimpleSDInterface::addComputesAndRequiresDivergence(
   // Everthing needs to register to calculate the basic interface flux rate
   setBaseComputesAndRequiresDivergence(task, matls->getUnion());
 
-  task->requires(Task::OldDW, d_mpm_lb->delTLabel);
+  task->requiresVar(Task::OldDW, d_mpm_lb->delTLabel);
 
-  task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
-  task->requires(Task::NewDW, d_mpm_lb->gVolumeLabel,
+  task->requiresVar(Task::NewDW, d_mpm_lb->gVolumeLabel,                  gnone);
+  task->requiresVar(Task::NewDW, d_mpm_lb->gVolumeLabel,
                  d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
-  task->requires(Task::NewDW, d_mpm_lb->diffusion->gConcentration,     gnone);
-  task->requires(Task::NewDW, d_mpm_lb->diffusion->gConcentration,
+  task->requiresVar(Task::NewDW, d_mpm_lb->diffusion->gConcentration,     gnone);
+  task->requiresVar(Task::NewDW, d_mpm_lb->diffusion->gConcentration,
                  d_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
 
-//  task->computes(sdInterfaceRate, mss);
+//  task->computesVar(sdInterfaceRate, mss);
 
   sched->addTask(task, patches, matls);
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -152,8 +152,8 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
-  task->requires( Uintah::Task::NewDW,pressureLabel_, gt, ng );
-  //task->modifies( pressureLabel_);
+  task->requiresVar( Uintah::Task::NewDW,pressureLabel_, gt, ng );
+  //task->modifiesVar( pressureLabel_);
   Uintah::LoadBalancer * lb = sched->getLoadBalancer();
   sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
 }
@@ -166,12 +166,12 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::MaterialSubset* const materials,
                                const int RKStage )
 {
-  if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
-  else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  if( RKStage == 1 ) task.computesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  else               task.modifiesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   if ( hasIntrusion_ ) {
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
-    task.requires(Uintah::Task::NewDW, Uintah::VarLabel::find(volFracTag_.name()), gt, ng);
+    task.requiresVar(Uintah::Task::NewDW, Uintah::VarLabel::find(volFracTag_.name()), gt, ng);
   }
 }
 

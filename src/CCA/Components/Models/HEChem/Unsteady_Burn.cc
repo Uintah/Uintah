@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,9 +53,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
 
 //__________________________________   
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
@@ -202,11 +199,11 @@ void Unsteady_Burn::scheduleInitialize(SchedulerP& sched,
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
-  t->computes(BurningCellLabel, react_matl);
-  t->computes(TsLabel,          react_matl);
-  t->computes(BetaLabel,        react_matl);
-  t->computes(PartBetaLabel,    react_matl);
-  t->computes(PartTsLabel,      react_matl);
+  t->computesVar(BurningCellLabel, react_matl);
+  t->computesVar(TsLabel,          react_matl);
+  t->computesVar(BetaLabel,        react_matl);
+  t->computesVar(PartBetaLabel,    react_matl);
+  t->computesVar(PartTsLabel,      react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -278,43 +275,43 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     const MaterialSubset* ice_matls = m_materialManager->allMaterials( "ICE" )->getUnion();
     const MaterialSubset* mpm_matls = m_materialManager->allMaterials( "MPM" )->getUnion();
   */
-  t->requires(Task::OldDW, Ilb->timeStepLabel );
-  t->requires(Task::OldDW, Ilb->delTLabel,        level.get_rep());
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,     gac,1);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, gac,1);
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,        level.get_rep());
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,     gac,1);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel, gac,1);
   /*     Products     */
   /*     Reactants    */
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::NewDW, MIlb->vel_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, MIlb->cMassLabel,       react_matl, gn);
-  t->requires(Task::NewDW, MIlb->gMassLabel,       react_matl, gac, 1);
-  t->requires(Task::OldDW, Mlb->pXLabel,           react_matl, particle_ghost_type, particle_ghost_layer);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->vel_CCLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->cMassLabel,       react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->gMassLabel,       react_matl, gac, 1);
+  t->requiresVar(Task::OldDW, Mlb->pXLabel,           react_matl, particle_ghost_type, particle_ghost_layer);
   /*     Misc      */
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW, Mlb->NC_CCweightLabel,    one_matl, gac, 1);  
+  t->requiresVar(Task::NewDW, Ilb->press_equil_CCLabel, one_matl, gac, 1);
+  t->requiresVar(Task::OldDW, Mlb->NC_CCweightLabel,    one_matl, gac, 1);  
 
-  t->requires(Task::OldDW, BurningCellLabel,       react_matl, gac, 1);     
-  t->requires(Task::OldDW, TsLabel,                react_matl, gac, 1);     
-  t->requires(Task::OldDW, BetaLabel,              react_matl, gac, 1);     
-  t->requires(Task::OldDW, PartBetaLabel,          react_matl, gn);
-  t->requires(Task::OldDW, PartTsLabel,            react_matl, gn);
+  t->requiresVar(Task::OldDW, BurningCellLabel,       react_matl, gac, 1);     
+  t->requiresVar(Task::OldDW, TsLabel,                react_matl, gac, 1);     
+  t->requiresVar(Task::OldDW, BetaLabel,              react_matl, gac, 1);     
+  t->requiresVar(Task::OldDW, PartBetaLabel,          react_matl, gn);
+  t->requiresVar(Task::OldDW, PartTsLabel,            react_matl, gn);
 
-  t->computes(BurningCellLabel, react_matl);  
-  t->computes(TsLabel,          react_matl);
-  t->computes(BetaLabel,        react_matl);
-  t->computes(PartBetaLabel,    react_matl);
-  t->computes(PartTsLabel,      react_matl);
+  t->computesVar(BurningCellLabel, react_matl);  
+  t->computesVar(TsLabel,          react_matl);
+  t->computesVar(BetaLabel,        react_matl);
+  t->computesVar(PartBetaLabel,    react_matl);
+  t->computesVar(PartTsLabel,      react_matl);
    
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
   
   if(d_saveConservedVars->mass ){
-    t->computes(Unsteady_Burn::totalMassBurnedLabel);
+    t->computesVar(Unsteady_Burn::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-    t->computes(Unsteady_Burn::totalHeatReleasedLabel);
+    t->computesVar(Unsteady_Burn::totalHeatReleasedLabel);
   }
 
   sched->addTask(t, level->eachPatch(), mymatls);

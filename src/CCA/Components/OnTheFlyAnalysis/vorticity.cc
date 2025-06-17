@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -129,12 +129,12 @@ void vorticity::scheduleDoAnalysis(SchedulerP  & sched,
 
   Ghost::GhostType gac = Ghost::AroundCells;
 
-  t->requires( Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
-  t->computes( vorticityLabel, d_matl_sub);
+  t->requiresVar( Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
+  t->computesVar( vorticityLabel, d_matl_sub);
 
 #ifdef HAVE_VISIT
   if( required ) {
-    t->requires( Task::OldDW, vorticityLabel, d_matl_sub, m_gn, 0);
+    t->requiresVar( Task::OldDW, vorticityLabel, d_matl_sub, m_gn, 0);
   }
 #endif
 

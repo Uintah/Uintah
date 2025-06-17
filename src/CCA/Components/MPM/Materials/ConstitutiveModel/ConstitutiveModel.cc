@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -153,7 +153,7 @@ ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
 {
   Ghost::GhostType  gnone = Ghost::None;
   addSharedCRForExplicit(task, matlset, p);
-  task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pStressLabel,             matlset, gnone);
 }
 
 void
@@ -163,21 +163,21 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
 {
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
-  task->requires(Task::OldDW, lb->pMassLabel,               matlset, gnone);
-  task->requires(Task::OldDW, lb->pVolumeLabel,             matlset, gnone);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
-  task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,
+  task->requiresVar(Task::OldDW, lb->delTLabel);
+  task->requiresVar(Task::OldDW, lb->pXLabel,                  matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pMassLabel,               matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pVolumeLabel,             matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
+  task->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,
                                                             matlset, gnone);
-  task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
+  task->requiresVar(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
 
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pdTdtLabel,                        matlset);
-  //task->computes(lb->p_qLabel_preReloc,                 matlset);
+  task->computesVar(lb->pStressLabel_preReloc,             matlset);
+  task->computesVar(lb->pdTdtLabel,                        matlset);
+  //task->computesVar(lb->p_qLabel_preReloc,                 matlset);
 }
 
 void

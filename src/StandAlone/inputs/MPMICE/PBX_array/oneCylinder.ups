@@ -3,9 +3,9 @@
 <Uintah_specification>
    <Meta>
        <title>2D pbx9501 cylinder</title>
-   </Meta>  
+   </Meta>
    <SimulationComponent type="mpmice" />
-   
+
    <!--
    <LoadBalancer type="DLB">
      <timestepInterval> 200         </timestepInterval>
@@ -24,7 +24,7 @@
        <max_Timesteps>      700      </max_Timesteps>
        <timestep_multiplier>0.2       </timestep_multiplier>
        <max_delt_increase>  0.5      </max_delt_increase>
-   </Time>    
+   </Time>
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -81,18 +81,18 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-    
+
        <Level>
            <Box label = "1">
               <lower>        [ 0.000, 0.000, 0.0000] </lower>
               <upper>        [ 0.025, 0.025,  0.0005]    </upper>
               <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [2,2,1]                 </patches> 
+              <patches>      [2,2,1]                 </patches>
               <resolution>   [50,50,1]               </resolution>
            </Box>
        </Level>
     </Grid>
-   
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -130,12 +130,12 @@
        <ICE>
         <advection type = "SecondOrder"/>
         <ClampSpecificVolume>true</ClampSpecificVolume>
-       </ICE>        
+       </ICE>
     </CFD>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
@@ -169,26 +169,26 @@
              <useModifiedEOS>                true  </useModifiedEOS>
            </constitutive_model>
            <erosion algorithm = "ZeroStress"/>
-           
+
               <geom_object>
                 <cylinder label = "0">
                    <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
                    <top>     [0.000000, 0.000000, 0.010000]  </top>
                    <radius>       0.025400       </radius>
                 </cylinder>
- <!--                
+ <!--
              <difference>
                 <cylinder label = "0">
                    <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
                    <top>     [0.000000, 0.000000, 0.010000]  </top>
                    <radius>       0.025400       </radius>
                 </cylinder>
-   
+
                 <cylinder label = "hole">
                    <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
                    <top>     [0.000000, 0.000000, 0.010000]  </top>
                    <radius>       0.0075       </radius>
-                </cylinder> 
+                </cylinder>
              </difference>
 -->
              <res>                 [2,2,2]         </res>
@@ -197,8 +197,8 @@
            </geom_object>
          </material>
 
-          <contact>                                               
-           <type>null</type>                                 
+          <contact>
+           <type>null</type>
          </contact>
        </MPM>
 
@@ -224,7 +224,7 @@
              <density>            1.38934929e+00      </density>
              <pressure>           101325.0            </pressure>
            </geom_object>
-           
+
          </material>
          <material name="product">
            <EOS type="JWLC">
@@ -237,10 +237,10 @@
              <om>   0.45     </om>
              <rho0> 1894     </rho0>
            </EOS>
-           <dynamic_viscosity>      0.0              </dynamic_viscosity>      
-           <thermal_conductivity>   0.0              </thermal_conductivity>   
-           <specific_heat>          544.96           </specific_heat>          
-           <gamma>                  1.4              </gamma>                  
+           <dynamic_viscosity>      0.0              </dynamic_viscosity>
+           <thermal_conductivity>   0.0              </thermal_conductivity>
+           <specific_heat>          544.96           </specific_heat>
+           <gamma>                  1.4              </gamma>
            <geom_object>
              <box label="outOfDomain">
                <min>           [99.0, 99.0, 99.0 ]   </min>
@@ -252,7 +252,7 @@
              <density>        1.1792946927374306      </density>
              <pressure>       101325.0                </pressure>
            </geom_object>
- <!--          
+ <!--
            <geom_object>
              <cylinder label = "hole"/>
              <res>                [2,2,2]             </res>
@@ -261,13 +261,16 @@
              <density>            2000      </density>
              <pressure>           101325.0            </pressure>
            </geom_object>
--->           
+-->
          </material>
 
-      </ICE>       
+      </ICE>
 
       <exchange_properties>
-        <heatExchangeCoeff>  variable  </heatExchangeCoeff>
+        <CoefficientModel>
+          <heat> linearVariation </heat>
+        </CoefficientModel>
+
         <exchange_coefficients>
           <momentum>  [ 1e10, 1e10, 1e10 ]   </momentum>
           <heat>      [  1e5, 1e5,  1e5  ]   </heat>
@@ -277,7 +280,7 @@
 
 
     <Models>
- 
+
 <!--
       <Model type="Steady_Burn">
         <Steady_Burn>
@@ -298,7 +301,7 @@
         <IgnitionTemp>         500.0        </IgnitionTemp>
         </Steady_Burn>
       </Model>
-     
+
 
       Note:  These parameters are for PBX 9501.  They should give a Detonation velocity slightly higher than experimental,
       perhaps as much as 500 m/s too large (5%) but they give about the right detonation pressure: ~35 GPa.  They do not exhibit
@@ -306,9 +309,10 @@
       is likely too large in inpact situations, indicating a need for larger Gcrack.  However, these should give a good representation
       of what the model can do.
 -->
+      <!--______________________________________________________________________-->
       <Model type="DDT1">
         <DDT1>
-          <fromMaterial> PBX9501   </fromMaterial> 
+          <fromMaterial> PBX9501   </fromMaterial>
           <toMaterial>   product   </toMaterial>
           <G>       3.0e-10 </G>
           <b>       1.5     </b>
@@ -332,7 +336,7 @@
           <BoundaryParticles>    3            </BoundaryParticles>
           <IgnitionTemp>         1e100        </IgnitionTemp>    <!-- turn off deflagration -->
           <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
-          
+
           <adjust_IO_intervals>
             <PressureSwitch>
               <PressureThreshold>     5e9    </PressureThreshold>
@@ -348,31 +352,32 @@
           </adjust_IO_intervals>
 
         </DDT1>
-      </Model>  
+      </Model>
     </Models>
-                                                    
-    <PhysicalBC>                                     
-      <MPM>                                          
-         <pressure>                                  
-           <geom_object>   
-             <cylinder label = "0">                                   
-                <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>   
-                <top>     [0.000000, 0.000000, 0.010000]  </top>      
-                <radius>       0.025400       </radius>               
-             </cylinder>  
-           </geom_object>                            
-           <load_curve>                              
-              <id>1</id>                             
-              <time_point>                           
-                <time> 0 </time>                     
-                <load> -8e9 </load>                 
-              </time_point>                          
-              <time_point>                           
-                <time> 5e-7 </time>                  
-                <load> 0</load>                  
-              </time_point>                          
-           </load_curve>                             
-         </pressure>                                 
-      </MPM>                                         
-    </PhysicalBC>                                    
+
+    <!--______________________________________________________________________-->
+    <PhysicalBC>
+      <MPM>
+         <pressure>
+           <geom_object>
+             <cylinder label = "0">
+                <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
+                <top>     [0.000000, 0.000000, 0.010000]  </top>
+                <radius>       0.025400       </radius>
+             </cylinder>
+           </geom_object>
+           <load_curve>
+              <id>1</id>
+              <time_point>
+                <time> 0 </time>
+                <load> -8e9 </load>
+              </time_point>
+              <time_point>
+                <time> 5e-7 </time>
+                <load> 0</load>
+              </time_point>
+           </load_curve>
+         </pressure>
+      </MPM>
+    </PhysicalBC>
 </Uintah_specification>

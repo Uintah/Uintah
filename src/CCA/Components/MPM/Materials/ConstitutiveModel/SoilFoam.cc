@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -422,8 +422,8 @@ void SoilFoam::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(sv_minLabel,       matlset);
-  task->computes(p_sv_minLabel,     matlset);
+  task->computesVar(sv_minLabel,       matlset);
+  task->computesVar(p_sv_minLabel,     matlset);
 }
 
 void SoilFoam::addComputesAndRequires(Task* task,
@@ -438,11 +438,11 @@ void SoilFoam::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, sv_minLabel,         matlset, gnone);
-  task->requires(Task::OldDW, p_sv_minLabel,       matlset, gnone);
+  task->requiresVar(Task::OldDW, sv_minLabel,         matlset, gnone);
+  task->requiresVar(Task::OldDW, p_sv_minLabel,       matlset, gnone);
 
-  task->computes(sv_minLabel_preReloc,       matlset);
-  task->computes(p_sv_minLabel_preReloc,     matlset);
+  task->computesVar(sv_minLabel_preReloc,       matlset);
+  task->computesVar(p_sv_minLabel_preReloc,     matlset);
 }
 
 void 
@@ -460,11 +460,11 @@ SoilFoam::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, sv_minLabel,       matlset,gnone);
-  task->requires(Task::OldDW, p_sv_minLabel,     matlset,gnone);
+  task->requiresVar(Task::OldDW, sv_minLabel,       matlset,gnone);
+  task->requiresVar(Task::OldDW, p_sv_minLabel,     matlset,gnone);
 
-  task->computes(sv_minLabel_preReloc,       matlset);
-  task->computes(p_sv_minLabel_preReloc,     matlset);
+  task->computesVar(sv_minLabel_preReloc,       matlset);
+  task->computesVar(p_sv_minLabel_preReloc,     matlset);
 }
 
 double SoilFoam::computeRhoMicroCM(double pressure,

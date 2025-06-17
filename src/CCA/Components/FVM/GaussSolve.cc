@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -132,9 +132,9 @@ GaussSolve::scheduleInitialize( const LevelP     & level,
 
   Task* t = scinew Task( "GaussSolve::initialize", this, &GaussSolve::initialize );
 
-  t->computes(d_lb->ccPosCharge);
-  t->computes(d_lb->ccNegCharge);
-  t->computes(d_lb->ccPermittivity);
+  t->computesVar(d_lb->ccPosCharge);
+  t->computesVar(d_lb->ccNegCharge);
+  t->computesVar(d_lb->ccPermittivity);
   sched->addTask(t, level->eachPatch(), fvm_matls);
 
   d_solver->scheduleInitialize(level,sched, fvm_matls);
@@ -185,7 +185,7 @@ void GaussSolve::scheduleComputeStableTimeStep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimeStep",this, 
                            &GaussSolve::computeStableTimeStep);
-  task->computes(getDelTLabel(),level.get_rep());
+  task->computesVar(getDelTLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials( "FVM" ));
 }
 //__________________________________
@@ -229,12 +229,12 @@ GaussSolve::scheduleBuildMatrixAndRhs(       SchedulerP  & sched,
                            &GaussSolve::buildMatrixAndRhs,
                            level, sched.get_rep());
 
-  task->requires(Task::NewDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
-  task->computes(d_lb->ccESPotentialMatrix, d_es_matl, Task::OutOfDomain);
-  task->computes(d_lb->ccRHS_ESPotential,   d_es_matl, Task::OutOfDomain);
-  task->computes(d_lb->ccTotalCharge,       d_es_matl, Task::OutOfDomain);
+  task->requiresVar(Task::NewDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
+  task->requiresVar(Task::NewDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
+  task->requiresVar(Task::NewDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
+  task->computesVar(d_lb->ccESPotentialMatrix, d_es_matl, Task::OutOfDomain);
+  task->computesVar(d_lb->ccRHS_ESPotential,   d_es_matl, Task::OutOfDomain);
+  task->computesVar(d_lb->ccTotalCharge,       d_es_matl, Task::OutOfDomain);
 
   sched->addTask(task, level->eachPatch(), es_matl);
 }
@@ -334,12 +334,12 @@ void GaussSolve::scheduleComputeCharge(SchedulerP& sched,
   Task* t = scinew Task("GaussSolve::computeCharge", this,
                         &GaussSolve::computeCharge);
 
-  t->requires(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
-  t->computes(d_lb->ccPosCharge);
-  t->computes(d_lb->ccNegCharge);
-  t->computes(d_lb->ccPermittivity);
+  t->requiresVar(Task::OldDW, d_lb->ccPosCharge,    Ghost::AroundCells, 1);
+  t->requiresVar(Task::OldDW, d_lb->ccNegCharge,    Ghost::AroundCells, 1);
+  t->requiresVar(Task::OldDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
+  t->computesVar(d_lb->ccPosCharge);
+  t->computesVar(d_lb->ccNegCharge);
+  t->computesVar(d_lb->ccPermittivity);
 
   sched->addTask(t, level->eachPatch(), fvm_matls);
 }
@@ -386,7 +386,7 @@ void GaussSolve::scheduleUpdateESPotential(SchedulerP& sched, const LevelP& leve
                            &GaussSolve::updateESPotential,
                            level, sched.get_rep());
 
-  task->modifies(d_lb->ccESPotential , d_es_matl);
+  task->modifiesVar(d_lb->ccESPotential , d_es_matl);
   sched->addTask(task, level->eachPatch(), es_matl);
 }
 

@@ -32,11 +32,11 @@ function [TG] = getTimeGridInfo (uda, ts, level)
   endif
 
   TG.ts = int8(ts);
-  TG.physicalTime = physicalTime(ts);
+  TG.physicalTime = physicalTime(ts+1);  % octave is 1 based arrays
 
   %________________________________
   %  extract the grid information on a level
-  c = sprintf('puda -gridstats %s > tmp 2>&1',uda); 
+  c = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i > tmp 2>&1',uda, ts, ts);
   [s,r] = unix(c);
   
   c1 = sprintf('sed -n /"Level: index %i"/,/"dx"/{p} tmp > tmp.clean 2>&1',level);
@@ -45,11 +45,16 @@ function [TG] = getTimeGridInfo (uda, ts, level)
   [s,r0] = unix('grep -m1 dx: tmp.clean                  | tr -d "dx:[]"');
   [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp.clean |cut -d":" -f2 | tr -d "[]int"');
   [s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
-
+  
+  [s,r3] = unix("grep -m1 -w 'Interior Spatial Range' tmp |  awk -F'[][]' '{print $2}'" );
+  [s,r4] = unix("grep -m1 -w 'Interior Spatial Range' tmp |  awk -F'[][]' '{print $4}'" );
+  
   TG.dx = str2num(r0);
   TG.resolution   = int64( str2num(r1) );
   TG.domainLength = str2num(r2);
-  
+  TG.interiorSpatialRange_lo = str2num(r3);
+  TG.interiorSpatialRange_hi = str2num(r4);
+    
   %cleanup
   [s,r] = unix('/bin/rm tmp tmp.clean');
 endfunction

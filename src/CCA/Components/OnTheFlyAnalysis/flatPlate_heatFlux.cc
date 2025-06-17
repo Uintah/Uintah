@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -207,8 +207,8 @@ void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
 
   Ghost::GhostType gn = Ghost::None;
 
-  t->requires(Task::NewDW, M_lb->gHeatFluxLabel, d_matl_sub, gn,0);
-  t->computes(v_lb->total_heatRateLabel);
+  t->requiresVar(Task::NewDW, M_lb->gHeatFluxLabel, d_matl_sub, gn,0);
+  t->computesVar(v_lb->total_heatRateLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }

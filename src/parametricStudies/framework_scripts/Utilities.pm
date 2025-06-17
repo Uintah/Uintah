@@ -1,7 +1,7 @@
 #
 # The MIT License
 #
-# Copyright (c) 1997-2024 The University of Utah
+# Copyright (c) 1997-2025 The University of Utah
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -116,7 +116,7 @@ sub setPath{
     print " ($modInput)\n";
   }
 
-  print "does not exist.  Now exiting\n";
+  print "does not exist at any of the paths above.  Now exiting\n";
   exit
 }
 
@@ -354,6 +354,10 @@ sub modify_xml_files{
 sub modify_xml_file{
   my ( $upsFile, $test_nodes ) = @_;
 
+
+  if( ! $test_nodes  ){
+    return;
+  }
   #__________________________________
   # replace lines in test_ups
   foreach my $rpl_node ( $test_nodes->findnodes('replace_lines/*') ) {
@@ -406,7 +410,8 @@ sub write_file {
 sub runPreProcessCmd {
   my ( $upsFile_base, $upsFile_mod, $test_nodes ) = @_;
   
-  if( ! $test_nodes->findnodes('preProcess_cmd') ){
+  
+  if( ! $test_nodes ){
     return;
   }
    

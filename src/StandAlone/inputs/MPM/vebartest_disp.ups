@@ -16,11 +16,11 @@
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
-        <filebase>vebar.uda</filebase>
+        <filebase>Vebar.uda</filebase>
         <outputInterval>.5</outputInterval>
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
@@ -31,11 +31,17 @@
         <save label="p.volume"/>
         <save label="p.stress"/>
         <save label="p.mass"/>
-        <save label="g.stressFS"/>
+        <save label="g.mass"/>
+        <save label="p.color"/>
+        <save label="p.velocity"/>
+        <save label="p.scalefactor"/>
    </DataArchiver>
 
    <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator> fast_cpdi </interpolator>
+       <withColor> true </withColor>
+       <DoExplicitHeatConduction> false </DoExplicitHeatConduction>
    </MPM>
 
 
@@ -46,10 +52,8 @@
     <MaterialProperties>
        <MPM>
            <material>
-              <density>1.e9</density>
-              <constitutive_model type="hypo_elastic">
-                 <G>12.e6</G>
-                 <K>32.e6</K>
+              <density>1.e4</density>
+              <constitutive_model type="rigid">
                </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
@@ -61,6 +65,7 @@
                   <res>[2,2,2]</res>
                   <velocity>[0.0,0.0,0.005]</velocity>
                   <temperature>300</temperature>
+                  <color>.1</color>
                </geom_object>
               <geom_object>
                   <box label = "bottom rigid">
@@ -70,18 +75,25 @@
                   <res>[2,2,2]</res>
                   <velocity>[0.0,0.0,-0.005]</velocity>
                   <temperature>300</temperature>
+                  <color>.2</color>
                </geom_object>
            </material>
            
            <material>
               <density>1.0e3</density>
+<!--
+              <constitutive_model type = "UCNH">
+                 <shear_modulus>6.e3</shear_modulus>
+                 <bulk_modulus>16.e3</bulk_modulus>
+              </constitutive_model>
+-->
               <constitutive_model type = "mw_visco_elastic">
                  <e_shear_modulus>6.e3</e_shear_modulus>
                  <e_bulk_modulus>16.e3</e_bulk_modulus>
                  <ve_shear_modulus>1.0e7</ve_shear_modulus>
                  <ve_bulk_modulus>1.0e7</ve_bulk_modulus>
-                 <ve_volumetric_viscosity>1.0e15</ve_volumetric_viscosity>
-                 <ve_deviatoric_viscosity>1000000</ve_deviatoric_viscosity>
+                 <ve_volumetric_viscosity>1.0e6</ve_volumetric_viscosity>
+                 <ve_deviatoric_viscosity>1.0e6</ve_deviatoric_viscosity>
               </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
@@ -93,14 +105,15 @@
                   <res>[2,2,2]</res>
                   <velocity>[0.,0.,0.]</velocity>
                   <temperature>300.</temperature>
+                  <color>1</color>
                </geom_object>
 
            </material>
 
            <contact>
-             <type>rigid</type>
+             <type>specified</type>
              <materials>[0,1]</materials>
-              <stop_time>1.0 </stop_time>
+             <stop_time>1.0 </stop_time>
            </contact>
        </MPM>
 
@@ -110,9 +123,10 @@
        <Level>
            <Box label="1">
               <lower>[  0.0, -0.4, -1.5 ]</lower>
-              <upper>[  0.1, 0.4,  1.5 ]</upper>
-               <resolution>[1,8,30]</resolution>
+              <upper>[  0.1,  0.4,  1.5 ]</upper>
+              <resolution>[1,8,30]</resolution>
               <patches>[1,1,2]</patches>
+              <extraCells>[1,1,1]       </extraCells>
            </Box>
        </Level>
         <BoundaryConditions>
@@ -136,6 +150,5 @@
         </Face>
         </BoundaryConditions>
     </Grid>
-
 
 </Uintah_specification>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -258,7 +258,7 @@ void planeExtract::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("planeExtract::initialize",
                   this, &planeExtract::initialize);
 
-  t->computes(d_lb->lastWriteTimeLabel);
+  t->computesVar(d_lb->lastWriteTimeLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -307,7 +307,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
   Task* t = scinew Task("planeExtract::doAnalysis",
                    this,&planeExtract::doAnalysis);
 
-  t->requires( Task::OldDW, m_timeStepLabel);
+  t->requiresVar( Task::OldDW, m_timeStepLabel);
   sched_TimeVars( t, level, d_lb->lastWriteTimeLabel, true );
 
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
@@ -321,7 +321,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
 
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
+    t->requiresVar(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -374,6 +374,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       //__________________________________
       // loop over each plane
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
+        bool initialPass = true;
 
         string relativePath = d_planes[p]->name + "/" + timestep + "/" + levelIndx;
 
@@ -427,13 +428,17 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             //__________________________________
             //  Open the file pointer and write the header
             ostringstream fname;
-            fname<< udaPath <<"/"<< relativePath << "/" << patch->getID() << ":"<< labelName <<"_"<< matl<<".dat";
+            int patchID = patch->getID();
+            fname<< udaPath <<"/"<< relativePath << "/" << patchID << ":"<< labelName <<"_"<< matl<<".dat";
             string filename = fname.str();
 
-
             FILE *fp;
-            createFile(filename, varLabel, matl, tv.now, fp);
+            createFile(filename, varLabel, matl, tv.now, fp);\
 
+            if ( initialPass && pg->myRank() == 0 ){
+              DOUTR( true, " OnTheFlyAnalysis planeExtract results are located at " << relativePath );
+              initialPass = false;
+            }
             //__________________________________
             //
             const Uintah::TypeDescription* td = varLabel->typeDescription();
@@ -559,6 +564,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             }
 
             fclose(fp);
+
           }  // loop over variables
         }  // doWrite
       }  // loop over planes
@@ -619,8 +625,6 @@ void planeExtract::createFile(const string& filename,
 
   fprintf(fp,"\n");
   fflush(fp);
-
-  cout << Parallel::getMPIRank() << " OnTheFlyAnalysis planeExtract results are located in " << filename << endl;
 }
 
 //______________________________________________________________________
@@ -641,7 +645,7 @@ void planeExtract::writeDataD( DataWarehouse*  new_dw,
     Point here = patch->cellPosition(c);
     here += offset;
 
-    fprintf(fp,    "%16.15E %16.15E  %16.15E ",here.x(),here.y(),here.z());
+    fprintf(fp,    "%16.15E %16.15E %16.15E ",here.x(),here.y(),here.z());
     fprintf(fp, "    %16.15E\n",Q_var[c]);
   }
 }

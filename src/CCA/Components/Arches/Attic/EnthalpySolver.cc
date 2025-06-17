@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -281,7 +281,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
                           &EnthalpySolver::buildLinearMatrix,
                           timelabels );
 
-  tsk->requires( Task::OldDW, d_lab->d_timeStepLabel );
+  tsk->requiresVar( Task::OldDW, d_lab->d_timeStepLabel );
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
@@ -290,7 +290,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
+  tsk->requiresVar(parent_old_dw, d_lab->d_delTLabel);
   
   // This task requires enthalpy and density from old time step for transient
   // calculation
@@ -300,9 +300,9 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,  gac, 2);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gac, 2);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_enthalpySPLabel,  gac, 2);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,   gac, 2);
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
@@ -310,49 +310,49 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_enthalpySPLabel,  gn, 0);
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gn, 0);
+  tsk->requiresVar(old_values_dw, d_lab->d_enthalpySPLabel,  gn, 0);
+  tsk->requiresVar(old_values_dw, d_lab->d_densityCPLabel,   gn, 0);
   
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
 
   if (d_dynScalarModel){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,        gac, 2);
+    tsk->requiresVar(Task::NewDW, d_lab->d_viscosityCTSLabel,        gac, 2);
   }
   
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
   Task::WhichDW which_dw = Task::NewDW;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     which_dw = Task::OldDW;
   }
 
-  tsk->requires(which_dw, d_lab->d_tempINLabel,  gac, 1);
-  tsk->requires(which_dw, d_lab->d_cpINLabel,    gac, 1);
+  tsk->requiresVar(which_dw, d_lab->d_tempINLabel,  gac, 1);
+  tsk->requiresVar(which_dw, d_lab->d_cpINLabel,    gac, 1);
   
 
   if (d_radiationCalc) {
-    tsk->requires(Task::NewDW, d_lab->d_radiationSRCINLabel, gn, 0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_radiationSRCINLabel, gn, 0);
   } 
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,gn, 0);
+    tsk->requiresVar(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,   gn, 0);
+    tsk->requiresVar(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,gn, 0);
   }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-    tsk->computes(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
-    tsk->computes(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
-    tsk->computes(d_lab->d_enthNonLinSrcSBLMLabel);
+    tsk->computesVar(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->computesVar(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
+    tsk->computesVar(d_lab->d_enthNonLinSrcSBLMLabel);
   }
   else {
-    tsk->modifies(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
-    tsk->modifies(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
-    tsk->modifies(d_lab->d_enthNonLinSrcSBLMLabel);
+    tsk->modifiesVar(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifiesVar(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifiesVar(d_lab->d_enthNonLinSrcSBLMLabel);
   }
   
    //__________________________________
@@ -363,12 +363,12 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
      const VarLabel* srcLabel = src.getSrcLabel(); 
-     tsk->requires(Task::NewDW, srcLabel, gn, 0); 
+     tsk->requiresVar(Task::NewDW, srcLabel, gn, 0); 
   }
 
-  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
+  tsk->requiresVar(Task::NewDW, timelabels->negativeDensityGuess);
 
-  tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);                  
+  tsk->modifiesVar(d_lab->d_enthalpyBoundarySrcLabel);                  
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
@@ -690,29 +690,29 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
-  tsk->requires(parent_old_dw, d_lab->d_delTLabel);
+  tsk->requiresVar(parent_old_dw, d_lab->d_delTLabel);
   
-  tsk->requires(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
-  tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel,     gn, 0);
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gac, 1);
+  tsk->requiresVar(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
+  tsk->requiresVar(Task::NewDW,   d_lab->d_cellInfoLabel,     gn, 0);
+  tsk->requiresVar(Task::NewDW,   d_lab->d_cellTypeLabel,     gac, 1);
   
 
   if (timelabels->multiple_steps){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, gac, 1);
+    tsk->requiresVar(Task::NewDW, d_lab->d_enthalpyTempLabel, gac, 1);
   }else{
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,   gac, 1);
+    tsk->requiresVar(Task::OldDW, d_lab->d_enthalpySPLabel,   gac, 1);
   }
   
-  tsk->requires(Task::NewDW,   d_lab->d_enthCoefSBLMLabel, 
+  tsk->requiresVar(Task::NewDW,   d_lab->d_enthCoefSBLMLabel, 
                                d_lab->d_stencilMatl, oams, gn, 0);
                                
-  tsk->requires(Task::NewDW,   d_lab->d_enthNonLinSrcSBLMLabel, gn, 0);
+  tsk->requiresVar(Task::NewDW,   d_lab->d_enthNonLinSrcSBLMLabel, gn, 0);
 
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
   } 
  
-  tsk->modifies(d_lab->d_enthalpySPLabel);
+  tsk->modifiesVar(d_lab->d_enthalpySPLabel);
   
   sched->addTask(tsk, patches, matls);
 }

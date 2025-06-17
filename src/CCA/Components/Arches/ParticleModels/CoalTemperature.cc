@@ -263,9 +263,9 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
     register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable( char_name, ArchesFieldContainer        ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( enthalpy_name, ArchesFieldContainer    ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable( rc_name , ArchesFieldContainer         ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( char_name, ArchesFieldContainer       ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( enthalpy_name, ArchesFieldContainer   ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( rc_name , ArchesFieldContainer        ::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( temperature_name, ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
 

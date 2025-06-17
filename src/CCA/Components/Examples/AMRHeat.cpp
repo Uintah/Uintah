@@ -44,9 +44,9 @@ void AMRHeat::scheduleErrorEstimate(const LevelP&     coarseLevel,
                                           SchedulerP& sched)
 {
   Task* task = scinew Task("AMRHeat::errorEstimate", this, &AMRHeat::errorEstimate);
-  task->requires(Task::NewDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
-  task->modifies(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
-  task->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  task->requiresVar(Task::NewDW, d_lb->temperature_nc, Ghost::AroundNodes, 1);
+  task->modifiesVar(m_regridder->getRefineFlagLabel(), m_regridder->refineFlagMaterials());
+  task->modifiesVar(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -133,9 +133,9 @@ void AMRHeat::scheduleRefine (const PatchSet*   patches,
 {
   if(getLevel(patches)->hasCoarserLevel()){
     Task* task = scinew Task("AMRHeat::refine", this, &AMRHeat::refine);
-    task->requires(Task::NewDW, d_lb->temperature_nc, 0, Task::CoarseLevel,
+    task->requiresVar(Task::NewDW, d_lb->temperature_nc, 0, Task::CoarseLevel,
                    0, Task::NormalDomain, Ghost::AroundNodes, 1);
-    task->computes(d_lb->temperature_nc);
+    task->computesVar(d_lb->temperature_nc);
     sched->addTask(task, patches, m_materialManager->allMaterials());
   }
 }

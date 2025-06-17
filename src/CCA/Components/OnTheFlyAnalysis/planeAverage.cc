@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -324,10 +324,10 @@ void planeAverage::scheduleInitialize(SchedulerP   & sched,
                   this, &planeAverage::initialize);
 
   t->setType( Task::OncePerProc );
-  t->computes(d_lb->lastCompTimeLabel );
+  t->computesVar(d_lb->lastCompTimeLabel );
 
   if( d_writeOutput ){
-    t->computes(d_lb->fileVarsStructLabel, m_zeroMatl);
+    t->computesVar(d_lb->fileVarsStructLabel, m_zeroMatl);
   }
 
   const PatchSet * perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
@@ -528,7 +528,7 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
 
   Ghost::GhostType gn = Ghost::None;
   if( d_lb->weightLabel != nullptr ){
-    t->requires( Task::NewDW, d_lb->weightLabel, d_matl_subSet, gn, 0);
+    t->requiresVar( Task::NewDW, d_lb->weightLabel, d_matl_subSet, gn, 0);
   }
 
   const int L_indx = level->getIndex();
@@ -559,7 +559,7 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
     matSubSet->add( planarVars[i]->matl );
     matSubSet->addReference();
 
-    t->requires( Task::NewDW, label, matSubSet, gn, 0 );
+    t->requiresVar( Task::NewDW, label, matSubSet, gn, 0 );
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -903,8 +903,8 @@ void planeAverage::sched_writeToFiles(SchedulerP   &    sched,
 
   sched_TimeVars( t, level, d_lb->lastCompTimeLabel, true );
 
-  t->requires( Task::OldDW, d_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0 );
-  t->computes( d_lb->fileVarsStructLabel, m_zeroMatl );
+  t->requiresVar( Task::OldDW, d_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0 );
+  t->computesVar( d_lb->fileVarsStructLabel, m_zeroMatl );
 
   // first patch on this level
   const Patch* p = level->getPatch(0);

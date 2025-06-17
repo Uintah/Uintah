@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -138,13 +138,13 @@ void AnalysisModule::sched_TimeVars( Task* t,
                                      const VarLabel * prev_AnlysTimeLabel,
                                      const bool addComputes )
 {
-  t->requires( Task::OldDW, m_simulationTimeLabel );
-  t->requires( Task::OldDW, prev_AnlysTimeLabel );
-  t->requires( Task::OldDW, m_delTLabel, level.get_rep() );
-  t->requires( Task::OldDW, m_timeStepLabel );
+  t->requiresVar( Task::OldDW, m_simulationTimeLabel );
+  t->requiresVar( Task::OldDW, prev_AnlysTimeLabel );
+  t->requiresVar( Task::OldDW, m_delTLabel, level.get_rep() );
+  t->requiresVar( Task::OldDW, m_timeStepLabel );
 
   if( addComputes ){
-    t->computes( prev_AnlysTimeLabel );
+    t->computesVar( prev_AnlysTimeLabel );
   }
 }
 

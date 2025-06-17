@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -251,7 +251,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
     auto taskDependencies = [&](Task* tsk) {
 
       // Actually compute the dt based on CFD variables.
-      tsk->computes( m_delTLabel, level.get_rep() );
+      tsk->computesVar( m_delTLabel, level.get_rep() );
 
       m_uLabel = VarLabel::find( uname );
       m_vLabel = VarLabel::find( vname );
@@ -260,11 +260,11 @@ KokkosSolver::computeTimestep( const LevelP     & level
       m_tot_muLabel = VarLabel::find( muname );
 
       if ( level->getIndex() == m_archesLevelIndex ){
-        tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
-        tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+        tsk->requiresVar( Task::NewDW, m_uLabel, Ghost::None, 0 );
+        tsk->requiresVar( Task::NewDW, m_vLabel, Ghost::None, 0 );
+        tsk->requiresVar( Task::NewDW, m_wLabel, Ghost::None, 0 );
+        tsk->requiresVar( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
+        tsk->requiresVar( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
       }
 
       m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
@@ -309,7 +309,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
     auto taskDependencies = [&](Task* tsk) {
       m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init );
       proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
-      tsk->computes( m_delTLabel, level.get_rep() );
+      tsk->computesVar( m_delTLabel, level.get_rep() );
     };
 
     create_portable_tasks(taskDependencies, this,

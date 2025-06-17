@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -360,18 +360,18 @@ void FluidContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   z_matl->addReference();
 
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,           gp, ngc_p);
-  t->requires(Task::OldDW, lb->pMassLabel,        gp, ngc_p);
-  t->requires(Task::OldDW, lb->pVolumeLabel,      gp, ngc_p);
-  t->requires(Task::OldDW, lb->pStressLabel,      gp, ngc_p);
-  t->requires(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
-  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
-  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
-  // t->computes(lb->gStressLabel); // Will this influence pore pressure?
-  t->modifies(Hlb->gFluidVelocityLabel, mss);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::OldDW, lb->pXLabel,           gp, ngc_p);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,        gp, ngc_p);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,      gp, ngc_p);
+  t->requiresVar(Task::OldDW, lb->pStressLabel,      gp, ngc_p);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
+  t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel, gp, ngc_p);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  // t->computesVar(lb->gStressLabel); // Will this influence pore pressure?
+  t->modifiesVar(Hlb->gFluidVelocityLabel, mss);
 
   sched->addTask(t, patches, ms);
 
@@ -392,16 +392,16 @@ void FluidContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
-  // t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  // t->requires(Task::NewDW, lb->gPositionLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel,         Ghost::None);
-  t->requires(Task::NewDW, Hlb->gFluidVelocityLabel,         Ghost::None);
-  t->modifies(             Hlb->gFluidVelocityStarLabel,  mss);
-  t->modifies(             Hlb->gFluidAccelerationLabel,  mss);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  // t->requiresVar(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  // t->requiresVar(Task::NewDW, lb->gPositionLabel,         Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVelocityLabel,         Ghost::None);
+  t->requiresVar(Task::NewDW, Hlb->gFluidVelocityLabel,         Ghost::None);
+  t->modifiesVar(             Hlb->gFluidVelocityStarLabel,  mss);
+  t->modifiesVar(             Hlb->gFluidAccelerationLabel,  mss);
 
   sched->addTask(t, patches, ms);
 

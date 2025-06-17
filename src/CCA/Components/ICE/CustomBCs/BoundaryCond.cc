@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1247,53 +1247,57 @@ void BC_bulletproofing(const ProblemSpecP & prob_spec,
     if(side == "z+") { tagFace_plus.z(1); }
 
     // loop over all BCTypes for that face
-    for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
-      map<string,string> bc_type;
-      bc_iter->getAttributes(bc_type);
+    for( ProblemSpecP bcType_ps = face_ps->findBlock( "BCType" ); bcType_ps != nullptr; bcType_ps = bcType_ps->findNextBlock( "BCType" ) ) {
+      map<string,string> bc_attr;
+      bcType_ps->getAttributes(bc_attr);
 
+      string label = bc_attr["label"];
       // valididate user input
       // Note a scalar could have multiple names
-      bool isNot_Scalar = ( bc_type["label"].find( "scalar" ) == string::npos);
+      bool isNot_Scalar = ( label.find( "scalar" ) == string::npos);
 
-      if( bc_type["label"] != "Pressure"      && bc_type["label"] != "Temperature" &&
-          bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity"    &&
-          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric"   &&
-          isNot_Scalar                        && bc_type["label"] != "cumulativeEnergyReleased"){
+      if( label != "Pressure"      && label != "Temperature" &&
+          label != "SpecificVol"   && label != "Velocity"    &&
+          label != "Density"       && label != "Symmetric"   &&
+          isNot_Scalar                        && label != "cumulativeEnergyReleased"){
 
         ostringstream warn;
-        warn <<"\n   ERROR: ICE::\n   The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
-             << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+        warn <<"\n   ERROR: ICE::\n   The boundary condition label ("<< label <<") is not valid\n"
+             << " Face:  " << face["side"] << " BCType " << label<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
 
       // specified "all" for a 1 matl problem
-      if (bc_type["id"] == "all" && numAllMatls == 1){
+      if (bc_attr["id"] == "all" && numAllMatls == 1){
         ostringstream warn;
         warn <<"\n__________________________________\n"
              << "  ERROR: ICE: This is a single material problem and you've specified 'BCType id = all' \n"
              << "  The boundary condition infrastructure treats 'all' and '0' as two separate materials, \n"
              << "  setting the boundary conditions twice on each face.  Set BCType id = '0' \n"
-             << "   Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+             << "   Face:  " << face["side"] << " BCType " << label<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
 
       // symmetric BCs
-      if ( bc_type["label"] == "Symmetric"){
-        if (numAllMatls > 1 &&  bc_type["id"] != "all") {
+      if ( label == "Symmetric"){
+        if (numAllMatls > 1 &&  bc_attr["id"] != "all") {
           ostringstream warn;
           warn <<"\n__________________________________\n"
              << "  ERROR: ICE: This is a multimaterial problem with a symmetric boundary condition\n"
-             << "  You must have the id = all instead of id = "<< bc_type["id"] <<"\n"
-             << "  Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+             << "  You must have the id = all instead of id = "<< bc_attr["id"] <<"\n"
+             << "  Face:  " << face["side"] << " BCType " << label<< endl;
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
         }
       }  // symmetric
 
       // All passed tests on this face set the flags to true
-      if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
+      if(label == "Pressure" || label == "Symmetric"){
         is_press_BC_set[side]  +=1;
       }
-      isBC_set[bc_type["label"]] = true;
+
+
+
+      isBC_set[label] = true;
     }  // BCType loop
 
     //__________________________________

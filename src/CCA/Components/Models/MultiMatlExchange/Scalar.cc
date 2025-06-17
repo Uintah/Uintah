@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -113,9 +113,9 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
   printSchedule( patches, dbgExch, "ScalarExch::sched_AddExch_VelFC" );
 
   if(recursion) {
-    t->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
+    t->requiresVar(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
   } else {
-    t->requires(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
+    t->requiresVar(Task::OldDW,       Ilb->delTLabel,getLevel(patches));
   }
 
   Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -132,21 +132,21 @@ void ScalarExch::sched_AddExch_VelFC( SchedulerP            & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
+  t->requiresVar( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
+  t->requiresVar( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
+  t->requiresVar( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
+  t->requiresVar( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
+  t->requiresVar( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
 
   computesRequires_CustomBCs(t, "velFC_Exchange", Ilb, ice_matls,
                              BC_globalVars, recursion);
 
-  t->computes( Ilb->sp_volX_FCLabel );
-  t->computes( Ilb->sp_volY_FCLabel );
-  t->computes( Ilb->sp_volZ_FCLabel );
-  t->computes( Ilb->uvel_FCMELabel );
-  t->computes( Ilb->vvel_FCMELabel );
-  t->computes( Ilb->wvel_FCMELabel );
+  t->computesVar( Ilb->sp_volX_FCLabel );
+  t->computesVar( Ilb->sp_volY_FCLabel );
+  t->computesVar( Ilb->sp_volZ_FCLabel );
+  t->computesVar( Ilb->uvel_FCMELabel );
+  t->computesVar( Ilb->vvel_FCMELabel );
+  t->computesVar( Ilb->wvel_FCMELabel );
 
   sched->addTask(t, patches, all_matls);
 }
@@ -431,32 +431,32 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, Ilb->timeStepLabel);
-  t->requires(Task::OldDW, Ilb->delTLabel,getLevel(patches));
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,getLevel(patches));
 
   if(d_exchCoeff->convective() && mpm_matls ){
-    t->requires( Task::NewDW, d_isSurfaceCellLabel, d_zero_matl, gac, 1 );
+    t->requiresVar( Task::NewDW, d_isSurfaceCellLabel, d_zero_matl, gac, 1 );
   }
                                 // I C E
-  t->requires(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
-  t->requires(Task::NewDW,  Ilb->specific_heatLabel,ice_matls, gn);
-  t->requires(Task::NewDW,  Ilb->gammaLabel,        ice_matls, gn);
+  t->requiresVar(Task::OldDW,  Ilb->temp_CCLabel,      ice_matls, gn);
+  t->requiresVar(Task::NewDW,  Ilb->specific_heatLabel,ice_matls, gn);
+  t->requiresVar(Task::NewDW,  Ilb->gammaLabel,        ice_matls, gn);
                                 // A L L  M A T L S
-  t->requires(Task::NewDW,  Ilb->mass_L_CCLabel,    gn);
-  t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     gn);
-  t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, gn);
-  t->requires(Task::NewDW,  Ilb->sp_vol_CCLabel,    gn);
-  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,  gn);
+  t->requiresVar(Task::NewDW,  Ilb->mass_L_CCLabel,    gn);
+  t->requiresVar(Task::NewDW,  Ilb->mom_L_CCLabel,     gn);
+  t->requiresVar(Task::NewDW,  Ilb->int_eng_L_CCLabel, gn);
+  t->requiresVar(Task::NewDW,  Ilb->sp_vol_CCLabel,    gn);
+  t->requiresVar(Task::NewDW,  Ilb->vol_frac_CCLabel,  gn);
 
   computesRequires_CustomBCs(t, "CC_Exchange", Ilb, ice_matls, BC_globalVars);
 
-  t->computes(Ilb->Tdot_CCLabel);
-  t->computes(Ilb->mom_L_ME_CCLabel);
-  t->computes(Ilb->eng_L_ME_CCLabel);
+  t->computesVar(Ilb->Tdot_CCLabel);
+  t->computesVar(Ilb->mom_L_ME_CCLabel);
+  t->computesVar(Ilb->eng_L_ME_CCLabel);
 
   if (mpm_matls && mpm_matls->size() > 0){
-    t->modifies(Ilb->temp_CCLabel, mpm_matls);
-    t->modifies(Ilb->vel_CCLabel,  mpm_matls);
+    t->modifiesVar(Ilb->temp_CCLabel, mpm_matls);
+    t->modifiesVar(Ilb->vel_CCLabel,  mpm_matls);
   }
   sched->addTask(t, patches, all_matls);
 }
@@ -545,7 +545,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     FastMatrix K(numALLMatls, numALLMatls);
     FastMatrix H(numALLMatls, numALLMatls);
     FastMatrix a(numALLMatls, numALLMatls);
-    
+
     beta.zero();
     acopy.zero();
     K.zero();
@@ -585,6 +585,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,    indx, patch,gn, 0);
       new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel,indx, patch,gn, 0);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch,gn, 0);
+
       new_dw->allocateAndPut(Tdot[m],        Ilb->Tdot_CCLabel,    indx,patch);
       new_dw->allocateAndPut(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,indx,patch);
       new_dw->allocateAndPut(int_eng_L_ME[m],Ilb->eng_L_ME_CCLabel,indx,patch);
@@ -606,6 +607,11 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
       //---------- M O M E N T U M   E X C H A N G E
       //   Form BETA matrix (a), off diagonal terms
+
+      if(d_exchCoeff->d_momExchCoeffModel == ExchangeCoefficients::linearVariation){
+        d_exchCoeff->getVariableExchangeCoeff( K, c, mass_L);
+      }
+
       for(int m = 0; m < numALLMatls; m++)  {
         tmp = delT*sp_vol_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
@@ -637,8 +643,8 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       }
 
       //---------- E N E R G Y   E X C H A N G E
-      if(d_exchCoeff->d_heatExchCoeffModel != "constant"){
-        d_exchCoeff->getVariableExchangeCoeff( K, H, c, mass_L);
+      if(d_exchCoeff->d_heatExchCoeffModel == ExchangeCoefficients::linearVariation){
+        d_exchCoeff->getVariableExchangeCoeff( H, c, mass_L);
       }
 
       for(int m = 0; m < numALLMatls; m++) {
@@ -696,26 +702,26 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       Ghost::GhostType  gn = Ghost::None;
       constNCVariable< int > isSurfaceCell;
       new_dw->get( isSurfaceCell, d_isSurfaceCellLabel, 0, patch, gn,0 );
-     
+
       Vector dx    = patch->dCell();
       double dxLen = dx.length();
-        
+
       const Level* level=patch->getLevel();
 
       for (int m = 0; m < numALLMatls; m++)  {
-        
+
         Material* matl = d_matlManager->getMaterial( m );
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         int dwindex = matl->getDWIndex();
-        
+
         if(mpm_matl && dwindex==sm){
-        
+
           constCCVariable<Vector> surfaceNorm;
           new_dw->get(surfaceNorm, d_surfaceNormLabel, dwindex,patch, gn, 0);
 
           for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
             IntVector c = *iter;
-            
+
             // surface
             if ( isSurfaceCell[c]){
 
@@ -724,7 +730,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
               IntVector q;
               if(patch->findCell(adja_cell_pos, q)){
-              
+
                 cet(0,0) = 0.;
                 cet(0,1) = delT * vol_frac_CC[gm][q] * H(sm,gm) * sp_vol_CC[sm][c]/cv[sm][c];
                 cet(1,0) = delT * vol_frac_CC[sm][c] * H(gm,sm) * sp_vol_CC[gm][q]/cv[gm][q];
@@ -743,9 +749,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
                 RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
                 RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
-                
+
                 ac.destructiveSolve(RHSc);
-                
+
                 Temp_CC[sm][c] += RHSc[0];
                 Temp_CC[gm][q] += RHSc[1];
               }

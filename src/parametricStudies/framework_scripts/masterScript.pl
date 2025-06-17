@@ -2,7 +2,7 @@
 #
 # The MIT License
 #
-# Copyright (c) 1997-2024 The University of Utah
+# Copyright (c) 1997-2025 The University of Utah
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -60,6 +60,7 @@ use XML::LibXML;
 use Data::Dumper;
 use File::Path;
 use File::Basename;
+use File::Spec;
 
 use Cwd;
 use lib dirname (__FILE__) ."/framework_scripts";    # needed to find local Utilities.pm
@@ -67,7 +68,7 @@ use Utilities qw( cleanStr setPath print_XML_ElementTree get_XML_value);
 
 #__________________________________
 # bulletproofing
-my @modules = qw( Data::Dumper File::Path File::Basename );
+my @modules = qw( Data::Dumper File::Path File::Basename File::Spec);
 
 for(@modules) {
   eval "use $_";
@@ -183,14 +184,21 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
    #   - copy tst, scripts, other files & input files
    my $otherFiles = "";
 
+   
    foreach my $test ( $whatToRun->findnodes('test') ) {
 
      my $testName = cleanStr( $test->findvalue('name') );
 
      # tst file can live outside of uintah src tree
+     # The postProcessing cmd may be in the same dir as the tst
+     # so add that path to PATH
      my $tstFile  = cleanStr( $test->findvalue('tst') );
      $tstFile     = setPath( $tstFile, $fw_path );
 
+     my($vol,$tstPath,$file) = File::Spec->splitpath($tstFile);
+     my $orgPath  = $ENV{"PATH"};
+     $ENV{"PATH"} = "$orgPath:$tstPath";
+     
      my $tst_basename = basename( $tstFile );
 
      my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
@@ -203,8 +211,14 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
 
                    # UPS file
      my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
-     my $upsFile  = setPath( $ups_tmp, $fw_path, $inputs_path.$component );
+     my $upsFile  = setPath( $ups_tmp, $tstPath, $fw_path, $inputs_path.$component );
 
+
+                   # gnuplot file
+     my $gp_tmp  = cleanStr( $tstData->findvalue('/start/gnuplot/script') );
+     my $gpFile  = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
+     
+     
                    # restarts
      my $doRestart  = cleanStr( $tstData->exists('/start/restart_uda') );
      my $restartUda = cleanStr( $tstData->findvalue('/start/restart_uda/uda') );
@@ -268,6 +282,8 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
      
      system("cp -f  $tstFile $testing_path");
      
+     system("cp -f  $gpFile $testing_path");
+     
      system("cp -rf $otherFiles $testing_path > /dev/null 2>&1");
      
      system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
@@ -299,6 +315,7 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
      print "inputs dir     : $inputs_path\n";
      print "sus            : $sus";
      print "other Files    : $otherFiles\n";
+     print "gnuplot File   : $gpFile\n";
      print "results path   : $testing_path\n";
      print "=======================================================================================\n";
 

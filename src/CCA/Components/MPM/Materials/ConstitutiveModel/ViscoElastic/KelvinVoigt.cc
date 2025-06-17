@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -91,16 +91,16 @@ namespace Uintah {
                               __FILE__, __LINE__);
     }
     else {
-      task->requires(Task::OldDW, lb->delTLabel);
-      task->requires(Task::OldDW, lb->pStressLabel,   matlset, gnone);
-      task->requires(Task::OldDW, lb->pMassLabel,     matlset, gnone);
-      task->requires(Task::OldDW, lb->pVelocityLabel, matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->delTLabel);
+      task->requiresVar(Task::OldDW, lb->pStressLabel,   matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->pMassLabel,     matlset, gnone);
+      task->requiresVar(Task::OldDW, lb->pVelocityLabel, matlset, gnone);
 
-      task->requires(Task::NewDW, lb->pVelGradLabel_preReloc, matlset, gnone);
-      task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, matlset, gnone);
+      task->requiresVar(Task::NewDW, lb->pVelGradLabel_preReloc, matlset, gnone);
+      task->requiresVar(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, matlset, gnone);
 
-      task->computes(lb->pdTdtLabel, matlset);
-      task->computes(lb->pStressLabel_preReloc, matlset);
+      task->computesVar(lb->pdTdtLabel, matlset);
+      task->computesVar(lb->pStressLabel_preReloc, matlset);
     }
 
   }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,9 +36,15 @@
 
 namespace Lockfree { namespace Impl {
 
-// Copies of pool are shallow,  i.e., they point to the same reference counted memory.
-// So each thread should have its own copy of the pool
-// It is not thread safe for multiple threads to interact with the same instance of a pool
+// Copies of pool are shallow, i.e., they point to the same reference
+// counted memory.  So each thread should have its own copy of the
+// pool.  It is not thread safe for multiple threads to interact with
+// the same instance of a pool.
+
+// Note with C++20 std::allocator::construct is depreciated so use
+// std::construct_at. It is unknown what will happen if the default
+// std::allocator is not used.
+
 template <  typename T
           , typename BitsetBlockType
           , unsigned BitsetNumBlocks
@@ -143,8 +149,12 @@ public:
     , m_node_allocator{ node_allocator }
   {
     m_head = m_node_allocator.allocate(1);
+    // With C++20 construct is depreciated so use construct_at
+#if __cplusplus >= 202002L
+    std::construct_at( m_head.load( std::memory_order_relaxed ), m_pool_id, this );
+#else
     m_node_allocator.construct( m_head.load( std::memory_order_relaxed ), m_pool_id, this );
-
+#endif
     m_find_head.store( m_head.load( std::memory_order_relaxed ), std::memory_order_relaxed );
   }
 
@@ -163,7 +173,12 @@ public:
     // iterate circular pool deleting nodes
     do {
       next = curr->next();
+      // With C++20 destroy is depreciated so use destroy_at
+#if __cplusplus >= 202002L
+      std::destroy_at( curr );
+#else
       m_node_allocator.destroy(curr);
+#endif
       m_node_allocator.deallocate( curr, 1 );
       curr = next;
     } while ( curr != start );

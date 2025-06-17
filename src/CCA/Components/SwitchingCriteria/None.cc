@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,7 +55,7 @@ void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
-  t->computes(d_switch_label);
+  t->computesVar(d_switch_label);
   sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 }
 

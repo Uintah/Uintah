@@ -80,23 +80,23 @@ PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
   // actual velocity we will compute
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin();
         i != d_fieldLabels->partVel.end(); i++){
-    tsk->computes( i->second );
+    tsk->computesVar( i->second );
   }
 
   for ( std::map<int, const VarLabel*>::iterator i = _face_x_part_vel_labels.begin();
         i != _face_x_part_vel_labels.end(); i++)
   {
-    tsk->computes( i->second );
+    tsk->computesVar( i->second );
   }
   for ( std::map<int, const VarLabel*>::iterator i = _face_y_part_vel_labels.begin();
         i != _face_y_part_vel_labels.end(); i++)
   {
-    tsk->computes( i->second );
+    tsk->computesVar( i->second );
   }
   for ( std::map<int, const VarLabel*>::iterator i = _face_z_part_vel_labels.begin();
         i != _face_z_part_vel_labels.end(); i++)
   {
-    tsk->computes( i->second );
+    tsk->computesVar( i->second );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_materialManager->allMaterials( "Arches" ));
@@ -174,18 +174,18 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin();
         i != d_fieldLabels->partVel.end(); i++){
     if (rkStep < 1 )
-      tsk->computes( i->second );
+      tsk->computesVar( i->second );
     else
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     // also get the old one
-    tsk->requires( Task::OldDW, i->second, gn, 0);
+    tsk->requiresVar( Task::OldDW, i->second, gn, 0);
   }
 
 
-    tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFXLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFYLabel, gn, 0 );
-    tsk->requires( which_dw, d_fieldLabels->d_areaFractionFZLabel, gn, 0 );
+    tsk->requiresVar( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    tsk->requiresVar( which_dw, d_fieldLabels->d_areaFractionFXLabel, gn, 0 );
+    tsk->requiresVar( which_dw, d_fieldLabels->d_areaFractionFYLabel, gn, 0 );
+    tsk->requiresVar( which_dw, d_fieldLabels->d_areaFractionFZLabel, gn, 0 );
 
     //for (int i = 0; i < N; i++){
       //std::string name = "w_qn";
@@ -198,36 +198,36 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
       //EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
       //const VarLabel* myLabel = eqn.getTransportEqnLabel();
 
-      //tsk->requires( which_dw, myLabel, gn, 0 );
+      //tsk->requiresVar( which_dw, myLabel, gn, 0 );
     //}
 
     for (int i = 0; i < N; i++){
 
       if ( rkStep == 0 ){
-        tsk->computes( _face_x_part_vel_labels[i]);
-        tsk->computes( _face_y_part_vel_labels[i]);
-        tsk->computes( _face_z_part_vel_labels[i]);
+        tsk->computesVar( _face_x_part_vel_labels[i]);
+        tsk->computesVar( _face_y_part_vel_labels[i]);
+        tsk->computesVar( _face_z_part_vel_labels[i]);
       } else {
-        tsk->modifies( _face_x_part_vel_labels[i]);
-        tsk->modifies( _face_y_part_vel_labels[i]);
-        tsk->modifies( _face_z_part_vel_labels[i]);
+        tsk->modifiesVar( _face_x_part_vel_labels[i]);
+        tsk->modifiesVar( _face_y_part_vel_labels[i]);
+        tsk->modifiesVar( _face_z_part_vel_labels[i]);
       }
 
       std::string name = ArchesCore::append_env( _uname, i );
       const VarLabel* ulabel = VarLabel::find(name);
-      tsk->requires( which_dw, ulabel, ga, 1 );
+      tsk->requiresVar( which_dw, ulabel, ga, 1 );
 
       name = ArchesCore::append_env( _vname, i );
       const VarLabel* vlabel = VarLabel::find(name);
-      tsk->requires( which_dw, vlabel, ga, 1 );
+      tsk->requiresVar( which_dw, vlabel, ga, 1 );
 
       name = ArchesCore::append_env( _wname, i );
       const VarLabel* wlabel = VarLabel::find(name);
-      tsk->requires( which_dw, wlabel, ga, 1 );
+      tsk->requiresVar( which_dw, wlabel, ga, 1 );
 
       name = ArchesCore::append_qn_env( "w", i );
       const VarLabel* weightlabel = VarLabel::find(name);
-      tsk->requires( which_dw, weightlabel, ga, 1);
+      tsk->requiresVar( which_dw, weightlabel, ga, 1);
 
     }
 

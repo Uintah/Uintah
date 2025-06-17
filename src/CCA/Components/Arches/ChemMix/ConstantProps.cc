@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -121,7 +121,7 @@ ConstantProps::sched_getState( const LevelP& level,
   if ( initialize_me ) {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->computes( i->second );
+      tsk->computesVar( i->second );
 
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
@@ -134,41 +134,41 @@ ConstantProps::sched_getState( const LevelP& level,
           sched->get_dw(1)->get( timeStep, m_timeStepLabel );
 
         if ( timeStep != 0 ){
-          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
+          tsk->requiresVar( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
     }
 
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->computes( i->second );
+      tsk->computesVar( i->second );
     }
 
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
 
   }
 
   if ( modify_ref_den ){
     if ( time_substep == 0 ){
-      tsk->computes( m_denRefArrayLabel );
+      tsk->computesVar( m_denRefArrayLabel );
     }
   } else {
     if ( time_substep == 0 ){
-      tsk->computes( m_denRefArrayLabel );
-      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
+      tsk->computesVar( m_denRefArrayLabel );
+      tsk->requiresVar( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
     }
   }
 
   // other variables
-  tsk->modifies( m_densityLabel );
+  tsk->modifiesVar( m_densityLabel );
 
-  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
+  tsk->requiresVar( Task::NewDW, m_volFractionLabel, gn, 0 );
 
   sched->addTask( tsk, level->eachPatch(), m_materialManager->allMaterials( "Arches" ) );
 }

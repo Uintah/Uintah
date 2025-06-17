@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -207,7 +207,7 @@ Mixing::scheduleInitialize(       SchedulerP & sched,
   Task* t = scinew Task( "Mixing::initialize", this, &Mixing::initialize );
   for(vector<Stream*>::iterator iter = streams.begin(); iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->computes(stream->massFraction_CCLabel);
+    t->computesVar(stream->massFraction_CCLabel);
   }
   sched->addTask(t, level->eachPatch(), mymatls);
 }
@@ -276,15 +276,15 @@ void Mixing::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("Mixing::computeModelSources",this, 
                         &Mixing::computeModelSources);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->requires(Task::OldDW, Ilb->rho_CCLabel, Ghost::None);
-  t->requires(Task::OldDW, Ilb->delTLabel,  level.get_rep());
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel, Ghost::None);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,  level.get_rep());
   
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->requires(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
-    t->modifies(stream->massFraction_source_CCLabel);
+    t->requiresVar(Task::OldDW, stream->massFraction_CCLabel, Ghost::None);
+    t->modifiesVar(stream->massFraction_source_CCLabel);
   }
 
   sched->addTask(t, level->eachPatch(), mymatls);

@@ -69,27 +69,27 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   }
 
   _old_manifold_label = VarLabel::find( _manifold_var_name+"_old");
-  tsk->requires( Task::NewDW, _old_manifold_label, Ghost::AroundCells, 1 );
+  tsk->requiresVar( Task::NewDW, _old_manifold_label, Ghost::AroundCells, 1 );
 
   if (timeSubStep == 0) {
-    tsk->computes(_src_label);
-    tsk->computes(_conv_label);
-    tsk->computes(_diff_label);
+    tsk->computesVar(_src_label);
+    tsk->computesVar(_conv_label);
+    tsk->computesVar(_diff_label);
   } else {
-    tsk->modifies(_src_label);
-    tsk->modifies(_conv_label);
-    tsk->modifies(_diff_label);
+    tsk->modifiesVar(_src_label);
+    tsk->modifiesVar(_conv_label);
+    tsk->modifiesVar(_diff_label);
   }
 
-  tsk->requires( Task::NewDW, _manifold_label, Ghost::None, 0 );
-  tsk->requires(Task::NewDW, VarLabel::find("uVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("vVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("wVelocitySPBC"), Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, VarLabel::find("areaFraction"), Ghost::AroundCells, 2);
-  tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, VarLabel::find("density"), Ghost::None, 0);
-  tsk->requires(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, _field_labels->d_delTLabel);
+  tsk->requiresVar( Task::NewDW, _manifold_label, Ghost::None, 0 );
+  tsk->requiresVar(Task::NewDW, VarLabel::find("uVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::NewDW, VarLabel::find("vVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::NewDW, VarLabel::find("wVelocitySPBC"), Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, VarLabel::find("areaFraction"), Ghost::AroundCells, 2);
+  tsk->requiresVar(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::NewDW, VarLabel::find("density"), Ghost::None, 0);
+  tsk->requiresVar(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::OldDW, _field_labels->d_delTLabel);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
@@ -188,10 +188,10 @@ ManifoldRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ManifoldRxn::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

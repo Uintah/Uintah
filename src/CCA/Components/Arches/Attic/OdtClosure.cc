@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -126,7 +126,7 @@ OdtClosure::sched_initializeSmagCoeff( SchedulerP& sched,
                           &OdtClosure::initializeSmagCoeff,
                           timelabels);
 
-  tsk->computes(d_lab->d_CsLabel);
+  tsk->computesVar(d_lab->d_CsLabel);
   sched->addTask(tsk, patches, matls);
 }
 
@@ -210,7 +210,7 @@ OdtClosure::sched_initializeOdtvariable( SchedulerP& sched,
                           &OdtClosure::initializeOdtvariable,
                           timelabels);
 
-  tsk->computes(d_lab->d_CsLabel);
+  tsk->computesVar(d_lab->d_CsLabel);
   sched->addTask(tsk, patches, matls);
 }
 
@@ -241,39 +241,39 @@ OdtClosure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,      gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
-  tsk->requires(Task::OldDW, d_lab->d_odtDataLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
+  tsk->requiresVar(Task::OldDW, d_lab->d_odtDataLabel,       gac, 1);
 
   // for multimaterial
   if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+    tsk->requiresVar(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
 
       // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,oams);
-/*  tsk->computes(d_lab->d_stressTensorXdivLabel);
-    tsk->computes(d_lab->d_stressTensorYdivLabel);
-    tsk->computes(d_lab->d_stressTensorZdivLabel);
+    tsk->computesVar(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,oams);
+/*  tsk->computesVar(d_lab->d_stressTensorXdivLabel);
+    tsk->computesVar(d_lab->d_stressTensorYdivLabel);
+    tsk->computesVar(d_lab->d_stressTensorZdivLabel);
 */
-    tsk->computes(d_lab->d_scalarFluxCompLabel,   d_lab->d_vectorMatl,oams);
-    tsk->computes(d_lab->d_odtDataLabel);
+    tsk->computesVar(d_lab->d_scalarFluxCompLabel,   d_lab->d_vectorMatl,oams);
+    tsk->computesVar(d_lab->d_odtDataLabel);
   }
   else {
-    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,oams);
-/*    tsk->modifies(d_lab->d_stressTensorXdivLabel);
-    tsk->modifies(d_lab->d_stressTensorYdivLabel);
-    tsk->modifies(d_lab->d_stressTensorZdivLabel);
+    tsk->modifiesVar(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,oams);
+/*    tsk->modifiesVar(d_lab->d_stressTensorXdivLabel);
+    tsk->modifiesVar(d_lab->d_stressTensorYdivLabel);
+    tsk->modifiesVar(d_lab->d_stressTensorZdivLabel);
 */
-    tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,oams);
-    tsk->modifies(d_lab->d_odtDataLabel);
+    tsk->modifiesVar(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,oams);
+    tsk->modifiesVar(d_lab->d_odtDataLabel);
   }
   sched->addTask(tsk, patches, matls);
 }
@@ -1129,13 +1129,13 @@ OdtClosure::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells, 1);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-     tsk->computes(d_lab->d_scalarVarSPLabel);
+     tsk->computesVar(d_lab->d_scalarVarSPLabel);
   }else{
-     tsk->modifies(d_lab->d_scalarVarSPLabel);
+     tsk->modifiesVar(d_lab->d_scalarVarSPLabel);
   }
   sched->addTask(tsk, patches, matls);
 }
@@ -1248,18 +1248,18 @@ OdtClosure::sched_computeScalarDissipation(SchedulerP& sched,
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+    tsk->requiresVar(Task::OldDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gac, 1);
-    tsk->computes(d_lab->d_scalarDissSPLabel);
+    tsk->computesVar(d_lab->d_scalarDissSPLabel);
   }
   else {
-    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+    tsk->requiresVar(Task::NewDW, d_lab->d_scalarFluxCompLabel,
                   d_lab->d_vectorMatl, oams, gac, 1);
-    tsk->modifies(d_lab->d_scalarDissSPLabel);
+    tsk->modifiesVar(d_lab->d_scalarDissSPLabel);
   }
 
   sched->addTask(tsk, patches, matls);

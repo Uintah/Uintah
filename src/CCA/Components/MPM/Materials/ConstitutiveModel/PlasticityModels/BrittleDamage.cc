@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -149,8 +149,8 @@ BrittleDamage::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes( pFailureStressOrStrainLabel, matlset );
-  task->computes( pDamageLabel,                matlset );
+  task->computesVar( pFailureStressOrStrainLabel, matlset );
+  task->computesVar( pDamageLabel,                matlset );
 }
 //______________________________________________________________________
 //
@@ -194,18 +194,18 @@ BrittleDamage::addComputesAndRequires(Task* task,
   // VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
 
-  task->requires( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
-  task->requires( Task::OldDW, pParticleIDLabel,            matls, gnone);   
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
-  task->requires( Task::NewDW, pDefGradLabel,               matls, gnone);   
-  task->requires( Task::NewDW, pVolumeLabel,                matls, gnone);
-  task->requires( Task::OldDW, pDamageLabel,                matls, gnone);   
+  task->requiresVar( Task::OldDW, pFailureStressOrStrainLabel, matls, gnone);   
+  task->requiresVar( Task::OldDW, pParticleIDLabel,            matls, gnone);   
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel,    matls, gnone);   
+  task->requiresVar( Task::NewDW, pDefGradLabel,               matls, gnone);   
+  task->requiresVar( Task::NewDW, pVolumeLabel,                matls, gnone);
+  task->requiresVar( Task::OldDW, pDamageLabel,                matls, gnone);   
     
-  task->modifies( pStressLabel,                         matls );
-  task->computes( pFailureStressOrStrainLabel_preReloc, matls );
-  task->computes( d_lb->pLocalizedMPMLabel_preReloc,    matls );
-  task->computes( pDamageLabel_preReloc,                matls );
-//  task->computes( TotalLocalizedParticleLabel );
+  task->modifiesVar( pStressLabel,                         matls );
+  task->computesVar( pFailureStressOrStrainLabel_preReloc, matls );
+  task->computesVar( d_lb->pLocalizedMPMLabel_preReloc,    matls );
+  task->computesVar( pDamageLabel_preReloc,                matls );
+//  task->computesVar( TotalLocalizedParticleLabel );
 }
 //______________________________________________________________________
 //

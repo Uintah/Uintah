@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -102,13 +102,13 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel( SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
 
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
-  //tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
+  //tsk->requiresVar(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
-  tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_turbViscosLabel);
+  tsk->modifiesVar(d_lab->d_viscosityCTSLabel);
+  tsk->modifiesVar(d_lab->d_turbViscosLabel);
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }

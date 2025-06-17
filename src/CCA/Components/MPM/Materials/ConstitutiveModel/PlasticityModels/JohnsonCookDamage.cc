@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -115,7 +115,7 @@ JohnsonCookDamage::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matls = matl->thisMaterial();
-  task->computes(pDamageLabel, matls);
+  task->computesVar(pDamageLabel, matls);
 }
 //______________________________________________________________________
 //
@@ -165,16 +165,16 @@ JohnsonCookDamage::addComputesAndRequires(Task* task,
 
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
-  task->requires( Task::OldDW, pDamageLabel,                     matls, gnone);
-  task->requires( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
+  task->requiresVar( Task::OldDW, pDamageLabel,                     matls, gnone);
+  task->requiresVar( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
+  task->requiresVar( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
 
-  task->requires( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
-  task->requires( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
+  task->requiresVar( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
+  task->requiresVar( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
 
-  task->computes( pDamageLabel_preReloc, matls );
+  task->computesVar( pDamageLabel_preReloc, matls );
 
-//  task->computes(TotalLocalizedParticleLabel);
+//  task->computesVar(TotalLocalizedParticleLabel);
 }
 
 //______________________________________________________________________

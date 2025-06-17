@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,9 +30,15 @@
 
 namespace Lockfree {
 
-// Copies of pool are shallow,  i.e., they point to the same reference counted memory.
-// So each thread should have its own copy of the pool
-// It is not thread safe for multiple threads to interact with the same instance of a pool
+// Copies of pool are shallow, i.e., they point to the same reference
+// counted memory.  So each thread should have its own copy of the
+// pool.  It is not thread safe for multiple threads to interact with
+// the same instance of a pool.
+
+// Note with C++20 std::allocator::construct is depreciated so use
+// std::construct_at. It is unknown what will happen if the default
+// std::allocator is not used.
+
 template <  typename T
           , typename BitsetBlockType = uint64_t
           , unsigned BitsetNumBlocks = 1u
@@ -300,14 +306,25 @@ public:
   {
     m_pools = m_pool_allocator.allocate( num_levels );
     for ( size_t i=0; i<m_num_levels; ++i) {
+      // With C++20 construct is depreciated so use construct_at
+#if __cplusplus >= 202002L
+      std::construct_at( m_pools + i, i, m_node_allocator );
+#else
       m_pool_allocator.construct( m_pools + i, i, m_node_allocator );
+#endif
     }
 
     m_size = m_size_allocator.allocate(1);
-    m_size_allocator.construct( m_size, 0 );
-
     m_refcount = m_size_allocator.allocate(1);
+
+    // With C++20 construct is depreciated so use construct_at
+#if __cplusplus >= 202002L
+    std::construct_at( m_size, 0 );
+    std::construct_at( m_refcount, 1 );
+#else
+    m_size_allocator.construct( m_size, 0 );
     m_size_allocator.construct( m_refcount, 1 );
+#endif
 
     std::atomic_thread_fence( std::memory_order_seq_cst );
   }
@@ -388,8 +405,14 @@ public:
     if ( m_refcount && m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
 
       for ( size_t i=0; i<m_num_levels; ++i) {
+      // With C++20 destroy is depreciated so use destroy_at
+#if __cplusplus >= 202002L
+        std::destroy_at( m_pools + i );
+#else
         m_pool_allocator.destroy( m_pools + i );
+#endif
       }
+
       m_pool_allocator.deallocate( m_pools, m_num_levels);
 
       m_size_allocator.deallocate( m_size, 1 );

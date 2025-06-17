@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -206,17 +206,17 @@ void BinaryProperties::scheduleInitialize(SchedulerP   & sched,
 
   Task* t = scinew Task("BinaryProperties::initialize", this, &BinaryProperties::initialize);
 
-  t->requires(Task::NewDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::NewDW, Ilb->timeStepLabel );
 
-  t->modifies( Ilb->sp_vol_CCLabel);
-  t->modifies( Ilb->rho_micro_CCLabel);
-  t->modifies( Ilb->rho_CCLabel);
-  t->modifies( Ilb->specific_heatLabel);
-  t->modifies( Ilb->gammaLabel);
-  t->modifies( Ilb->thermalCondLabel);
-  t->modifies( Ilb->viscosityLabel);
+  t->modifiesVar( Ilb->sp_vol_CCLabel);
+  t->modifiesVar( Ilb->rho_micro_CCLabel);
+  t->modifiesVar( Ilb->rho_CCLabel);
+  t->modifiesVar( Ilb->specific_heatLabel);
+  t->modifiesVar( Ilb->gammaLabel);
+  t->modifiesVar( Ilb->thermalCondLabel);
+  t->modifiesVar( Ilb->viscosityLabel);
 
-  t->computes(d_scalar->scalar_CCLabel);
+  t->computesVar(d_scalar->scalar_CCLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -328,12 +328,12 @@ void BinaryProperties::scheduleModifyThermoTransportProperties(SchedulerP  & sch
   Task* t = scinew Task("BinaryProperties::modifyThermoTransportProperties",
                    this,&BinaryProperties::modifyThermoTransportProperties);
 
-  t->requires( Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0 );
-  t->modifies( Ilb->specific_heatLabel );
-  t->modifies( Ilb->gammaLabel );
-  t->modifies( Ilb->thermalCondLabel );
-  t->modifies( Ilb->viscosityLabel );
-  t->computes( d_scalar->diffusionCoefLabel );
+  t->requiresVar( Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0 );
+  t->modifiesVar( Ilb->specific_heatLabel );
+  t->modifiesVar( Ilb->gammaLabel );
+  t->modifiesVar( Ilb->thermalCondLabel );
+  t->modifiesVar( Ilb->viscosityLabel );
+  t->computesVar( d_scalar->diffusionCoefLabel );
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 /* _____________________________________________________________________
@@ -424,11 +424,11 @@ void BinaryProperties::scheduleComputeModelSources( SchedulerP   & sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, Ilb->delTLabel, level.get_rep());
-  t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
-  t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->requiresVar(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  t->requiresVar(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1);
 
-  t->modifies(d_scalar->source_CCLabel);
+  t->modifiesVar(d_scalar->source_CCLabel);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -490,13 +490,13 @@ void BinaryProperties::scheduleTestConservation(SchedulerP    & sched,
                      this,&BinaryProperties::testConservation);
 
     Ghost::GhostType  gn = Ghost::None;
-    t->requires(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
-    t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0);
-    t->requires(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
-    t->requires(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0);
-    t->requires(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0);
-    t->requires(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0);
-    t->computes(Slb->sum_scalar_fLabel);
+    t->requiresVar(Task::OldDW, Ilb->delTLabel, getLevel(patches) );
+    t->requiresVar(Task::NewDW, d_scalar->scalar_CCLabel, gn,0);
+    t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,          gn,0);
+    t->requiresVar(Task::NewDW, Ilb->uvel_FCMELabel,       gn,0);
+    t->requiresVar(Task::NewDW, Ilb->vvel_FCMELabel,       gn,0);
+    t->requiresVar(Task::NewDW, Ilb->wvel_FCMELabel,       gn,0);
+    t->computesVar(Slb->sum_scalar_fLabel);
 
     sched->addTask(t, patches, d_matl_set);
   }

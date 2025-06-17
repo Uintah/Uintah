@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -164,9 +164,9 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
       Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
                                &Smagorinsky_Model::computeVariance, s);
                                
-      task->requires(Task::OldDW, VarLabel::find( timeStep_name) );
-      task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
-      task->computes(s->scalarVariance);
+      task->requiresVar(Task::OldDW, VarLabel::find( timeStep_name) );
+      task->requiresVar(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
+      task->computesVar(s->scalarVariance);
       sched->addTask(task, patches, s->matl_set);
     }
   }

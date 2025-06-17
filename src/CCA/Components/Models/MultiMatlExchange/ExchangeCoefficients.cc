@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,8 @@ extern DebugStream dbgExch;
 //
 ExchangeCoefficients::ExchangeCoefficients()
 {
-  d_heatExchCoeffModel = "constant"; // default
+  d_heatExchCoeffModel = ConstantCoeff; // default
+  d_momExchCoeffModel  = ConstantCoeff;
   d_convective = false;
   d_K_mom_V.clear();
   d_K_heat_V.clear();
@@ -68,54 +69,55 @@ void ExchangeCoefficients::problemSetup(const ProblemSpecP  & matl_ps,
 
   //__________________________________
   // variable coefficient models
-  exch_ps->get("heatExchangeCoeff",d_heatExchCoeffModel);
+  ProblemSpecP exCoefModel_ps = exch_ps->findBlock( "CoefficientModel" );
 
-  if(d_heatExchCoeffModel !="constant" &&
-     d_heatExchCoeffModel !="variable" &&
-     d_heatExchCoeffModel !="Variable"){
-     ostringstream warn;
-      warn<<"ERROR\n Heat exchange coefficient model (" << d_heatExchCoeffModel
-          <<") does not exist.\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  if( exCoefModel_ps ){
+    string model;
+    exCoefModel_ps->get("momentum",model);
+
+    if(model =="linearVariation" ){
+      d_momExchCoeffModel = linearVariation;
+      proc0cout << "------------------------------Using  (linear) model for momentum exchange coefficients"<< endl;
+    }
+
+    exCoefModel_ps->get("heat",model);
+
+    if(model =="linearVariation" ){
+      d_heatExchCoeffModel = linearVariation;
+      proc0cout << "------------------------------Using  (linear) model for heat exchange coefficients"<< endl;
+    }
   }
-
   //__________________________________
   //  constant coefficient model
+  // Always load the constant coefficients
   ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
 
-  // momentum
+                                                        // momentum
   exch_co_ps->require("momentum",d_K_mom_V);
 
   // Bullet Proofing
   for (int i = 0; i<(int)d_K_mom_V.size(); i++) {
     dbgExch << "K_mom = " << d_K_mom_V[i] << endl;
-    
+
     if( d_K_mom_V[i] < 0.0 || d_K_mom_V[i] > 1e20 ) {
       ostringstream warn;
-      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
+      warn<<"ERROR\n Momentum exchange coef. is either too large or negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
+                                                      // heat
+  exch_co_ps->require("heat", d_K_heat_V);
+
+  // Bullet Proofing
+  for (int i = 0; i<(int)d_K_heat_V.size(); i++) {
+    dbgExch << "K_heat = " << d_K_heat_V[i] << endl;
+    if( d_K_heat_V[i] < 0.0 || d_K_heat_V[i] > 1e15 ) {
+      ostringstream warn;
+      warn<<"ERROR\n Heat exchange coef. is either too large or negative\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
-  // heat
-  if(d_heatExchCoeffModel == "constant"){
-    exch_co_ps->require("heat", d_K_heat_V);
-
-    // Bullet Proofing
-    for (int i = 0; i<(int)d_K_heat_V.size(); i++) {
-      dbgExch << "K_heat = " << d_K_heat_V[i] << endl;
-      if( d_K_heat_V[i] < 0.0 || d_K_heat_V[i] > 1e15 ) {
-        ostringstream warn;
-        warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
-  }
-
-  if (d_heatExchCoeffModel != "constant"){
-    proc0cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
-  }
-  
   //__________________________________
   //  convective heat transfer
   d_convective = false;
@@ -136,8 +138,18 @@ void ExchangeCoefficients::outputProblemSpec(ProblemSpecP& matl_ps,
   }
   // <exchange_properties>
   exch_prop_ps = matl_ps->appendChild("exchange_properties");
-  exch_prop_ps->appendElement("heatExchangeCoeff",d_heatExchCoeffModel);
 
+
+  //__________________________________
+  // Linear variation
+  if(d_momExchCoeffModel == linearVariation ||
+     d_heatExchCoeffModel == linearVariation ){
+    ProblemSpecP exCoefModel_ps = exch_prop_ps->appendChild("CoefficientModel");
+    exCoefModel_ps->appendElement( "momentum", d_coeffModelName[d_momExchCoeffModel] );
+    exCoefModel_ps->appendElement( "heat",     d_coeffModelName[d_heatExchCoeffModel] );
+  }
+
+  //__________________________________
   // <exchange_coefficients>
   ProblemSpecP exch_coeff_ps = exch_prop_ps->appendChild("exchange_coefficients");
   exch_coeff_ps->appendElement("momentum", d_K_mom_V);
@@ -169,12 +181,12 @@ void ExchangeCoefficients::getConstantExchangeCoeff( FastMatrix& K,
   // bulletproofing
   bool test = false;
   string desc;
-  if (num_coeff != (int)d_K_mom_V.size()) {
+  if (num_coeff != (int)d_K_mom_V.size() && d_momExchCoeffModel == ConstantCoeff) {
     test = true;
     desc = "momentum";
   }
 
-  if (num_coeff !=(int)d_K_heat_V.size() && d_heatExchCoeffModel == "constant") {
+  if (num_coeff !=(int)d_K_heat_V.size() && d_heatExchCoeffModel == ConstantCoeff) {
     test = true;
     desc = desc + " energy";
   }
@@ -206,7 +218,7 @@ void ExchangeCoefficients::getConstantExchangeCoeff( FastMatrix& K,
   }
 
   // heat
-  if( d_heatExchCoeffModel == "constant" ) {
+  if( d_heatExchCoeffModel == ConstantCoeff ) {
     for (int i = 0; i < d_numMatls; i++ )  {
       H(i,i) = 0.0;
       for (int j = i + 1; j < d_numMatls; j++) {
@@ -218,38 +230,31 @@ void ExchangeCoefficients::getConstantExchangeCoeff( FastMatrix& K,
 
 //______________________________________________________________________
 //
-void ExchangeCoefficients::getVariableExchangeCoeff( FastMatrix& ,
-                                                     FastMatrix& H,
+void ExchangeCoefficients::getVariableExchangeCoeff( FastMatrix& Q,
                                                      IntVector & c,
                                                      std::vector<constCCVariable<double> >& mass_L  )
 {
-
-  //__________________________________
-  // Momentum  (do nothing for now)
-
-  //__________________________________
-  // Heat coefficient
   for (int m = 0; m < d_numMatls; m++ )  {
-    H(m,m) = 0.0;
+    Q(m,m) = 0.0;
     for (int n = m + 1; n < d_numMatls; n++) {
       double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);
 
-      // 1e5  is the lower limit clamp
-      // 1e12 is the upper limit clamp
+      // 1e5  is tQe lower limit clamp
+      // 1e12 is tQe upper limit clamp
       if (massRatioSqr < 1e-12){
-        H(n,m) = H(m,n) = 1e12;
+        Q(n,m) = Q(m,n) = 1e12;
       }
       else if (massRatioSqr >= 1e-12 && massRatioSqr < 1e-5){
-        H(n,m) = H(m,n) = 1./massRatioSqr;
+        Q(n,m) = Q(m,n) = 1./massRatioSqr;
       }
       else if (massRatioSqr >= 1e-5 && massRatioSqr < 1e5){
-        H(n,m) = H(m,n) = 1e5;
+        Q(n,m) = Q(m,n) = 1e5;
       }
       else if (massRatioSqr >= 1e5 && massRatioSqr < 1e12){
-        H(n,m) = H(m,n) = massRatioSqr;
+        Q(n,m) = Q(m,n) = massRatioSqr;
       }
       else if (massRatioSqr >= 1e12){
-        H(n,m) = H(m,n) = 1e12;
+        Q(n,m) = Q(m,n) = 1e12;
       }
 
     }

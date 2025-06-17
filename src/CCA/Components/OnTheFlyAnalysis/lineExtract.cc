@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -69,8 +69,8 @@ lineExtract::~lineExtract()
 {
   DOUTR( dout_OTF_LE, " Doing: Destructor lineExtract " );
 
-  if(d_matl_set && d_matl_set->removeReference()) {
-    delete d_matl_set;
+  if(m_matl_set && m_matl_set->removeReference()) {
+    delete m_matl_set;
   }
 
   VarLabel::destroy(m_lb->lastWriteTimeLabel);
@@ -79,7 +79,7 @@ lineExtract::~lineExtract()
 
   // delete each line
   vector<line*>::iterator iter;
-  for( iter  = d_lines.begin();iter != d_lines.end(); iter++){
+  for( iter  = m_liness.begin();iter != m_liness.end(); iter++){
     delete *iter;
   }
 }
@@ -109,13 +109,13 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
 
   // find the material to extract data from.  Default is matl 0.
   if(m_module_spec->findBlock("material") ){
-    d_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
+    m_matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   }
   else {
     throw ProblemSetupException("ERROR:AnalysisModule:lineExtract: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
-  int defaultMatl = d_matl->getDWIndex();
+  int defaultMatl = m_matl->getDWIndex();
 
   //__________________________________
   //  Read in the optional material index from the variables that may be different
@@ -124,7 +124,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
 
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
-  d_matl_set = scinew MaterialSet();
+  m_matl_set = scinew MaterialSet();
   map<string,string> attribute;
 
   for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
@@ -140,19 +140,10 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
       throw ProblemSetupException("lineExtract: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
 
-    d_varMatl.push_back(matl);
     m.push_back(matl);
-  }
 
-  //Construct the matl_set
-  d_matl_set->addAll_unique(m);
-  d_matl_set->addReference();
-
-  //__________________________________
-  //  Read in variables label names
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze")) {
-    var_spec->getAttributes(attribute);
-
+    //__________________________________
+    //    Find the label
     string name = attribute["label"];
     VarLabel* label =VarLabel::find( name, "ERROR  lineExtract::problemSetup:Analyze" );
 
@@ -163,42 +154,62 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
       throw ProblemSetupException("lineExtract: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
 
-    const Uintah::TypeDescription* td = label->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const TypeDescription* td = label->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
+
+    const TypeDescription::Type baseType = td->getType();
+    const TypeDescription::Type subType  = subtype->getType();
 
     //__________________________________
     bool throwException = false;
 
-    // only CC, SFCX, SFCY, SFCZ variables
-    if(td->getType() != TypeDescription::CCVariable   &&
-       td->getType() != TypeDescription::SFCXVariable &&
-       td->getType() != TypeDescription::SFCYVariable &&
-       td->getType() != TypeDescription::SFCZVariable ){
+
+    // only CC, NC, SFCX, SFCY, SFCZ variables
+    if(baseType != TypeDescription::CCVariable   &&
+       baseType != TypeDescription::NCVariable   &&
+       baseType != TypeDescription::SFCXVariable &&
+       baseType != TypeDescription::SFCYVariable &&
+       baseType != TypeDescription::SFCZVariable ){
        throwException = true;
     }
-    // CC Variables, only Doubles and Vectors
-    if(td->getType() != TypeDescription::CCVariable       &&
-       subtype->getType() != TypeDescription::double_type &&
-       subtype->getType() != TypeDescription::int_type    &&
-       subtype->getType() != TypeDescription::Vector  ){
+    // CC, NC Variables, only doubles, Vectors, ints and Matrix3
+    if( ( baseType != TypeDescription::CCVariable     ||
+          baseType != TypeDescription::NCVariable )   &&
+
+       (subType != TypeDescription::double_type       &&
+        subType != TypeDescription::int_type          &&
+        subType != TypeDescription::Vector            &&
+        subType != TypeDescription::Matrix3  ) ){
       throwException = true;
     }
+
     // Face Centered Vars, only Doubles
-    if( (td->getType() == TypeDescription::SFCXVariable ||
-         td->getType() == TypeDescription::SFCYVariable ||
-         td->getType() == TypeDescription::SFCZVariable)    &&
-        (subtype->getType() != TypeDescription::double_type &&
-         subtype->getType() != TypeDescription::Vector) ) {
+    if( (baseType == TypeDescription::SFCXVariable  ||
+         baseType == TypeDescription::SFCYVariable  ||
+         baseType == TypeDescription::SFCZVariable) &&
+
+        (subType != TypeDescription::double_type    &&
+         subType != TypeDescription::Vector) ) {
       throwException = true;
     }
+
     if(throwException){
       ostringstream warn;
       warn << "ERROR:AnalysisModule:lineExtact: ("<<label->getName() << " "
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    d_varLabels.push_back(label);
-  }
+
+    varProperty v={label, label->getName(), matl, td, baseType, subType};
+    m_varProperties.push_back( v );
+  }  // analyze
+
+  //  examine all the baseTypes
+  isCommonBaseVarType();
+
+  //  Construct the matl_set
+  m_matl_set->addAll_unique(m);
+  m_matl_set->addReference();
 
   //__________________________________
   //  Read in lines
@@ -217,6 +228,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     line_spec->require("startingPt", start);
     line_spec->require("endingPt",   end);
     line_spec->getWithDefault("stepSize", stepSize, 0.0);
+
     //__________________________________
     // bullet proofing
     // -every line must have a name
@@ -258,7 +270,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     l->endPt    = end;
     l->loopDir  = loopDir;
     l->stepSize = stepSize;
-    d_lines.push_back(l);
+    m_liness.push_back(l);
   }
 }
 
@@ -271,9 +283,9 @@ void lineExtract::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("lineExtract::initialize",
                   this, &lineExtract::initialize);
 
-  t->computes( m_lb->lastWriteTimeLabel );
-  t->computes( m_lb->fileVarsStructLabel, m_zeroMatl );
-  sched->addTask(t, level->eachPatch(), d_matl_set );
+  t->computesVar( m_lb->lastWriteTimeLabel );
+  t->computesVar( m_lb->fileVarsStructLabel, m_zeroMatl );
+  sched->addTask(t, level->eachPatch(), m_matl_set );
 }
 //______________________________________________________________________
 void lineExtract::initialize(const ProcessorGroup *,
@@ -336,31 +348,35 @@ void lineExtract::scheduleDoAnalysis(SchedulerP   & sched,
 
   sched_TimeVars( t, level, m_lb->lastWriteTimeLabel, true );
 
-  t->requires(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
+  t->requiresVar(Task::OldDW, m_lb->fileVarsStructLabel, m_zeroMatl, m_gn, 0);
 
   //__________________________________
   //
-  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+
+  for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+
+    const varProperty vp = m_varProperties[i];
+    const VarLabel* varLabel = vp.varLabel;
+
     // bulletproofing
-    if(d_varLabels[i] == nullptr){
-      string name = d_varLabels[i]->getName();
-      throw InternalError("lineExtract: scheduleDoAnalysis label ("+name+") not found.", __FILE__, __LINE__);
+    if( varLabel== nullptr ){
+      throw InternalError("lineExtract: scheduleDoAnalysis label ("+vp.name+") not found.", __FILE__, __LINE__);
     }
 
     MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add(d_varMatl[i]);
+    matSubSet->add( vp.matl );
     matSubSet->addReference();
 
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::AroundCells, 1);
+    t->requiresVar(Task::NewDW, vp.varLabel, matSubSet, Ghost::AroundCells, 1);
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
   }
 
-  t->computes(m_lb->fileVarsStructLabel, m_zeroMatl);
+  t->computesVar(m_lb->fileVarsStructLabel, m_zeroMatl);
 
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+  sched->addTask(t, level->eachPatch(), m_matl_set);
 }
 
 //______________________________________________________________________
@@ -419,6 +435,13 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       vector< constCCVariable<int> >      CC_integer_data;
       vector< constCCVariable<double> >   CC_double_data;
       vector< constCCVariable<Vector> >   CC_Vector_data;
+      vector< constCCVariable<Matrix3> >  CC_Matrix3_data;
+      vector< constCCVariable<Matrix3> >  emptyArray;
+
+      vector< constNCVariable<int> >      NC_integer_data;
+      vector< constNCVariable<double> >   NC_double_data;
+      vector< constNCVariable<Vector> >   NC_Vector_data;
+      vector< constNCVariable<Matrix3> >  NC_Matrix3_data;
 
       vector< constSFCXVariable<double> > SFCX_double_data;
       vector< constSFCYVariable<double> > SFCY_double_data;
@@ -428,9 +451,15 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       vector< constSFCYVariable<Vector> > SFCY_Vector_data;
       vector< constSFCZVariable<Vector> > SFCZ_Vector_data;
 
-      constCCVariable<int>    q_CC_integer;
-      constCCVariable<double> q_CC_double;
-      constCCVariable<Vector> q_CC_Vector;
+      constCCVariable<int>     q_CC_integer;
+      constCCVariable<double>  q_CC_double;
+      constCCVariable<Vector>  q_CC_Vector;
+      constCCVariable<Matrix3> q_CC_Matrix3;
+
+      constNCVariable<int>     q_NC_integer;
+      constNCVariable<double>  q_NC_double;
+      constNCVariable<Vector>  q_NC_Vector;
+      constNCVariable<Matrix3> q_NC_Matrix3;
 
       constSFCXVariable<double> q_SFCX_double;
       constSFCYVariable<double> q_SFCY_double;
@@ -443,81 +472,109 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       Ghost::GhostType gac = Ghost::AroundCells;
 
 
-      for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+      for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+
+        const varProperty vp = m_varProperties[i];
 
         // bulletproofing
-        if(d_varLabels[i] == nullptr){
-          string name = d_varLabels[i]->getName();
-          throw InternalError("lineExtract: analyze label(" + name + ") not found", __FILE__, __LINE__);
+        if( vp.varLabel == nullptr ){
+          throw InternalError("lineExtract: analyze label(" + vp.name + ") not found", __FILE__, __LINE__);
         }
 
-        const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-        const Uintah::TypeDescription* subtype = td->getSubType();
+        int indx = vp.matl;
+        switch( vp.baseType ){
+          case TypeDescription::CCVariable:      // CC Variables
+            switch( vp.subType) {
 
-
-        int indx = d_varMatl[i];
-        switch(td->getType()){
-          case Uintah::TypeDescription::CCVariable:      // CC Variables
-            switch(subtype->getType()) {
-
-            case Uintah::TypeDescription::double_type:
-              new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gac, 1);
+            case TypeDescription::double_type:
+              new_dw->get(q_CC_double, vp.varLabel, indx, patch, gac, 1);
               CC_double_data.push_back(q_CC_double);
               break;
 
-            case Uintah::TypeDescription::Vector:
-              new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gac, 1);
+            case TypeDescription::Vector:
+              new_dw->get(q_CC_Vector, vp.varLabel, indx, patch, gac, 1);
               CC_Vector_data.push_back(q_CC_Vector);
               break;
 
-            case Uintah::TypeDescription::int_type:
-              new_dw->get(q_CC_integer, d_varLabels[i], indx, patch, gac, 1);
+            case TypeDescription::int_type:
+              new_dw->get(q_CC_integer, vp.varLabel, indx, patch, gac, 1);
               CC_integer_data.push_back(q_CC_integer);
+              break;
+
+            case TypeDescription::Matrix3:
+              new_dw->get(q_CC_Matrix3, vp.varLabel, indx, patch, gac, 1);
+              CC_Matrix3_data.push_back(q_CC_Matrix3);
               break;
             default:
               throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
             }
             break;
-          case Uintah::TypeDescription::SFCXVariable:   // SFCX Variables
+          case TypeDescription::NCVariable:      // NC Variables
+            switch( vp.subType ) {
 
-            switch( subtype->getType() ) {
-              case Uintah::TypeDescription::double_type:
-                new_dw->get( q_SFCX_double, d_varLabels[i], indx, patch, gac, 1 );
+            case TypeDescription::double_type:
+              new_dw->get(q_NC_double, vp.varLabel, indx, patch, gac, 1);
+              NC_double_data.push_back(q_NC_double);
+              break;
+
+            case TypeDescription::Vector:
+              new_dw->get(q_NC_Vector, vp.varLabel, indx, patch, gac, 1);
+              NC_Vector_data.push_back(q_NC_Vector);
+              break;
+
+            case TypeDescription::int_type:
+              new_dw->get(q_NC_integer, vp.varLabel, indx, patch, gac, 1);
+              NC_integer_data.push_back(q_NC_integer);
+              break;
+
+            case TypeDescription::Matrix3:
+              new_dw->get(q_NC_Matrix3, vp.varLabel, indx, patch, gac, 1);
+              NC_Matrix3_data.push_back(q_NC_Matrix3);
+              break;
+            default:
+              throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
+            }
+            break;
+          case TypeDescription::SFCXVariable:   // SFCX Variables
+
+            switch( vp.subType ) {
+              case TypeDescription::double_type:
+                new_dw->get( q_SFCX_double, vp.varLabel, indx, patch, gac, 1 );
                 SFCX_double_data.push_back( q_SFCX_double );
                 break;
 
-              case Uintah::TypeDescription::Vector:
-                new_dw->get( q_SFCX_Vector, d_varLabels[i], indx, patch, gac, 1 );
+              case TypeDescription::Vector:
+                new_dw->get( q_SFCX_Vector, vp.varLabel, indx, patch, gac, 1 );
                 SFCX_Vector_data.push_back( q_SFCX_Vector );
                 break;
               default:
                 throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
             }
             break;
-          case Uintah::TypeDescription::SFCYVariable:    // SFCY Variables
-            switch( subtype->getType() ) {
-              case Uintah::TypeDescription::double_type:
-                new_dw->get( q_SFCY_double, d_varLabels[i], indx, patch, gac, 1 );
+          case TypeDescription::SFCYVariable:    // SFCY Variables
+            switch( vp.subType ) {
+              case TypeDescription::double_type:
+                new_dw->get( q_SFCY_double, vp.varLabel, indx, patch, gac, 1 );
                 SFCY_double_data.push_back( q_SFCY_double );
                 break;
 
-              case Uintah::TypeDescription::Vector:
-                new_dw->get( q_SFCY_Vector, d_varLabels[i], indx, patch, gac, 1 );
+              case TypeDescription::Vector:
+                new_dw->get( q_SFCY_Vector, vp.varLabel, indx, patch, gac, 1 );
                 SFCY_Vector_data.push_back( q_SFCY_Vector );
                 break;
               default:
                 throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
             }
             break;
-          case Uintah::TypeDescription::SFCZVariable:   // SFCZ Variables
-            switch( subtype->getType() ) {
-              case Uintah::TypeDescription::double_type:
-                new_dw->get( q_SFCZ_double, d_varLabels[i], indx, patch, gac, 1 );
+          case TypeDescription::SFCZVariable:   // SFCZ Variables
+            switch( vp.subType ) {
+              case TypeDescription::double_type:
+                new_dw->get( q_SFCZ_double, vp.varLabel, indx, patch, gac, 1 );
                 SFCZ_double_data.push_back( q_SFCZ_double );
                 break;
 
-              case Uintah::TypeDescription::Vector:
-                new_dw->get( q_SFCZ_Vector, d_varLabels[i], indx, patch, gac, 1 );
+              case TypeDescription::Vector:
+                new_dw->get( q_SFCZ_Vector, vp.varLabel, indx, patch, gac, 1 );
                 SFCZ_Vector_data.push_back( q_SFCZ_Vector );
                 break;
               default:
@@ -526,31 +583,31 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
             break;
           default:
             ostringstream warn;
-            warn << "ERROR:AnalysisModule:lineExtact: ("<<d_varLabels[i]->getName() << " "
-                 << td->getName() << " ) has not been implemented" << endl;
+            warn << "ERROR:AnalysisModule:lineExtact: ("<< vp.name << " "
+                 << vp.td->getName() << " ) has not been implemented" << endl;
             throw InternalError(warn.str(), __FILE__, __LINE__);
         }
       }
 
       //__________________________________
       // loop over each line
-      for (unsigned int l =0 ; l < d_lines.size(); l++) {
+      for (unsigned int l =0 ; l < m_liness.size(); l++) {
 
         // create the directory structure
         const string udaDir    = m_output->getOutputLocation();
         const string levelIndx = to_string( level->getIndex() );
-        const string path      =   d_lines[l]->name + "/L-" + levelIndx;
+        const string path      = m_liness[l]->name + "/L-" + levelIndx;
 
         createDirectory( 0777, udaDir, path );
 
         // find the physical domain and index range
         // associated with this patch
-        Point start_pt = d_lines[l]->startPt;
-        Point end_pt   = d_lines[l]->endPt;
+        Point start_pt = m_liness[l]->startPt;
+        Point end_pt   = m_liness[l]->endPt;
 
-        double stepSize( d_lines[l]->stepSize);
+        double stepSize( m_liness[l]->stepSize);
         Vector dx    = patch->dCell();
-        double dxDir = dx[d_lines[l]->loopDir];
+        double dxDir = dx[m_liness[l]->loopDir];
         double tmp   = stepSize/dxDir;
 
         int step = RoundUp(tmp);
@@ -571,8 +628,12 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
         // enlarge the index space by 1 except in the main looping direction
         IntVector one(1,1,1);
-        one[d_lines[l]->loopDir] = 0;
+        one[m_liness[l]->loopDir] = 0;
         end_idx+= one;
+
+        // Offset the position reported.  Only if all the
+        // the variables are the same type.
+        Point offset = findCellOffset( level );
 
         //__________________________________
         // loop over each point in the line on this patch
@@ -594,10 +655,8 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
           //  if it's not in the fileInfo struct then create it
           FILE *fp;
 
-          cout << " filename: " << filename << endl;
-
           if( myFiles.count(filename) == 0 ){
-            createFile(filename, fp);
+            createFile(filename, fp, level);
             myFiles[filename] = fp;
           }
           else {
@@ -609,9 +668,14 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
           }
 
           // write cell position and time
-          Point here = patch->cellPosition(c);
-          const int w = d_col_width;
-          fprintf(fp,    "%-*E %-*E %-*E %-*E",w, here.x(), w, here.y(), w, here.z(), w, tv.now);
+          Point here = level->getNodePosition(c) + offset.asVector();
+
+          const int w = m_col_width;
+          fprintf(fp,    "%-*E %-*E %-*E %-*i %-*E", w, here.x(),
+                                                     w, here.y(),
+                                                     w, here.z(),
+                                                     w, tv.timeStep,
+                                                     w, tv.now);
 
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is
@@ -622,10 +686,11 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
             fprintf(fp, "%-*i", w, CC_integer_data[i][c]);
           }
 
-          fprintf_Arrays( fp, c, CC_double_data,   CC_Vector_data);
-          fprintf_Arrays( fp, c, SFCX_double_data, SFCX_Vector_data);
-          fprintf_Arrays( fp, c, SFCY_double_data, SFCY_Vector_data);
-          fprintf_Arrays( fp, c, SFCZ_double_data, SFCZ_Vector_data);
+          fprintf_Arrays( fp, c, CC_double_data,   CC_Vector_data,   CC_Matrix3_data );
+          fprintf_Arrays( fp, c, NC_double_data,   NC_Vector_data,   NC_Matrix3_data );
+          fprintf_Arrays( fp, c, SFCX_double_data, SFCX_Vector_data, emptyArray );
+          fprintf_Arrays( fp, c, SFCY_double_data, SFCY_Vector_data, emptyArray );
+          fprintf_Arrays( fp, c, SFCZ_double_data, SFCZ_Vector_data, emptyArray );
 
           fprintf(fp,"\n");
           fflush(fp);
@@ -641,10 +706,70 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
     new_dw->put(fileInfo, m_lb->fileVarsStructLabel, 0, patch);
   }  // patches
 }
+
+//______________________________________________________________________
+//        Determine if all variables have the same baseType
+void lineExtract::isCommonBaseVarType()
+{
+
+  // Use a set to identify if all the types are unique
+  std::vector<TypeDescription::Type> varTypes;
+
+  vector<varProperty>::iterator iter;
+  for( iter  = m_varProperties.begin();iter != m_varProperties.end(); iter++){
+    varProperty vp = *iter;
+    varTypes.push_back( vp.baseType );
+  }
+
+  std::set<TypeDescription::Type> allTypes( varTypes.begin(), varTypes.end() );
+
+  if ( allTypes.size() > 1 ){
+    proc0cout << "__________________________________ Data Analysis module: lineExtract"<<"\n";
+    proc0cout << "         WARNING: You have specified variables that have different locations on a grid cell."<<"\n";
+    proc0cout << "         The location for all variables will be specified at the Cell Center." << "\n\n";
+    m_allVarsBaseType = TypeDescription::Other;
+  }
+  else{
+    m_allVarsBaseType = varTypes[0];
+  }
+}
+
+//______________________________________________________________________
+//      Based on the type of variables that are analyzed find the
+//      offset from the lower, bottom back corner
+Point lineExtract::findCellOffset(const Level* level )
+{
+  Vector dx_2 = level->dCell() * 0.5;
+
+  switch( m_allVarsBaseType ){
+    case TypeDescription::CCVariable:     // CC Variables
+      return dx_2.asPoint();
+      break;
+    case TypeDescription::NCVariable:     // NC Variables
+      return Point(0.0, 0.0, 0.0 );
+      break;
+    case TypeDescription::SFCXVariable:   // SFCX Variables
+      return Point( 0.0, dx_2.y(), dx_2.z() );
+      break;
+    case TypeDescription::SFCYVariable:   // SFCY Variables
+      return Point( dx_2.x(), 0.0, dx_2.z() );
+      break;
+    case TypeDescription::SFCZVariable:   // SFCZ Variables
+      return Point( dx_2.x(), dx_2.y(), 0.0 );
+      break;
+    case TypeDescription::Other:          // mixed Variables
+      return dx_2.asPoint();
+      break;
+    default:
+      throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
+  }
+}
+
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
 void lineExtract::createFile( const string& filename,
-                              FILE*& fp)
+                              FILE*& fp,
+                              const Level* level)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
   ifstream doExists( filename.c_str() );
@@ -656,13 +781,14 @@ void lineExtract::createFile( const string& filename,
    // WARNING If you change the order that these are written
    // out you must also change the order in doAnalysis()
 
+  Vector dx = level->dCell();
+
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"%-*s %-*s %-*s %-*s", d_col_width,"# X_CC",
-                                    d_col_width,"Y_CC",
-                                    d_col_width,"Z_CC",
-                                    d_col_width,"Time [s]");
+
+  printHeader( fp, dx );
 
   printHeader( fp,TypeDescription::CCVariable);
+  printHeader( fp,TypeDescription::NCVariable);
   printHeader( fp,TypeDescription::SFCXVariable);
   printHeader( fp,TypeDescription::SFCYVariable);
   printHeader( fp,TypeDescription::SFCZVariable);
@@ -674,6 +800,51 @@ void lineExtract::createFile( const string& filename,
 }
 
 //______________________________________________________________________
+//      determine the description for the header of the file
+void
+lineExtract::printHeader(FILE*& fp,
+                         const Vector dx)
+{
+  vector<std::string> loc;
+
+  switch( m_allVarsBaseType ){
+    case TypeDescription::CCVariable:     // CC Variables
+      loc = { "# X_CC", "Y_CC", "Z_CC" };
+      break;
+    case TypeDescription::NCVariable:     // NC Variables
+      loc =  vector<std::string> { "# X_NC", "Y_NC", "Z_NC" };
+      break;
+    case TypeDescription::SFCXVariable:   // SFCX Variables
+      loc =  vector<std::string> { "# X_SFCX", "Y_SFCX", "Z_SFCX" };
+      break;
+    case TypeDescription::SFCYVariable:   // SFCY Variables
+      loc =  vector<std::string> { "# X_SFCY", "Y_SFCY", "Z_SFCY" };
+      break;
+    case TypeDescription::SFCZVariable:   // SFCZ Variables
+      loc =  vector<std::string> { "# X_SFCZ", "Y_SFCZ", "Z_SFCZ" };
+      break;
+    case TypeDescription::Other:  {        // mixed Variables
+        ostringstream dxStr;
+        dxStr << dx;
+
+        fprintf( fp, "# WARNING:  not all variables are at the cell center, you'll need apply an offset to them\n" );
+        fprintf( fp, "# dx: %s\n", dxStr.str().c_str() );
+        loc =  vector<std::string> { "# X_CC", "Y_CC", "Z_CC" };
+      }
+      break;
+    default:
+      throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
+  }
+
+  fprintf(fp,"%-*s %-*s %-*s %-*s %-*s", m_col_width, loc[0].c_str(),
+                                         m_col_width, loc[1].c_str(),
+                                         m_col_width, loc[2].c_str(),
+                                         m_col_width,"Timestep",
+                                         m_col_width,"Time [s]");
+
+}
+
+//______________________________________________________________________
 //
 void
 lineExtract::printHeader( FILE*& fp,
@@ -682,44 +853,40 @@ lineExtract::printHeader( FILE*& fp,
 
   //__________________________________
   // <double/int>
-  for (unsigned int i =0 ; i< d_varLabels.size(); i++) {
-    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+  for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+    const varProperty vp = m_varProperties[i];
 
-    if(td->getType()      == myType &&
-       (subtype->getType() == TypeDescription::double_type ||
-        subtype->getType() == TypeDescription::int_type ) ){
-      string name = d_varLabels[i]->getName();
+    if( vp.baseType == myType &&
+      ( vp.subType == TypeDescription::double_type ||
+        vp.subType  == TypeDescription::int_type ) ){
 
       ostringstream colDesc;
-      colDesc  <<  std::left << name << "_"<< d_varMatl[i] << setw(d_col_width) << " ";
+      colDesc  <<  std::left << vp.name << "_"<< vp.matl << setw(m_col_width) << " ";
 
-      string tmp = colDesc.str().substr(0,d_col_width);  // crop the description
+      string tmp = colDesc.str().substr(0,m_col_width);  // crop the description
       const char* cstr = tmp.c_str();
       fprintf( fp, "%s", cstr );
     }
   }
   //__________________________________
   // <Vector>
-  for (unsigned int i =0 ; i< d_varLabels.size(); i++) {
-    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+  for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+    const varProperty vp = m_varProperties[i];
 
-    if( td->getType()      == myType  &&
-        subtype->getType() == TypeDescription::Vector ){
-      string name = d_varLabels[i]->getName();
+    if( vp.baseType == myType  &&
+        vp.subType  == TypeDescription::Vector ){
 
       ostringstream colDescX;
       ostringstream colDescY;
       ostringstream colDescZ;
-      colDescX << std::left << name << "_"<< d_varMatl[i] << ".x" << setw(d_col_width) << " ";
-      colDescY << std::left << name << "_"<< d_varMatl[i] << ".y" << setw(d_col_width) << " ";
-      colDescZ << std::left << name << "_"<< d_varMatl[i] << ".z" << setw(d_col_width) << " ";
+      colDescX << std::left << vp.name << "_"<< vp.matl << ".x" << setw(m_col_width) << " ";
+      colDescY << std::left << vp.name << "_"<< vp.matl << ".y" << setw(m_col_width) << " ";
+      colDescZ << std::left << vp.name << "_"<< vp.matl << ".z" << setw(m_col_width) << " ";
 
        // crop the descriptions
-      string tmpX = colDescX.str().substr(0,d_col_width);
-      string tmpY = colDescY.str().substr(0,d_col_width);
-      string tmpZ = colDescZ.str().substr(0,d_col_width);
+      string tmpX = colDescX.str().substr(0,m_col_width);
+      string tmpY = colDescY.str().substr(0,m_col_width);
+      string tmpZ = colDescZ.str().substr(0,m_col_width);
 
       const char* cstrX = tmpX.c_str();
       const char* cstrY = tmpY.c_str();
@@ -727,27 +894,70 @@ lineExtract::printHeader( FILE*& fp,
       fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
     }
   }
+
+  //__________________________________
+  //    Matrix3
+  for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+    const varProperty vp = m_varProperties[i];
+
+    if( vp.baseType == myType  &&
+        vp.subType  == TypeDescription::Matrix3 ){
+
+      int colWidth = m_col_width + 4;
+      for (int row = 0; row<3; row++){
+        ostringstream colDesc0;
+        ostringstream colDesc1;
+        ostringstream colDesc2;
+        colDesc0 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",0)" << setw(colWidth) << " ";
+        colDesc1 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",1)" << setw(colWidth) << " ";
+        colDesc2 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",2)" << setw(colWidth) << " ";
+
+         // crop the descriptions
+        string tmpX = colDesc0.str().substr(0,colWidth);
+        string tmpY = colDesc1.str().substr(0,colWidth);
+        string tmpZ = colDesc2.str().substr(0,colWidth);
+
+        const char* cstrX = tmpX.c_str();
+        const char* cstrY = tmpY.c_str();
+        const char* cstrZ = tmpZ.c_str();
+        fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
+      }
+    }
+  }
 }
 
 //______________________________________________________________________
 //
-template< class D, class V >
+template< class D, class V, class M>
 void lineExtract::fprintf_Arrays( FILE*& fp,
                                   const IntVector& c,
                                   const D& doubleData,
-                                  const V& VectorData)
+                                  const V& VectorData,
+                                  const M& Matrix3Data)
 {
-   const int w = d_col_width;
-   // double variables
-   for (unsigned int i=0 ; i< doubleData.size(); i++) {
-     fprintf(fp, "%-*E", w, doubleData[i][c]);
-   }
+  int w = m_col_width;
 
-   // Vector variable
-   for (unsigned int i=0 ; i< VectorData.size(); i++) {
-     fprintf(fp, "%-*E %-*E %-*E",
-             w, VectorData[i][c].x(),
-             w, VectorData[i][c].y(),
-             w, VectorData[i][c].z() );
-   }
+  // double variables
+  for (unsigned int i=0 ; i< doubleData.size(); i++) {
+    fprintf(fp, "%-*E", w, doubleData[i][c]);
+  }
+
+  // Vector variable
+  for (unsigned int i=0 ; i< VectorData.size(); i++) {
+    fprintf(fp, "%-*E %-*E %-*E",
+            w, VectorData[i][c].x(),
+            w, VectorData[i][c].y(),
+            w, VectorData[i][c].z() );
+  }
+
+  // Matrix variable
+  w = w + 4;   // needed for matrix (row,col)
+  for (unsigned int i=0 ; i< Matrix3Data.size(); i++) {
+    for (int row = 0; row<3; row++){
+      fprintf(fp, "%-*E %-*E %-*E",
+              w, Matrix3Data[i][c](row,0),
+              w, Matrix3Data[i][c](row,1),
+              w, Matrix3Data[i][c](row,2) );
+    }
+  }
 }

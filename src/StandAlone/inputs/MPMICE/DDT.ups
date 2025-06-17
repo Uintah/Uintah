@@ -255,7 +255,6 @@
 <!--__________________________________-->
 
       <exchange_properties>
-       <!-- <heatExchangeCoeff>  constant  </heatExchangeCoeff>-->
         <exchange_coefficients>
           <momentum>  [ 1e8]   </momentum>
           <heat>      [  1e5]   </heat>

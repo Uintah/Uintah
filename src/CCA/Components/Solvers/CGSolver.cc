@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -673,24 +673,24 @@ public:
     if(cout_doing.active())
       cout_doing << "CGSolver::schedule setup" << endl;
     Task* task = scinew Task("CGSolver:setup", this, &CGStencil7<GridVarType>::setup);
-    task->requires(parent_which_b_dw, B_label, Ghost::None, 0);
-    task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
+    task->requiresVar(parent_which_b_dw, B_label, Ghost::None, 0);
+    task->requiresVar(parent_which_A_dw, A_label, Ghost::None, 0);
     
     if(guess_label){
-      task->requires(parent_which_guess_dw, guess_label, Around, 1);
+      task->requiresVar(parent_which_guess_dw, guess_label, Around, 1);
     }
     
-    task->computes(memref_label);
-    task->computes(R_label);
-    task->computes(X_label);
-    task->computes(D_label);
-    task->computes(d_label);
-    task->computes(tolerance_label);
-    task->computes(diag_label);
+    task->computesVar(memref_label);
+    task->computesVar(R_label);
+    task->computesVar(X_label);
+    task->computesVar(D_label);
+    task->computesVar(d_label);
+    task->computesVar(tolerance_label);
+    task->computesVar(diag_label);
     if(params->norm != CGSolverParams::L2){
-      task->computes(err_label);
+      task->computesVar(err_label);
     }
-    task->computes(flop_label);
+    task->computesVar(flop_label);
     subsched->addTask(task, level->eachPatch(), matlset);
 
     subsched->compile();
@@ -748,12 +748,12 @@ public:
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 1" << endl;
       task = scinew Task("CGSolver:step1", this, &CGStencil7<GridVarType>::step1);
-      task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
-      task->requires(Task::OldDW,       D_label, Around, 1);
-      task->computes(aden_label);
-      task->computes(Q_label);
-      task->computes(flop_label);
-      task->computes(memref_label);
+      task->requiresVar(parent_which_A_dw, A_label, Ghost::None, 0);
+      task->requiresVar(Task::OldDW,       D_label, Around, 1);
+      task->computesVar(aden_label);
+      task->computesVar(Q_label);
+      task->computesVar(flop_label);
+      task->computesVar(memref_label);
       subsched->addTask(task, level->eachPatch(), matlset);
 
       //__________________________________
@@ -762,22 +762,22 @@ public:
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 2" << endl;
       task = scinew Task("CGSolver:step2", this, &CGStencil7<GridVarType>::step2);
-      task->requires(Task::OldDW, d_label);
-      task->requires(Task::NewDW, aden_label);
-      task->requires(Task::OldDW, D_label,    Ghost::None, 0);
-      task->requires(Task::OldDW, X_label,    Ghost::None, 0);
-      task->requires(Task::OldDW, R_label,    Ghost::None, 0);
-      task->requires(Task::OldDW, diag_label, Ghost::None, 0);
-      task->computes(X_label);
-      task->computes(R_label);
-      task->modifies(Q_label);
-      task->computes(d_label);
-      task->computes(diag_label);
-      task->computes(flop_label);
-      task->modifies(memref_label);
+      task->requiresVar(Task::OldDW, d_label);
+      task->requiresVar(Task::NewDW, aden_label);
+      task->requiresVar(Task::OldDW, D_label,    Ghost::None, 0);
+      task->requiresVar(Task::OldDW, X_label,    Ghost::None, 0);
+      task->requiresVar(Task::OldDW, R_label,    Ghost::None, 0);
+      task->requiresVar(Task::OldDW, diag_label, Ghost::None, 0);
+      task->computesVar(X_label);
+      task->computesVar(R_label);
+      task->modifiesVar(Q_label);
+      task->computesVar(d_label);
+      task->computesVar(diag_label);
+      task->computesVar(flop_label);
+      task->modifiesVar(memref_label);
       
       if(params->norm != CGSolverParams::L2) {
-        task->computes(err_label);
+        task->computesVar(err_label);
       }
       subsched->addTask(task, level->eachPatch(), matlset);
 
@@ -788,13 +788,13 @@ public:
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 3" << endl;
       task = scinew Task("CGSolver:step3", this, &CGStencil7<GridVarType>::step3);
-      task->requires(Task::OldDW, D_label, Ghost::None, 0);
-      task->requires(Task::NewDW, Q_label, Ghost::None, 0);
-      task->requires(Task::NewDW, d_label);
-      task->requires(Task::OldDW, d_label);
-      task->computes(D_label);
-      task->computes(flop_label);
-      task->modifies(memref_label);
+      task->requiresVar(Task::OldDW, D_label, Ghost::None, 0);
+      task->requiresVar(Task::NewDW, Q_label, Ghost::None, 0);
+      task->requiresVar(Task::NewDW, d_label);
+      task->requiresVar(Task::OldDW, d_label);
+      task->computesVar(D_label);
+      task->computesVar(flop_label);
+      task->modifiesVar(memref_label);
       subsched->addTask(task, level->eachPatch(), matlset);
       subsched->compile();
 
@@ -1066,23 +1066,23 @@ void CGSolver::scheduleSolve(const LevelP       & level,
     throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
   }
 
-  task->requires(which_A_dw, A, Ghost::None, 0);
+  task->requiresVar(which_A_dw, A, Ghost::None, 0);
   if(guess){
-    task->requires(which_guess_dw, guess, Around, 1);
+    task->requiresVar(which_guess_dw, guess, Around, 1);
   }
   if(modifies_x) {
-    task->modifies(x);
+    task->modifiesVar(x);
   }
   else{
-    task->computes(x);  
+    task->computesVar(x);  
   }
   
-  task->requires(which_b_dw, b, Ghost::None, 0);
+  task->requiresVar(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
 
   if(m_params->getRecomputeTimeStepOnFailure()) {
-    task->computes( VarLabel::find(abortTimeStep_name) );
-    task->computes( VarLabel::find(recomputeTimeStep_name) );
+    task->computesVar( VarLabel::find(abortTimeStep_name) );
+    task->computesVar( VarLabel::find(recomputeTimeStep_name) );
   }
   
   LoadBalancer * lb = sched->getLoadBalancer();

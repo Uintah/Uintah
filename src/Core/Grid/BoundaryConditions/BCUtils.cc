@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,7 @@
  */
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 
 using namespace std;
 
@@ -77,13 +78,13 @@ namespace Uintah {
     // loop over all faces and determine if a BC has been set
     for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps = face_ps->findNextBlock( "Face" ) ) {
 
-      map<string,string> face;
-      face_ps->getAttributes(face);
+      map<string,string> face_attr;
+      face_ps->getAttributes(face_attr);
 
       //loop through the attributes and find  (x-,x+,y-,y+... )
       string side = "nullptr";
 
-      for( map<string,string>::iterator iter = face.begin(); iter !=  face.end(); iter++ ){
+      for( map<string,string>::iterator iter = face_attr.begin(); iter !=  face_attr.end(); iter++ ){
         string me = (*iter).second;
 
         if( me =="x-" || me == "x+" ||
@@ -95,39 +96,35 @@ namespace Uintah {
         }
       }
 
-      // Loop over all BCTypes:
-      for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
-        map<string,string> bc_type;
-        bc_iter->getAttributes(bc_type);
+      //__________________________________
+      //      Loop over all BCTypes for this face:
+      for( ProblemSpecP bcType_ps = face_ps->findBlock( "BCType" ); bcType_ps != nullptr; bcType_ps = bcType_ps->findNextBlock( "BCType" ) ) {
+        map<string,string> bc_attr;
 
-        bool foundMatlID = ( bc_type.find("id") != bc_type.end() );
-        int matlIndx;
-        string id;
+        bcType_ps->getAttributes(bc_attr);
+        std::string label = bc_attr["label"];
 
-        if (!foundMatlID) {
-          if (defaultMat == "") {
-            SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-          }else{
-            matlIndx = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+        if( label != variable && label != "Symmetric" ){
+          continue;
+        }
+
+        std::vector<int> matl_ids;              // find the matl_ids associated with this BC
+        matl_ids = BoundCondReader::parseMatl_ids( bc_attr, defaultMat );
+
+        for ( auto matl_id: matl_ids ){
+          bool foundMatl = false;
+          if( matl_id == -1 || matls->contains(matl_id)){
+            foundMatl = true;
           }
-        } else {
-          id = bc_type["id"];
-          matlIndx = (id == "all") ? -1 : atoi(id.c_str());
-        }
 
-        bool foundMatl = false;
-        if( id == "all" || matls->contains(matlIndx)){
-          foundMatl = true;
+          if (( label == variable || label == "Symmetric") && foundMatl ) {
+            is_BC_set[side] = true;
+          }
         }
-
-
-        if ((bc_type["label"] == variable || bc_type["label"] == "Symmetric") && foundMatl ) {
-          is_BC_set[side] = true;
-        }
-      }
+      }  // BCTyoe loop
 
       //__________________________________
-      //Now check if the variable on this face was set
+      //  Now check if the variable on this face was set
       if (!is_BC_set[side] && !is_periodic[side]){   // BC not set and not periodic
         ostringstream warn;
         warn <<"\n__________________________________\n"
@@ -137,7 +134,6 @@ namespace Uintah {
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }  // face loop
-
     //__________________________________
     // Duplicate periodic BC and normal BCs
     if(periodic.length() != 0){

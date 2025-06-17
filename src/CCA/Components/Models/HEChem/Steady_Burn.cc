@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,9 +55,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
 
 //__________________________________   
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
@@ -195,7 +192,7 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched,
   
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
-  t->computes(TsLabel, react_matl);
+  t->computesVar(TsLabel, react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -241,9 +238,9 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
 
-  t1->requires(Task::OldDW, Ilb->timeStepLabel);
-  t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
-  t1->computes(numPPCLabel, react_matl);
+  t1->requiresVar(Task::OldDW, Ilb->timeStepLabel);
+  t1->requiresVar(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
+  t1->computesVar(numPPCLabel, react_matl);
 
   sched->addTask(t1, level->eachPatch(), mymatls);
 
@@ -253,7 +250,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
                         &Steady_Burn::computeModelSources);
 
   printSchedule(level,cout_doing,"Steady_Burn::scheduleComputeModelSources");  
-  t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep());
+  t->requiresVar( Task::OldDW, Ilb->delTLabel, level.get_rep());
   
   // define material subsets  
   const MaterialSet* all_matls = m_materialManager->allMaterials();
@@ -265,34 +262,34 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
 
-  t->requires(Task::OldDW, Ilb->timeStepLabel );
-  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,         level.get_rep());
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
   /*     Reactants    */
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
-  t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
-  t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
+  t->requiresVar(Task::NewDW, numPPCLabel,           react_matl, gac,1);
   /*     Misc      */
-  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
-  t->requires(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
+  t->requiresVar(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
+  t->requiresVar(Task::OldDW,  Mlb->NC_CCweightLabel,   one_matl, gac, 1);  
   
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
   
-  t->computes(BurningCellLabel, react_matl);
-  t->computes(TsLabel,          react_matl);
+  t->computesVar(BurningCellLabel, react_matl);
+  t->computesVar(TsLabel,          react_matl);
      
   if(d_saveConservedVars->mass ){
-    t->computes(Steady_Burn::totalMassBurnedLabel);
+    t->computesVar(Steady_Burn::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-    t->computes(Steady_Burn::totalHeatReleasedLabel);
+    t->computesVar(Steady_Burn::totalHeatReleasedLabel);
   } 
   
   sched->addTask(t, level->eachPatch(), mymatls);

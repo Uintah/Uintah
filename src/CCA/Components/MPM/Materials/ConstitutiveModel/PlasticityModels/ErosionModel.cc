@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -154,7 +154,7 @@ ErosionModel::addInitialComputesAndRequires(Task* task,
   printTask( dbg, mesg.str() );
   
   const MaterialSubset* matls = matl->thisMaterial();
-  task->computes( pTimeOfLocLabel, matls );
+  task->computesVar( pTimeOfLocLabel, matls );
 }
 //______________________________________________________________________
 //
@@ -198,9 +198,9 @@ ErosionModel::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
   
-  task->requires(Task::OldDW, pTimeOfLocLabel, matls, gnone);
-  task->modifies(d_lb->pStressLabel_preReloc,  matls); 
-  task->computes(pTimeOfLocLabel_preReloc,     matls);
+  task->requiresVar(Task::OldDW, pTimeOfLocLabel, matls, gnone);
+  task->modifiesVar(d_lb->pStressLabel_preReloc,  matls); 
+  task->computesVar(pTimeOfLocLabel_preReloc,     matls);
 }
 
 //______________________________________________________________________

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -101,18 +101,18 @@ namespace Uintah {
       SolidReactionModel& operator=(const SolidReactionModel&);
 
       // Innards
-      RateConstant *rateConstant {nullptr};     // k(T)
-      RateModel    *rateModel    {nullptr};     // f(a)
+      RateConstant * d_rateConstantModel {nullptr};     // k(T)
+      RateModel    * d_rateModel         {nullptr};     // f(a)
 
-      const Material* reactant  {nullptr};
-      const Material* product   {nullptr};
+      const Material* d_reactant  {nullptr};
+      const Material* d_product   {nullptr};
 
-      std::string fromMaterial;
-      std::string toMaterial;
+      std::string d_fromMaterial;
+      std::string d_doMaterial;
       double d_E0;                            // Enthalpy change for reaction in J/kg
 
       ICELabel *Ilb;                          // Used to get handles on temperature, pressure, etc.
-      MaterialSet *mymatls;                   // All the materials referenced by this model
+      MaterialSet *d_myMatls;                   // All the materials referenced by this model
 
       // Variables used for tracking the Reaction
       const VarLabel* reactedFractionLabel;   // Fraction of reactant in cell

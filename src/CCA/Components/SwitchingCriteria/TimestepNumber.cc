@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,8 +65,8 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->computes(d_switch_label);
+  t->requiresVar(Task::OldDW, m_timeStepLabel);
+  t->computesVar(d_switch_label);
   sched->addTask(t, level->eachPatch(), m_materialManager->allMaterials());
 }
 

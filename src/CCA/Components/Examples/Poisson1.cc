@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -115,8 +115,8 @@ void Poisson1::scheduleInitialize( const LevelP     & level
 {
   Task* task = scinew Task("Poisson1::initialize", this, &Poisson1::initialize);
 
-  task->computes(phi_label);
-  task->computes(residual_label);
+  task->computesVar(phi_label);
+  task->computesVar(residual_label);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -136,8 +136,8 @@ void Poisson1::scheduleComputeStableTimeStep( const LevelP     & level
 {
   Task* task = scinew Task("Poisson1::computeStableTimeStep", this, &Poisson1::computeStableTimeStep);
 
-  task->requires(Task::NewDW, residual_label);
-  task->computes(getDelTLabel(), level.get_rep());
+  task->requiresVar(Task::NewDW, residual_label);
+  task->computesVar(getDelTLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
@@ -152,18 +152,18 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
 
 //  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
 
-//  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-//  task->computes(phi_label);
-//  task->computes(residual_label);
+//  task->requiresVar(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//  task->computesVar(phi_label);
+//  task->computesVar(residual_label);
 //  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 
 //______________________________________________________________________
 // Portable approach:
 
   auto TaskDependencies = [&](Task* task) {
-    task->requires(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
+    task->requiresVar(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, POISSON1_GHOST_TYPE, 1);
-    task->computes(residual_label);
+    task->computesVar(residual_label);
   };
 
   create_portable_tasks(TaskDependencies, this,

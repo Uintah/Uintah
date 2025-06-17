@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,9 +49,9 @@ void CommonIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,
                            &CommonIFConcDiff::sdInterfaceInterpolated);
 
   const MaterialSubset* mss = matls->getUnion();
-  task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::AroundNodes, 1);
+  task->requiresVar( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::AroundNodes, 1);
 
-  task->modifies(d_mpm_lb->diffusion->gConcentration, mss);
+  task->modifiesVar(d_mpm_lb->diffusion->gConcentration, mss);
 
   sched->addTask(task, patches, matls);
 }
@@ -117,9 +117,9 @@ void CommonIFConcDiff::addComputesAndRequiresDivergence(SchedulerP & sched,
                            &CommonIFConcDiff::sdInterfaceDivergence);
 
   const MaterialSubset* mss = matls->getUnion();
-  task->requires( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::None);
+  task->requiresVar( Task::NewDW, d_mpm_lb->gMassLabel, Ghost::None);
 
-  task->modifies(d_mpm_lb->diffusion->gConcentrationRate, mss);
+  task->modifiesVar(d_mpm_lb->diffusion->gConcentrationRate, mss);
 
   sched->addTask(task, patches, matls);
 }

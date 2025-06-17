@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -173,25 +173,25 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     const LevelP l = level->getGrid()->getLevel(i);
     const PatchSubset* subset = l->eachPatch()->getUnion();
     
-    task->requires(which_A_dw, A, subset, Ghost::None, 0);
+    task->requiresVar(which_A_dw, A, subset, Ghost::None, 0);
     
     if (modifies_x) {
-      task->modifies(x, subset, 0);
+      task->modifiesVar(x, subset, 0);
     }
     else {
-      task->computes(x, subset);
+      task->computesVar(x, subset);
     }
     
     if (guess) {
-      task->requires(which_guess_dw, guess, subset, Ghost::None, 0); 
+      task->requiresVar(which_guess_dw, guess, subset, Ghost::None, 0); 
     }
     
-    task->requires(which_b_dw, b, subset, Ghost::None, 0);
+    task->requiresVar(which_b_dw, b, subset, Ghost::None, 0);
   }// numLevels
   
   
-  // task->computes( VarLabel::find(abortTimeStep_name) );
-  // task->computes( VarLabel::find(recomputeTimeStep_name) );
+  // task->computesVar( VarLabel::find(abortTimeStep_name) );
+  // task->computesVar( VarLabel::find(recomputeTimeStep_name) );
   
   task->setType(Task::OncePerProc);
 

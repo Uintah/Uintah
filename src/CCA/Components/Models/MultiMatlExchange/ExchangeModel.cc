@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -102,11 +102,11 @@ void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,
   printSchedule( patches, dbgExch, name );
 
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  t->requires( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
-  t->requires( Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1 );
+  t->requiresVar( Task::NewDW, Mlb->gMassLabel,       mpm_matls,   gac, 1 );
+  t->requiresVar( Task::OldDW, Mlb->NC_CCweightLabel, d_zero_matl, gac, 1 );
 
-  t->computes( d_surfaceNormLabel,   mpm_matls );
-  t->computes( d_isSurfaceCellLabel, d_zero_matl ); 
+  t->computesVar( d_surfaceNormLabel,   mpm_matls );
+  t->computesVar( d_isSurfaceCellLabel, d_zero_matl ); 
   
   const MaterialSet* mpm_matlset = d_matlManager->allMaterials( "MPM" );
   sched->addTask(t, patches, mpm_matlset );

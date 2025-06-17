@@ -2,7 +2,7 @@
 #
 # The MIT License
 #
-# Copyright (c) 1997-2024 The University of Utah
+# Copyright (c) 1997-2025 The University of Utah
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -77,8 +77,8 @@ foreach $test_dom ($doc->findnodes('/start/Test')) {
   }
   
   # Pull out the entries from the test dom tree
-  $X            = $test_dom->findvalue('x');
-  $testTitle    = $test_dom->findvalue('Title');
+  $X            = Utilities::cleanStr( $test_dom->findvalue('x') );
+  $testTitle    = Utilities::cleanStr( $test_dom->findvalue('Title') );
   $postProc_cmd = $test_dom->findvalue('postProcess_cmd');
 }
 
@@ -131,13 +131,15 @@ chomp($L2norm);
 
 #______________________________________________________________________
 # Plot results gnuplot script         OPTIONAL
-my $gpData = $doc->find( '/start/gnuplot' );
+#  The plot script path is relative to the tst file
+#  The plot script is copied to the test directory upstream
+my $gpFile = Utilities::cleanStr($doc->findvalue( '/start/gnuplot/script' ) );
 
-if ( length $gpData ) {
-  my $gpFile = $doc->findvalue( '/start/gnuplot/script' );        # if a user provides a gnuplot file
-
+if ( -e $gpFile ) {
   # modify the plot script
   my $title = $doc->findvalue( '/start/gnuplot/title' );
+  my $arg1  = $doc->findvalue( '/start/gnuplot/arg1' );
+  my $arg2  = $doc->findvalue( '/start/gnuplot/arg2' );
   my $xlabel= $doc->findvalue( '/start/gnuplot/xlabel' );
   my $ylabel= $doc->findvalue( '/start/gnuplot/ylabel' );
   my $label = $doc->findvalue( '/start/gnuplot/label' );
@@ -145,9 +147,12 @@ if ( length $gpData ) {
   system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
   system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
   system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
-  system("sed", "-i", "s/#label/set label     $label/g",      "$gpFile");
+  system("sed", "-i", "s/#label/set label   \"$label\"/g",  "$gpFile");
 
-  print "Now plotting using the modified gnuplot script ($gpFile) \n";
-  system("gnuplot $gpFile > gp.out 2>&1");
+  
+  my @gpCmd = ( "gnuplot -c", "$gpFile", "$arg1", "$arg2" );
+  print "Now plotting using the modified gnuplot script (@gpCmd) \n";
+  
+  system("@gpCmd > gp.out 2>&1") ==0 or die("ERROR(analyze_Analysis.pl):\tFailed running: (@gpCmd)) failed: $@");
 }
 

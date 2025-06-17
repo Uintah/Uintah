@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -2512,7 +2512,7 @@ Heat<VAR, DIM, STN, AMR>::scheduleCoarsen_solution (
     task->requires ( Task::NewDW, u_label, nullptr, Task::FineLevel, nullptr, Task::NormalDomain, Ghost::None, 0 );
     task->requires ( Task::NewDW, subproblems_label, Ghost::None, 0 );
     task->requires ( Task::NewDW, subproblems_label, nullptr, Task::FineLevel, nullptr, Task::NormalDomain, Ghost::None, 0 );
-    task->modifies ( u_label );
+    task->modifiesVar( u_label );
     sched->addTask ( task, level_coarse->eachPatch(), this->m_materialManager->allMaterials() );
 }
 
@@ -2542,8 +2542,8 @@ Heat<VAR, DIM, STN, AMR>::scheduleErrorEstimate_solution (
     Task * task = scinew Task ( "Heat::task_error_estimate_solution", this, &Heat::task_error_estimate_solution );
     task->requires ( Task::NewDW, subproblems_label, Ghost::None, 0 );
     task->requires ( Task::NewDW, u_label, FGT, FGN );
-    task->modifies ( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
-    task->modifies ( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
+    task->modifiesVar( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
+    task->modifiesVar( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
     sched->addTask ( task, level->eachPatch(), this->m_materialManager->allMaterials() );
 }
 
@@ -2565,8 +2565,8 @@ Heat<VAR, DIM, STN, AMR>::scheduleErrorEstimate_solution (
         task->requires ( Task::NewDW, subproblems_label, nullptr, Task::CoarseLevel, nullptr, Task::NormalDomain, CGT, CGN );
         task->requires ( Task::NewDW, u_label, FGT, FGN );
         task->requires ( Task::NewDW, u_label, nullptr, Task::CoarseLevel, nullptr, Task::NormalDomain, CGT, CGN );
-        task->modifies ( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
-        task->modifies ( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
+        task->modifiesVar( this->m_regridder->getRefineFlagLabel(), this->m_regridder->refineFlagMaterials() );
+        task->modifiesVar( this->m_regridder->getRefinePatchFlagLabel(), this->m_regridder->refineFlagMaterials() );
         sched->addTask ( task, level->eachPatch(), this->m_materialManager->allMaterials() );
     }
 }

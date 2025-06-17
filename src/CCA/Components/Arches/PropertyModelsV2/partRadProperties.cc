@@ -344,17 +344,17 @@ void
 partRadProperties::register_initialize( VIVec& variable_registry , const bool pack_tasks)
 {
 
-  const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability
+  const auto computesVar = Uintah::ArchesFieldContainer::COMPUTES;   // for readability
 
-  register_variable( _abskp_name , computes, variable_registry);
+  register_variable( _abskp_name , computesVar, variable_registry);
 
   for (int i=0; i< _nQn_part ; i++){
-    register_variable( _abskp_name_vector[i] , computes, variable_registry);
+    register_variable( _abskp_name_vector[i] , computesVar, variable_registry);
   }
 
   if (_scatteringOn ){
-    register_variable( _scatkt_name ,         computes, variable_registry);
-    register_variable( _asymmetryParam_name , computes , variable_registry);
+    register_variable( _scatkt_name ,         computesVar, variable_registry);
+    register_variable( _asymmetryParam_name , computesVar, variable_registry);
   }
 }
 
@@ -398,33 +398,33 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
                                           const bool packed_tasks)
 {
 
-  const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability;
-  const auto requires = Uintah::ArchesFieldContainer::REQUIRES;
+  const auto computesVar = Uintah::ArchesFieldContainer::COMPUTES;   // for readability;
+  const auto requiresVar = Uintah::ArchesFieldContainer::REQUIRES;
 
-  register_variable( _abskp_name , computes, variable_registry, time_substep);
+  register_variable( _abskp_name , computesVar, variable_registry, time_substep);
 
   for (int i=0; i< _nQn_part ; i++){
-    register_variable( _abskp_name_vector[i] ,  computes, variable_registry, time_substep);
-    register_variable( _temperature_name_v[i] , requires, variable_registry, time_substep);
-    register_variable( _size_name_v[i] ,        requires, variable_registry, time_substep);
-    register_variable( _weight_name_v[i] ,      requires, variable_registry, time_substep);
+    register_variable( _abskp_name_vector[i] ,  computesVar, variable_registry, time_substep);
+    register_variable( _temperature_name_v[i] , requiresVar, variable_registry, time_substep);
+    register_variable( _size_name_v[i] ,        requiresVar, variable_registry, time_substep);
+    register_variable( _weight_name_v[i] ,      requiresVar, variable_registry, time_substep);
 
     if(_isCoal){
-      register_variable( _RC_name_v[i] ,   requires, variable_registry, time_substep);
-      register_variable( _Char_name_v[i] , requires, variable_registry, time_substep);
+      register_variable( _RC_name_v[i] ,   requiresVar, variable_registry, time_substep);
+      register_variable( _Char_name_v[i] , requiresVar, variable_registry, time_substep);
     }
   }
 
   if (_scatteringOn ){
-    register_variable( _scatkt_name ,         computes, variable_registry, time_substep);
-    register_variable( _asymmetryParam_name , computes , variable_registry, time_substep);
+    register_variable( _scatkt_name ,         computesVar, variable_registry, time_substep);
+    register_variable( _asymmetryParam_name , computesVar, variable_registry, time_substep);
   }
 
   for (int i=0; i<_nDVs; i++){
-    register_variable( "partRadProps_temporary_"+std::to_string(i) , computes, variable_registry, time_substep);
+    register_variable( "partRadProps_temporary_"+std::to_string(i) , computesVar, variable_registry, time_substep);
   } 
 
-  register_variable("volFraction" , requires,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
+  register_variable("volFraction" , requiresVar,0,ArchesFieldContainer::NEWDW,variable_registry, time_substep );
 }
 
 //______________________________________________________________________

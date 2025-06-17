@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -141,7 +141,7 @@ TableLookup::sched_setDependBCs( const LevelP& level,
     std::map<std::string, const VarLabel*> depend_var_map = model->getDVVars();
 
     for ( auto i = depend_var_map.begin(); i != depend_var_map.end(); i++ ){
-      tsk->modifies( i->second );
+      tsk->modifiesVar( i->second );
     }
   };
 

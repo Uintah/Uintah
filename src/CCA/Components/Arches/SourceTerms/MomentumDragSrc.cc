@@ -50,9 +50,9 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::computeSource, timeSubStep);
 
   if (timeSubStep == 0 ) {
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
   } else {
-    tsk->modifies(_src_label);
+    tsk->modifiesVar(_src_label);
   }
 
   for ( int i = 0; i<_N; i++ ) {
@@ -67,7 +67,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0);
     }
 
     if ( _base_y_drag != "none" ) {
@@ -77,7 +77,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0);
     }
 
     if ( _base_z_drag != "none" ) {
@@ -87,7 +87,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       model_name += "_";
       model_name += node;
       const VarLabel* tempLabel = VarLabel::find( model_name );
-      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
+      tsk->requiresVar( Task::OldDW, tempLabel, Ghost::None, 0);
     }
   }
 
@@ -215,10 +215,10 @@ MomentumDragSrc::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter);
+    tsk->computesVar(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

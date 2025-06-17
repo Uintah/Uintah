@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -122,8 +122,8 @@ namespace WasatchCore {
                                              &PoissonExpression::process_bcs);
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
-    task->requires(Uintah::Task::NewDW,phiLabel_, gt, ng);
-    //task->modifies(phiLabel_);
+    task->requiresVar(Uintah::Task::NewDW,phiLabel_, gt, ng);
+    //task->modifiesVar(phiLabel_);
     Uintah::LoadBalancer * lb = sched->getLoadBalancer();
     sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
   }
@@ -136,8 +136,8 @@ namespace WasatchCore {
                                           const Uintah::MaterialSubset* const materials,
                                           const int RKStage )
   {
-    if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
-    else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+    if( RKStage == 1 ) task.computesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+    else               task.modifiesVar( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   }
 
   //--------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -73,7 +73,7 @@ IsoHardeningFlow::addInitialComputesAndRequires(Task* task,
                                                    const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pAlphaLabel, matlset);
+  task->computesVar(pAlphaLabel, matlset);
 }
 
 void 
@@ -82,8 +82,8 @@ IsoHardeningFlow::addComputesAndRequires(Task* task,
                                             const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
-  task->computes(pAlphaLabel_preReloc, matlset);
+  task->requiresVar(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
+  task->computesVar(pAlphaLabel_preReloc, matlset);
 }
 
 void 
@@ -95,9 +95,9 @@ IsoHardeningFlow::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   if(SchedParent){
-    task->requires(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
+    task->requiresVar(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
   }else{
-    task->requires(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
+    task->requiresVar(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
   }
 }
 
@@ -116,8 +116,8 @@ IsoHardeningFlow::allocateCMDataAddRequires(Task* task,
                                                MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
-  //task->requires(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
+  task->requiresVar(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
+  //task->requiresVar(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
 }
 
 void IsoHardeningFlow::allocateCMDataAdd(DataWarehouse* new_dw,

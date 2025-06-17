@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,7 +62,7 @@ using namespace std;
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 
-Dout dout_models_srm("MODELS_DOING_COUT2", "Models::SolidReactionModel", "Models::SolidReactionModel debug stream", false);
+Dout dout_models_srm("SolidReactionModel_tasks", "Models::SolidReactionModel", "Prints task scheduling & execution", false);
 //______________________________________________________________________
 //
 SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld,
@@ -72,145 +72,150 @@ SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld,
   : ModelInterface(myworld, materialManager),
     d_params(params), d_prob_spec(prob_spec)
 {
-    mymatls = 0;
-    Ilb = scinew ICELabel();
-    d_saveConservedVars = scinew saveConservedVars();
+  d_myMatls = 0;
+  Ilb = scinew ICELabel();
+  d_saveConservedVars = scinew saveConservedVars();
 
-    // Labels
-    reactedFractionLabel   = VarLabel::create("F",
-                                         CCVariable<double>::getTypeDescription());
-    delFLabel              = VarLabel::create("delF",
-                                         CCVariable<double>::getTypeDescription());
+  // Labels
+  reactedFractionLabel   = VarLabel::create("F",
+                                       CCVariable<double>::getTypeDescription());
+  delFLabel              = VarLabel::create("delF",
+                                       CCVariable<double>::getTypeDescription());
 
-    totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
-                                              sum_vartype::getTypeDescription() );
-    totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
-                                              sum_vartype::getTypeDescription() );
+  totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
+                                            sum_vartype::getTypeDescription() );
+  totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
+                                            sum_vartype::getTypeDescription() );
 }
 //______________________________________________________________________
 //
 SolidReactionModel::~SolidReactionModel()
 {
-    DOUTR( dout_models_srm, " Doing: SolidReactionMode destructor ");
-    delete rateConstant;
-    delete rateModel;
+  DOUTR( dout_models_srm, " Doing: SolidReactionMode destructor ");
+  delete d_rateConstantModel;
+  delete d_rateModel;
 
-    delete Ilb;
-    delete d_saveConservedVars;
+  delete Ilb;
+  delete d_saveConservedVars;
 
-    VarLabel::destroy(reactedFractionLabel);
-    VarLabel::destroy(delFLabel);
-    VarLabel::destroy(totalMassBurnedLabel);
-    VarLabel::destroy(totalHeatReleasedLabel);
+  VarLabel::destroy(reactedFractionLabel);
+  VarLabel::destroy(delFLabel);
+  VarLabel::destroy(totalMassBurnedLabel);
+  VarLabel::destroy(totalHeatReleasedLabel);
 
-    if(mymatls && mymatls->removeReference())
-      delete mymatls;
+  if(d_myMatls && d_myMatls->removeReference()){
+    delete d_myMatls;
+  }
 }
 //______________________________________________________________________
 //
 void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
 {
-    DOUTR( dout_models_srm, " SolidReactionModel::outputProblemSpec ");
+  DOUTR( dout_models_srm, " SolidReactionModel::outputProblemSpec ");
 
-    ProblemSpecP model_ps = ps->appendChild("Model");
-    model_ps->setAttribute("type","SolidReactionModel");
+  ProblemSpecP model_ps = ps->appendChild("Model");
+  model_ps->setAttribute("type","SolidReactionModel");
+  ProblemSpecP srm_ps = model_ps->appendChild( "SolidReactionModel" );
 
-    model_ps->appendElement("fromMaterial",fromMaterial);
-    model_ps->appendElement("toMaterial",toMaterial);
-    model_ps->appendElement("E0",   d_E0);
+  srm_ps->appendElement("fromMaterial",d_fromMaterial);
+  srm_ps->appendElement("toMaterial",  d_doMaterial);
+  srm_ps->appendElement("E0",   d_E0);
 
-    rateConstant->outputProblemSpec(model_ps);
-    rateModel->outputProblemSpec(model_ps);
+  d_rateConstantModel->outputProblemSpec( srm_ps );
+  d_rateModel        ->outputProblemSpec( srm_ps );
 }
 //______________________________________________________________________
 //
 void SolidReactionModel::problemSetup(GridP& grid,
-                                       const bool isRestart)
+                                      const bool isRestart)
 {
 
-    DOUTR( dout_models_srm, " SolidReactionModel::problemSetup ");
-    // Get base includes
-    d_params->require("fromMaterial",fromMaterial);
-    d_params->require("toMaterial",  toMaterial);
-    d_params->require("E0",          d_E0);
+  DOUTR( dout_models_srm, " SolidReactionModel::problemSetup ");
 
-    ProblemSpecP models_ps = d_params->findBlock("SolidReactionModel");
-    ProblemSpecP rateConstChild = models_ps->findBlock("RateConstantModel");
-    ProblemSpecP rateModelChild = models_ps->findBlock("RateModel");
+  ProblemSpecP srm_ps = d_params->findBlock("SolidReactionModel");
+  // Get base includes
+  srm_ps->require("fromMaterial",d_fromMaterial);
+  srm_ps->require("toMaterial",  d_doMaterial);
+  srm_ps->require("E0",          d_E0);
 
-    //__________________________________
-    //  Bulletproofing
-    if(!rateConstChild){
-      throw ProblemSetupException("SolidReactionModel: Cannot find RateConstantModel", __FILE__, __LINE__);
-    }
+  ProblemSpecP rcm_ps = srm_ps->findBlock("RateConstantModel");
+  ProblemSpecP rm_ps  = srm_ps->findBlock("RateModel");
 
-    if(!rateModelChild){
-      throw ProblemSetupException("SolidReactionModel: Cannot find RateModel", __FILE__, __LINE__);
-    }
+  //__________________________________
+  //  Bulletproofing
+  if(!rcm_ps){
+    throw ProblemSetupException("SolidReactionModel: Cannot find RateConstantModel", __FILE__, __LINE__);
+  }
 
-    // Create the rate constant model
-    string modelType;
-    if(!rateConstChild->getAttribute("type", modelType)){
-      throw ProblemSetupException("SolidReactionModel: Cannot find type for RateConstantModel", __FILE__, __LINE__);
-    }
-    if(modelType == "Arrhenius"){
-      rateConstant = scinew Arrhenius(rateConstChild);
-    }
-    if(modelType == "ModifiedArrhenius"){
-      rateConstant = scinew ModifiedArrhenius(rateConstChild);
-    }
+  if(!rm_ps){
+    throw ProblemSetupException("SolidReactionModel: Cannot find RateModel", __FILE__, __LINE__);
+  }
 
-    // Create the rate model
-    if(!rateModelChild->getAttribute("type", modelType)){
-      throw ProblemSetupException("SolidReactionModel: Cannot find type for RateModel", __FILE__, __LINE__);
-    }
+  //__________________________________
+  // Create the rate constant model
+  string modelType;
+  if(!rcm_ps->getAttribute("type", modelType)){
+    throw ProblemSetupException("SolidReactionModel: Cannot find type for RateConstantModel", __FILE__, __LINE__);
+  }
+  if(modelType == "Arrhenius"){
+    d_rateConstantModel = scinew Arrhenius(rcm_ps);
+  }
+  if(modelType == "ModifiedArrhenius"){
+    d_rateConstantModel = scinew ModifiedArrhenius(rcm_ps);
+  }
 
-    if(modelType == "AvaramiErofeev"){
-      rateModel = scinew AvaramiErofeevModel(rateModelChild);
-    }
-    if(modelType == "ContractingCylinder"){
-      rateModel = scinew ContractingCylinderModel(rateModelChild);
-    }
-    if(modelType == "ContractingSphere"){
-      rateModel = scinew ContractingSphereModel(rateModelChild);
-    }
-    if(modelType == "Diffusion"){
-      rateModel = scinew DiffusionModel(rateModelChild);
-    }
-    if(modelType == "Power"){
-      rateModel = scinew PowerModel(rateModelChild);
-    }
-    if(modelType == "ProutTompkins"){
-      rateModel = scinew ProutTompkinsModel(rateModelChild);
-    }
-    if(modelType == "NthOrder"){
-      rateModel = scinew NthOrderModel(rateModelChild);
-    }
+  //__________________________________
+  // Create the rate model
+  if(!rm_ps->getAttribute("type", modelType)){
+    throw ProblemSetupException("SolidReactionModel: Cannot find type for RateModel", __FILE__, __LINE__);
+  }
 
-    //__________________________________
-    //  Are we saving the total burned mass and total burned energy
-    if ( m_output->isLabelSaved( "totalMassBurned" ) ){
-      d_saveConservedVars->mass  = true;
-    }
+  if(modelType == "AvaramiErofeev"){
+    d_rateModel = scinew AvaramiErofeevModel(rm_ps);
+  }
+  if(modelType == "ContractingCylinder"){
+    d_rateModel = scinew ContractingCylinderModel(rm_ps);
+  }
+  if(modelType == "ContractingSphere"){
+    d_rateModel = scinew ContractingSphereModel(rm_ps);
+  }
+  if(modelType == "Diffusion"){
+    d_rateModel = scinew DiffusionModel(rm_ps);
+  }
+  if(modelType == "Power"){
+    d_rateModel = scinew PowerModel(rm_ps);
+  }
+  if(modelType == "ProutTompkins"){
+    d_rateModel = scinew ProutTompkinsModel(rm_ps);
+  }
+  if(modelType == "NthOrder"){
+    d_rateModel = scinew NthOrderModel(rm_ps);
+  }
 
-    if ( m_output->isLabelSaved( "totalHeatReleased" ) ){
-      d_saveConservedVars->energy = true;
-    }
+  //__________________________________
+  //  Are we saving the total burned mass and total burned energy
+  if ( m_output->isLabelSaved( "totalMassBurned" ) ){
+    d_saveConservedVars->mass  = true;
+  }
 
-    reactant = m_materialManager->parseAndLookupMaterial(d_params, "fromMaterial");
-    product  = m_materialManager->parseAndLookupMaterial(d_params, "toMaterial");
+  if ( m_output->isLabelSaved( "totalHeatReleased" ) ){
+    d_saveConservedVars->energy = true;
+  }
 
-    //__________________________________
-    //  define the materialSet
-    mymatls = scinew MaterialSet();
+  d_reactant = m_materialManager->parseAndLookupMaterial( srm_ps, "fromMaterial" );
+  d_product  = m_materialManager->parseAndLookupMaterial( srm_ps, "toMaterial" );
 
-    vector<int> m;
-    m.push_back(0);                       // needed for the pressure and NC_CCWeight
-    m.push_back(reactant->getDWIndex());
-    m.push_back(product->getDWIndex());
+  //__________________________________
+  //  define the materialSet
+  d_myMatls = scinew MaterialSet();
 
-    mymatls->addAll_unique(m);            // elimiate duplicate entries
-    mymatls->addReference();
+  vector<int> m;
+  m.push_back(0);                       // needed for the pressure and NC_CCWeight
+  m.push_back(d_reactant->getDWIndex());
+  m.push_back(d_product->getDWIndex());
+
+  d_myMatls->addAll_unique(m);            // elimiate duplicate entries
+  d_myMatls->addReference();
 }
 //______________________________________________________________________
 //
@@ -238,43 +243,48 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
   printSchedule( level, dout_models_srm, " SolidReactionModel::scheduleComputeModelSources" );
 
   Ghost::GhostType  gn  = Ghost::None;
-  const MaterialSubset* react_matl = reactant->thisMaterial();
-  const MaterialSubset* prod_matl  = product->thisMaterial();
+  const MaterialSubset* react_matl = d_reactant->thisMaterial();
+  const MaterialSubset* prod_matl  = d_product->thisMaterial();
+  
   MaterialSubset* one_matl     = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
+
   MaterialSubset* press_matl   = one_matl;
 
-  t->requires(Task::OldDW, Ilb->timeStepLabel);
-  t->requires(Task::OldDW, Ilb->delTLabel,         level.get_rep());
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel,         level.get_rep());
   //__________________________________
   // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->requiresVar(Task::NewDW,  Ilb->rho_CCLabel,        prod_matl, gn);
+  t->requiresVar(Task::NewDW,  Ilb->specific_heatLabel, prod_matl,gn);
 
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
 
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
-  t->computes(reactedFractionLabel, react_matl);
-  t->computes(delFLabel,            react_matl);
+  t->requiresVar(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+  
 
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel);
+  t->computesVar(reactedFractionLabel, react_matl);
+  t->computesVar(delFLabel,            react_matl);
+
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel);
 
   if(d_saveConservedVars->mass ){
-    t->computes(SolidReactionModel::totalMassBurnedLabel);
+    t->computesVar(SolidReactionModel::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-    t->computes(SolidReactionModel::totalHeatReleasedLabel);
+    t->computesVar(SolidReactionModel::totalHeatReleasedLabel);
   }
-  sched->addTask(t, level->eachPatch(), mymatls);
+  sched->addTask(t, level->eachPatch(), d_myMatls);
 
   if (one_matl->removeReference())
     delete one_matl;
@@ -297,8 +307,8 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   old_dw->get(delT, Ilb->delTLabel, level);
 
-  int m0 = reactant->getDWIndex(); /* reactant material */
-  int m1 = product->getDWIndex();  /* product material */
+  int m0 = d_reactant->getDWIndex(); /* reactant material */
+  int m1 = d_product->getDWIndex();  /* product material */
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
 
@@ -311,10 +321,13 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
     CCVariable<double> mass_src_0;
     CCVariable<double> mass_src_1;
     CCVariable<double> mass_0;
+ 
     CCVariable<Vector> momentum_src_0;
     CCVariable<Vector> momentum_src_1;
+ 
     CCVariable<double> energy_src_0;
     CCVariable<double> energy_src_1;
+    
     CCVariable<double> sp_vol_src_0;
     CCVariable<double> sp_vol_src_1;
 
@@ -335,6 +348,8 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> rctRho;
     constCCVariable<double> rctSpvol;
     constCCVariable<double> prodRho;
+    constCCVariable<double> cv_product;
+    
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
@@ -358,8 +373,8 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     // Product Data,
-    new_dw->get(prodRho,       Ilb->rho_CCLabel,   m1,patch,gn, 0);
-
+    new_dw->get(prodRho,       Ilb->rho_CCLabel,        m1,patch,gn, 0);
+    new_dw->get(cv_product,    Ilb->specific_heatLabel, m1,patch,gn, 0);
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,      Ilb->press_equil_CCLabel,0,  patch,gn, 0);
@@ -368,11 +383,12 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
     double cv_rct = -1.0;
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_materialManager->getMaterial(m0));
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(m_materialManager->getMaterial(m0));
+
     if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
     }
     else if(ice_matl){
-      cv_rct = ice_matl->getSpecificHeat();
+      cv_rct = ice_matl->getSpecificHeat();         // ICE has variable specific heats. -Todd
     }
 
     //__________________________________
@@ -384,14 +400,16 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
       double F = prodRho[c]/(rctRho[c]+prodRho[c]);
 
       if( F >= 0.0 && F < 1.0 ){
-        delF[c] = rateConstant->getConstant(rctTemp[c]) * rateModel->getDifferentialFractionChange(F);
+        double k  = d_rateConstantModel->getConstant(rctTemp[c]);
+        double df = d_rateModel->getDifferentialFractionChange(F);
+        delF[c] = k * df;
       }
 
       delF[c] *=delT;
       Fr[c]    = F;
       double rctMass = rctRho[c]*cell_vol;
       double prdMass = prodRho[c]*cell_vol;
-      burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
+      burnedMass = min( delF[c]*(prdMass + rctMass), rctMass);
 
       //__________________________________
       // conservation of mass, momentum and energy
@@ -425,10 +443,10 @@ void SolidReactionModel::computeModelSources(const ProcessorGroup*,
   //__________________________________
   //save total quantities
   if(d_saveConservedVars->mass ){
-      new_dw->put(sum_vartype(totalBurnedMass),   SolidReactionModel::totalMassBurnedLabel);
+    new_dw->put(sum_vartype(totalBurnedMass),   SolidReactionModel::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-      new_dw->put(sum_vartype(totalHeatReleased), SolidReactionModel::totalHeatReleasedLabel);
+    new_dw->put(sum_vartype(totalHeatReleased), SolidReactionModel::totalHeatReleasedLabel);
   }
 }
 

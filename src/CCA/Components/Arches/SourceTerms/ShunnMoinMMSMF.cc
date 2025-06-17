@@ -75,19 +75,19 @@ ShunnMoinMMSMF::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   if (timeSubStep == 0) { 
 
-    tsk->computes(_src_label);
+    tsk->computesVar(_src_label);
     which_dw = Task::OldDW; 
 
   } else {
 
-    tsk->modifies(_src_label); 
+    tsk->modifiesVar(_src_label); 
     which_dw = Task::NewDW; 
 
   }
 
-  tsk->requires(Task::OldDW, _simulationTimeLabel);
+  tsk->requiresVar(Task::OldDW, _simulationTimeLabel);
 
-  tsk->requires(which_dw, VarLabel::find("density"), Ghost::None, 0); 
+  tsk->requiresVar(which_dw, VarLabel::find("density"), Ghost::None, 0); 
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" )); 
 
@@ -187,7 +187,7 @@ ShunnMoinMMSMF::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ShunnMoinMMSMF::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 

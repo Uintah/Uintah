@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,12 +84,12 @@ void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   if(level->hasFinerLevel() == false){  // only on finest level
-    t->requires(Task::NewDW, Mlb->gMassLabel,                gac, 1);
-    t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
-    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
+    t->requiresVar(Task::NewDW, Mlb->gMassLabel,                gac, 1);
+    t->requiresVar(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
+    t->requiresVar(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
   }
 
-  t->computes(d_switch_label);
+  t->computesVar(d_switch_label);
 
   sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 

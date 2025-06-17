@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -98,14 +98,14 @@ void DDT1Criteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   Ghost::GhostType  gan = Ghost::AroundNodes;
   
   if (level->hasFinerLevel() == false){  // only on the finest level
-    t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
-    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gan,2);
-    t->requires(Task::OldDW, Mlb->pXLabel,          mpm_matls, gan,1);
-    t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,  gan,2);
-    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
+    t->requiresVar(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
+    t->requiresVar(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gan,2);
+    t->requiresVar(Task::OldDW, Mlb->pXLabel,          mpm_matls, gan,1);
+    t->requiresVar(Task::NewDW, Mlb->gTemperatureLabel,one_matl,  gan,2);
+    t->requiresVar(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
   
-  t->computes(d_switch_label);
+  t->computesVar(d_switch_label);
 
   sched->addTask(t, level->eachPatch(),d_materialManager->allMaterials());
 

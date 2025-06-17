@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -124,13 +124,13 @@ ViscoSCRAMHotSpot::addInitialComputesAndRequires(Task* task,
   // Set up extra stuff needed for hotspot model
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  //task->requires(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
+  //task->requiresVar(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
 
-  task->computes(pHotSpotT1Label,    matlset);
-  task->computes(pHotSpotT2Label,    matlset);
-  task->computes(pHotSpotPhi1Label,  matlset);
-  task->computes(pHotSpotPhi2Label,  matlset);
-  task->computes(pChemHeatRateLabel, matlset);
+  task->computesVar(pHotSpotT1Label,    matlset);
+  task->computesVar(pHotSpotT2Label,    matlset);
+  task->computesVar(pHotSpotPhi1Label,  matlset);
+  task->computesVar(pHotSpotPhi2Label,  matlset);
+  task->computesVar(pChemHeatRateLabel, matlset);
 }
 
 void 
@@ -187,17 +187,17 @@ ViscoSCRAMHotSpot::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, pHotSpotT1Label,    matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotT2Label,    matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotPhi1Label,  matlset, gnone);
-  task->requires(Task::OldDW, pHotSpotPhi2Label,  matlset, gnone);
-  task->requires(Task::OldDW, pChemHeatRateLabel, matlset, gnone);
+  task->requiresVar(Task::OldDW, pHotSpotT1Label,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pHotSpotT2Label,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pHotSpotPhi1Label,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pHotSpotPhi2Label,  matlset, gnone);
+  task->requiresVar(Task::OldDW, pChemHeatRateLabel, matlset, gnone);
 
-  task->computes(pHotSpotT1Label_preReloc,    matlset);
-  task->computes(pHotSpotT2Label_preReloc,    matlset);
-  task->computes(pHotSpotPhi1Label_preReloc,  matlset);
-  task->computes(pHotSpotPhi2Label_preReloc,  matlset);
-  task->computes(pChemHeatRateLabel_preReloc, matlset);
+  task->computesVar(pHotSpotT1Label_preReloc,    matlset);
+  task->computesVar(pHotSpotT2Label_preReloc,    matlset);
+  task->computesVar(pHotSpotPhi1Label_preReloc,  matlset);
+  task->computesVar(pHotSpotPhi2Label_preReloc,  matlset);
+  task->computesVar(pChemHeatRateLabel_preReloc, matlset);
 }
 
 void 

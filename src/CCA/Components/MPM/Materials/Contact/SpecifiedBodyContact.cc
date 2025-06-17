@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -604,10 +604,10 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
 
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->modifies(             lb->gVelocityLabel,       mss);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->modifiesVar(             lb->gVelocityLabel,       mss);
   
   sched->addTask(t, patches, ms);
 #endif
@@ -625,18 +625,18 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->requiresVar(Task::OldDW, lb->simulationTimeLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   if(d_NormalOnly){
-   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
+   t->requiresVar(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   }
 
-  t->modifies(             lb->gVelocityStarLabel,   mss);
+  t->modifiesVar(             lb->gVelocityStarLabel,   mss);
 
   //__________________________________
   //  Create reductionMatlSubSet that includes all mss matls
@@ -656,11 +656,11 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 
   reduction_mss->addReference();
 
-  t->computes( lb->RigidReactionForceLabel,  reduction_mss );
-  t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
+  t->computesVar( lb->RigidReactionForceLabel,  reduction_mss );
+  t->computesVar( lb->RigidReactionTorqueLabel, reduction_mss );
 
   if(flag->d_reductionVars->sumTransmittedForce){
-    t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
+    t->computesVar(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
   sched->addTask(t, patches, ms);

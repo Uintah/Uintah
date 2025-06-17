@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -138,8 +138,9 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  read in when each variable started
   string comment = "__________________________________\n"
-                   "\tIf you want to overide the value of\n \t  firstSumTimestep\n"
-                   "\tsee checkpoints/t*****/timestep.xml\n"
+                   "\t- To overide the value of firstSumTimestep\n"
+                   "\t- To reset all summations, which is needed if you change the analysis window\n"
+                   "\t  Modify checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
 
@@ -242,11 +243,21 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   //  On restart read the firstSumTimestep for each variable from checkpoing/t***/timestep.xml
+  // if user has <resetAllVariables> true  </resetAllVariables> then reinitialize all summations
   if( restart_prob_spec ){
 
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
     if( da_rs_ps ){
       ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "turbulentFluxes");
+
+      stat_ps->require( "resetAllVariables", m_resetAllVariables);
+
+      if ( m_resetAllVariables){
+        static int count = 0;
+        proc0cout_eq(0 , count)<< "         Initializing all summation variables to zero    \n";
+        count ++;
+      }
+
       ProblemSpecP vars_ps = stat_ps->findBlock("variables");
 
       for(ProblemSpecP n = vars_ps->getFirstChild(); n != nullptr; n=n->getNextSibling()) {
@@ -278,6 +289,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  Warnings
 
+  static int count = 0;
   ostringstream warn;
   warn << "";
 
@@ -289,10 +301,11 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     }
   }
 
-  if( warn.str() != "" ){
+  if( warn.str() != ""){
     warn << "WARNING:  You've activated the DataAnalysis:turbulentFluxes module but your not saving the variable(s) (\n"
          << warn.str() << ")";
-    proc0cout << warn.str() << endl;
+    proc0cout_eq(0, count) << warn.str() << endl;
+    count ++;
   }
 
 
@@ -324,16 +337,16 @@ void turbulentFluxes::scheduleInitialize( SchedulerP   & sched,
     const Qvar_ptr Q = m_Qvars[i];
     const MaterialSubset* matl = Q->matlSubset;
 
-    t->computes ( Q->Qsum_Label,          matl );
-    t->computes ( Q->Q2sum_Label,         matl );
-    t->computes ( Q->Qu_Qv_Qw_sum_Label,  matl );
+    t->computesVar( Q->Qsum_Label,          matl );
+    t->computesVar( Q->Q2sum_Label,         matl );
+    t->computesVar( Q->Qu_Qv_Qw_sum_Label,  matl );
 
-    t->computes ( Q->Qmean_Label,         matl );
-    t->computes ( Q->Q2mean_Label,        matl );
-    t->computes ( Q->Qu_Qv_Qw_mean_Label, matl );
+    t->computesVar( Q->Qmean_Label,         matl );
+    t->computesVar( Q->Q2mean_Label,        matl );
+    t->computesVar( Q->Qu_Qv_Qw_mean_Label, matl );
 
-    t->computes ( Q->variance_Label,      matl );
-    t->computes ( Q->covariance_Label,    matl );
+    t->computesVar( Q->variance_Label,      matl );
+    t->computesVar( Q->covariance_Label,    matl );
   }
 
   sched->addTask(t, level->eachPatch(), m_matlSet);
@@ -342,6 +355,7 @@ void turbulentFluxes::scheduleInitialize( SchedulerP   & sched,
 //______________________________________________________________________
 //
 //   Zero out computed quantites if they don't exist in the new_dw
+//   or if the user has requested that they are reinitialized.
 void turbulentFluxes::initialize( const ProcessorGroup *,
                                   const PatchSubset    * patches,
                                   const MaterialSubset *,
@@ -358,8 +372,16 @@ void turbulentFluxes::initialize( const ProcessorGroup *,
       const Qvar_ptr Q = m_Qvars[i];
 
      // skip if it already exists in the new_dw from a checkpoint
-      if( new_dw->exists( Q->Qsum_Label, Q->matl, patch ) ){
+      if( new_dw->exists( Q->Qsum_Label, Q->matl, patch ) && m_resetAllVariables == false){
         continue;
+      }
+
+
+      if ( m_resetAllVariables == true ){
+        Q->isInitialized    = false;
+        Q->firstSumTimestep = 0;
+        Q->nTimesteps       = 0;
+        Q->isStatEnabled    = false;
       }
 
       switch(Q->subtype->getType()) {
@@ -405,6 +427,11 @@ turbulentFluxes::outputProblemSpec( ProblemSpecP& root_ps)
   ProblemSpecP m_ps = da_ps->appendChild("Module");
   m_ps->setAttribute( "name","turbulentFluxes" );
 
+  string comment = "*** Set resetAllVariables to true if you change the start/end times";
+  m_ps->addComment( comment );
+
+  m_ps->appendElement("resetAllVariables", false);
+
   ProblemSpecP var_ps = m_ps->appendChild("variables");
 
   for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
@@ -439,8 +466,8 @@ void turbulentFluxes::sched_Q_mean( SchedulerP   & sched,
 
   printSchedule(level,dbg_OTF_TF,"turbulentFluxes::sched_Q_mean");
 
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->requires(Task::OldDW, m_simulationTimeLabel);
+  t->requiresVar(Task::OldDW, m_timeStepLabel);
+  t->requiresVar(Task::OldDW, m_simulationTimeLabel);
 
   for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
     Qvar_ptr Q = m_Qvars[i];
@@ -449,20 +476,20 @@ void turbulentFluxes::sched_Q_mean( SchedulerP   & sched,
 
     //__________________________________
     //
-    t->requires( Task::NewDW, Q->Label,               matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qsum_Label,          matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Q2sum_Label,         matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qu_Qv_Qw_sum_Label,  matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qmean_Label,         matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Q2mean_Label,        matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->Qu_Qv_Qw_mean_Label, matl, m_gn, 0 );
+    t->requiresVar( Task::NewDW, Q->Label,               matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Qsum_Label,          matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Q2sum_Label,         matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Qu_Qv_Qw_sum_Label,  matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Qmean_Label,         matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Q2mean_Label,        matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->Qu_Qv_Qw_mean_Label, matl, m_gn, 0 );
 
-    t->computes( Q->Qsum_Label,          matl );
-    t->computes( Q->Q2sum_Label,         matl );
-    t->computes( Q->Qmean_Label,         matl );
-    t->computes( Q->Q2mean_Label,        matl );
-    t->computes( Q->Qu_Qv_Qw_sum_Label,  matl );
-    t->computes( Q->Qu_Qv_Qw_mean_Label, matl );
+    t->computesVar( Q->Qsum_Label,          matl );
+    t->computesVar( Q->Q2sum_Label,         matl );
+    t->computesVar( Q->Qmean_Label,         matl );
+    t->computesVar( Q->Q2mean_Label,        matl );
+    t->computesVar( Q->Qu_Qv_Qw_sum_Label,  matl );
+    t->computesVar( Q->Qu_Qv_Qw_mean_Label, matl );
 //    Q->print();
   }
   sched->addTask( t, level->eachPatch() , m_matlSet );
@@ -621,8 +648,8 @@ void turbulentFluxes::sched_turbFluxes( SchedulerP   & sched,
 
   printSchedule(level,dbg_OTF_TF,"turbulentFluxes::sched_turbFluxes");
 
-  t->requires(Task::OldDW, m_timeStepLabel);
-  t->requires(Task::OldDW, m_simulationTimeLabel);
+  t->requiresVar(Task::OldDW, m_timeStepLabel);
+  t->requiresVar(Task::OldDW, m_simulationTimeLabel);
 
   //__________________________________
   //
@@ -631,16 +658,16 @@ void turbulentFluxes::sched_turbFluxes( SchedulerP   & sched,
 
     const MaterialSubset* matl = Q->matlSubset;
 
-    t->requires( Task::NewDW, Q->Label,                matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Qmean_Label,          matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Q2mean_Label,         matl, m_gn, 0 );
-    t->requires( Task::NewDW, Q->Qu_Qv_Qw_mean_Label,  matl, m_gn, 0 );
+    t->requiresVar( Task::NewDW, Q->Label,                matl, m_gn, 0 );
+    t->requiresVar( Task::NewDW, Q->Qmean_Label,          matl, m_gn, 0 );
+    t->requiresVar( Task::NewDW, Q->Q2mean_Label,         matl, m_gn, 0 );
+    t->requiresVar( Task::NewDW, Q->Qu_Qv_Qw_mean_Label,  matl, m_gn, 0 );
 
-    t->requires( Task::OldDW, Q->variance_Label,    matl, m_gn, 0 );
-    t->requires( Task::OldDW, Q->covariance_Label,  matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->variance_Label,    matl, m_gn, 0 );
+    t->requiresVar( Task::OldDW, Q->covariance_Label,  matl, m_gn, 0 );
 
-    t->computes ( Q->variance_Label,   matl );
-    t->computes ( Q->covariance_Label, matl );
+    t->computesVar( Q->variance_Label,   matl );
+    t->computesVar( Q->covariance_Label, matl );
   }
   sched->addTask( t, level->eachPatch() , m_matlSet );
 }

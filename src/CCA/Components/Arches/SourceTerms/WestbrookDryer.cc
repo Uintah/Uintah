@@ -201,46 +201,46 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   if (timeSubStep == 0 ) {
 
-    tsk->computes(_src_label);
-    tsk->computes(d_WDstrippingLabel);
-    tsk->computes(d_WDextentLabel);
+    tsk->computesVar(_src_label);
+    tsk->computesVar(d_WDstrippingLabel);
+    tsk->computesVar(d_WDextentLabel);
 
-    tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, _temperatureLabel, Ghost::None, 0 );
     if ( _using_xi ){
-      tsk->requires( Task::OldDW, _XiLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, _XiLabel, Ghost::None, 0 );
     } else {
-      tsk->requires( Task::OldDW, _EtaLabel, Ghost::None, 0 );
-      tsk->requires( Task::OldDW, _FpLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, _EtaLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, _FpLabel, Ghost::None, 0 );
     }
-    tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 );
-    tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, _denLabel,         Ghost::None, 0 );
+    tsk->requiresVar( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 );
     if ( _use_flam_limits && !_const_diluent ){
-      tsk->requires( Task::OldDW, _diluentLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::OldDW, _diluentLabel, Ghost::None, 0 );
     }
 
   } else {
 
-    tsk->modifies(_src_label);
-    tsk->modifies(d_WDstrippingLabel);
-    tsk->modifies(d_WDextentLabel);
+    tsk->modifiesVar(_src_label);
+    tsk->modifiesVar(d_WDstrippingLabel);
+    tsk->modifiesVar(d_WDextentLabel);
 
-    tsk->requires( Task::NewDW, _temperatureLabel, Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, _temperatureLabel, Ghost::None, 0 );
     if ( _using_xi ){
-      tsk->requires( Task::NewDW, _XiLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, _XiLabel, Ghost::None, 0 );
     } else {
-      tsk->requires( Task::NewDW, _EtaLabel, Ghost::None, 0 );
-      tsk->requires( Task::NewDW, _FpLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, _EtaLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, _FpLabel, Ghost::None, 0 );
     }
-    tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 );
-    tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, _denLabel,         Ghost::None, 0 );
+    tsk->requiresVar( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 );
     if ( _use_flam_limits && !_const_diluent ){
-      tsk->requires( Task::NewDW, _diluentLabel, Ghost::None, 0 );
+      tsk->requiresVar( Task::NewDW, _diluentLabel, Ghost::None, 0 );
     }
 
   }
 
-  tsk->requires( Task::OldDW, _simulationTimeLabel);
-  tsk->requires( Task::OldDW, _field_labels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar( Task::OldDW, _simulationTimeLabel);
+  tsk->requiresVar( Task::OldDW, _field_labels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));
 
@@ -425,10 +425,10 @@ WestbrookDryer::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::initialize);
 
-  tsk->computes(_src_label);
+  tsk->computesVar(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter, _materialManager->allMaterials( "Arches" )->getUnion());
+    tsk->computesVar(*iter, _materialManager->allMaterials( "Arches" )->getUnion());
   }
 
   sched->addTask(tsk, level->eachPatch(), _materialManager->allMaterials( "Arches" ));

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1475,12 +1475,12 @@ void simplifiedGeoModel::addInitialComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
 
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pPlasticStrainVolLabel, matlset);
-  task->computes(pElasticStrainVolLabel, matlset);
-  task->computes(pKappaLabel, matlset);
-  task->computes(pBackStressLabel, matlset);
-  task->computes(pBackStressIsoLabel, matlset);
+  task->computesVar(pPlasticStrainLabel, matlset);
+  task->computesVar(pPlasticStrainVolLabel, matlset);
+  task->computesVar(pElasticStrainVolLabel, matlset);
+  task->computesVar(pKappaLabel, matlset);
+  task->computesVar(pBackStressLabel, matlset);
+  task->computesVar(pBackStressIsoLabel, matlset);
 
 }
 
@@ -1494,18 +1494,18 @@ void simplifiedGeoModel::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pKappaLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pBackStressLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pBackStressIsoLabel,    matlset, Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc,  matlset);
-  task->computes(pPlasticStrainVolLabel_preReloc,  matlset);
-  task->computes(pElasticStrainVolLabel_preReloc,  matlset);
-  task->computes(pKappaLabel_preReloc,  matlset);
-  task->computes(pBackStressLabel_preReloc,  matlset);
-  task->computes(pBackStressIsoLabel_preReloc,  matlset);
+  task->requiresVar(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pKappaLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pBackStressLabel,    matlset, Ghost::None);
+  task->requiresVar(Task::OldDW, pBackStressIsoLabel,    matlset, Ghost::None);
+  task->computesVar(pPlasticStrainLabel_preReloc,  matlset);
+  task->computesVar(pPlasticStrainVolLabel_preReloc,  matlset);
+  task->computesVar(pElasticStrainVolLabel_preReloc,  matlset);
+  task->computesVar(pKappaLabel_preReloc,  matlset);
+  task->computesVar(pBackStressLabel_preReloc,  matlset);
+  task->computesVar(pBackStressIsoLabel_preReloc,  matlset);
 
 }
 

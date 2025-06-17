@@ -287,7 +287,7 @@
           <initial_porosity_distrib>gauss</initial_porosity_distrib>
         </constitutive_model>
         <erosion algorithm="ZeroStress"/>
-            
+
         <damage_model type="johnson_cook">
           <initial_mean_scalar_damage>0.0050000000000000001</initial_mean_scalar_damage>
           <initial_std_scalar_damage>0.001</initial_std_scalar_damage>
@@ -424,7 +424,11 @@
       </material>
     </ICE>
     <exchange_properties>
-      <heatExchangeCoeff>variable</heatExchangeCoeff>
+
+      <CoefficientModel>
+        <heat> linearVariation </heat>
+      </CoefficientModel>
+
       <exchange_coefficients>
         <momentum>[0,1000000000000000,1000000000000000,1000000000000000,1000000000,1000000000000000]</momentum>
         <heat>[]</heat>

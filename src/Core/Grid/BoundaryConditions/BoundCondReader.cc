@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -789,6 +789,53 @@ BoundCondReader::read(      ProblemSpecP  & bc_ps,
   readInteriorBndBCs(bc_ps,grid_ps, level);
 }
 
+//______________________________________________________________________
+//  Returns a vector of material indices
+//  There are 3 possibilities:
+//    1) no id is specified so set it to the default value.
+//    2) A single id or "all" is specified
+//    3) multiple ids are specified "ids=[1,2,3]"
+
+std::vector<int>
+BoundCondReader::parseMatl_ids( std::map<string,string> bc_attr,
+                                string defaultMat )
+{
+  std::vector<int> matl_ids;
+
+  if( bc_attr.count("id") ){                      // if a single id (1,2,4....,all) specified
+    string id = bc_attr["id"];
+    int mat_id = (id == "all") ? -1 : atoi(id.c_str());
+    matl_ids.push_back(mat_id);
+    return matl_ids;
+  }
+
+  if( bc_attr.count("ids") ){                   // if multiple ids (1,2,4....,) isspecified
+    std::vector<char> separators;
+    separators.push_back( ',' );
+    separators.push_back( ' ' );
+    separators.push_back( '[' );
+    separators.push_back( ']' );
+
+    std::vector<string> ids = split_string( bc_attr["ids"], separators );
+
+    for (auto val : ids) {
+      matl_ids.push_back(stoi(val));
+    }
+    return matl_ids;
+  }
+
+  if (! bc_attr.count("id") ) {                 // if id is not specified
+    if (defaultMat == "") {
+      SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+    }
+    else {
+      int mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+      matl_ids.push_back( mat_id );
+    }
+  }
+  return matl_ids;
+}
+
 //-------------------------------------------------------------------------------------------------
 
 void
@@ -813,7 +860,9 @@ BoundCondReader::readInteriorBndBCs(      ProblemSpecP  & bc_ps,
 
   std::string defaultMat="";
   ProblemSpecP defaultMatSpec = bc_ps->findBlock("DefaultMaterial");
-  if(defaultMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
+  if(defaultMatSpec){
+     bc_ps->get("DefaultMaterial", defaultMat);
+  }
 
   for( ProblemSpecP face_ps = bc_ps->findBlock("InteriorFace"); face_ps != nullptr; face_ps=face_ps->findNextBlock("InteriorFace") ) {
 
@@ -828,35 +877,28 @@ BoundCondReader::readInteriorBndBCs(      ProblemSpecP  & bc_ps,
 
     std::multimap<int, BoundCondBase*> bctype_data;
 
+    //__________________________________
+    //  Parse the attribues for the material ids and create the object
     for( ProblemSpecP child = face_ps->findBlock("BCType"); child != nullptr; child = child->findNextBlock("BCType") ) {
-      int mat_id;
 
       std::map<std::string,std::string> bc_attr;
       child->getAttributes( bc_attr );
-      bool foundMatlID = ( bc_attr.find("id") != bc_attr.end() );
 
-      if (!foundMatlID) {
-        if (defaultMat == "") {
-          SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-        }
-        else {
-          mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
-        }
+      std::vector<int> matl_ids;
+      matl_ids = parseMatl_ids( bc_attr, defaultMat );
+
+      for( auto mat_id: matl_ids){
+
+        BoundCondBase* bc;
+        BoundCondFactory::create( child, bc, mat_id, face_label );
+        BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = "
+                <<  bc->getBCVariable() << " bctype = "
+                <<  bc->getBCType()
+                <<  " "  << bc  << std::endl;
+
+        bctype_data.insert( std::pair<int,BoundCondBase*>(mat_id,bc->clone() ) );
+        delete bc;
       }
-      else {
-        std::string id = bc_attr["id"];
-        mat_id = (id == "all") ? -1 : atoi(id.c_str());
-      }
-
-      BoundCondBase* bc;
-      BoundCondFactory::create(child, bc, mat_id, face_label);
-      BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = "
-      <<  bc->getBCVariable() << " bctype = "
-      <<  bc->getBCType()
-      <<  " "  << bc  << std::endl;
-
-      bctype_data.insert(std::pair<int,BoundCondBase*>(mat_id,bc->clone()));
-      delete bc;
     }
 
     // Print out all of the bcs just created
@@ -1040,35 +1082,24 @@ BoundCondReader::readDomainBCs(       ProblemSpecP& bc_ps,
     //__________________________________
     //      Parse the BCTypes and create a multimap
     for( ProblemSpecP bcType_ps = face_ps->findBlock( "BCType" ); bcType_ps != nullptr; bcType_ps = bcType_ps->findNextBlock( "BCType" ) ) {
-      int mat_id;
+      std::map<std::string,std::string> bc_attr;
+      bcType_ps->getAttributes( bc_attr );
 
-      std::map<std::string,std::string> bc_atts;
-      bcType_ps->getAttributes( bc_atts );
-      bool foundMatlID = ( bc_atts.find("id") != bc_atts.end() );
+      std::vector<int> matl_ids;
+      matl_ids = parseMatl_ids( bc_attr, defaultMat );
 
-      if (!foundMatlID) {
-        if (defaultMat == "") {
-          SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-        }
-        else {
-          mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
-        }
+      for( auto mat_id: matl_ids){
+
+        BoundCondBase* bc;
+        BoundCondFactory::create( bcType_ps, bc, mat_id, face_label );
+        BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = "
+                <<  bc->getBCVariable() << " bctype = "
+                <<  bc->getBCType()
+                <<  " "  << bc  << std::endl;
+
+        bctype_data.insert(std::pair<int,BoundCondBase*>(mat_id,bc->clone()));
+        delete bc;
       }
-      else {
-        std::string id = bc_atts["id"];
-        mat_id = (id == "all") ? -1 : atoi(id.c_str());
-      }
-
-      BoundCondBase* bc;
-      BoundCondFactory::create( bcType_ps, bc, mat_id, face_label );
-
-      BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = "
-              <<  bc->getBCVariable() << " bctype = "
-              <<  bc->getBCType()
-              <<  " "  << bc  << std::endl;
-
-      bctype_data.insert( std::pair<int, BoundCondBase*>(mat_id, bc->clone() ));
-      delete bc;
     }
 
 //    // Add the Auxillary boundary condition type

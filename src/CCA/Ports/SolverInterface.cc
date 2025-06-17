@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,15 +54,15 @@ namespace Uintah {
     Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
                                     this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel,
                                     rhsIntegralLabel);
-    tskIntegral->computes( rhsIntegralLabel );
-    tskIntegral->requires( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
+    tskIntegral->computesVar( rhsIntegralLabel );
+    tskIntegral->requiresVar( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
     sched->addTask(tskIntegral, level->eachPatch(), matls);
     
     Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
                                        this, &SolverInterface::enforceSolvability<FieldT>, bLabel,
                                        rhsIntegralLabel);
-    tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel );
-    tskSolvability->modifies( bLabel );
+    tskSolvability->requiresVar( Uintah::Task::NewDW, rhsIntegralLabel );
+    tskSolvability->modifiesVar( bLabel );
     sched->addTask(tskSolvability, level->eachPatch(), matls);
   }
 
@@ -88,15 +88,15 @@ namespace Uintah {
     Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
                                     this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
                                     refValueLabel, refCell, refValue);
-    tskFindDiff->computes( refValueLabel );
-    tskFindDiff->requires( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
+    tskFindDiff->computesVar( refValueLabel );
+    tskFindDiff->requiresVar( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
     sched->addTask(tskFindDiff, level->eachPatch(), matls);
     
     Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
                                        this, &SolverInterface::setRefValue<FieldT>, xLabel,
                                        refValueLabel);
-    tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel );
-    tskSetRefValue->modifies( xLabel );
+    tskSetRefValue->requiresVar( Uintah::Task::NewDW, refValueLabel );
+    tskSetRefValue->modifiesVar( xLabel );
     sched->addTask(tskSetRefValue, level->eachPatch(), matls);
   }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -476,26 +476,26 @@ Ray::sched_rayTrace( const LevelP& level,
 
   DOUT(g_ray_dbg, "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")" );
 
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
-  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
+  tsk->requiresVar( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
+  tsk->requiresVar( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
+  tsk->requiresVar( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
 
 
   if( modifies_divQ ) {
-    tsk->modifies( d_divQLabel );
-    tsk->modifies( d_boundFluxLabel );
-    tsk->modifies( d_radiationVolqLabel );
+    tsk->modifiesVar( d_divQLabel );
+    tsk->modifiesVar( d_boundFluxLabel );
+    tsk->modifiesVar( d_radiationVolqLabel );
   } else {
-    tsk->computes( d_divQLabel );
-    tsk->computes( d_boundFluxLabel );
-    tsk->computes( d_radiationVolqLabel );
+    tsk->computesVar( d_divQLabel );
+    tsk->computesVar( d_boundFluxLabel );
+    tsk->computesVar( d_radiationVolqLabel );
   }
 
 #ifdef USE_TIMER
   if( modifies_divQ ){
-    tsk->modifies( d_PPTimerLabel );
+    tsk->modifiesVar( d_PPTimerLabel );
   } else {
-    tsk->computes( d_PPTimerLabel );
+    tsk->computesVar( d_PPTimerLabel );
   }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
                                   false, false, true, true, true);
@@ -877,36 +877,36 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     }
 
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
-    tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
-    tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
+    tsk->requiresVar( abskg_dw,     d_abskgLabel,     gac, maxElem );
+    tsk->requiresVar( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
+    tsk->requiresVar( celltype_dw , d_cellTypeLabel , gac, maxElem );
   } else {                                        // we don't know the number of ghostCells so get everything
-    tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
-    tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
-    tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX );
+    tsk->requiresVar( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
+    tsk->requiresVar( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
+    tsk->requiresVar( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX );
   }
 
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
-    tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
-    tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0);
-    tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+    tsk->requiresVar( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    tsk->requiresVar( Task::OldDW, d_boundFluxLabel,     d_gn, 0);
+    tsk->requiresVar( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   }
 
 
   if (d_ROI_algo == dynamic) {
-    tsk->requires( Task::NewDW, d_ROI_LoCellLabel );
-    tsk->requires( Task::NewDW, d_ROI_HiCellLabel );
+    tsk->requiresVar( Task::NewDW, d_ROI_LoCellLabel );
+    tsk->requiresVar( Task::NewDW, d_ROI_HiCellLabel );
   }
 
   // declare requires for all coarser levels
   for (int l = 0; l < maxLevels; ++l) {
     int offset = maxLevels - l;
     Task::WhichDW abskg_dw_CL = get_abskg_whichDW( l, d_abskgLabel );
-    tsk->requires( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-    tsk->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
-    tsk->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    tsk->requiresVar( abskg_dw_CL, d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    tsk->requiresVar( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    tsk->requiresVar( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
 
     proc0cout << "WARNING: RMCRT High communication costs on level: " << l
               << ".  Variables from every patch on this level are communicated to every patch on the finest level."
@@ -914,20 +914,20 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   }
 
   if( modifies_divQ ){
-    tsk->modifies( d_divQLabel );
-    tsk->modifies( d_boundFluxLabel );
-    tsk->modifies( d_radiationVolqLabel );
+    tsk->modifiesVar( d_divQLabel );
+    tsk->modifiesVar( d_boundFluxLabel );
+    tsk->modifiesVar( d_radiationVolqLabel );
   } else {
-    tsk->computes( d_divQLabel );
-    tsk->computes( d_boundFluxLabel );
-    tsk->computes( d_radiationVolqLabel );
+    tsk->computesVar( d_divQLabel );
+    tsk->computesVar( d_boundFluxLabel );
+    tsk->computesVar( d_radiationVolqLabel );
   }
 
 #ifdef USE_TIMER
   if( modifies_divQ ){
-    tsk->modifies( d_PPTimerLabel );
+    tsk->modifiesVar( d_PPTimerLabel );
   } else {
-    tsk->computes( d_PPTimerLabel );
+    tsk->computesVar( d_PPTimerLabel );
   }
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
                                   false, false, true, true, true);
@@ -1608,11 +1608,11 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   printSchedule(level,g_ray_dbg,taskname);
 
   if(!backoutTemp){
-    tsk->requires( temp_dw, d_compTempLabel, Ghost::None, 0 );
+    tsk->requiresVar( temp_dw, d_compTempLabel, Ghost::None, 0 );
   }
 
-  tsk->modifies( d_sigmaT4Label );
-  tsk->modifies( d_abskgLabel );
+  tsk->modifiesVar( d_sigmaT4Label );
+  tsk->modifiesVar( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 
@@ -1856,13 +1856,13 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires( Task::NewDW, d_divQLabel,          allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
-    task->requires( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
-    task->requires( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requiresVar( Task::NewDW, d_divQLabel,          allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requiresVar( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requiresVar( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
 
-    task->computes( d_divQLabel );
-    task->computes( d_boundFluxLabel );
-    task->computes( d_radiationVolqLabel );
+    task->computesVar( d_divQLabel );
+    task->computesVar( d_boundFluxLabel );
+    task->computesVar( d_radiationVolqLabel );
     sched->addTask( task, patches, matls, RMCRTCommon::TG_RMCRT );
   }
 }
@@ -1965,14 +1965,14 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
     tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< float >);
   }
 
-  tsk->requires( Task::NewDW, d_abskgLabel,    d_gac, 1 );
-  tsk->requires( Task::NewDW, d_sigmaT4Label,  d_gac, 1 );
-  tsk->computes( d_mag_grad_abskgLabel );
-  tsk->computes( d_mag_grad_sigmaT4Label );
-  tsk->computes( d_flaggedCellsLabel );
+  tsk->requiresVar( Task::NewDW, d_abskgLabel,    d_gac, 1 );
+  tsk->requiresVar( Task::NewDW, d_sigmaT4Label,  d_gac, 1 );
+  tsk->computesVar( d_mag_grad_abskgLabel );
+  tsk->computesVar( d_mag_grad_sigmaT4Label );
+  tsk->computesVar( d_flaggedCellsLabel );
 
-  tsk->computes(d_ROI_LoCellLabel);
-  tsk->computes(d_ROI_HiCellLabel);
+  tsk->computesVar(d_ROI_LoCellLabel);
+  tsk->computesVar(d_ROI_HiCellLabel);
 
   scheduler->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
@@ -2088,11 +2088,11 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   }
 
   if(modifies){
-    tsk->requires( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
-    tsk->modifies( variable);
+    tsk->requiresVar( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
+    tsk->modifiesVar( variable);
   }else{
-    tsk->requires( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
-    tsk->computes( variable );
+    tsk->requiresVar( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
+    tsk->computesVar( variable );
   }
 
   sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
@@ -2259,10 +2259,10 @@ void Ray::sched_computeCellType ( const LevelP& level,
   printSchedule(level, g_ray_dbg, taskname);
 
   if ( which == Ray::modifiesVar ){
-    tsk->requires(Task::NewDW, d_cellTypeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    tsk->modifies( d_cellTypeLabel );
+    tsk->requiresVar(Task::NewDW, d_cellTypeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    tsk->modifiesVar( d_cellTypeLabel );
   }else if ( which == Ray::computesVar ){
-    tsk->computes( d_cellTypeLabel );
+    tsk->computesVar( d_cellTypeLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
@@ -2642,10 +2642,10 @@ Ray::sched_filter( const LevelP& level,
 
   printSchedule(level,g_ray_dbg,taskname);
 
-  tsk->requires( which_divQ_dw, d_divQLabel,      d_gn, 0 );
-  tsk->requires( which_divQ_dw, d_boundFluxLabel, d_gn, 0 );
-  tsk->computes(                d_divQFiltLabel);
-  tsk->computes(                d_boundFluxFiltLabel);
+  tsk->requiresVar( which_divQ_dw, d_divQLabel,      d_gn, 0 );
+  tsk->requiresVar( which_divQ_dw, d_boundFluxLabel, d_gn, 0 );
+  tsk->computesVar(                d_divQFiltLabel);
+  tsk->computesVar(                d_boundFluxFiltLabel);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }

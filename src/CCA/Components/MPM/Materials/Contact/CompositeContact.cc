@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -110,7 +110,7 @@ CompositeContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   if (!flag->d_fracture) {
     Task * t = scinew Task("Contact::initFriction", 
                         this, &CompositeContact::initFriction);
-    t->computes(lb->frictionalWorkLabel);
+    t->computesVar(lb->frictionalWorkLabel);
     sched->addTask(t, patches, matls);
   }
   for(list<Contact*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++)

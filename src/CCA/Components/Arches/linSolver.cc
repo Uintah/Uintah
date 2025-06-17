@@ -104,10 +104,10 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
   const VarLabel* ALabel = d_presCoefPBLMLabel;
   Task* tsk = scinew Task(taskname, this, &linSolver::customSolve,ALabel);
 
-  tsk->requires(Task::NewDW, ALabel, Ghost::AroundCells, 1);   // ghosts needed fro jjacobiblock, not jacobi
+  tsk->requiresVar(Task::NewDW, ALabel, Ghost::AroundCells, 1);   // ghosts needed fro jjacobiblock, not jacobi
 
   for (unsigned int i=0;i<d_precMLabel.size();i++){
-    tsk->computes(d_precMLabel[i]);
+    tsk->computesVar(d_precMLabel[i]);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -117,9 +117,9 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
 } else {
   Task* tskc = scinew Task("linSolver::coarsenA_"+std::to_string(level->getID()), this, &linSolver::coarsen_A);
   for (unsigned int i=0;i<d_precMLabel.size();i++){
-    //tsk->requires( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
-    tskc->requires( Task::NewDW ,d_precMLabel[i], 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
-    tskc->computes(d_precMLabel[i]);
+    //tsk->requiresVar( fineLevel_Q_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0 );
+    tskc->requiresVar( Task::NewDW ,d_precMLabel[i], 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
+    tskc->computesVar(d_precMLabel[i]);
   }
 
   proc0cout << __FUNCTION__ << "  " << __LINE__
@@ -132,8 +132,8 @@ linSolver::sched_PreconditionerConstruction(SchedulerP& sched, const MaterialSet
  //This allows us to populate ghosts into the "static" a_matrix, and is otherwise unnecessary, this could have been donw ith more complex upstream logic, but this is much more simple.
   Task* tsk_hack = scinew Task("linSolver::fillGhosts", this, &linSolver::fillGhosts);
   for (unsigned int i=0;i<d_precMLabel.size();i++){
-    tsk_hack->requires( Task::NewDW ,d_precMLabel[i], Ghost::AroundCells, cg_ghost+1 ); // +1 not needed for i=0;
-    tsk_hack->modifies( d_precMLabel[i] ); // +1 not needed for i=0;
+    tsk_hack->requiresVar( Task::NewDW ,d_precMLabel[i], Ghost::AroundCells, cg_ghost+1 ); // +1 not needed for i=0;
+    tsk_hack->modifiesVar( d_precMLabel[i] ); // +1 not needed for i=0;
   }
   sched->addTask(tsk_hack, patches, matls);
 
@@ -177,10 +177,10 @@ linSolver::sched_buildAMatrix(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  tsk->requires(Task::NewDW, d_cellTypeLabel,       gac, 1);
+  tsk->requiresVar(Task::NewDW, d_cellTypeLabel,       gac, 1);
   // get drhodt that goes in the rhs of the pressure equation
 
-  tsk->computes(d_presCoefPBLMLabel);
+  tsk->computesVar(d_presCoefPBLMLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -336,8 +336,8 @@ void linSolver::sched_customSolve(SchedulerP& sched, const MaterialSet* matls,
       string taskname_update =  "linSolver::update_preconditioner_";
       Task* task_u = scinew Task(taskname_update, this, &linSolver::Update_preconditioner);
       for (unsigned int i=0;i<d_precMLabel.size();i++){
-        task_u->requires(Task::OldDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1);
-        task_u->computes(d_precMLabel[i]);// the right way, but may impose unnecessary ghost cell communication
+        task_u->requiresVar(Task::OldDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1);
+        task_u->computesVar(d_precMLabel[i]);// the right way, but may impose unnecessary ghost cell communication
       }
       sched->addTask(task_u, level_patches, matls);
     }
@@ -349,14 +349,14 @@ void linSolver::sched_customSolve(SchedulerP& sched, const MaterialSet* matls,
   Task* task_i1 = scinew Task(taskname_i1, this, &linSolver::cg_init1,ALabel,xLabel,bLabel,guess);
 
 
-  task_i1->requires(Task::NewDW, guess, Ghost::AroundCells, 1);
-  task_i1->requires(Task::NewDW, bLabel, Ghost::None, 0);
-  task_i1->requires(Task::NewDW, ALabel, Ghost::AroundCells, 1);
-  task_i1->computes(xLabel);
+  task_i1->requiresVar(Task::NewDW, guess, Ghost::AroundCells, 1);
+  task_i1->requiresVar(Task::NewDW, bLabel, Ghost::None, 0);
+  task_i1->requiresVar(Task::NewDW, ALabel, Ghost::AroundCells, 1);
+  task_i1->computesVar(xLabel);
   if (rk_step==0){
-  task_i1->computes(d_residualLabel);
+  task_i1->computesVar(d_residualLabel);
   }else{
-  task_i1->modifies(d_residualLabel);
+  task_i1->modifiesVar(d_residualLabel);
   }
 
   sched->addTask(task_i1, fineLevel->eachPatch(), matls);
@@ -368,30 +368,30 @@ for (int rb_iter=0; rb_iter < total_rb_switch; rb_iter++){
   Task* task_i2 = scinew Task(taskname_i2, this, &linSolver::cg_init2, rb_iter);
 
   if (rk_step==0 && rb_iter==0){
-  task_i2->computes(d_smallPLabel);
+  task_i2->computesVar(d_smallPLabel);
 }else{
-  task_i2->modifies(d_smallPLabel);
+  task_i2->modifiesVar(d_smallPLabel);
 }
 
 if (rb_iter == final_iter){
   if (rk_step==0 ){
     task_i2->computesWithScratchGhost
       (d_bigZLabel, nullptr, Uintah::Task::NormalDomain,Ghost::AroundCells,cg_ghost);
-    task_i2->computes(d_littleQLabel);
-    task_i2->computes(d_resSumLabel[0]);
+    task_i2->computesVar(d_littleQLabel);
+    task_i2->computesVar(d_resSumLabel[0]);
   }else{
-    task_i2->modifies(d_smallPLabel);
-    task_i2->modifies(d_bigZLabel);
-    task_i2->modifies(d_littleQLabel);
-    //task_i2->computes(d_resSumLabel[0]);   // NEED FOR RK2
+    task_i2->modifiesVar(d_smallPLabel);
+    task_i2->modifiesVar(d_bigZLabel);
+    task_i2->modifiesVar(d_littleQLabel);
+    //task_i2->computesVar(d_resSumLabel[0]);   // NEED FOR RK2
   }
 }
 
 
-  task_i2->requires(Task::NewDW, d_residualLabel, Ghost::AroundCells, cg_ghost); 
+  task_i2->requiresVar(Task::NewDW, d_residualLabel, Ghost::AroundCells, cg_ghost); 
 
     for (unsigned int i=0;i<d_precMLabel.size();i++){
-      task_i2->requires(Task::NewDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1); //  possibly not needed...
+      task_i2->requiresVar(Task::NewDW,d_precMLabel[i],Ghost::AroundCells,cg_ghost+1); //  possibly not needed...
   }
 
   sched->addTask(task_i2,fineLevel->eachPatch(), matls);
@@ -401,21 +401,21 @@ if (rb_iter == final_iter){
   for (int cg_iter=0 ; cg_iter < cg_n_iter ; cg_iter++){
   Task* task1 = scinew Task("linSolver::cg_task1" ,
                            this, &linSolver::cg_task1,ALabel, cg_iter);
-  task1->requires(Task::NewDW,ALabel,Ghost::None, 0 );
-  task1->requires(Task::NewDW,d_smallPLabel, Ghost::AroundCells, 1);
-  task1->modifies(d_littleQLabel);
-  task1->computes(d_corrSumLabel[cg_iter]);
+  task1->requiresVar(Task::NewDW,ALabel,Ghost::None, 0 );
+  task1->requiresVar(Task::NewDW,d_smallPLabel, Ghost::AroundCells, 1);
+  task1->modifiesVar(d_littleQLabel);
+  task1->computesVar(d_corrSumLabel[cg_iter]);
 
   sched->addTask(task1, fineLevel->eachPatch(),matls);
 
   Task* task2 = scinew Task("linSolver::cg_task2",
                            this, &linSolver::cg_task2,xLabel, cg_iter);
-  task2->requires(Task::NewDW,d_corrSumLabel[cg_iter]);
-  task2->requires(Task::NewDW,d_resSumLabel[cg_iter]);
-  task2->requires(Task::NewDW,d_littleQLabel, Ghost::None, 0);
-  task2->requires(Task::NewDW,d_smallPLabel, Ghost::None, 0);
-  task2->modifies(xLabel);
-  task2->modifies(d_residualLabel);
+  task2->requiresVar(Task::NewDW,d_corrSumLabel[cg_iter]);
+  task2->requiresVar(Task::NewDW,d_resSumLabel[cg_iter]);
+  task2->requiresVar(Task::NewDW,d_littleQLabel, Ghost::None, 0);
+  task2->requiresVar(Task::NewDW,d_smallPLabel, Ghost::None, 0);
+  task2->modifiesVar(xLabel);
+  task2->modifiesVar(d_residualLabel);
 
 
   sched->addTask(task2, fineLevel->eachPatch(),matls);
@@ -429,11 +429,11 @@ if (rb_iter == final_iter){
     Task* task_multigrid_up = scinew Task("linSolver::cg_coarsenResidual",
         this, &linSolver::cg_moveResUp, cg_iter);
 
-    task_multigrid_up->requires( Task::NewDW ,d_residualLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
+    task_multigrid_up->requiresVar( Task::NewDW ,d_residualLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     if ( cg_iter==0){
-      task_multigrid_up->computes(d_residualLabel);
+      task_multigrid_up->computesVar(d_residualLabel);
     }else{
-      task_multigrid_up->modifies(d_residualLabel);
+      task_multigrid_up->modifiesVar(d_residualLabel);
 
     }
     sched->addTask(task_multigrid_up, level_patches,matls);
@@ -449,14 +449,14 @@ if (rb_iter == final_iter){
         this, &linSolver::cg_multigrid_down, cg_iter);
 
     if (l<maxLevels-1 && cg_iter==0){
-      task_multigrid_down->computes(d_bigZLabel);
+      task_multigrid_down->computesVar(d_bigZLabel);
     }else{
-      task_multigrid_down->modifies(d_bigZLabel);
+      task_multigrid_down->modifiesVar(d_bigZLabel);
     }
 
     if (l>0){
         //int offset = 1;
-        task_multigrid_down->requires( Task::NewDW ,d_bigZLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
+        task_multigrid_down->requiresVar( Task::NewDW ,d_bigZLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::None, 0 );
     }
     
     sched->addTask(task_multigrid_down, level_patches,matls);
@@ -467,18 +467,18 @@ if (rb_iter == final_iter){
       Task* task_multigrid_smooth = scinew Task("linSolver::cg_multigridSmooth_" +  std::to_string(coarse_level->getID()),
           this, &linSolver::cg_multigrid_smooth,red_black_switch, cg_iter);
 
-      task_multigrid_smooth->requires(Task::NewDW,d_residualLabel, Ghost::AroundCells, cg_ghost);
-      task_multigrid_smooth->requires(Task::NewDW,d_bigZLabel, Ghost::AroundCells,cg_ghost);
-      task_multigrid_smooth->modifies(d_bigZLabel);
+      task_multigrid_smooth->requiresVar(Task::NewDW,d_residualLabel, Ghost::AroundCells, cg_ghost);
+      task_multigrid_smooth->requiresVar(Task::NewDW,d_bigZLabel, Ghost::AroundCells,cg_ghost);
+      task_multigrid_smooth->modifiesVar(d_bigZLabel);
 
       for (unsigned int i=0;i<d_precMLabel.size();i++){
-        task_multigrid_smooth->requires(Task::NewDW,d_precMLabel[i], Ghost::AroundCells,cg_ghost+1); // NOT REALLY 0 ghost cells, we are taking shortcuts upstream
+        task_multigrid_smooth->requiresVar(Task::NewDW,d_precMLabel[i], Ghost::AroundCells,cg_ghost+1); // NOT REALLY 0 ghost cells, we are taking shortcuts upstream
       }
 
 
       if (l==maxLevels-1 && red_black_switch==0){
-        task_multigrid_smooth->computes(d_resSumLabel [cg_iter+1]);
-        task_multigrid_smooth->computes(d_convMaxLabel[cg_iter]);
+        task_multigrid_smooth->computesVar(d_resSumLabel [cg_iter+1]);
+        task_multigrid_smooth->computesVar(d_convMaxLabel[cg_iter]);
       }
       sched->addTask(task_multigrid_smooth, level_patches,matls);
     }
@@ -490,11 +490,11 @@ if (rb_iter == final_iter){
   Task* task4 = scinew Task("linSolver::cg_task4",
                            this, &linSolver::cg_task4, cg_iter);
 
-  task4->requires(Task::NewDW,d_convMaxLabel[cg_iter]);
-  task4->requires(Task::NewDW,d_resSumLabel[cg_iter]);
-  task4->requires(Task::NewDW,d_resSumLabel[cg_iter+1]);
-  task4->modifies(d_smallPLabel);
-  task4->requires(Task::NewDW,d_bigZLabel,Ghost::None, 0);
+  task4->requiresVar(Task::NewDW,d_convMaxLabel[cg_iter]);
+  task4->requiresVar(Task::NewDW,d_resSumLabel[cg_iter]);
+  task4->requiresVar(Task::NewDW,d_resSumLabel[cg_iter+1]);
+  task4->modifiesVar(d_smallPLabel);
+  task4->requiresVar(Task::NewDW,d_bigZLabel,Ghost::None, 0);
 
   sched->addTask(task4, fineLevel->eachPatch(),matls);
   } // END CG_iter

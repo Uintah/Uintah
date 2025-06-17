@@ -104,19 +104,19 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
 
     const VarLabel* lab = VarLabel::find( *iter );
     
-    tsk->modifies( lab );
-    tsk->requires( Task::OldDW, lab, ghost_type, n_extra );
+    tsk->modifiesVar( lab );
+    tsk->requiresVar( Task::OldDW, lab, ghost_type, n_extra );
   } 
   // rhs
   for ( std::vector<std::string>::iterator iter = rhs.begin(); iter != rhs.end(); iter++ ){ 
 
     const VarLabel* lab = VarLabel::find( *iter ); 
 
-    tsk->requires( Task::NewDW, lab, ghost_type, n_extra ); 
+    tsk->requiresVar( Task::NewDW, lab, ghost_type, n_extra ); 
 
   } 
 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
+  tsk->requiresVar(Task::OldDW, d_fieldLabels->d_delTLabel, Ghost::None, 0);
 
   sched->addTask( tsk, patches, matls ); 
 
@@ -187,8 +187,8 @@ void ExplicitTimeInt::sched_time_ave( SchedulerP& sched,
 
     const VarLabel* lab = VarLabel::find( *iter ); 
 
-    tsk->requires( Task::OldDW, lab, ghost_type, extra_cells ); 
-    tsk->modifies( lab ); 
+    tsk->requiresVar( Task::OldDW, lab, ghost_type, extra_cells ); 
+    tsk->modifiesVar( lab ); 
 
   } 
 

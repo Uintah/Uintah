@@ -109,7 +109,7 @@ MaximumTemperature::sched_initVars( const LevelP& level, SchedulerP& sched )
   string taskname = "MaximumTemperature::initVars"; 
   Task* tsk = scinew Task(taskname, this, &MaximumTemperature::initVars);
 
-  tsk->computes(d_modelLabel);
+  tsk->computesVar(d_modelLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
 }
@@ -152,18 +152,18 @@ MaximumTemperature::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   Task::WhichDW which_dw; 
 
   if (timeSubStep == 0 ) { 
-    tsk->computes(d_modelLabel);
+    tsk->computesVar(d_modelLabel);
     which_dw = Task::OldDW; 
   } else {
-    tsk->modifies(d_modelLabel); 
+    tsk->modifiesVar(d_modelLabel); 
     which_dw = Task::NewDW; 
   }
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _max_pT_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _weight_scaled_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _max_pT_weighted_scaled_varlabel, gn, 0 ); 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_delTLabel); 
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
+  tsk->requiresVar( which_dw, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->requiresVar( which_dw, _max_pT_varlabel, gn, 0 ); 
+  tsk->requiresVar( which_dw, _weight_scaled_varlabel, gn, 0 ); 
+  tsk->requiresVar( which_dw, _max_pT_weighted_scaled_varlabel, gn, 0 ); 
+  tsk->requiresVar( Task::OldDW, d_fieldLabels->d_delTLabel); 
+  tsk->requiresVar( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" )); 
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -113,8 +113,8 @@ void STThermalContact::initializeThermalContact(const Patch* /*patch*/,
 void STThermalContact::addComputesAndRequires(Task* t, const PatchSet*,
                                               const MaterialSet*) const
 {
-  t->requires(Task::OldDW, lb->delTLabel);  
-  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::None);
-  t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
-  t->computes(lb->gThermalContactTemperatureRateLabel);
+  t->requiresVar(Task::OldDW, lb->delTLabel);  
+  t->requiresVar(Task::NewDW, lb->gMassLabel,        Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
+  t->computesVar(lb->gThermalContactTemperatureRateLabel);
 }

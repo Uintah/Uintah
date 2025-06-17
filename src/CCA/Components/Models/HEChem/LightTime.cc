@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,9 +55,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-#define d_SMALL_NUM 1e-100
-#define d_TINY_RHO  1e-12
 
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_NORMAL_COUT:+,MODELS_DOING_COUT:+"
@@ -154,7 +151,7 @@ void LightTime::scheduleInitialize(SchedulerP& sched,
 
   const MaterialSubset* react_matl = matl0->thisMaterial();
 
-  t->computes(reactedFractionLabel,react_matl);
+  t->computesVar(reactedFractionLabel,react_matl);
 
   sched->addTask(t, level->eachPatch(), mymatls);
 }
@@ -198,30 +195,30 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
   
-  t->requires( Task::OldDW, Ilb->timeStepLabel );
-  t->requires( Task::OldDW, Ilb->simulationTimeLabel );
-  t->requires( Task::OldDW, Ilb->delTLabel,        level.get_rep());
+  t->requiresVar( Task::OldDW, Ilb->timeStepLabel );
+  t->requiresVar( Task::OldDW, Ilb->simulationTimeLabel );
+  t->requiresVar( Task::OldDW, Ilb->delTLabel,        level.get_rep());
   //__________________________________
   // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
-  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel, prod_matl, gn);
+  t->requiresVar(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->requiresVar(Task::NewDW,  Ilb->vol_frac_CCLabel, prod_matl, gn);
 
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+  t->requiresVar(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
 
-  t->computes(reactedFractionLabel, react_matl);
-  t->computes(delFLabel,            react_matl);
+  t->computesVar(reactedFractionLabel, react_matl);
+  t->computesVar(delFLabel,            react_matl);
 
-  t->modifies(Ilb->modelMass_srcLabel);
-  t->modifies(Ilb->modelMom_srcLabel);
-  t->modifies(Ilb->modelEng_srcLabel);
-  t->modifies(Ilb->modelVol_srcLabel); 
+  t->modifiesVar(Ilb->modelMass_srcLabel);
+  t->modifiesVar(Ilb->modelMom_srcLabel);
+  t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->modifiesVar(Ilb->modelVol_srcLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -397,11 +394,11 @@ void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   const MaterialSubset* react_matl = matl0->thisMaterial();
   
-  t->requires(Task::NewDW, reactedFractionLabel,   react_matl, gac, 1);
+  t->requiresVar(Task::NewDW, reactedFractionLabel,   react_matl, gac, 1);
   
-  t->computes(mag_grad_Fr_Label, react_matl);
-  t->modifies(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
-  t->modifies(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
+  t->computesVar(mag_grad_Fr_Label, react_matl);
+  t->modifiesVar(m_regridder->getRefineFlagLabel(),      m_regridder->refineFlagMaterials());
+  t->modifiesVar(m_regridder->getRefinePatchFlagLabel(), m_regridder->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), mymatls);
 }
