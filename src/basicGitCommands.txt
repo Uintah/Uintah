@@ -126,7 +126,26 @@ Notes:
 - The branch to migrate to must have an initial commit
 - The branch in the new repository can be merged to the default (e.g., master) branch to associate GitHub activity with a GitHub user account
 
+//______________________________________________________________________
+//    Move a single commit from (A) into a branch (B)
+//   Where A = master and B = yoyodyne
 
+mkdir git                                                                   // start with a clean slate
+cd git
+git clone --verbose --progress --depth 100 --branch B https://github.com/Uintah/Uintah.git B
+
+cd B
+git remote add A https://github.com/Uintah/Uintah.git
+git fetch --depth 100 A
+
+git cherry-pick <hash>
+git remote set-url origin git@github.com:Uintah/Uintah
+git push
+
+git cherry-pick <hash>
+git push
+
+< repeat>
 
 //__________________________________
 //  To pull a single directory <src/scripts> from master
