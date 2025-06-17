@@ -172,13 +172,14 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
        baseType != TypeDescription::SFCZVariable ){
        throwException = true;
     }
-    // CC, NC Variables, only doubles, Vectors and ints
+    // CC, NC Variables, only doubles, Vectors, ints and Matrix3
     if( ( baseType != TypeDescription::CCVariable     ||
           baseType != TypeDescription::NCVariable )   &&
 
        (subType != TypeDescription::double_type       &&
         subType != TypeDescription::int_type          &&
-        subType != TypeDescription::Vector  ) ){
+        subType != TypeDescription::Vector            &&
+        subType != TypeDescription::Matrix3  ) ){
       throwException = true;
     }
 
@@ -202,7 +203,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     varProperty v={label, label->getName(), matl, td, baseType, subType};
     m_varProperties.push_back( v );
   }  // analyze
-  
+
   //  examine all the baseTypes
   isCommonBaseVarType();
 
@@ -434,10 +435,13 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       vector< constCCVariable<int> >      CC_integer_data;
       vector< constCCVariable<double> >   CC_double_data;
       vector< constCCVariable<Vector> >   CC_Vector_data;
+      vector< constCCVariable<Matrix3> >  CC_Matrix3_data;
+      vector< constCCVariable<Matrix3> >  emptyArray;
 
       vector< constNCVariable<int> >      NC_integer_data;
       vector< constNCVariable<double> >   NC_double_data;
       vector< constNCVariable<Vector> >   NC_Vector_data;
+      vector< constNCVariable<Matrix3> >  NC_Matrix3_data;
 
       vector< constSFCXVariable<double> > SFCX_double_data;
       vector< constSFCYVariable<double> > SFCY_double_data;
@@ -447,13 +451,15 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
       vector< constSFCYVariable<Vector> > SFCY_Vector_data;
       vector< constSFCZVariable<Vector> > SFCZ_Vector_data;
 
-      constCCVariable<int>    q_CC_integer;
-      constCCVariable<double> q_CC_double;
-      constCCVariable<Vector> q_CC_Vector;
+      constCCVariable<int>     q_CC_integer;
+      constCCVariable<double>  q_CC_double;
+      constCCVariable<Vector>  q_CC_Vector;
+      constCCVariable<Matrix3> q_CC_Matrix3;
 
-      constNCVariable<int>    q_NC_integer;
-      constNCVariable<double> q_NC_double;
-      constNCVariable<Vector> q_NC_Vector;
+      constNCVariable<int>     q_NC_integer;
+      constNCVariable<double>  q_NC_double;
+      constNCVariable<Vector>  q_NC_Vector;
+      constNCVariable<Matrix3> q_NC_Matrix3;
 
       constSFCXVariable<double> q_SFCX_double;
       constSFCYVariable<double> q_SFCY_double;
@@ -494,6 +500,11 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
               new_dw->get(q_CC_integer, vp.varLabel, indx, patch, gac, 1);
               CC_integer_data.push_back(q_CC_integer);
               break;
+
+            case TypeDescription::Matrix3:
+              new_dw->get(q_CC_Matrix3, vp.varLabel, indx, patch, gac, 1);
+              CC_Matrix3_data.push_back(q_CC_Matrix3);
+              break;
             default:
               throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
             }
@@ -514,6 +525,11 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
             case TypeDescription::int_type:
               new_dw->get(q_NC_integer, vp.varLabel, indx, patch, gac, 1);
               NC_integer_data.push_back(q_NC_integer);
+              break;
+
+            case TypeDescription::Matrix3:
+              new_dw->get(q_NC_Matrix3, vp.varLabel, indx, patch, gac, 1);
+              NC_Matrix3_data.push_back(q_NC_Matrix3);
               break;
             default:
               throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
@@ -670,11 +686,11 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
             fprintf(fp, "%-*i", w, CC_integer_data[i][c]);
           }
 
-          fprintf_Arrays( fp, c, CC_double_data,   CC_Vector_data);
-          fprintf_Arrays( fp, c, NC_double_data,   NC_Vector_data);
-          fprintf_Arrays( fp, c, SFCX_double_data, SFCX_Vector_data);
-          fprintf_Arrays( fp, c, SFCY_double_data, SFCY_Vector_data);
-          fprintf_Arrays( fp, c, SFCZ_double_data, SFCZ_Vector_data);
+          fprintf_Arrays( fp, c, CC_double_data,   CC_Vector_data,   CC_Matrix3_data );
+          fprintf_Arrays( fp, c, NC_double_data,   NC_Vector_data,   NC_Matrix3_data );
+          fprintf_Arrays( fp, c, SFCX_double_data, SFCX_Vector_data, emptyArray );
+          fprintf_Arrays( fp, c, SFCY_double_data, SFCY_Vector_data, emptyArray );
+          fprintf_Arrays( fp, c, SFCZ_double_data, SFCZ_Vector_data, emptyArray );
 
           fprintf(fp,"\n");
           fflush(fp);
@@ -878,27 +894,70 @@ lineExtract::printHeader( FILE*& fp,
       fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
     }
   }
+
+  //__________________________________
+  //    Matrix3
+  for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
+    const varProperty vp = m_varProperties[i];
+
+    if( vp.baseType == myType  &&
+        vp.subType  == TypeDescription::Matrix3 ){
+
+      int colWidth = m_col_width + 4;
+      for (int row = 0; row<3; row++){
+        ostringstream colDesc0;
+        ostringstream colDesc1;
+        ostringstream colDesc2;
+        colDesc0 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",0)" << setw(colWidth) << " ";
+        colDesc1 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",1)" << setw(colWidth) << " ";
+        colDesc2 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",2)" << setw(colWidth) << " ";
+
+         // crop the descriptions
+        string tmpX = colDesc0.str().substr(0,colWidth);
+        string tmpY = colDesc1.str().substr(0,colWidth);
+        string tmpZ = colDesc2.str().substr(0,colWidth);
+
+        const char* cstrX = tmpX.c_str();
+        const char* cstrY = tmpY.c_str();
+        const char* cstrZ = tmpZ.c_str();
+        fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
+      }
+    }
+  }
 }
 
 //______________________________________________________________________
 //
-template< class D, class V >
+template< class D, class V, class M>
 void lineExtract::fprintf_Arrays( FILE*& fp,
                                   const IntVector& c,
                                   const D& doubleData,
-                                  const V& VectorData)
+                                  const V& VectorData,
+                                  const M& Matrix3Data)
 {
-   const int w = m_col_width;
-   // double variables
-   for (unsigned int i=0 ; i< doubleData.size(); i++) {
-     fprintf(fp, "%-*E", w, doubleData[i][c]);
-   }
+  int w = m_col_width;
 
-   // Vector variable
-   for (unsigned int i=0 ; i< VectorData.size(); i++) {
-     fprintf(fp, "%-*E %-*E %-*E",
-             w, VectorData[i][c].x(),
-             w, VectorData[i][c].y(),
-             w, VectorData[i][c].z() );
-   }
+  // double variables
+  for (unsigned int i=0 ; i< doubleData.size(); i++) {
+    fprintf(fp, "%-*E", w, doubleData[i][c]);
+  }
+
+  // Vector variable
+  for (unsigned int i=0 ; i< VectorData.size(); i++) {
+    fprintf(fp, "%-*E %-*E %-*E",
+            w, VectorData[i][c].x(),
+            w, VectorData[i][c].y(),
+            w, VectorData[i][c].z() );
+  }
+
+  // Matrix variable
+  w = w + 4;   // needed for matrix (row,col)
+  for (unsigned int i=0 ; i< Matrix3Data.size(); i++) {
+    for (int row = 0; row<3; row++){
+      fprintf(fp, "%-*E %-*E %-*E",
+              w, Matrix3Data[i][c](row,0),
+              w, Matrix3Data[i][c](row,1),
+              w, Matrix3Data[i][c](row,2) );
+    }
+  }
 }

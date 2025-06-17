@@ -103,11 +103,12 @@ namespace Uintah {
     void printHeader( FILE*& fp,
                       const Uintah::TypeDescription::Type myType);
 
-    template< class D, class V >
+    template< class D, class V, class M >
     void fprintf_Arrays( FILE*& fp,
                          const IntVector& c,
                          const D&  doubleData,
-                         const V&  VectorData);
+                         const V&  VectorData,
+                         const M&  MatrixData);
 
     // general labels
     class lineExtractLabel {
