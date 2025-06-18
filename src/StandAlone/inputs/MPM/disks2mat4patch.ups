@@ -44,7 +44,7 @@
 
     <MaterialProperties>
        <MPM>
-           <material>
+           <material  name="matl0">
               <density>1000.0</density>
               <constitutive_model type="comp_mooney_rivlin"> 
                  <he_constant_1>100000.0</he_constant_1>
@@ -65,7 +65,7 @@
                </geom_object>
            </material>
 
-           <material>
+           <material name="matl1">
               <density>1000.0</density>
               <constitutive_model type="comp_mooney_rivlin"> 
                  <he_constant_1>100000.0</he_constant_1>
@@ -134,6 +134,36 @@
        </Level>
     </Grid>
 
-    
+<!--__________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="lineExtract">
+       
+        <material>matl1</material>
+        <samplingFrequency> 1000  </samplingFrequency>
+        <timeStart>         0.005 </timeStart>
+        <timeStop>          100   </timeStop>
+       
+        <Variables>
+          <analyze label="g.mass"/> 
+          <analyze label="g.mass"     matl="1"/>
+          <analyze label="g.velocity"/>
+          <analyze label="g.velocity" matl="1"/>
+          <analyze label="g.stressFS" />
+        </Variables>
+
+        <lines>
+          <line name="X_line"> 
+            <startingPt>  [0.0, 0.5, 0.05]   </startingPt>
+            <endingPt>    [1.0, 0.5, 0.05]   </endingPt>
+            <stepSize> 0.001 </stepSize>
+          </line>
+          <line name="Y_line"> 
+            <startingPt>  [0.5, 0.0, 0.05]   </startingPt>    
+            <endingPt>    [0.5, 1.0, 0.05]   </endingPt>      
+            <stepSize> 0.001 </stepSize>                      
+          </line>
+        </lines>
+      </Module>
+    </DataAnalysis>    
 </Uintah_specification>
 
