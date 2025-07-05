@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,9 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/FileGeomPieceParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToStorePartSize.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -153,8 +156,12 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     // For SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes        = 0;
+#ifdef KEEP_PSIZE
     vector<Matrix3>* psizes        = 0;
+#endif
+#ifdef INCLUDE_THERMAL
     vector<double>* temperatures   = 0;
+#endif
     vector<double>* colors         = 0;
     vector<double>* concentrations = 0;
     vector<Vector>* pforces        = 0;
@@ -163,11 +170,15 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pareas        = 0;
 
     volumes      = sgp->getVolume();
+#ifdef INCLUDE_THERMAL
     temperatures = sgp->getTemperature();
+#endif
     pforces      = sgp->getForces();
     pfiberdirs   = sgp->getFiberDirs();
     pvelocities  = sgp->getVelocity();  // gcd adds and new change name
+#ifdef KEEP_PSIZE
     psizes       = sgp->getSize();
+#endif
 
     if(d_with_color){
       colors      = sgp->getColors();
@@ -185,18 +196,22 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
       if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
     }
 
+#ifdef KEEP_PSIZE
     // For getting particle sizes (if they exist)
     vector<Matrix3>::const_iterator sizeiter;
     if (psizes) {
       if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
     sizeiter = vars.d_object_size[*obj].begin();
     }
+#endif
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
+#ifdef INCLUDE_THERMAL
     if (temperatures) {
       if (!temperatures->empty()) tempiter = vars.d_object_temps[*obj].begin();
     }
+#endif
 
     // For getting particle external forces (if they exist)
     vector<Vector>::const_iterator forceiter;
@@ -256,12 +271,14 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
       // One can also describe any of the fields below in the file as well.
       // See FileGeometryPiece for usage.
 
+#ifdef INCLUDE_THERMAL
       if (temperatures) {
         if (!temperatures->empty()) {
           pvars.ptemperature[pidx] = *tempiter;
           ++tempiter;
         }
       }
+#endif
 
       if (pforces) {                           
         if (!pforces->empty()) {
@@ -292,6 +309,7 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
+#ifdef KEEP_PSIZE
       if (psizes) {
         // Read psize from file or get from a smooth geometry piece
         if (!psizes->empty()) {
@@ -299,6 +317,7 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
           ++sizeiter;
         }
       }
+#endif
 
       if (pareas) {
         // Read parea from file or get from a smooth geometry piece
@@ -376,7 +395,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
                0.,0.,1./((double) ppc.z()));
   Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
 
+#ifdef INCLUDE_THERMAL
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
+#endif
   pvars.plocalized[i]   = 0;
 
   // For AMR
@@ -401,13 +422,19 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
       pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
 
+#ifdef KEEP_PSIZE
     pvars.psize[i]      = size;  // Normalized by grid spacing
+#endif
 
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+#ifdef KEEP_VELGRAD
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i]  = Matrix3(0.0);
     }
+#endif
+#ifdef INCLUDE_THERMAL
     pvars.pTempGrad[i] = Vector(0.0);
+#endif
   
     if (d_coupledflow &&
         !matl->getIsRigid()) {  // mass is determined by incoming porosity
@@ -460,7 +487,9 @@ FileGeomPieceParticleCreator::initializeParticle(const Patch* patch,
     pvars.pLastLevel[i] = curLevel->getID();
   }
   
+#ifdef INCLUDE_THERMAL
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+#endif
   GeometryPieceP piece = (*obj)->getPiece();
   FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
   if(fgp){
@@ -518,7 +547,9 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
   vector<Vector>*   pforces         = sgp->getForces();
   vector<Vector>*   pfiberdirs      = sgp->getFiberDirs();
   vector<Vector>*   pvelocities     = sgp->getVelocity();
+#ifdef KEEP_PSIZE
   vector<Matrix3>*  psizes          = sgp->getSize();
+#endif
   vector<double>*   concentrations  = sgp->getConcentration();
   vector<Vector>*   pareas          = sgp->getArea();
 
@@ -573,10 +604,12 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
           Vector pvel = pvelocities->at(ii); 
           vars.d_object_velocity[obj].push_back(pvel);
         }
+#ifdef KEEP_PSIZE
         if (!psizes->empty()) {
           Matrix3 psz = psizes->at(ii); 
           vars.d_object_size[obj].push_back(psz);
         }
+#endif
         if (!pareas->empty() && d_doScalarDiffusion) {
           Vector psz = pareas->at(ii); 
           vars.d_object_area[obj].push_back(psz);

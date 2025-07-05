@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -106,6 +106,7 @@ RigidMaterial::computeStressTensor(const PatchSubset* patches,
                                    DataWarehouse* new_dw)
 {
   carryForward(patches, matl, old_dw, new_dw);
+
 }
 
 void 
@@ -140,8 +141,19 @@ RigidMaterial::carryForward(const PatchSubset* patches,
 
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
-    // This method is defined in the ConstitutiveModel base class.
-    carryForwardSharedData(pset, old_dw, new_dw, matl);
+    ParticleVariable<double>  pIntHeatRate_new,p_q;
+    ParticleVariable<Matrix3> pStress_new;
+    new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel,             pset);
+    new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
+    new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
+
+    ParticleSubset::iterator iter = pset->begin();
+    for(; iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pIntHeatRate_new[idx] = 0.0;
+      pStress_new[idx]=Matrix3(0.0);
+      p_q[idx]=0.;
+    }
     new_dw->put(delt_vartype(1.0), lb->delTLabel, patch->getLevel());
     
     if (flag->d_reductionVars->accStrainEnergy ||

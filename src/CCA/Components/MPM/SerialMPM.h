@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -413,13 +413,6 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
-  //////////MJ
-  // From Wojtek Solowski's group:
-  virtual void GranularMPM(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
 
   virtual void computeParticleGradients(const ProcessorGroup*,
                                         const PatchSubset* patches,
@@ -565,9 +558,6 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 /////MJ												  
- virtual void scheduleGranularMPM(SchedulerP&, const PatchSet*, 
-                                                  const MaterialSet*);
-
   virtual void scheduleComputeParticleGradients(SchedulerP&, 
                                                 const PatchSet*,
                                                 const MaterialSet*);

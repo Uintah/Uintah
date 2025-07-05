@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1316,6 +1316,7 @@ void TriangleTasks::scheduleRefineTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,               gan, NGP);
   t->modifies(lb->pXLabel_preReloc);
   t->modifies(lb->pSizeLabel_preReloc);
+  t->modifies(lb->pDeformationMeasureLabel_preReloc);
   t->modifies(TriL->triangleIDLabel_preReloc);
   t->modifies(TriL->triMidToN0VectorLabel_preReloc);
   t->modifies(TriL->triMidToN1VectorLabel_preReloc);
@@ -1355,6 +1356,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
 
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pSize, tNearbyMats;
+      ParticleVariable<Matrix3> tF;
       ParticleVariable<long64> tids;
       ParticleVariable<IntVector> tUseInPenalty;
       ParticleVariable<Vector> tMTN0Vec,tMTN1Vec,tMTN2Vec,tAreaAtNodes,tNormal;
@@ -1366,6 +1368,8 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
       new_dw->getModifiable(tNearbyMats, 
                                      TriL->triNearbyMatsLabel_preReloc,   pset);
       new_dw->getModifiable(tids,    TriL->triangleIDLabel_preReloc,      pset);
+      new_dw->getModifiable(tF,        lb->pDeformationMeasureLabel_preReloc,
+                                                                          pset);
       new_dw->getModifiable(tUseInPenalty,
                                      TriL->triUseInPenaltyLabel_preReloc, pset);
       new_dw->getModifiable(tMTN0Vec,TriL->triMidToN0VectorLabel_preReloc,pset);
@@ -1408,6 +1412,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
 
         ParticleVariable<Point> pxtmp;
         ParticleVariable<Matrix3> pSizetmp, tNearbyMatstmp;
+        ParticleVariable<Matrix3> tFtmp;
         ParticleVariable<long64> tidstmp;
         ParticleVariable<IntVector> tUseInPenaltytmp;
         ParticleVariable<Vector> tMTN0Vectmp,tMTN1Vectmp,tMTN2Vectmp;
@@ -1417,6 +1422,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
 
         new_dw->allocateTemporary(pxtmp,            pset);
         new_dw->allocateTemporary(pSizetmp,         pset);
+        new_dw->allocateTemporary(tFtmp,            pset);
         new_dw->allocateTemporary(tNearbyMatstmp,   pset);
         new_dw->allocateTemporary(tidstmp,          pset);
         new_dw->allocateTemporary(tUseInPenaltytmp, pset);
@@ -1434,6 +1440,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
         for( unsigned int pp=0; pp<oldNumTri; ++pp ){
            pxtmp[pp]=px[pp];
            pSizetmp[pp]=pSize[pp];
+           tFtmp[pp]=tF[pp];
            tNearbyMatstmp[pp]=tNearbyMats[pp];
            tidstmp[pp]=tids[pp];
            tUseInPenaltytmp[pp]=tUseInPenalty[pp];
@@ -1503,6 +1510,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
                 pSizetmp[new_index]         = pSize[idx];  // not used?
                 tNearbyMatstmp[new_index]   = tNearbyMats[idx];
                 tNormaltmp[new_index]       = tNormal[idx];
+                tFtmp[new_index]            = tF[idx];
                 tClaytmp[new_index]         = tClay[idx];
                 tMassDisptmp[new_index]     = tMassDisp[idx];
                 tCemThicktmp[new_index]     = tCemThick[idx];
@@ -1518,6 +1526,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
         new_dw->put(tNearbyMatstmp, 
                                   TriL->triNearbyMatsLabel_preReloc,     true);
         new_dw->put(tidstmp,      TriL->triangleIDLabel_preReloc,        true);
+        new_dw->put(tFtmp,        lb->pDeformationMeasureLabel_preReloc, true);
         new_dw->put(tUseInPenaltytmp,
                                   TriL->triUseInPenaltyLabel_preReloc,   true);
         new_dw->put(tMTN0Vectmp,  TriL->triMidToN0VectorLabel_preReloc,  true);

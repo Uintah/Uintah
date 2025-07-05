@@ -8,10 +8,14 @@ PATH="/usr/sbin/":"$PATH"
 #  It will send mail to the user if a file can't be removed.
 #
 
-OS=`uname -s`
-MACHINE=`hostname`
+OS=$(uname -s)
+MACHINE=$(hostname -s)
 
 if [ "$MACHINE" == "uintah-build" ]; then
+  BUILD_DIR=/home/${LOGNAME}/"$OS"
+fi
+
+if [ "$MACHINE" == "lscad5" ]; then
   BUILD_DIR=/home/${LOGNAME}/"$OS"
 fi
 
@@ -57,7 +61,7 @@ To: $sendto
 This is an automated e-mail.
 Please remove the following directories regression tester.
 
-Under `pwd` on `hostname`:
+Under `pwd` on `hostname -s`:
 
 EOF
   

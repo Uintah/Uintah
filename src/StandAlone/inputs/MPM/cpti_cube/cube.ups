@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<!-- Variables
+-->
+<Uintah_specification>
+   <Meta>
+       <title>CPTI Five Tetrahedron in a Cube</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>2.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.0e-10</delt_min>
+       <delt_max>0.005</delt_max> 
+       <timestep_multiplier>0.5</timestep_multiplier>
+       <max_Timesteps>1000</max_Timesteps>
+   </Time>
+   <DataArchiver>
+       <filebase>cube.uda</filebase>
+       <outputInterval>0.05</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.mass"/>
+       <save label = "p.stress"/>
+       <save label = "p.size"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.velocity"/>
+       <save label = "g.stressFS"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.color"/>
+<!--   
+       <save label = "BndyForce_xminus"/>
+       <save label = "BndyForce_xplus"/>
+       <save label = "BndyContactArea_xminus"/>
+       <save label = "BndyContactArea_xplus"/>
+-->
+       <checkpoint cycle = "2" interval = "1.0"/>
+   </DataArchiver>
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>cpti</interpolator>
+       <!-- Prescribed Deformation
+       <interpolator>cpdi</interpolator>
+       Reads in File: 	time_defgrad_rotation
+       File Format:	t0 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta0 a0 a1 a2
+    			t1 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta1 a0 a1 a2    
+
+       <boundary_traction_faces>[xminus,xplus]</boundary_traction_faces> 
+      -->
+       <withColor>true</withColor>
+       <UsePrescribedDeformation>true</UsePrescribedDeformation>
+       <PrescribedDeformationFile>cube.defgrad</PrescribedDeformationFile>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="mat1">
+             <density>1050.0</density>
+            <constitutive_model type="comp_neo_hook">
+              <shear_modulus>384615.38461538462</shear_modulus>
+              <bulk_modulus>833333.33</bulk_modulus>
+            </constitutive_model>
+            <room_temp>294.0</room_temp>
+            <thermal_conductivity>1.0</thermal_conductivity>
+            <specific_heat>5</specific_heat>
+	          <geom_object>
+              <file>
+                 <name>cube_mat1.pts</name>
+                 <var>p.rvec1</var>
+                 <var>p.rvec2</var>
+                 <var>p.rvec3</var>
+              </file>
+              <res>[1,1,1]</res>
+              <velocity>[0.0,0.0,0.0]</velocity>
+              <temperature>294.</temperature>
+              <color>1</color>
+            </geom_object>
+           </material>
+           <material name="mat2" >
+             <density>1050.0</density>
+            <constitutive_model type="comp_neo_hook">
+              <shear_modulus>384615.38461538462</shear_modulus>
+              <bulk_modulus>833333.33</bulk_modulus>
+            </constitutive_model>
+            <room_temp>294.0</room_temp>
+            <thermal_conductivity>1.0</thermal_conductivity>
+            <specific_heat>5</specific_heat>
+	          <geom_object>
+              <file>
+                 <name>cube_mat2.pts</name>
+                 <var>p.rvec1</var>
+                 <var>p.rvec2</var>
+                 <var>p.rvec3</var>
+              </file>
+              <res>[1,1,1]</res>
+              <velocity>[0.0,0.0,0.0]</velocity>
+              <temperature>294.</temperature>
+              <color>2</color>
+            </geom_object>
+           </material>
+           <contact>
+              <type>null</type>
+              <direction>[1,1,1]</direction>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "z+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                 
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-1.5,-1.5,-1.5]</lower>
+              <upper>[1.5,1.5,1.5]</upper>
+              <extraCells>[1,1,1]</extraCells>
+              <patches>[1,1,1]</patches>
+           </Box>
+           <!--<spacing> [1.0,1.0,1.0]</spacing>-->
+           <spacing> [0.5,0.25,1.5]</spacing>
+       </Level>
+    </Grid>
+
+</Uintah_specification>
+

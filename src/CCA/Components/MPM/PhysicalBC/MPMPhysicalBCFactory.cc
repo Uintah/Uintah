@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/BodyForce.h>
 #include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
@@ -52,6 +53,10 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, con
 
     for( ProblemSpecP child = current_ps->findBlock("pressure"); child != nullptr; child = child->findNextBlock("pressure") ) {
        mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
+    }
+
+    for( ProblemSpecP child = current_ps->findBlock("body_force"); child != nullptr; child = child->findNextBlock("body_force") ) {
+       mpmPhysicalBCs.push_back(scinew BodyForce(child, grid, flags));
     }
 
     for( ProblemSpecP child = current_ps->findBlock("torque"); child != nullptr; child = child->findNextBlock("torque") ) {

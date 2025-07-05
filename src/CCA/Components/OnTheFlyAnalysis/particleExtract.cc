@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -497,7 +497,7 @@ particleExtract::doAnalysis( const ProcessorGroup * pg,
           }
 
           // write particle position and time
-          fprintf(fp,    "%E\t %E\t %E\t %E",tv.now, px[idx].x(),px[idx].y(),px[idx].z());
+          fprintf(fp,    "%E   %E   %E   %E",tv.now, px[idx].x(),px[idx].y(),px[idx].z());
 
            // WARNING If you change the order that these are written
            // out you must also change the order that the header is

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/Matrix3.h>
 #include <string.h>
@@ -303,7 +304,9 @@ ErosionModel::updateVariables_Erosion( ParticleSubset * pset,
     
       if( pLocalized[idx] ){
         pFNew[idx]    = pFOld[idx];
+#ifdef KEEP_VELGRAD
         pVelGrad[idx] = zero;
+#endif
       }
     }
   }
@@ -317,7 +320,9 @@ ErosionModel::updateVariables_Erosion( ParticleSubset * pset,
       if( pLocalized[idx] ){
         double cbrtJ  = cbrt( pFNew[idx].Determinant() );
         pFNew[idx]    = cbrtJ * Identity;
+#ifdef KEEP_VELGRAD
         pVelGrad[idx] = third * pVelGrad[idx].Trace() * Identity;
+#endif
       }
     }
   }

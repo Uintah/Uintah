@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,8 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -167,13 +169,17 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
   task->requires(Task::OldDW, lb->pMassLabel,               matlset, gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,             matlset, gnone);
+#ifdef INCLUDE_THERMAL
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
+#endif
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,
                                                             matlset, gnone);
+#ifdef KEEP_VELGRAD
   task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
+#endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);

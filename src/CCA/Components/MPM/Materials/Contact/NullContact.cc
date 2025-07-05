@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,10 +45,10 @@
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 using namespace Uintah;
 
-NullContact::NullContact(const ProcessorGroup* myworld,
+NullContact::NullContact(const ProcessorGroup* myworld, ProblemSpecP& ps,
                          MaterialManagerP& d_sS,
                          MPMLabel* Mlb,MPMFlags* MFlags)
-  : Contact(myworld, Mlb, MFlags, 0)
+  : Contact(myworld, Mlb, MFlags, ps)
 {
   // Constructor
   d_materialManager = d_sS;

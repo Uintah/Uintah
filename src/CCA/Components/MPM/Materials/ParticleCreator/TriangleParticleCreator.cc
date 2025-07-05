@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,9 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/TriangleParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+#include <CCA/Components/MPM/ToHeatOrNotToHeat.h>
+#include <CCA/Components/MPM/ToStoreVelGrad.h>
+#include <CCA/Components/MPM/ToStorePartSize.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/AMRMPMLabel.h>
@@ -173,7 +176,7 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
-      if (d_useLoadCurves) {
+      if (d_useLoadCurves && !d_useBodyForce) {
         // if it is a surface particle
         if (pvars.psurface[pidx]==1) {
           Vector areacomps;
@@ -189,6 +192,9 @@ TriangleParticleCreator::createParticles(MPMMaterial* matl,
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
         }
+      } else if (d_useLoadCurves && d_useBodyForce){
+        Vector areacomps;
+        pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
       }
       count++;
     }
@@ -584,16 +590,24 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
                0.,0.,1./((double) ppc.z()));
   Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
 
+#ifdef INCLUDE_THERMAL
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
+#endif
   pvars.plocalized[i]   = 0;
 
   pvars.position[i] = p;
   // standard voxel volume
   pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
+#ifdef KEEP_PSIZE
   pvars.psize[i]      = size;  // Normalized by grid spacing
+#endif
   pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+#ifdef KEEP_VELGRAD
   pvars.pvelGrad[i]  = Matrix3(0.0);
+#endif
+#ifdef INCLUDE_THERMAL
   pvars.pTempGrad[i] = Vector(0.0);
+#endif
   pvars.pmass[i]     = matl->getInitialDensity()*pvars.pvolume[i];
   pvars.pdisp[i]     = Vector(0.,0.,0.);
 
@@ -611,7 +625,9 @@ TriangleParticleCreator::initializeParticle(const Patch* patch,
     pvars.p_q[i] = 0.;
   }
 
+#ifdef INCLUDE_THERMAL
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
+#endif
   if(d_flags->d_useLogisticRegression ||
      d_useLoadCurves){
     GeometryPieceP piece = (*obj)->getPiece();

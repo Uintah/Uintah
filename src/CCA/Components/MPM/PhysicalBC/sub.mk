@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2024 The University of Utah
+#  Copyright (c) 1997-2025 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -43,6 +43,7 @@ SRCS     += \
         $(SRCDIR)/MPMPhysicalBCFactory.cc  \
         $(SRCDIR)/PolynomialData.cc        \
         $(SRCDIR)/PressureBC.cc            \
+        $(SRCDIR)/BodyForce.cc             \
         $(SRCDIR)/ScalarFluxBC.cc          \
         $(SRCDIR)/TorqueBC.cc
 

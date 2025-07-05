@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -224,6 +224,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("use_load_curves",             d_useLoadCurves);
+  mpm_flag_ps->get("use_body_force",              d_useBodyForce);
   mpm_flag_ps->get("keepPressBCNormalToSurface",  d_keepPressBCNormalToSurface);
   mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
@@ -447,6 +448,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("XPIC2",                              d_XPIC2);
   ps->appendElement("use_cohesive_zones",                 d_useCohesiveZones);
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
+  ps->appendElement("use_body_force",                     d_useBodyForce);
   ps->appendElement("keepPressBCNormalToSurface", d_keepPressBCNormalToSurface);
   ps->appendElement("use_CBDI_boundary_condition",        d_useCBDI);
   ps->appendElement("exactDeformation",                   d_exactDeformation);

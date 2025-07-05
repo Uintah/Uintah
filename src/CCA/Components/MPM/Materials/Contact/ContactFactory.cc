@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,7 +57,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
    }
    
-   CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
+   CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag, ps);
    
    needNormals=false;
    useLogisticRegression=false;
@@ -68,7 +68,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",con_type, "null");
      
      if (con_type == "null") {
-       contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+       contact_list->add(scinew NullContact(myworld,child,ss,lb,flag));
      }
      else if (con_type == "single_velocity") {
        contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
@@ -105,7 +105,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
        useLogisticRegression=true;
      }
      else if (con_type == "specified_velocity" || con_type == "specified" || con_type == "rigid"  ) {
-       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag ) );
+       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag));
        needNormals=true;
      }
      else {
@@ -117,7 +117,8 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    // 
    if( contact_list->size() == 0 ) {
      proc0cout << "no contact - using null\n";
-     contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+     ProblemSpecP child;
+     contact_list->add(scinew NullContact(myworld,child,ss,lb,flag));
    }
 
    return contact_list;

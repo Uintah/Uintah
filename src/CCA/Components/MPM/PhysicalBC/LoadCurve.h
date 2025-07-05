@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -87,7 +87,7 @@ WARNING
 
       // Get the load
       inline T getLoad(int index) {
-        return ((index < (int) d_time.size()) ? d_load[index] : 0);
+        return ((index < (int) d_time.size()) ? d_load[index] : T(0));
       }
 
       // Get the load curve id

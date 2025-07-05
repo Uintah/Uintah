@@ -25,7 +25,7 @@ cd $scriptsDir
 
 # Git
 foreach X ( $files[*] )
-  wget --timestamping https://raw.githubusercontent.com/Uintah/Uintah/master/src/R_Tester/toplevel/$X
+  wget --timestamping https://raw.githubusercontent.com/Uintah/Uintah/yoyodyne/src/R_Tester/toplevel/$X
 end
 
 exit(0)

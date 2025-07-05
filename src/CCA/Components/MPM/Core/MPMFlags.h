@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2024 The University of Utah
+ * Copyright (c) 1997-2025 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -76,6 +76,7 @@ class Output;
     bool        d_artificial_viscosity_heating;                // Include heating due to AV
     bool        d_useLoadCurves;                               // Flag for using load curves
     bool        d_keepPressBCNormalToSurface;                  // Flag for using load curves
+    bool        d_useBodyForce;                                // Flag for using body forces (a special use of load curves)
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
