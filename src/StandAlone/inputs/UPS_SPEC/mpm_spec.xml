@@ -199,7 +199,8 @@
                   <porosity spec="OPTIONAL DOUBLE 'positive'"/>
                   <permeability spec="OPTIONAL DOUBLE 'positive'"/>
                   <initial_pore_pressure spec="OPTIONAL DOUBLE"/>
-                  
+        <PistonMaterial                  spec="OPTIONAL BOOLEAN" />
+
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
         <!-- Damage models -->
