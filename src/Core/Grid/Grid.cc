@@ -1054,9 +1054,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
         // bulletproofing: catch patches > resolution 
         for (int d=0; d<3; d++) {
-          if ( patches[d] > resolution[d] ){
+          if ( patches[d] > 1 && 2*patches[d] > resolution[d] ){
             std::ostringstream desc;
-            desc << "   ERROR: The number of patches in direction (" << d << ") is greater than the number of cells."
+            desc << "   ERROR: The number of patches in direction (" << d << ") is greater than or equal to twice the number of cells."
                  << " (patches: " << patches << ", cells: " << resolution << ")";
             throw InvalidGrid(desc.str(),__FILE__,__LINE__);
           }
