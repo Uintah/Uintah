@@ -137,7 +137,7 @@ void ThresholdDamageVar::outputProblemSpec(ProblemSpecP& ps)
 {
   printTask( dbg, "ThresholdDamageVar::outputProblemSpec" );
   ProblemSpecP dam_ps = ps->appendChild("damage_model");
-  dam_ps->setAttribute("type","Threshold");
+  dam_ps->setAttribute("type","ThresholdVar");
 
   dam_ps->appendElement("failure_mean",     d_epsf.mean);
   dam_ps->appendElement("failure_std",      d_epsf.std);
