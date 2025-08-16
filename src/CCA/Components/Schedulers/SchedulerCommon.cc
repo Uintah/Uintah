@@ -54,7 +54,9 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/Timers/Timers.hpp>
+
 
 #include <sci_defs/visit_defs.h>
 
@@ -372,6 +374,7 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
     //
     ProblemSpecP track = params->findBlock("VarTracker");
     if (track) {
+
       track->require( "start_time",   m_tracking_start_time);
       track->require( "end_time",     m_tracking_end_time);
       track->getWithDefault("level",  m_tracking_level, -1);
@@ -379,6 +382,19 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
       track->getWithDefault("end_index",   m_tracking_end_index,   IntVector(-9, -9, -9));
       track->getWithDefault("patchid",     m_tracking_patch_id, -1);
 
+
+      ProblemSpecP output = track->findBlock("output");
+      if (output) {
+        std::map<std::string, std::string> attributes;
+        output->getAttributes(attributes);
+        std::string flag      = attributes["formatFlag"];
+        std::string precision = attributes["precision"];
+
+        m_tracking_outputDigits = std::stoi(precision);
+        if( string_toupper(flag) == "SCIENTIFIC" ){
+          m_tracking_formatFlag = SCIENTIFIC_FORMATFLAG;
+        }
+      }
       proc0cout << "\n";
       proc0cout << "-----------------------------------------------------------\n";
       proc0cout << "-- Initializing VarTracker...\n";
@@ -626,6 +642,14 @@ void SchedulerCommon::printTrackedValues(       GridVariable<T> * var
                                         )
 {
   std::ostringstream message;
+  message << std::setprecision(m_tracking_outputDigits);
+  if (m_tracking_formatFlag == FIXED_FORMATFLAG ){
+    message <<  std::fixed;
+  }
+  else {
+    message <<  std::scientific;
+  }
+
   // Add 1 to high to include x+, y+, z+ extraCells.
   for (int z = start.z(); z < end.z() + 1; z++) {
     for (int y = start.y(); y < end.y() + 1; y++) {
@@ -634,7 +658,7 @@ void SchedulerCommon::printTrackedValues(       GridVariable<T> * var
 
       for (int x = start.x(); x < end.x() + 1; x++) {
         IntVector c(x, y, z);
-        message << " " << c << ": " << (*var)[c];
+        message << " " << c << ": "  <<(*var)[c];
       }
       message << std::endl;
     }

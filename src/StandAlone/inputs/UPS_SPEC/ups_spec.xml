@@ -897,6 +897,10 @@
       <start_index        spec="REQUIRED VECTOR"  />
       <end_index          spec="REQUIRED VECTOR"  />
       <patchid            spec="OPTIONAL INTEGER" />
+      <output             spec="OPTIONAL NO_DATA"
+                            attribute1="formatFlag REQUIRED STRING  'FIXED, fixed, scientific, SCIENTIFIC'"
+                            attribute2="precision  REQUIRED INTEGER 'positive'"/>
+
       <var                spec="MULTIPLE NO_DATA"
                             attribute1="label   REQUIRED STRING"
                             attribute2="matl_id OPTIONAL INTEGER  'positive'"

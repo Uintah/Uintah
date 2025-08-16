@@ -322,21 +322,23 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void verifyChecksum() = 0;
 
     enum {
-        PRINT_BEFORE_COMM = 1
+        PRINT_BEFORE_COMM = 1       // used by TrackedVars
       , PRINT_BEFORE_EXEC = 2
       , PRINT_AFTER_EXEC  = 4
+      , FIXED_FORMATFLAG  = 5
+      , SCIENTIFIC_FORMATFLAG = 6
     };
 
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current
     // method of getting data from an old to a new grid).
 protected:
-    bool                                m_is_copy_data_timestep{false};
-    bool                                m_is_init_timestep{false};
-    bool                                m_is_restart_init_timestep{false};
-    int                                 m_current_task_graph{-1};
-    int                                 m_generation{0};
-    int                                 m_dwmap[Task::TotalDWs];
+    bool  m_is_copy_data_timestep{false};
+    bool  m_is_init_timestep{false};
+    bool  m_is_restart_init_timestep{false};
+    int   m_current_task_graph{-1};
+    int   m_generation{0};
+    int   m_dwmap[Task::TotalDWs];
 
     ApplicationInterface * m_application  {nullptr};
     LoadBalancer         * m_loadBalancer {nullptr};
@@ -347,13 +349,15 @@ protected:
     std::vector<TaskGraph*>             m_task_graphs;
 
     //! These are so we can track certain variables over the taskgraph's execution.
-    int                        m_tracking_vars_print_location {0};
-    int                        m_tracking_patch_id    {-1};
-    int                        m_tracking_level       {-1};
-    double                     m_tracking_start_time  {1.0};
-    double                     m_tracking_end_time    {0.0};
-    IntVector                  m_tracking_start_index {IntVector(-9, -9, -9)};
-    IntVector                  m_tracking_end_index   {IntVector(-9, -9, -9)};
+    int        m_tracking_vars_print_location {0};
+    int        m_tracking_patch_id    {-1};
+    int        m_tracking_level       {-1};
+    int        m_tracking_formatFlag  {FIXED_FORMATFLAG};   // option for output formatting
+    int        m_tracking_outputDigits{9};                  // option for output formatting
+    double     m_tracking_start_time  {1.0};
+    double     m_tracking_end_time    {0.0};
+    IntVector  m_tracking_start_index {IntVector(-9, -9, -9)};
+    IntVector  m_tracking_end_index   {IntVector(-9, -9, -9)};
 
     struct trackingVar{         // for each variable store the name, dw and matl_id
       trackingVar(){};
