@@ -266,6 +266,16 @@ namespace Uintah {
       // MPM Hydrostatic BC label
       const VarLabel* boundaryPointsPerCellLabel;
 
+      // ESPotential
+      const VarLabel* pESPotential;
+      const VarLabel* pESGradPotential;
+
+      // Charge
+      const VarLabel* pNegChargeLabel;
+      const VarLabel* pPosChargeLabel;
+
+      // Permittivity
+      const VarLabel* pPermittivityLabel;
     };
 } // End namespace Uintah
 
