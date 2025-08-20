@@ -48,6 +48,8 @@ public:
 
   enum { rank = 3 };
 
+  BlockRange() {}
+
   template <typename ArrayType>
   BlockRange( ArrayType const & c0, ArrayType const & c1 )
   {
