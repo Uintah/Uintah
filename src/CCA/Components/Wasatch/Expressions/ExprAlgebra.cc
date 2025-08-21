@@ -25,6 +25,12 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <spatialops/structured/FVStaggered.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+using SpatialOps::Particle::ParticleField;
+
 // ###################################################################
 //
 //                          Implementation
