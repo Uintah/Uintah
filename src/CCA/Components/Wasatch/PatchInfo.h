@@ -27,6 +27,20 @@
 
 #include <map>
 
+//
+//-- Uintah Includes --//
+#include <Core/Grid/Variables/PerPatch.h>      /* single, per-patch value */
+#include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Parallel/ProcessorGroup.h>
+# ifdef ENABLE_CUDA
+#include <Core/Grid/Variables/GPUGridVariableBase.h>  /* GPU grid Variables */
+#include <Core/Grid/Variables/GPUPerPatchBase.h>      /* GPU perpatch Variables */
+#endif
+
+//-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
+
 /**
  *  \file PatchInfo.h
  */
