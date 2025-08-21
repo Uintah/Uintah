@@ -26,6 +26,11 @@
 
 #include <spatialops/OperatorDatabase.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+
 //====================================================================
 
 template< typename StrainT, typename Vel1T, typename Vel2T >

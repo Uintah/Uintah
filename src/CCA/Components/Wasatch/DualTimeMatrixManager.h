@@ -126,6 +126,7 @@ namespace WasatchCore{
 
   };
 
+  using SpatialOps::SVolField;
   using FieldT           = SpatialOps::SVolField;
   using InviscidFluxJacT = Expr::matrix::InviscidFluxAssembler<FieldT>;
   using ViscousFluxJacT  = Expr::matrix::ViscousFluxAssembler<FieldT>;

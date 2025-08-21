@@ -28,6 +28,11 @@
 #include <expression/Expression.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+
 //==================================================================
 
 // note that the ordering of Vel1T and Vel2T are very important, and
