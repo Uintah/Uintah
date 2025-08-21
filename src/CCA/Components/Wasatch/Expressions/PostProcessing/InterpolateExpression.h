@@ -32,6 +32,8 @@
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
+using SpatialOps::Particle::ParticleField;
+
 /**
  *  \class   InterpolateExpression
  *  \author  Tony Saad
