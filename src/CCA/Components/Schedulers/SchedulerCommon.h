@@ -364,6 +364,7 @@ protected:
       std::string      name;
       Task::WhichDW    dw;
       int              matl_id {-1};
+      std::string      singleTaskName {"allTasks"};         // output for a single task, default is all tasks
     };
 
     using trackingVar_ptr       = std::shared_ptr<trackingVar>;
@@ -417,12 +418,12 @@ protected:
     SchedulerCommon( SchedulerCommon && )                 = delete;
     SchedulerCommon& operator=( SchedulerCommon && )      = delete;
 
-    ProblemSpecP                m_graph_doc{nullptr};
-    ProblemSpecP                m_graph_nodes{nullptr};
+    ProblemSpecP   m_graph_doc{nullptr};
+    ProblemSpecP   m_graph_nodes{nullptr};
 
-    std::ofstream*              m_mem_logfile{nullptr};
+    std::ofstream* m_mem_logfile{nullptr};
 
-    Relocate                    m_relocate_1;
+    Relocate       m_relocate_1;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)

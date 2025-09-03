@@ -441,6 +441,10 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
           Q->matl_id  = stoi(var_attr["matl_id"]);
         }
 
+        if( ! var_attr["singleTask"].empty() ){         // output for only this task
+          Q->singleTaskName  = var_attr["singleTask"];
+        }
+
         if (dw == "OldDW") {
           Q->dw = Task::OldDW;
         }
@@ -466,7 +470,12 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec
                  "an error in input file specification.)\n");
           Q->dw = Task::NewDW;
         }
-        proc0cout << "--  Tracking variable '" << Q->name << "' in DataWarehouse '" << dw << "' matl " << Q->matl_id <<"\n";
+        proc0cout << "--  Tracking variable '"
+                  << std::left<<std::setw(20)
+                  << Q->name
+                  << "' in DataWarehouse '" << dw
+                  << "' matl " << Q->matl_id
+                  << " singleTask:" << Q->singleTaskName << "\n";
         m_tracking_vars.push_back( Q );
       }
 
@@ -706,9 +715,14 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
     bool printedVarName = false;
 
     const std::string   tv_name = tVar->name;
+    const std::string   tv_singleTask = tVar->singleTaskName;
     const int           tv_matl = tVar->matl_id;
     const Task::WhichDW tv_dw   = tVar->dw;
     const int           int_dw  = task->mapDataWarehouse( tv_dw );
+
+    if (tv_singleTask != "allTasks" && tv_singleTask != taskName) {
+      continue;
+    }
 
     // That DW may not have been mapped....
     if ( int_dw < 0 || int_dw >= (int)m_dws.size()) {
