@@ -123,10 +123,12 @@ my @args = ("$cmd_basename", "-o", "$comp_output", "-uda", "$uda");
 system("@args")==0 or die("ERROR(analyze_Analysis.pl):\tFailed running: (@args)) failed: $@");
 
 # concatenate results
-my $L2norm = `cat $comp_output`;
-chomp($L2norm);
-`echo $X $L2norm >> L2norm.dat`;
-`rm -f $comp_output`;
+if ( -e $comp_output && -s $comp_output ){
+  my $L2norm = `cat $comp_output`;
+  chomp($L2norm);
+  `echo $X $L2norm >> L2norm.dat`;
+  `rm -f $comp_output`;
+}
   
 
 #______________________________________________________________________
