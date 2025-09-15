@@ -22,7 +22,7 @@ ______________________________________________________________________-->
 
 
 <start>
-<upsFile>naturalConvectionCavity_dx.ups</upsFile>
+<upsFile>naturalConvectionCavity2mat_dx.ups</upsFile>
 
 <AllTests>
 </AllTests>
@@ -31,6 +31,7 @@ ______________________________________________________________________-->
     <Title>Ra_1e3_96</Title>
     <sus_cmd>mpirun -np 9 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e3' </postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e3' </postProcess_cmd>
     <x>1e3</x>
     <replace_lines>
       <maxTime>            2     </maxTime>
@@ -39,12 +40,17 @@ ______________________________________________________________________-->
       <patches>      [3,3,1]     </patches>
       <resolution>   [96,96,1]   </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[2.803910e-02, 2.803910e-02, 0.0]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[5.607821e-02, 5.607821e-02, 2.0]' />
+    </replace_values>
 </Test>
 
 <Test>
     <Title>Ra_1e4_96</Title>
     <sus_cmd>mpirun -np 9 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e4'</postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e4'</postProcess_cmd>
     <x>1e4</x>
     <replace_lines>
       <maxTime>            4     </maxTime>
@@ -53,12 +59,17 @@ ______________________________________________________________________-->
       <patches>      [3,3,1]     </patches>
       <resolution>   [96,96,1]   </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[6.040851e-03, 6.040851e-03, 0.000000e+00]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[1.208170e-02, 1.208170e-02, 2.000000e+00]' />
+    </replace_values>
 </Test>
 
 <Test>
     <Title>Ra_1e5_96</Title>
     <sus_cmd>mpirun -np 9 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e5'</postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e5'</postProcess_cmd>
     <x>1e5</x>
     <replace_lines>
       <maxTime>            25     </maxTime>
@@ -67,12 +78,17 @@ ______________________________________________________________________-->
       <patches>      [3,3,1]      </patches>
       <resolution>   [96,96,1]    </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[1.301461e-02, 1.301461e-02, 0.000000e+00]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[2.602922e-02, 2.602922e-02, 2.000000e+00]' />
+    </replace_values>
 </Test>
 
 <Test>
     <Title>Ra_1e6_96</Title>
     <sus_cmd>mpirun -np 9 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e6'</postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e6'</postProcess_cmd>
     <x>1e6</x>
     <replace_lines>
       <maxTime>            50     </maxTime>
@@ -81,12 +97,17 @@ ______________________________________________________________________-->
       <patches>      [3,3,1]      </patches>
       <resolution>   [96,96,1]    </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[2.803910e-02, 2.803910e-02, 0.000000e+00]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[5.607821e-02, 5.607821e-02, 2.000000e+00]' />
+    </replace_values>
 </Test>
 
 <Test>
     <Title>Ra_1e8_96</Title>
     <sus_cmd>mpirun -np 9 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e8'</postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e8'</postProcess_cmd>
     <x>1e8</x>
     <replace_lines>
       <maxTime>            150     </maxTime>
@@ -95,12 +116,17 @@ ______________________________________________________________________-->
       <patches>      [3,3,1]      </patches>
       <resolution>   [96,96,1]    </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[1.301458e-01, 1.301458e-01, 0.000000e+00]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[2.602916e-01, 2.602916e-01, 2.000000e+00]' />
+    </replace_values>
 </Test>
 
 <Test>
     <Title>Ra_1e10_128</Title>
     <sus_cmd>mpirun -np 16 sus </sus_cmd>
     <postProcess_cmd>postProcess.m -mat 0 -Ra '1e10'</postProcess_cmd>
+    <postProcess_cmd>postProcess.m -mat 1 -Ra '1e10'</postProcess_cmd>
     <x>1e10</x>
     <replace_lines>
       <maxTime>            500    </maxTime>
@@ -109,6 +135,11 @@ ______________________________________________________________________-->
       <patches>      [4,4,1]      </patches>
       <resolution>   [128,128,1]  </resolution>
     </replace_lines>
+    <replace_values>
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/min" value = '[6.040823e-01, 6.040823e-01, 0.000000e+00]' />
+      <entry path = "Uintah_specification/MaterialProperties/ICE/material/geom_object/box[@label='box']/max" value = '[1.208165e+00, 1.208165e+00, 2.000000e+00]' />
+    </replace_values>
 </Test>
-
+<!--
+-->
 </start>

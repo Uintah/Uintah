@@ -18,7 +18,7 @@ ______________________________________________________________________-->
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>Natural convection in a square cavity.</title>
+       <title>Natural convection in a square cavity with 2 ideal gases</title>
    </Meta>
 
    <SimulationComponent type="ice" />
@@ -43,77 +43,77 @@ ______________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"       var = "Neumann">
                             <value> 0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "all"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"
-                           label = "Temperature"  var = "Dirichlet">
+        <BCType id = "all"
+                           label = "Temperature"    var = "Dirichlet">
                             <value> 320</value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
+        <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0 </value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"       var = "Neumann">
                               <value> 0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "all"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Dirichlet">
+        <BCType id = "all"   label = "Temperature"  var = "Dirichlet">
                               <value> 300.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
+        <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"       var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "all"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
+        <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"       var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "all"   label = "Velocity"     var = "Dirichlet">
                               <value> [0,0,0] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+        <BCType id = "all"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
+        <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
               <lower>        [0,0,0]       </lower>
-              <upper>         [8.411731e-02, 8.411731e-02, 8.762220e-04]  </upper>
+              <upper>        [8.411731e-02, 8.411731e-02, 8.762220e-04]  </upper>
               <extraCells>   [1,1,1]       </extraCells>
-              <patches>      [3,3,1]       </patches>
+              <patches>      [1,1,1]       </patches>
               <resolution>   [96,96,1]   </resolution>
            </Box>
        </Level>
@@ -126,14 +126,45 @@ ______________________________________________________________________-->
      1.000000e+06      [8.411731e-02, 8.411731e-02, 8.762220e-04]
      1.000000e+08      [3.904374e-01, 3.904374e-01, 4.067056e-03]
      1.000000e+10      [1.812247e+00, 1.812247e+00, 1.887757e-02]
+
+
+       Ra     upper   resolution 96
+     1.000000e+03      [8.411751e-03, 8.411751e-03, 8.762240e-05]
+     1.000000e+04      [1.812255e-02, 1.812255e-02, 1.887766e-04]
+     1.000000e+05      [3.904383e-02, 3.904383e-02, 4.067065e-04]
+     1.000000e+06      [8.411731e-02, 8.411731e-02, 8.762220e-04]
+     1.000000e+08      [3.904374e-01, 3.904374e-01, 4.067056e-03]
+     1.000000e+10      [1.812247e+00, 1.812247e+00, 1.887757e-02]
+
+     Dimensions for box in 2matl problem
+     Ra: 1.000000e+03
+           <min> [2.803917e-03, 2.803917e-03, 0.000000e+00] </min>
+           <max> [5.607834e-03, 5.607834e-03, 2.000000e+00] </max>
+     Ra: 1.000000e+04
+           <min> [6.040851e-03, 6.040851e-03, 0.000000e+00] </min>
+           <max> [1.208170e-02, 1.208170e-02, 2.000000e+00] </max>
+     Ra: 1.000000e+05
+           <min> [1.301461e-02, 1.301461e-02, 0.000000e+00] </min>
+           <max> [2.602922e-02, 2.602922e-02, 2.000000e+00] </max>
+     Ra: 1.000000e+06
+           <min> [2.803910e-02, 2.803910e-02, 0.000000e+00] </min>
+           <max> [5.607821e-02, 5.607821e-02, 2.000000e+00] </max>
+     Ra: 1.000000e+08
+           <min> [1.301458e-01, 1.301458e-01, 0.000000e+00] </min>
+           <max> [2.602916e-01, 2.602916e-01, 2.000000e+00] </max>
+     Ra: 1.000000e+10
+           <min> [6.040823e-01, 6.040823e-01, 0.000000e+00] </min>
+           <max> [1.208165e+00, 1.208165e+00, 2.000000e+00] </max>
+
     -->
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>Ra_1e6_96.uda</filebase>
+      <filebase>Ra_1e6_96_2matl.uda</filebase>
 
       <outputTimestepInterval> 10 </outputTimestepInterval>
+
       <outputLastTimestep> true </outputLastTimestep>
 
       <save label="vel_CC"/>
@@ -196,7 +227,28 @@ ______________________________________________________________________-->
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
-         <material name="air">
+         <material name="airBox">
+           <EOS type = "ideal_gas">         </EOS>
+           <dynamic_viscosity>  1.895e-5    </dynamic_viscosity>
+           <thermal_conductivity>  0.02625  </thermal_conductivity>
+           <specific_heat>      719.28      </specific_heat>
+           <gamma>              1.4         </gamma>
+           <geom_object>
+              <box label="box">
+                         <!-- This has to be changed for every Ra -->
+                <min> [2.803910e-02, 2.803910e-02, 0.0] </min>
+                <max> [5.607821e-02, 5.607821e-02, 2.0] </max>
+
+              </box>
+              <res>           [4,4,4]       </res>
+              <velocity>      [0.,0.,0.]    </velocity>
+              <density>       1.145         </density>
+              <pressure>      101464.51392  </pressure>
+              <temperature>   308.0         </temperature>
+           </geom_object>
+         </material>
+
+         <material name="airDomain">
            <isSurroundingMatl>  true        </isSurroundingMatl>
            <EOS type = "ideal_gas">         </EOS>
            <dynamic_viscosity>  1.895e-5    </dynamic_viscosity>
@@ -204,11 +256,14 @@ ______________________________________________________________________-->
            <specific_heat>      719.28      </specific_heat>
            <gamma>              1.4         </gamma>
            <geom_object>
-              <box label="wholeDomain">
-                  <min>       [-1.0, -1.0,-1.0]  </min>
-                  <max>       [ 2.0,  2.0, 2.0]  </max>
-              </box>
-              <res>           [2,2,2]       </res>
+              <difference>
+                  <box label="wholeDomain">
+                    <min>       [-1.0, -1.0,-1.0]  </min>
+                    <max>       [ 2.0,  2.0, 2.0]  </max>
+                  </box>
+                  <box label="box"/>
+              </difference>
+              <res>           [4,4,4]       </res>
               <velocity>      [0.,0.,0.]    </velocity>
               <density>       1.145         </density>
               <pressure>      101464.51392  </pressure>
@@ -216,11 +271,19 @@ ______________________________________________________________________-->
            </geom_object>
          </material>
       </ICE>
+
+      <exchange_properties>
+        <exchange_coefficients>
+          <momentum>  [1e15]  </momentum>
+          <heat>      [1e15]  </heat>
+        </exchange_coefficients>
+      </exchange_properties>
     </MaterialProperties>
+
 <!--__________________________________-->
   <DataAnalysis>
     <Module name="vorticity">
-      <material>air</material>
+      <material>airDomain</material>
     </Module>
   </DataAnalysis>
 </Uintah_specification>

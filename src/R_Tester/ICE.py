@@ -108,8 +108,10 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
                    ("stagnationPoint",    "stagnationPoint.ups",     8, "All", ["exactComparison"]),
-                   ("naturalConvection",  "naturalConvectionCavity_dx.ups",
-                                                                     9, "All", ["exactComparison"])
+                   ("naturalConvection",    "naturalConvectionCavity_dx.ups",
+                                                                     9, "All", ["exactComparison"]),
+                   ("naturalConvection2mat","naturalConvectionCavity2mat_dx.ups",
+                                                                     9, "All", ["exactComparison"])                                                 
               ]
 
 DIFFUSION  = [     ("Poiseuille_XY", "CouettePoiseuille/XY.ups",     1, "All", ["exactComparison"]),         
