@@ -184,7 +184,7 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
    #   - copy tst, scripts, other files & input files
    my $otherFiles = "";
 
-   
+
    foreach my $test ( $whatToRun->findnodes('test') ) {
 
      my $testName = cleanStr( $test->findvalue('name') );
@@ -198,7 +198,7 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
      my($vol,$tstPath,$file) = File::Spec->splitpath($tstFile);
      my $orgPath  = $ENV{"PATH"};
      $ENV{"PATH"} = "$orgPath:$tstPath";
-     
+
      my $tst_basename = basename( $tstFile );
 
      my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
@@ -217,12 +217,12 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
                    # gnuplot file
      my $gp_tmp  = cleanStr( $tstData->findvalue('/start/gnuplot/script') );
      my $gpFile  = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
-     
-     
+
+
                    # restarts
      my $doRestart  = cleanStr( $tstData->exists('/start/restart_uda') );
      my $restartUda = cleanStr( $tstData->findvalue('/start/restart_uda/uda') );
-     
+
      if( $doRestart ){
        $doRestart = 1;
        $upsFile   = '';
@@ -258,8 +258,8 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
        print "or the tst file: \n     ($tstFile)\n";
        print "do not exist.  Now exiting\n";
        exit
-     }     
-     
+     }
+
      if ( $doRestart == 1 && (! -e $restartUda || ! -e $tstFile ) ){
        print "\n \nERROR:setupFrameWork:\n";
        print "The restart uda: \n     ($restartUda) \n";
@@ -272,20 +272,20 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
      # copy the config files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
-     
+
      if( $doRestart ){
        system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path");
-     } 
+     }
      else {
        system("cp -f $upsFile $testing_path");
      }
-     
+
      system("cp -f  $tstFile $testing_path");
-     
+
      system("cp -f  $gpFile $testing_path");
-     
+
      system("cp -rf $otherFiles $testing_path > /dev/null 2>&1");
-     
+
      system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
 
      chdir($testing_path);
@@ -337,12 +337,12 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
        system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
      }
      else{
-     
+
        print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
        my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
        system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
      }
-     
+
      chdir("..");
    }  # loop over tests
 

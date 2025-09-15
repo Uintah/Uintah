@@ -66,7 +66,9 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr setPath modify_xml_file modify_xml_files modify_batchScript read_file write_file runSusCmd submitBatchScript print_XML_ElementTree );
+use Utilities qw( cleanStr setPath modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript print_XML_ElementTree );
+use analyze;
+use gnuplot   qw(gnuplot_singleTest gnuplot_allTests);
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -77,15 +79,6 @@ my $config_files_path = $ARGV[1];
 # read XML file into a dom tree
 my $tst_dom = XML::LibXML->load_xml(location => $tstFile);
 
-#__________________________________
-# copy gnuplot script   OPTIONAL
-my $gpFile = cleanStr( $tst_dom->findvalue( '/start/gnuplot/script' ) );
-
-if( length $gpFile > 0 ){
-  $gpFile    = $config_files_path."/".$gpFile;
-  system("cp -f $gpFile . > /dev/null 2>&1");
-  print "  gnuplot script used in postProcess ($gpFile)\n";
-}
 
 #__________________________________
 # copy batch script and modify the template  OPTIONAL
@@ -188,10 +181,9 @@ system(" cp $timestep_xml $timestep_xml_mod0" );
 my $statsFile;
 open( $statsFile,">out.stat");
 
-my $nTest = 0;
-foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
+foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
-  my $test_title        = cleanStr( $test_node->findvalue('Title') );
+  my $test_title        = cleanStr( $testNode->findvalue('Title') );
   my $test_input_xml    = $restartUda."/".$test_title."_input.xml";
   my $test_timestep_xml = $restartUda."/checkpoints/".$timestep."/".$test_title."timestep.xml";
   my $test_output       = "out.".$test_title;
@@ -207,7 +199,7 @@ foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
   system("replace_XML_line", "$fn", "$input_xml")==0 ||  die("Error replace_XML_line $fn in file $input_xml \n $@");
   print "\treplace_XML_line $fn $input_xml\n";
 
-  modify_xml_files( \@editFiles, \@editFiles_dom, $test_node );  # passing two references
+  modify_xml_files( \@editFiles, \@editFiles_dom, $testNode );  # passing two references
 
 
   #__________________________________
@@ -229,12 +221,12 @@ foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
 
     my @batch_nodes = $tst_dom->findnodes('/start/batchScheduler/batchReplace');
     modify_batchScript( $test_batch, @batch_nodes );
-    modify_batchScript( $test_batch, $test_node->findnodes('batchReplace') );
+    modify_batchScript( $test_batch, $testNode->findnodes('batchReplace') );
   }
 
   #__________________________________
   # print meta data and run sus command
-  my $sus_cmd_0 = $test_node->findnodes('sus_cmd');
+  my $sus_cmd_0 = $testNode->findnodes('sus_cmd');
 
   $sus_cmd_0 =~ s/-restart//;             # remove any restart spec
   $sus_cmd_0 =~ s/-t [0-9] //;
@@ -268,25 +260,31 @@ foreach my $test_node ($tst_dom->findnodes('/start/Test')) {
   printf $statsFile ("Running Time :  %.3f [secs]\n", $fin);
 
   #__________________________________
-  #  execute post process command   OPTIONAL
+  #  execute post process command(s)
   my $postProc_cmd = undef;
-  $postProc_cmd = $test_node->findvalue('postProcess_cmd');
+  $postProc_cmd = $testNode->findvalue('postProcess_cmd');
 
   if( $rc == 0 && length $postProc_cmd != 0){
-
-    my @cmd = ("analyze_results.pl","$tstFile", "$nTest", "$uda");
-    print $statsFile "postProcessCmd:  "."$postProc_cmd"." -uda ".$uda."\n";
-
-    if ( $exitOnCrash eq "TRUE" ) {
-      system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
-    }else{
-      system("@cmd");
-    }
+    analyze::analyze( $testNode, "$uda", $statsFile, $exitOnCrash );
   }
+
+  #__________________________________
+  #  execute any gnuplot command(s)
+  my $gnuplot_cmd = undef;
+  $gnuplot_cmd = $testNode->findvalue('gnuplot_cmd');
+
+  if( $rc == 0 && length $gnuplot_cmd != 0){
+    gnuplot::gnuplot_singleTest( $testNode, "$uda", $statsFile, $exitOnCrash );
+  }
+
   print $statsFile "---------------------------------------------\n";
-  $nTest++;
 
 }  # all tests loop
 
+#__________________________________
+#   Execute any final gnuplot commands
+gnuplot::gnuplot_singleTest( $tst_dom, $statsFile, $exitOnCrash );
+
 close($statsFile);
+
 

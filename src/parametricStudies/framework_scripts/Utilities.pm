@@ -409,12 +409,12 @@ sub write_file {
 
 sub runPreProcessCmd {
   my ( $upsFile_base, $upsFile_mod, $test_nodes ) = @_;
-  
-  
+
+
   if( ! $test_nodes ){
     return;
   }
-   
+
   print "\n";
 
   foreach my $ppc_node ( $test_nodes->findnodes('preProcess_cmd') ) {
@@ -424,7 +424,7 @@ sub runPreProcessCmd {
     my $upsFile   = "";
 
     my @cmd = split(/ /,$cmd0);
-    
+
     # bulletproofing
     my $test1 = ( ( $add_ups eq "TRUE" )  &&( $whichUps ne "TEST_UPS" ) && ( $whichUps ne "BASE_UPS" ) );
     my $test2 = ( ( $add_ups eq "FALSE" ) &&( $whichUps ne "NONE" ) );
@@ -435,14 +435,14 @@ sub runPreProcessCmd {
       print "\t- If 'add_ups' == false then 'which_ups' must be none.\n";
       print "\t $ppc_node\n";
       print "\tNow exiting\n";
-      exit 
+      exit
     }
     if ( ( ! which($cmd[0]) ) ){
       print "\n\tERROR:runPreProcessCmd:\n";
       print "\tThe command specified could not be found:\n";
       print "\t $ppc_node\n";
       print "\tNow exiting\n";
-      exit 
+      exit
     }
 
     if( $whichUps eq "TEST_UPS" ){
@@ -455,20 +455,20 @@ sub runPreProcessCmd {
     if ( ( ! -e $upsFile ) && ( $whichUps ne "NONE") ){
       die("\nERROR \trunPreProcessCmd Could not find the ups file ($upsFile)\n\n");
     }
-    
+
     my @full_cmd = ( "@cmd", "$upsFile", ">> out.preProcess 2>&1" );
-    
+
     my $outFile;
-    open( $outFile,">>", "out.preProcess");    
+    open( $outFile,">>", "out.preProcess");
     print  $outFile "\n______________________________________________________________________\n";
     print  $outFile "   cmd: (@full_cmd) whichUps: ".$whichUps." Ups: ".$upsFile. "\n";
     print  $outFile "______________________________________________________________________\n";
     close($outFile);
-    
+
     print "\tExecuting preProcessCmd (@full_cmd)\n";
-    
+
     my $rc = system( "@full_cmd" );
-    
+
     if( $rc != 0){
       print "ERROR \trunPreProcessCmd, the command (@full_cmd) failed\n";
       die("ERROR");
@@ -563,4 +563,4 @@ sub submitBatchScript{
   my @cmd = ( "$batchCmd", "$test_batch" );
   system("@cmd")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@cmd)\n");
 };
-1;
+1;    # Required for a Perl Module
