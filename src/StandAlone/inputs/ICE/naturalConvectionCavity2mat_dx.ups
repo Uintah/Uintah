@@ -113,7 +113,7 @@ ______________________________________________________________________-->
               <lower>        [0,0,0]       </lower>
               <upper>        [8.411731e-02, 8.411731e-02, 8.762220e-04]  </upper>
               <extraCells>   [1,1,1]       </extraCells>
-              <patches>      [1,1,1]       </patches>
+              <patches>      [3,3,1]       </patches>
               <resolution>   [96,96,1]   </resolution>
            </Box>
        </Level>
