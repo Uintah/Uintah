@@ -2571,17 +2571,16 @@ void ICE::initializeSubTask_setFlags(const ProcessorGroup *,
     if( ice_matl->isSurroundingMatl() ) {
       d_surroundingMatl_indx = ice_matl->getDWIndex();
     }
+  }
+  //__________________________________
+  // bulletproofing
 
-    //__________________________________
-    // bulletproofing
-
-    if (getGravity().length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
-      throw ProblemSetupException("ERROR ICE::initializeSubTask_setFlags \n"
-            "You must have \n"
-            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-            "specified inside the ICE material that is the background matl\n",
-                                  __FILE__, __LINE__);
-    }
+  if (getGravity().length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
+    throw ProblemSetupException("ERROR ICE::initializeSubTask_setFlags \n"
+          "You must have \n"
+          "       <isSurroundingMatl> true </isSurroundingMatl> \n "
+          "specified inside the ICE material that is the background matl\n",
+                                __FILE__, __LINE__);
   }
 }
 /* _____________________________________________________________________
