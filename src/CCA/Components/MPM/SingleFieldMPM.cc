@@ -558,6 +558,7 @@ void SingleFieldMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->requiresVar(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifiesVar(lb->pExternalForceLabel);
+    t->modifiesVar(lb->pExternalHeatRateLabel);
     sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
   }
 
@@ -703,8 +704,8 @@ void SingleFieldMPM::scheduleApplyExternalLoads(SchedulerP& sched,
     t->requiresVar(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
     t->computesVar(                lb->pLoadCurveIDLabel_preReloc);
   }
-//  t->computesVar(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
   t->computesVar(             lb->pExtForceLabel_preReloc);
+  t->computesVar(             lb->pExternalHeatRateLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -733,6 +734,8 @@ void SingleFieldMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   }
   t->requiresVar(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requiresVar(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
+  t->requiresVar(Task::NewDW, lb->pExternalHeatRateLabel_preReloc,
+                                                          gan,NGP);
   t->requiresVar(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requiresVar(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
   t->requiresVar(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
@@ -1372,6 +1375,7 @@ void SingleFieldMPM::scheduleComputeParticleGradients(SchedulerP& sched,
   t->computesVar(lb->pVelGradLabel_preReloc);
   t->computesVar(lb->pDeformationMeasureLabel_preReloc);
   t->computesVar(lb->pTemperatureGradientLabel_preReloc);
+  t->computesVar(lb->pJThermalLabel);
 
   if(flags->d_reductionVars->volDeformed){
     t->computesVar(lb->TotalVolumeDeformedLabel);
@@ -1553,6 +1557,7 @@ SingleFieldMPM::scheduleRefine( const PatchSet   * patches,
   t->computesVar(lb->pVelGradLabel);
   t->computesVar(lb->pTemperatureGradientLabel);
   t->computesVar(lb->pExternalForceLabel);
+  t->computesVar(lb->pExternalHeatRateLabel);
   t->computesVar(lb->pParticleIDLabel);
   t->computesVar(lb->pDeformationMeasureLabel);
   t->computesVar(lb->pStressLabel);
@@ -1773,9 +1778,12 @@ void SingleFieldMPM::initializePressureBC(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<IntVector> pLoadCurveID;
       ParticleVariable<Vector> pExternalForce;
+      ParticleVariable<double> pExternalHeatRate;
       new_dw->get(px,    lb->pXLabel, pset);
       new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
       new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+      new_dw->getModifiable(pExternalHeatRate, 
+                                            lb->pExternalHeatRateLabel, pset);
 
       int nofPressureBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -1806,6 +1814,7 @@ void SingleFieldMPM::initializePressureBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             pExternalForce[idx] = Vector(0.,0.,0.);
+            pExternalHeatRate[idx] = 0.;
             for(int k=0;k<3;k++){
              if (pLoadCurveID[idx](k) == nofPressureBCs) {
                pExternalForce[idx] += pbc->getForceVector(px[idx],
@@ -2058,6 +2067,7 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<Matrix3> pVelGrad;
       constParticleVariable<Vector>  pTempGrad;
+      constParticleVariable<double> pexternalheatrate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -2075,6 +2085,8 @@ void SingleFieldMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->get(psize,          lb->pCurSizeLabel,       pset);
       old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      new_dw->get(pexternalheatrate, 
+                                  lb->pExternalHeatRateLabel_preReloc, pset);
       constParticleVariable<IntVector> pLoadCurveID;
 
       // Create arrays for the grid data
@@ -3142,9 +3154,12 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector>       pExternalForce_new;
+      ParticleVariable<double>       pExternalHeatRate_new;
       old_dw->get(px,    lb->pXLabel,    pset);
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
+      new_dw->allocateAndPut(pExternalHeatRate_new,
+                             lb->pExternalHeatRateLabel_preReloc,  pset);
 
       // pExternalForce is either:
       //  set using load curves
@@ -3182,6 +3197,7 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
           for(;iter != pset->end(); iter++){
            particleIndex idx = *iter;
            pExternalForce_new[idx] = Vector(0.,0.,0.);
+           pExternalHeatRate_new[idx] = 0.;
            for(int k=0;k<3;k++){
             int loadCurveID = pLoadCurveID[idx](k)-1;
             if (loadCurveID >= 0) {
@@ -3197,6 +3213,7 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
                                        iter != pset->end(); iter++){
             particleIndex idx = *iter;
             pExternalForce_new[idx] = Vector(0.,0.,0.);
+            pExternalHeatRate_new[idx] = 0.;
           }
         }
       } else if(!mms_type.empty()) {
@@ -3210,6 +3227,7 @@ void SingleFieldMPM::applyExternalLoads(const ProcessorGroup* ,
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
           pExternalForce_new[idx] = Vector(0.,0.,0.);
+          pExternalHeatRate_new[idx] = 0.;
         }
       }
     } // matl loop
@@ -3544,7 +3562,7 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
       constParticleVariable<int> pLocalized;
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<Vector> pSurfGrad;
-      ParticleVariable<double> pvolume,pTempNew;
+      ParticleVariable<double> pvolume,pTempNew,pJThermal;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       ParticleVariable<Vector> pTempGrad;
 
@@ -3569,6 +3587,7 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
                                                                           pset);
       new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
+      new_dw->allocateAndPut(pJThermal,  lb->pJThermalLabel,              pset);
 
 //      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
 //      if (flags->d_doExplicitHeatConduction){
@@ -3639,6 +3658,10 @@ void SingleFieldMPM::computeParticleGradients(const ProcessorGroup*,
           Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
           pFNew[idx] = Finc*pFOld[idx];
         }
+
+        // Thermal Expansion
+        double thermalStretch = 1.;// + (pTemperature[idx]-pRef)*thermExpCoeff;
+        pJThermal[idx] = thermalStretch*thermalStretch*thermalStretch;
 
         double J   =pFNew[idx].Determinant();
         double JOld=pFOld[idx].Determinant();

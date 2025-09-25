@@ -156,12 +156,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "UCNH" ){
     return( scinew UCNH( child, flags, false, false ) );
   } 
-  else if (cm_type ==  "cnh_damage") {
-    return( scinew UCNH( child, flags, false, true ) );
-  } 
-  else if (cm_type ==  "cnhp_damage") {
-    return( scinew UCNH( child, flags, true, true ) );
-  } 
   else if (cm_type ==  "comp_neo_hook_plastic") {
     return( scinew UCNH( child, flags, true, false ) );
   }
