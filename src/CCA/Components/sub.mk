@@ -46,11 +46,6 @@ ifeq ($(BUILD_EXAMPLES),yes)
   EXAMPLES :=$(SRCDIR)/Examples
 endif
 
-# FVM
-ifeq ($(BUILD_FVM),yes)
-  FVM :=$(SRCDIR)/FVM
-endif
-
 # Heat
 ifeq ($(BUILD_HEAT),yes)
   HEAT := $(SRCDIR)/Heat
@@ -66,11 +61,6 @@ ifeq ($(BUILD_MPM),yes)
   MPM := $(SRCDIR)/MPM
 endif
 
-
-# MPM-FVM
-ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
-  MPMFVM := $(SRCDIR)/MPMFVM
-endif
 
 # MPM-ICE
 ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
@@ -90,10 +80,8 @@ endif
 SUBDIRS := \
         $(ARCHES)                      \
         $(EXAMPLES)                    \
-        $(FVM)                         \
         $(ICE)                         \
         $(MPM)                         \
-        $(MPMFVM)                      \
         $(MPMICE)                      \
         $(PARENT)                      \
         $(PHASEFIELD)                  \
