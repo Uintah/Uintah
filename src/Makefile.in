@@ -89,11 +89,6 @@ ifeq ($(BUILD_EXAMPLES),yes)
   EXAMPLES_LIB = $(COMPONENTS)/Examples
 endif
 
-# FVM
-ifeq ($(BUILD_FVM),yes)
-  FVM_LIB = $(COMPONENTS)/FVM
-endif
-
 # ICE
 ifeq ($(BUILD_ICE),yes)
   ICE_LIB = $(COMPONENTS)/ICE
@@ -129,11 +124,6 @@ ifeq ($(BUILD_MPM),yes)
 	$(MPM_DIR)/Core
 
 #       $(MPM_DIR)/Crack
-endif
-
-# MPM-FVM
-ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
-  MPMFVM_LIB = $(COMPONENTS)/MPMFVM
 endif
 
 # MPM-ICE
@@ -199,12 +189,10 @@ ALL_PSE_LIBS =                              \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
         $(EXAMPLES_LIB)                     \
-        $(FVM_LIB)                          \
         $(ICE_LIB)                          \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
-        $(MPMFVM_LIB)                       \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
         $(PHASEFIELD_LIB)                   \
@@ -227,14 +215,12 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
-    $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \
     $(ICE_LIB)                          \
     $(ICE_SUB_LIBS)                     \
     $(MPMICE_LIB)                       \
     $(MPMICE_SUB_LIBS)                  \
-    $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
     $(PHASEFIELD_LIB)                   \
                                         \

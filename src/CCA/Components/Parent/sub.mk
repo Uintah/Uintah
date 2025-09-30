@@ -50,11 +50,9 @@ PSELIBS := \
         Core/Util                          \
         $(ARCHES)                          \
         $(EXAMPLES)                        \
-        $(FVM)                             \
         $(HEAT)                            \
         $(ICE)                             \
         $(MPM)                             \
-        $(MPMFVM)                          \
         $(MPMICE)                          \
         $(PHASEFIELD)                      \
         $(WASATCH)                         \

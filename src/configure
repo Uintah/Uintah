@@ -51,7 +51,7 @@
 ##
 enable_option_checking=fatal
 
-#
+
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -853,7 +853,6 @@ DEF_PHASEFIELD
 DEF_MODELS_RADIATION
 DEF_MPM
 DEF_ICE
-DEF_FVM
 DEF_EXAMPLES
 DEF_ARCHES
 BUILD_WASATCH
@@ -861,7 +860,6 @@ BUILD_PHASEFIELD
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
-BUILD_FVM
 BUILD_EXAMPLES
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -926,6 +924,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1012,7 +1011,6 @@ enable_unit_tests
 enable_minimal
 enable_arches
 enable_examples
-enable_fvm
 enable_ice
 enable_mpm
 enable_phasefield
@@ -1076,6 +1074,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1328,6 +1327,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1465,7 +1473,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1618,6 +1626,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1687,7 +1696,6 @@ Optional Features:
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-examples       Turn on the Examples component - and Radiation
                           Model.
---enable-fvm            Turn on the FVM component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
 --enable-phasefield     Turn on the PhaseField component.
@@ -6078,18 +6086,6 @@ fi
 
 
 
-  # Check whether --enable-fvm was given.
-if test "${enable_fvm+set}" = set; then :
-  enableval=$enable_fvm; BUILD_FVM="yes"
-else
-  BUILD_FVM="no"
-   DEF_FVM="#define NO_FVM"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-fvm --disable-fvm"
-
-
-
   # Check whether --enable-ice was given.
 if test "${enable_ice+set}" = set; then :
   enableval=$enable_ice; BUILD_ICE="yes"
@@ -6143,14 +6139,12 @@ if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; enable_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_EXAMPLES="yes"
-   BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_PHASEFIELD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
-   DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_PHASEFIELD=
@@ -6181,7 +6175,6 @@ fi
 # Check for enabling a specific component (one or more)
 if test \( "$enable_arches"     = "yes" -o  \
            "$enable_examples"   = "yes" -o  \
-           "$enable_fvm"        = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
@@ -8275,9 +8268,6 @@ fi
 if test "$USE_ARCHES" != ""; then
    as_fn_error $? "USE_ARCHES is deprecated.  Please use --enable-arches. " "$LINENO" 5
 fi
-if test "$USE_FVM" != ""; then
-   as_fn_error $? "USE_FVM is deprecated.  Please use --enable-fvm. " "$LINENO" 5
-fi
 if test "$USE_ICE" != ""; then
    as_fn_error $? "USE_ICE is deprecated.  Please use --enable-ice. " "$LINENO" 5
 fi
@@ -8301,8 +8291,6 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
 
 
 

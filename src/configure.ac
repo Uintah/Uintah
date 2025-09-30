@@ -744,13 +744,6 @@ SCI_ARG_ENABLE(examples,
   [BUILD_EXAMPLES="no"
    DEF_EXAMPLES=["#define NO_EXAMPLES"]])
 
-SCI_ARG_ENABLE(fvm,
-  AC_HELP_STRING(--enable-fvm,
-                 Turn on the FVM component.),
-  [BUILD_FVM="yes"],
-  [BUILD_FVM="no"
-   DEF_FVM=["#define NO_FVM"]])
-
 SCI_ARG_ENABLE(ice,
   AC_HELP_STRING(--enable-ice,
                  Turn on the Ice component.),
@@ -785,14 +778,12 @@ SCI_ARG_ENABLE(all_components,
   [enable_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_EXAMPLES="yes"
-   BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_PHASEFIELD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
-   DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_PHASEFIELD=
@@ -818,7 +809,6 @@ fi
 # Check for enabling a specific component (one or more)
 if test \( "$enable_arches"     = "yes" -o  \
            "$enable_examples"   = "yes" -o  \
-           "$enable_fvm"        = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
@@ -1365,9 +1355,6 @@ fi
 if test "$USE_ARCHES" != ""; then
    AC_MSG_ERROR( USE_ARCHES is deprecated.  Please use --enable-arches. )
 fi
-if test "$USE_FVM" != ""; then
-   AC_MSG_ERROR( USE_FVM is deprecated.  Please use --enable-fvm. )
-fi
 if test "$USE_ICE" != ""; then
    AC_MSG_ERROR( USE_ICE is deprecated.  Please use --enable-ice. )
 fi
@@ -1395,7 +1382,6 @@ fi
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_EXAMPLES)
-AC_SUBST(BUILD_FVM)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
@@ -1404,7 +1390,6 @@ AC_SUBST(BUILD_WASATCH)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_EXAMPLES)
-AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_MODELS_RADIATION)

@@ -61,12 +61,6 @@
 #include <CCA/Components/Examples/Wave.h>
 #endif
 
-#ifndef NO_FVM
-#include <CCA/Components/FVM/ElectrostaticSolve.h>
-#include <CCA/Components/FVM/GaussSolve.h>
-#include <CCA/Components/FVM/MPNP.h>
-#endif
-
 #ifndef NO_ICE
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
@@ -81,11 +75,6 @@
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
 #include <CCA/Components/MPM/SingleHydroMPM.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_FVM)
-#include <CCA/Components/MPMFVM/ESMPM.h>
-#include <CCA/Components/MPMFVM/ESMPM2.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ICE)
@@ -155,31 +144,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "arches ";
-  }
-#endif
-
-  //----------------------------
-
-#ifndef NO_FVM
-  if (sim_comp == "electrostatic_solver") {
-    return scinew ElectrostaticSolve(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "electrostatic_solver ";
-  }
-
-  if(sim_comp == "gauss_solver") {
-    return scinew GaussSolve(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "gauss_solver ";
-  }
-
-  if(sim_comp == "mpnp") {
-    return scinew MPNP(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "mpnp ";
   }
 #endif
 
@@ -259,24 +223,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "impm ";
-  }
-#endif
-
-  //----------------------------
-
-#if !defined(NO_MPM) && !defined(NO_FVM)
-  if (sim_comp == "esmpm" || sim_comp == "ESMPM") {
-    return scinew ESMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "esmpms ";
-  }
-
-  if (sim_comp == "esmpm2" || sim_comp == "ESMPM2") {
-    return scinew ESMPM2(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "esmpm2 ";
   }
 #endif
 

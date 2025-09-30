@@ -275,7 +275,6 @@ def runOrSkip_BuildBot( change ):
                 'src/parametricStudies',
                 'src/scripts',
                 'src/testprograms',
-                'src/CCA/Components/FVM',
                 'src/CCA/Components/Arches/Attic',
                 'src/CCA/Components/ICE/Docs',
                 'src/CCA/Components/ICE/Matlab',
