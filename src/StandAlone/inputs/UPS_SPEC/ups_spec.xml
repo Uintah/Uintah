@@ -797,7 +797,6 @@
 
     <include href="ice_spec.xml"        section="AMR/ICE" />
     <include href="mpm_spec.xml"        section="AMR/MPM" />
-    <include href="fvm_spec.xml"        section="AMR/FVM" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'Tiled, SingleLevel'" >
@@ -966,7 +965,6 @@
   </LoadBalancer>
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
-  <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/ESMPM" />
 
   <!--__________________________________-->
@@ -974,7 +972,6 @@
                                            attribute1="add OPTIONAL BOOLEAN" >
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
     <include href="ice_spec.xml" section="MaterialProperties"     excludeSectionTag="true"/>
-    <include href="fvm_spec.xml" section="MaterialProperties/FVM" />
 
   </MaterialProperties>
 
