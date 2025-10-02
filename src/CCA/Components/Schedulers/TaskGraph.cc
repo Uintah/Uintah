@@ -176,16 +176,51 @@ TaskGraph::addTask(       std::shared_ptr<Task>   task
 
 #if 0
     //__________________________________
-    // Usefull debugging tool
-    // This snippet will find all the tasks that require a label, simply change the value of "search_name"
-    for (Task::Dependency* m_req = task->getRequires(); m_req != nullptr; m_req = m_req->m_next) {
-      const VarLabel* label = m_req->m_var;
+    //  Useful debugging tool
+    //  This snippet will find all the tasks that require,compute or modify a label. 
+    //  Simply change the value of "search_name"
+    std::string search_name("sp_vol_CC");
+    
+    for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+      const VarLabel* label = req->m_var;
       std::string name = label->getName();
-      std::string search_name("abskg");
+      
       if (name == search_name) {
-        std::cout << "\n" << "Rank-" << std::setw(4) << std::left << Parallel::getMPIRank() << " "
-                  << task->getName() << " requires label " << "\"" << search_name << "\"";
-        task->displayAll_DOUT(g_add_task_dbg);
+        std::ostringstream dbg;
+        dbg << std::left;
+        dbg.width(50);
+        dbg << task->getName() << " requires label " 
+            << "\"" << search_name << "\" "
+            << *matlset;
+        DOUTR( true, dbg.str() );
+      }
+    }
+    for (Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
+      const VarLabel* label = comp->m_var;
+      std::string name = label->getName();
+
+      if (name == search_name) {
+        std::ostringstream dbg;
+        dbg << std::left;
+        dbg.width(50);
+        dbg << task->getName() << " computes label " 
+            << "\"" << search_name << "\" "
+            << *matlset;
+        DOUTR( true, dbg.str());
+      }
+    }
+    for (Task::Dependency* mod = task->getModifies(); mod != nullptr; mod = mod->m_next) {
+      const VarLabel* label = mod->m_var;
+      std::string name = label->getName();
+
+      if (name == search_name) {
+        std::ostringstream dbg;
+        dbg << std::left;
+        dbg.width(50);
+        dbg << task->getName() << " modifies label " 
+            << "\"" << search_name << "\" "
+            << *matlset;
+        DOUTR( true, dbg.str());
       }
     }
 #endif
