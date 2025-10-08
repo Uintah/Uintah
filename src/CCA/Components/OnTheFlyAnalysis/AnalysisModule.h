@@ -93,6 +93,9 @@ namespace Uintah {
                          const std::string & path );
 
 
+    std::string abbreviateName( const std::string& name,
+                                const int maxLen );
+
     void bulletProofing_LinesPlanes( const objectType obj,
                                      const GridP& grid,
                                      const std::string message,

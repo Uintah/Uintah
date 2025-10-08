@@ -35,6 +35,7 @@
 
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <iostream>
@@ -79,7 +80,7 @@ lineExtract::~lineExtract()
 
   // delete each line
   vector<line*>::iterator iter;
-  for( iter  = m_liness.begin();iter != m_liness.end(); iter++){
+  for( iter  = m_lines.begin();iter != m_lines.end(); iter++){
     delete *iter;
   }
 }
@@ -200,7 +201,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
-    varProperty v={label, label->getName(), matl, td, baseType, subType};
+    varProperty v={label, name, matl, td, baseType, subType};
     m_varProperties.push_back( v );
   }  // analyze
 
@@ -270,7 +271,7 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
     l->endPt    = end;
     l->loopDir  = loopDir;
     l->stepSize = stepSize;
-    m_liness.push_back(l);
+    m_lines.push_back(l);
   }
 }
 
@@ -591,23 +592,23 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
       //__________________________________
       // loop over each line
-      for (unsigned int l =0 ; l < m_liness.size(); l++) {
+      for (unsigned int l =0 ; l < m_lines.size(); l++) {
 
         // create the directory structure
         const string udaDir    = m_output->getOutputLocation();
         const string levelIndx = to_string( level->getIndex() );
-        const string path      = m_liness[l]->name + "/L-" + levelIndx;
+        const string path      = m_lines[l]->name + "/L-" + levelIndx;
 
         createDirectory( 0777, udaDir, path );
 
         // find the physical domain and index range
         // associated with this patch
-        Point start_pt = m_liness[l]->startPt;
-        Point end_pt   = m_liness[l]->endPt;
+        Point start_pt = m_lines[l]->startPt;
+        Point end_pt   = m_lines[l]->endPt;
 
-        double stepSize( m_liness[l]->stepSize);
+        double stepSize( m_lines[l]->stepSize);
         Vector dx    = patch->dCell();
-        double dxDir = dx[m_liness[l]->loopDir];
+        double dxDir = dx[m_lines[l]->loopDir];
         double tmp   = stepSize/dxDir;
 
         int step = RoundUp(tmp);
@@ -628,7 +629,7 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
         // enlarge the index space by 1 except in the main looping direction
         IntVector one(1,1,1);
-        one[m_liness[l]->loopDir] = 0;
+        one[m_lines[l]->loopDir] = 0;
         end_idx+= one;
 
         // Offset the position reported.  Only if all the
@@ -860,11 +861,15 @@ lineExtract::printHeader( FILE*& fp,
       ( vp.subType == TypeDescription::double_type ||
         vp.subType  == TypeDescription::int_type ) ){
 
-      ostringstream colDesc;
-      colDesc  <<  std::left << vp.name << "_"<< vp.matl << setw(m_col_width) << " ";
+      string colDesc = abbreviateName( vp.name, m_col_width-3 );
 
-      string tmp = colDesc.str().substr(0,m_col_width);  // crop the description
-      const char* cstr = tmp.c_str();
+      colDesc += "_" + to_string(vp.matl) ;
+
+      //    add padding
+      int nChars = m_col_width - colDesc.length();
+      colDesc.append( nChars, ' ');
+
+      const char* cstr = colDesc.c_str();
       fprintf( fp, "%s", cstr );
     }
   }
@@ -876,22 +881,21 @@ lineExtract::printHeader( FILE*& fp,
     if( vp.baseType == myType  &&
         vp.subType  == TypeDescription::Vector ){
 
-      ostringstream colDescX;
-      ostringstream colDescY;
-      ostringstream colDescZ;
-      colDescX << std::left << vp.name << "_"<< vp.matl << ".x" << setw(m_col_width) << " ";
-      colDescY << std::left << vp.name << "_"<< vp.matl << ".y" << setw(m_col_width) << " ";
-      colDescZ << std::left << vp.name << "_"<< vp.matl << ".z" << setw(m_col_width) << " ";
+      string matl = to_string(vp.matl);
+      string colDesc   = abbreviateName( vp.name, m_col_width-4 );
+      string colDescX  = colDesc + "_" + matl + ".x";
+      string colDescY  = colDesc + "_" + matl + ".y";
+      string colDescZ  = colDesc + "_" + matl + ".z";
 
-       // crop the descriptions
-      string tmpX = colDescX.str().substr(0,m_col_width);
-      string tmpY = colDescY.str().substr(0,m_col_width);
-      string tmpZ = colDescZ.str().substr(0,m_col_width);
+      //    add white space padding
+      int nChars = m_col_width - colDescX.length();
+      colDescX.append( nChars, ' ');
+      colDescY.append( nChars, ' ');
+      colDescZ.append( nChars, ' ');
 
-      const char* cstrX = tmpX.c_str();
-      const char* cstrY = tmpY.c_str();
-      const char* cstrZ = tmpZ.c_str();
-      fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
+      fprintf( fp, "%s %s %s", colDescX.c_str(),
+                               colDescY.c_str(),
+                               colDescZ.c_str() );
     }
   }
 
@@ -903,24 +907,26 @@ lineExtract::printHeader( FILE*& fp,
     if( vp.baseType == myType  &&
         vp.subType  == TypeDescription::Matrix3 ){
 
-      int colWidth = m_col_width + 4;
+      string matl = to_string(vp.matl);
+
       for (int row = 0; row<3; row++){
-        ostringstream colDesc0;
-        ostringstream colDesc1;
-        ostringstream colDesc2;
-        colDesc0 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",0)" << setw(colWidth) << " ";
-        colDesc1 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",1)" << setw(colWidth) << " ";
-        colDesc2 << std::left << vp.name << "_"<< vp.matl << "("<<row<<",2)" << setw(colWidth) << " ";
+        string colDesc   = abbreviateName( vp.name, m_col_width-7 );
+        string r = to_string(row);
 
-         // crop the descriptions
-        string tmpX = colDesc0.str().substr(0,colWidth);
-        string tmpY = colDesc1.str().substr(0,colWidth);
-        string tmpZ = colDesc2.str().substr(0,colWidth);
+        string colDesc0  = colDesc + "_" + matl + "(" + r + ",0)";
+        string colDesc1  = colDesc + "_" + matl + "(" + r + ",1)";
+        string colDesc2  = colDesc + "_" + matl + "(" + r + ",2)";
 
-        const char* cstrX = tmpX.c_str();
-        const char* cstrY = tmpY.c_str();
-        const char* cstrZ = tmpZ.c_str();
-        fprintf( fp, "%s %s %s", cstrX, cstrY, cstrZ );
+        //    add white space padding
+        int nChars = m_col_width - colDesc0.length();
+        colDesc0.append( nChars, ' ' );
+        colDesc1.append( nChars, ' ' );
+        colDesc2.append( nChars, ' ' );
+
+
+        fprintf( fp, "%s %s %s", colDesc0.c_str(),
+                                 colDesc1.c_str(),
+                                 colDesc2.c_str() );
       }
     }
   }

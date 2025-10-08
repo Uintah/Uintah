@@ -27,12 +27,14 @@
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sstream>
 
 using namespace Uintah;
 using std::cout;
 using std::ostringstream;
+using std::string;
 //______________________________________________________________________
 //
 AnalysisModule::AnalysisModule( const ProcessorGroup* myworld,
@@ -86,7 +88,8 @@ AnalysisModule::~AnalysisModule()
 
 //______________________________________________________________________
 //
-void AnalysisModule::setComponents( ApplicationInterface *comp )
+void
+AnalysisModule::setComponents( ApplicationInterface *comp )
 {
   ApplicationInterface * parent = dynamic_cast<ApplicationInterface*>( comp );
 
@@ -98,7 +101,8 @@ void AnalysisModule::setComponents( ApplicationInterface *comp )
 }
 //______________________________________________________________________
 //
-void AnalysisModule::getComponents()
+void
+AnalysisModule::getComponents()
 {
   m_application = dynamic_cast<ApplicationInterface*>( getPort("application") );
 
@@ -120,7 +124,8 @@ void AnalysisModule::getComponents()
 }
 //______________________________________________________________________
 //
-void AnalysisModule::releaseComponents()
+void
+AnalysisModule::releaseComponents()
 {
   releasePort( "application" );
   releasePort( "scheduler" );
@@ -133,7 +138,8 @@ void AnalysisModule::releaseComponents()
 
 //______________________________________________________________________
 //
-void AnalysisModule::sched_TimeVars( Task* t,
+void
+AnalysisModule::sched_TimeVars( Task* t,
                                      const LevelP   & level,
                                      const VarLabel * prev_AnlysTimeLabel,
                                      const bool addComputes )
@@ -150,7 +156,8 @@ void AnalysisModule::sched_TimeVars( Task* t,
 
 //______________________________________________________________________
 //
-bool AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
+bool
+AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
                                   const Level    * level,
                                   const VarLabel * prev_AnlysTimeLabel,
                                   timeVars       & tv)
@@ -188,7 +195,8 @@ bool AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
 }
 //______________________________________________________________________
 //
-void AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
+void
+AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
                                   const VarLabel * prev_AnlysTimeLabel,
                                   timeVars tv)
 {
@@ -197,12 +205,59 @@ void AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
 
 //______________________________________________________________________
 //
-bool AnalysisModule::isItTime( DataWarehouse * old_dw,
+bool
+AnalysisModule::isItTime( DataWarehouse * old_dw,
                               const Level    * level,
                               const VarLabel * prev_AnlysTimeLabel)
 {
   timeVars tv;
   return getTimeVars( old_dw, level, prev_AnlysTimeLabel, tv);
+}
+
+
+//______________________________________________________________________
+//      Abbreviates "name" if it's too long.
+//      - First convert "snake case" to camel case
+//      - if camelCase is too long then cut out the center of the name
+//        avoiding uppercase chars. 
+std::string
+AnalysisModule::abbreviateName( const std::string& name,
+                                const int maxLen )
+{
+
+  int len  = name.length();
+  string abbName = name;
+
+  //__________________________________
+  //  if variable is snake case convert it to camel case:
+  if( len >= maxLen ){
+    abbName = snakeToCamel( name );
+  }
+
+  len = abbName.length();
+
+  //__________________________________
+  //  Cut the middle of the name out
+  //  Don't cut out uppercase chars
+  if( len >= maxLen ){
+    int cutChars = len - maxLen;
+    int midChar  = len/2;
+    int start    = midChar - (cutChars/2);
+
+    const char* cstr = abbName.c_str();
+
+    //    if the char to start cutting is uppercase shift by 1
+    if ( isupper(cstr[start-1]) ){
+      start-=1;
+    }
+    //    if the char to stop cutting is uppercase shift by 1
+    if ( isupper(cstr[ start+cutChars-1]) ){
+      start-=1;
+    }
+    abbName.erase( start, cutChars);
+  }
+
+  return abbName;
 }
 
 

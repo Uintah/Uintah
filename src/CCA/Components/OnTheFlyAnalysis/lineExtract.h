@@ -140,7 +140,7 @@ namespace Uintah {
 
     //__________________________________
     // global constants
-    std::vector<line*>     m_liness;
+    std::vector<line*>     m_lines;
     int                    m_col_width = 16;    //  column width
     TypeDescription::Type  m_allVarsBaseType {TypeDescription::Other};
 
