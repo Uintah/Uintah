@@ -49,25 +49,31 @@ namespace Uintah {
 using std::string;
 using std::vector;
 
+//______________________________________________________________________
+//
 bool
 string_to_int(const std::string &str, int &result)
 {
   return sscanf(str.c_str(), "%d", &result) == 1;
 }
 
+//______________________________________________________________________
+//
 bool
 string_to_double(const std::string &str, double &result)
 {
   return sscanf(str.c_str(), "%lf", &result) == 1;
 }
 
+//______________________________________________________________________
+//
 bool
 string_to_unsigned_long(const std::string &str, unsigned long &result)
 {
   return sscanf(str.c_str(), "%lu", &result) == 1;
 }
 
-//__________________________________
+//______________________________________________________________________
 //
 IntVector
 string_to_IntVector(const string &input, 
@@ -88,7 +94,7 @@ string_to_IntVector(const string &input,
   return result;
 }
 
-//__________________________________
+//______________________________________________________________________
 //  
 Vector
 string_to_Vector(const string &input, 
@@ -109,7 +115,7 @@ string_to_Vector(const string &input,
   return result;
 }
 
-//__________________________________
+//______________________________________________________________________
 //  
 Point
 string_to_Point(const string &input, 
@@ -120,7 +126,7 @@ string_to_Point(const string &input,
 }
 
 
-//__________________________________
+//______________________________________________________________________
 //
 std::string
 to_string(int val)
@@ -130,6 +136,8 @@ to_string(int val)
   return std::string(s);
 }
 
+//______________________________________________________________________
+//
 std::string
 to_string(unsigned int val)
 {
@@ -138,6 +146,8 @@ to_string(unsigned int val)
   return std::string(s);
 }
 
+//______________________________________________________________________
+//
 std::string
 to_string(unsigned long val)
 {
@@ -146,6 +156,8 @@ to_string(unsigned long val)
   return std::string(s);
 }
 
+//______________________________________________________________________
+//
 std::string
 to_string(double val)
 {
@@ -154,19 +166,24 @@ to_string(double val)
   return std::string(s);
 }
 
+//______________________________________________________________________
+//
 std::string
 basename(const std::string &path)
 {
   return path.substr(path.rfind('/')+1);
 }
 
+//______________________________________________________________________
+//
 std::string
 pathname(const std::string &path)
 {
   return path.substr(0, path.rfind('/')+1);
 }
 
-
+//______________________________________________________________________
+//
 char *
 ccast_unsafe(const std::string &str)
 {
@@ -175,6 +192,8 @@ ccast_unsafe(const std::string &str)
   return result;
 }
 
+//______________________________________________________________________
+//
 static
 bool
 is_separator( char ch, std::vector<char> separators )
@@ -187,6 +206,8 @@ is_separator( char ch, std::vector<char> separators )
   return false;
 }
 
+//______________________________________________________________________
+//
 std::string
 concatStrings( const std::vector<std::string> strings )
 {
@@ -200,6 +221,8 @@ concatStrings( const std::vector<std::string> strings )
   return result;
 }
 
+//______________________________________________________________________
+//
 std::vector<std::string>
 split_string(const std::string& str, const std::vector<char> & separators)
 {
@@ -231,8 +254,9 @@ split_string(const std::string& str, const std::vector<char> & separators)
 }
 
 
-/////////
-// C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
+//______________________________________________________________________
+//
+//    C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
 std::string
 string_Cify(const std::string &str)
 {
@@ -273,7 +297,8 @@ string_Cify(const std::string &str)
   return result;
 }
 
-// Remove leading and trailing white space (blanks, tabs, \n, \r) from string.
+//______________________________________________________________________
+//    Remove leading and trailing white space (blanks, tabs, \n, \r) from string.
 void
 collapse( std::string & str )
 {
@@ -305,7 +330,8 @@ collapse( std::string & str )
 }
 
 
-// replaces all occurances of 'substr' in 'str' with 'replacement'
+//______________________________________________________________________
+//    replaces all occurances of 'substr' in 'str' with 'replacement'
 void
 replace_substring( std::string & str,
                    const std::string & substr,
@@ -321,14 +347,16 @@ replace_substring( std::string & str,
   } while (pos != std::string::npos);
 }
 
-
+//______________________________________________________________________
+//
 bool
 ends_with(const std::string &str, const std::string &substr)
 {
   return str.rfind(substr) == str.size()-substr.size();
 }  
 
-
+//______________________________________________________________________
+//
 std::string
 string_toupper( const std::string & str )
 {
@@ -339,6 +367,8 @@ string_toupper( const std::string & str )
   return temp;
 }
 
+//______________________________________________________________________
+//
 std::string
 string_tolower( const std::string & str )
 {
@@ -349,6 +379,8 @@ string_tolower( const std::string & str )
   return temp;
 }
 
+//______________________________________________________________________
+//
 unsigned int
 count_substrs( const std::string & str, const std::string & substr )
 {
@@ -360,6 +392,33 @@ count_substrs( const std::string & str, const std::string & substr )
     num++;
   }
   return num;
+}
+
+//______________________________________________________________________
+//    Converts snake case to camel case strings
+//    This searches the input string for '_'.  If found it deletes
+//    the char and capitalizes the next char in the sting.
+//    For example "mom_Source_CC" -> "momSourceCC"
+std::string 
+snakeToCamel( const std::string& snake_str ) {
+  std::string camelStr = "";
+  bool capitalize_next = false;
+
+  for (char ch : snake_str) {
+    if (ch == '_') {
+        capitalize_next = true;
+    } 
+    else {
+      if (capitalize_next) {
+        camelStr += static_cast<char>(std::toupper(ch));
+        capitalize_next = false;
+      } 
+      else {
+        camelStr += static_cast<char>(ch);
+      }
+    }
+  }
+  return camelStr;
 }
 
 } // End namespace Uintah

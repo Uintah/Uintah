@@ -111,6 +111,9 @@ bool ends_with( const std::string & str,
 // Returns the number of 'substr' in 'str'.  (ie: if str is 'aaaa' and substr is 'aaa', then 2 is returned.)
 unsigned int count_substrs( const std::string & str, 
                             const std::string & substr );
+ 
+// converts snake case to camel case string                            
+std::string snakeToCamel( const std::string& snake_str );
 
 } // End namespace Uintah
 
