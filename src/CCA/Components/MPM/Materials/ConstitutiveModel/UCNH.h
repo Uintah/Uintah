@@ -111,11 +111,6 @@ namespace Uintah {
     bool d_useModifiedEOS;
     int d_8or27;
 
-    // MohrColoumb options
-    double d_friction_angle;  // Assumed to come in degrees
-    double d_tensile_cutoff;  // Fraction of the cohesion at which
-                              // tensile failure occurs
-
     //__________________________________
     //  Plasticity
     bool d_usePlasticity;

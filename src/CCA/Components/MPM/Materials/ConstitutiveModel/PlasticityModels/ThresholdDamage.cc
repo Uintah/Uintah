@@ -55,11 +55,11 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
 
   if(d_failure_criteria!="MaximumPrincipalStress" &&
      d_failure_criteria!="MaximumPrincipalStrain" &&
-     d_failure_criteria!="MohrColoumb"){
-     throw ProblemSetupException("<failure_criteria> must be either MaximumPrincipalStress, MaximumPrincipalStrain or MohrColoumb", __FILE__, __LINE__);
+     d_failure_criteria!="MohrCoulomb"){
+     throw ProblemSetupException("<failure_criteria> must be either MaximumPrincipalStress, MaximumPrincipalStrain or MohrCoulomb", __FILE__, __LINE__);
   }
 
-  if( d_failure_criteria == "MohrColoumb" ){
+  if( d_failure_criteria == "MohrCoulomb" ){
     // The cohesion value that MC needs is the "mean" value in the
     // FailureStressOrStrainData struct
     ps->require("friction_angle", d_friction_angle);
@@ -131,7 +131,7 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
   dam_ps->appendElement("LocalizeParticles",d_epsf.localizeOrNot);
 
-  if(d_failure_criteria=="MohrColoumb"){
+  if(d_failure_criteria=="MohrCoulomb"){
     dam_ps->appendElement("friction_angle", d_friction_angle);
     dam_ps->appendElement("tensile_cutoff_fraction_of_cohesion",
                                            d_tensile_cutoff);
@@ -381,7 +381,7 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
                  << " eps_f = " << pFailureStrain[idx] << endl;
           }
         }
-        else if( d_failure_criteria=="MohrColoumb" ){
+        else if( d_failure_criteria=="MohrCoulomb" ){
           double maxEigen=0., medEigen=0., minEigen=0.;
           pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
   
@@ -406,7 +406,7 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
             cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
                  << epsMax << " cohesion = " << cohesion << endl;
           }
-        } // Mohr-Coloumb
+        } // Mohr-Coulomb
       } // pLocalized==0
     }  // pset loop
   } // Do Localization

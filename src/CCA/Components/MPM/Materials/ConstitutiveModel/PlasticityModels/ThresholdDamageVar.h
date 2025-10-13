@@ -67,9 +67,9 @@ namespace Uintah {
 
     FailureStressOrStrainData d_epsf;
     std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
-                                    /* "MaximumPrincipalStress", "MohrColoumb"*/
+                                    /* "MaximumPrincipalStress", "MohrCoulomb"*/
 
-    // MohrColoumb options
+    // MohrCoulomb options
     double d_friction_angle;           // Assumed to come in degrees
     double d_tensile_cutoff;           // Fraction of the cohesion at which
                                        // tensile failure occurs
