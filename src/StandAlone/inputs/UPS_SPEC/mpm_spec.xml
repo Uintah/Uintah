@@ -224,9 +224,10 @@
           <failure_seed          spec="OPTIONAL DOUBLE"               need_applies_to="type Threshold"/>
           <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
                                                                       need_applies_to="type Threshold"/>
-          <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
+          <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrCoulomb'" 
                                                                       need_applies_to="type Threshold"/> 
           <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+          <exponent               spec="OPTIONAL DOUBLE" />
           <LocalizeParticles    spec="OPTIONAL BOOLEAN"               need_applies_to="type Threshold"/>
           <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
                                                                       need_applies_to="type Threshold"/> 
@@ -248,6 +249,7 @@
           <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
           <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
           <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+          <brittle_damage_initial_std                 spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
 
           <D1                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
           <D2                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
