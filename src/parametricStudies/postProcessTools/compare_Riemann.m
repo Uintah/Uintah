@@ -1,24 +1,32 @@
 #! /usr/bin/octave -qf
 %_____________________________________________________________
 % Function: compare_Riemann
+%   This function depends on the executable "exactRiemann" which is part of
+%   Numerica.  You need to compile it before you can run this script.
+%
+%    cd src/parametricStudies/postProcessTools/Numerica
+%    ./compile
+%
+%______________________________________________________________________
+
+
 clear all;
 close all;
 format short e;
 function Usage
-  printf('compare_Riemann.m <options>\n')                                                                    
-  printf('options:\n')                                                                                       
-  printf('  -uda  <udaFileName> - name of the uda file \n') 
-  printf('  -test <1,2,3>       - name of the test youd like to run \n')                                                 
-  printf('  -pDir <1,2,3>       - principal direction \n')                                                   
-  printf('  -var  <press_CC, vel_CC, rho_CC, temp_CC> \n')                                                   
-  printf('  -mat                - material index \n')                                                        
-  printf('  -plot <true, false> - produce a plot \n')                                                        
-  printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
-  printf('  -o <fname>          - Dump the output (L2Error) to a file\n')                                    
-end 
+  printf('compare_Riemann.m <options>\n')
+  printf('options:\n')
+  printf('  -uda  <udaFileName> - name of the uda file \n')
+  printf('  -test <1,2,3>       - name of the test to run \n')
+  printf('  -pDir <1,2,3>       - principal direction \n')
+  printf('  -mat                - material index \n')
+  printf('  -plot <true, false> - produce a plot \n')
+  printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n')
+  printf('  -o <fname>          - Dump the output (L2Error) to a file\n')
+end
 
-%________________________________            
-% Parse User inputs  
+%________________________________
+%   Parse User inputs
 %echo
 nargin = length(argv);
 if (nargin == 0)
@@ -27,21 +35,21 @@ if (nargin == 0)
 endif
 
 %__________________________________
-% update paths
+%   update paths
 myPath   = readlink( mfilename ("fullpathext") );
+scriptPath = fileparts(myPath);
 uintah   = textread( 'scriptPath', '%s','endofline', '\n' );
-path     = sprintf( '%s:%s/functions', uintah{:}, fileparts(myPath) );
+path     = sprintf( '%s:%s/functions:%s/Numerica', uintah{:}, scriptPath, scriptPath );
 addpath( path )
 
-% path used by octave:unix command
-unixPath = sprintf( '%s:%s', EXEC_PATH(),  uintah{:} );
+%   path used by octave:unix command
+unixPath = sprintf( '%s:%s', EXEC_PATH(), path );
 EXEC_PATH ( unixPath )
 
 %__________________________________
-% default user inputs
-symbol   = {'b:+;computed;','*r','xg'}; 
+%   default user inputs
+symbol   = {'b:+;computed;','*r','xg'};
 pDir        = 999;
-variable    = 'press_CC';
 mat         = 0;
 makePlot    = true;
 ts          = 999;
@@ -52,9 +60,9 @@ for i = 1:2:nargin
    option    = sprintf("%s",arg_list{i} );
    opt_value = sprintf("%s",arg_list{++i});
 
-  if ( strcmp(option,"-uda") )   
+  if ( strcmp(option,"-uda") )
     uda = opt_value;
-  elseif (strcmp(option,"-pDir") ) 
+  elseif (strcmp(option,"-pDir") )
     pDir = str2num(opt_value);
   elseif (strcmp(option,"-var") )
     variable = opt_value;
@@ -63,12 +71,12 @@ for i = 1:2:nargin
   elseif (strcmp(option,"-plot") )
     makePlot = opt_value;
   elseif (strcmp(option,"-test") )
-    testNumber = str2num(opt_value);    
+    testNumber = str2num(opt_value);
   elseif (strcmp(option,"-ts") )
-    ts = str2num(opt_value);                  
-  elseif (strcmp(option,"-o") )  
-    output_file = opt_value;    
-  end                                      
+    ts = str2num(opt_value);
+  elseif (strcmp(option,"-o") )
+    output_file = opt_value;
+  end
 end
 
 %______________________________
@@ -78,9 +86,16 @@ L = 1;
 
 %________________________________
 % does code for computing exact solution exist
-[s, r]=unix('which exactRiemann > /dev/null 2>&1');
-if( s ~=1)
-  disp('Cannot find the executable exactRiemann');
+[s, r]=unix('which exactRiemann');
+
+if( s == 1 )
+  printf("__________________________________ERROR\n")
+  printf(" Cannot find the executable exactRiemann\n \
+           To compile the code:\n \
+           cd %s/Numerica\n \
+           ./compile\n \
+  Now exiting.\n", scriptPath);
+  printf("__________________________________\n")
   quit(-1);
 end
 
@@ -100,25 +115,37 @@ time = sprintf('%d sec', t);
 % The column format is
 %  X    Rho_CC    vel_CC    Press_CC    Temp_CC
 if( testNumber == 1 )
-  inputFile = sprintf("test1.in");
+  inputFile = sprintf( "test1.in" );
 elseif( testNumber == 2 )
-  inputFile = sprintf("test2.in");
+  inputFile = sprintf( "test2.in" );
 elseif( testNumber == 3 )
-  inputFile = sprintf("test3.in");
+  inputFile = sprintf( "test3.in" );
 elseif( testNumber == 4 )
-  inputFile = sprintf("test4.in");
+  inputFile = sprintf( "test4.in" );
 elseif( testNumber == 5 )
-  inputFile = sprintf("test5.in");
+  inputFile = sprintf( "test5.in" );
 endif
 
-c = sprintf('exactRiemann %s %s %i %g', inputFile, 'exactSol', resolution(pDir), t)
+cmd = sprintf('exactRiemann %s %s %i %g', inputFile, 'exactSol', resolution(pDir), t);
 
-[s, r] = unix(c);
-exactSol = load('exactSol');
-x_ex     = exactSol(:,1);
+printf( "       Now computing the exact solution (%s)\n", cmd)
+[s, r]  = unix(cmd);
+
+if( s != 0 )
+  printf("__________________________________ERROR\n")
+  printf(" There was a problem computing the exact solution executable exactRiemann\n \
+           %s\n \
+  Now exiting.\n", cmd);
+  printf("__________________________________\n")
+  quit(-1);
+end
+
+
+exactSol  = load('exactSol');
+x_ex      = exactSol(:,1);
 
 %______________________________
-% Load the simulation solution into simSol
+%   Load the simulation solution into simSol
 
 if(pDir == 1)
   startEnd = sprintf('-istart 0 0 0 -iend %i 0 0',resolution(pDir)-1);
@@ -128,76 +155,83 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart 0 0 0 -iend 0 0 %i',resolution(pDir)-1);
 end
 
-variables = { 'rho_CC' 'vel_CC' 'press_CC' 'temp_CC'};
+variables = {"rho_CC"; "vel_CC"; "press_CC"; "temp_CC"};  % don't change the order of these unless you also alter
+                                                          % Numerica/e1rpexModified.g
 
 nrows = resolution(pDir);
 ncols = length(variables);
-susSol = zeros(nrows,ncols);
+susSolution = zeros(nrows,ncols);
 x      = zeros(nrows);
 
 %__________________________________
-% loop over all the variables and load them into susSol
+%   loop over all the variables and load them into susSolution
+printf( "       Now extracting the variables from the uda %s", uda)
+
 for v=1:length(variables)
-  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s > /dev/null 2>&1',variables(v),level,ts-1,startEnd,mat,uda);
+
+  var = variables{v};
+
+  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s > /dev/null 2>&1',var,level,ts-1,startEnd,mat,uda);
   [s1, r1] = unix(c1);
-  
-  if ( strcmp(variables(v),'vel_CC'))         % for vel_CC
+
+  if ( strcmp(var,'vel_CC') )         % for vel_CC
+
     % rip out [] from velocity data
     c2 = sprintf('cat sim.dat | tr -d "[]" > sim.dat2; mv sim.dat2 sim.dat');
     [r2, r2]=unix(c2);
-    
-    var = load('sim.dat');
-    susSol(:,v) = var(:,3 + pDir);
-    
+
+    vel = load('sim.dat');
+    susSolution(:,v) = vel(:,3 + pDir);
+
   else                                        % all other variables
- 
+
     var = load('sim.dat');
-    susSol(:,v) = var(:,4); 
+    susSolution(:,v) = var(:,4);
   endif
-  
+
   x = var(:,pDir);
 end
 
-susSol;
+susSolution;
 
-%cleanup tmp files
+%   cleanup tmp files
 unix('/bin/rm -f sim.dat');
 
-% bulletproofing
+%   bulletproofing
 test = sum (x - x_ex);
 if(test > 1e-10)
   display('ERROR: compute_L2_norm: The results cannot be compared')
 end
 
 %__________________________________
-% compute the difference/L-norm for each of the variables
+%   compute the difference/L-norm for each of the variables
 d = zeros(nrows,ncols);
 
 if(0)             %  skip sections of the domain.
   for v=1:length(variables)
 
-    for c=1:length(x)                                                      
-      d(c,v) = 0.0;                                                        
+    for c=1:length(x)
+      d(c,v) = 0.0;
 
-      if( x(c) < 0.7 || x(c) > 0.75)          %define the regions to skip  
-        d(c,v) = ( susSol(c,v) .- exactSol(c,v+1) );                        
-      end                                                                  
-    end                                                                    
-    
+      if( x(c) < 0.7 || x(c) > 0.75)          %define the regions to skip
+        d(c,v) = ( susSolution(c,v) .- exactSol(c,v+1) );
+      end
+    end
+
     L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
   end
-        
+
 else              % include all of the cells in the calculation
 
   for v=1:length(variables)
-    d(:,v) = ( susSol(:,v) .- exactSol(:,v+1) );
+    d(:,v) = ( susSolution(:,v) .- exactSol(:,v+1) );
     L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
   end
 end
 
 
 %__________________________________
-% write L_norm to a file
+%   write L_norm to a file
 nargv = length(output_file);
 if (nargv > 0)
   fid = fopen(output_file, 'w');
@@ -208,61 +242,31 @@ if (nargv > 0)
   fclose(fid);
 end
 
+
 %__________________________________
-%write simulation data to a file
+%   write simulation data to a file
+susResults = sprintf('sim_%g.dat',resolution(pDir));
 if (nargv > 0)
-  fn = sprintf('sim_%g.dat',resolution(pDir));
-  fid = fopen(fn, 'w');
-  
+  fid = fopen(susResults, 'w');
+
   for c=1:length(x)
     fprintf(fid,'%g, ',x(c))
     for v=1:length(variables)
-      fprintf(fid,'%g, ',susSol(c,v));
+      fprintf(fid,'%g, ',susSolution(c,v));
     end
     fprintf(fid, '\n')
   end
-  
+
   fclose(fid);
 end
 
-
-% write the data to a file
 %______________________________
+%   Plot the results.  Use gnuplot since octave plotting routines are difficult
 if(makePlot)
-  for v=1:length(variables)
-    subplot(2,1,1), plot(x,susSol(:,v),symbol{L}, x_ex, exactSol(:,v+1),'r:;exact;');
-    xlabel('x')
 
-    tmp = sprintf('%s',variables(v));    
-    ylabel(tmp)
-    
-    tmp = sprintf('Toro Test (%s) L1 norm: %f, time: %f', inputFile, L_norm(v),t);
-    title(tmp);
-    grid on;
+  Title = sprintf( "\"Riemann Problem: %i, resolution: %i, pDir: %i \"",testNumber, resolution(pDir), pDir );
+  cmd = sprintf( " gnuplot -c %s %s %s %i %s", "plotResults.gp", susResults, "exactSol", resolution(pDir), Title );
+  printf( "       Now plotting the exact solution vs ICE's solution (%s)\n", cmd)
+  unix (cmd);
 
-    subplot(2,1,2),plot(x,d(:,v), 'b:+');
-    ylabel('Difference'); 
-    xlabel('x');
-    grid on;
-    fname = sprintf('%s_%i.eps',variables(v),resolution(pDir));
-    print ( fname, '-deps');
-   % pause
-  end
-  
-  
-  if(0)
-    %______________________________
-    % gradient of variable
-    dx = abs(x(1) - x(2));
-    gradVar   = gradient(susSol, dx);
-    gradExact = gradient(exactSol,dx);
-    figure(2)
-    plot(x,gradVar,'b:;sus;',x,gradExact,'r:;exact;')
-
-    xlabel('x')
-    label = sprintf( 'Grad %s',variable);
-    ylabel(label);
-    grid on;
-    pause
-  endif
 endif

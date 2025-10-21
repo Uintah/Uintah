@@ -32,11 +32,12 @@ function [TG] = getTimeGridInfo (uda, ts, level)
   endif
 
   TG.ts = int8(ts);
-  TG.physicalTime = physicalTime(ts+1);  % octave is 1 based arrays
+  TG.physicalTime = physicalTime(ts);  % octave is 1 based arrays
 
   %________________________________
   %  extract the grid information on a level
-  c = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i > tmp 2>&1',uda, ts, ts);
+  %  puda uses 0 based arrays thus subtract 1.
+  c = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i > tmp 2>&1',uda, ts-1, ts-1);
   [s,r] = unix(c);
   
   c1 = sprintf('sed -n /"Level: index %i"/,/"dx"/{p} tmp > tmp.clean 2>&1',level);
