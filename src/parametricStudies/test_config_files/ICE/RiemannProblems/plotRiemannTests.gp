@@ -7,7 +7,8 @@ set grid xtics ytics
 #title
 #xlabel
 #ylabel
-set output "orderAccuracy.ps"
+fileName = "orderAccuracy.ps"
+set output fileName
 
 # generate the curvefit
 f1(x) = a1*x**b1                # define the function to be fit
@@ -44,3 +45,8 @@ plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
       f3(x) with l ls 1 title "",\
       'L2norm.dat' using 1:5 t 'Temperature' with linespoints,\
       f4(x) with l ls 1 title ""
+
+
+# generate a pdf from the ps file.
+cmd = sprintf( 'ps2pdf -dEPSCrop %s; rm %s', fileName, fileName )
+system( cmd )
