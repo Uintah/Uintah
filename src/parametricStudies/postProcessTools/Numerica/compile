@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "Now compiling ...."
+
+if [[ -e exactRiemann ]]; then
+  rm exactRiemann
+fi
+
+gfortran -o exactRiemann e1rpexModified.f
