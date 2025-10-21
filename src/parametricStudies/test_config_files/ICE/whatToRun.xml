@@ -150,26 +150,30 @@
 <!--
 <test>
   <name>Test1</name>
-  <tst>riemann_dx.tst</tst>
-  <otherFilesToCopy>test1.in</otherFilesToCopy>
+  <tst>RiemannProblems/test1_dx.tst</tst>
+  <otherFilesToCopy> RiemannProblems/test1.in       </otherFilesToCopy>
+  <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
 </test>
-
+<!--
 <test>
   <name>Test2</name>
-  <tst>test2_dx.tst</tst>
-  <otherFilesToCopy>test2.in</otherFilesToCopy>
+  <tst>RiemannProblems/test2_dx.tst</tst>
+  <otherFilesToCopy> RiemannProblems/test2.in       </otherFilesToCopy>
+  <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
 </test>
 
 <test>
   <name>Test3</name>
-  <tst>test3_dx.tst</tst>
-  <otherFilesToCopy>test3.in</otherFilesToCopy>
+  <tst>RiemannProblems/test3_dx.tst</tst>
+  <otherFilesToCopy> RiemannProblems/test3.in       </otherFilesToCopy>
+  <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
 </test>
 
 <test>
   <name>Test4</name>
-  <tst>test4_dx.tst</tst>
-  <otherFilesToCopy>test4.in</otherFilesToCopy>
+  <tst>RiemannProblems/test4_dx.tst</tst>
+  <otherFilesToCopy> RiemannProblems/test4.in       </otherFilesToCopy>
+  <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
 </test>
 
 <test>
