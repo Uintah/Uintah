@@ -95,13 +95,15 @@ sub analyze{
 
     my @cmd = ("$cmd_basename", "-o", "$ppOutput", "-uda", "$uda");
 
+    print $statsFile "postProcessCmd:  "."@cmd"."\n";
+
     if ( $exitOnCrash eq "TRUE" ) {
       system( "@cmd" )==0 or die("ERROR(analyze.pm): \t\tFailed running: (@cmd)\n");
     }else{
       system( "@cmd" );
     }
 
-    print $statsFile "postProcessCmd:  "."@cmd"."\n";
+
 
     #__________________________________
     #   If the script outputs concatenate results

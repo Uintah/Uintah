@@ -43,20 +43,21 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(gnuplot_singleTest gnuplot_allTests);
 
 #______________________________________________________________________
-#   This function is run on every test
-sub gnuplot_singleTest{
-  my( $testNode, $uda, $statsFile, $exitOnCrash ) = @_;  
+#   This function is called by all the gnuplot sub functions
 
-  my $gpFile = Utilities::cleanStr($testNode->findvalue( '/gnuplot/script' ) );
+sub modifyAndPlot{
+  my( $node, $xmlTag, $uda, $statsFile, $exitOnCrash ) = @_;
+
+  my $gpFile = Utilities::cleanStr($node->findvalue( $xmlTag  . '/script' ) );
 
   if ( -e $gpFile ) {
     # modify the plot script
-    my $title = $testNode->findvalue( '/gnuplot/title' );
-    my $arg1  = $testNode->findvalue( '/gnuplot/arg1' );
-    my $arg2  = $testNode->findvalue( '/gnuplot/arg2' );
-    my $xlabel= $testNode->findvalue( '/gnuplot/xlabel' );
-    my $ylabel= $testNode->findvalue( '/gnuplot/ylabel' );
-    my $label = $testNode->findvalue( '/gnuplot/label' );
+    my $title = $node->findvalue( $xmlTag  . '/title' );
+    my $arg1  = $node->findvalue( $xmlTag  . '/arg1' );
+    my $arg2  = $node->findvalue( $xmlTag  . '/arg2' );
+    my $xlabel= $node->findvalue( $xmlTag  . '/xlabel' );
+    my $ylabel= $node->findvalue( $xmlTag  . '/ylabel' );
+    my $label = $node->findvalue( $xmlTag  . '/label' );
 
     system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
     system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
@@ -65,11 +66,11 @@ sub gnuplot_singleTest{
 
 
     my @gpCmd = ( "gnuplot -c", "$gpFile", "$arg1", "$arg2" );
-    print "Now plotting using the modified gnuplot script (@gpCmd) \n";
-    
+    print "       Now plotting using the modified gnuplot script (@gpCmd) \n";
+
     if ( $exitOnCrash eq "TRUE" ) {
       system("@gpCmd > gp.out 2>&1") ==0 or die("ERROR(gnuplot.pm):\tFailed running: (@gpCmd)) failed: $@");
-    
+
     }else{
       system( "@gpCmd" );
     }
@@ -78,33 +79,22 @@ sub gnuplot_singleTest{
   }
 };
 
+#______________________________________________________________________
+#   This function is run on every test
+sub gnuplot_singleTest{
+  my( $testNode, $uda, $statsFile, $exitOnCrash ) = @_;
+
+  modifyAndPlot( $testNode, '/gnuplot', $uda, $exitOnCrash );
+};
+
 
 #______________________________________________________________________
 #  This function is called after all the tests have been completed
 sub gnuplot_allTests{
-  my( $doc, $statsFile, $exitOnCrash) = @_;  
-
-  my $gpFile = Utilities::cleanStr($doc->findvalue( '/start/gnuplot/script' ) );
-
-  if ( -e $gpFile ) {
-    # modify the plot script
-    my $title = $doc->findvalue( '/start/gnuplot/title' );
-    my $arg1  = $doc->findvalue( '/start/gnuplot/arg1' );
-    my $arg2  = $doc->findvalue( '/start/gnuplot/arg2' );
-    my $xlabel= $doc->findvalue( '/start/gnuplot/xlabel' );
-    my $ylabel= $doc->findvalue( '/start/gnuplot/ylabel' );
-    my $label = $doc->findvalue( '/start/gnuplot/label' );
-
-    system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
-    system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
-    system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
-    system("sed", "-i", "s/#label/set label   \"$label\"/g",  "$gpFile");
+  my( $doc, $statsFile, $exitOnCrash) = @_;
 
 
-    my @gpCmd = ( "gnuplot -c", "$gpFile", "$arg1", "$arg2" );
-    print "Now plotting using the modified gnuplot script (@gpCmd) \n";
+  modifyAndPlot( $doc, '/start/gnuplot', "", $statsFile, $exitOnCrash );
 
-    system("@gpCmd > gp.out 2>&1") ==0 or die("ERROR(gnuplot.pm):\tFailed running: (@gpCmd)) failed: $@");
-  }
 };
 1;    # Required for a Perl Module

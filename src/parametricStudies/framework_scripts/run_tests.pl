@@ -209,7 +209,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   $gnuplot_cmd = $testNode->findvalue('gnuplot_cmd');
 
   if( $rc == 0 && length $gnuplot_cmd != 0){
-    gnuplot::gnuplot_singleTest( $testNode, "$uda", $statsFile, $exitOnCrash );
+    gnuplot::gnuplot_singleTest( $testNode, "$uda", $exitOnCrash );
   }
 
   print $statsFile "---------------------------------------------\n";
@@ -218,7 +218,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
 #__________________________________
 #   Execute any final gnuplot commands
-gnuplot::gnuplot_singleTest( $tst_dom, $statsFile, $exitOnCrash );
+gnuplot::gnuplot_allTests( $tst_dom, $statsFile, $exitOnCrash );
 
 close($statsFile);
 

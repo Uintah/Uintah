@@ -146,207 +146,213 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
 #__________________________________
 # loop over each component
 
- foreach my $compNode ( $xmlElements->findnodes('component') ) {
-   chdir($curr_path);
+foreach my $compNode ( $xmlElements->findnodes('component') ) {
+  chdir($curr_path);
 
-   my $component = cleanStr( $compNode->textContent() );
+  my $component = cleanStr( $compNode->textContent() );
 
-   if ( ! -e $component) {
-    mkpath($component) || die "cannot mkpath($component) $!";
-   }
-   chdir($component);
-   print "----------------------------------------------------------------  $component \n";
+  if ( ! -e $component) {
+   mkpath($component) || die "cannot mkpath($component) $!";
+  }
+  chdir($component);
+  print "----------------------------------------------------------------  $component \n";
 
-   my $fw_path = $config_files_path."/".$component;  # path to component config files
+  my $fw_path = $config_files_path."/".$component;  # path to component config files
 
-   # read whatToRun.xml file into xml tree and parse
-   my $dom         = XML::LibXML->load_xml(location => $fw_path."/whatToRun.xml" , no_blanks => 1);
-   my $whatToRun   = $dom->documentElement;
+  # read whatToRun.xml file into xml tree and parse
+  my $dom         = XML::LibXML->load_xml(location => $fw_path."/whatToRun.xml" , no_blanks => 1);
+  my $whatToRun   = $dom->documentElement;
 
-   # add the comparison utilities path to PATH
-   my $p        = cleanStr( $whatToRun->findvalue('postProcessCmd_path') );
-   my $orgPath  = $ENV{"PATH"};
-   $ENV{"PATH"} = "$p:$orgPath";
+  # add the comparison utilities path to PATH
+  my $p        = cleanStr( $whatToRun->findvalue('postProcessCmd_path') );
+  my $orgPath  = $ENV{"PATH"};
+  $ENV{"PATH"} = "$p:$orgPath";
 
-   # additional symbolic links to make OPTIONAL
-   my @symLinks;
+  # additional symbolic links to make OPTIONAL
+  my @symLinks;
 
-   if( $whatToRun->exists( 'symbolicLinks' ) ){
-     my $sl     = $whatToRun->findvalue('symbolicLinks');
+  if( $whatToRun->exists( 'symbolicLinks' ) ){
+    my $sl     = $whatToRun->findvalue('symbolicLinks');
 
-     @symLinks  = split(/ /,$sl);
-     @symLinks  = cleanStr(@symLinks);
-   }
+    @symLinks  = split(/ /,$sl);
+    @symLinks  = cleanStr(@symLinks);
+  }
 
-   #__________________________________
-   # loop over all tests
-   #   - make test directories
-   #   - copy tst, scripts, other files & input files
-   my $otherFiles = "";
+  #__________________________________
+  # loop over all tests
+  #   - make test directories
+  #   - copy tst, scripts, other files & input files
 
+  foreach my $test ( $whatToRun->findnodes('test') ) {
 
-   foreach my $test ( $whatToRun->findnodes('test') ) {
+    my $testName = cleanStr( $test->findvalue('name') );
 
-     my $testName = cleanStr( $test->findvalue('name') );
+    # tst file can live outside of uintah src tree
+    # The postProcessing cmd may be in the same dir as the tst
+    # so add that path to PATH
+    my $tstFile  = cleanStr( $test->findvalue('tst') );
+    $tstFile     = setPath( $tstFile, $fw_path );
 
-     # tst file can live outside of uintah src tree
-     # The postProcessing cmd may be in the same dir as the tst
-     # so add that path to PATH
-     my $tstFile  = cleanStr( $test->findvalue('tst') );
-     $tstFile     = setPath( $tstFile, $fw_path );
+    my($vol,$tstPath,$file) = File::Spec->splitpath($tstFile);
+    my $orgPath  = $ENV{"PATH"};
+    $ENV{"PATH"} = "$orgPath:$tstPath";
 
-     my($vol,$tstPath,$file) = File::Spec->splitpath($tstFile);
-     my $orgPath  = $ENV{"PATH"};
-     $ENV{"PATH"} = "$orgPath:$tstPath";
+    my $tst_basename = basename( $tstFile );
 
-     my $tst_basename = basename( $tstFile );
+    my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
+    my $tstData  = $dom->documentElement;
 
-     my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
-     my $tstData  = $dom->documentElement;
-
-                    # Inputs directory default path (src/StandAlone/inputs)
-     my $default_path = $src_path . "/StandAlone/inputs/";
-     my $inputs_path = get_XML_value( $tstData, 'inputs_path', $default_path );
+                   # Inputs directory default path (src/StandAlone/inputs)
+    my $default_path = $src_path . "/StandAlone/inputs/";
+    my $inputs_path = get_XML_value( $tstData, 'inputs_path', $default_path );
 
 
-                   # UPS file
-     my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
-     my $upsFile  = setPath( $ups_tmp, $tstPath, $fw_path, $inputs_path.$component );
+                  # UPS file
+    my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
+    my $upsFile  = setPath( $ups_tmp, $tstPath, $fw_path, $inputs_path.$component );
 
 
-                   # gnuplot file
-     my $gp_tmp  = cleanStr( $tstData->findvalue('/start/gnuplot/script') );
-     my $gpFile  = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
+                  # gnuplot file
+    my $gp_tmp  = cleanStr( $tstData->findvalue('/start/gnuplot/script') );
+    my $gpFile  = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
 
 
-                   # restarts
-     my $doRestart  = cleanStr( $tstData->exists('/start/restart_uda') );
-     my $restartUda = cleanStr( $tstData->findvalue('/start/restart_uda/uda') );
+                  # restarts
+    my $doRestart  = cleanStr( $tstData->exists('/start/restart_uda') );
+    my $restartUda = cleanStr( $tstData->findvalue('/start/restart_uda/uda') );
 
-     if( $doRestart ){
-       $doRestart = 1;
-       $upsFile   = '';
-     }
-                   # Other files needed.  This could contain wildcards
-     if($test->exists('otherFilesToCopy') ){
-       $otherFiles = cleanStr( $test->findvalue('otherFilesToCopy') );
-       $otherFiles = setPath( $otherFiles, $fw_path, $inputs_path.$component ) ;
-     }
+    if( $doRestart ){
+      $doRestart = 1;
+      $upsFile   = '';
+    }
 
-                    # find a unique testname
-     my $count = 0;
-     my $testNameOld = $testName;
-     $testName = "$testName.$count";
+    #__________________________________
+    #               Other files needed.  This could contain wildcards
+    my @otherFiles = "";
 
-     while( -e $testName){
-       $testName = "$testNameOld.$count";
-       $count +=1;
-     }
+    foreach my $node ( $test->findnodes('otherFilesToCopy') ) {
 
-     mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
-     unlink( $testNameOld );
-     symlink( $testName, $testNameOld  ) || die "ERROR:masterScript.pl:cannot create symlink $!";
+      my $of = $node->textContent;
+      $of = cleanStr( $of );
+      $of = setPath( $of, $fw_path, $inputs_path.$component ) ;
+      @otherFiles = ( $of, @otherFiles );
+    }
 
-     chdir($testName);
+    #__________________________________
+                   # find a unique testname
+    my $count = 0;
+    my $testNameOld = $testName;
+    $testName = "$testName.$count";
 
-     #__________________________________
-     # bulletproofing
-     # do these files exist
-     if ( $doRestart == 0 && (! -e $upsFile || ! -e $tstFile ) ){
-       print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n        ($upsFile) \n";
-       print "or the tst file: \n     ($tstFile)\n";
-       print "do not exist.  Now exiting\n";
-       exit
-     }
+    while( -e $testName){
+      $testName = "$testNameOld.$count";
+      $count +=1;
+    }
 
-     if ( $doRestart == 1 && (! -e $restartUda || ! -e $tstFile ) ){
-       print "\n \nERROR:setupFrameWork:\n";
-       print "The restart uda: \n     ($restartUda) \n";
-       print "or the tst file: \n     ($tstFile)\n";
-       print "do not exist.  Now exiting\n";
-       exit
-     }
+    mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
+    unlink( $testNameOld );
+    symlink( $testName, $testNameOld  ) || die "ERROR:masterScript.pl:cannot create symlink $!";
 
-     #__________________________________
-     # copy the config files to the testing directory
-     my $testing_path = $curr_path."/".$component."/".$testName;
-     chdir($fw_path);
+    chdir($testName);
 
-     if( $doRestart ){
-       system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path");
-     }
-     else {
-       system("cp -f $upsFile $testing_path");
-     }
+    #__________________________________
+    # bulletproofing
+    # do these files exist
+    if ( $doRestart == 0 && (! -e $upsFile || ! -e $tstFile ) ){
+      print "\n \nERROR:setupFrameWork:\n";
+      print "The ups file: \n        ($upsFile) \n";
+      print "or the tst file: \n     ($tstFile)\n";
+      print "do not exist.  Now exiting\n";
+      exit
+    }
 
-     system("cp -f  $tstFile $testing_path");
+    if ( $doRestart == 1 && (! -e $restartUda || ! -e $tstFile ) ){
+      print "\n \nERROR:setupFrameWork:\n";
+      print "The restart uda: \n     ($restartUda) \n";
+      print "or the tst file: \n     ($tstFile)\n";
+      print "do not exist.  Now exiting\n";
+      exit
+    }
 
-     system("cp -f  $gpFile $testing_path");
+    #__________________________________
+    # copy the config files to the testing directory
+    my $testing_path = $curr_path."/".$component."/".$testName;
+    chdir($fw_path);
 
-     system("cp -rf $otherFiles $testing_path > /dev/null 2>&1");
+    if( $doRestart ){
+      system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path");
+    }
+    else {
+      system("cp -f $upsFile $testing_path");
+    }
 
-     system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
+    system("cp -f  $tstFile $testing_path");
 
-     chdir($testing_path);
+    system("cp -f  $gpFile $testing_path");
 
-     #__________________________________
-     # make a symbolic link to sus
-     my $sus = `which sus`;
-     system("ln -s $sus > /dev/null 2>&1");
+    system("cp -rf @otherFiles $testing_path ");
 
-     # make a symbolic link to inputs
-     system("ln -s $inputs_path > /dev/null 2>&1");
+    system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
 
-     # create any symbolic links requested by that component
-     foreach my $s (@symLinks) {
-       if( defined $s ){
-         print " creating symbolic link: $s \n";
-         system("ln -s $s> /dev/null 2>&1");
-       }
-     }
+    chdir($testing_path);
 
+    #__________________________________
+    # make a symbolic link to sus
+    my $sus = `which sus`;
+    system("ln -s $sus > /dev/null 2>&1");
 
-     print "\n\n===================================================================================\n";
-     print "Test Name      : $testName \n";
-     print "ups File       : $upsFile \n";
-     print "restartUda     : $restartUda \n";
-     print "tst File       : $tstFile \n";
-     print "inputs dir     : $inputs_path\n";
-     print "sus            : $sus";
-     print "other Files    : $otherFiles\n";
-     print "gnuplot File   : $gpFile\n";
-     print "results path   : $testing_path\n";
-     print "=======================================================================================\n";
+    # make a symbolic link to inputs
+    system("ln -s $inputs_path > /dev/null 2>&1");
 
-     # Bulletproofing
-     print "Checking that the tst file is a properly formatted xml file  \n";
-     system("xmlstarlet val --err $tst_basename") == 0 ||  die("\nERROR: $tst_basename, contains errors.\n");
+    # create any symbolic links requested by that component
+    foreach my $s (@symLinks) {
+      if( defined $s ){
+        print " creating symbolic link: $s \n";
+        system("ln -s $s> /dev/null 2>&1");
+      }
+    }
 
 
-     # clean out any comment in the TST file
-     system("xmlstarlet c14n --without-comments $tst_basename > $tst_basename.clean 2>&1");
-     $tst_basename = "$tst_basename.clean";
+    print "\n\n===================================================================================\n";
+    print "Test Name      : $testName \n";
+    print "ups File       : $upsFile \n";
+    print "restartUda     : $restartUda \n";
+    print "tst File       : $tstFile \n";
+    print "inputs dir     : $inputs_path\n";
+    print "sus            : $sus";
+    print "other Files    : @otherFiles\n";
+    print "gnuplot File   : $gpFile\n";
+    print "results path   : $testing_path\n";
+    print "=======================================================================================\n";
+
+    # Bulletproofing
+    print "Checking that the tst file is a properly formatted xml file  \n";
+    system("xmlstarlet val --err $tst_basename") == 0 ||  die("\nERROR: $tst_basename, contains errors.\n");
 
 
-     #__________________________________
-     # run the tests
-     if( $doRestart) {                 # restarting
-       print "\n\nLaunching: run_tests_restart.pl $tst_basename\n\n";
-       my @args = (" $scripts_path/run_tests_restart.pl","$testing_path/$tst_basename", "$fw_path");
-       system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
-     }
-     else{
+    # clean out any comment in the TST file
+    system("xmlstarlet c14n --without-comments $tst_basename > $tst_basename.clean 2>&1");
+    $tst_basename = "$tst_basename.clean";
 
-       print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
-       my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
-       system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
-     }
 
-     chdir("..");
-   }  # loop over tests
+    #__________________________________
+    # run the tests
+    if( $doRestart) {                 # restarting
+      print "\n\nLaunching: run_tests_restart.pl $tst_basename\n\n";
+      my @args = (" $scripts_path/run_tests_restart.pl","$testing_path/$tst_basename", "$fw_path");
+      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
+    }
+    else{
 
-   chdir("..");
- }
+      print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
+      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
+      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
+    }
+
+    chdir("..");
+  }  # loop over tests
+
+  chdir("..");
+}
 
   # END
