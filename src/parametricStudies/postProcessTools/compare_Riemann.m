@@ -53,7 +53,7 @@ pDir        = 999;
 mat         = 0;
 makePlot    = true;
 ts          = 999;
-output_file = 'L2norm';
+output_file = 'Errors.dat';
 
 arg_list = argv ();
 for i = 1:2:nargin
@@ -141,8 +141,8 @@ if( s != 0 )
 end
 
 
-exactSol  = load('exactSol');
-x_ex      = exactSol(:,1);
+exactSol = load('exactSol');
+x_ex     = exactSol(:,1);
 
 %______________________________
 %   Load the simulation solution into simSol
@@ -155,8 +155,8 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart 0 0 0 -iend 0 0 %i',resolution(pDir)-1);
 end
 
-variables = {"rho_CC"; "vel_CC"; "press_CC"; "temp_CC"};  % don't change the order of these unless you also alter
-                                                          % Numerica/e1rpexModified.g
+variables = {"rho_CC"; "vel_CC"; "press_CC"; "temp_CC"; "mach"};  % don't change the order of these unless you also alter
+                                                          % Numerica/e1rpexModified.f
 
 nrows = resolution(pDir);
 ncols = length(variables);
@@ -198,34 +198,35 @@ susSolution;
 unix('/bin/rm -f sim.dat');
 
 %   bulletproofing
-test = sum (x - x_ex);
-if(test > 1e-10)
-  display('ERROR: compute_L2_norm: The results cannot be compared')
+test = sum( x - x_ex );
+if( abs(test) > 1e-10)
+  display('ERROR: compute_L2_norm: The results cannot be compared since the x locations are not the same')
 end
 
 %__________________________________
-%   compute the difference/L-norm for each of the variables
-d = zeros(nrows,ncols);
+%   compute the L2 norm and L Infinity norms for each of the variables
+difference = zeros(nrows,ncols);
 
 if(0)             %  skip sections of the domain.
   for v=1:length(variables)
 
     for c=1:length(x)
-      d(c,v) = 0.0;
+      difference(c,v) = 0.0;
 
       if( x(c) < 0.7 || x(c) > 0.75)          %define the regions to skip
-        d(c,v) = ( susSolution(c,v) .- exactSol(c,v+1) );
+        difference(c,v) = ( susSolution(c,v) .- exactSol(c,v+1) );
       end
     end
-
-    L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
+    L2norm(v)    = sqrt( sum(difference.^2)/length(difference) )
+    LInfinity(v) = max(difference)
   end
 
 else              % include all of the cells in the calculation
 
   for v=1:length(variables)
-    d(:,v) = ( susSolution(:,v) .- exactSol(:,v+1) );
-    L_norm(v) = dx(pDir) * sum( abs( d(:,v) ) );
+    difference   = ( susSolution(:,v) .- exactSol(:,v+1) );
+    L2norm(v)    = sqrt( sum(difference.^2)/length(difference)  );
+    LInfinity(v) = max(difference);
   end
 end
 
@@ -234,12 +235,10 @@ end
 %   write L_norm to a file
 nargv = length(output_file);
 if (nargv > 0)
-  fid = fopen(output_file, 'w');
-  for v=1:length(variables)
-    fprintf(fid,'%g ',L_norm(v));
-  end
-  fprintf(fid,'\n');
-  fclose(fid);
+
+  output_Lnorm( 'L2norm.dat',        variables, resolution(pDir), L2norm )
+  output_Lnorm( 'LInfinityNorm.dat', variables, resolution(pDir), LInfinity )
+
 end
 
 
@@ -250,9 +249,9 @@ if (nargv > 0)
   fid = fopen(susResults, 'w');
 
   for c=1:length(x)
-    fprintf(fid,'%g, ',x(c))
+    fprintf(fid,'%E, ',x(c))
     for v=1:length(variables)
-      fprintf(fid,'%g, ',susSolution(c,v));
+      fprintf(fid,'%E, ',susSolution(c,v));
     end
     fprintf(fid, '\n')
   end
