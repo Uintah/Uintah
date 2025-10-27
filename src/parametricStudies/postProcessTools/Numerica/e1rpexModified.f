@@ -55,16 +55,16 @@ C     Declaration of variables:
       INTEGER I, CELLS, NARGS
 *
       DOUBLE PRECISION    GAMMA, G1, G2, G3, G4, G5, G6, G7, G8,
-     &        DL, UL, PL, CL, DR, UR, PR, CR, CV,
+     &        DL, UL, PL, CL, DR, UR, PR, CR, CV, C,
      &        DIAPH1, DOMLEN, DS, DX, PM, PSCALE, PS, S,
-     &        TIMEOU, UM, US, XPOS
-     
+     &        TIMEOU, UM, US, XPOS, MACH
+
       character*12 name, out
       CHARACTER *100 BUFFER
 *
       COMMON /GAMMAS/ GAMMA, G1, G2, G3, G4, G5, G6, G7, G8
       COMMON /STATES/ DL, UL, PL, CL, DR, UR, PR, CR
-      
+
 C     Input variables
 *
 C     DOMLEN   : Domain length
@@ -80,15 +80,16 @@ C     DR       : Initial density  on right state
 C     UR       : Initial velocity on right state
 C     PR       : Initial pressure on right state
 C     PSCALE   : Normalising constant
+C     MACH     : Mach numnber
 *
       NARGS = COMMAND_ARGUMENT_COUNT()
 
       CELLS = -9
       TIMEOU = -9
-      IF( NARGS .EQ. 0)THEN 
+      IF( NARGS .EQ. 0)THEN
          PRINT *,'Input file name'
          READ (*,'(A20)') name
-         PRINT *,'Output filename'     
+         PRINT *,'Output filename'
          READ (*,'(A20)') out
          PRINT *,'Number of cells'
          READ (*,*) CELLS
@@ -98,17 +99,17 @@ C     PSCALE   : Normalising constant
          PRINT *, ' ERROR: Incorrect number of inputs.'
          PRINT *, '        Now exiting.....'
          call EXIT(1)
-      
+
       ELSE
          CALL GETARG(1,BUFFER)
          READ(BUFFER,*) name
-      
+
          CALL GETARG(2,BUFFER)
          READ(BUFFER,*) out
-      
+
          CALL GETARG(3,BUFFER)
          READ(BUFFER,*) CELLS
-         
+
          CALL GETARG(4,BUFFER)
          READ(BUFFER,*) TIMEOU
       ENDIF
@@ -116,11 +117,11 @@ C     PSCALE   : Normalising constant
       IF( CELLS .LT. 0 .OR. TIMEOU .LT. 0 )THEN
          PRINT *, ' ERROR, the input parameter CELLS'
          PRINT *, '        or TIMEOU was invalid'
-         call EXIT(1) 
+         call EXIT(1)
       ENDIF
-      
+
       WRITE(6,*)name, out, CELLS
-      
+
       OPEN(UNIT = 1,FILE = name ,STATUS = 'UNKNOWN')
 *
 C     Initial data and parameters are read in
@@ -140,10 +141,10 @@ C     Initial data and parameters are read in
       READ(1,*)PSCALE
 *
       CLOSE(1)
-      
+
 *c    __________________________________
       PRINT *, 'CELLS', CELLS
-      PRINT *, 'TIMEOU', TIMEOU    
+      PRINT *, 'TIMEOU', TIMEOU
 *
 C     Compute gamma related constants
 *
@@ -186,7 +187,7 @@ C     region is found
 C     Complete solution at time TIMEOU is found
 *
       OPEN(UNIT = 1,FILE = out ,STATUS = 'UNKNOWN')
-      WRITE(1,*)'#X, RHO, VEL, PRESS, TEMP'
+      WRITE(1,*)'#X, RHO, VEL, PRESS, TEMP, MACH'
 *
       DO 10 I = 1, CELLS
 *
@@ -201,13 +202,16 @@ C        is found
 C        Exact solution profiles are written to e1rpex.out.
 *
 *         WRITE(1, 20)XPOS, DS, US, PS/PSCALE, PS/DS/G8/PSCALE
-         WRITE(1, 20)XPOS, DS, US, PS/PSCALE, PS/(DS*G8*PSCALE*CV)
+*        Compute the Mach number
+         C = SQRT(GAMMA*PS/DS)
+         MACH = US/C
+         WRITE(1, 20)XPOS, DS, US, PS/PSCALE, PS/(DS*G8*PSCALE*CV), MACH
 *
  10   CONTINUE
 *
       CLOSE(1)
 *
- 20   FORMAT(5(F20.12, 2X))
+ 20   FORMAT(6(F20.12, 2X))
 *
       END
 *
