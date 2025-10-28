@@ -57,7 +57,7 @@ C     Declaration of variables:
       DOUBLE PRECISION    GAMMA, G1, G2, G3, G4, G5, G6, G7, G8,
      &        DL, UL, PL, CL, DR, UR, PR, CR, CV, C,
      &        DIAPH1, DOMLEN, DS, DX, PM, PSCALE, PS, S,
-     &        TIMEOU, UM, US, XPOS, MACH
+     &        TIMEOU, UM, US, XPOS, MACH, Vdot
 
       character*12 name, out
       CHARACTER *100 BUFFER
@@ -187,7 +187,7 @@ C     region is found
 C     Complete solution at time TIMEOU is found
 *
       OPEN(UNIT = 1,FILE = out ,STATUS = 'UNKNOWN')
-      WRITE(1,*)'#X, RHO, VEL, PRESS, TEMP, MACH'
+      WRITE(1,*)'#X, RHO, VEL, PRESS, TEMP, MACH, VOL_FLOWRATE'
 *
       DO 10 I = 1, CELLS
 *
@@ -205,13 +205,15 @@ C        Exact solution profiles are written to e1rpex.out.
 *        Compute the Mach number
          C = SQRT(GAMMA*PS/DS)
          MACH = US/C
-         WRITE(1, 20)XPOS, DS, US, PS/PSCALE, PS/(DS*G8*PSCALE*CV), MACH
+         Vdot = US*DS
+         WRITE(1, 20)XPOS, DS, US, PS/PSCALE, PS/(DS*G8*PSCALE*CV),
+     &               MACH,Vdot
 *
  10   CONTINUE
 *
       CLOSE(1)
 *
- 20   FORMAT(6(F20.12, 2X))
+ 20   FORMAT(7(F20.12, 2X))
 *
       END
 *
