@@ -5,6 +5,14 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
+<!--______________________________________________________________________-->
+<!--   This input file is used by the parameterStudies that performs      -->
+<!--   an order of accuracy study.  The exact solution is computed using  -->
+<!--   the code Numerica/e1rpex.f.                                        -->
+<!--   Reference:  E.F. Toro "Riemann Solvers and Numerical Methods for   -->
+<!--   for Fluid Dynamics, A Practical Introduction, 3rd edition          -->
+<!--______________________________________________________________________-->
+
    <Meta>
        <title>shock tube</title>
    </Meta>    
@@ -100,7 +108,8 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
-      <save label="sp_vol_CC"/>  
+      <save label="sp_vol_CC"/> 
+      <save label="mach"/>
       <!-- needed for regression tester dat comparisons -->       
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
