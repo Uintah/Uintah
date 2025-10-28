@@ -22,10 +22,12 @@ parseMetaData()
   local udaOut="$1"
   local -n array="$2"
 
+  #  Note that xargs removes excess spaces!!
+
   array[procs]=$(   awk -F: '/Parallel/&&/processes/ {printf "%i", $2}' "$udaOut" )
   array[threads]=$( grep "threads per MPI process" "$udaOut" | awk '{print $2}' )
-  array[machine]=$( grep Machine    "$udaOut" | cut -d":" -f 2 )
-  array[date]=$(    grep -m1 Date   "$udaOut" | cut -d" " -f2-8,10 )
+  array[machine]=$( grep Machine    "$udaOut" | awk -F "Machine:"  '{print $2}' | xargs )
+  array[date]=$(    grep -m1 Date   "$udaOut" | awk -F "Date:"     '{print $2}' | date --file - '+%D %R')
   array[uda]=$(     grep "DataArchiver created" "$udaOut" | awk '{print $3}' )
 }
 
@@ -42,14 +44,13 @@ setTerminal()
 
     /bin/rm "$gpFile"
     cat > "$gpFile" << fin
-set terminal x11 1
-set terminal postscript color solid "Times-Roman" 12
+set terminal postscript landscape color solid "Times-Roman" 8
 set output "$fname"
 fin
   else
     echo "  Using a X11 terminal"
     cat > "$gpFile" << fin
-set terminal x11 enhanced font "clean,12"  size 1024,768
+set terminal x11 enhanced font "clean,12"  size 1500,1250
 fin
   fi
 
@@ -73,11 +74,13 @@ pruneTimesteps()
   if [ -n "$tsLo" ] && [ -n "$tsHi" ]; then
     echo "  Only timesteps $tsLo -> $tsHi are shown."
 
-    awk -v tsLo="$tsLo" -v tsHi="$tsHi" \
-        '{ if ( $1 >= tsLo && $1 <= tsHi ) print }' \
-         "$outFile" > data.pruned
+    awk -v tsLo="$tsLo" -v tsHi="$tsHi" '
+         {
+          if ( $1 >= tsLo && $1 <= tsHi ) print
+         }' "$outFile" > data.pruned
 
-    cp data.pruned data
+    cp data.pruned "$outFile"
+    /bin/rm data.pruned
   fi
 }
 
