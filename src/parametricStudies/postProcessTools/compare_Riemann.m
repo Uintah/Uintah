@@ -80,7 +80,7 @@ for i = 1:2:nargin
 end
 
 %______________________________
-% hardwired variables for 1 level problem
+% hardwired susLabels for 1 level problem
 level = 0;
 L = 1;
 
@@ -155,21 +155,23 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart 0 0 0 -iend 0 0 %i',resolution(pDir)-1);
 end
 
-variables = {"rho_CC"; "vel_CC"; "press_CC"; "temp_CC"; "mach"};  % don't change the order of these unless you also alter
-                                                          % Numerica/e1rpexModified.f
+susLabels      = {"rho_CC"; "vel_CC"; "press_CC"; "temp_CC"; "mach"};  % don't change the order of these unless you also alter
+                                                                    % Numerica/e1rpexModified.f
+computedVars = {"VDot"};                                            % volume flow rate, computed
+allVars      = [susLabels ;computedVars ];
 
-nrows = resolution(pDir);
-ncols = length(variables);
-susSolution = zeros(nrows,ncols);
-x      = zeros(nrows);
+nRows = resolution(pDir);
+nVars = length(allVars);
+susSolution = zeros(nRows,nVars);
+x      = zeros(nRows);
 
 %__________________________________
-%   loop over all the variables and load them into susSolution
-printf( "       Now extracting the variables from the uda %s", uda)
+%   loop over all the susLabels and load them into susSolution
+printf( "       Now extracting the susLabels from the uda %s", uda)
 
-for v=1:length(variables)
+for v=1:length(susLabels)
 
-  var = variables{v};
+  var = susLabels{v};
 
   c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s > /dev/null 2>&1',var,level,ts-1,startEnd,mat,uda);
   [s1, r1] = unix(c1);
@@ -183,7 +185,7 @@ for v=1:length(variables)
     vel = load('sim.dat');
     susSolution(:,v) = vel(:,3 + pDir);
 
-  else                                        % all other variables
+  else                                        % all other susLabels
 
     var = load('sim.dat');
     susSolution(:,v) = var(:,4);
@@ -192,7 +194,8 @@ for v=1:length(variables)
   x = var(:,pDir);
 end
 
-susSolution;
+VDot = susSolution(:,1) .* susSolution(:,2);
+susSolution(:,nVars) = VDot;
 
 %   cleanup tmp files
 unix('/bin/rm -f sim.dat');
@@ -204,11 +207,13 @@ if( abs(test) > 1e-10)
 end
 
 %__________________________________
-%   compute the L2 norm and L Infinity norms for each of the variables
-difference = zeros(nrows,ncols);
+%   compute the L2 norm and L Infinity norms for each of the susLabels
+%   Reference:  Code Verification by the Method of Manufactured Solutions,
+%               SAND2000-1444, June 2000, pg 28
+difference = zeros(nRows,nVars);
 
 if(0)             %  skip sections of the domain.
-  for v=1:length(variables)
+  for v=1:nVars
 
     for c=1:length(x)
       difference(c,v) = 0.0;
@@ -223,7 +228,7 @@ if(0)             %  skip sections of the domain.
 
 else              % include all of the cells in the calculation
 
-  for v=1:length(variables)
+  for v=1:nVars
     difference   = ( susSolution(:,v) .- exactSol(:,v+1) );
     L2norm(v)    = sqrt( sum(difference.^2)/length(difference)  );
     LInfinity(v) = max(difference);
@@ -236,11 +241,10 @@ end
 nargv = length(output_file);
 if (nargv > 0)
 
-  output_Lnorm( 'L2norm.dat',        variables, resolution(pDir), L2norm )
-  output_Lnorm( 'LInfinityNorm.dat', variables, resolution(pDir), LInfinity )
+  output_Lnorm( 'L2norm.dat',        allVars, resolution(pDir), L2norm )
+  output_Lnorm( 'LInfinityNorm.dat', allVars, resolution(pDir), LInfinity )
 
 end
-
 
 %__________________________________
 %   write simulation data to a file
@@ -250,7 +254,7 @@ if (nargv > 0)
 
   for c=1:length(x)
     fprintf(fid,'%E, ',x(c))
-    for v=1:length(variables)
+    for v=1:nVars
       fprintf(fid,'%E, ',susSolution(c,v));
     end
     fprintf(fid, '\n')
