@@ -298,7 +298,7 @@ fin
 
   #__________________________________
   # clean up
-  #/bin/rm -rf scraps
+  /bin/rm -rf scraps
 
   exit 0
 }
