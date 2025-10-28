@@ -1,7 +1,7 @@
 set terminal postscript color solid "Times-Roman" 14
 set autoscale
-set logscale x
-set logscale y
+#set logscale x
+#set logscale y
 set grid xtics ytics
 
 #title
@@ -37,6 +37,11 @@ set label sprintf( 'velocity    = %3.5g',b2 )  at screen 0.2,0.30
 set label sprintf( 'pressure    = %3.5g',b3 )  at screen 0.2,0.26
 set label sprintf( 'Temperature = %3.5g',b4 )  at screen 0.2,0.22
 
+set autoscale
+set multiplot  layout 2,1
+
+set ylabel 'L-2 Norm error'
+unset xlabel
 plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
       f1(x) with l ls 1 title "",\
       'L2norm.dat' using 1:3 t 'Velocity' with linespoints,\
@@ -46,6 +51,12 @@ plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
       'L2norm.dat' using 1:5 t 'Temperature' with linespoints,\
       f4(x) with l ls 1 title ""
 
+unset title
+set ylabel 'L-Infinity Norm error'
+plot 'LInfinityNorm.dat' using 1:2 t 'Density'  with linespoints,\
+     'LInfinityNorm.dat' using 1:3 t 'Velocity' with linespoints,\
+     'LInfinityNorm.dat' using 1:4 t 'Pressure' with linespoints,\
+     'LInfinityNorm.dat' using 1:5 t 'Temperature' with linespoints
 
 # generate a pdf from the ps file.
 cmd = sprintf( 'ps2pdf -dEPSCrop %s; rm %s', fileName, fileName )
