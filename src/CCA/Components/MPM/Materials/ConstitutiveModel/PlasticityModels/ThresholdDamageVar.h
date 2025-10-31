@@ -47,6 +47,11 @@ namespace Uintah {
       double std;          /* Standard deviation of failure strain */
     };
 
+    struct FA_and_TC{
+      double FA;         /* Friction Angle */
+      double TC;         /* Tensile Cutoff Fraction of Cohesion */
+    };
+
     struct FailureStressOrStrainData {
       double mean;         /* Mean failure stress, strain or cohesion */
       double std;          /* Standard deviation of failure strain */
@@ -70,8 +75,8 @@ namespace Uintah {
                                     /* "MaximumPrincipalStress", "MohrCoulomb"*/
 
     // MohrCoulomb options
-    double d_friction_angle;           // Assumed to come in degrees
-    double d_tensile_cutoff;           // Fraction of the cohesion at which
+//    double d_friction_angle;           // Assumed to come in degrees
+//    double d_tensile_cutoff;           // Fraction of the cohesion at which
                                        // tensile failure occurs
     //__________________________________
     //  Labels
@@ -86,14 +91,16 @@ namespace Uintah {
     std::vector<double> d_Color;
     std::vector<double> d_mean;
     std::vector<double> d_std;
+    std::vector<double> d_FA;
+    std::vector<double> d_TC;
 
   //______________________________________________________________________
   //
   public:
     // constructors
     ThresholdDamageVar( ProblemSpecP    & ps,
-                     MPMFlags        * Mflags,
-                     MaterialManager * materialManager );
+                        MPMFlags        * Mflags,
+                        MaterialManager * materialManager );
 
     ThresholdDamageVar(const ThresholdDamageVar* cm);
 
@@ -151,8 +158,32 @@ namespace Uintah {
          }
        }
 
-       props.mean       = d_mean[0];
+       props.mean    = d_mean[0];
        props.std     = d_std[0];
+       return props;
+     }
+
+     inline FA_and_TC findMCPropertiesFromColor(double color){
+
+       FA_and_TC props;
+       int n_entries = static_cast<int>(d_Color.size());
+       if (color >= d_Color[n_entries-1]){
+          props.FA    = d_FA[n_entries-1];
+          props.TC    = d_TC[n_entries-1];
+          return props;
+       }
+
+       for (int ii = 1; ii < n_entries; ++ii) {
+        if (color <= d_Color[ii]) {
+          double s = (d_Color[ii]-color)/(d_Color[ii]-d_Color[ii-1]);
+          props.FA    = d_FA[ii-1]*s + d_FA[ii]*(1.0-s);
+          props.TC    = d_TC[ii-1]*s + d_TC[ii]*(1.0-s);
+          return props;
+         }
+       }
+
+       props.FA    = d_FA[0];
+       props.TC    = d_TC[0];
        return props;
      }
   };

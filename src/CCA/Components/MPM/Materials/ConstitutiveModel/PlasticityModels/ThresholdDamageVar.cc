@@ -58,7 +58,10 @@ ThresholdDamageVar::ThresholdDamageVar( ProblemSpecP    & ps,
      throw ProblemSetupException("**ERROR** No variable properties specified.",
                                   __FILE__, __LINE__);
   }
-  for( ProblemSpecP varProp = properties->findBlock("entry");
+  
+  if(d_failure_criteria=="MaximumPrincipalStress" ||
+     d_failure_criteria=="MaximumPrincipalStrain"){
+   for( ProblemSpecP varProp = properties->findBlock("entry");
        varProp != nullptr;
        varProp = varProp->findNextBlock("entry") ) {
      double C = 0.0;
@@ -70,7 +73,28 @@ ThresholdDamageVar::ThresholdDamageVar( ProblemSpecP    & ps,
      d_Color.push_back(C);
      d_mean.push_back(M);
      d_std.push_back(S);
-  }
+    }
+   } else if(d_failure_criteria=="MohrCoulomb"){
+   for( ProblemSpecP varProp = properties->findBlock("entry");
+       varProp != nullptr;
+       varProp = varProp->findNextBlock("entry") ) {
+     double C = 0.0;
+     double M = 0.0;
+     double S = 0.0;
+     double FA = 0.0;
+     double TC = 0.0;
+     varProp->require("color",    C);
+     varProp->require("mean",     M);
+     varProp->require("std",      S);
+     varProp->require("friction_angle",                      FA);
+     varProp->require("tensile_cutoff_fraction_of_cohesion", TC);
+     d_Color.push_back(C);
+     d_mean.push_back(M);
+     d_std.push_back(S);
+     d_FA.push_back(FA);
+     d_TC.push_back(TC);
+    }
+   }
 
   if(d_failure_criteria!="MaximumPrincipalStress" &&
      d_failure_criteria!="MaximumPrincipalStrain" &&
@@ -78,20 +102,7 @@ ThresholdDamageVar::ThresholdDamageVar( ProblemSpecP    & ps,
      throw ProblemSetupException("<failure_criteria> must be either MaximumPrincipalStress, MaximumPrincipalStrain or MohrCoulomb", __FILE__, __LINE__);
   }
 
-  if( d_failure_criteria == "MohrCoulomb" ){
-    // The cohesion value that MC needs is the "mean" value in the
-    // FailureStressOrStrainData struct
-    ps->require("friction_angle", d_friction_angle);
-    ps->require("tensile_cutoff_fraction_of_cohesion", d_tensile_cutoff);
-  }
-
-//  ps->require("failure_mean",d_epsf.mean);        // Mean val. of failure stress/strain
   ps->get("failure_distrib", d_epsf.dist);        // "constant", "weibull" or "gauss"
-
-  // Only require std if using a non-constant distribution
-  if( d_epsf.dist != "constant" ){
-//    ps->require("failure_std", d_epsf.std);      //Std dev (Gauss) or Weibull modulus
-  }
 
   ps->get("scaling", d_epsf.scaling);             // "none" or "kayenta"
   if( d_epsf.scaling != "none" ){
@@ -115,7 +126,7 @@ ThresholdDamageVar::ThresholdDamageVar( ProblemSpecP    & ps,
   //  Create labels
   const TypeDescription* P_dbl = ParticleVariable<double>::getTypeDescription();
     
-  pFailureStressOrStrainLabel = VarLabel::create("p.epsf",        P_dbl );
+  pFailureStressOrStrainLabel = VarLabel::create("p.epsf",          P_dbl );
   pFailureStressOrStrainLabel_preReloc = VarLabel::create("p.epsf+",P_dbl );
 }
 //______________________________________________________________________
@@ -137,7 +148,7 @@ void ThresholdDamageVar::outputProblemSpec(ProblemSpecP& ps)
 {
   printTask( dbg, "ThresholdDamageVar::outputProblemSpec" );
   ProblemSpecP dam_ps = ps->appendChild("damage_model");
-  dam_ps->setAttribute("type","ThresholdVar");
+  dam_ps->setAttribute("type","Threshold");
 
   dam_ps->appendElement("failure_mean",     d_epsf.mean);
   dam_ps->appendElement("failure_std",      d_epsf.std);
@@ -150,17 +161,23 @@ void ThresholdDamageVar::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
   dam_ps->appendElement("LocalizeParticles",d_epsf.localizeOrNot);
   ProblemSpecP lc_ps = dam_ps->appendChild("variable_properties");
-  for (int i = 0; i<(int)d_Color.size();i++) {
+  if(d_failure_criteria=="MaximumPrincipalStress" ||
+     d_failure_criteria=="MaximumPrincipalStrain"){
+   for (int i = 0; i<(int)d_Color.size();i++) {
     ProblemSpecP time_ps = lc_ps->appendChild("entry");
     time_ps->appendElement("color",    d_Color[i]);
     time_ps->appendElement("mean",     d_mean[i]);
     time_ps->appendElement("std",      d_std[i]);
-  }
-
-  if(d_failure_criteria=="MohrCoulomb"){
-    dam_ps->appendElement("friction_angle", d_friction_angle);
-    dam_ps->appendElement("tensile_cutoff_fraction_of_cohesion",
-                                           d_tensile_cutoff);
+   }
+  } else if(d_failure_criteria=="MohrCoulomb"){
+   for (int i = 0; i<(int)d_Color.size();i++) {
+    ProblemSpecP time_ps = lc_ps->appendChild("entry");
+    time_ps->appendElement("color",    d_Color[i]);
+    time_ps->appendElement("mean",     d_mean[i]);
+    time_ps->appendElement("std",      d_std[i]);
+    time_ps->appendElement("friction_angle",      d_FA[i]);
+    time_ps->appendElement("tensile_cutoff_fraction_of_cohesion", d_TC[i]);
+   }
   }
 }
 
@@ -303,9 +320,10 @@ ThresholdDamageVar::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
-  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
+  task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,
                                                               matls, gnone);
   task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
+  task->requires(Task::OldDW, d_lb->pColorLabel,              matls, gnone);
   
   task->modifies(d_lb->pStressLabel_preReloc,          matls);
 
@@ -333,7 +351,7 @@ ThresholdDamageVar::computeSomething( ParticleSubset    * pset,
   printTask( patch, dbg, "    ThresholdDamageVar::computeSomething" );
   
   constParticleVariable<int>     pLocalized;
-  constParticleVariable<double>  pFailureStrain;
+  constParticleVariable<double>  pFailureStrain, pColor;
   constParticleVariable<long64>  pParticleID;
   constParticleVariable<Matrix3> pDefGrad_new;
   
@@ -344,7 +362,8 @@ ThresholdDamageVar::computeSomething( ParticleSubset    * pset,
   old_dw->get(pLocalized,               d_lb->pLocalizedMPMLabel,    pset);
   old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel, pset);
   old_dw->get(pParticleID,              d_lb->pParticleIDLabel,      pset);
-  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,           
+  old_dw->get(pColor,                   d_lb->pColorLabel,           pset);
+  new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,
                                                                      pset);
   new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc, pset);
 
@@ -427,16 +446,19 @@ ThresholdDamageVar::computeSomething( ParticleSubset    * pset,
           pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
   
           double cohesion = pFailureStrain[idx];
-  
+          FA_and_TC props = findMCPropertiesFromColor(pColor[*iter]);
+          double FA = props.FA;
+          double TC  = props.TC;
+
           double epsMax=0.;
-          // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
-          if (maxEigen > d_tensile_cutoff * cohesion){
+          // Tensile failure criteria (max princ stress > tensile_cutoff*cohesion)
+          if (maxEigen > TC * cohesion){
             pLocalized_new[idx] = 1;
             epsMax = maxEigen;
           }
 
           //  Shear failure criteria (max shear > cohesion + friction)
-          double friction_angle = d_friction_angle*(M_PI/180.);
+          double friction_angle = FA*(M_PI/180.);
 
           if ( (maxEigen - minEigen)/2.0 > cohesion * cos(friction_angle)
                - (maxEigen + minEigen)*sin(friction_angle)/2.0){
