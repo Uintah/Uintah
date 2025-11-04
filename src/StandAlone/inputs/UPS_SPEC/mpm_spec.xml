@@ -238,6 +238,9 @@
               <color               spec="REQUIRED DOUBLE" />
               <mean                spec="REQUIRED DOUBLE" />
               <std                 spec="REQUIRED DOUBLE" />
+              <friction_angle      spec="OPTIONAL DOUBLE" />
+              <tensile_cutoff_fraction_of_cohesion
+                                   spec="OPTIONAL DOUBLE" />
             </entry>
         </variable_properties>
 
