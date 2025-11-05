@@ -23,8 +23,8 @@
  */
 
 
-#ifndef CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
-#define CCA_Components_ontheflyAnalysis_meanTurbFluxes_h
+#ifndef CCA_Components_ontheflyAnalysis_planeAvgTurbFluxes_h
+#define CCA_Components_ontheflyAnalysis_planeAvgTurbFluxes_h
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
@@ -35,7 +35,7 @@ namespace Uintah {
 
 GENERAL INFORMATION
 
-   meanTurbFluxes.h
+   planeAvgTurbFluxes.h
 
    This module computes the spatial Planar average of the turbulent fluxes on each plane
 
@@ -55,16 +55,16 @@ ______________________________________________________________________*/
 
 //______________________________________________________________________
 
-  class meanTurbFluxes :  public AnalysisModule{
+  class planeAvgTurbFluxes :  public AnalysisModule{
   public:
 
-    meanTurbFluxes(const ProcessorGroup   * myworld,
-                   const MaterialManagerP   materialManager,
-                   const ProblemSpecP     & module_spec);
+    planeAvgTurbFluxes(const ProcessorGroup   * myworld,
+                       const MaterialManagerP   materialManager,
+                       const ProblemSpecP     & module_spec);
 
-    meanTurbFluxes();
+    planeAvgTurbFluxes();
 
-    virtual ~meanTurbFluxes();
+    virtual ~planeAvgTurbFluxes();
 
     virtual void problemSetup(const ProblemSpecP  & prob_spec,
                               const ProblemSpecP  & restart_prob_spec,

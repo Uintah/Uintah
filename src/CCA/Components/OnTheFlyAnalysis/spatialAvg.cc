@@ -538,8 +538,8 @@ void spatialAvg::query( const Patch         * patch,
 //  allocateAndZero  averaged
 template <class T>
 void spatialAvg::allocateAndZeroLabels( DataWarehouse * new_dw,
-                                               const Patch   * patch,
-                                               QavgVar        & Q )
+                                        const Patch   * patch,
+                                        QavgVar        & Q )
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.avgLabel,      matl, patch );
@@ -557,7 +557,7 @@ spatialAvg::proc0patch0cout::proc0patch0cout( const int nPerTimestep)
 //______________________________________________________________________
 //
 void spatialAvg::proc0patch0cout::print(const Patch * patch,
-                                   std::ostringstream& msg)
+                                        std::ostringstream& msg)
 {
   if( d_count <= d_nTimesPerTimestep ){
     if( patch->getID() == 0 && Uintah::Parallel::getMPIRank() == 0 && Uintah::Parallel::getMainThreadID() == std::this_thread::get_id() ){

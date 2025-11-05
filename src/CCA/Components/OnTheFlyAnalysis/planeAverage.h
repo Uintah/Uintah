@@ -840,7 +840,7 @@ ______________________________________________________________________*/
     // global constants always begin with "d_"
     std::string d_className;                   // identifier for each instantiation of this class
     bool   d_parse_ups_variables;              // parse ups file to define d_allLevels_planarVars
-                                               // this switch is needed for meanTurbFluxes module
+                                               // this switch is needed for planeAvgTurbFluxes module
     bool   d_writeOutput;
 
     const Material*  d_matl;

@@ -41,7 +41,6 @@ SRCS += \
         $(SRCDIR)/controlVolFluxes.cc      \
         $(SRCDIR)/FileInfoVar.cc           \
         $(SRCDIR)/lineExtract.cc           \
-        $(SRCDIR)/meanTurbFluxes.cc        \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeAverage.cc          \
@@ -67,6 +66,7 @@ PSELIBS := \
 # ICE analysis modules
 ifeq ($(BUILD_ICE),yes)
   SRCS += \
+        $(SRCDIR)/planeAvgTurbFluxes.cc   \
         $(SRCDIR)/vorticity.cc            \
         $(SRCDIR)/SGS_ReynoldsStress.cc
 

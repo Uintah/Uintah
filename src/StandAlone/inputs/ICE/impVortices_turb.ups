@@ -276,7 +276,7 @@
         </Variables>
       </Module>
 
-      <Module name="meanTurbFluxes">
+      <Module name="planeAvgTurbFluxes">
         <material>          atmosphere  </material>
          <samplingFrequency> 1e99       </samplingFrequency>
          <timeStart>         0.001      </timeStart>

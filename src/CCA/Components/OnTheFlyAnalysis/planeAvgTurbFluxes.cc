@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/OnTheFlyAnalysis/meanTurbFluxes.h>
+#include <CCA/Components/OnTheFlyAnalysis/planeAvgTurbFluxes.h>
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/DbgOutput.h>
@@ -40,8 +40,8 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "meanTurbFluxes:+,planeAverage:+"
-Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug stream", false);
+//  setenv SCI_DEBUG "planeAvgTurbFluxes:+,planeAverage:+"
+Dout dbg_OTF_MTF("planeAvgTurbFluxes", "OnTheFlyAnalysis", "planeAvgTurbFluxes debug stream", false);
 
 //______________________________________________________________________
 /*
@@ -49,14 +49,14 @@ Dout dbg_OTF_MTF("meanTurbFluxes", "OnTheFlyAnalysis", "meanTurbFluxes debug str
 
 Verification steps:
     1)  Edit:
-        src/CCA/Components/OnTheFlyAnalysis/meanTurbFluxesVerify.py
+        src/CCA/Components/OnTheFlyAnalysis/planeAvgTurbFluxesVerify.py
         nPlaneCells   = np.array( [30, 30, 1])
         change nPlaneCells to match your problem.
 
-    2)  Execute: meanTurbFluxesVerify.py
+    2)  Execute: planeAvgTurbFluxesVerify.py
         To generate the files "testDistribution.txt" and "covariance.txt"
 
-    3) Modify the labels used in meanTurbFluxes section
+    3) Modify the labels used in planeAvgTurbFluxes section
             <velocity label="verifyVelocity" />
             <analyze label="verifyScalar"     weighting="nCells" />
             <analyze label="verifyVelocity"   weighting="nCells" />
@@ -72,9 +72,9 @@ Verification steps:
 
 ______________________________________________________________________*/
 
-meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
-                                const MaterialManagerP    materialManager,
-                                const ProblemSpecP      & module_spec )
+planeAvgTurbFluxes::planeAvgTurbFluxes( const ProcessorGroup    * myworld,
+                                        const MaterialManagerP    materialManager,
+                                        const ProblemSpecP      & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
   d_monitorCell = IntVector(0,0,0);
@@ -90,9 +90,9 @@ meanTurbFluxes::meanTurbFluxes( const ProcessorGroup    * myworld,
 }
 
 //__________________________________
-meanTurbFluxes::~meanTurbFluxes()
+planeAvgTurbFluxes::~planeAvgTurbFluxes()
 {
-  DOUT(dbg_OTF_MTF, " Doing: destorying meanTurbFluxes" );
+  DOUT(dbg_OTF_MTF, " Doing: destorying planeAvgTurbFluxes" );
 
   delete d_planeAve_1;
   delete d_planeAve_2;
@@ -109,7 +109,7 @@ meanTurbFluxes::~meanTurbFluxes()
 //
 //   Once C++14 is adpoted delete this
 template<typename T, typename ...Args>
-std::unique_ptr<T> meanTurbFluxes::make_unique( Args&& ...args )
+std::unique_ptr<T> planeAvgTurbFluxes::make_unique( Args&& ...args )
 {
   return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
 }
@@ -118,13 +118,13 @@ std::unique_ptr<T> meanTurbFluxes::make_unique( Args&& ...args )
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void
-meanTurbFluxes::problemSetup(const ProblemSpecP &,
-                             const ProblemSpecP &,
-                             GridP & grid,
-                             std::vector<std::vector<const VarLabel* > > &PState,
-                             std::vector<std::vector<const VarLabel* > > &PState_preReloc)
+planeAvgTurbFluxes::problemSetup(const ProblemSpecP &,
+                                 const ProblemSpecP &,
+                                 GridP & grid,
+                                 std::vector<std::vector<const VarLabel* > > &PState,
+                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  DOUT(dbg_OTF_MTF, "Doing problemSetup \t\t\t\t meanTurbFluxes" );
+  DOUT(dbg_OTF_MTF, "Doing problemSetup \t\t\t\t planeAvgTurbFluxes" );
 
   d_planeAve_1->setComponents( m_application );
   d_planeAve_2->setComponents( m_application );
@@ -138,7 +138,7 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
-    throw ProblemSetupException("meanTurbFluxes: Couldn't find <Variables> tag", __FILE__, __LINE__);
+    throw ProblemSetupException("planeAvgTurbFluxes: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
   //__________________________________
@@ -170,12 +170,12 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
   ProblemSpecP vel_ps = m_module_spec->findBlock( "velocity" );
 
   if( vel_ps == nullptr ) {
-    throw ProblemSetupException("meanTurbFluxes: velocity xml tag not found: ", __FILE__, __LINE__);
+    throw ProblemSetupException("planeAvgTurbFluxes: velocity xml tag not found: ", __FILE__, __LINE__);
   }
 
   vel_ps->getAttributes( attribute );
   string labelName = attribute["label"];
-  d_velocityVar->label =VarLabel::find( labelName, "ERROR  meanTurbFluxes:problemSetup, velocity label" );
+  d_velocityVar->label =VarLabel::find( labelName, "ERROR  planeAvgTurbFluxes:problemSetup, velocity label" );
 
   d_velocityVar->matl  = defaultMatl;
 
@@ -216,7 +216,7 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
     //__________________________________
     // label name
     string labelName = attribute["label"];
-    VarLabel* label = VarLabel::find( labelName, "ERROR  meanTurbFluxes:problemSetup:analyze" );
+    VarLabel* label = VarLabel::find( labelName, "ERROR  planeAvgTurbFluxes:problemSetup:analyze" );
 
     if (label == d_velocityVar->label ){  // velocity label has already been processed
       continue;
@@ -234,7 +234,7 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
     if(baseType != TypeDescription::CCVariable &&
        subType  != TypeDescription::double_type   ){
       ostringstream warn;
-      warn << "ERROR:AnalysisModule:meanTurbFluxes: ("<<label->getName() << " "
+      warn << "ERROR:AnalysisModule:planeAvgTurbFluxes: ("<<label->getName() << " "
            << " only CCVariable<double> variables work" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
@@ -249,7 +249,7 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
 
     // Bulletproofing
     if ( labelName == "press_CC" && attribute["matl"].empty() ){
-      throw ProblemSetupException("meanTurbFluxes: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
+      throw ProblemSetupException("planeAvgTurbFluxes: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
 
     // Read in the optional level index
@@ -292,8 +292,8 @@ meanTurbFluxes::problemSetup(const ProblemSpecP &,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
-                                   const LevelP & level)
+planeAvgTurbFluxes::scheduleInitialize(SchedulerP   & sched,
+                                       const LevelP & level)
 {
 
   d_planeAve_1->scheduleInitialize( sched, level);
@@ -305,10 +305,10 @@ meanTurbFluxes::scheduleInitialize(SchedulerP   & sched,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
-                                          const LevelP & level)
+planeAvgTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
+                                              const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleRestartInitialize");
+  printSchedule(level,dbg_OTF_MTF,"planeAvgTurbFluxes::scheduleRestartInitialize");
 
   d_planeAve_1->scheduleRestartInitialize( sched, level);
 
@@ -320,10 +320,10 @@ meanTurbFluxes::scheduleRestartInitialize(SchedulerP   & sched,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
-                                   const LevelP & level)
+planeAvgTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
+                                       const LevelP & level)
 {
-  printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::scheduleDoAnalysis");
+  printSchedule(level,dbg_OTF_MTF,"planeAvgTurbFluxes::scheduleDoAnalysis");
 
 
   sched_populateVerifyLabels( sched, level );
@@ -374,15 +374,15 @@ meanTurbFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 //  and fills each plane with these values.  The values are duplicated
 //  on all other planes on all patches
 void
-meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
-                                            const LevelP & level )
+planeAvgTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
+                                                const LevelP & level )
 {
   if( ! d_doVerification ){
     return;
   }
 
-  Task* t = scinew Task( "meanTurbFluxes::populateVerifyLabels",
-                    this,&meanTurbFluxes::populateVerifyLabels );
+  Task* t = scinew Task( "planeAvgTurbFluxes::populateVerifyLabels",
+                    this,&planeAvgTurbFluxes::populateVerifyLabels );
 
   t->computesVar( d_verifyVectorLabel );
   t->computesVar( d_verifyScalarLabel );
@@ -391,11 +391,11 @@ meanTurbFluxes::sched_populateVerifyLabels( SchedulerP   & sched,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
-                                     const PatchSubset    * patches,
-                                     const MaterialSubset * ,
-                                     DataWarehouse        * ,
-                                     DataWarehouse        * new_dw)
+planeAvgTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
+                                         const PatchSubset    * patches,
+                                         const MaterialSubset * ,
+                                         DataWarehouse        * ,
+                                         DataWarehouse        * new_dw)
 {
 
 
@@ -403,7 +403,7 @@ meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::verification");
+    printTask(patches, patch, dbg_OTF_MTF, "Doing planeAvgTurbFluxes::verification");
 
     int matl = d_velocityVar->matl;
     CCVariable< Vector > velocity;
@@ -461,7 +461,7 @@ meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
       ostringstream warn;
       warn << "\n\nERROR:  The filePosition ("<< lineNum << ") exceeds the length of the "
            << " verification file ("<< filename << ":"<< nFileLines << ").\n"
-           << " Verify that the meanTurbFluxesVerify.py:nPlaneCells variable"
+           << " Verify that the planeAvgTurbFluxesVerify.py:nPlaneCells variable"
            << " matches the ups resolution.\n";
       throw InternalError( warn.str(), __FILE__, __LINE__ );
     }
@@ -568,10 +568,10 @@ meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
 //  WARNING:  This could be slow on large core count simulations
 //______________________________________________________________________
 int
-meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
-                                        const int nPlaneCellPerPatch,
-                                        const IntVector      pLo,
-                                        const IntVector      pHi)
+planeAvgTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
+                                            const int nPlaneCellPerPatch,
+                                            const IntVector      pLo,
+                                            const IntVector      pHi)
 {
   map<int, int> fileOffsetMap;
 
@@ -648,13 +648,13 @@ meanTurbFluxes::findFilePositionOffset( const PatchSubset  * patches,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
-                                       const LevelP & level)
+planeAvgTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
+                                           const LevelP & level)
 {
-  Task* t = scinew Task( "meanTurbFluxes::calc_TurbFluctuations",
-                    this,&meanTurbFluxes::calc_TurbFluctuations );
+  Task* t = scinew Task( "planeAvgTurbFluxes::calc_TurbFluctuations",
+                    this,&planeAvgTurbFluxes::calc_TurbFluctuations );
 
-  printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::sched_TurbFluctuations");
+  printSchedule(level,dbg_OTF_MTF,"planeAvgTurbFluxes::sched_TurbFluctuations");
 
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
 
@@ -675,11 +675,11 @@ meanTurbFluxes::sched_TurbFluctuations(SchedulerP   & sched,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
-                                      const PatchSubset    * patches,
-                                      const MaterialSubset * ,
-                                      DataWarehouse        * old_dw,
-                                      DataWarehouse        * new_dw)
+planeAvgTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset * ,
+                                          DataWarehouse        * old_dw,
+                                          DataWarehouse        * new_dw)
 {
   const Level* level = getLevel(patches);
   if( d_planeAve_1->isItTime( old_dw, level, d_lastCompTimeLabel) == false ){
@@ -693,7 +693,7 @@ meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
   //
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluctuations");
+    printTask(patches, patch, dbg_OTF_MTF, "Doing planeAvgTurbFluxes::calc_TurbFluctuations");
 
     // Q -> Q'
     for ( size_t i =0 ; i < d_Qvars.size(); i++ ) {
@@ -711,8 +711,8 @@ meanTurbFluxes::calc_TurbFluctuations(const ProcessorGroup  * ,
 //    This is needed if you save the intermediate values for regression
 //    testing
 void
-meanTurbFluxes::zeroPrimeLabels( DataWarehouse      * new_dw,
-                                 const PatchSubset  * patches)
+planeAvgTurbFluxes::zeroPrimeLabels( DataWarehouse      * new_dw,
+                                     const PatchSubset  * patches)
 {
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
@@ -735,9 +735,9 @@ meanTurbFluxes::zeroPrimeLabels( DataWarehouse      * new_dw,
 //
 template <class T>
 void
-meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
-                              const Patch   * patch,
-                              shared_ptr<Qvar> Q)
+planeAvgTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
+                                  const Patch   * patch,
+                                  shared_ptr<Qvar> Q)
 {
   const int matl = Q->matl;
 
@@ -757,10 +757,10 @@ meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
   if( Qbar.size() == 0 ){
     string name = Q->label->getName();
     ostringstream err;
-    err << "\n\tERROR meanTurbFluxes::calc_Q_prime.  Could not find the planarAverage"
+    err << "\n\tERROR planeAvgTurbFluxes::calc_Q_prime.  Could not find the planarAverage"
         << " for the variable (" << name << ")."
         << " \n\t" << name << " must be one of the variables"
-        << " listed in the ups file: <DataAnalysis>-><Module name=\"meanTurbFluxes\">-><Variables>-><analyze>\n";
+        << " listed in the ups file: <DataAnalysis>-><Module name=\"planeAvgTurbFluxes\">-><Variables>-><analyze>\n";
     throw InternalError( err.str(), __FILE__, __LINE__ );
   }
 
@@ -806,13 +806,13 @@ meanTurbFluxes::calc_Q_prime( DataWarehouse * new_dw,
 //______________________________________________________________________
 //  This is computed every timestep, not necessary
 void
-meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
-                                 const LevelP & level)
+planeAvgTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
+                                     const LevelP & level)
 {
-  Task* t = scinew Task( "meanTurbFluxes::calc_TurbFluxes",
-                    this,&meanTurbFluxes::calc_TurbFluxes );
+  Task* t = scinew Task( "planeAvgTurbFluxes::calc_TurbFluxes",
+                    this,&planeAvgTurbFluxes::calc_TurbFluxes );
 
-  printSchedule(level,dbg_OTF_MTF,"meanTurbFluxes::sched_TurbFluxes");
+  printSchedule(level,dbg_OTF_MTF,"planeAvgTurbFluxes::sched_TurbFluxes");
 
 
   sched_TimeVars( t, level, d_lastCompTimeLabel, false );
@@ -839,11 +839,11 @@ meanTurbFluxes::sched_TurbFluxes(SchedulerP   & sched,
 //______________________________________________________________________
 //
 void
-meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
-                                const PatchSubset    * patches,
-                                const MaterialSubset * ,
-                                DataWarehouse        * old_dw,
-                                DataWarehouse        * new_dw)
+planeAvgTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
+                                    const PatchSubset    * patches,
+                                    const MaterialSubset * ,
+                                    DataWarehouse        * old_dw,
+                                    DataWarehouse        * new_dw)
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
@@ -860,7 +860,7 @@ meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, dbg_OTF_MTF, "Doing meanTurbFluxes::calc_TurbFluxes");
+    printTask(patches, patch, dbg_OTF_MTF, "Doing planeAvgTurbFluxes::calc_TurbFluxes");
 
     constCCVariable<Vector> velPrime;
     new_dw->get ( velPrime, d_velocityVar->primeLabel, d_velocityVar->matl, patch, Ghost::None, 0 );
@@ -928,8 +928,8 @@ meanTurbFluxes::calc_TurbFluxes(const ProcessorGroup * ,
 //    This is needed if you save the intermediate values for regression
 //    testing
 void
-meanTurbFluxes::zeroTurbFluxLabels( DataWarehouse      * new_dw,
-                                    const PatchSubset  * patches)
+planeAvgTurbFluxes::zeroTurbFluxLabels( DataWarehouse      * new_dw,
+                                        const PatchSubset  * patches)
 {
   for( auto p=0;p<patches->size();p++ ){
     const Patch* patch = patches->get(p);

@@ -8,7 +8,7 @@ ______________________________________________________________________
 UPS inputs: 
 
    <DataAnalysis>
-     <Module name="meanTurbFluxes">
+     <Module name="planeAvgTurbFluxes">
        
         <material>    Atmosphere </material>
         <samplingFrequency> 2000 </samplingFrequency>
