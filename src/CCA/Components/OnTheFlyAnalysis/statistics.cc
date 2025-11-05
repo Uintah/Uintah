@@ -1014,36 +1014,6 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
 }
 
 //______________________________________________________________________
-//  allocateAndZero
-template <class T>
-void statistics::allocateAndZero( DataWarehouse  * new_dw,
-                                  const VarLabel * label,
-                                  const int        matl,
-                                  const Patch    * patch )
-{
-  const Uintah::TypeDescription* td = label->typeDescription();
-  Variable* var = td->createInstance();
-
-  ASSERT( var != nullptr );
-
-  GridVariableBase* gridVarBase = dynamic_cast<GridVariableBase*>( var );
-  GridVariable<T>* gridVar      = dynamic_cast<GridVariable<T>* >( gridVarBase );
-
-  IntVector lowIndex;
-  IntVector highIndex;
-
-  patch->computeVariableExtents(  td->getType() ,label->getBoundaryLayer(), Ghost::None, 0,  lowIndex, highIndex);
-  gridVar->allocate( lowIndex, highIndex );
-
-  T zero(0.0);
-  gridVar->initialize(zero);
-  new_dw->put( gridVar, label, matl, patch );
-
-  delete  var;
-}
-
-
-//______________________________________________________________________
 //  carryForward  summation variables
 void statistics::carryForwardSums( DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,

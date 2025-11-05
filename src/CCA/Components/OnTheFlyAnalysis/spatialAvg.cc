@@ -546,26 +546,6 @@ void spatialAvg::allocateAndZeroLabels( DataWarehouse * new_dw,
   allocateAndZero<T>( new_dw, Q.varianceLabel, matl, patch );
 }
 
-//______________________________________________________________________
-//  allocateAndZero
-template <class T>
-void spatialAvg::allocateAndZero( DataWarehouse * new_dw,
-                              const VarLabel * label,
-                              const int matl,
-                              const Patch * patch )
-{
-  CCVariable<T> Q;
-  new_dw->allocateAndPut( Q, label, matl, patch );
-  T zero(0.0);
-  Q.initialize( zero );
-}
-
-//______________________________________________________________________
-// Instantiate the explicit template instantiations.
-//
-template void spatialAvg::allocateAndZero<float> ( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
-template void spatialAvg::allocateAndZero<double>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
-template void spatialAvg::allocateAndZero<Vector>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
 
 //______________________________________________________________________
 //

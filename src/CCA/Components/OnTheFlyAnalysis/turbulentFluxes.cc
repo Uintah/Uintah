@@ -831,21 +831,6 @@ void turbulentFluxes::allocateAndZeroAll( DataWarehouse* new_dw,
 }
 
 //______________________________________________________________________
-//  allocateAndZero
-template <class T>
-void turbulentFluxes::allocateAndZero( DataWarehouse  * new_dw,
-                                       const VarLabel * label,
-                                       const int        matl,
-                                       const Patch    * patch )
-{
-  CCVariable<T> Q;
-  new_dw->allocateAndPut( Q, label, matl, patch );
-  T zero(0.0);
-  Q.initialize( zero );
-}
-
-
-//______________________________________________________________________
 //  carryForward  variables from old_dw to new_dw
 void turbulentFluxes::carryForward_means( DataWarehouse     * old_dw,
                                           DataWarehouse     * new_dw,

@@ -154,12 +154,6 @@ WARNING
                                 const Patch   * patch,
                                 QavgVar        & Q);
 
-    template <class T>
-    void allocateAndZero( DataWarehouse  * new_dw,
-                          const VarLabel * label,
-                          const int        matl,
-                          const Patch    * patch );
-
     enum Domain {EVERYWHERE, INTERIOR, BOUNDARIES};
     //__________________________________
     // global constants

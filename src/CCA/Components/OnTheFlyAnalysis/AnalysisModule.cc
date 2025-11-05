@@ -140,9 +140,9 @@ AnalysisModule::releaseComponents()
 //
 void
 AnalysisModule::sched_TimeVars( Task* t,
-                                     const LevelP   & level,
-                                     const VarLabel * prev_AnlysTimeLabel,
-                                     const bool addComputes )
+                                const LevelP   & level,
+                                const VarLabel * prev_AnlysTimeLabel,
+                                const bool addComputes )
 {
   t->requiresVar( Task::OldDW, m_simulationTimeLabel );
   t->requiresVar( Task::OldDW, prev_AnlysTimeLabel );
@@ -158,9 +158,9 @@ AnalysisModule::sched_TimeVars( Task* t,
 //
 bool
 AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
-                                  const Level    * level,
-                                  const VarLabel * prev_AnlysTimeLabel,
-                                  timeVars       & tv)
+                             const Level    * level,
+                             const VarLabel * prev_AnlysTimeLabel,
+                             timeVars       & tv)
 {
   max_vartype      prevTime;
   simTime_vartype  simTime;
@@ -197,8 +197,8 @@ AnalysisModule::getTimeVars( DataWarehouse  * old_dw,
 //
 void
 AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
-                                  const VarLabel * prev_AnlysTimeLabel,
-                                  timeVars tv)
+                             const VarLabel * prev_AnlysTimeLabel,
+                             timeVars tv)
 {
   new_dw->put(max_vartype( tv.prevAnlysTime ), prev_AnlysTimeLabel);
 }
@@ -207,13 +207,43 @@ AnalysisModule::putTimeVars( DataWarehouse  * new_dw,
 //
 bool
 AnalysisModule::isItTime( DataWarehouse * old_dw,
-                              const Level    * level,
-                              const VarLabel * prev_AnlysTimeLabel)
+                          const Level    * level,
+                          const VarLabel * prev_AnlysTimeLabel)
 {
   timeVars tv;
   return getTimeVars( old_dw, level, prev_AnlysTimeLabel, tv);
 }
 
+//______________________________________________________________________
+//      Method that will allocate and put a grid variable and 
+//      set the value to 0.0
+template <class T>
+void AnalysisModule::allocateAndZero( DataWarehouse  * new_dw,
+                                      const VarLabel * label,
+                                      const int        matl,
+                                      const Patch    * patch )
+{
+
+  const Uintah::TypeDescription* td = label->typeDescription();
+  Variable* var = td->createInstance();
+
+  ASSERT( var != nullptr );
+
+  GridVariableBase* gridVarBase = dynamic_cast<GridVariableBase*>( var );
+  GridVariable<T>* gridVar      = dynamic_cast<GridVariable<T>* >( gridVarBase );
+
+  IntVector lowIndex;
+  IntVector highIndex;
+
+  patch->computeVariableExtents(  td->getType() ,label->getBoundaryLayer(), Ghost::None, 0,  lowIndex, highIndex);
+  gridVar->allocate( lowIndex, highIndex );
+
+  T zero(0.0);
+  gridVar->initialize(zero);
+  new_dw->put( gridVar, label, matl, patch );
+
+  delete  var;
+}
 
 //______________________________________________________________________
 //      Abbreviates "name" if it's too long.
@@ -371,3 +401,11 @@ AnalysisModule::bulletProofing_LinesPlanes( const objectType obj,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 }
+//______________________________________________________________________
+//
+//______________________________________________________________________
+//
+// Explicit template instantiations:
+template void AnalysisModule::allocateAndZero<double>(DataWarehouse*, const VarLabel*, int, const Patch* );
+template void AnalysisModule::allocateAndZero<float>(DataWarehouse*, const VarLabel*, int, const Patch* );
+template void AnalysisModule::allocateAndZero<Vector>(DataWarehouse*, const VarLabel*, int, const Patch* );

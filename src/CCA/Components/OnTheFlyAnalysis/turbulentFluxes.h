@@ -254,11 +254,6 @@ WARNING
                               const TypeDescription * td );
 
     template <class T>
-    void allocateAndZero( DataWarehouse * new_dw,
-                          const VarLabel* label,
-                          const int       matl,
-                          const Patch   * patch );
-    template <class T>
     void allocateAndZeroAll( DataWarehouse * new_dw,
                              const Patch   * patch,
                              Qvar_ptr        Q);

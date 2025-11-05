@@ -88,6 +88,12 @@ namespace Uintah {
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) = 0;
 
+    template <class T>
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
+
     int createDirectory( mode_t mode,
                          const std::string & rootPath,
                          const std::string & path );
