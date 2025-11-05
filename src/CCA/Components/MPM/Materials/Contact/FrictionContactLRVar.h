@@ -101,6 +101,9 @@ WARNING
          // Destructor
          virtual ~FrictionContactLRVar();
 
+         // Currently, setting if any materials are rigid
+         virtual void setContactMaterialAttributes();
+
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
          // Basic contact methods

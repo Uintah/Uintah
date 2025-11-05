@@ -167,6 +167,7 @@ WARNING
    double getPorosity() const;
    double getPermeability() const;
    double getInitialPorepressure() const;
+   bool   d_usedInLogisticRegression = false;
 
    // For MPMICE
    double getGamma() const;

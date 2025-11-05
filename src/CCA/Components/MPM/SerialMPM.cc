@@ -3348,7 +3348,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
   }
 }
 
-
 //______________________________________________________________________
 //
 void SerialMPM::computeContactArea(const ProcessorGroup*,
@@ -6508,6 +6507,9 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       new_dw->allocateTemporary(ParticleList[m], patch);
       IsRigidMaterial[m] = mpm_matl->getIsRigid();
       PossibleAlpha[m] = mpm_matl->getPossibleAlphaMaterial();
+      if(!mpm_matl->d_usedInLogisticRegression){
+        PossibleAlpha[m]=false;
+      }
     }
 
     // Here, find out two things:
@@ -6554,6 +6556,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       MPMMaterial* mpm_matl =
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
+     if(mpm_matl->d_usedInLogisticRegression){
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -6596,6 +6599,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }
         nodeList.clear();
       }    // Loop over Particles
+     }   // If material is used in LR contact
     }  // Loop over materials
 
     // Do an additional check to make sure that nodes identified as
@@ -6766,6 +6770,8 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       projMax.initialize(-9.e99);
       projMin.initialize( 9.e99);
 
+     if(mpm_matl->d_usedInLogisticRegression){
+
       for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
         particleIndex idx = *it;
 
@@ -6892,6 +6898,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 #endif
        } // Is a surface particle
       } // end Particle loop
+     }  // if used in LR
     }  // loop over matls
 
     delete interpolator;

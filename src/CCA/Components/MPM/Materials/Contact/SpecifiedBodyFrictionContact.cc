@@ -143,6 +143,17 @@ void SpecifiedBodyFrictionContact::setContactMaterialAttributes()
   MPMMaterial* mpm_matl = 
          (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
   mpm_matl->setIsRigid(true);
+
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
+  for(int m=0;m<numMatls;m++){
+    MPMMaterial* mpm_matl = 
+                      (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+
+    int dwi = mpm_matl->getDWIndex();
+    if(d_matls.requested(dwi)){
+      mpm_matl->d_usedInLogisticRegression = true;
+    }
+  }
 }
 
 void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)

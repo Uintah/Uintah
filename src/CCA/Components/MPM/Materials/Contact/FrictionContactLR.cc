@@ -74,6 +74,20 @@ FrictionContactLR::~FrictionContactLR()
   // Destructor
 }
 
+void FrictionContactLR::setContactMaterialAttributes()
+{
+  int numMatls = d_materialManager->getNumMatls( "MPM" );
+  for(int m=0;m<numMatls;m++){
+    MPMMaterial* mpm_matl = 
+                      (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+
+    int dwi = mpm_matl->getDWIndex();
+    if(d_matls.requested(dwi)){
+      mpm_matl->d_usedInLogisticRegression = true;
+    }
+  }
+}
+
 void FrictionContactLR::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
