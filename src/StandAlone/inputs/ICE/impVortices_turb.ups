@@ -145,6 +145,15 @@
       <save label="mean_Qu_Qv_Qw_press_CC"/>
 
 
+      <!--__________________________________-->
+      <!--   From planeAvgTurbFlux module   -->
+      <save label="vel_CC_prime"/>
+      <save label="temp_CC_prime"/>
+      <save label="normalTurbStrss"/>
+      <save label="shearTurbStrss"/>
+      <save label="temp_CC_prime"/>
+      <save label="temp_CC_turbFlux"/>
+
       <checkpoint timestepInterval="15" cycle="1"/>
    </DataArchiver>
 
@@ -266,6 +275,21 @@
           <analyze label="vel_CC"    fluidVelocityLabel="true" />
         </Variables>
       </Module>
+
+      <Module name="meanTurbFluxes">
+        <material>          atmosphere  </material>
+         <samplingFrequency> 1e99       </samplingFrequency>
+         <timeStart>         0.001      </timeStart>
+         <timeStop>          1e99       </timeStop>
+         <planeOrientation>  XZ         </planeOrientation>
+         <weight label="mass_adv"/>
+         <velocity label="vel_CC" />
+         <Variables>
+            <analyze label="vel_CC"      weighting="nCells" />
+            <analyze label="temp_CC"     weighting="nCells" />
+         </Variables>
+       </Module>
+
   </DataAnalysis>
 
 </Uintah_specification>

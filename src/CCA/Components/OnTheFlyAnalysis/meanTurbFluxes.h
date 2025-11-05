@@ -37,8 +37,10 @@ GENERAL INFORMATION
 
    meanTurbFluxes.h
 
-   This module computes the mean turbulent fluxes on each plane in the domain
-   {u'u'}^bar, {v'v'}^bar, {w'w'}^bar {u'v'}^bar, {v'w'}^bar {u'w'}^bar
+   This module computes the spatial Planar average of the turbulent fluxes on each plane
+
+   {u'u'}^bar, {v'v'}^bar, {w'w'}^bar
+   {u'v'}^bar, {v'w'}^bar {u'w'}^bar
 
    foreach Q ( T, P, scalar )
      ( {u'Q'}^bar(y), {v'Q'}^bar(y), {w'Q'}^bar(y) )
@@ -163,6 +165,9 @@ ______________________________________________________________________*/
                                DataWarehouse        * ,
                                DataWarehouse        * new_dw);
 
+    void zeroPrimeLabels( DataWarehouse      * new_dw,
+                          const PatchSubset  * patches);
+
     template <class T>
     void calc_Q_prime( DataWarehouse       * new_dw,
                        const Patch         * patch,
@@ -176,6 +181,9 @@ ______________________________________________________________________*/
                          const MaterialSubset * ,
                          DataWarehouse        * ,
                          DataWarehouse        * new_dw);
+
+    void zeroTurbFluxLabels( DataWarehouse      * new_dw,
+                             const PatchSubset  * patches);
 
     //______________________________________________________________________
     //          VARIABLES
