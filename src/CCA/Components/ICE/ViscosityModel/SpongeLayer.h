@@ -24,7 +24,7 @@
 
 
 #ifndef ICE_VISCOSITY_SPONGELAYER_H
-#define iCE_VISCOSITY_SPONGELAYER_H
+#define ICE_VISCOSITY_SPONGELAYER_H
 
 #include <CCA/Components/ICE/ViscosityModel/Viscosity.h>
 #include <Core/Grid/Box.h>
