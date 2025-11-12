@@ -34,6 +34,7 @@
 #include <climits>
 #include <cstdio>
 #include <atomic>
+#include <memory>
 
 namespace Lockfree { namespace Impl {
 

@@ -25,6 +25,7 @@
 #ifndef LOCKFREE_MAPPERS_HPP
 #define LOCKFREE_MAPPERS_HPP
 
+#include <memory>
 #include <atomic>
 
 namespace Lockfree {

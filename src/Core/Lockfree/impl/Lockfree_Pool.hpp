@@ -32,7 +32,7 @@
 #include <atomic>
 
 #include <cstdio>
-
+#include <memory>
 
 namespace Lockfree { namespace Impl {
 

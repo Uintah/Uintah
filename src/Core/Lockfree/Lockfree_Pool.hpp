@@ -24,7 +24,7 @@
 
 #ifndef LOCKFREE_POOL_HPP
 #define LOCKFREE_POOL_HPP
-
+#include <memory>
 #include "Lockfree_Mappers.hpp"
 #include "impl/Lockfree_Pool.hpp"
 
