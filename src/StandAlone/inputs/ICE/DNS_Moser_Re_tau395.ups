@@ -305,7 +305,7 @@
     -->
 
     <!--________________-->    
-    <Module name="meanTurbFluxes">
+    <Module name="planeAvgTurbFluxes">
       <material>          air  </material>
       <samplingFrequency> 0.03333  </samplingFrequency>
       <timeStart>         0    </timeStart>
