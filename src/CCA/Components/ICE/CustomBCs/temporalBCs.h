@@ -132,7 +132,7 @@ namespace Uintah {
   //__________________________________
   //
 
-  double t     = lv->simTime + lv->delT;
+//  double t     = lv->simTime + lv->delT;
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
     IntVector c = *bound_ptr - oneCell;

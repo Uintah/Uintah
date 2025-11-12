@@ -94,6 +94,8 @@ void addRequires_Temporal( Task          * t,
   cout_doing<< "Doing addRequires_temporalBCs: \t\t" <<t->getName()
             << " " << where << endl;
 
+
+#if 0
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   MaterialSubset* press_matl = scinew MaterialSubset();
@@ -105,6 +107,7 @@ void addRequires_Temporal( Task          * t,
   }
   if(where == "Advection"){
   }
+#endif
 }
 
 /*______________________________________________________________________
@@ -120,7 +123,7 @@ void  preprocess_temporal_BCs(DataWarehouse * new_dw,
                               bool          & setTemporal_BCS,
                               temporal_localVars* lv)
 {
-  Ghost::GhostType  gn  = Ghost::None;
+//  Ghost::GhostType  gn  = Ghost::None;
   setTemporal_BCS = false;
   lv->where = where;
   //__________________________________
@@ -176,7 +179,7 @@ int  setVelocity_temporalBC(  const Patch         * patch,
       throw InternalError("setVelocity_temporalBC", __FILE__, __LINE__);
     }
 
-    double t  = lv->simTime + lv->delT;
+    // double t  = lv->simTime + lv->delT;
     // only alter the velocity in the direction that the reference_velocity
     // is non-zero.
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
@@ -240,7 +243,7 @@ int setPress_temporalBC(const Patch         * patch,
   }
 
   int nCells = 0;
-  double t   = lv->simTime + lv->delT;
+  // double t   = lv->simTime + lv->delT;
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
     IntVector c = *bound_ptr;
