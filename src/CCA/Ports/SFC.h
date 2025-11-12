@@ -438,7 +438,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
 #define sample(median,block_size, merge_size, blocks, sample_size)          \
 {                                                                           \
    Timers::Simple timer;                                                    \
-   float start,finish;                                                      \
+                                                                            \
    float median_sum;                                                        \
    SetMergeParameters(block_size,merge_size,blocks,sample_size);            \
    for(int r=0;r<repeat;r++)                                                \
@@ -451,12 +451,14 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
    }                                                                        \
    sort(times.begin(),times.end());                                         \
    int mid=times.size()/2;                                                  \
-   if(times.size()%2==0)                                                    \
-    median=(times[mid-1]+times[mid])/2;                                     \
-   else                                                                     \
+   if(times.size()%2==0)  {                                                 \
+     median=(times[mid-1]+times[mid])/2;                                    \
+   }                                                                        \
+   else{                                                                    \
     median=times[mid];                                                      \
     Uintah::MPI::Allreduce(&median,&median_sum,1,MPI_FLOAT,MPI_SUM,Comm);   \
     median=median_sum/P;                                                    \
+  }                                                                         \
 }
 
 
@@ -2971,7 +2973,8 @@ struct MergeInfo
   unsigned int n;
   BITS min;
   BITS max;
-  MergeInfo<BITS>() : n(0), min(0), max(0) {};
+  MergeInfo() : n(0), min(0), max(0) {}
+
 };
 
 #define ASCENDING 0
@@ -3751,7 +3754,10 @@ void SFC<LOCS>::Batchers(std::vector<History<BITS> > &histories, std::vector<His
 template<class LOCS> template <class BITS>
 void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf)
 {
-  int i=1, c=1, val=0, iter=0;
+  int i=1;
+  int c=1; 
+  int val=0;
+  int iter=0;
   int mod=(int)ceil(log((float)P)/log(3.0f));
   while(c!=0)
   {
