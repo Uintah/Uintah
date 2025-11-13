@@ -405,6 +405,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   if(d_mpm->flags->d_computeNormals){
     d_mpm->scheduleComputeNormals(            sched, mpm_patches, mpm_matls);
   }
+  if(d_mpm->flags->d_useLogisticRegression){
+    d_mpm->scheduleFindSurfaceParticles(      sched, mpm_patches, mpm_matls);
+    d_mpm->scheduleComputeLogisticRegression( sched, mpm_patches, mpm_matls);
+  }
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
@@ -535,6 +539,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   mpm_matls);
   }
 
+  if(d_mpm->d_bndy_traction_faces.size()>0) {
+    d_mpm->scheduleComputeContactArea(        sched, mpm_patches, mpm_matls);
+  }
   d_mpm->scheduleComputeInternalForce(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(     sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeNodalHeatFlux(        sched, mpm_patches, mpm_matls);
