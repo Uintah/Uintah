@@ -174,8 +174,8 @@ void lineExtract::problemSetup(const ProblemSpecP& ,
        throwException = true;
     }
     // CC, NC Variables, only doubles, Vectors, ints and Matrix3
-    if( ( baseType != TypeDescription::CCVariable     ||
-          baseType != TypeDescription::NCVariable )   &&
+    if( ( baseType == TypeDescription::CCVariable     ||
+          baseType == TypeDescription::NCVariable )   &&
 
        (subType != TypeDescription::double_type       &&
         subType != TypeDescription::int_type          &&
