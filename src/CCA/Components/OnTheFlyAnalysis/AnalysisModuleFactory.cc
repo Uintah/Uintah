@@ -27,7 +27,6 @@
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
-#include <CCA/Components/OnTheFlyAnalysis/planeAvgTurbFluxes.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 #include <CCA/Components/OnTheFlyAnalysis/spatialAvg.h>
@@ -38,6 +37,7 @@
 #if !defined( NO_ICE )
   #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
   #include <CCA/Components/OnTheFlyAnalysis/controlVolFluxes.h>
+  #include <CCA/Components/OnTheFlyAnalysis/planeAvgTurbFluxes.h>
   #include <CCA/Components/OnTheFlyAnalysis/SGS_ReynoldsStress.h>
 #endif
 
@@ -108,9 +108,6 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "planeExtract" ) {
         modules.push_back( scinew planeExtract(        myworld, materialManager, module_ps ) );
       }
-      else if ( module == "planeAvgTurbFluxes" ) {
-        modules.push_back( scinew planeAvgTurbFluxes(  myworld, materialManager, module_ps ) );
-      }
       else if ( module == "momentumAnalysis" ) {
         modules.push_back( scinew momentumAnalysis(    myworld, materialManager, module_ps ) );
       }
@@ -122,6 +119,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       }
 
 #if !defined( NO_ICE )
+      else if ( module == "planeAvgTurbFluxes" ) {
+        modules.push_back( scinew planeAvgTurbFluxes(  myworld, materialManager, module_ps ) );
+      }
       else if ( module == "SGS_ReynoldsStress" ) {
         modules.push_back( scinew SGS_ReynoldsStress(  myworld, materialManager, module_ps ) );
       }
