@@ -181,8 +181,7 @@ ThresholdDamage::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matls = matl->thisMaterial();
   task->computes( pFailureStressOrStrainLabel, matls );
   
-//  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
-//  task->computes(TotalLocalizedParticleLabel);
+  task->computes(d_lb->TotalLocalizedParticleLabel);
 }
 
 //______________________________________________________________________
@@ -258,8 +257,6 @@ ThresholdDamage::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
 
-//  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
-
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
   task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,
@@ -276,9 +273,8 @@ ThresholdDamage::addComputesAndRequires(Task* task,
   } else { 
     task->computes(d_lb->pLocalizedMPMLabel_preReloc,    matls);    
   }
-       
-  
-//  task->computes(TotalLocalizedParticleLabel);
+
+  task->computes(d_lb->TotalLocalizedParticleLabel);
 }
 //______________________________________________________________________
 //
@@ -310,6 +306,8 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
 
   new_dw->allocateAndPut(pFailureStrain_new,
                          pFailureStressOrStrainLabel_preReloc,  pset);
+
+  long64 totalLocalizedParticle = 0;
 
   //pLocalizedMPM+ _can_ be computed upstream
   if( matl->is_pLocalizedPreComputed() ){
@@ -408,6 +406,12 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
           }
         } // Mohr-Coulomb
       } // pLocalized==0
+      if(pLocalized_new[idx] != 0){
+        totalLocalizedParticle++;
+      }
+
     }  // pset loop
   } // Do Localization
+  new_dw->put(sumlong_vartype(totalLocalizedParticle),
+                          d_lb->TotalLocalizedParticleLabel);
 }
