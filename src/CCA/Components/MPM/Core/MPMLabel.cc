@@ -198,6 +198,13 @@ MPMLabel::MPMLabel()
   pFiberDirLabel_preReloc  = VarLabel::create( "p.fiberdir+",
                         ParticleVariable<Vector>::getTypeDescription() );
 
+  pNormalLabel  = VarLabel::create( "p.normal",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pNormalLabel_preReloc  = VarLabel::create( "p.normal+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+
   // Particle Variables 
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
                         ParticleVariable<Matrix3>::getTypeDescription());
@@ -608,6 +615,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pCurSizeLabel);
   VarLabel::destroy(pFiberDirLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel);
+  VarLabel::destroy(pNormalLabel_preReloc);
+  VarLabel::destroy(pNormalLabel);
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(p_qLabel_preReloc);
   VarLabel::destroy(pTemperatureGradientLabel);

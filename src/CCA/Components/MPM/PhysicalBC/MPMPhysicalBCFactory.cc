@@ -26,6 +26,7 @@
 
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressurePtsBC.h>
 #include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
@@ -38,7 +39,7 @@ using namespace Uintah;
 
 std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
 
-void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags)
+void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, MPMFlags* flags)
 {
   ProblemSpecP test = ps->findBlock("PhysicalBC");
   if (test){
@@ -52,6 +53,10 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, con
 
     for( ProblemSpecP child = current_ps->findBlock("pressure"); child != nullptr; child = child->findNextBlock("pressure") ) {
        mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
+    }
+
+    for( ProblemSpecP child = current_ps->findBlock("pressure_pts"); child != nullptr; child = child->findNextBlock("pressure_pts") ) {
+       mpmPhysicalBCs.push_back(scinew PressurePtsBC(child, grid, flags));
     }
 
     for( ProblemSpecP child = current_ps->findBlock("torque"); child != nullptr; child = child->findNextBlock("torque") ) {

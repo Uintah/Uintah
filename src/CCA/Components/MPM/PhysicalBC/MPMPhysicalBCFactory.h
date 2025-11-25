@@ -36,7 +36,7 @@ namespace Uintah {
   class MPMPhysicalBCFactory
   {
   public:
-    static void create(const ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags);
+    static void create(const ProblemSpecP& ps, const GridP& grid, MPMFlags* flags);
     static void clean(); // delete all mpmPhysicalBCs
     static std::vector<MPMPhysicalBC*> mpmPhysicalBCs;
   };

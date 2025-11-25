@@ -338,10 +338,13 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
-  new_dw->allocateAndPut(pvars.pTempGrad,   d_lb->pTemperatureGradientLabel,
+  new_dw->allocateAndPut(pvars.pTempGrad,     d_lb->pTemperatureGradientLabel,
                                                                         subset);
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
+  }
+  if (d_flags->d_useParticleNormals) {
+    new_dw->allocateAndPut(pvars.pnormal,     d_lb->pNormalLabel,       subset);
   }
   if(d_with_color){
      new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
@@ -951,12 +954,16 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_flags->d_AMR) {
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
-
   }
 
   if (d_computeScaleFactor) {
     particle_state.push_back(d_lb->pScaleFactorLabel);
     particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
+  }
+
+  if (d_flags->d_useParticleNormals) {
+    particle_state.push_back(d_lb->pNormalLabel);
+    particle_state_preReloc.push_back(d_lb->pNormalLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

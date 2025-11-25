@@ -109,6 +109,8 @@ namespace Uintah {
       const VarLabel* pRefinedLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
+      const VarLabel* pNormalLabel;
+      const VarLabel* pNormalLabel_preReloc;
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction

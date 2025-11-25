@@ -149,7 +149,10 @@ namespace Uintah {
     std::vector<Vector>* getRvec1();
     std::vector<Vector>* getRvec2();
     std::vector<Vector>* getRvec3();
-                                                               // gcd adds
+
+    std::vector<IntVector>* getLoadCurveID();
+    std::vector<Vector>* getNormals();
+
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle velocity      */
     //////////////////////////////////////////////////////////////////////
@@ -234,6 +237,8 @@ namespace Uintah {
     std::vector<Vector> d_rvec3; // CPDI or CPTI
     std::vector<Matrix3> d_size; // CPDI or CPTI
     std::vector<Vector>  d_area; // CPDI or CPTI
+    std::vector<IntVector>  d_loadCurveID;
+    std::vector<Vector>  d_normal;
     double d_dx;
     Vector d_DX;
   };

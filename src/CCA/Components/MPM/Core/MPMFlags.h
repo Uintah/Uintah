@@ -76,6 +76,7 @@ class Output;
     bool        d_artificial_viscosity_heating;                // Include heating due to AV
     bool        d_useLoadCurves;                               // Flag for using load curves
     bool        d_keepPressBCNormalToSurface;                  // Flag for using load curves
+    bool        d_useParticleNormals;                          // Flag for using load curves
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones

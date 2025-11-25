@@ -114,6 +114,18 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <pressure_pts             spec="MULTIPLE NO_DATA" >
+          <SurfaceArea            spec="REQUIRED DOUBLE" />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
+        </pressure_pts>
         <torque                 spec="MULTIPLE NO_DATA" >
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />
