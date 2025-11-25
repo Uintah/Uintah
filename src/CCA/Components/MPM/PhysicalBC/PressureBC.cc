@@ -182,7 +182,7 @@ PressureBC::flagMaterialPoint(const Point& p,
     delete volume;
 
   } else if (d_surfaceType == "cylinder") {
-    double tol = 0.9*dxpp.minComponent();
+    double tol = 1.5*dxpp.minComponent();
     CylinderGeometryPiece* cgp =dynamic_cast<CylinderGeometryPiece*>(d_surface);
 
     if(!d_cylinder_end && !d_axisymmetric_end){  // Not a cylinder end
