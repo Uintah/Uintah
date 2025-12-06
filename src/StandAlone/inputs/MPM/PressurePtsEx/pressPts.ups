@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+<!-- T91 Cylinder, units are ug, cm, us -->
+
+   <Meta>
+       <title>T91 cylinder with internal pressure</title>
+   </Meta>    
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>            50.0        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           0.01724     </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+<!--
+       <max_Timesteps>        500       </max_Timesteps>
+-->
+       <timestep_multiplier>0.4         </timestep_multiplier>
+   </Time>    
+
+   <DataArchiver>
+      <filebase>PressPts.uda</filebase>
+      <outputInterval> 1.0 </outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.color"/>
+      <save label = "p.stress"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.scalefactor"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.externalforce"/>
+      <save label = "StrainEnergy"/>
+      <save label = "KineticEnergy"/>
+      <save label = "TotalMass"/>
+      <save label = "g.mass"/>
+      <save label = "g.temperature"/>
+      <save label = "g.stressFS"/>
+      <save label = "g.velocity"/>
+      <save label = "g.acceleration"/>
+      <save label = "p.normal"/>
+<!--      <checkpoint cycle = "2" interval = "25.0"/>  -->
+      <checkpoint cycle = "2" interval = "1.0"/>
+   </DataArchiver>
+
+   <MPM>
+     <interpolator>fast_cpdi</interpolator>
+     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
+     <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
+     <artificial_viscosity> false </artificial_viscosity>
+     <use_load_curves> true </use_load_curves>
+     <boundary_traction_faces>[xminus,xplus,yminus,yplus,zplus,zminus]</boundary_traction_faces>
+     <use_CBDI_boundary_condition>false</use_CBDI_boundary_condition>
+     <withColor> true </withColor>
+   </MPM>
+
+   <PhysicalConstants>
+      <gravity>            [0,0,0]   </gravity>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+     <MPM>
+        <material name="T91">
+	 <density>8e6</density>
+	 <constitutive_model type="UCNH"> 
+	   <bulk_modulus>166.7e4</bulk_modulus>
+	   <shear_modulus>76.9e4</shear_modulus>
+
+	   <usePlasticity>false</usePlasticity>
+	 </constitutive_model>
+
+	 <thermal_conductivity>1.0</thermal_conductivity>
+	 <specific_heat>5</specific_heat>
+         <geom_object>
+           <file>
+             <name>test_LCID_norm.pts</name>
+             <var>p.loadCurveID</var>
+             <var>p.normal</var>
+           </file>
+           <res>                 [1,1,1]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         300             </temperature>
+           <color>                 0             </color>
+         </geom_object>
+       </material>
+
+       <contact>
+         <type>null</type>
+       </contact>
+
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure_pts>
+         <SurfaceArea> .028274 </SurfaceArea>
+
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 10 </load>
+           </time_point>
+<!-- Final value of load (pressure) desired is 0.1e4 (10^5 Pa).  -->
+           <time_point>
+             <time> 100.0 </time>
+             <load> 0.025e4 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e10 </time>
+             <load> 0.025e4 </load>
+           </time_point>
+         </load_curve>
+       </pressure_pts>
+     </MPM>
+   </PhysicalBC>
+
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [0.0,0.0,0.0]     </lower>
+         <upper>        [0.6,0.6,0.01]    </upper>
+         <patches>      [1,1,1]           </patches>
+        <extraCells>    [1,1,1]           </extraCells>
+       </Box>
+       <spacing>   [0.01,0.01,0.01]  </spacing>
+     </Level>
+     <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+     </BoundaryConditions>
+   </Grid>
+       
+</Uintah_specification>

@@ -112,6 +112,10 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
       proc0cout << " and rvec3";
     } else if(*vit=="p.velocity") {
       proc0cout << " and velocity";
+    } else if(*vit=="p.loadCurveID") {
+      proc0cout << " and loadCurveID";
+    } else if(*vit=="p.normal") {
+      proc0cout << " and normal";
     }
   }
   proc0cout << endl;
@@ -246,7 +250,8 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
   double x2=inf;
   double x3=inf;
 
-  // CPTI and CPDI can pass the size matrix columns containing rvec1, rvec2, rvec3
+  // CPTI and CPDI can pass the size matrix columns containing
+  // rvec1, rvec2, rvec3
   // Other interpolators will default to grid spacing and default orientation
   Matrix3 size(d_DX.x(),0.,0.,0.,d_DX.y(),0.,0.,0.,d_DX.z());
   // grid spacing for normalizing size
@@ -258,7 +263,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
   //  TEXT FILE
   if(d_file_format=="text") {
     double v1,v2,v3,vol;
-    
+
     // line always starts with coordinates
     is >> x1 >> x2 >> x3;
     if(is.eof()){
@@ -315,6 +320,14 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(2,2)=v3;
           file_has_size=true;
         }  
+      } else if(*vit=="p.loadCurveID") {
+        if(is >> v1 >> v2 >> v3){
+          d_loadCurveID.push_back(IntVector((int) v1,(int) v2,(int) v3));
+        }
+      } else if(*vit=="p.normal") {
+        if(is >> v1 >> v2 >> v3){
+          d_normal.push_back(Vector(v1, v2, v3));
+        }
       } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
@@ -358,7 +371,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     // read unformatted binary numbers
     
     double v[3];
-    
+
     // never changes, should save this !
     const bool iamlittle = isLittleEndian();
     const bool needflip = (iamlittle && (d_file_format=="msb")) || (!iamlittle && (d_file_format=="lsb"));
@@ -458,6 +471,24 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(1,2)=v[1];
           size(2,2)=v[2];
           file_has_size=true;
+        }
+      } else if(*vit=="p.loadCurveID") {
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
+          }
+          d_loadCurveID.push_back(IntVector((int) v[0],(int) v[1],(int) v[2]));
+        }
+      } else if(*vit=="p.normal") {
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
+          }
+          d_normal.push_back(Vector(v[0],v[1],v[2]));
         }
       } else if(*vit=="p.velocity") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {

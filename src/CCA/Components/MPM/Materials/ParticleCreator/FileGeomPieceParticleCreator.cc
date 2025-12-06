@@ -167,7 +167,9 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pforces        = 0;
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;
-    vector<Vector>* pareas        = 0;
+    vector<Vector>* pareas         = 0;
+    vector<Vector>* pnormals       = 0;
+    vector<IntVector>* pLCIDs      = 0;
 
     volumes      = sgp->getVolume();
 #ifdef INCLUDE_THERMAL
@@ -179,6 +181,8 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
 #ifdef KEEP_PSIZE
     psizes       = sgp->getSize();
 #endif
+    pnormals     = sgp->getNormals();
+    pLCIDs       = sgp->getLoadCurveID();
 
     if(d_with_color){
       colors      = sgp->getColors();
@@ -217,6 +221,24 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>::const_iterator forceiter;
     if (pforces) {
       if (!pforces->empty()) forceiter = vars.d_object_forces[*obj].begin();
+    }
+
+    // For getting particle loadCurveIDs (if they exist)
+    vector<IntVector>::const_iterator LCIDiter;
+    if (pLCIDs) {
+      if (!pLCIDs->empty()){
+         LCIDiter = vars.d_object_loadCurveIDs[*obj].begin();
+         cout << LCIDiter[0] << endl;
+      }
+    }
+
+    // For getting particle normals (if they exist)
+    vector<Vector>::const_iterator Normiter;
+    if (pnormals) {
+      if (!pnormals->empty()){
+         Normiter = vars.d_object_normals[*obj].begin();
+         cout << Normiter[0] << endl;
+      }
     }
 
     // For getting particle fiber directions (if they exist)
@@ -359,6 +381,20 @@ FileGeomPieceParticleCreator::createParticles(MPMMaterial* matl,
 //        }
         if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
           pvars.parea[pidx]=Vector(0.);
+        }
+
+        if (pLCIDs) {                           
+          if (!pLCIDs->empty()) {
+            pvars.pLoadCurveID[pidx] = *LCIDiter;
+            ++LCIDiter;
+          }
+        }
+
+        if (pnormals) {                           
+          if (!pnormals->empty()) {
+            pvars.pnormal[pidx] = *Normiter;
+            ++Normiter;
+          }
         }
       }
       count++;
@@ -552,6 +588,8 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
 #endif
   vector<double>*   concentrations  = sgp->getConcentration();
   vector<Vector>*   pareas          = sgp->getArea();
+  vector<Vector>*   pnormals        = sgp->getNormals();
+  vector<IntVector>* pLCIDs         = sgp->getLoadCurveID();
 
   Point p;
   IntVector cell_idx;
@@ -617,6 +655,14 @@ FileGeomPieceParticleCreator::countAndCreateParticles(const Patch* patch,
         if (!colors->empty()) {
           double color = colors->at(ii); 
           vars.d_object_colors[obj].push_back(color);
+        }
+        if (!pLCIDs->empty()) {
+          IntVector LCID = pLCIDs->at(ii); 
+          vars.d_object_loadCurveIDs[obj].push_back(LCID);
+        }
+        if (!pnormals->empty()) {
+          Vector Normal = pnormals->at(ii); 
+          vars.d_object_normals[obj].push_back(Normal);
         }
         if (!concentrations->empty()) {
           double concentration = concentrations->at(ii); 

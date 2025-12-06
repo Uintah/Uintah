@@ -69,6 +69,7 @@ namespace Uintah {
     typedef std::map<GeometryObject*,std::vector<Point> > geompoints;
     typedef std::map<GeometryObject*,std::vector<double> > geomvols;
     typedef std::map<GeometryObject*,std::vector<Vector> > geomvecs;
+    typedef std::map<GeometryObject*,std::vector<IntVector> > geomintvecs;
     typedef std::map<GeometryObject*,std::vector<Matrix3> > geomMat3s;
   
     typedef struct {
@@ -85,6 +86,8 @@ namespace Uintah {
     geomvecs d_object_velocity; // gcd add
     geomMat3s d_object_size;  
     geomvecs d_object_area;  
+    geomvecs d_object_normals;
+    geomintvecs d_object_loadCurveIDs;
     } ObjectVars;
 
     typedef struct {
@@ -99,6 +102,7 @@ namespace Uintah {
     ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 
     ParticleVariable<IntVector> pLoadCurveID;
+    ParticleVariable<Vector> pnormal;
     ParticleVariable<int> plocalized;
     ParticleVariable<int> prefined;
     ParticleVariable<int> pLastLevel;

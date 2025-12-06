@@ -67,6 +67,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useCBDI                       =  false;
   d_useCPTI                       =  false;
   d_useCohesiveZones              =  false;
+  d_useParticleNormals            =  false;
   d_with_color                    =  false;
   d_fracture                      =  false;
   d_minGridLevel                  =  0;
@@ -226,6 +227,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("use_load_curves",             d_useLoadCurves);
   mpm_flag_ps->get("use_body_force",              d_useBodyForce);
   mpm_flag_ps->get("keepPressBCNormalToSurface",  d_keepPressBCNormalToSurface);
+  mpm_flag_ps->get("use_particle_normals",        d_useParticleNormals);
   mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
@@ -416,6 +418,7 @@ else{
     dbg << " XPIC2                       = " << d_XPIC2 << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Keep PressBC Normal         = " << d_keepPressBCNormalToSurface << endl;
+    dbg << " Use Particle Normals        = " << d_useParticleNormals << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
@@ -450,6 +453,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("use_load_curves",                    d_useLoadCurves);
   ps->appendElement("use_body_force",                     d_useBodyForce);
   ps->appendElement("keepPressBCNormalToSurface", d_keepPressBCNormalToSurface);
+  ps->appendElement("use_particle_normals",               d_useParticleNormals);
   ps->appendElement("use_CBDI_boundary_condition",        d_useCBDI);
   ps->appendElement("exactDeformation",                   d_exactDeformation);
   ps->appendElement("DoImplicitHeatConduction",           d_doImplicitHeatConduction);

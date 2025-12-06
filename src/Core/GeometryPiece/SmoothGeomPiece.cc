@@ -151,6 +151,24 @@ SmoothGeomPiece::getRvec3()
 {
   return &d_rvec3;
 }
+
+//////////////////////////////////////////////////////////////////////
+/* Returns the vectors containing the loadCurveID (IntVector)       */
+//////////////////////////////////////////////////////////////////////
+vector<IntVector>* 
+SmoothGeomPiece::getLoadCurveID()
+{
+  return &d_loadCurveID;
+}
+
+//////////////////////////////////////////////////////////////////////
+/* Returns the vectors containing the particle normal               */
+//////////////////////////////////////////////////////////////////////
+vector<Vector>* 
+SmoothGeomPiece::getNormals()
+{
+  return &d_normal;
+}
                                                            // gcd adds
 //////////////////////////////////////////////////////////////////////
 /* Returns the vector containing the particle velocity components   */
