@@ -96,6 +96,26 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        DataWarehouse* new_dw);
 
+  //HK 
+                                           
+     virtual void modifyComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
+
+    virtual void modifyComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;                                        
+
+	 virtual void CopyInitialCMData(const Patch* patch,
+                                  const MPMMaterial* matl_ref,
+							      const MPMMaterial* matl_dest,         
+                                  const  int oldNumPar,
+					              const  int newNumPar,
+							      const  int partID_ref,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw); /
+
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
