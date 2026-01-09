@@ -30,6 +30,11 @@
 
 #include <CCA/Components/Wasatch/Expressions/SimpleEmission.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+
 //--------------------------------------------------------------------
 
 template< typename FieldT >

@@ -38,6 +38,7 @@ static Uintah::DebugStream dbgd("WASATCH_DUALTIME", false); // dual time diagnos
 
 namespace WasatchCore{
 
+  using SpatialOps::SVolField;
 
   void DualTimeMatrixInfo::set_mass_fraction_tags( const Expr::TagList tags )
   {
