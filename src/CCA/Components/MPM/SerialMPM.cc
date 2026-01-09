@@ -6720,3 +6720,11 @@ void SerialMPM::scheduleDiffusionInterfaceDiv(       SchedulerP  & sched
   d_sdInterfaceModel->addComputesAndRequiresDivergence(sched, patches, matls);
 }
 
+//______________________________________________________________________
+//
+double SerialMPM::recomputeDelT( const double delT )
+{
+  return delT * 0.1;
+}
+//______________________________________________________________________
+//
