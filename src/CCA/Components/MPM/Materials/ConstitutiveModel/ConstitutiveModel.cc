@@ -180,6 +180,37 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   //task->computesVar(lb->p_qLabel_preReloc,                 matlset);
 }
 
+//_________________________________HK granularMPM
+void
+ConstitutiveModel::modifyComputesAndRequires(Task*,
+                                          const MPMMaterial*,
+                                          const PatchSet*) const
+{
+  throw InternalError("Stub Task: ConstitutiveModel::modifyComputesAndRequires ", __FILE__, __LINE__);
+}
+
+void ConstitutiveModel::modifyComputesAndRequires(Task*,
+                                          const MPMMaterial*,
+                                          const PatchSet*,
+                                          const bool ,
+                                          const bool) const
+{
+  throw InternalError("Stub Task: ConstitutiveModel::modifyComputesAndRequires ", __FILE__, __LINE__);
+}
+
+
+void ConstitutiveModel::CopyInitialCMData(const Patch* patch,
+                                     const MPMMaterial* matl_ref,
+							         const MPMMaterial* matl_dest,         
+                                     const  int oldNumPar,
+					        		 const  int newNumPar,
+							         const  int partID_ref,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)                                             
+{
+}
+//_________________________________HK end granularMPM
+
 void
 ConstitutiveModel::computeStressTensor(const PatchSubset*,
                                        const MPMMaterial*,
