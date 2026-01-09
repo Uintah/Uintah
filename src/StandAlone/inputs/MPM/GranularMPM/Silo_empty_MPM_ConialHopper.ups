@@ -1,0 +1,300 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<!--  First try for creatng granular flow -->
+<Uintah_specification>
+<!--            
+                - Silo with Conical hopper
+                
+
+-->
+  <Meta>
+    <title>Granular_Flow_01</title>
+  </Meta>
+   
+ <LoadBalancer type="PLB">
+	<timestepInterval>25</timestepInterval>
+	<gainThreshold>0.15</gainThreshold>
+	<doSpaceCurve>true</doSpaceCurve>
+ </LoadBalancer>
+
+  <SimulationComponent type="mpm" />
+  <Time>
+    <maxTime>6</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>2.2500e-6</delt_min>
+    <delt_max>05.0e-3</delt_max>
+    <delt_init>5.0e-3</delt_init>
+    <timestep_multiplier>0.5</timestep_multiplier>    
+  </Time>
+
+  <DataArchiver>
+	<filebase>Silo_result.uda</filebase>
+     <outputInterval>.05</outputInterval> 
+       
+
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+      
+       <save label = "p.velocity"/>
+        
+       <save label = "p.scalefactor"/>
+      
+    <checkpoint cycle = "2" interval = "0.05"/>   
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator> 		         explicit  </time_integrator>
+    <interpolator>                   gimp      </interpolator>
+    <minimum_particle_mass>          1.0e-8    </minimum_particle_mass>
+    <maximum_particle_velocity>      1000      </maximum_particle_velocity>
+    <minimum_mass_for_acc>           1.e-15    </minimum_mass_for_acc>
+    <artificial_damping_coeff>       0.0001    </artificial_damping_coeff>
+    <withColor>                      true      </withColor>
+     <DoGranularMPM>                 false     </DoGranularMPM>
+  </MPM>
+  
+ 
+  <PhysicalConstants>
+      <gravity>[0.0,-9.81,0]</gravity>
+  </PhysicalConstants>
+  
+  
+ <MaterialProperties>
+     <MPM>
+	 
+      <material name="Silo_Wall_0">  <!-- 0-->
+		<density>1200</density>
+        
+        <stress_free>false</stress_free>
+       <activation_time>0.0</activation_time>     <!-- material activation HK -->
+        <is_active>true</is_active>                 <!-- material activation HK -->
+        
+	 	<constitutive_model type="comp_neo_hook">
+			<bulk_modulus> 	8.33e6 </bulk_modulus>  
+            <shear_modulus>3.85e6</shear_modulus>
+            <useModifiedEOS> true </useModifiedEOS>
+            </constitutive_model> 	
+	   <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+	   <geom_object>  
+	      <box label = "Wall_1">
+              <min>[0.0, 0.55, 0.0]</min>
+              <max>[0.02, 0.82, 0.01]</max>
+          </box>
+          <res>[1,1,1]</res>
+          <velocity>[0.0,0.0,0.0]</velocity>
+          <temperature>294</temperature>   
+		  <color>01</color>
+      </geom_object>  
+      <geom_object>  
+			<parallelepiped label = "ConicalHopper_1">
+				<p1>[0.00, 0.57, 0.0 ]</p1>
+				<p2>[0.16, 0.47, 0.0]</p2>
+				<p3>[0.00, 0.57, 0.01]</p3>
+				<p4>[0.00, 0.52, 0.0]</p4>			 
+	      </parallelepiped>   
+     <res>[1,1,1]</res>
+     <velocity>[0.0,0.0,0.0]</velocity>
+     <temperature>294</temperature>   
+ 	 <color>03</color>
+   </geom_object> 
+   
+  </material>
+  
+  
+  
+  
+   <material name="Silo_Wall_1">  <!-- 1-->
+		<density>1200</density>
+       
+        <stress_free>false</stress_free>
+         <activation_time>0.0</activation_time>     
+        <is_active>true</is_active>                 
+        
+	 	<constitutive_model type="comp_neo_hook">
+			<bulk_modulus> 	8.33e6 </bulk_modulus>  
+            <shear_modulus>3.85e6</shear_modulus>
+            <useModifiedEOS> true </useModifiedEOS>
+            </constitutive_model> 	
+	   <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       
+      <geom_object>  
+	      <box label = "Wall_2">
+              <min>[0.48, 0.55, 0.0]</min>
+              <max>[0.50, 0.82, 0.01]</max>
+          </box>
+          <res>[1,1,1]</res>
+          <velocity>[0.0,0.0,0.0]</velocity>
+          <temperature>294</temperature>   
+		  <color>01</color>
+      </geom_object>
+      
+      <geom_object>  
+		<parallelepiped label = "ConicalHopper_2">
+				<p1>[0.50, 0.57, 0.0 ]</p1>
+				<p2>[0.34, 0.47, 0.0]</p2>
+				<p3>[0.50, 0.57, 0.01]</p3>
+				<p4>[0.50, 0.52, 0.0]</p4>			 
+	      </parallelepiped>
+          
+     <res>[1,1,1]</res>
+     <velocity>[0.0,0.0,0.0]</velocity>
+     <temperature>294</temperature>   
+ 	 <color>03</color>
+   </geom_object> 
+   
+  </material>
+  
+  
+  
+   <material name="Silo_Wall_2"> <!-- 2-->
+		<density>1200</density>
+       
+        <stress_free>false</stress_free>
+         <activation_time>0.0</activation_time>     <
+        <is_active>true</is_active>                 
+        
+	 	<constitutive_model type="comp_neo_hook">
+			<bulk_modulus> 	8.33e6 </bulk_modulus>  
+            <shear_modulus>3.85e6</shear_modulus>
+            <useModifiedEOS> true </useModifiedEOS>
+            </constitutive_model> 	
+	   <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>  
+        
+ 	   <geom_object>  
+		 <box label = "Wall_3">
+            <min>[0.0, -0.5, 0.0]</min>
+            <max>[0.50, -0.48, 0.01]</max>
+        </box>
+        <res>[1,1,1]</res>
+        <velocity>[0.0,0.0,0.0]</velocity>
+        <temperature>294</temperature>   
+		<color>04</color>
+     </geom_object> 
+   
+  </material>
+  
+     
+   <material name="Granular_material_3">  <!-- 3-->
+        <density>1379.0</density>
+       
+           <stress_free>false</stress_free>
+  <activation_time>0.0</activation_time>    
+        <is_active>true</is_active>                 
+  
+	    <specific_heat>132.0</specific_heat>
+        <thermal_conductivity>174.0</thermal_conductivity>
+        <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>
+			<K>8.33e6</K>
+			<G>3.85e6</G>           
+			<Phi>31.0</Phi>
+			<c>0.0</c>
+			<Psi>0.0</Psi> 	  
+		  					  		  
+        </constitutive_model>	
+        	
+        <geom_object>
+            <difference>
+                <box label = "Soil_1">
+					<min>[0.03 , 0.48 ,  0.0]</min>
+					<max>[0.25 , 0.8 ,  0.01]</max>
+                </box>
+                <parallelepiped label = "ParticleRemove_1">
+					<p1>[0.00, 0.57, 0.00]</p1>
+					<p2>[0.16, 0.47, 0.00]</p2>
+					<p3>[0.00, 0.57, 0.01]</p3>
+					<p4>[0.00, 0.40, 0.00]</p4>	
+				</parallelepiped>
+            </difference>
+			<res>[1,1,1]</res>
+            <velocity>[0.0,0.0,0.0]</velocity>
+            <temperature>294</temperature>
+		    <color>00</color>
+        </geom_object>	
+        
+         <geom_object>
+            <difference>
+                <box label = "Soil_2">
+					<min>[0.25 , 0.48 ,  0.0]</min>
+					<max>[0.47 , 0.8 ,  0.01]</max>
+                </box>
+                <parallelepiped label = "ParticleRemove_2">
+					<p1>[0.50, 0.57, 0.00]</p1>
+					<p2>[0.34, 0.47, 0.00]</p2>
+					<p3>[0.50, 0.57, 0.01]</p3>
+					<p4>[0.50, 0.40, 0.00]</p4>	
+				</parallelepiped>
+            </difference>
+			<res>[1,1,1]</res>
+            <velocity>[0.0,0.0,0.0]</velocity>
+            <temperature>294</temperature>
+		    <color>00</color>
+        </geom_object>	       
+   </material>
+   
+
+<contact>
+	<type>friction_bard</type>
+	<materials>[0,1,2,3]</materials>
+	<mu> 0.15 </mu>
+</contact>
+
+   
+		
+    </MPM>
+  </MaterialProperties>
+
+
+
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[ 0.0, -0.5, 0.0]</lower>
+        <upper>[ 0.5, 0.9, 0.01]</upper>
+        <resolution>[50,140,1]</resolution>
+        <patches>[1,1,1]</patches>
+        <extraCells>[1,1,1]</extraCells>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+	
+	           <Face side = "x-">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                   </Face>
+
+                   <Face side = "x+">                     
+                     <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                   </Face>
+
+                   <Face side = "y-">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                   </Face>
+
+                   <Face side = "y+">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                            <value> [0.0,0.0,0.0] </value>
+                      </BCType>
+                   </Face>              			  
+			 
+       <Face side = "z-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face> 
+			  
+
+    </BoundaryConditions>
+  </Grid>
+
+</Uintah_specification>

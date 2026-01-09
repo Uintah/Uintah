@@ -1,0 +1,545 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<!--  First try for creatng granular flow -->
+<Uintah_specification>
+<!--            
+
+              
+                - 2D- simulation
+                - cpdi             
+                
+-->
+  <Meta>
+    <title>Sand-settling-MPM</title>
+  </Meta>
+ 
+  <SimulationComponent type="mpm" />
+
+     <Time>
+		<maxTime>3</maxTime>
+		<initTime>0.0</initTime>
+		<delt_min>1e-9</delt_min>
+		<delt_max>1e-3</delt_max>
+		<timestep_multiplier>0.4</timestep_multiplier>
+		<delt_init>1.0e-5</delt_init>
+   </Time>
+   <DataArchiver>
+       <filebase>result.uda</filebase>
+       <outputInterval>0.05</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.displacement"/>
+       <save label = "p.velocity"/>
+       <save label = "p.mass"/>
+       <save label = "p.stress"/>
+       <save label = "p.scalefactor"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <save label = "p.particleID"/>
+       <save label = "p.deformationMeasure"/>
+    
+       <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+    <MPM>
+		<time_integrator> 		         explicit  </time_integrator>
+		<InsertParticles>               true      </InsertParticles>
+		<InsertParticlesFile>InsertParticels_MPM.txt</InsertParticlesFile>
+		<interpolator>                   gimp      </interpolator>
+		<withColor>                      true      </withColor>
+		<DoGranularMPM>false</DoGranularMPM>
+    </MPM>
+  
+
+  <PhysicalConstants>
+   <gravity>[0.0, -9.81 ,0]</gravity>
+  </PhysicalConstants>
+  
+
+ <MaterialProperties>
+       <MPM>
+		   
+	  <material name="Silo_Wall_0"> <!-- mId : 0  -->
+     
+         <density>1200</density>
+		<specific_heat>132.0</specific_heat>
+		<thermal_conductivity>174.0</thermal_conductivity>
+		<stress_free>false</stress_free>
+		<activation_time>0.0</activation_time>    
+        <is_active>true</is_active>                 
+	 	<constitutive_model type="comp_neo_hook">
+             <bulk_modulus>8.333333e7</bulk_modulus>
+             <shear_modulus>1.677852e6</shear_modulus>
+             <useModifiedEOS> true </useModifiedEOS>
+        </constitutive_model>
+        <geom_object>  
+		    <box label = "Wall_00">
+               <min>[-0.02, 0.0, 0.0]</min>
+               <max>[0.0, 0.25, 0.01]</max>
+            </box>
+            <res>[1,1,1]</res>
+            <velocity>[0.0,0.0,0.0]</velocity>
+            <temperature>294</temperature>   
+			<color>0</color>
+       </geom_object>            
+      <geom_object>  
+		    <box label = "Wall_01">
+               <min>[0.1, 0.0, 0.0]</min>
+               <max>[0.12, 0.25, 0.01]</max>
+            </box>
+            <res>[1,1,1]</res>
+            <velocity>[0.0,0.0,0.0]</velocity>
+            <temperature>294</temperature>   
+			<color>0</color>
+       </geom_object>  
+       <geom_object>  
+		    <box label = "Wall_03">
+               <min>[-0.16, -0.02, 0.0]</min>
+               <max>[0.26, 0.0, 0.01]</max>
+            </box>
+            <res>[1,1,1]</res>
+            <velocity>[0.0,0.0,0.0]</velocity>
+            <temperature>294</temperature>   
+			<color>0</color>
+       </geom_object>        
+  </material>
+  
+
+   <material name="Granular_material_1">  <!-- mId : 1  -->
+    <density>1477.0</density>
+    <specific_heat>132.0</specific_heat>
+    <thermal_conductivity>174.0</thermal_conductivity>
+    <critical_density>1400</critical_density>
+    <stress_free>true</stress_free>
+		<activation_time>0.0</activation_time>    
+        <is_active>true</is_active>                 
+		<constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil2">
+                <min>[0.01 , 0.22,  0.0]</min>
+                <max>[0.09 , 0.23 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5 ,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>1</color>
+        </geom_object>	       
+   </material>
+   
+      <material name="Granular_material_2">  <!-- mId : 2  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+        <stress_free>true</stress_free>
+		<activation_time>0.50</activation_time>     
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>			
+        <geom_object>
+                <box label = "Soil3">
+                <min>[0.14 , 0.0,  0.0]</min>
+                <max>[0.22 , 0.01 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>2</color>
+        </geom_object>	       
+   </material>
+   
+      <material name="Granular_material_3">  <!-- mId : 3  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+        <thermal_conductivity>174.0</thermal_conductivity>
+        <critical_density>1400</critical_density>
+        <stress_free>true</stress_free>
+		<activation_time>0.45</activation_time>     
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil4">
+                <min>[0.14 , 0.01,  0.0]</min>
+                <max>[0.22 , 0.02 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>3</color>
+        </geom_object>	      
+   </material>
+   
+      <material name="Granular_material_4">  <!-- mId : 4  -->
+		<density>1477.0</density>
+       <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+      <stress_free>true</stress_free>
+		<activation_time>0.4</activation_time>     
+        <is_active>false</is_active>                
+	    <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil5">
+                <min>[0.14 , 0.02,  0.0]</min>
+                <max>[0.22 , 0.03 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>4</color>
+        </geom_object>	    
+   </material>
+   
+      <material name="Granular_material_5">  <!-- mId : 5  -->
+		<density>1477.0</density>
+       <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+       <stress_free>true</stress_free>
+		<activation_time>0.35</activation_time>    
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>	
+        <geom_object>
+                <box label = "Soil6">
+                <min>[0.14 , 0.03,  0.0]</min>
+                <max>[0.22 , 0.04 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>5</color>
+        </geom_object>	      
+   </material>
+   
+      <material name="Granular_material_6">  <!-- mId : 6  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+        <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+      <stress_free>true</stress_free>
+		<activation_time>0.30</activation_time>     
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil7">
+                <min>[0.14 , 0.04,  0.0]</min>
+                <max>[0.22 , 0.05 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>6</color>
+        </geom_object>	     
+   </material>
+   
+      <material name="Granular_material_7">  <!-- mId : 7  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+       <stress_free>true</stress_free>
+		<activation_time>0.25</activation_time>     
+        <is_active>false</is_active>                 
+	    <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil8">
+                <min>[0.14 , 0.05,  0.0]</min>
+                <max>[0.22 , 0.06 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>7</color>
+        </geom_object>	 
+   </material>
+   
+      <material name="Granular_material_8">  <!-- mId : 8  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+        <thermal_conductivity>174.0</thermal_conductivity>
+        <critical_density>1400</critical_density>
+       <stress_free>true</stress_free>
+		<activation_time>0.20</activation_time>     
+        <is_active>false</is_active>                 
+	    <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>	
+        <geom_object>
+                <box label = "Soil9">
+                <min>[0.14 , 0.06,  0.0]</min>
+                <max>[0.22 , 0.07 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>8</color>
+        </geom_object>	      
+   </material>
+   
+   <material name="Granular_material_9">  <!-- mId : 9  -->
+		<density>1477.0</density>
+       <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+       <critical_density>1400</critical_density>
+      <stress_free>true</stress_free>
+		<activation_time>0.15</activation_time>     
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil10">
+                <min>[0.14 , 0.07,  0.0]</min>
+                <max>[0.22 , 0.08 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>9</color>
+        </geom_object>	   
+   </material>
+   
+   <material name="Granular_material_10">  <!-- mId : 10  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+       <thermal_conductivity>174.0</thermal_conductivity>
+      <critical_density>1400</critical_density>
+     <stress_free>true</stress_free>
+		<activation_time>0.10</activation_time>     
+        <is_active>false</is_active>                 
+	   <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>		
+        <geom_object>
+                <box label = "Soil11">
+                <min>[0.14 , 0.08,  0.0]</min>
+                <max>[0.22 , 0.09 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0,0.0]</velocity>
+                <temperature>294</temperature>
+				<color>10</color>
+        </geom_object>	     
+   </material>
+   
+    <material name="Granular_material_11">  <!-- mId : 11  -->
+		<density>1477.0</density>
+        <specific_heat>132.0</specific_heat>
+        <thermal_conductivity>174.0</thermal_conductivity>
+        <critical_density>1400</critical_density>
+      <stress_free>true</stress_free>
+		<activation_time>0.05</activation_time>     
+        <is_active>false</is_active>                 
+	    <constitutive_model type="MohrCoulomb">
+			<Version>11</Version>		
+			<G>1.0e7</G>
+			<K>1.3006536e7</K>
+			<Phi>34.0</Phi>
+			<c>0.00</c>
+			<Psi>0.00</Psi>  		  					  		  
+		</constitutive_model>	
+        <geom_object>
+                <box label = "Soil12">
+                <min>[0.14 , 0.09,  0.0]</min>
+                <max>[0.22 , 0.1 ,  0.01]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0, -5.0, 0.0]</velocity>
+                <temperature>294</temperature>
+				<color>11</color>
+        </geom_object>	    
+   </material>
+
+                                   
+           <!--  contact     1        -->   
+           
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,1]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,2]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,3]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,4]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,5]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,6]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,7]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,8]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,9]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,10]</materials>
+    <mu>0.37</mu>
+</contact>
+
+<contact>
+    <type>friction_bard</type>
+    <materials>[0,11]</materials>
+    <mu>0.37</mu>
+</contact>
+            
+            <!-- contact     3   -->          
+
+
+    <contact>
+		<type>friction_bard</type>
+		<materials>[1,2,3,4,5,6,7,8,9,10,11 ]</materials>
+		 <mu>0.67</mu>
+	</contact>
+	
+      
+	         
+    </MPM>
+
+ </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "y-">
+                 <BCType id = "all" var = "Dirichlet" label = "Velocity">
+						<value> [0.0,0.0,0.0] </value>
+				  </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+						<value> [0.0,0.0,0.0] </value>
+				  </BCType>
+           </Face>
+            <Face side = "x-">
+                 <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                
+          <Face side = "x+">
+               <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">                     
+              <lower>[-0.16, -0.02, 0.0]</lower>
+              <upper>[0.26, 0.25, 0.01]</upper>
+              <resolution>[42,27,1]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+  
+</Uintah_specification>
+
+
+

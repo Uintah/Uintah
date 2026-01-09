@@ -15,9 +15,6 @@
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <DoGranularMPM                      spec="OPTIONAL BOOLEAN" />
-      <GranularMPMVcrix                   spec="OPTIONAL DOUBLE" />
-      <GranularMPMVcriy                   spec="OPTIONAL DOUBLE" />
-      <GranularMPMVcriz                   spec="OPTIONAL DOUBLE" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
       <restartOnLargeNodalVelocity        spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
@@ -38,6 +35,7 @@
       <!-- controls maximum linear dimension of particle in cell units befor particle -->
       <!-- resizing and possible numerical fracture, default is 1.5-->
       <cpdi_lcrit                         spec="OPTIONAL DOUBLE 'positive'"/> 
+       <maximum_particle_velocity              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_subcycles_for_F            spec="OPTIONAL INTEGER"/>
@@ -203,6 +201,16 @@
         <density                         spec="REQUIRED DOUBLE" />
         <is_active                       spec="OPTIONAL BOOLEAN" />
         <activation_time                 spec="OPTIONAL DOUBLE" />
+         <!--__________________________________-->
+        <!-- GranularMPM HK -->
+        <!-- <MPMGranular                       spec="OPTIONAL NO_DATA" > -->
+			  <allow_DWIndex_correction         spec="OPTIONAL BOOLEAN" />     
+			  <applied_contact_model            spec="OPTIONAL BOOLEAN" />                                      
+			  <stress_free                      spec="OPTIONAL BOOLEAN" />     
+			  <critical_density                 spec="OPTIONAL DOUBLE" />   
+			  <MatTypeIdx                       spec="OPTIONAL INTEGER 'positive'" /> 
+			  <deactivation_time                spec="OPTIONAL DOUBLE" /> 
+       <!-- </MPMGranular>   --><!--HK GranularMPM -->
 
                   <!--Hydro mechanical coupling-->s
                   <water_density spec="OPTIONAL DOUBLE 'positive'"/>
