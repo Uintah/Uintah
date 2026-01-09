@@ -55,7 +55,7 @@ class SDInterfaceModel;
 class FluxBCModel;
 class CZLabel;
 class CohesiveZoneTasks;
-
+class MPMGranular; // HK from Wojciech Solowski's research group
 /**************************************
 
 CLASS
@@ -167,6 +167,7 @@ protected:
   FluxBCModel*  d_fluxBC;
   CZLabel* Cl;
   CohesiveZoneTasks* cohesiveZoneTasks;
+  MPMGranular* MPMGranularTasks; //HK
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -400,14 +401,7 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
-  //////////MJ
-  // From Wojtek Solowski's group:
-  virtual void GranularMPM(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
-
+  
   virtual void computeParticleGradients(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* matls,
@@ -551,9 +545,6 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
-/////MJ                                                                                           
- virtual void scheduleGranularMPM(SchedulerP&, const PatchSet*, 
-                                                  const MaterialSet*);
 
   virtual void scheduleComputeParticleGradients(SchedulerP&, 
                                                 const PatchSet*,
