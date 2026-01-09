@@ -130,7 +130,20 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("specific_heat",d_specificHeat);
   ps->getWithDefault("linear_thermal_expansion_coef",
                                      d_thermalExpCoeff, 0.);
+
+
+// HK - For MPMGranular
+  //__________________________
+   ps->get("MatTypeIdx",  d_MatTypeIdx);  //
+   ps->get("allow_DWIndex_correction",  d_allow_DWIndex_correction); //
+   ps->get("critical_density",  d_rho_cri); // critical density 
+   ps->get("stress_free",  d_stress_free);  // for grains with gas-like behavior
+   ps->get("applied_contact_model",     d_applied_contact_model);  // for non-Dummy  materials
+   d_deactivation_time = 100000000;  // defult value
+   ps->get("deactivation_time", d_deactivation_time);
+  //__________________________
   
+
   // Also use for Darcy momentum exchange model
   ps->get("permeability", d_permeability);
 
@@ -325,6 +338,15 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("possible_alpha", d_possible_alpha);
   mpm_ps->appendElement("activation_time",d_activation_time);
 
+   //for MPMGranular HK
+  mpm_ps->appendElement("critical_density",  d_rho_cri); // critical density
+  mpm_ps->appendElement("MatTypeIdx",  d_MatTypeIdx); 
+  mpm_ps->appendElement("allow_DWIndex_correction",  d_allow_DWIndex_correction); 
+  mpm_ps->appendElement("deactivation_time",d_deactivation_time); 
+  mpm_ps->appendElement("stress_free",d_stress_free); 
+  mpm_ps->appendElement("applied_contact_model",d_applied_contact_model); 
+  //
+
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
   d_erosionModel->outputProblemSpec(mpm_ps);
@@ -358,6 +380,14 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_is_active = mat->d_is_active;
   d_possible_alpha = mat->d_possible_alpha;
   d_activation_time = mat->d_activation_time;
+  // for MPMGranular HK
+   d_rho_cri = mat->d_rho_cri; 
+  d_MatTypeIdx = mat->d_MatTypeIdx; 
+  d_allow_DWIndex_correction = mat->d_allow_DWIndex_correction; 
+  d_deactivation_time = mat->d_deactivation_time;
+  d_stress_free = mat->d_stress_free; 
+  d_applied_contact_model = mat->d_applied_contact_model; 
+  // end MPMGranular
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags,
@@ -533,7 +563,37 @@ double MPMMaterial::getInitialPorepressure() const
 
 // End MPM Hydro-mechanical coupling
 
+//_____________For GranularMPM HK
+//
+bool MPMMaterial::getDoStressFree() const
+{
+  return d_stress_free;
+}
 
+bool MPMMaterial::DoDWIndexCorrection() const 
+{
+  return d_allow_DWIndex_correction;
+}
+
+bool MPMMaterial::getAppliedContactModel() const
+{
+  return d_applied_contact_model;
+}
+
+double MPMMaterial::getCriticalDensity() const 
+{
+  return d_rho_cri;
+}
+
+unsigned int MPMMaterial::getMatTypeIdx() const 
+{
+  return d_MatTypeIdx;
+}
+double MPMMaterial::getDeactivationTime() const  
+{
+  return d_deactivation_time;
+}
+ //end MPMGranular
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
  Notes:  This function initializeCCVariables.  Reasonable values for 
