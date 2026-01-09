@@ -34,6 +34,7 @@
 #include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZoneTasks.h>
+#include <CCA/Components/MPM/MPMGranular.h> //HK for GranularMPM
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -126,6 +127,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   thermalContactModel = nullptr;
   heatConductionModel = nullptr;
   cohesiveZoneTasks   = nullptr;
+  MPMGranularTasks   = nullptr; //HK
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
@@ -147,6 +149,7 @@ SerialMPM::~SerialMPM()
   delete d_switchCriteria;
   delete Cl;
   delete cohesiveZoneTasks;
+  delete MPMGranularTasks;//HK
 
   MPMPhysicalBCFactory::clean();
 
@@ -278,10 +281,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if (flags->d_prescribeDeformation){
     readPrescribedDeformations(flags->d_prescribedDeformationFile);
   }
-  if (flags->d_insertParticles){
-    readInsertParticlesFile(flags->d_insertParticlesFile);
-  }
-
+  
   setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
@@ -307,6 +307,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
   cohesiveZoneTasks->cohesiveZoneProblemSetup(restart_mat_ps, flags);
+
+  MPMGranularTasks   = scinew MPMGranular(m_materialManager, flags); //HK 
+  MPMGranularTasks->MPMGranularProblemSetup(restart_mat_ps, flags); //HK
+  
+  if (flags->d_insertParticles){
+	   if(flags->d_doGranularMPM ){  //HK
+			MPMGranularTasks->readInsertGranularParticlesFile(flags->d_insertParticlesFile); //HK
+        }else{  
+          readInsertParticlesFile(flags->d_insertParticlesFile);
+        }  
+  }
 
   if (flags->d_doScalarDiffusion) {
     d_sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager, flags, lb);
@@ -849,12 +860,17 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
-  if(flags->d_doGranularMPM){ //MJ
-    scheduleGranularMPM(                  sched, patches, matls);
-  }
+  if(flags->d_doGranularMPM ){  //HK-GK- MJ
+   MPMGranularTasks->scheduleGranularMPM(sched, patches, matls); //HK
+ }
 
   scheduleFinalParticleUpdate(            sched, patches, matls);
-  scheduleInsertParticles(                sched, patches, matls);
+  
+  if(flags->d_doGranularMPM ){  //HK
+		MPMGranularTasks->scheduleInsertGranularParticles(                sched, patches, matls); //HK
+  }else{
+	  scheduleInsertParticles(                sched, patches, matls);
+  }	
   if(flags->d_refineParticles){
     scheduleAddParticles(                 sched, patches, matls);
   }
@@ -2068,81 +2084,6 @@ void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   }
 }
 
-//MJ: This function schedul GranularMPM and should take place before FinalParticleUpdate
-void SerialMPM::scheduleGranularMPM(SchedulerP& sched,
-                                    const PatchSet* patches,
-                                    const MaterialSet* matls)
-{
-    if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-        getLevel(patches)->getGrid()->numLevels()))
-        return;
-
-    printSchedule(patches, cout_doing, "MPM::scheduleGranularMPM");
-
-    Task* t = scinew Task("MPM::GranularMPM", this, &SerialMPM::GranularMPM);
-  
-
-//    MaterialSubset* zeroth_matl = scinew MaterialSubset();
-//    zeroth_matl->add(0);
-//    zeroth_matl->addReference();
-
-    t->modifiesVar(lb->pParticleIDLabel_preReloc);
-    t->modifiesVar(lb->pXLabel_preReloc);
-    t->modifiesVar(lb->pVolumeLabel_preReloc);
-    t->modifiesVar(lb->pVelocityLabel_preReloc);
-    t->modifiesVar(lb->pMassLabel_preReloc);
-    t->modifiesVar(lb->pSizeLabel_preReloc);
-    t->modifiesVar(lb->pDispLabel_preReloc);
-    t->modifiesVar(lb->pStressLabel_preReloc);
-    t->modifiesVar(lb->pdTdtLabel);
-
-    if (flags->d_with_color) {
-        t->modifiesVar(lb->pColorLabel_preReloc);
-    }
-    if (flags->d_useLoadCurves) {
-        t->modifiesVar(lb->pLoadCurveIDLabel_preReloc);
-    }
-
-    // JBH -- Add code for these variables -- FIXME TODO
-    if (flags->d_doScalarDiffusion) {
-        t->modifiesVar(lb->diffusion->pConcentration_preReloc);
-        t->modifiesVar(lb->diffusion->pConcPrevious_preReloc);
-        t->modifiesVar(lb->diffusion->pGradConcentration_preReloc);
-        t->modifiesVar(lb->diffusion->pExternalScalarFlux_preReloc);
-        t->modifiesVar(lb->diffusion->pArea_preReloc);
-        t->modifiesVar(lb->diffusion->pDiffusivity_preReloc);
-    }
-    t->modifiesVar(lb->pLocalizedMPMLabel_preReloc);
-    t->modifiesVar(lb->pExtForceLabel_preReloc);
-    t->modifiesVar(lb->pTemperatureLabel_preReloc);
-    t->modifiesVar(lb->pTemperatureGradientLabel_preReloc);
-    t->modifiesVar(lb->pTempPreviousLabel_preReloc);
-    t->modifiesVar(lb->pDeformationMeasureLabel_preReloc);
-    //t->modifiesVar(lb->pRefinedLabel_preReloc);
-    if (flags->d_computeScaleFactor) {
-        t->modifiesVar(lb->pScaleFactorLabel_preReloc);
-    }
-    t->modifiesVar(lb->pVelGradLabel_preReloc);
-
-    //t->requiresVar(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
-    //t->computesVar(lb->pCellNAPIDLabel, zeroth_matl);
-
-    // Need to figure out if this is needed, and if not, why not?
-#if 0
-    unsigned int numMatls = m_materialManager->getNumMatls("MPM");
-    for (unsigned int m = 0; m < numMatls; m++) {
-        MPMMaterial* mpm_matl = (MPMMaterial*)m_materialManager->getMaterial("MPM", m);
-        ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-        cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
-        if (flags->d_doScalarDiffusion) {
-            ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-            sdm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
-        }
-    }
-#endif
-
-    sched->addTask(t, patches, matls);
-}
 
 //______________________________________________________________________
 //
@@ -4878,23 +4819,17 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
         double J   =pFNew[idx].Determinant();
         double JOld=pFOld[idx].Determinant();
         pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
+
+         // stressfree conditions HK - GK - MJ
+        double rho_org = mpm_matl->getInitialDensity();
+		    double rho_cri = mpm_matl->getCriticalDensity();
+	    	double rho_cur = rho_org/J;
+        if (flags->d_doGranularMPM && rho_cur< (rho_cri - 1.0e-6) && mpm_matl->getDoStressFree() ){ 
+			     pFNew[idx]=pFOld[idx];
+			    J = pFOld[idx].Determinant();
+			    pvolume[idx] = pVolumeOld[idx]; 					 	  		
+		    } // end if Granular MPM
         partvoldef += pvolume[idx];
-        if(flags->d_doGranularMPM){ //MJ //JG
-          double Vcrix = flags->d_GranularMPM_Vcrix;
-          double Vcriy = flags->d_GranularMPM_Vcriy;
-          double Vcriz = flags->d_GranularMPM_Vcriz;
-          if(flags->d_ndim<=2){
-            Vcriz=1.0;
-          }
-          double r1=dx.x()*pSizeOrig[idx](0,0);
-          double r2=dx.y()*pSizeOrig[idx](1,1);
-          double r3=dx.z()*pSizeOrig[idx](2,2);
-          const double Vcri = (Vcrix*r1 * Vcriy*r2 * Vcriz*r3);
-          if (pvolume[idx]> (Vcri + 1.0e-12)){
-            pFNew[idx] = pFOld[idx];
-            pvolume[idx] = pVolumeOld[idx];
-          }
-        } // end if Granular MPM
       }
 
       // The following is used only for pressure stabilization
@@ -4948,22 +4883,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           double JOld=pFOld[idx].Determinant();
           pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
 
-          if(flags->d_doGranularMPM){ //MJ //JG
-            double Vcrix = flags->d_GranularMPM_Vcrix;
-            double Vcriy = flags->d_GranularMPM_Vcriy;
-            double Vcriz = flags->d_GranularMPM_Vcriz;
-            if(flags->d_ndim<=2){
-              Vcriz=1.0;
-            }
-            double r1=dx.x()*pSizeOrig[idx](0,0);
-            double r2=dx.y()*pSizeOrig[idx](1,1);
-            double r3=dx.z()*pSizeOrig[idx](2,2);
-            const double Vcri = (Vcrix*r1 * Vcriy*r2 * Vcriz*r3);
-            if (pvolume[idx]> (Vcri + 1.0e-12)){
-               pFNew[idx] = pFOld[idx];
-               pvolume[idx] = pVolumeOld[idx];
-            }
-          } // end if Granular MPM
+          // stressfree conditions HK - GK - MJ
+          double rho_org = mpm_matl->getInitialDensity();
+		      double rho_cri = mpm_matl->getCriticalDensity();
+	    	  double rho_cur = rho_org/J;
+         if (flags->d_doGranularMPM && rho_cur< (rho_cri - 1.0e-6) && mpm_matl->getDoStressFree() ){ 
+			      pFNew[idx]=pFOld[idx];
+			      J = pFOld[idx].Determinant();
+			     pvolume[idx] = pVolumeOld[idx]; 					 	  		
+		     } // end if Granular MPM
         }
       } //end of pressureStabilization loop  at the patch level
 
