@@ -78,6 +78,30 @@ namespace Uintah {
                                    bool output_cm_tag = true) = 0;
 
 
+ //________________________________________________________HK granularMPM
+//                                      
+   virtual void modifyComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const; //HK
+
+    virtual void modifyComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion,
+                                        const bool SchedParent) const;     //HK                                   
+
+   virtual void CopyInitialCMData(const Patch* patch,
+                                  const MPMMaterial* matl_ref,
+							      const MPMMaterial* matl_dest,         
+                                  const  int oldNumPar,
+					              const  int newNumPar,
+							      const  int partID_ref,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw) ;   //HK      
+                                  
+                                                           
+  //_____________________________________________ end of GranularMPM
+
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
