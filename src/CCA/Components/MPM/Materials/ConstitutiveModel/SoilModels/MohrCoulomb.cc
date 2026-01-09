@@ -462,6 +462,69 @@ void MohrCoulomb::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
+//_________________________________________________________________HK for GranularMPM
+
+void MohrCoulomb::modifyComputesAndRequires(Task* task,
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
+{
+  // modify the computes and requires that are common to all explicit
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+    //cerr << "MohrCoulomb: In  modifyComputesAndRequires" << endl;
+  // modify and requires for internal state data
+  for(int i=0;i<d_NINSV;i++){
+    task->modifiesVar(             ISVLabels_preReloc[i], matlset);
+  }
+}
+
+void MohrCoulomb::modifyComputesAndRequires(Task*,
+                                     const MPMMaterial*,
+                                     const PatchSet*,
+                                     const bool ) const
+{
+	//  cerr << "* MohrCoulomb: In  modifyComputesAndRequires" << endl;
+}
+
+void MohrCoulomb::CopyInitialCMData(const Patch* patch,
+							const MPMMaterial* matl_ref,
+							const MPMMaterial* matl_dest,
+							const  int oldNumPar,
+							const  int newNumPar,
+							const  int partID_ref,
+							DataWarehouse* old_dw,
+							DataWarehouse* new_dw)
+{
+    ParticleSubset* pset_ref = old_dw->getParticleSubset(matl_ref->getDWIndex(), patch);	
+    ParticleSubset* pset_dest = old_dw->getParticleSubset(matl_dest->getDWIndex(), patch);
+
+   vector<ParticleVariable<double> > ISVs_dest(d_NINSV+1);
+   vector<ParticleVariable<double> > ISVs_ref(d_NINSV+1);
+   vector<ParticleVariable<double> > ISVs_tmp(d_NINSV+1);
+   //cout<< "BBM: In CopyInitialCMData, matl_dest  is "<<matl_dest->getDWIndex()<<", matl_ref  is "<<matl_ref->getDWIndex()<<endl; 
+  
+    for(int i=0; i<d_NINSV; i++) {
+      new_dw->getModifiable(ISVs_ref[i], ISVLabels_preReloc[i], pset_ref); 
+      new_dw->getModifiable(ISVs_dest[i], ISVLabels_preReloc[i], pset_dest); 
+      new_dw->allocateTemporary(ISVs_tmp[i], pset_dest); 
+    }   
+    for ( int pp = 0; pp < oldNumPar; ++pp) {
+	     for(int i=0; i<d_NINSV; i++) {
+		    	ISVs_tmp[i][pp] = ISVs_dest[i][pp];   
+         }
+      } 
+    for(int i=0; i<d_NINSV; i++) {
+	  ISVs_tmp[i][newNumPar - 1] = ISVs_ref[i][partID_ref]; 
+	 }
+	 
+	 for(int i=0; i<d_NINSV; i++) {    
+		new_dw->put(ISVs_tmp[i], ISVLabels_preReloc[i], true); 
+	 }  
+	  
+  }
+//_______________________________HK end for GranularMPM
+
 void MohrCoulomb::computeStressTensor(const PatchSubset* patches,
                                   const MPMMaterial* matl,
                                   DataWarehouse* old_dw,
