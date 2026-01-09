@@ -582,6 +582,81 @@ void UCNH::computeStableTimeStep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 //______________________________________________________________________
+//HK for GranularMPM
+void UCNH::modifyComputesAndRequires(Task* task,
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
+{
+  // modify the computes and requires that are common to all explicit
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+    //cerr << "UCNH: In  modifyComputesAndRequires" << endl;
+    
+  // Plasticity
+  if(d_usePlasticity) {
+    task->modifiesVar(pPlasticStrainLabel_preReloc,       matlset);
+    task->modifiesVar(pYieldStressLabel_preReloc,         matlset);
+    task->modifiesVar(bElBarLabel_preReloc,               matlset);
+  }
+
+}
+
+void UCNH::modifyComputesAndRequires(Task*,
+                                     const MPMMaterial*,
+                                     const PatchSet*,
+                                     const bool ) const
+{
+	  //cerr << "* UCNH  : In  modifyComputesAndRequires" << endl;
+}
+
+void UCNH ::CopyInitialCMData(const Patch* patch,
+							const MPMMaterial* matl_ref,
+							const MPMMaterial* matl_dest,
+							const  int oldNumPar,
+							const  int newNumPar,
+							const  int partID_ref,
+							DataWarehouse* old_dw,
+							DataWarehouse* new_dw)
+{
+    ParticleSubset* pset_ref = old_dw->getParticleSubset(matl_ref->getDWIndex(), patch);	
+    ParticleSubset* pset_dest = old_dw->getParticleSubset(matl_dest->getDWIndex(), patch);
+	
+    if(d_usePlasticity) {
+		ParticleVariable<double> pPlasticStrain_ref, pPlasticStrain_dest, pPlasticStrain_tmp;
+		ParticleVariable<double> pYieldStress_ref, pYieldStress_dest, pYieldStress_tmp;
+		ParticleVariable<Matrix3> bElBar_ref, bElBar_dest, bElBar_tmp;
+      
+		new_dw->getModifiable(pPlasticStrain_ref,        pPlasticStrainLabel_preReloc,           pset_ref);
+		new_dw->getModifiable(pYieldStress_ref,          pYieldStressLabel_preReloc,             pset_ref);
+		new_dw->getModifiable(bElBar_ref,                bElBarLabel_preReloc,                   pset_ref);
+      
+		new_dw->getModifiable(pPlasticStrain_dest,       pPlasticStrainLabel_preReloc,           pset_dest);
+		new_dw->getModifiable(pYieldStress_dest,         pYieldStressLabel_preReloc,             pset_dest);
+		new_dw->getModifiable(bElBar_dest,               bElBarLabel_preReloc,                   pset_dest);
+      
+		new_dw->allocateTemporary(pPlasticStrain_tmp,   pset_dest);
+		new_dw->allocateTemporary(pYieldStress_tmp,     pset_dest);
+		new_dw->allocateTemporary(bElBar_tmp,           pset_dest);
+            
+		for ( int pp = 0; pp < oldNumPar; ++pp) {
+			pPlasticStrain_tmp[pp] = pPlasticStrain_dest[pp];
+			pYieldStress_tmp[pp] = pYieldStress_dest[pp];
+			bElBar_tmp[pp] = bElBar_dest[pp];  
+		} 
+      
+		pPlasticStrain_tmp[newNumPar - 1] = pPlasticStrain_ref[partID_ref];
+		pYieldStress_tmp[newNumPar - 1] = pYieldStress_ref[partID_ref];
+		bElBar_tmp[newNumPar - 1] = bElBar_ref[partID_ref];
+            
+		new_dw->put(pPlasticStrain_tmp,        pPlasticStrainLabel_preReloc,           true);
+		new_dw->put(pYieldStress_tmp,          pYieldStressLabel_preReloc,             true);
+		new_dw->put(bElBar_tmp,                bElBarLabel_preReloc,                   true);   
+     }
+}    
+//HK end for GranularMPM
+
+//______________________________________________________________________
 //
 void UCNH::computeStressTensor(const PatchSubset* patches,
                                 const MPMMaterial* matl,
