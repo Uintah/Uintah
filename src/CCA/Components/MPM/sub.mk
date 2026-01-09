@@ -35,6 +35,7 @@ SRCDIR	:= CCA/Components/MPM
 SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
 	$(SRCDIR)/MPMCommon.cc    \
+	$(SRCDIR)/MPMGranular.cc    \
 	$(SRCDIR)/ImpMPM.cc       \
 	$(SRCDIR)/ShellMPM.cc     \
 	$(SRCDIR)/SingleFieldMPM.cc     \
