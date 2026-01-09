@@ -160,6 +160,17 @@ WARNING
 
    int nullGeomObject() const;
 
+   //HK: MPMGranular (GranularMPM)
+    //____________________________
+     bool getDoStressFree() const; 
+     bool getAppliedContactModel() const; 
+     double getCriticalDensity() const; 
+     unsigned int getMatTypeIdx() const; 
+     bool DoDWIndexCorrection() const; 
+     double getDeactivationTime() const;
+    //_____________________________
+  
+
    // MPM Hydro-mechanical coupling
    double getWaterDensity() const;
    double getPorosity() const;
@@ -236,6 +247,16 @@ WARNING
    // copy constructor
    MPMMaterial(const MPMMaterial &mpmm);
    MPMMaterial& operator=(const MPMMaterial &mpmm);
+
+     //HK: MPMGranular (GranularMPM)
+    //____________________________
+   double d_rho_cri ; 
+   unsigned int d_MatTypeIdx ; 
+   bool d_allow_DWIndex_correction = false; 
+   bool   d_stress_free = false;
+   bool   d_applied_contact_model= true;
+   double d_deactivation_time;   
+    //_____________________________
 
    ///////////////////////////////////////////////////////////////////////////
    //
