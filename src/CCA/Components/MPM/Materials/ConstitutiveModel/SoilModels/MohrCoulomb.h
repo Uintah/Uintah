@@ -114,7 +114,7 @@ namespace Uintah {
 					              const  int newNumPar,
 							      const  int partID_ref,
                                   DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw); /
+                                  DataWarehouse* new_dw); 
 
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
