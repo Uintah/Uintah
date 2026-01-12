@@ -312,15 +312,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   MPMGranularTasks->MPMGranularProblemSetup(restart_mat_ps, flags); //HK
   
   if (flags->d_insertParticles){
-	   if(flags->d_doGranularMPM ){  //HK
-			MPMGranularTasks->readInsertGranularParticlesFile(flags->d_insertParticlesFile); //HK
-        }else{  
-          readInsertParticlesFile(flags->d_insertParticlesFile);
-        }  
+    if(flags->d_doGranularMPM ){  //HK
+      MPMGranularTasks->readInsertGranularParticlesFile(flags->d_insertParticlesFile); //HK
+    }else{
+      readInsertParticlesFile(flags->d_insertParticlesFile);
+    }
   }
 
   if (flags->d_doScalarDiffusion) {
-    d_sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager, flags, lb);
+    d_sdInterfaceModel = 
+              SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager,
+                                              flags, lb);
   }
 
   d_fluxBC = FluxBCModelFactory::create(m_materialManager, flags);
@@ -867,10 +869,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleFinalParticleUpdate(            sched, patches, matls);
   
   if(flags->d_doGranularMPM ){  //HK
-		MPMGranularTasks->scheduleInsertGranularParticles(                sched, patches, matls); //HK
+    MPMGranularTasks->scheduleInsertGranularParticles(sched,patches,matls);//HK
   }else{
-	  scheduleInsertParticles(                sched, patches, matls);
-  }	
+    scheduleInsertParticles(                sched, patches, matls);
+  }
   if(flags->d_refineParticles){
     scheduleAddParticles(                 sched, patches, matls);
   }
@@ -4822,13 +4824,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
          // stressfree conditions HK - GK - MJ
         double rho_org = mpm_matl->getInitialDensity();
-		    double rho_cri = mpm_matl->getCriticalDensity();
-	    	double rho_cur = rho_org/J;
-        if (flags->d_doGranularMPM && rho_cur< (rho_cri - 1.0e-6) && mpm_matl->getDoStressFree() ){ 
-			     pFNew[idx]=pFOld[idx];
-			    J = pFOld[idx].Determinant();
-			    pvolume[idx] = pVolumeOld[idx]; 					 	  		
-		    } // end if Granular MPM
+        double rho_cri = mpm_matl->getCriticalDensity();
+        double rho_cur = rho_org/J;
+        if (flags->d_doGranularMPM && 
+            rho_cur< (rho_cri - 1.0e-6) && 
+            mpm_matl->getDoStressFree() ){ 
+          pFNew[idx]=pFOld[idx];
+          J = pFOld[idx].Determinant();
+          pvolume[idx] = pVolumeOld[idx];
+        } // end if Granular MPM
         partvoldef += pvolume[idx];
       }
 
@@ -4885,13 +4889,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
           // stressfree conditions HK - GK - MJ
           double rho_org = mpm_matl->getInitialDensity();
-		      double rho_cri = mpm_matl->getCriticalDensity();
-	    	  double rho_cur = rho_org/J;
-         if (flags->d_doGranularMPM && rho_cur< (rho_cri - 1.0e-6) && mpm_matl->getDoStressFree() ){ 
-			      pFNew[idx]=pFOld[idx];
-			      J = pFOld[idx].Determinant();
-			     pvolume[idx] = pVolumeOld[idx]; 					 	  		
-		     } // end if Granular MPM
+      double rho_cri = mpm_matl->getCriticalDensity();
+      double rho_cur = rho_org/J;
+      if (flags->d_doGranularMPM && 
+          rho_cur< (rho_cri - 1.0e-6) && 
+          mpm_matl->getDoStressFree() ){ 
+        pFNew[idx]=pFOld[idx];
+        J = pFOld[idx].Determinant();
+       pvolume[idx] = pVolumeOld[idx];
+      } // end if Granular MPM
         }
       } //end of pressureStabilization loop  at the patch level
 
