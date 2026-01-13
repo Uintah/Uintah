@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2025 The University of Utah
+ * Copyright (c) 1997-2026 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,7 @@ namespace Uintah {
    *  \author  Biswajit Banerjee, 
    *  \author  C-SAFE and Department of Mechanical Engineering,
    *  \author  University of Utah.
-   *  \author  Copyright (C) 2025 The University of Utah
+   *  \author  Copyright (C) 2026 The University of Utah
 
    Based on Tahoe implementation of nArrayT.h v.1.20.
   */
