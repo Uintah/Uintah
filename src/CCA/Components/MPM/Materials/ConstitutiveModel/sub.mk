@@ -33,6 +33,7 @@ SRCDIR := CCA/Components/MPM/Materials/ConstitutiveModel
 SRCS   += \
         $(SRCDIR)/RigidMaterial.cc              \
         $(SRCDIR)/CompMooneyRivlin.cc           \
+        $(SRCDIR)/ThreeFactorMooney.cc           \
         $(SRCDIR)/ConstitutiveModelFactory.cc   \
         $(SRCDIR)/ConstitutiveModel.cc          \
         $(SRCDIR)/ImplicitCM.cc                 \

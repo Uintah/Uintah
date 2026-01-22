@@ -27,6 +27,7 @@
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RigidMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/CompMooneyRivlin.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ThreeFactorMooney.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/CNH_MMS.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TransIsoHyper.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TransIsoHyperImplicit.h>
@@ -124,6 +125,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (cm_type == "comp_mooney_rivlin") {
     return(scinew CompMooneyRivlin(child,flags));
+  }
+  else if (cm_type == "three_factor_mooney") {
+    return(scinew ThreeFactorMooney(child,flags));
   }
   else if (cm_type == "nonlocal_drucker_prager"){
     return(scinew NonLocalDruckerPrager(child,flags));

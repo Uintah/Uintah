@@ -3,6 +3,7 @@
 
   <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, 
+                                                                             three_factor_mooney, 
                                                                              comp_neo_hook, 
                                                                              comp_neo_hook_plastic,
                                                                              elastic_plastic, 
@@ -206,6 +207,7 @@
     <hardening_modulus             spec="OPTIONAL DOUBLE" />
     <he_constant_1                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_constant_2                 spec="OPTIONAL DOUBLE 'positive'" />
+    <he_constant_3                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_PR                         spec="OPTIONAL DOUBLE 'positive'" />
     <InitialCrackRadius            spec="OPTIONAL DOUBLE 'positive'" />
     <initial_material_temperature  spec="OPTIONAL DOUBLE" />
