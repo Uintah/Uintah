@@ -66,7 +66,7 @@ def parse_addtlpath( addtlpath, susdir ):
     if addtlpath != None:
 
       for elem in addtlpath:
-        tmp=re.split('=|\s',elem)                   # deliminter = " " or =
+        tmp=re.split( r'=|\s', elem)                   # deliminter = " " or =
 
         if tmp[0].upper() =='ABSOLUTEPATH':
           addtlpath_clean = tmp[1] + pathsep  + addtlpath_clean
