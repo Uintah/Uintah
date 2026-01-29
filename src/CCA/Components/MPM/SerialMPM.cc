@@ -5846,12 +5846,14 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
   z_matl->add(0);
   z_matl->addReference();
 
-  t->requiresVar(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::OldDW, lb->pMassLabel,               particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::OldDW, lb->pStressLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::NewDW, lb->gMassLabel,             Ghost::AroundNodes, 1);
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pMassLabel,               gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pStressLabel,             gan, NGP);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,               gan, 1);
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computesVar(lb->gSurfNormLabel);
@@ -6065,12 +6067,13 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
 
-  t->requiresVar(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
-  t->requiresVar(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requiresVar(Task::OldDW, lb->pXLabel,                  gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            gan, NGP);
+  t->requiresVar(Task::OldDW, lb->pVolumeLabel,             gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pSurfLabel_preReloc,      gan, NGP);
+  t->requiresVar(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requiresVar(Task::NewDW, lb->gMassLabel,
            m_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
