@@ -65,7 +65,7 @@ DESCRIPTION
    and also for determining the bounding box for the surface.
    The input form looks like this:
        <line_segment>
-         <file>surface.pts</file>
+         <name>surface.pts</name>
        </line_segment>
 
 
