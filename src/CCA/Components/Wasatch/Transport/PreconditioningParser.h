@@ -37,6 +37,8 @@
 
 #include <expression/ExprFwd.h>
 
+#include <Core/Malloc/Allocator.h>
+
 namespace WasatchCore {
 
   /**
