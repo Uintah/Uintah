@@ -63,8 +63,8 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   // read a list of values from a file
   ps->get("filename", d_filename);
 
-//  IntVector defaultDir(0,0,1);
-  ps->get("direction",d_direction);
+  IntVector defaultDir(1,1,1);
+  ps->getWithDefault("direction",d_direction,defaultDir);
 
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
