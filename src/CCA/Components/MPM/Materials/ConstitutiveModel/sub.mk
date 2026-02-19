@@ -60,6 +60,7 @@ SRCS   += \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/UCNHVar.cc                   \
+        $(SRCDIR)/Diamm.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/SoilFoam.cc                   \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \

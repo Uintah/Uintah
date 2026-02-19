@@ -39,6 +39,7 @@ endif
 
 SRCS     += \
         $(SRCDIR)/Hooke.F          \
+        $(SRCDIR)/diamm.F          \
         $(SRCDIR)/Kayenta_calcs.F  \
         $(SRCDIR)/MIGUtilsF.F      \
         $(SRCDIR)/MIGUtils.cc

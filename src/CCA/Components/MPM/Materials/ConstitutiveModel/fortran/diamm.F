@@ -1977,7 +1977,7 @@ C     Compute bulk modulus
 C     Kerley EOS to compute sound speed
          P= -PTHIRD*RI1
          CALL EOSARRAYREORDER(UI,UIMG)
-         CALL KEREOSMGV(1,1,UIMG,UI,UI(IPDC1),R,U,0,0,P,T,CS,S)
+         CALL KEREOSMGV(1,1,UIMG,UI,UI(IPDC1),R,U,0.d0,0,P,T,CS,S)
 
       ELSEIF(IDK.EQ.1)THEN
          CS = SQRT((B0 + B1*EXP(-B2/MAX(-RI1,1.D-40)))/R0)
@@ -2829,7 +2829,8 @@ C
         DO 6 J=I,NP+1
           IF(II.GE.1) THEN
             DO 5 K=1,II
- 5          A(I,J) = A(I,J)-A(I,K)*A(K,J)
+            A(I,J) = A(I,J)-A(I,K)*A(K,J)
+ 5          END DO
           ENDIF
           IF(J.NE.I) THEN
             IF(J.LT.NP+1) A(J,I)=A(I,J)
@@ -2945,8 +2946,7 @@ C
       PARAMETER (ZERO=0.D0,ONE=1.0D0,TWO=2.0D0,THR=3.0D0,FOR=4.0D0,
      &           FIV=5.0D0,SIX=6.0D0,HALF=0.5D0)
       DIMENSION UI(*),GC(*),DC(*)
-      DIMENSION RHO(MC), ENRG(MC), ALPH(MC),
-     &          PRES(MC), TEMP(MC), CS(MC), S(MC,8)
+      DIMENSION  S(MC,8)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 c     avoid compiler warning of unused variables
@@ -2984,18 +2984,18 @@ c     avoid compiler warning of unused variables
 *  Check for realistic density.
 *
       DO 1 N=1,NC
-       IF(RHO(N).GE.RMX .OR. RHO(N).LE.ZERO)  THEN
+       IF(RHO.GE.RMX .OR. RHO.LE.ZERO)  THEN
 C        Flag the error so we can get graceful shutdown or at least
 C        an error report of some kind
 C        This produces a fatal error with an ungraceful shutdown
-         WRITE(DEN,'(1PE10.3)')  RHO(N)
+         WRITE(DEN,'(1PE10.3)')  RHO
          CALL FATERR('KEREOSMGV','UNATTAINABLE DENSITY, RHO='//DEN)
-         RHO(N)=R0
-         ENRG(N)=-ONE
+         RHO=R0
+         ENRG=-ONE
        ENDIF
 C
-       S(N,6) = RHO(N)
-       IF (NX.NE.0) S(N,6)=MAX(ONE,ALPH(N))*S(N,6)
+       S(N,6) = RHO
+       IF (NX.NE.0) S(N,6)=MAX(ONE,ALPH)*S(N,6)
  1    CONTINUE
 *
       DO 2 N=1,NC
@@ -3010,7 +3010,7 @@ C
         S(N,7) = (S(N,1)/XB)**FB
         S(N,3) = BX*EXP(-S(N,7))
         S(N,8) = CF*S(N,7)/(S(N,7)+XF)**PF
-        CS(N) = S(N,2)+S(N,1)*(S1+(S1*S(N,4)+FOR*S2*S(N,1))/S(N,5))
+        CS = S(N,2)+S(N,1)*(S1+(S1*S(N,4)+FOR*S2*S(N,1))/S(N,5))
      &          *S(N,2)**2-S(N,3)*(ONE-CX*S(N,7))
         S(N,2) = S(N,2)-S(N,3)
         S(N,3) = S(N,1)*(A1+S(N,1)*(A2+S(N,1)*(A3+S(N,1)*(A4
@@ -3018,32 +3018,32 @@ C
         S(N,4) = S(N,1)*(TWO*A1+S(N,1)*(THR*A2+S(N,1)*(FOR*A3
      &           +S(N,1)*(FIV*A4+S(N,1)*SIX*A5))))
      &           +S(N,8)*(ONE+PF*(ONE+PF*S(N,7)/(S(N,7)+XF)))
-        TEMP(N) = T0*EXP(G0*S(N,1))
-        S(N,5) = S0*(HALF-S(N,3))*(S(N,1)*S(N,2))**2/R0-CV*TEMP(N)
-        PRES(N) = S0*S(N,1)*(ONE-G0*S(N,1)*S(N,3))*S(N,2)**2-DPT*TEMP(N)
-        CS(N) = S0*S(N,2)*(CS(N)*(ONE-G0*S(N,1)*S(N,3))
-     &          -S(N,1)*G0*S(N,4)*S(N,2))-DPT*G0*TEMP(N)
+        TEMP = T0*EXP(G0*S(N,1))
+        S(N,5) = S0*(HALF-S(N,3))*(S(N,1)*S(N,2))**2/R0-CV*TEMP
+        PRES = S0*S(N,1)*(ONE-G0*S(N,1)*S(N,3))*S(N,2)**2-DPT*TEMP
+        CS = S0*S(N,2)*(CS*(ONE-G0*S(N,1)*S(N,3))
+     &          -S(N,1)*G0*S(N,4)*S(N,2))-DPT*G0*TEMP
        ELSE
         S(N,5) = HALF*B0*S(N,1)**2/R0-DPT*T0*S(N,1)/R0-CV*T0
-        PRES(N) = B0*S(N,1)-DPT*T0
-        CS(N) = B0
+        PRES = B0*S(N,1)-DPT*T0
+        CS = B0
        ENDIF
 *
 *  Find temperature from energy, then pressure and sound speed.
 *
-       TEMP(N) = (ENRG(N)-S(N,5)-UI(7))/CV
-       PRES(N) = PRES(N)+DPT*TEMP(N)
-       IF (NX.GT.0) PRES(N)=PRES(N)/MAX(ONE,ALPH(N))
-       S(N,1) = CS(N)*R0/S(N,6)**2
+       TEMP = (ENRG-S(N,5)-UI(7))/CV
+       PRES = PRES+DPT*TEMP
+       IF (NX.GT.0) PRES=PRES/MAX(ONE,ALPH)
+       S(N,1) = CS*R0/S(N,6)**2
        S(N,2) = DPT
-       IF (NX.GT.0) S(N,2)=S(N,2)/MAX(ONE,ALPH(N))
+       IF (NX.GT.0) S(N,2)=S(N,2)/MAX(ONE,ALPH)
        S(N,3) = CV
-       S(N,4) = (PRES(N)-TEMP(N)*S(N,2))/RHO(N)**2
-       CS(N) = MAX(ZERO,S(N,1)+TEMP(N)*(S(N,2)/RHO(N))**2/CV)
-       CS(N) = SQRT(CS(N))
+       S(N,4) = (PRES-TEMP*S(N,2))/RHO**2
+       CS = MAX(ZERO,S(N,1)+TEMP*(S(N,2)/RHO)**2/CV)
+       CS = SQRT(CS)
        IF (NX.GT.0) THEN
-        IF (CE.GT.CS(N).AND.ALPH(N).LT.ONE+AF*MAX(ZERO,PS-PRES(N))**PWR)
-     &     CS(N)=CE
+        IF (CE.GT.CS.AND.ALPH.LT.ONE+AF*MAX(ZERO,PS-PRES)**PWR)
+     &     CS=CE
        ENDIF
  2    CONTINUE
 
