@@ -349,6 +349,7 @@
     <RTau4                         spec="OPTIONAL DOUBLE" />
     <RTau5                         spec="OPTIONAL DOUBLE" />
     <shear_modulus                 spec="OPTIONAL DOUBLE" />
+    <compressive_modulus_ratio spec="OPTIONAL DOUBLE" />
     <shear_modulus_model           spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_shear, mts_shear, np_shear, ptw_shear, scg_shear'" >
       <mu_0                        spec="OPTIONAL DOUBLE" />

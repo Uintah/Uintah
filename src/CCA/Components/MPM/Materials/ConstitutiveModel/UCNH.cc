@@ -64,6 +64,8 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   d_useModifiedEOS = false;
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
+  ps->getWithDefault("compressive_modulus_ratio", 
+                                      d_initialData.compModRat,1.0);
   ps->get("useModifiedEOS",           d_useModifiedEOS);
 
   ps->getWithDefault( "reinitializeCMData", d_reinitializeCMData, false );
@@ -147,6 +149,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("shear_modulus",            d_initialData.tauDev);
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
+  cm_ps->appendElement("compressive_modulus_ratio",d_initialData.compModRat);
 
   // Plasticity
   if(d_usePlasticity) {
@@ -603,6 +606,13 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   double flow     = 0.0;
   double K        = 0.0;
 
+  // Only needed for bimodulus option
+  double E = 9.*bulk*shear/(3*bulk+shear);
+  double PR = (3.*bulk - 2.*shear)/(6.*bulk + 2.*shear);
+  double Ecomp = d_initialData.compModRat*E;
+  double bulk_comp =  Ecomp/(3.*(1.-2.*PR));
+  double shear_comp = Ecomp/(2.*(1.+PR));
+
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
   // Normal patch loop
@@ -690,6 +700,15 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // 2) Compute the deformed volume and new density
       double J        = pDefGrad_new[idx].Determinant();
       double rho_cur  = rho_orig/J;
+
+      // for the bi-modulus option
+      if(J<1){
+        bulk =  bulk_comp;
+        shear = shear_comp;
+      } else {
+        bulk     = d_initialData.Bulk;
+        shear    = d_initialData.tauDev;
+      }
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {

@@ -77,6 +77,9 @@ namespace Uintah {
     struct CMData {
       double Bulk;
       double tauDev;
+      double compModRat;  // Factor by which to increase Young's modulus in 
+                          // compression over the values provided, which are
+                          // used in spherical tension
       // For Plasticity
       double FlowStress;
       double K;
