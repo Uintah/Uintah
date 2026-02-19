@@ -44,7 +44,7 @@
 #endif
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Kayenta.h>
-//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ProgramBurn.h>
@@ -240,9 +240,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
   }
-//  else if (cm_type == "diamm"){
-//    return(scinew Diamm(child,flags));
-//  }
+  else if (cm_type == "diamm"){
+    return(scinew Diamm(child,flags));
+  }
 #endif
 
   else if (cm_type ==  "mw_visco_elastic"){
