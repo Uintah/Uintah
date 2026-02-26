@@ -573,9 +573,9 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
 
                 //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
 //              reaction_force  -= ginternalForce[n][c];
-//              reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
                 reaction_force[dwi] -=ginternalForce[n][c];
-                reaction_torque[dwi]+=Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+//                reaction_torque[dwi]+=Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+                reaction_torque[dwi]+=Cross(r,ginternalForce[n][c]);
                 STF[dwi_dmatl]       -=gmass[n][c]*(Dv/delT);
                 allMatls_STF         -=gmass[n][c]*(Dv/delT);
               }  // if normalDeltaVel > 0
