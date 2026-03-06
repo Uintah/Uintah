@@ -4,6 +4,7 @@
   <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, 
                                                                              three_factor_mooney, 
+                                                                             SVK, 
                                                                              comp_neo_hook, 
                                                                              comp_neo_hook_plastic,
                                                                              elastic_plastic, 
@@ -209,6 +210,8 @@
     <he_constant_2                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_constant_3                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_PR                         spec="OPTIONAL DOUBLE 'positive'" />
+    <YoungsModulus                 spec="OPTIONAL DOUBLE 'positive'" />
+    <PR                            spec="OPTIONAL DOUBLE 'positive'" />
     <InitialCrackRadius            spec="OPTIONAL DOUBLE 'positive'" />
     <initial_material_temperature  spec="OPTIONAL DOUBLE" />
     <initial_mean_porosity         spec="OPTIONAL DOUBLE" />
