@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/ShellMPMLabel.cc     \
 	$(SRCDIR)/CZLabel.cc           \
 	$(SRCDIR)/TriangleLabel.cc     \
+	$(SRCDIR)/LineSegmentLabel.cc  \
 	$(SRCDIR)/AMRMPMLabel.cc       \
 	$(SRCDIR)/HydroMPMLabel.cc     \
 	$(SRCDIR)/ImpMPMFlags.cc

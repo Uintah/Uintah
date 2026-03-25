@@ -182,6 +182,7 @@ namespace Uintah {
       const VarLabel* massBurnFractionLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
+      const VarLabel* gNearestLSLabel;
 
       const VarLabel* StrainEnergyLabel;
       const VarLabel* AccStrainEnergyLabel;
