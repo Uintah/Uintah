@@ -74,18 +74,8 @@
 #endif
 
 #ifndef NO_MPM
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPM/SingleFieldMPM.h>
-#include <CCA/Components/MPM/SingleHydroMPM.h>
-#endif
-
-#if !defined(NO_MPM) && !defined(NO_FVM)
-#include <CCA/Components/MPMFVM/ESMPM.h>
-#include <CCA/Components/MPMFVM/ESMPM2.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ICE)
@@ -225,60 +215,9 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   else {
     turned_on_options += "rigidmpm ";
   }
-
-  if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "amrmpm ";
-  }
-
-  if (sim_comp == "sfmpm" || sim_comp == "SFmpm" || sim_comp == "SFMPM") {
-    return scinew SingleFieldMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "sfmpm ";
-  }
-
-  if (sim_comp == "shmpm" || sim_comp == "SHmpm" || sim_comp == "SHMPM") {
-      return scinew SingleHydroMPM(myworld, materialManager);
-  }
-  else {
-      turned_on_options += "shmpm ";
-
-  }
-  if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "shellmpm ";
-  }
-
-  if (sim_comp == "impm" || sim_comp == "IMPM") {
-    return scinew ImpMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "impm ";
-  }
 #endif
 
   //----------------------------
-
-#if !defined(NO_MPM) && !defined(NO_FVM)
-  if (sim_comp == "esmpm" || sim_comp == "ESMPM") {
-    return scinew ESMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "esmpms ";
-  }
-
-  if (sim_comp == "esmpm2" || sim_comp == "ESMPM2") {
-    return scinew ESMPM2(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "esmpm2 ";
-  }
-#endif
 
   //----------------------------
 
@@ -288,13 +227,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "mpmice ";
-  }
-
-  if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    return scinew MPMICE(myworld, materialManager, SHELL_MPMICE, doAMR);
-  }
-  else {
-    turned_on_options += "shellmpmice ";
   }
 
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
