@@ -81,7 +81,9 @@ class Output;
     bool        d_useCBDI;                                     // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI;                                     // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones;                            // Flag for using cohesive zones
-    bool        d_useTriangles;                                // Flag for using line segments
+    bool        d_useLineSegments;                             // Flag for using line segments
+    bool        d_useTriangles;                                // Flag for using triangles
+    bool        d_useMMP;                                      // Flag for using Mixed Mesh Particle Contact
     bool        d_with_color;                                  // to turn on the color variable
     bool        d_fracture;                                    // to turn on fracture
 

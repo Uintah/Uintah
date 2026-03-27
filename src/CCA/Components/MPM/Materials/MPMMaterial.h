@@ -144,6 +144,9 @@ WARNING
    double getRoomTemperature() const;
    double getMeltTemperature() const;
 
+   bool getHasSurfaceDescription() const;
+   void setHasSurfaceDescription(const bool hasSurfaceDescription);
+
    bool getIsRigid() const;
    void setIsRigid(const bool is_rigid);
 
@@ -218,6 +221,9 @@ WARNING
 
    // for rigid body contact
    bool d_is_rigid;
+
+   // for MMP
+   bool d_hasSurfaceDescription;
 
    // for frictionLR contact model
    bool d_possible_alpha;

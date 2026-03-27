@@ -74,6 +74,18 @@ namespace Uintah {
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
+    virtual void scheduleFindNearestTri(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSubset*,
+                                       const MaterialSubset*,
+                                       const MaterialSet*);
+
+    virtual void findNearestTri(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
     virtual void scheduleComputeTriangleForces(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSubset*,

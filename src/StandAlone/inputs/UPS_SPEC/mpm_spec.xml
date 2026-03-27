@@ -49,6 +49,8 @@
       <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
+      <use_linesegments                   spec="OPTIONAL BOOLEAN" />
+      <use_MMP                            spec="OPTIONAL BOOLEAN" />
       <use_triangles                      spec="OPTIONAL BOOLEAN" />
       <RefineTriangles                    spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
@@ -310,10 +312,17 @@
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
+      <LineSegment                         spec="MULTIPLE NO_DATA"
+                                           attribute1="name OPTIONAL STRING" >
+        <associated_material               spec="OPTIONAL INTEGER" />
+        <lineseg_filename                  spec="REQUIRED STRING" />
+      </LineSegment>
       <Triangle                         spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <associated_material               spec="OPTIONAL INTEGER" />
         <triangle_filename                  spec="REQUIRED STRING" />
+        <filename                           spec="OPTIONAL STRING" />
+        <include_rotation                   spec="OPTIONAL BOOLEAN" />
       </Triangle>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
       <include href="diffusion_interface.xml" />

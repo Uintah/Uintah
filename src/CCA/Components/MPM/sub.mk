@@ -34,16 +34,12 @@ SRCDIR	:= CCA/Components/MPM
 
 SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
-	$(SRCDIR)/MPMCommon.cc    \
-	$(SRCDIR)/ImpMPM.cc       \
-	$(SRCDIR)/ShellMPM.cc     \
-	$(SRCDIR)/SingleFieldMPM.cc     \
-	$(SRCDIR)/SingleHydroMPM.cc     \
-	$(SRCDIR)/AMRMPM.cc       
+	$(SRCDIR)/MPMCommon.cc 
 
 PSELIBS := \
 	$(SRCDIR)/CohesiveZone   \
 	$(SRCDIR)/Triangle       \
+	$(SRCDIR)/LineSegment    \
 	$(SRCDIR)/Core           \
 	$(SRCDIR)/HeatConduction \
 	$(SRCDIR)/Materials      \
@@ -81,6 +77,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 SUBDIRS := \
 	$(SRCDIR)/CohesiveZone      \
 	$(SRCDIR)/Triangle          \
+	$(SRCDIR)/LineSegment       \
 	$(SRCDIR)/Core              \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/Materials         \

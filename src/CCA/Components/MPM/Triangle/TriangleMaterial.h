@@ -101,6 +101,14 @@ WARNING
    std::string getTriangleFilename() const;
 
    int getAssociatedMaterial() const;
+   int    getProfileSize();
+   Vector findVelFromProfile(const double t);
+   Vector findRotFromProfile(const double t);
+   Vector findOriFromProfile(const double t);
+   Vector findValFromProfile(double t,
+                        std::vector< std::pair<double, Vector> > profile) const;
+
+   bool           d_includeRotation;
 
  private:
 
@@ -109,6 +117,13 @@ WARNING
 
    std::string d_triangle_filename;
    int d_associated_material;
+
+   std::string    d_filename;
+
+   // For use with Specified and PenaltyRigid contact
+   std::vector< std::pair<double, Vector> > d_vel_profile;
+   std::vector< std::pair<double, Vector> > d_rot_profile;
+   std::vector< std::pair<double, Vector> > d_ori_profile;
 
    // Prevent copying of this class
    // copy constructor

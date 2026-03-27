@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Core/CZLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/Core/TriangleLabel.h>
+#include <CCA/Components/MPM/Core/LineSegmentLabel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -35,6 +36,9 @@
 #include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZoneTasks.h>
+#include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
+#include <CCA/Components/MPM/LineSegment/LineSegment.h>
+#include <CCA/Components/MPM/LineSegment/LSTasks.h>
 #include <CCA/Components/MPM/Triangle/Triangle.h>
 #include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
 #include <CCA/Components/MPM/Triangle/TriangleTasks.h>
@@ -128,6 +132,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   flags = scinew MPMFlags(myworld);
 
   TriL = scinew TriangleLabel();
+  LSl  = scinew LineSegmentLabel();
   Cl = scinew CZLabel();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -136,6 +141,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   heatConductionModel = nullptr;
   cohesiveZoneTasks   = nullptr;
   triangleTasks       = nullptr;
+  lsTasks    = nullptr;
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
@@ -159,6 +165,7 @@ SerialMPM::~SerialMPM()
   delete TriL;
   delete cohesiveZoneTasks;
   delete triangleTasks;
+  delete lsTasks;
 
   MPMPhysicalBCFactory::clean();
 
@@ -318,9 +325,40 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   contactModel->setContactMaterialAttributes();
 
+  lsTasks = scinew LSTasks(m_materialManager, flags, m_output);
+
+  lsTasks->lineSegmentProblemSetup(restart_mat_ps, flags);
+
+  if(flags->d_useLineSegments){
+    unsigned int numLSMatls = m_materialManager->getNumMatls("LineSegment");
+
+    for(unsigned int in = 0; in < numLSMatls; in++){
+      LineSegmentMaterial* ls_matl = (LineSegmentMaterial *) 
+                              m_materialManager->getMaterial("LineSegment", in);
+      int mpm_matl_index = ls_matl->getAssociatedMaterial(); 
+
+      MPMMaterial* mpm_matl = 
+          (MPMMaterial *) m_materialManager->getMaterial("MPM", mpm_matl_index);
+      mpm_matl->setHasSurfaceDescription(true);
+    }
+  }
+
   triangleTasks = scinew TriangleTasks(m_materialManager, flags, m_output);
 
   triangleTasks->triangleProblemSetup(restart_mat_ps, flags);
+  if(flags->d_useTriangles){
+    unsigned int numLSMatls = m_materialManager->getNumMatls("Triangle");
+
+    for(unsigned int in = 0; in < numLSMatls; in++){
+      TriangleMaterial* tri_matl = (TriangleMaterial *) 
+                              m_materialManager->getMaterial("Triangle", in);
+      int mpm_matl_index = tri_matl->getAssociatedMaterial(); 
+
+      MPMMaterial* mpm_matl = 
+          (MPMMaterial *) m_materialManager->getMaterial("MPM", mpm_matl_index);
+      mpm_matl->setHasSurfaceDescription(true);
+    }
+  }
 
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
@@ -392,6 +430,12 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   for (unsigned int i = 0; i < m_materialManager->getNumMatls( "CZ" );i++) {
     CZMaterial* mat = (CZMaterial*) m_materialManager->getMaterial( "CZ", i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+
+  for(unsigned int i = 0;i< m_materialManager->getNumMatls("LineSegment");i++){
+    LineSegmentMaterial* mat = (LineSegmentMaterial *)
+                              m_materialManager->getMaterial("LineSegment", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
@@ -547,6 +591,16 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
+  int numLineSegmentM = m_materialManager->getNumMatls("LineSegment");
+  if(numLineSegmentM>0){
+   LineSegmentMaterial* ls_matl = (LineSegmentMaterial *)
+                              m_materialManager->getMaterial("LineSegment", 0);
+   LineSegment* ls = ls_matl->getLineSegment();
+   ls->scheduleInitialize(level, sched, m_materialManager);
+
+   schedulePrintLineSegmentCount(level, sched);
+  }
+
   int numTriangleM = m_materialManager->getNumMatls("Triangle");
   if(numTriangleM>0){
    TriangleMaterial* ls_matl = (TriangleMaterial *)
@@ -634,17 +688,6 @@ Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
   sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 }
 
-//______________________________________________________________________
-void SerialMPM::schedulePrintParticleCount(const LevelP& level,
-                                           SchedulerP& sched)
-{
-  Task* t = scinew Task("MPM::printParticleCount",
-                        this, &SerialMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
-  t->setType(Task::OncePerProc);
-  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
-                 m_materialManager->allMaterials( "MPM" ));
-}
 //__________________________________
 //  Diagnostic task: compute the total number of particles
 void SerialMPM::scheduleTotalParticleCount(SchedulerP& sched,
@@ -684,6 +727,54 @@ void SerialMPM::totalParticleCount(const ProcessorGroup*,
       totalParticles+=numParticles;
     }
     new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+  }
+}
+
+
+//______________________________________________________________________
+void SerialMPM::schedulePrintParticleCount(const LevelP& level,
+                                           SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printParticleCount",
+                        this, &SerialMPM::printParticleCount);
+  t->requires(Task::NewDW, lb->partCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "MPM" ));
+}
+
+//______________________________________________________________________
+void SerialMPM::schedulePrintLineSegmentCount(const LevelP& level,
+                                           SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printLineSegmentCount",
+                        this, &SerialMPM::printLineSegmentCount);
+  t->requires(Task::NewDW, LSl->lineSegmentCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "LineSegment" ));
+}
+
+//______________________________________________________________________
+void SerialMPM::printLineSegmentCount(const ProcessorGroup* pg,
+                                   const PatchSubset*,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, LSl->lineSegmentCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total line segments" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero line segments were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
 
@@ -858,11 +949,14 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = m_materialManager->allMaterials( "MPM" );
   const MaterialSet* cz_matls = m_materialManager->allMaterials( "CZ" );
+  const MaterialSet* lineseg_matls= m_materialManager->allMaterials("LineSegment");
   const MaterialSet* triangle_matls=m_materialManager->allMaterials("Triangle");
   const MaterialSet* all_matls = m_materialManager->allMaterials();
 
   const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);;
   const MaterialSubset*  cz_matls_sub = (cz_matls ? cz_matls->getUnion() : nullptr);
+  const MaterialSubset* lineseg_matls_sub =
+                          (lineseg_matls ? lineseg_matls->getUnion() : nullptr);
   const MaterialSubset* triangle_matls_sub =
                         (triangle_matls ? triangle_matls->getUnion() : nullptr);
 
@@ -872,10 +966,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     d_fluxBC->scheduleApplyExternalScalarFlux(sched, patches, matls);
   }
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  if(flags->d_useTriangles){
-    triangleTasks->scheduleComputeTriangleForces(sched, patches, mpm_matls_sub,
-                                                        triangle_matls_sub,
-                                                        all_matls);
+  if(flags->d_useLineSegments && flags->d_useMMP){
+    lsTasks->scheduleFindNearestLS(sched, patches, mpm_matls_sub,
+                                                   lineseg_matls_sub,
+                                                   all_matls);
+  }
+  if(flags->d_useTriangles && flags->d_useMMP){
+    triangleTasks->scheduleFindNearestTri(sched, patches, mpm_matls_sub,
+                                                   triangle_matls_sub,
+                                                   all_matls);
   }
   if(flags->d_computeNormals){
     if(flags->d_useTriangles){
@@ -944,6 +1043,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
+  if(flags->d_useLineSegments){
+    lsTasks->scheduleUpdateLineSegments(   sched, patches, mpm_matls_sub,
+                                                           lineseg_matls_sub,
+                                                           all_matls);
+  }
   if(flags->d_useTriangles){
     triangleTasks->scheduleUpdateTriangles(sched, patches, mpm_matls_sub,
                                                           triangle_matls_sub,
@@ -954,6 +1058,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInsertParticles(                sched, patches, matls);
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
+    if(flags->d_useLineSegments){
+      lsTasks->scheduleComputeLineSegScaleFactor(sched, patches, lineseg_matls);
+    }
     if(flags->d_useTriangles){
       triangleTasks->scheduleComputeTriangleScaleFactor(sched, patches,
                                                                 triangle_matls);
@@ -975,8 +1082,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-  SerialMPM::scheduleParticleRelocation(   sched, level,  matls, cz_matls,
-                                                                triangle_matls);
+  SerialMPM::scheduleParticleRelocation(sched, level,  matls, cz_matls,
+                                         triangle_matls, lineseg_matls);
 
   //__________________________________
   //  on the fly analysis
@@ -996,9 +1103,9 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
                                             const LevelP      & level,
                                             const MaterialSet * matls,
                                             const MaterialSet * cz_matls,
-                                            const MaterialSet * tri_matls)
+                                            const MaterialSet * tri_matls,
+                                            const MaterialSet * ls_matls)
 {
-
 
   //__________________________________
   //  Unmodified labels and matls subset
@@ -1028,6 +1135,23 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
     for( int i=0; i<numLabels; i++){
       old_labels.push_back(cohesiveZoneTasks->d_cohesiveZoneState_preReloc[i]);
       new_labels.push_back(cohesiveZoneTasks->d_cohesiveZoneState[i] );
+    }
+  }
+
+  //__________________________________
+  // If needed concatenate the labels and matls that are passed into
+  // the ParticleRelocate
+  if(flags->d_useLineSegments){
+
+    //update the mss
+    const MaterialSubset*  mss  = ls_matls->getSubset(0);
+    new_mss->addSubset( mss );
+
+    // update the labels
+    int numLabels = lsTasks->d_lineseg_state_preReloc.size();
+    for( int i=0; i<numLabels; i++){
+      old_labels.push_back(lsTasks->d_lineseg_state_preReloc[i]);
+      new_labels.push_back(lsTasks->d_lineseg_state[i] );
     }
   }
 
@@ -6509,7 +6633,10 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,
            m_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl,Ghost::None);
+  if(flags->d_useMMP){
+    t->requires(Task::NewDW, lb->gNearestLSLabel,  z_matl,Ghost::None);
+  }
 
   t->computes(lb->gMatlProminenceLabel);
   t->computes(lb->gAlphaMaterialLabel);
@@ -6557,6 +6684,11 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     constNCVariable<double>    NC_CCweight;
     old_dw->get(NC_CCweight,   lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
+    constNCVariable<Point>    nearestSurf;
+    if(flags->d_useMMP){
+      new_dw->get(nearestSurf,   lb->gNearestLSLabel,   0, patch, gnone, 0);
+    }
+
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -6569,6 +6701,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     NCVariable<int> NumParticlesOnNode;
     NCVariable<Vector> normAlphaToBeta;
     std::vector<NCVariable<Int130> > ParticleList(numMPMMatls);
+    std::vector<bool> HasSurfaceDescription(numMPMMatls);
     std::vector<bool> IsRigidMaterial(numMPMMatls);
     std::vector<bool> PossibleAlpha(numMPMMatls);
 
@@ -6598,6 +6731,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
       new_dw->allocateTemporary(ParticleList[m], patch);
       IsRigidMaterial[m] = mpm_matl->getIsRigid();
+      HasSurfaceDescription[m] = mpm_matl->getHasSurfaceDescription();
       PossibleAlpha[m] = mpm_matl->getPossibleAlphaMaterial();
       if(!mpm_matl->d_usedInLogisticRegression){
         PossibleAlpha[m]=false;
@@ -6992,6 +7126,23 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       } // end Particle loop
      }  // if used in LR
     }  // loop over matls
+
+   // if using Mixed Mesh Particle, use the nearest surf for
+   // the projected point at the node
+   if(flags->d_useMMP){
+     for(unsigned int m=0;m<numMPMMatls;m++){
+      for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
+        IntVector c = *iter;
+
+         double proj = Dot(nearestSurf[c], normAlphaToBeta[c]);
+         if(IsRigidMaterial[m] && (int) m==alphaMaterial[c] 
+                               && HasSurfaceDescription[m]){
+            d_x_p_dot_n[m][c] = proj;
+         }
+      } // Loop over nodes
+     }  // loop over matls
+   }  // if use MMP
+   
 
     delete interpolator;
   }    // patches

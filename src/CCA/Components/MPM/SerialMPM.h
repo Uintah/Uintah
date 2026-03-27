@@ -52,11 +52,13 @@ class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
 class TriangleLabel;
+class LineSegmentLabel;
 class SDInterfaceModel;
 class FluxBCModel;
 class CZLabel;
 class CohesiveZoneTasks;
 class TriangleTasks;
+class LSTasks;
 
 /**************************************
 
@@ -119,6 +121,8 @@ public:
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
 
+  void schedulePrintLineSegmentCount(const LevelP& level, SchedulerP& sched);
+
   void schedulePrintTriangleCount(const LevelP& level, SchedulerP& sched);
 
   void schedulePrintCZCount(const LevelP& level, SchedulerP& sched);
@@ -170,9 +174,11 @@ protected:
 
   FluxBCModel*  d_fluxBC;
   TriangleLabel* TriL;
+  LineSegmentLabel* LSl;
   CZLabel* Cl;
   CohesiveZoneTasks* cohesiveZoneTasks;
   TriangleTasks* triangleTasks;
+  LSTasks* lsTasks;
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -185,7 +191,8 @@ protected:
                                    const LevelP      & level,
                                    const MaterialSet * matls,
                                    const MaterialSet * cz_matls,
-                                   const MaterialSet * tri_matls);
+                                   const MaterialSet * tri_matls,
+                                   const MaterialSet * ls_matls);
 
   void deleteGeometryObjects(const ProcessorGroup*,
                              const PatchSubset* patches,
@@ -198,6 +205,12 @@ protected:
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
+
+  void printLineSegmentCount(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
 
   void printTriangleCount(const ProcessorGroup*,
                           const PatchSubset* patches,

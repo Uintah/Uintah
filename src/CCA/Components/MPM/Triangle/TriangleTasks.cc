@@ -33,6 +33,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Grid/fastCpdiInterpolator.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Util/ProgressiveWarning.h>
@@ -142,6 +143,7 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
 
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
   t->requires(Task::OldDW, lb->pXLabel,                  triangle_matls, gnone);
@@ -227,9 +229,38 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
     }
 
     int numLSMatls=d_materialManager->getNumMatls("Triangle");
+
+    // Get the current simulation time
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+
     for(int ls = 0; ls < numLSMatls; ls++){
       TriangleMaterial* ls_matl = (TriangleMaterial *) 
                               d_materialManager->getMaterial("Triangle", ls);
+
+      int  prof_size = ls_matl->getProfileSize();
+      int rotation_axis = -99;
+      Vector vel, rot, ori;
+      if(prof_size > 1){
+        vel = ls_matl->findVelFromProfile(time);
+        if(ls_matl->d_includeRotation){
+          rot = ls_matl->findRotFromProfile(time);
+          ori = ls_matl->findOriFromProfile(time);
+
+          // If rotation axis is aligned with a ordinal direction,
+          // use the exact treatment, otherwise default to the approximate
+          double ROL = rot.length();
+          if(fabs(Dot(rot/ROL,Vector(1.,0.,0.))) > 0.99){
+            rotation_axis=0;
+          } else if(fabs(Dot(rot/ROL,Vector(0.,1.,0.))) > 0.99){
+            rotation_axis=1;
+          } else if(fabs(Dot(rot/ROL,Vector(0.,0.,1.))) > 0.99){
+            rotation_axis=2;
+          }
+        }
+      } // if velocity profile exists
+  
       int dwi = ls_matl->getDWIndex();
 
       int adv_matl = ls_matl->getAssociatedMaterial();
@@ -311,6 +342,7 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       triCemThick_new.copyData(triCemThick);
       tsize_new.copyData(tsize);  // This isn't really used
 
+      if(prof_size < 1){
       // Loop over triangles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -409,6 +441,7 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
                << endl; 
           delset->addParticle(idx);
         } else if(deleteThisTriangle>0){
+          cout << "TriID = " << triangle_ids[idx] << endl;
           Vector velMean(0.);
           double populatedVertices=0.;
           for(int itv = 0; itv < 3; itv++){
@@ -445,71 +478,172 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
 #endif
 
       } // Loop over triangles
+      } else {  // get motion from filename
+        // Loop over triangles
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+
+          Point P[3];
+          // Update the positions of the triangle vertices
+          P[0] = tx[idx] + triMidToN0Vec[idx];
+          P[1] = tx[idx] + triMidToN1Vec[idx];
+          P[2] = tx[idx] + triMidToN2Vec[idx];
+          for(int itv = 0; itv < 3; itv++){
+            Vector r = P[itv]-ori.asPoint();
+            Point NewPos(0.,0.,0.);
+            if(rotation_axis==0){  //rotation about x-axis
+              double posz = r.z() - ori.z();
+              double posy = r.y() - ori.y();
+              double theta = atan2(posz,posy);
+              double thetaPlus = theta+rot[0]*delT;
+              double R = sqrt(posy*posy + posz*posz);
+              NewPos = Point(r.x(),
+                             R*cos(thetaPlus)+ori.y(),
+                             R*sin(thetaPlus)+ori.z());
+            } else if(rotation_axis==1){  //rotation about y-axis
+              double posx = r.x() - ori.x();
+              double posz = r.z() - ori.z();
+              double theta = atan2(posx,posz);
+              double thetaPlus = theta+rot[1]*delT;
+              double R = sqrt(posz*posz + posx*posx);
+              NewPos = Point(R*sin(thetaPlus)+ori.x(),
+                             r.y(),
+                             R*cos(thetaPlus)+ori.z());
+            } else if(rotation_axis==2){  //rotation about z-axis
+              double posx = r.x() - ori.x();
+              double posy = r.y() - ori.y();
+              double theta = atan2(posy,posx);
+              double thetaPlus = theta+rot[2]*delT;
+              double R = sqrt(posx*posx + posy*posy);
+              NewPos = Point(R*cos(thetaPlus)+ori.x(),
+                             R*sin(thetaPlus)+ori.y(),
+                             r.z());
+            } else if(rotation_axis==-99){
+              NewPos = P[itv];
+            }
+            NewPos+=vel*delT;
+            P[itv] = NewPos;
+          } // Loop over vertices
+          tx_new[idx] = (P[0]+P[1]+P[2])/3.;
+          Vector triNorm = Cross(P[1]-P[0],P[2]-P[0]);
+          double triNormLength = triNorm.length()+1.e-100;
+          triArea_new[idx]=0.5*triNormLength;
+          triNormal_new[idx]=triNorm/triNormLength;
+
+          triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
+          triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
+          triMidToN2Vec_new[idx] = P[2] - tx_new[idx];
+        } // Loop over triangles
+      }
       new_dw->deleteParticles(delset);
-
-#if 0
-      // This is for computing updated triAreaAtNodes. Need to create a
-      // container to replace the modified Stencil7 that I used in a hack here
-      // Loop over triangles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        // Hit each vertex of the triangle
-        double area0=0., area1=0., area2=0.;
-
-        // Vertex 0
-        for(int itri=0; itri < triNode0TriIDs[idx][29]; itri++) {
-          int triID = triNode0TriIDs[idx][itri];
-          // Inner Loop over triangles
-          for(ParticleSubset::iterator jter = pset->begin();
-              jter != pset->end(); jter++){
-            particleIndex jdx = *jter;
-            if(triID == triangle_ids[jdx]){
-              area0+=triArea_new[jdx];
-              break;
-            } // if IDs are equal
-          } // inner loop over triangles
-        }
-        area0/=3.;
-
-        // Vertex 1
-        for(int itri=0; itri < triNode1TriIDs[idx][29]; itri++) {
-          int triID = triNode1TriIDs[idx][itri];
-          // Inner Loop over triangles
-          for(ParticleSubset::iterator jter = pset->begin();
-              jter != pset->end(); jter++){
-            particleIndex jdx = *jter;
-            if(triID == triangle_ids[jdx]){
-              area1+=triArea_new[jdx];
-              break;
-            } // if IDs are equal
-          } // inner loop over triangles
-        }
-        area1/=3.;
-
-        // Vertex 2
-        for(int itri=0; itri < triNode2TriIDs[idx][29]; itri++) {
-          int triID = triNode2TriIDs[idx][itri];
-          // Inner Loop over triangles
-          for(ParticleSubset::iterator jter = pset->begin();
-              jter != pset->end(); jter++){
-            particleIndex jdx = *jter;
-            if(triID == triangle_ids[jdx]){
-              area2+=triArea_new[jdx];
-              break;
-            } // if IDs are equal
-          } // inner loop over triangles
-        }
-        area2/=3.;
-
-        triAreaAtNodes_new[idx]=Vector(area0, area1, area2);
-      } // Outer loop over triangles for vertex area calculation
-#endif
     }  // matls
 
     delete interpolator;
   }    // patches
+}
+
+void TriangleTasks::scheduleFindNearestTri(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSubset* mpm_matls,
+                                    const MaterialSubset* triangle_matls,
+                                    const MaterialSet* matls)
+{
+  if (!d_flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  
+  printSchedule(patches,cout_doing,"TriangleTasks::scheduleFindNearestTri");
+
+  Task* t=scinew Task("TriangleTasks::findNearestTri",
+                      this, &TriangleTasks::findNearestTri);
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  
+  t->requires(Task::OldDW, lb->pXLabel,                triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,triangle_matls, gac, 2);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+  t->computes(lb->gNearestLSLabel,               z_matl);
+
+  // The task will have a reference to z_matl
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
+
+  sched->addTask(t, patches, matls);
+}
+
+void TriangleTasks::findNearestTri(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing findNearestTri");
+
+    ParticleInterpolator* interpolator=scinew BSplineInterpolator(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+
+    int numLSMatls=d_materialManager->getNumMatls("Triangle");
+
+    // Allocate nodal data for nearest line segment
+    NCVariable<Point> nearestLS;
+    new_dw->allocateAndPut(nearestLS,lb->gNearestLSLabel,0,patch);
+    nearestLS.initialize(Point(9.e89,9.e89,9.e89));
+    NCVariable<double> DisToNearestLS;
+    new_dw->allocateTemporary(DisToNearestLS,     patch);
+    DisToNearestLS.initialize(9.e89);
+    Matrix3 size(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+
+    for(int tmo = 0; tmo < numLSMatls; tmo++) {
+      TriangleMaterial* t_matl = (TriangleMaterial *) 
+                             d_materialManager->getMaterial("Triangle", tmo);
+      int dwi = t_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gac, 2, lb->pXLabel);
+
+      constParticleVariable<Point> tx;
+      constParticleVariable<Vector> lsMidToEndVec;
+      std::vector<constParticleVariable<Vector>  > triMidToNodeVec(3);
+      old_dw->get(tx,            lb->pXLabel,                pset);
+      old_dw->get(triMidToNodeVec[0], TriL->triMidToN0VectorLabel, pset);
+      old_dw->get(triMidToNodeVec[1], TriL->triMidToN1VectorLabel, pset);
+      old_dw->get(triMidToNodeVec[2], TriL->triMidToN2VectorLabel, pset);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        for(int vert=0;vert<2;vert++){
+          Point vertPos = tx[idx] + triMidToNodeVec[vert][idx];
+          int NN = interpolator->findCellAndWeights(vertPos, ni, S, size);
+  
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+ 
+            if(patch->containsNode(node)) {
+              Point npos = patch->getNodePosition(ni[k]);
+              double dis = (vertPos - npos).length();
+              if(dis < DisToNearestLS[ni[k]]){
+                DisToNearestLS[ni[k]] = dis;
+                nearestLS[ni[k]] = vertPos;
+              }
+            } // loop over nodes near this vertex
+          }
+        } // loop over triangle vertices
+      } // end loop over line segments
+    }
+  }
 }
 
 void TriangleTasks::scheduleComputeTriangleForces(SchedulerP& sched,

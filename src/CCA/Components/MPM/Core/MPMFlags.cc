@@ -109,7 +109,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_ice                           =  false;
   d_myworld                            =  myworld;
   
+  d_useLineSegments                    =  false;
   d_useTriangles                       =  false;
+  d_useMMP                             =  false;
 
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass                = false;
@@ -273,7 +275,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
 
+  mpm_flag_ps->get("use_linesegments",  d_useLineSegments);
   mpm_flag_ps->get("use_triangles",     d_useTriangles);
+  mpm_flag_ps->get("use_MMP",           d_useMMP);
 
 //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -424,6 +428,8 @@ else{
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << " Use Triangles               = " << d_useTriangles << endl;
+    dbg << " Use MMP                     = " << d_useMMP << endl;
+    dbg << " Use Line Segments           = " << d_useLineSegments << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -500,7 +506,9 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
   ps->appendElement("d_ndim",                      d_ndim);
+  ps->appendElement("use_linesegments",  d_useLineSegments);
   ps->appendElement("use_triangles",     d_useTriangles);
+  ps->appendElement("use_MMP",           d_useMMP);
 }
 
 bool

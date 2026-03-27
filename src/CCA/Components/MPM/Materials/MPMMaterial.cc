@@ -172,6 +172,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
 
+  // Material has a triangulated surface description (or not)
+  d_hasSurfaceDescription=false;
+  ps->get("hasSurfaceDescription", d_hasSurfaceDescription);
+
   // Material is force transmitting (moves according to sum of forces)
   d_is_force_transmitting_material=false;
   ps->get("is_force_transmitting_material", d_is_force_transmitting_material);
@@ -325,6 +329,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("hasSurfaceDescription",d_hasSurfaceDescription);
   mpm_ps->appendElement("PistonMaterial",      d_isPistonMaterial);
   mpm_ps->appendElement("MotionInDirection",   d_motionInDirection);
   mpm_ps->appendElement("is_force_transmitting_material",
@@ -362,6 +367,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
+  d_hasSurfaceDescription = mat->d_hasSurfaceDescription;
   d_is_force_transmitting_material = mat->d_is_force_transmitting_material;
   d_is_active = mat->d_is_active;
   d_possible_alpha = mat->d_possible_alpha;
@@ -471,6 +477,16 @@ int MPMMaterial::nullGeomObject() const
       return obj;
   }
   return -1;
+}
+
+void MPMMaterial::setHasSurfaceDescription(const bool has_surface)
+{
+  d_hasSurfaceDescription=has_surface;
+}
+
+bool MPMMaterial::getHasSurfaceDescription() const
+{
+  return d_hasSurfaceDescription;
 }
 
 void MPMMaterial::setIsRigid(const bool is_rigid)
