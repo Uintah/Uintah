@@ -182,14 +182,25 @@ VUMAT* VUMAT::clone()
 
 void 
 VUMAT::initializeCMData(const Patch* patch,
-                                   const MPMMaterial* matl,
-                                   DataWarehouse* new_dw)
+                        const MPMMaterial* matl,
+                              DataWarehouse* new_dw)
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
+  std::vector<ParticleVariable<double> > pStateVar(d_initialData.nstatev);
+  for(int i = 0; i< d_initialData.nstatev; i++){
+    new_dw->allocateAndPut(pStateVar[i], pStateVarLabel[i],   pset);
+
+    // Initialize State Variables to zero
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      pStateVar[i][*iter] = 0.0;
+    }
+  }
 
   computeStableTimeStep(patch, matl, new_dw);
 }
@@ -293,6 +304,9 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
     // Load up the specific vumat library described by the arguments below
     loadLibrary(d_initialData.library.c_str(), d_initialData.function.c_str());
 
+    std::vector<double> stateOld(d_initialData.nstatev*nblock,0.0);
+    std::vector<double> stateNew(d_initialData.nstatev*nblock,0.0);
+
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
@@ -308,14 +322,22 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
       double stretchNew[6] = {tensorU(0,0), tensorU(1,1), tensorU(2,2), 
                               tensorU(0,1), tensorU(1,2), tensorU(0,2)};
 
+      for(int i = 0; i< d_initialData.nstatev; i++){
+        stateOld[i] = pStateVar_old[i][idx];
+      }
+
       // Call the VUMAT function directly
       vumat_func(nblock, ndir, nshr, d_initialData.nstatev, iptr, nprops, iptr, 
                  dptr, dptr, dptr, nullptr, nullptr, nullptr, 
                  &(d_initialData.props[0]), nullptr, strainInc, 
                  nullptr, nullptr, nullptr, 
                  nullptr, nullptr, stressOld, nullptr, nullptr, nullptr, 
-                 nullptr, stretchNew, nullptr, nullptr, stressNew, nullptr, 
-                 nullptr, nullptr);
+                 nullptr, stretchNew, &(stateOld[0]), nullptr, stressNew,
+                 &(stateNew[0]), nullptr, nullptr);
+
+      for(int i = 0; i< d_initialData.nstatev; i++){
+        pStateVar_new[i][idx] = stateNew[i];
+      }
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
@@ -426,7 +448,7 @@ void VUMAT::addInitialComputesAndRequires(Task* task,
                                           const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  // Plasticity
+  // StateVar
   for(int i = 0; i< d_initialData.nstatev; i++){
     task->computesVar(pStateVarLabel[i],       matlset);
   }
