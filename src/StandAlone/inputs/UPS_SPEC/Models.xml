@@ -522,6 +522,9 @@
 
       <hydrogenBurke spec="OPTIONAL NO_DATA">
         <material spec="REQUIRED STRING"/>
+        <YN2_init spec="REQUIRED DOUBLE"/>
+        <YH2_init spec="REQUIRED DOUBLE"/>
+        <YO2_init spec="REQUIRED DOUBLE"/>
         <debug spec="OPTIONAL BOOLEAN"/>
       </hydrogenBurke>
 

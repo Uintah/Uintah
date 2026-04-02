@@ -80,12 +80,16 @@ private:
   hydrogenBurke(const hydrogenBurke&) = delete;
   hydrogenBurke& operator=(const hydrogenBurke&) = delete;
 
+  double YN20{0.0};
+  double YH20{0.0};
+  double YO20{0.0};
+
   //------------------------------------------------------------------
   // Geometry-based initialization
   //------------------------------------------------------------------
   struct Region {
     GeometryPieceP piece;
-    std::vector<double> Yinit; // size = 6 (tracked species)
+    std::vector<double> Yinit; // size = 7 (tracked species)
 
     Region(GeometryPieceP p, const std::vector<double>& Y)
       : piece(p), Yinit(Y) {}

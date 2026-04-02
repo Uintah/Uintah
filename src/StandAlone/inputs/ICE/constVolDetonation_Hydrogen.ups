@@ -79,7 +79,7 @@
 
   <!--==================== ICE SETUP ====================-->
   <CFD>
-    <cfl>0.2</cfl>
+    <cfl>0.0001</cfl>
     <ICE>
       <advection type="SecondOrder"/>
     </ICE>
@@ -88,7 +88,7 @@
   <!--==================== CONSTANTS ====================-->
   <PhysicalConstants>
     <gravity>            [0.0, 0.0, 0.0] </gravity>
-    <reference_pressure> 1000000.0        </reference_pressure>
+    <reference_pressure> 101325.0        </reference_pressure>
   </PhysicalConstants>
 
   <!--==================== MATERIAL ====================-->
@@ -110,9 +110,9 @@
 
           <res> [2,2,2] </res>
           <velocity> [0.0,0.0,0.0] </velocity>
-          <density>  2.176183844   </density>
-          <pressure> 1e7           </pressure>
-          <temperature> 1600     </temperature>
+          <density>  0.320729932   </density>
+          <pressure> 101325.0      </pressure>
+          <temperature> 1100       </temperature>
         </geom_object>
       </material>
     </ICE>
@@ -122,10 +122,12 @@
   <Models>
     <Model type="hydrogenBurke">
       <hydrogenBurke>
-
+        
+        <!-- Stoichometric Hydrogen-Air -->
+        <YN2_init> 0.7451236  </YN2_init>
+        <YH2_init> 0.02852239 </YH2_init>
+        <YO2_init> 0.22635401 </YO2_init>
         <material>source</material>
-        <debug>false</debug>
-
       </hydrogenBurke>
     </Model>
   </Models>

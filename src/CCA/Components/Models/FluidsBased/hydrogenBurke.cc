@@ -68,13 +68,22 @@ hydrogenBurke::~hydrogenBurke()
 //------------------------------------------------------------------
 void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
 {
+//   if (d_debug) {
+//     std::cout << "Running: hydrogenBurke::outputProblemSpec" << std::endl;
+//   }
+
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type", "hydrogenBurke");
 
   d_matl->outputProblemSpec(model_ps);
 
-  ProblemSpecP ed_ps = model_ps->appendChild("hydrogenBurke");
-  ed_ps->appendElement("debug", d_debug);
+  ProblemSpecP hb_ps = model_ps->appendChild("hydrogenBurke");
+  
+  hb_ps->appendElement("YN2_init",YN20);
+  hb_ps->appendElement("YH2_init",YH20);
+  hb_ps->appendElement("YO2_init",YO20);
+  // Get rid of
+  hb_ps->appendElement("debug", d_debug);
 
 }
 
@@ -86,6 +95,10 @@ void hydrogenBurke::scheduleTestConservation(SchedulerP&, const PatchSet*) {}
 //------------------------------------------------------------------
 void hydrogenBurke::problemSetup(GridP&, const bool)
 {
+//   if (d_debug) {
+//     std::cout << "Running: hydrogenBurke::problemSetup" << std::endl;
+//   }
+
   ProblemSpecP ps = d_params->findBlock("hydrogenBurke");
   if (!ps) {
     throw ProblemSetupException("Missing <hydrogenBurke> block", __FILE__, __LINE__);
@@ -99,10 +112,18 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
+  ps->require("YN2_init",YN20);
+  ps->require("YH2_init",YH20);
+  ps->require("YO2_init",YO20);
+//   // Stoichmetric Hydrogen Air by default
+//   ps->getWithDefault("YN2_init",YN20,0.7451236);
+//   ps->getWithDefault("YH2_init",YH20,0.02852239);
+//   ps->getWithDefault("YO2_init",YO20,0.22635401);
+
   ps->getWithDefault("debug", d_debug, false);
 
   //----------------------------------------------------------------
-  // Create 6 passive scalars
+  // Create 7 passive scalars
   //----------------------------------------------------------------
   static const char* names[N_SPECIES] = {
     "YH2", "YO2", "YH2O", "YH", "YO", "YOH", "YHO2"
@@ -131,19 +152,6 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     std::vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_ps, pieces);
 
-    std::vector<double> Yinit;
-    geom_ps->require("Y", Yinit);
-
-    if (Yinit.size() != N_SPECIES) {
-    throw ProblemSetupException(
-        "Initial Y vector must have length 7",
-        __FILE__, __LINE__);
-    }
-
-    for (auto& piece : pieces) {
-    d_regions.push_back(scinew Region(piece, Yinit));
-    }
-
   }
 }
 
@@ -153,6 +161,9 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 void hydrogenBurke::scheduleInitialize(SchedulerP& sched,
                                             const LevelP& level)
 {
+//   if (d_debug) {
+//     std::cout << "Running: hydrogenBurke::scheduleInitialize" << std::endl;
+//   }
   Task* t = scinew Task("hydrogenBurke::initialize",
                         this, &hydrogenBurke::initialize);
 
@@ -169,6 +180,9 @@ void hydrogenBurke::initialize(const ProcessorGroup*,
                                     DataWarehouse*,
                                     DataWarehouse* new_dw)
 {
+//   if (d_debug) {
+//     std::cout << "Running: hydrogenBurke::initialize" << std::endl;
+//   }
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
@@ -176,23 +190,11 @@ void hydrogenBurke::initialize(const ProcessorGroup*,
       int indx = matls->get(m);
 
       std::vector<CCVariable<double>> Y(N_SPECIES);
-      //                  Y0 = [YH2,        YO2,        YH2O,YH,  YO,  YOH, YHO2]
-      std::vector<double> Y0 = {0.02852239, 0.22635401, 0.0, 0.0, 0.0, 0.0, 0.0};
+      //                  Y0 = [YH2,  YO2,        YH2O,YH,  YO,  YOH, YHO2]
+      std::vector<double> Y0 = {YH20, YO20, 0.0, 0.0, 0.0, 0.0, 0.0};
       for (int k = 0; k < N_SPECIES; k++) {
         new_dw->allocateAndPut(Y[k], d_Y_labels[k], indx, patch);
         Y[k].initialize(Y0[k]);
-      }
-
-      for (CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-        Point pt = patch->cellPosition(*iter);
-
-        for (auto* r : d_regions) {
-          if (r->piece->inside(pt)) {
-            for (int k = 0; k < N_SPECIES; k++) {
-              Y[k][*iter] = r->Yinit[k];
-            }
-          }
-        }
       }
     }
   }
@@ -204,6 +206,10 @@ void hydrogenBurke::initialize(const ProcessorGroup*,
 void hydrogenBurke::scheduleComputeModelSources(SchedulerP& sched,
                                                      const LevelP& level)
 {
+//   if (d_debug) {
+//     std::cout << "Running: hydrogenBurke::scheduleComputeModelSources" << std::endl;
+//   }
+
   Task* t = scinew Task("hydrogenBurke::computeModelSources",
                         this, &hydrogenBurke::computeModelSources);
 
@@ -227,6 +233,9 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP& sched,
 // Enthalpy calculator (J / mol)  Valid for Temperatures T = 1000K - 3500K
 double hydrogenBurke::enthalpy(double T, int R1, int P1, std::optional<int> R2, std::optional<int> P2)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::enthalpy" << std::endl;
+    // }
     double Tsqr  = T * T;
     double Tcube = Tsqr * T;
     double Tquad = Tcube * T;
@@ -248,6 +257,9 @@ double hydrogenBurke::enthalpy(double T, int R1, int P1, std::optional<int> R2, 
 // Gibbs calculator (dimensionless) Valid for Temperatures T = 1000K - 3500K
 double hydrogenBurke::gibbs(double T, int R1, int P1, std::optional<int> R2, std::optional<int> P2)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::gibbs" << std::endl;
+    // }
     double Tlog = 1 - std::log(T);
     double Tsqr  = T * T;
     double Tcube = Tsqr * T;
@@ -268,6 +280,9 @@ double hydrogenBurke::gibbs(double T, int R1, int P1, std::optional<int> R2, std
 // Standard Reaction rate calculator (mol / cm^3 - s) Takes in the temp (T), concentrations (C), along with Reactant 1 and 2 (R1, R2) and Product 1 and 2 (P1, P2)
 double hydrogenBurke::reaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::reaction" << std::endl;
+    // }
     double kf, kp, kr, q;
     recNum -= 1;
     // Reaction follows the form R1 + R2 <=> P1 + P2
@@ -279,6 +294,9 @@ double hydrogenBurke::reaction(double T, double RT, const std::vector<double>& C
 }
 double hydrogenBurke::duplicateReaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::duplicateReaction" << std::endl;
+    // }
     double kf, kfa, kfb, kp, kr, q;
     recNum -= 1;
     // Reaction follows the form R1 + R2 <=> P1 + P2
@@ -290,8 +308,12 @@ double hydrogenBurke::duplicateReaction(double T, double RT, const std::vector<d
     q   = kf * C[R1] * C[R2] - kr * C[P1] * C[P2]; // rate mol / cm^3 - s 
     return q;
 }
+// Calculates rate for reaction 14 only.
 double hydrogenBurke::reaction14(double T, double RT, const std::vector<double>& C)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::reaction14" << std::endl;
+    // }
     double kf, kp, kc, kr, q;
     int recNum = 13;
     // Reaction follows the form R1 + R2 <=> P1 + P2
@@ -307,6 +329,9 @@ double hydrogenBurke::reaction14(double T, double RT, const std::vector<double>&
 // Third Body Reaction Rate calculator (2 Reactants 1 Producet) (mol / cm^3 - s)
 double hydrogenBurke::thirdBodyReaction2R(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int R2, int P1)
 {
+//   if (d_debug) {
+//         std::cout << "Running: hydrogenBurke::thirdBodyReaction2R" << std::endl;
+//   }
   double M, kf, kp, kc, kr, q;
   recNum -= 1;
   // Reaction follows the form R1 + R2 + M <=> P1 + M
@@ -322,6 +347,9 @@ double hydrogenBurke::thirdBodyReaction2R(double T, double RT, const std::vector
 // Third Body Reaction Rate Calculator (1 Reactant 2 Products) (mol / cm^3 - s)
 double hydrogenBurke::thirdBodyReaction2P(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int P1, int P2)
 {
+//   if (d_debug) {
+//         std::cout << "Running: hydrogenBurke::thirdBodyReaction2P" << std::endl;
+//   }
   double M, kf, kp, kc, kr, q;
   recNum -= 1;
   // Reaction follows the form R1 + M <=> P1 + P2 + M
@@ -335,8 +363,12 @@ double hydrogenBurke::thirdBodyReaction2P(double T, double RT, const std::vector
 }
 
 // Falloff Reaction Rate Calculators 
+// Calculates reaction rate for reaction 15 only
 double hydrogenBurke::falloffReaction15(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int R2, int P1)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::falloffReaction15" << std::endl;
+    // }
     double k0, kinf, M, Pr, log10Pr, Fc, log10Fc, Ctroe, Ntroe, Sqr, log10F, F, keff, kp, kc, kr, q;
     // Calculate low and high pressure limits
     k0   = A15[0] * std::pow(T, n15[0]) * std::exp(-Ea15[0] / RT);
@@ -365,9 +397,12 @@ double hydrogenBurke::falloffReaction15(double T, double RT, const std::vector<d
     q  = keff * C[R1] * C[R2] - kr * C[P1]; // rate mol / cm*3 - s
     return q;
 }
-
+// Calculates reaction rate for reaction 22 only
 double hydrogenBurke::falloffReaction22(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int P1, int P2)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::falloffReaction22" << std::endl;
+    // }
     double k0, kinf, M, Pr, log10Pr, Fc, log10Fc, Ctroe, Ntroe, Sqr, log10F, F, keff, kp, kc, kr, q;
     // Calculate low and high pressure limits
     k0   = A22[0] * std::pow(T, n22[0]) * std::exp(-Ea22[0] / RT);
@@ -401,6 +436,9 @@ double hydrogenBurke::falloffReaction22(double T, double RT, const std::vector<d
 // Step 1 Calculate rates
 std::vector<double> hydrogenBurke::globalRates(double T, const std::vector<double>& C)
 {
+//   if (d_debug) {
+//         std::cout << "Running: hydrogenBurke::globalRates" << std::endl;
+//   }
   double RT = Ru * T; // J / mol
   double q1, q2, q4, q5, q6, q9, q12, q13, q14, q15, q16, q17, q18, q19, q20, q22, q23, q24, q25, q26;
   q1  = reaction(T, RT, C, 1, H, O2, O, OH);
@@ -431,6 +469,9 @@ std::vector<double> hydrogenBurke::globalRates(double T, const std::vector<doubl
 // Step 2 Calculate Heat release (qdot)
 double hydrogenBurke::heatRelease(std::vector<double>& q, double T)
 {
+//   if (d_debug) {
+//         std::cout << "Running: hydrogenBurke::heatRelease" << std::endl;
+//   }
   q[0]  *= enthalpy(T, H,    O,    O2,           OH);  // (W / cm^3) reaction 1
   q[1]  *= enthalpy(T, O,    H,    H2,           OH);  // (W / cm^3) reaction 2
   q[3]  *= enthalpy(T, H2,   H2O,  OH,           H);   // (W / cm^3) reaction 4
@@ -459,6 +500,9 @@ double hydrogenBurke::heatRelease(std::vector<double>& q, double T)
 // Step 3 Calculate Mass source terms
 std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
 {
+    // if (d_debug) {
+    //     std::cout << "Running: hydrogenBurke::massSource" << std::endl;
+    // }
     double sH2, sO2, sH2O, sH, sO, sOH, sHO2;
     sH2  = q[15] + q[23] - q[1] - q[3] - q[5];
     sO2  = q[8] + q[15] + q[17] + q[18] + q[19] - q[0] - q[14];
@@ -471,7 +515,7 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
     //[H2, O2, N2, H2O, H, O, OH, HO2]
     sdot = {sH2, sO2, 0.0, sH2O, sH, sO, sOH, sHO2};
     double temp;
-    for(size_t k = 0; k < Mw.size(); k++){
+    for(size_t k = 0; k < Mw.size() - 1; k++){
       if(k == 2) continue;
       temp = Mw[k] * sdot[k] * 1e3; // kg / m^3 s
       S.push_back(temp);
@@ -485,16 +529,19 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+//   if (d_debug) {
+//         std::cout << "Running: hydrogenBurke::computeModelSources" << std::endl;
+//   }
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel);
 
-  for (int p = 0; p < patches->size(); p++) {
+  for (int p = 0; p < patches->size(); p++) { // loop over patches
     const Patch* patch = patches->get(p);
 
     Vector dx = patch->dCell();
     double cellVol = dx.x() * dx.y() * dx.z();
 
-    for (int m = 0; m < matls->size(); m++) {
+    for (int m = 0; m < matls->size(); m++) { // loop over materials
       int indx = matls->get(m);
 
       CCVariable<double> eng_src;
@@ -519,37 +566,37 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup*,
         // Current Properties for cell
         double T      = temp[*iter];
         double rho_kg = rho[*iter];
-        double YN2    = 0.7451236; //stoichmetric air Hydrogen (will be specified in input file)
+        // double YN2    = 0.7451236; //stoichmetric air Hydrogen (will be specified in input file)
 
         // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
         std::vector<double> Y;
         double Ytmp;
-
         for (int j = 0; j< N_SPECIES; j++){
             Ytmp = Yold[j][*iter];
             Y.push_back(Ytmp); // Start mass fraction vector with tracked species
         }
-        Y.insert(Y.begin() + 2, YN2); // Insert constant mass fraction nitrogen
+        Y.insert(Y.begin() + 2, YN20); // Insert constant mass fraction nitrogen
         double YH2O2 = std::max(1 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
         Y.push_back(YH2O2); // Insert final mass fraction
 
-        // Molar Concentration mol / cm^3
+        // Compute Molar Concentration mol / cm^3
         std::vector<double> conc(Y.size());
         for(size_t j = 0; j< Y.size(); j++){
             conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
         }
 
-        // Rates mol / cm^3 - s
-        std::vector<double> q = globalRates(T, conc);
+        //--------------- Step 1 Calculate Rates --------------
+        std::vector<double> q = globalRates(T, conc); // mol / cm^3 - s
 
-        // Compute Scalar sources
-        std::vector<double> S = massSource(q);
+
+        // -------------- Step 3 Calculate Species Source Terms -------------- 
+        std::vector<double> S = massSource(q); // kg / m^3 s
         for (int j = 0; j< N_SPECIES; j++){
-            Ysrc[j][*iter] += S[j] * delT / rho_kg;
+            Ysrc[j][*iter] += S[j] * delT / rho_kg; // 1 / s
         }
 
-        // Compute Energy source
-        eng_src[*iter] += heatRelease(q, T) * cellVol * delT;
+        //--------------- Step 2 Calculate Heat Release
+        eng_src[*iter] += heatRelease(q, T) * cellVol * delT; // Joules
       }
     }
   }
