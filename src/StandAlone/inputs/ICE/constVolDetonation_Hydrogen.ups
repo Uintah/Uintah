@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+    <title>Hydrogen Detonation validation </title>
+  </Meta>
+
+  <SimulationComponent type="ice" />
+
+  <!--==================== TIME ====================-->
+  <Time>
+    <maxTime>            0.001     </maxTime>
+    <initTime>           0.0     </initTime>
+    <delt_min>           0.0     </delt_min>
+    <delt_max>           1.0e-9  </delt_max>
+    <delt_init>          1.0e-9  </delt_init>
+    <max_delt_increase>  1.0     </max_delt_increase>
+    <timestep_multiplier> 1      </timestep_multiplier>
+  </Time>
+
+  <!--==================== GRID ====================-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side="x-"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+      <Face side="x+"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+      <Face side="y-"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+      <Face side="y+"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+      <Face side="z-"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+      <Face side="z+"><BCType id="0" var="symmetry" label="Symmetric"/></Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="domain">
+        <lower>        [0.0, 0.0, 0.0] </lower>
+        <upper>        [1.0, 1.0, 1.0] </upper>
+
+        <extraCells>   [1,1,1]         </extraCells>
+        <patches>      [1,1,1]         </patches>
+        <resolution>   [3,3,3]         </resolution>
+      </Box>
+    </Level>
+  </Grid>
+
+  <!--==================== OUTPUTS ====================-->
+  <DataArchiver>
+    <filebase>cvHydrogen.uda</filebase>
+    <outputInterval>1e-7</outputInterval>
+
+    <!-- Species passive scalars -->
+    <save label="scalar-YH2"/>
+    <save label="scalar-YO2"/>
+    <save label="scalar-YH2O"/>
+    <save label="scalar-YH"/>
+    <save label="scalar-YO"/>
+    <save label="scalar-YOH"/>
+    <save label="scalar-YHO2"/>
+
+    <!-- Species source terms -->
+    <save label="scalar_YH2_src"/>
+    <save label="scalar_YO2_src"/>
+    <save label="scalar_YH2O_src"/>
+    <save label="scalar_YH_src"/>
+    <save label="scalar_YO_src"/>
+    <save label="scalar_YOH_src"/>
+    <save label="scalar_YHO2_src"/>
+
+    <!-- Thermodynamic fields -->
+    <save label="temp_CC"/>
+    <save label="vel_CC"/>
+    <save label="rho_CC"/>
+    <save label="press_CC"/>
+
+    <!-- Source Terms-->
+    <save label="modelEng_src"/>
+    <save label="modelMom_src"/>
+    <save label="modelMass_src"/>
+  </DataArchiver>
+
+  <!--==================== ICE SETUP ====================-->
+  <CFD>
+    <cfl>0.2</cfl>
+    <ICE>
+      <advection type="SecondOrder"/>
+    </ICE>
+  </CFD>
+
+  <!--==================== CONSTANTS ====================-->
+  <PhysicalConstants>
+    <gravity>            [0.0, 0.0, 0.0] </gravity>
+    <reference_pressure> 1000000.0        </reference_pressure>
+  </PhysicalConstants>
+
+  <!--==================== MATERIAL ====================-->
+  <MaterialProperties>
+    <ICE>
+      <material name="source">
+        <EOS type="ideal_gas"/>
+
+        <dynamic_viscosity>     0.0    </dynamic_viscosity>
+        <thermal_conductivity>  0.0    </thermal_conductivity>
+        <specific_heat>         718.0  </specific_heat>
+        <gamma>                 1.4    </gamma>
+
+        <geom_object>
+          <box label="domain_box">
+            <min>[0.0,0.0,0.0]</min>
+            <max>[1.0,1.0,1.0]</max>
+          </box>
+
+          <res> [2,2,2] </res>
+          <velocity> [0.0,0.0,0.0] </velocity>
+          <density>  2.176183844   </density>
+          <pressure> 1e7           </pressure>
+          <temperature> 1600     </temperature>
+        </geom_object>
+      </material>
+    </ICE>
+  </MaterialProperties>
+
+  <!--==================== MODEL ====================-->
+  <Models>
+    <Model type="hydrogenBurke">
+      <hydrogenBurke>
+
+        <material>source</material>
+        <debug>false</debug>
+
+      </hydrogenBurke>
+    </Model>
+  </Models>
+
+</Uintah_specification>
