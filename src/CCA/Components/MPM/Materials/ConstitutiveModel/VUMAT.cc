@@ -67,12 +67,12 @@ VUMAT::VUMAT(ProblemSpecP& ps, MPMFlags* Mflag)
   const TypeDescription* P_dbl =ParticleVariable<double>::getTypeDescription();
 
   for(int i = 0; i< d_initialData.nstatev; i++){
-    ostringstream vlnum;
-    vlnum << i;
-    pStateVarLabel[i]         = VarLabel::create("p.statevar" + vlnum.str(),
-                                                                         P_dbl);
-    pStateVarLabel_preReloc[i]= VarLabel::create("p.statevar+"+ vlnum.str(),
-                                                                         P_dbl);
+   ostringstream vlnum;
+   vlnum << i;
+   pStateVarLabel.push_back(VarLabel::create("p.statevar" + vlnum.str(),
+                                                                        P_dbl));
+   pStateVarLabel_preReloc.push_back(VarLabel::create("p.statevar+"+vlnum.str(),
+                                                                        P_dbl));
   }
 }
 
@@ -298,7 +298,6 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
 
     int nblock = 1, ndir = 3, nshr = 3, nprops = d_initialData.props.size();
     const int& iptr = 0;
-    const double& dptr = 0.0;
     Matrix3 tensorU, tensorR;
 
     // Load up the specific vumat library described by the arguments below
@@ -306,6 +305,8 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
 
     std::vector<double> stateOld(d_initialData.nstatev*nblock,0.0);
     std::vector<double> stateNew(d_initialData.nstatev*nblock,0.0);
+    std::vector<double> defgradOld(9,0.0);
+    std::vector<double> defgradNew(9,0.0);
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
@@ -321,18 +322,23 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
       double strainInc[6] = {0.0}; // Not used
       double stretchNew[6] = {tensorU(0,0), tensorU(1,1), tensorU(2,2), 
                               tensorU(0,1), tensorU(1,2), tensorU(0,2)};
+      // Need to load deformationGradient into defgradOld/New
+      // Don't know what the format is
 
       for(int i = 0; i< d_initialData.nstatev; i++){
         stateOld[i] = pStateVar_old[i][idx];
       }
+      double stepTime = 0.;
+      double totalTime = 1.;  // FIX 
 
       // Call the VUMAT function directly
       vumat_func(nblock, ndir, nshr, d_initialData.nstatev, iptr, nprops, iptr, 
-                 dptr, dptr, dptr, nullptr, nullptr, nullptr, 
+                 stepTime, totalTime, delT, nullptr, nullptr, nullptr, 
                  &(d_initialData.props[0]), nullptr, strainInc, 
                  nullptr, nullptr, nullptr, 
-                 nullptr, nullptr, stressOld, nullptr, nullptr, nullptr, 
-                 nullptr, stretchNew, &(stateOld[0]), nullptr, stressNew,
+                 &(defgradOld[0]), nullptr, stressOld, &(stateOld[0]),
+                 nullptr, nullptr, 
+                 nullptr, stretchNew, &(defgradNew[0]), nullptr, stressNew,
                  &(stateNew[0]), nullptr, nullptr);
 
       for(int i = 0; i< d_initialData.nstatev; i++){
@@ -425,8 +431,8 @@ void VUMAT::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void VUMAT::addComputesAndRequires(Task* task,
-                                              const MPMMaterial* matl,
-                                              const PatchSet* patches ) const
+                                   const MPMMaterial* matl,
+                                   const PatchSet* patches ) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
