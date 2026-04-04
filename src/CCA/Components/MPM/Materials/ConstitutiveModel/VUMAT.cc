@@ -330,16 +330,17 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
       }
       double stepTime = 0.;
       double totalTime = 1.;  // FIX 
+      const double tempNew = 300;
+      const double tempOld = 300.0;
 
       // Call the VUMAT function directly
       vumat_func(nblock, ndir, nshr, d_initialData.nstatev, iptr, nprops, iptr, 
                  stepTime, totalTime, delT, nullptr, nullptr, nullptr, 
-                 &(d_initialData.props[0]), nullptr, strainInc, 
-                 nullptr, nullptr, nullptr, 
-                 &(defgradOld[0]), nullptr, stressOld, &(stateOld[0]),
-                 nullptr, nullptr, 
-                 nullptr, stretchNew, &(defgradNew[0]), nullptr, stressNew,
-                 &(stateNew[0]), nullptr, nullptr);
+                 &(d_initialData.props[0]), nullptr, strainInc, nullptr, 
+		 &(tempOld), nullptr, &(defgradOld[0]), nullptr, 
+		 stressOld, &(stateOld[0]),nullptr, nullptr, 
+                 &(tempNew), stretchNew, &(defgradNew[0]), nullptr, 
+		 stressNew, &(stateNew[0]), nullptr, nullptr);
 
       for(int i = 0; i< d_initialData.nstatev; i++){
         pStateVar_new[i][idx] = stateNew[i];
