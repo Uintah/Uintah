@@ -231,7 +231,7 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP& sched,
 // Combustion Functions
 // ----------------------------------------------------------------
 // Enthalpy calculator (J / mol)  Valid for Temperatures T = 1000K - 3500K
-double hydrogenBurke::enthalpy(double T, int R1, int P1, std::optional<int> R2, std::optional<int> P2)
+double hydrogenBurke::enthalpy(double T, int R1, int P1, const int* R2, const int* P2)
 {
     // if (d_debug) {
     //     std::cout << "Running: hydrogenBurke::enthalpy" << std::endl;
@@ -248,14 +248,14 @@ double hydrogenBurke::enthalpy(double T, int R1, int P1, std::optional<int> R2, 
     double hR1 = speciesH(R1);
     double hP1 = speciesH(P1);
 
-    double hR2 = R2 ? speciesH(*R2) : 0.0;
-    double hP2 = P2 ? speciesH(*P2) : 0.0;
+    double hR2 = (R2 != nullptr) ? speciesH(*R2) : 0.0;
+    double hP2 = (P2 != nullptr) ? speciesH(*P2) : 0.0;
 
     return Ru * (hR1 + hR2 - hP1 - hP2);
 }
 
 // Gibbs calculator (dimensionless) Valid for Temperatures T = 1000K - 3500K
-double hydrogenBurke::gibbs(double T, int R1, int P1, std::optional<int> R2, std::optional<int> P2)
+double hydrogenBurke::gibbs(double T, int R1, int P1, const int* R2, const int* P2)
 {
     // if (d_debug) {
     //     std::cout << "Running: hydrogenBurke::gibbs" << std::endl;
@@ -272,8 +272,9 @@ double hydrogenBurke::gibbs(double T, int R1, int P1, std::optional<int> R2, std
     double gR1 = speciesG(R1);
     double gP1 = speciesG(P1);
 
-    double gR2 = R2 ? speciesG(*R2) : 0.0;
-    double gP2 = P2 ? speciesG(*P2) : 0.0;
+    double gR2 = (R2 != nullptr) ? speciesG(*R2) : 0.0;
+    double gP2 = (P2 != nullptr) ? speciesG(*P2) : 0.0;
+
     return gR1 + gR2 - gP1 - gP2;
 }
 
@@ -287,7 +288,7 @@ double hydrogenBurke::reaction(double T, double RT, const std::vector<double>& C
     recNum -= 1;
     // Reaction follows the form R1 + R2 <=> P1 + P2
     kf = A[recNum] * std::pow(T, n[recNum]) * std::exp(-Ea[recNum] / RT); // Forward reaction rate
-    kp = std::exp(gibbs(T, R1, P1, R2, P2)); // Equilibrium Constant
+    kp = std::exp(gibbs(T, R1, P1, &R2, &P2)); // Equilibrium Constant
     kr = kf / kp; // Reverse reaction rate
     q  = kf * C[R1] * C[R2] - kr * C[P1] * C[P2]; // rate mol / cm^3 - s 
     return q;
@@ -303,7 +304,7 @@ double hydrogenBurke::duplicateReaction(double T, double RT, const std::vector<d
     kfa = A[recNum] * std::exp(-Ea[recNum] / RT); // Forward reaction rate for first duplicate reaction
     kfb = A[recNum+1] * std::exp(-Ea[recNum+1] / RT); // Forward reaction rate for second duplicate reaction
     kf  = kfa + kfb;
-    kp  = std::exp(gibbs(T, R1, P1, R2, P2)); // Equilibrium Constant
+    kp  = std::exp(gibbs(T, R1, P1, &R2, &P2)); // Equilibrium Constant
     kr  = kf / kp; // Reverse reaction rate
     q   = kf * C[R1] * C[R2] - kr * C[P1] * C[P2]; // rate mol / cm^3 - s 
     return q;
@@ -318,7 +319,7 @@ double hydrogenBurke::reaction14(double T, double RT, const std::vector<double>&
     int recNum = 13;
     // Reaction follows the form R1 + R2 <=> P1 + P2
     kf = A[recNum] * std::pow(T, n[recNum]) * std::exp(-Ea[recNum] / RT); // Forward reaction rate
-    kp = std::exp(gibbs(T, H2O, H, std::nullopt, OH)); // Equilibrium Constant
+    kp = std::exp(gibbs(T, H2O, H, nullptr, &OH)); // Equilibrium Constant
     kc = 1e-6 * kp * 101325.0 / RT; // mol / cm^3 (P/RT = mol / m^3 convert to units consistent with kf)
     kr = kf / kc; // Reverse reaction rate
     q  = kf * C[H2O] * C[H2O] - kr * C[H] * C[OH] * C[H2O]; // rate mol / cm^3 - s 
@@ -337,7 +338,7 @@ double hydrogenBurke::thirdBodyReaction2R(double T, double RT, const std::vector
   // Reaction follows the form R1 + R2 + M <=> P1 + M
   M  = std::inner_product(C.begin(), C.end(),efficiencies.begin(),0.0); // Third body term
   kf = A[recNum] * std::pow(T, n[recNum]) * std::exp(-Ea[recNum] / RT); // Forward reaction rate
-  kp = std::exp(gibbs(T, R1, P1, R2)); // Equilibrium constant
+  kp = std::exp(gibbs(T, R1, P1, &R2)); // Equilibrium constant
   kc = 1e6 * kp * RT / 101325.0; // cm^3 / mol (RT/P = m^3 / mol convert to units consistent with kf)
   kr = kf / kc; // Reverse reaction rate
   q  = M * (kf * C[R1] * C[R2] - kr * C[P1]); // rate mol / cm*3 - s
@@ -355,7 +356,7 @@ double hydrogenBurke::thirdBodyReaction2P(double T, double RT, const std::vector
   // Reaction follows the form R1 + M <=> P1 + P2 + M
   M  = std::inner_product(C.begin(), C.end(),efficiencies.begin(),0.0); // Third body term
   kf = A[recNum] * std::pow(T, n[recNum]) * std::exp(-Ea[recNum] / RT); // Forward reaction rate
-  kp = std::exp(gibbs(T, R1, P1, std::nullopt, P2)); // Equilibrium Constant
+  kp = std::exp(gibbs(T, R1, P1, nullptr, &P2)); // Equilibrium Constant
   kc = 1e-6 * kp * 101325.0 / RT; // mol / cm^3 (P/RT = mol / m^3 convert to units consistent with kf)
   kr = kf / kc; // Reverse reaction rate
   q  = M * (kf * C[R1] - kr * C[P1] * C[P2]); // rate mol / cm*3 - s
@@ -391,7 +392,7 @@ double hydrogenBurke::falloffReaction15(double T, double RT, const std::vector<d
     keff = kinf * Pr * F / (1 + Pr);
 
      // Reaction follows the form R1 + R2 + M <=> P1 + M
-    kp = std::exp(gibbs(T, R1, P1, R2)); // Equilibrium constant
+    kp = std::exp(gibbs(T, R1, P1, &R2)); // Equilibrium constant
     kc = 1e6 * kp * RT / 101325.0; // cm^3 / mol (RT/P = m^3 / mol convert to units consistent with kf)
     kr = keff / kc; // Reverse reaction rate
     q  = keff * C[R1] * C[R2] - kr * C[P1]; // rate mol / cm*3 - s
@@ -425,7 +426,7 @@ double hydrogenBurke::falloffReaction22(double T, double RT, const std::vector<d
     keff = kinf * Pr * F / (1 + Pr);
 
     // Reaction follows the form R1 + M <=> P1 + P2 + M
-    kp = std::exp(gibbs(T, R1, P1, std::nullopt, P2)); // Equilibrium Constant
+    kp = std::exp(gibbs(T, R1, P1, nullptr, &P2)); // Equilibrium Constant
     kc = 1e-6 * kp * 101325.0 / RT; // mol / cm^3 (P/RT = mol / m^3 convert to units consistent with kf)
     kr = keff / kc; // Reverse reaction rate
     q  = keff * C[R1] - kr * C[P1] * C[P2]; // rate mol / cm*3 - s
@@ -472,26 +473,26 @@ double hydrogenBurke::heatRelease(std::vector<double>& q, double T)
 //   if (d_debug) {
 //         std::cout << "Running: hydrogenBurke::heatRelease" << std::endl;
 //   }
-  q[0]  *= enthalpy(T, H,    O,    O2,           OH);  // (W / cm^3) reaction 1
-  q[1]  *= enthalpy(T, O,    H,    H2,           OH);  // (W / cm^3) reaction 2
-  q[3]  *= enthalpy(T, H2,   H2O,  OH,           H);   // (W / cm^3) reaction 4
-  q[4]  *= enthalpy(T, OH,   O,    OH,           H2O); // (W / cm^3) reaction 5
-  q[5]  *= enthalpy(T, H2,   H,    std::nullopt, H);   // (W / cm^3) reaction 6
-  q[8]  *= enthalpy(T, O,    O2,   O);                 // (W / cm^3) reaction 9
-  q[11] *= enthalpy(T, O,    OH,   H);                 // (W / cm^3) reaction 12
-  q[12] *= enthalpy(T, H2O,  H,    std::nullopt, OH);  // (W / cm^3) reaction 13
-  q[13] *= enthalpy(T, H2O,  H,    std::nullopt, OH);  // (W / cm^3) reaction 14
-  q[14] *= enthalpy(T, H,    HO2,  O2);                // (W / cm^3) reaction 15
-  q[15] *= enthalpy(T, HO2,  H2,   H,            O2);  // (W / cm^3) reaction 16
-  q[16] *= enthalpy(T, HO2,  OH,   H,            OH);  // (W / cm^3) reaction 17
-  q[17] *= enthalpy(T, HO2,  O2,   O,            OH);  // (W / cm^3) reaction 18
-  q[18] *= enthalpy(T, HO2,  H2O,  OH,           O2);  // (W / cm^3) reaction 19
-  q[19] *= enthalpy(T, HO2,  H2O2, HO2,          O2);  // (W / cm^3) reaction 20
-  q[21] *= enthalpy(T, H2O2, OH,   std::nullopt, OH);  // (W / cm^3) reaction 22
-  q[22] *= enthalpy(T, H2O2, H2O,  H,            OH);  // (W / cm^3) reaction 23
-  q[23] *= enthalpy(T, H2O2, HO2,  H,            H2);  // (W / cm^3) reaction 24
-  q[24] *= enthalpy(T, H2O2, OH,   O,            HO2); // (W / cm^3) reaction 25
-  q[25] *= enthalpy(T, H2O2, HO2,  OH,           H2O); // (W / cm^3) reaction 26
+  q[0]  *= enthalpy(T, H,    O,    &O2,     &OH);  // (W / cm^3) reaction 1
+  q[1]  *= enthalpy(T, O,    H,    &H2,     &OH);  // (W / cm^3) reaction 2
+  q[3]  *= enthalpy(T, H2,   H2O,  &OH,     &H);   // (W / cm^3) reaction 4
+  q[4]  *= enthalpy(T, OH,   O,    &OH,     &H2O); // (W / cm^3) reaction 5
+  q[5]  *= enthalpy(T, H2,   H,    nullptr, &H);   // (W / cm^3) reaction 6
+  q[8]  *= enthalpy(T, O,    O2,   &O);            // (W / cm^3) reaction 9
+  q[11] *= enthalpy(T, O,    OH,   &H);            // (W / cm^3) reaction 12
+  q[12] *= enthalpy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 13
+  q[13] *= enthalpy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 14
+  q[14] *= enthalpy(T, H,    HO2,  &O2);           // (W / cm^3) reaction 15
+  q[15] *= enthalpy(T, HO2,  H2,   &H,      &O2);  // (W / cm^3) reaction 16
+  q[16] *= enthalpy(T, HO2,  OH,   &H,      &OH);  // (W / cm^3) reaction 17
+  q[17] *= enthalpy(T, HO2,  O2,   &O,      &OH);  // (W / cm^3) reaction 18
+  q[18] *= enthalpy(T, HO2,  H2O,  &OH,     &O2);  // (W / cm^3) reaction 19
+  q[19] *= enthalpy(T, HO2,  H2O2, &HO2,    &O2);  // (W / cm^3) reaction 20
+  q[21] *= enthalpy(T, H2O2, OH,   nullptr, &OH);  // (W / cm^3) reaction 22
+  q[22] *= enthalpy(T, H2O2, H2O,  &H,      &OH);  // (W / cm^3) reaction 23
+  q[23] *= enthalpy(T, H2O2, HO2,  &H,      &H2);  // (W / cm^3) reaction 24
+  q[24] *= enthalpy(T, H2O2, OH,   &O,      &HO2); // (W / cm^3) reaction 25
+  q[25] *= enthalpy(T, H2O2, HO2,  &OH,     &H2O); // (W / cm^3) reaction 26
 
   double qdot = std::accumulate(q.begin(), q.end(), 0.0) * 1e6; // W / m^3
   return qdot;

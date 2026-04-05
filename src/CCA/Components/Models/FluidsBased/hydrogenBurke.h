@@ -97,8 +97,8 @@ private:
   //------------------------------------------------------------------
   // Combustion Function declarations
   //------------------------------------------------------------------
-  double enthalpy(double T, int R1, int P1, std::optional<int> R2 = std::nullopt, std::optional<int> P2 = std::nullopt);
-  double gibbs(double T, int R1, int P1, std::optional<int> R2 = std::nullopt, std::optional<int> P2 = std::nullopt);
+  double enthalpy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
+  double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double reaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
   double duplicateReaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
   double reaction14(double T, double RT, const std::vector<double>& C);
