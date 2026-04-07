@@ -32,7 +32,7 @@ namespace SpeciesIndexHydrogenBurke {
 }
 
 /**
- * 5- step Hydrogen Detonation
+ * Burke 2012 Hydrogen Mechanism
  *
  * Single-material ICE combustion model with multiple passive scalars
  * representing pseudospecies mass fractions.

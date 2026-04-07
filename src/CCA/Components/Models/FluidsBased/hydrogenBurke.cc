@@ -1,13 +1,12 @@
 //---------------------------------------------------------------
 // Model is for combustion of Hydrogen mixture in presence of shocks (detonations)
-// The implemented model is from "TDetailed and Simplified Chemical Reaction 
-// Mechanisms for Detonation Simulation" (2005)
-// S. Browne et al
+// The implemented model is from "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
+// M. Burke et al
 
 // Enthalpy and Gibbs values are from Nasa7 Polynomials (gri-mech)
 // http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
 
-// Written by James Karr Mar 2026
+// Written by James Karr April 2026
 
 //--------------------------------------------------------------
 
