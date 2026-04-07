@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2026 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Uintah_Component_Models_FluidsBased_hydrogenBurke_h
 #define Uintah_Component_Models_FluidsBased_hydrogenBurke_h
 
@@ -14,12 +38,26 @@
 #include <cmath>
 #include <optional>
 
+
+//---------------------------------------------------------------
+// Model is for combustion of Hydrogen mixture in presence of shocks (detonations)
+// The implemented model is from "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
+// M. Burke et al  << incomplete reference>>
+//
+// Enthalpy and Gibbs values are from Nasa7 Polynomials (gri-mech)
+// http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
+//
+// Written by James Karr April 2026
+//
+//--------------------------------------------------------------
+
+
 namespace Uintah {
 
 
 class ICELabel;
 
-namespace SpeciesIndexHydrogenBurke {
+namespace SpeciesIndexHydrogenBurke {     // consider using an enum --Todd
   constexpr int H2   = 0;
   constexpr int O2   = 1;
   constexpr int N2   = 2;
@@ -44,7 +82,7 @@ public:
                      const MaterialManagerP& materialManager,
                      const ProblemSpecP& params);
 
-  virtual ~hydrogenBurke();
+  virtual ~hydrogenBurke();Ghost::GhostType  d_gn  = Ghost::None;
 
   virtual void problemSetup(GridP& grid, const bool isRestart);
 
@@ -94,21 +132,27 @@ private:
     Region(GeometryPieceP p, const std::vector<double>& Y)
       : piece(p), Yinit(Y) {}
   };
+
   //------------------------------------------------------------------
   // Combustion Function declarations
   //------------------------------------------------------------------
   double enthalpy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
+  
   double reaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
   double duplicateReaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
   double reaction14(double T, double RT, const std::vector<double>& C);
+  
   double thirdBodyReaction2R(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int R2, int P1);
   double thirdBodyReaction2P(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int P1, int P2);
+  
   double falloffReaction15(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int R2, int P1);
   double falloffReaction22(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int P1, int P2);
+  
   std::vector<double> globalRates(double T, const std::vector<double>& C);
   double heatRelease(std::vector<double>& q, double T);
   std::vector<double> massSource(const std::vector<double>& q);
+
   //------------------------------------------------------------------
   // Constants
   //------------------------------------------------------------------
@@ -127,33 +171,58 @@ private:
   // Universial gas constant
   static constexpr double Ru = 8.314462618; //(J / mol K)
 
+  //__________________________________
   // Arrhenius Parameters
-  inline static const std::vector<double> A = {
-    1.04e+14, 3.818e+12, 8.792e+14, 2.16e+08, 3.34e+04, 4.577e+19, 0.0, 0.0, 6.165e+15, 0.0, 0.0, 4.714e+18, 6.064e+27, 1.006e+26, 
-    0.0, 2.75e+06, 7.079e+13, 2.85e+10, 2.89e+13, 4.2e+14, 1.3e+11, 0.0, 2.41e+13, 4.82e+13, 9.55e+06, 1.74e+12, 7.59e+13
+  inline static const std::vector<double> A = {   // Pre Exponent
+    1.04e+14,  3.818e+12, 8.792e+14, 
+    2.16e+08,  3.34e+04,  4.577e+19, 
+    0.000000,  0.000000,  6.165e+15,
+    0.000000,  0.000000,  4.714e+18, 
+    6.064e+27, 1.006e+26, 0.0000000, 
+    2.75e+06,  7.079e+13, 2.850e+10, 
+    2.89e+13,  4.200e+14, 1.300e+11, 
+    0.000000,  2.410e+13, 4.820e+13,
+    9.55e+06,  1.740e+12, 7.590e+13
   };
 
-  inline static const std::vector<double> n = {
-    0.0, 0.0, 0.0, 1.51, 2.42, -1.4, 0.0, 0.0, -0.5, 0.0, 0.0, -1.0, -3.322, 
-    -2.44, 0.0, 2.09, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0
+  inline static const std::vector<double> n = {    // Exponent
+    0.00,   0.00, 0.00, 
+    1.51,   2.42, -1.4, 
+    0.00,   0.00, -0.5,
+    0.00,   0.00, -1.0, 
+    -3.322, -2.44, 0.0, 
+    2.09,   0.00,  1.0, 
+    0.00,   0.00,  0.0,
+    0.00,   0.00,  0.0, 
+    2.00,   0.00,  0.0
   };
 
-  inline static const std::vector<double> Ea = { // J / mol
-    6.3956624e+04, 3.3254432e+04, 8.020728e+04, 1.435112e+04, -8.07512e+03, 4.3672592e+05, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 5.0538536e+05, 5.0283312e+05, 0.0, -6.070984e+03, 1.23428e+03, -3.02892312e+03, -2.079448e+03, 
-    5.0132688e+04, -6.8169912e+03, 0.0, 1.661048e+04, 3.32628e+04, 1.661048e+04, 1.330512e+03, 3.041768e+04
+  inline static const std::vector<double> Ea = {   // Activation (J / mol)
+    6.3956624e+04,  3.3254432e+04, 8.020728e+04,
+    1.4351120e+04, -8.0751200e+03, 4.3672592e+05, 
+    0.00000000000,  0.00000000000, 0.00000000000, 
+    0.00000000000,  0.00000000000, 0.00000000000, 
+    5.0538536e+05,  5.0283312e+05, 0.00000000000,       
+    -6.070984e+03,  1.23428e+03,  -3.02892312e+03, 
+    -2.079448e+03,  5.0132688e+04, -6.8169912e+03, 
+    0.00000000000,  1.661048e+04,  3.32628e+04, 
+    1.661048e+04,   1.330512e+03,  3.041768e+04
   };
 
+  //__________________________________
   // Troe Falloff Parameters
   inline static const double d = 0.14;
   inline static const double T1 = 1.0e+30;
   inline static const double T3 = 1.0e-30;
+  
+  //__________________________________
   // Reaction 15
   inline static const std::vector<double> A15   = {6.366e+20, 4.65084e+12};
   inline static const std::vector<double> n15   = {-1.72, 0.44};
-  inline static const std::vector<double> Ea15  = {2.1957632e+03, 0.0};// J / mol
+  inline static const std::vector<double> Ea15  = {2.1957632e+03, 0.0};// J / mol     // This is confusing.  --Todd
   inline static const double a15   = 0.5;
   
+  //__________________________________
   // Reaction 22
   inline static const std::vector<double> A22   = {2.49e+24, 2.0e+12};
   inline static const std::vector<double> n22   = {-2.3, 0.9};
@@ -161,11 +230,14 @@ private:
   inline static const double a22   = 0.43;
 
 
+  //__________________________________
+  //
   // NASA7 polynomial coefficients for molar enthalpy [H2, O2, N2, H2O, H, O, OH, HO2, H2O2] 
   // Note tradtionally enthalpy is calculated like a0 + a1T + (a2/2)T^2 + (a3/3)T^3... 
   // division of coefficients (a2/2, a3/3, a4/4) is already computed below
-  inline static const std::vector<double> a0 = {
-    3.3372792, 3.28253784, 2.92664, 3.03399249, 2.50000001, 2.56942078, 
+  inline static const std::vector<double> a0 = {                             // Please rename variables
+    3.3372792, 3.28253784, 2.92664, 
+    3.03399249, 2.50000001, 2.56942078, 
     3.09288767, 4.0172109, 4.16500285};
 
   inline static const std::vector<double> a1 = {
@@ -192,8 +264,9 @@ private:
     -950.158922,-1088.45772,-922.7977,-30004.2971, 25473.6599, 29217.5791, 
      3858.657, 111.856713, -1.78617877e+04};
   
+  //__________________________________
   // NASA7 polynomial coefficients for gibbs free energy (dimensionless) [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
-  inline static const std::vector<double> b0 = {
+  inline static const std::vector<double> b0 = {                                // Please rename variables
     3.3372792, 3.28253784, 2.92664, 3.03399249, 2.50000001, 2.56942078, 
     3.09288767, 4.0172109, 4.16500285};
 
@@ -218,12 +291,14 @@ private:
     5.8706187999999998e-16,-5.3954267500000000e-16,-1.43954152e-15};
 
   inline static const std::vector<double> b5 = {
-    -950.158922,-1088.45772,-922.7977,-30004.2971, 25473.6599, 29217.5791, 
-    3858.657, 111.856713,-1.78617877e+04};
+    -950.158922,-1088.45772,-922.7977,
+    -30004.2971, 25473.6599, 29217.5791, 
+    3858.657,    111.856713,-1.78617877e+04};
 
   inline static const std::vector<double> b6 = {
-    -3.20502331, 5.45323129, 5.980528, 4.9667701,-0.446682914, 4.78433864, 
-    4.4766961, 3.78510215,2.91615662};
+    -3.20502331, 5.45323129,  5.980528, 
+    4.9667701,  -0.446682914, 4.78433864, 
+    4.4766961,   3.78510215,  2.91615662};
 
   //------------------------------------------------------------------
   // Data members
@@ -232,7 +307,8 @@ private:
   Material*    d_matl{nullptr};
   MaterialSet* d_matl_set{nullptr};
   ProblemSpecP d_params;
-
+  
+  
   // Species bookkeeping
   static constexpr int N_SPECIES = 7;
 
@@ -244,6 +320,7 @@ private:
   std::vector<Region*> d_regions;
 
   bool d_debug{false};
+  IntVector d_debugCell=IntVector(-9);   // cell for debugging output
 };
 
 } // namespace Uintah
