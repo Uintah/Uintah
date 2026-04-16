@@ -437,11 +437,13 @@ void LSTasks::findNearestLS(const ProcessorGroup*,
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
  
-            Point npos = patch->getNodePosition(ni[k]);
-            double dis = (lsEnd - npos).length();
-            if(dis < DisToNearestLS[ni[k]]){
-              DisToNearestLS[ni[k]] = dis;
-              nearestLS[ni[k]] = lsEnd;
+            if(patch->containsNode(node)) {
+              Point npos = patch->getNodePosition(ni[k]);
+              double dis = (lsEnd - npos).length();
+              if(dis < DisToNearestLS[ni[k]]){
+                DisToNearestLS[ni[k]] = dis;
+                nearestLS[ni[k]] = lsEnd;
+              }
             }
           } // loop over nodes near this LS
         } // loop over LS ends
