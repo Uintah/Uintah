@@ -424,22 +424,24 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     sumvec_vartype curCondVal;
     Vector curCondVal_Vec=Vector(0.0,0.0,0.0);
 
-    if(simTime > delT){
-      old_dw->get(curCondVal, conditionLabel);
-      curCondVal_Vec = curCondVal;
-    }
-
-    // see if it is time to adjust the profile(s)
-    if(fabs(curCondVal_Vec.maxComponent()) > d_conditionValue ||
-       fabs(curCondVal_Vec.minComponent()) > d_conditionValue){
-      // adjust the profile(s) to move to the next entry
-      modifyProfile(simTime, d_vel_profile);
-      if(d_includeRotation){
-        modifyProfile(simTime, d_ori_profile);
-        modifyProfile(simTime, d_rot_profile);
+    if(d_conditionValue < 9.e98){
+      if(simTime > delT){
+        old_dw->get(curCondVal, conditionLabel);
+        curCondVal_Vec = curCondVal;
       }
-      // only do this once
-      d_conditionValue = 9.e99;
+
+      // see if it is time to adjust the profile(s)
+      if(fabs(curCondVal_Vec.maxComponent()) > d_conditionValue ||
+         fabs(curCondVal_Vec.minComponent()) > d_conditionValue){
+        // adjust the profile(s) to move to the next entry
+        modifyProfile(simTime, d_vel_profile);
+        if(d_includeRotation){
+          modifyProfile(simTime, d_ori_profile);
+          modifyProfile(simTime, d_rot_profile);
+        }
+        // only do this once
+        d_conditionValue = 9.e99;
+      }
     }
 
     for(int m=0;m<matls->size();m++){
