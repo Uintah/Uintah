@@ -82,6 +82,21 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
 
+  // For modifying the velocity data from filename
+  ps->get("condition", d_condition);
+  ps->getWithDefault("conditionValue", d_conditionValue,9e99);
+
+  if(d_condition!="" && fabs(d_conditionValue) < 9.e98){
+    if(d_condition=="zminus" || d_condition=="zplus" ||
+       d_condition=="xminus" || d_condition=="xplus" ||
+       d_condition=="yminus" || d_condition=="yplus"){
+      std::string labelName = "BndyForce_" + d_condition;
+      conditionLabel =
+        VarLabel::create( std::string("BndyForce_"+d_condition).c_str(),
+                          sumvec_vartype::getTypeDescription() );
+    }
+  }
+
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
     if (!is ){
@@ -165,6 +180,8 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("volume_constraint",   d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",        d_oneOrTwoStep);
   contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
+  contact_ps->appendElement("condition",           d_condition);
+  contact_ps->appendElement("conditionValue",      d_conditionValue);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -370,6 +387,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    
   Ghost::GhostType  gnone = Ghost::None;
   int numMatls = d_materialManager->getNumMatls( "MPM" );
 
@@ -401,6 +421,27 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
+    sumvec_vartype curCondVal;
+    Vector curCondVal_Vec=Vector(0.0,0.0,0.0);
+
+    if(simTime > delT){
+      old_dw->get(curCondVal, conditionLabel);
+      curCondVal_Vec = curCondVal;
+    }
+
+    // see if it is time to adjust the profile(s)
+    if(fabs(curCondVal_Vec.maxComponent()) > d_conditionValue ||
+       fabs(curCondVal_Vec.minComponent()) > d_conditionValue){
+      // adjust the profile(s) to move to the next entry
+      modifyProfile(simTime, d_vel_profile);
+      if(d_includeRotation){
+        modifyProfile(simTime, d_ori_profile);
+        modifyProfile(simTime, d_rot_profile);
+      }
+      // only do this once
+      d_conditionValue = 9.e99;
+    }
+
     for(int m=0;m<matls->size();m++){
      MPMMaterial* mpm_matl = 
                         (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
@@ -416,9 +457,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
     } // if(d_NormalOnly)
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-    
     // rigid_velocity just means that the master_material's initial velocity
     // remains constant through the simulation, until d_stop_time is reached.
     // If the velocity comes from a profile specified in a file, or after
@@ -433,6 +471,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     } else if(d_vel_profile.size()>0) {
       rigid_velocity = false;
       requested_velocity = findValFromProfile(simTime, d_vel_profile);
+      for(int i = 0; i<(int)(d_vel_profile.size());i++){
+      }
       if(d_includeRotation){
         requested_origin = findValFromProfile(simTime, d_ori_profile);
         requested_omega  = findValFromProfile(simTime, d_rot_profile);
@@ -633,6 +673,10 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requiresVar(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
+  if(fabs(d_conditionValue) < 9e98){
+    t->requiresVar(Task::OldDW, conditionLabel, Ghost::None);
+  }
+
   if(d_NormalOnly){
    t->requiresVar(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   }
@@ -711,4 +755,25 @@ SpecifiedBodyContact::findValFromProfile(double t,
       double vz = xi*profile[smin+1].second[2]+(1-xi)*profile[smin].second[2];
       return Vector(vx,vy,vz);
     }
+}
+
+// subtract the difference from the time passed in to the next time
+// in the profile so that on the next timestep, we reach the next entry
+// in the profile
+void SpecifiedBodyContact::modifyProfile(double t, 
+                                 vector<pair<double, Vector> > &profile)
+{
+  int inext=0;
+  for(int i = 0; i< (int)(profile.size());i++){
+    if(profile[i].first > t){
+      inext = i;
+      break;
+    }
+  }
+  
+  double timeToNext = profile[inext].first - t;
+
+  for(int i = inext; i<(int)(profile.size());i++){
+    profile[i].first -= timeToNext;
+  }
 }

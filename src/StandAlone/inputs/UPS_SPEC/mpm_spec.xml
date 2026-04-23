@@ -183,6 +183,8 @@
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
+        <condition                       spec="OPTIONAL STRING" />
+        <conditionValue                  spec="OPTIONAL DOUBLE" />
         <master_material                 spec="OPTIONAL INTEGER" />
         <rigid_material                  spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />
