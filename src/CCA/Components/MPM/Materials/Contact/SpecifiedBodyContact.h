@@ -140,7 +140,8 @@ DESCRIPTION
     Vector findValFromProfile(double t, 
                         std::vector< std::pair<double, Vector> > profile) const;
     void modifyProfile(double t, 
-                        std::vector< std::pair<double, Vector> > &profile);
+                        std::vector< std::pair<double, Vector> > &profile,
+                        std::string conditionAction);
     
     MaterialManagerP d_materialManager;
     double    d_stop_time;
@@ -157,8 +158,9 @@ DESCRIPTION
     std::vector< std::pair<double, Vector> > d_vel_profile;
     std::vector< std::pair<double, Vector> > d_rot_profile;
     std::vector< std::pair<double, Vector> > d_ori_profile;
-    std::string    d_condition;
-    double    d_conditionValue;
+    std::string     d_condition;
+    double          d_conditionValue;
+    std::string     d_conditionAction;
     const VarLabel* conditionLabel;
 
   protected:

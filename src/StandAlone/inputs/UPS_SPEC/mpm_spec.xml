@@ -185,6 +185,7 @@
         <filename                        spec="OPTIONAL STRING" />
         <condition                       spec="OPTIONAL STRING" />
         <conditionValue                  spec="OPTIONAL DOUBLE" />
+        <conditionAction                 spec="OPTIONAL STRING" />
         <master_material                 spec="OPTIONAL INTEGER" />
         <rigid_material                  spec="OPTIONAL INTEGER" />
         <normal_only                     spec="OPTIONAL BOOLEAN" />

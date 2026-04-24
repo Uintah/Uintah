@@ -85,6 +85,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   // For modifying the velocity data from filename
   ps->get("condition", d_condition);
   ps->getWithDefault("conditionValue", d_conditionValue,9e99);
+  ps->get("conditionAction", d_conditionAction);
 
   if(d_condition!="" && fabs(d_conditionValue) < 9.e98){
     if(d_condition=="zminus" || d_condition=="zplus" ||
@@ -182,6 +183,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
   contact_ps->appendElement("condition",           d_condition);
   contact_ps->appendElement("conditionValue",      d_conditionValue);
+  contact_ps->appendElement("conditionAction",     d_conditionAction);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -434,10 +436,10 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       if(fabs(curCondVal_Vec.maxComponent()) > d_conditionValue ||
          fabs(curCondVal_Vec.minComponent()) > d_conditionValue){
         // adjust the profile(s) to move to the next entry
-        modifyProfile(simTime, d_vel_profile);
+        modifyProfile(simTime, d_vel_profile, d_conditionAction);
         if(d_includeRotation){
-          modifyProfile(simTime, d_ori_profile);
-          modifyProfile(simTime, d_rot_profile);
+          modifyProfile(simTime, d_ori_profile, d_conditionAction);
+          modifyProfile(simTime, d_rot_profile, d_conditionAction);
         }
         // only do this once
         d_conditionValue = 9.e99;
@@ -762,20 +764,42 @@ SpecifiedBodyContact::findValFromProfile(double t,
 // subtract the difference from the time passed in to the next time
 // in the profile so that on the next timestep, we reach the next entry
 // in the profile
-void SpecifiedBodyContact::modifyProfile(double t, 
-                                 vector<pair<double, Vector> > &profile)
+void SpecifiedBodyContact::modifyProfile(
+                                 double t, 
+                                 vector<pair<double, Vector> > &profile,
+                                 std::string conditionAction)
 {
-  int inext=0;
-  for(int i = 0; i< (int)(profile.size());i++){
-    if(profile[i].first > t){
-      inext = i;
-      break;
+  if(conditionAction=="GoToNextEntry"){
+    cout << "GTNE" << endl;
+    int inext=0;
+    for(int i = 0; i< (int)(profile.size());i++){
+      if(profile[i].first > t){
+        inext = i;
+        break;
+      }
     }
-  }
-  
-  double timeToNext = profile[inext].first - t;
 
-  for(int i = inext; i<(int)(profile.size());i++){
-    profile[i].first -= timeToNext;
+    double timeToNext = profile[inext].first - t;
+
+    for(int i = inext; i<(int)(profile.size());i++){
+      profile[i].first -= timeToNext;
+    }
+  } else if(conditionAction=="GoToZeroVelocity"){
+    cout << "GTZV" << endl;
+    int inext=0;
+    for(int i = 0; i< (int)(profile.size());i++){
+      if(profile[i].second.length() == 0.0){
+        inext = i;
+        break;
+      }
+    }
+
+    double timeToNext = profile[inext].first - t;
+
+    for(int i = inext; i<(int)(profile.size());i++){
+      profile[i].first -= timeToNext;
+    }
+  } else {
+     throw ProblemSetupException("conditionAction must be either GoToNextEntry or GoToZeroVelocity", __FILE__, __LINE__);
   }
 }
