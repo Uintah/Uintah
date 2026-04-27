@@ -774,7 +774,6 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         // Current Properties for cell
         double T      = temp[c];
         double rho_kg = rho[c];
-        // double YN2    = 0.7451236; //stoichmetric air Hydrogen (will be specified in input file)
 
         // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
         std::vector<double> Y;

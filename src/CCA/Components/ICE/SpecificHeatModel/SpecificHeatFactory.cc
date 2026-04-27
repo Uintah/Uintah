@@ -27,6 +27,7 @@
 #include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Component.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
+#include <CCA/Components/ICE/SpecificHeatModel/airNasa.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -63,13 +64,17 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
     else if (cv_model == "Polynomial"){
       return(scinew PolynomialCv(cv_ps));
     }
+    else if (cv_model == "airNasa"){ 
+      return(scinew airNasa(cv_ps));                 
+    } 
     else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown specific heat model ("<< cv_model << " )\n"
          << "Valid models are:\n"
          << " Debye\n"
          << " Component\n"
-         << " Polynomial\n" << endl;
+         << " Polynomial\n"
+         << " airNasa\n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }

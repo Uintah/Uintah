@@ -35,7 +35,8 @@ SRCS     += $(SRCDIR)/SpecificHeatFactory.cc   \
 	     $(SRCDIR)/SpecificHeat.cc          \
             $(SRCDIR)/Debye.cc                 \
             $(SRCDIR)/Component.cc             \
-            $(SRCDIR)/Polynomial.cc       
+            $(SRCDIR)/Polynomial.cc          \
+			$(SRCDIR)/airNasa.cc
 
 PSELIBS := \
 	Core/Disclosure     \
