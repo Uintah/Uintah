@@ -183,6 +183,9 @@
            <thermal_conductivity>   0.0                   </thermal_conductivity>
            <specific_heat>          652.9                 </specific_heat>
            <gamma>                  1.289                 </gamma>
+           <SpecificHeatModel type="airNasa">
+            <gas_constant> 288.1865406176613 </gas_constant>
+           </SpecificHeatModel>
            <!--____________________________________ -->
            <!-- How domain gets initialized         -->
            <!--____________________________________ -->
