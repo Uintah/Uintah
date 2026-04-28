@@ -28,7 +28,9 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
@@ -45,11 +47,15 @@
 
 //---------------------------------------------------------------
 // Model is for combustion of Hydrogen mixture in presence of shocks (detonations)
-// The implemented model is from "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
-// M. Burke et al  << incomplete reference>>
 //
-// Enthalpy and Gibbs values are from Nasa7 Polynomials (gri-mech)
-// http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
+// Reaction mechanism:
+//   M.P. Burke, M. Chaos, Y. Ju, F.L. Dryer, S.J. Klippenstein
+//   "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
+//   International Journal of Chemical Kinetics, Vol. 44, No. 7, pp. 444-474, 2012
+//   DOI: 10.1002/kin.20603
+//
+// Thermodynamic data (NASA-7 polynomials):
+//   http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
 //
 // Written by James Karr April 2026
 
@@ -57,8 +63,6 @@
 
 //______________________________________________________________________
 //      TO DO
-//      - complete the Burke reference in comment
-//      - Add bulletproofing
 //      - mapping of equation numbers in recipe to function names
 //      - more descriptive variable names as needed.
 //      - 2 space indentation
@@ -86,6 +90,7 @@ hydrogenBurke::hydrogenBurke(const ProcessorGroup   * myworld,
     d_params(params)
 {
   Ilb = scinew ICELabel();
+  m_modelComputesThermoTransportProps = true;
 }
 
 hydrogenBurke::~hydrogenBurke()
@@ -163,6 +168,15 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 //   ps->getWithDefault("YO2_init",YO20,0.22635401);
 
   ps->getWithDefault("debug", d_debug, false);
+
+  //__________________________________
+  // Bulletproofing
+  double Ysum = YH20 + YO20 + YN20;
+  if (Ysum > 1.0 + 1e-6) {
+    std::ostringstream warn;
+    warn << "hydrogenBurke: initial mass fractions YH2 + YO2 + YN2 = " << Ysum << " > 1";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
 
   //----------------------------------------------------------------
   // Create 7 passive scalars
@@ -775,6 +789,27 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         double T      = temp[c];
         double rho_kg = rho[c];
 
+        //__________________________________
+        // Bulletproofing
+        if (rho_kg <= 0.0) {
+          std::ostringstream warn;
+          warn << "hydrogenBurke: non-positive density rho=" << rho_kg << " at cell " << c;
+          throw InvalidValue(warn.str(), __FILE__, __LINE__);
+        }
+
+        if (T < 700.0 || T > 5000.0) {
+          std::ostringstream warn;
+          warn << "hydrogenBurke: temperature T=" << T << " K at cell " << c
+               << " is outside the hard limits [700, 5000] K";
+          throw InvalidValue(warn.str(), __FILE__, __LINE__);
+        }
+        if (T < 1000.0 || T > 3500.0) {
+          std::ostringstream warn;
+          warn << "hydrogenBurke WARNING: temperature T=" << T << " K at cell " << c
+               << " is outside the valid NASA-7 polynomial range [1000, 3500] K";
+          proc0cout << warn.str() << std::endl;
+        }
+
         // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
         std::vector<double> Y;
         double Ytmp;
@@ -785,8 +820,27 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         }
 
         Y.insert(Y.begin() + 2, YN20); // Insert constant mass fraction nitrogen
-        double YH2O2 = std::max(1 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
+        double YH2O2 = std::max(1.0 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
         Y.push_back(YH2O2);           // Insert final mass fraction
+
+        //__________________________________
+        // Bulletproofing: check mass fraction species vector
+        for (size_t j = 0; j < Y.size(); j++) {
+          if (Y[j] < 0.0) {
+            std::ostringstream warn;
+            warn << "hydrogenBurke: negative mass fraction Y[" << j << "]=" << Y[j]
+                 << " at cell " << c;
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+        }
+
+        double Ysum = std::accumulate(Y.begin(), Y.end(), 0.0);
+        if (Ysum > 1.1 || Ysum < 0.0) {
+          std::ostringstream warn;
+          warn << "hydrogenBurke: mass fractions sum to " << Ysum << " at cell " << c
+               << ", expected ~1.0";
+          throw InvalidValue(warn.str(), __FILE__, __LINE__);
+        }
 
         // Compute Molar Concentration mol / cm^3
         std::vector<double> conc(Y.size());
@@ -811,3 +865,108 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
     }   // matl loop
   }   // patches
 }
+
+//------------------------------------------------------------------
+// Thermo Transport Properties
+//------------------------------------------------------------------
+void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        sched,
+                                                               const LevelP&      level,                             
+                                                               const MaterialSet* matls )
+  {                                                                                                                  
+    Task* t = scinew Task("hydrogenBurke::modifyThermoTransportProperties",
+                           this, &hydrogenBurke::modifyThermoTransportProperties);                                   
+    for (int k = 0; k < N_SPECIES; k++) {
+      t->requiresVar(Task::OldDW, d_Y_labels[k], d_gn, 0);                                                           
+    }     
+    t->requiresVar(Task::OldDW, Ilb->temp_CCLabel, d_gn, 0);                                                 
+                                                                                                                     
+    t->modifiesVar(Ilb->specific_heatLabel);
+    t->modifiesVar(Ilb->gammaLabel);                                                                                 
+                                    
+    sched->addTask(t, level->eachPatch(), matls);                                                                    
+  }     
+  
+  std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
+                                                     int n)
+  {
+    double Tsqr  = T     * T;
+    double Tcube = Tsqr  * T;
+    double Tquad = Tcube * T;
+    std::vector<double> cpSpecies;
+
+    for(int i = 0; i < n; i++)
+    {
+      cpSpecies.push_back(cp0[i] + cp1[i] * T + cp2[i] * Tsqr + cp3[i] * Tcube + cp4[i] * Tquad);
+    }
+    return cpSpecies;
+  }
+   
+  void hydrogenBurke::modifyThermoTransportProperties( const ProcessorGroup*,                                        
+                                                       const PatchSubset*  patches,
+                                                       const MaterialSubset* matls,
+                                                       DataWarehouse*        old_dw,
+                                                       DataWarehouse*        new_dw )                                
+  {                                                                                
+    for (int p = 0; p < patches->size(); p++) {                                                                      
+      const Patch* patch = patches->get(p);    
+                                                                                                                     
+      for (int m = 0; m < matls->size(); m++) {
+        int indx = matls->get(m);                                                                                    
+                                 
+        std::vector<constCCVariable<double>> Yold(N_SPECIES);                                                           
+        for (int k = 0; k < N_SPECIES; k++) {                                                                        
+          old_dw->get(Yold[k], d_Y_labels[k], indx, patch, d_gn, 0);
+        }         
+        
+        constCCVariable<double> temp;
+        old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
+                                                                                                                     
+        CCVariable<double> cv, gamma;
+        new_dw->getModifiable(cv,    Ilb->specific_heatLabel, indx, patch);                                          
+        new_dw->getModifiable(gamma, Ilb->gammaLabel,         indx, patch);
+                                                                                                                     
+        CellIterator iter = patch->getExtraCellIterator();                                                           
+        for ( ; !iter.done(); iter++) {                                                                              
+          IntVector c = *iter;       
+
+          // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+          std::vector<double> Y;
+          double Ytmp;
+
+          for (int j = 0; j< N_SPECIES; j++){
+            Ytmp = Yold[j][c];
+            Y.push_back(Ytmp);            // Start mass fraction vector with tracked species
+          }
+
+          Y.insert(Y.begin() + 2, YN20); // Insert constant mass fraction nitrogen
+          double YH2O2 = std::max(1.0 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
+          Y.push_back(YH2O2);           // Insert final mass fraction   
+          
+          double cp = 0.0;
+          double Rmix = 0.0;
+          double Ri;
+          double T  = temp[c]; // Current cell temperature
+          
+          // Calculate non dimensional specfic heats for each species from NASA polynomial
+          std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+
+          // Calculate mixture average specific heat and gas constant
+          // Cp,mix = sum(Yi * Ri * Cp,i[non dim])
+          // R,mix = sum(Yi * Ri)
+          // Ri = Ru / Mw,i
+          for (int j = 0; j<Y.size(); j++){
+            Ri = 1e3 * Ru / Mw[j]; // J/kg-K
+            cp += Y[j] * Ri * cpSpecies[j]; // J/kg-K
+            Rmix += Y[j] * Ri; // J/kg-K
+          }
+
+          // Ideal gas relations
+          // R = Cp - Cv
+          // gamma = Cp / Cv
+          cv[c]    = cp - Rmix;                                                             
+          gamma[c] = cp / cv[c];    
+       
+        } // cell iterator                                      
+      } // matl loop                                                                                                     
+    } // patches                                                                                                        
+  }

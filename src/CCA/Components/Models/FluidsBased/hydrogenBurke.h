@@ -41,11 +41,15 @@
 
 //---------------------------------------------------------------
 // Model is for combustion of Hydrogen mixture in presence of shocks (detonations)
-// The implemented model is from "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
-// M. Burke et al  << incomplete reference>>
 //
-// Enthalpy and Gibbs values are from Nasa7 Polynomials (gri-mech)
-// http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
+// Reaction mechanism:
+//   M.P. Burke, M. Chaos, Y. Ju, F.L. Dryer, S.J. Klippenstein
+//   "Comprehensive H2/O2 Kinetic Model for High-Pressure Combustion"
+//   International Journal of Chemical Kinetics, Vol. 44, No. 7, pp. 444-474, 2012
+//   DOI: 10.1002/kin.20603
+//
+// Thermodynamic data (NASA-7 polynomials):
+//   http://combustion.berkeley.edu/gri-mech/data/nasa_plnm.html
 //
 // Written by James Karr April 2026
 //
@@ -108,9 +112,11 @@ public:
   virtual void outputProblemSpec(ProblemSpecP& ps);
   virtual void scheduleRestartInitialize(SchedulerP&, const LevelP&);
   virtual void scheduleTestConservation(SchedulerP&, const PatchSet*);
+  virtual void scheduleModifyThermoTransportProperties(SchedulerP&, const LevelP&, const MaterialSet*);
+  virtual void modifyThermoTransportProperties(const ProcessorGroup*, const PatchSubset*,                            
+                                               const MaterialSubset*, DataWarehouse*, DataWarehouse*);
 
   virtual void scheduleComputeStableTimeStep(SchedulerP&, const LevelP&) {}
-  virtual void scheduleModifyThermoTransportProperties(SchedulerP&, const LevelP&, const MaterialSet*) {}
   virtual void computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int) {}
   virtual void scheduleErrorEstimate(const LevelP&, SchedulerP&) {}
 
@@ -152,6 +158,11 @@ private:
   std::vector<double> globalRates(double T, const std::vector<double>& C);
   double heatRelease(std::vector<double>& q, double T);
   std::vector<double> massSource(const std::vector<double>& q);
+
+  //------------------------------------------------------------------
+  //Specfic Heat Function
+  //------------------------------------------------------------------
+  std::vector<double> cpSpecificHeat(double T, int n); 
 
   //------------------------------------------------------------------
   // Constants
@@ -299,6 +310,33 @@ private:
     -3.20502331, 5.45323129,  5.980528, 
     4.9667701,  -0.446682914, 4.78433864, 
     4.4766961,   3.78510215,  2.91615662};
+
+  //____________________________________
+  // NASA7 polynomial coefficients for constant pressure specific heat (dimensionless) [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+  inline static const std::vector<double> cp0 = {
+    3.3372792e+00,  3.28253784+00,  2.92664e+00, 
+    3.03399249e+00, 2.50000001e+00, 2.56942078e+00, 
+    3.09288767e+00, 4.0172109e+00,  4.16500285};
+
+  inline static const std::vector<double> cp1 = {
+    -4.94024731e-05, 1.48308754e-03, 1.4879768e-03,
+     2.17691804e-03,-2.30842973e-11,-8.59741137e-05,
+     5.48429716e-04, 2.23982013e-03, 4.90831694e-03};
+
+  inline static const std::vector<double> cp2 = {
+    4.99456778e-07,-7.57966669e-07,-5.68476e-07,
+   -1.64072518e-07, 1.61561948e-14, 4.19484589e-08,
+    1.26505228e-07,-6.3365815e-07, -1.90139225e-06};
+
+  inline static const std::vector<double> cp3 = {
+    -1.79566394e-10, 2.09470555e-10, 1.0097038e-10,
+    -9.7041987e-11, -4.73515235e-18,-1.00177799e-11,
+    -8.79461556e-11, 1.1424637e-10,  3.71185986e-10};
+
+  inline static const std::vector<double> cp4 = {
+    2.00255376e-14,-2.16717794e-14,-6.753351e-15,
+    1.68200992e-14, 4.98197357e-22, 1.22833691e-15,
+    1.17412376e-14,-1.07908535e-14,-2.87908305e-14};
 
   //------------------------------------------------------------------
   // Data members
