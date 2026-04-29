@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01        </maxTime>
+       <maxTime>            0.001        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -135,11 +135,11 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]    </lower>
-              <upper>        [5,5,5]    </upper>
+              <upper>        [1,1,1]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <patches>      [1,1,2]    </patches>
+              <resolution>   [50,50,50]  </resolution>
            </Box>
-           <spacing>[0.5,0.5,0.5] </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
@@ -151,6 +151,7 @@
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
+      <save label="specific_heat"/>
       <save label="delP_Dilatate"/>
    </DataArchiver>
    
@@ -158,7 +159,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.25</cfl>
        <ICE>
         <advection type = "FirstOrder" />
       </ICE>        
@@ -181,8 +182,8 @@
            
            <dynamic_viscosity>      0.0                   </dynamic_viscosity>
            <thermal_conductivity>   0.0                   </thermal_conductivity>
-           <specific_heat>          652.9                 </specific_heat>
-           <gamma>                  1.289                 </gamma>
+           <specific_heat>          721.8712622036791     </specific_heat>
+           <gamma>                  1.3992215173352451    </gamma>
            <SpecificHeatModel type="airNasa">
             <gas_constant> 288.1865406176613 </gas_constant>
            </SpecificHeatModel>
@@ -193,18 +194,18 @@
              <difference>
                 <box label="Whole grid">
                     <min>[ -1.0, -1.0, -1.0 ]           </min>
-                    <max>[ 6.0, 6.0, 6.0 ]              </max>
+                    <max>[ 1.0, 1.0, 1.0 ]              </max>
                 </box>
  
                 <box label="hot_spot">
-                    <min>[ 2.0, 2.0, 2.0 ]              </min>
-                    <max>[ 3.0, 3.0, 3.0 ]              </max>
+                    <min>[ 0.4, 0.4, 0.4 ]              </min>
+                    <max>[ 0.6, 0.6, 0.6 ]              </max>
                 </box>
              </difference>
                <res>                 [2,2,2]            </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
-               <density>       1.7899909957225715000    </density>
-               <pressure>      101325.0                 </pressure>
+               <density>       0.11719839492715756   </density>
+               <pressure>      10132.50                 </pressure>
                <temperature>   300.0                    </temperature>
            </geom_object>
            
@@ -212,9 +213,9 @@
                 <box label="hot_spot">                  </box>
                <res>                 [2,2,2]            </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
-               <density>       1.7899909957225715000     </density>
-               <pressure>      135266.039564763254020363         </pressure>
-               <temperature>   400.0                    </temperature>
+               <density>       0.11719839492715754        </density>
+               <pressure>      101325.0                 </pressure>
+               <temperature>   3000.0                   </temperature>
            </geom_object>
          </material>
       </ICE>       
