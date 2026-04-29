@@ -130,7 +130,7 @@ void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
   hb_ps->appendElement("YN2_init",YN20);
   hb_ps->appendElement("YH2_init",YH20);
   hb_ps->appendElement("YO2_init",YO20);
-  // Get rid of
+
   hb_ps->appendElement("debug", d_debug);
 
 }
@@ -179,10 +179,10 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   }
 
   //----------------------------------------------------------------
-  // Create 7 passive scalars
+  // Create 8 passive scalars
   //----------------------------------------------------------------
   static const char* names[N_SPECIES] = {
-    "YH2", "YO2", "YH2O", "YH", "YO", "YOH", "YHO2"
+    "YH2", "YO2", "YH2O", "YH", "YO", "YOH", "YHO2", "YH2O2"
   };
 
   for (int i = 0; i < N_SPECIES; i++) {
@@ -247,8 +247,8 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
       int indx = matls->get(m);
 
       std::vector<CCVariable<double>> Y(N_SPECIES);       // More descriptive variable name --Todd
-      //                  Y0 = [YH2,  YO2,        YH2O,YH,  YO,  YOH, YHO2]
-      std::vector<double> Y0 = {YH20, YO20, 0.0, 0.0, 0.0, 0.0, 0.0};
+      //                  Y0 = [YH2,  YO2,  YH2O,YH,  YO,  YOH, YHO2,YH2O2]
+      std::vector<double> Y0 = {YH20, YO20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
       for (int k = 0; k < N_SPECIES; k++) {
         new_dw->allocateAndPut(Y[k], d_Y_labels[k], indx, patch);
@@ -715,15 +715,16 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
   double sO   = q[0] + q[4] - q[1] - 2 * q[8] - q[11] - q[17] - q[24];
   double sOH  = q[0] + q[1] + q[11] + q[12] + q[13] + 2 * q[16] + q[17] + 2 * q[21] + q[22] + q[24] - q[3] - 2 * q[4] - q[18] - q[25];
   double sHO2 = q[14] + q[23] + q[24] + q[25] - q[15] - q[16] - q[17] - q[18] - 2 * q[19];
+  double sH2O2 = q[19] + q[20] - q[21] - q[22] - q[23] - q[24] - q[25] - q[26];
 
   std::vector<double> S;
   std::vector<double> sDot;
 
-  //[H2, O2, N2, H2O, H, O, OH, HO2]
-  sDot = {sH2, sO2, 0.0, sH2O, sH, sO, sOH, sHO2};
+  //[H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+  sDot = {sH2, sO2, 0.0, sH2O, sH, sO, sOH, sHO2, sH2O2};
 
   double temp;
-  for(size_t k = 0; k < Mw.size() - 1; k++){
+  for(size_t k = 0; k < Mw.size(); k++){
     if(k == 2){
       continue;
     }
@@ -797,10 +798,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        if (T < 700.0 || T > 5000.0) {
+        if (T < 100.0 || T > 5000.0) {
           std::ostringstream warn;
           warn << "hydrogenBurke: temperature T=" << T << " K at cell " << c
-               << " is outside the hard limits [700, 5000] K";
+               << " is outside the hard limits [100, 5000] K";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
         if (T < 1000.0 || T > 3500.0) {
@@ -819,9 +820,9 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           Y.push_back(Ytmp);            // Start mass fraction vector with tracked species
         }
 
-        Y.insert(Y.begin() + 2, YN20); // Insert constant mass fraction nitrogen
-        double YH2O2 = std::max(1.0 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
-        Y.push_back(YH2O2);           // Insert final mass fraction
+        double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
+        Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen
+
 
         //__________________________________
         // Bulletproofing: check mass fraction species vector
@@ -938,9 +939,8 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
             Y.push_back(Ytmp);            // Start mass fraction vector with tracked species
           }
 
-          Y.insert(Y.begin() + 2, YN20); // Insert constant mass fraction nitrogen
-          double YH2O2 = std::max(1.0 - std::accumulate(Y.begin(), Y.end(), 0.0), 0.0); // Use sum of Y = 1 to compute last mass fraction
-          Y.push_back(YH2O2);           // Insert final mass fraction   
+          double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
+          Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen 
           
           double cp = 0.0;
           double Rmix = 0.0;
