@@ -311,8 +311,21 @@ double hydrogenBurke::enthalpy(double T,
   double Tquad = Tcube * T;
   double Tpent = Tquad * T;
 
+  if (T > d_Tmid){
+    auto speciesH = [&](int idx) {
+      return (d_h0_HighT[idx] * T) + (d_h1_HighT[idx] * Tsqr) + (d_h2_HighT[idx] * Tcube) + (d_h3_HighT[idx] * Tquad) + (d_h4_HighT[idx] * Tpent) + d_h5_HighT[idx];
+    };
+
+    double hR1 = speciesH( R1 );
+    double hP1 = speciesH( P1 );
+
+    double hR2 = (R2 != nullptr) ? speciesH( *R2 ) : 0.0;
+    double hP2 = (P2 != nullptr) ? speciesH( *P2 ) : 0.0;
+    return Ru * (hR1 + hR2 - hP1 - hP2);
+  }
+
   auto speciesH = [&](int idx) {
-    return (a0[idx] * T) + (a1[idx] * Tsqr) + (a2[idx] * Tcube) + (a3[idx] * Tquad) + (a4[idx] * Tpent) + a5[idx];
+    return (d_h0_LowT[idx] * T) + (d_h1_LowT[idx] * Tsqr) + (d_h2_LowT[idx] * Tcube) + (d_h3_LowT[idx] * Tquad) + (d_h4_LowT[idx] * Tpent) + d_h5_LowT[idx];
   };
 
   double hR1 = speciesH( R1 );
@@ -342,17 +355,52 @@ double hydrogenBurke::gibbs(double T,
   double Tcube = Tsqr * T;
   double Tquad = Tcube * T;
 
+  if (T > d_Tmid){
+    auto speciesG = [&](int idx){
+      return (d_g0_HighT[idx] * Tlog) - (d_g1_HighT[idx] * T) - (d_g2_HighT[idx] * Tsqr) - (d_g3_HighT[idx] * Tcube) - (d_g4_HighT[idx] * Tquad) + (d_g5_HighT[idx] / T) - d_g6_HighT[idx];
+    };
+
+    double gR1 = speciesG( R1 );
+    double gP1 = speciesG( P1 );
+
+    double gR2 = (R2 != nullptr) ? speciesG( *R2 ) : 0.0;
+    double gP2 = (P2 != nullptr) ? speciesG( *P2 ) : 0.0;
+
+    return gR1 + gR2 - gP1 - gP2;
+  }
+
   auto speciesG = [&](int idx){
-    return (b0[idx] * Tlog) - (b1[idx] * T) - (b2[idx] * Tsqr) - (b3[idx] * Tcube) - (b4[idx] * Tquad) + (b5[idx] / T) - b6[idx];
-  };
+      return (d_g0_LowT[idx] * Tlog) - (d_g1_LowT[idx] * T) - (d_g2_LowT[idx] * Tsqr) - (d_g3_LowT[idx] * Tcube) - (d_g4_LowT[idx] * Tquad) + (d_g5_LowT[idx] / T) - d_g6_LowT[idx];
+    };
 
-  double gR1 = speciesG( R1 );
-  double gP1 = speciesG( P1 );
+    double gR1 = speciesG( R1 );
+    double gP1 = speciesG( P1 );
 
-  double gR2 = (R2 != nullptr) ? speciesG( *R2 ) : 0.0;
-  double gP2 = (P2 != nullptr) ? speciesG( *P2 ) : 0.0;
+    double gR2 = (R2 != nullptr) ? speciesG( *R2 ) : 0.0;
+    double gP2 = (P2 != nullptr) ? speciesG( *P2 ) : 0.0;
 
-  return gR1 + gR2 - gP1 - gP2;
+    return gR1 + gR2 - gP1 - gP2;
+}
+
+std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
+                                                     int n)
+{
+  double Tsqr  = T     * T;
+  double Tcube = Tsqr  * T;
+  double Tquad = Tcube * T;
+  std::vector<double> cpSpecies;
+  // High Temperature Polynomial Coefficients
+  if (T > d_Tmid){
+    for(int i = 0; i < n; i++){
+      cpSpecies.push_back(d_cp0_HighT[i] + d_cp1_HighT[i] * T + d_cp2_HighT[i] * Tsqr + d_cp3_HighT[i] * Tcube + d_cp4_HighT[i] * Tquad);
+    }
+  return cpSpecies;
+  }
+  // Low Temperature Polynomial Coefficients
+  for(int i = 0; i < n; i++){
+    cpSpecies.push_back(d_cp0_LowT[i] + d_cp1_LowT[i] * T + d_cp2_LowT[i] * Tsqr + d_cp3_LowT[i] * Tcube + d_cp4_LowT[i] * Tquad);
+  }
+  return cpSpecies;
 }
 
 //______________________________________________________________________
@@ -743,20 +791,6 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
   return S;
 }
 
-std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
-                                                     int n)
-{
-  double Tsqr  = T     * T;
-  double Tcube = Tsqr  * T;
-  double Tquad = Tcube * T;
-  std::vector<double> cpSpecies;
-
-  for(int i = 0; i < n; i++){
-    cpSpecies.push_back(cp0[i] + cp1[i] * T + cp2[i] * Tsqr + cp3[i] * Tcube + cp4[i] * Tquad);
-  }
-  return cpSpecies;
-}
-
 //______________________________________________________________________
 //
 void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
@@ -832,7 +866,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                << " is outside the hard limits [100, 5000] K";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
-        if (T < 1000.0 || T > 3500.0) {
+        if (T < 300.0 || T > 3500.0) {
           std::ostringstream warn;
           warn << "hydrogenBurke WARNING: temperature T=" << T << " K at cell " << c
                << " is outside the valid NASA-7 polynomial range [1000, 3500] K";
@@ -871,30 +905,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        // // Compute Molar Concentration mol / cm^3
-        // std::vector<double> conc(Y.size());
-        // for(size_t j = 0; j< Y.size(); j++){
-        //   conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
-        // }
-
-        // //--------------- Step 1 Calculate Rates --------------
-        // std::vector<double> q = globalRates(T, conc);       // mol / cm^3 - s
-
-
-        // // -------------- Step 3 Calculate Species Source Terms --------------
-        // std::vector<double> S = massSource(q);              // kg / m^3 s
-
-        // for (int j = 0; j< N_SPECIES; j++){
-        //   Ysrc[j][c] += S[j] * dtAdv / rho_kg;         // []
-        // }
-
-        // //--------------- Step 2 Calculate Heat Release
-        // eng_src[c] += heatRelease(q, T) * cellVol * dtAdv; // Joules
-
         // ------------------------------------------------------------
         // Source term integration from t -> t + dt_advection
         // ------------------------------------------------------------
-        double dtChem = 1e-9;
+        double dtChem = 1e-10;
         double t = 0.0;
 
         double engSrcTemp = 0.0;
