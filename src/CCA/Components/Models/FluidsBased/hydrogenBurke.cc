@@ -91,6 +91,9 @@ hydrogenBurke::hydrogenBurke(const ProcessorGroup   * myworld,
 {
   Ilb = scinew ICELabel();
   m_modelComputesThermoTransportProps = true;
+
+  d_cv_avg_label    = VarLabel::create("cv_chemAvg",    CCVariable<double>::getTypeDescription());
+  d_gamma_avg_label = VarLabel::create("gamma_chemAvg", CCVariable<double>::getTypeDescription());
 }
 
 hydrogenBurke::~hydrogenBurke()
@@ -109,6 +112,9 @@ hydrogenBurke::~hydrogenBurke()
   for (auto* r : d_regions) {
     delete r;
   }
+
+  VarLabel::destroy(d_cv_avg_label);
+  VarLabel::destroy(d_gamma_avg_label);
 
   delete Ilb;
 }
@@ -274,6 +280,8 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
   t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,  d_gn, 0);
 
   t->modifiesVar(Ilb->modelEng_srcLabel);
+  t->computesVar(d_cv_avg_label);
+  t->computesVar(d_gamma_avg_label);
 
   for (int k = 0; k < N_SPECIES; k++) {
     t->requiresVar(Task::OldDW, d_Y_labels[k], d_gn, 0);
@@ -735,6 +743,20 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
   return S;
 }
 
+std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
+                                                     int n)
+{
+  double Tsqr  = T     * T;
+  double Tcube = Tsqr  * T;
+  double Tquad = Tcube * T;
+  std::vector<double> cpSpecies;
+
+  for(int i = 0; i < n; i++){
+    cpSpecies.push_back(cp0[i] + cp1[i] * T + cp2[i] * Tsqr + cp3[i] * Tcube + cp4[i] * Tquad);
+  }
+  return cpSpecies;
+}
+
 //______________________________________________________________________
 //
 void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
@@ -743,8 +765,8 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                                         DataWarehouse         * old_dw,
                                         DataWarehouse         * new_dw)
 {
-  delt_vartype delT;
-  old_dw->get(delT, Ilb->delTLabel);
+  delt_vartype dtAdv;
+  old_dw->get(dtAdv, Ilb->delTLabel);
 
   for (int p = 0; p < patches->size(); p++) { // loop over patches
     const Patch* patch = patches->get(p);
@@ -769,6 +791,12 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         old_dw->get( Yold[k], d_Y_labels[k], indx, patch, d_gn, 0);
         new_dw->getModifiable( Ysrc[k], d_Y_src_labels[k], indx, patch);
       }
+      CCVariable<double> cv_avg, gamma_avg;
+      new_dw->allocateAndPut(cv_avg,    d_cv_avg_label,    indx, patch);
+      new_dw->allocateAndPut(gamma_avg, d_gamma_avg_label, indx, patch);
+      cv_avg.initialize(0.0);
+      gamma_avg.initialize(0.0);
+
       // Pull in Temperature and density from data warehouse
       constCCVariable<double> temp;
       constCCVariable<double> rho;
@@ -843,25 +871,133 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        // Compute Molar Concentration mol / cm^3
+        // // Compute Molar Concentration mol / cm^3
+        // std::vector<double> conc(Y.size());
+        // for(size_t j = 0; j< Y.size(); j++){
+        //   conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
+        // }
+
+        // //--------------- Step 1 Calculate Rates --------------
+        // std::vector<double> q = globalRates(T, conc);       // mol / cm^3 - s
+
+
+        // // -------------- Step 3 Calculate Species Source Terms --------------
+        // std::vector<double> S = massSource(q);              // kg / m^3 s
+
+        // for (int j = 0; j< N_SPECIES; j++){
+        //   Ysrc[j][c] += S[j] * dtAdv / rho_kg;         // []
+        // }
+
+        // //--------------- Step 2 Calculate Heat Release
+        // eng_src[c] += heatRelease(q, T) * cellVol * dtAdv; // Joules
+
+        // ------------------------------------------------------------
+        // Source term integration from t -> t + dt_advection
+        // ------------------------------------------------------------
+        double dtChem = 1e-9;
+        double t = 0.0;
+
+        double engSrcTemp = 0.0;
+        std::vector<double> massSrcTemp(Y.size());
+
         std::vector<double> conc(Y.size());
-        for(size_t j = 0; j< Y.size(); j++){
-          conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
-        }
+        std::vector<double> q;
+        std::vector<double> S;
 
-        //--------------- Step 1 Calculate Rates --------------
-        std::vector<double> q = globalRates(T, conc);       // mol / cm^3 - s
+        double qdot;
+        double cvTemp;
+        double gammaTemp;
+        double cvSum = 0.0;
+        double gammaSum = 0.0;
+
+        while (t < dtAdv){
+          // Change timestep if needed to end exactly at dt_advection
+          if ((t + dtChem) > dtAdv){
+            dtChem = dtAdv - t;
+          }
+
+          // ------------------------------------------------------
+          // Compute Specific Heat
+          // ------------------------------------------------------
+          double cp = 0.0;
+          double Rmix = 0.0;
+          double Ri;
+          // Calculate non dimensional specfic heats for each species from NASA polynomial
+          std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+
+          // Calculate mixture average specific heat and gas constant
+          // Cp,mix = sum(Yi * Ri * Cp,i[non dim])
+          // R,mix = sum(Yi * Ri)
+          // Ri = Ru / Mw,i
+          for (int j = 0; j<Y.size(); j++){
+            Ri = 1e3 * Ru / Mw[j]; // J/kg-K
+            cp += Y[j] * Ri * cpSpecies[j]; // J/kg-K
+            Rmix += Y[j] * Ri; // J/kg-K
+          }
+
+          // Ideal gas relations
+          // R = Cp - Cv
+          // gamma = Cp / Cv
+          cvTemp    = cp - Rmix;                                                             
+          gammaTemp = cp / cvTemp;
+
+          cvSum    += cvTemp    * dtChem;
+          gammaSum += gammaTemp * dtChem;
+
+          //----------------------------------------------------
+          // Integrate Constant Volume ODE's
+          //----------------------------------------------------
+
+          // Compute Molar Concentration mol / cm^3
+          for(size_t j = 0; j< Y.size(); j++){
+            conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
+
+          }
+          
+          //--------------- Step 1 Calculate Rates --------------
+          q = globalRates(T, conc);       // mol / cm^3 - s
+
+          // -------------- Step 3 Calculate Species Source Terms --------------
+          S = massSource(q);              // kg / m^3 s
+          for (int j = 0; j< N_SPECIES; j++){
+            massSrcTemp[j] += S[j] * dtChem / rho_kg;         // []
+          }
+
+          // ------------- Integrate Species ODE's one chemistry time step forward
+          double Ysum = 0.0;
+          for (int j = 0; j < Y.size(); j++) {
+            if (j == 2) continue; // skip closure mass fraction N2
+
+            int k = j - (j > 2);  // subtract 1 only after index 2
+            Y[j] += dtChem * S[k] / rho_kg;
+            Ysum += Y[j];
+          }
+          Y[2] = 1.0 - Ysum;// Use sum of Y = 1 to compute last mass fraction
 
 
-        // -------------- Step 3 Calculate Species Source Terms --------------
-        std::vector<double> S = massSource(q);              // kg / m^3 s
+          //--------------- Step 2 Calculate Heat Release
+          qdot = heatRelease(q, T);
+          engSrcTemp += qdot * cellVol * dtChem; // Joules
 
+          // ------------- Integrate Energy ODE one chemistry time step forward
+          T += dtChem * qdot / (rho_kg * cvTemp);
+
+          t += dtChem;    
+
+        } // dt_advection time integration
+
+        // ---------------------------------------------
+        // Modify Source terms
+        // ---------------------------------------------
+        
         for (int j = 0; j< N_SPECIES; j++){
-          Ysrc[j][c] += S[j] * delT / rho_kg;         // 1 / s
+          Ysrc[j][c] += massSrcTemp[j];         // []
         }
 
-        //--------------- Step 2 Calculate Heat Release
-        eng_src[c] += heatRelease(q, T) * cellVol * delT; // Joules
+        eng_src[c] += engSrcTemp; // Joules
+
+        cv_avg[c]    = cvSum    / dtAdv;
+        gamma_avg[c] = gammaSum / dtAdv;
       }   // cell iterator
     }   // matl loop
   }   // patches
@@ -882,25 +1018,11 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
     t->requiresVar(Task::OldDW, Ilb->temp_CCLabel, d_gn, 0);                                                 
                                                                                                                      
     t->modifiesVar(Ilb->specific_heatLabel);
-    t->modifiesVar(Ilb->gammaLabel);                                                                                 
-                                    
+    t->modifiesVar(Ilb->gammaLabel);
+
     sched->addTask(t, level->eachPatch(), matls);                                                                    
   }     
   
-  std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
-                                                     int n)
-  {
-    double Tsqr  = T     * T;
-    double Tcube = Tsqr  * T;
-    double Tquad = Tcube * T;
-    std::vector<double> cpSpecies;
-
-    for(int i = 0; i < n; i++)
-    {
-      cpSpecies.push_back(cp0[i] + cp1[i] * T + cp2[i] * Tsqr + cp3[i] * Tcube + cp4[i] * Tquad);
-    }
-    return cpSpecies;
-  }
    
   void hydrogenBurke::modifyThermoTransportProperties( const ProcessorGroup*,                                        
                                                        const PatchSubset*  patches,
@@ -923,12 +1045,12 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
         old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
                                                                                                                      
         CCVariable<double> cv, gamma;
-        new_dw->getModifiable(cv,    Ilb->specific_heatLabel, indx, patch);                                          
+        new_dw->getModifiable(cv,    Ilb->specific_heatLabel, indx, patch);
         new_dw->getModifiable(gamma, Ilb->gammaLabel,         indx, patch);
-                                                                                                                     
-        CellIterator iter = patch->getExtraCellIterator();                                                           
-        for ( ; !iter.done(); iter++) {                                                                              
-          IntVector c = *iter;       
+
+        CellIterator iter = patch->getExtraCellIterator();
+        for ( ; !iter.done(); iter++) {
+          IntVector c = *iter;
 
           // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
           std::vector<double> Y;
@@ -940,13 +1062,13 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           }
 
           double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
-          Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen 
-          
+          Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen
+
           double cp = 0.0;
           double Rmix = 0.0;
           double Ri;
           double T  = temp[c]; // Current cell temperature
-          
+
           // Calculate non dimensional specfic heats for each species from NASA polynomial
           std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
 
@@ -954,7 +1076,7 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           // Cp,mix = sum(Yi * Ri * Cp,i[non dim])
           // R,mix = sum(Yi * Ri)
           // Ri = Ru / Mw,i
-          for (int j = 0; j<Y.size(); j++){
+          for (int j = 0; j<(int)Y.size(); j++){
             Ri = 1e3 * Ru / Mw[j]; // J/kg-K
             cp += Y[j] * Ri * cpSpecies[j]; // J/kg-K
             Rmix += Y[j] * Ri; // J/kg-K
@@ -963,10 +1085,10 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           // Ideal gas relations
           // R = Cp - Cv
           // gamma = Cp / Cv
-          cv[c]    = cp - Rmix;                                                             
-          gamma[c] = cp / cv[c];    
-       
-        } // cell iterator                                      
-      } // matl loop                                                                                                     
-    } // patches                                                                                                        
+          cv[c]    = cp - Rmix;
+          gamma[c] = cp / cv[c];
+
+        } // cell iterator
+      } // matl loop
+    } // patches
   }

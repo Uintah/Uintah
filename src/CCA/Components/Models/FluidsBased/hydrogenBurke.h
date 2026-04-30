@@ -347,6 +347,9 @@ private:
   Material*    d_matl{nullptr};
   MaterialSet* d_matl_set{nullptr};
   ProblemSpecP d_params;
+
+  VarLabel* d_cv_avg_label{nullptr};
+  VarLabel* d_gamma_avg_label{nullptr};
   
   
   // Species bookkeeping
