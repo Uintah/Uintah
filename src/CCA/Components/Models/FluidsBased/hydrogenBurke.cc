@@ -294,7 +294,7 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
 // ----------------------------------------------------------------
 //  Combustion Functions
 // ----------------------------------------------------------------
-// Enthalpy calculator (J / mol)  Valid for Temperatures T = 1000K - 3500K
+// Enthalpy calculator (J / mol)  Valid for Temperatures T = 200K - 3500K
 double hydrogenBurke::enthalpy(double T,
                                int R1,
                                int P1,
@@ -848,12 +848,16 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           d_debug = true;
         }
 
+        // ----------------------------------------------------
+        // Step 1: Build cell state / Bulletproofing
+        // ----------------------------------------------------
+
         // Current Properties for cell
         double T      = temp[c];
         double rho_kg = rho[c];
 
         //__________________________________
-        // Bulletproofing
+        // Bulletproofing: Density, Temperature, Nasa poly
         if (rho_kg <= 0.0) {
           std::ostringstream warn;
           warn << "hydrogenBurke: non-positive density rho=" << rho_kg << " at cell " << c;
@@ -866,10 +870,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                << " is outside the hard limits [100, 5000] K";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
-        if (T < 300.0 || T > 3500.0) {
+        if (T < 299.0 || T > 3501.0) {
           std::ostringstream warn;
           warn << "hydrogenBurke WARNING: temperature T=" << T << " K at cell " << c
-               << " is outside the valid NASA-7 polynomial range [1000, 3500] K";
+               << " is outside the valid NASA-7 polynomial range [300, 3500] K";
           proc0cout << warn.str() << std::endl;
         }
 
@@ -906,9 +910,9 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         }
 
         // ------------------------------------------------------------
-        // Source term integration from t -> t + dt_advection
+        //  Step 2: Constant-Volume ODE Integration t -> t + dt_advection
         // ------------------------------------------------------------
-        double dtChem = 1e-10;
+        double dtChem = 1e-9;
         double t = 0.0;
 
         double engSrcTemp = 0.0;
@@ -931,7 +935,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           }
 
           // ------------------------------------------------------
-          // Compute Specific Heat
+          // 2a: Mixture Specific Heat
           // ------------------------------------------------------
           double cp = 0.0;
           double Rmix = 0.0;
@@ -958,20 +962,23 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           cvSum    += cvTemp    * dtChem;
           gammaSum += gammaTemp * dtChem;
 
-          //----------------------------------------------------
-          // Integrate Constant Volume ODE's
-          //----------------------------------------------------
-
+          // ------------------------------------------------------
+          // 2b: Molar Concentrations
+          // ------------------------------------------------------
           // Compute Molar Concentration mol / cm^3
           for(size_t j = 0; j< Y.size(); j++){
             conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
 
           }
           
-          //--------------- Step 1 Calculate Rates --------------
+          // ------------------------------------------------------
+          // 2c: Reaction rates
+          // ------------------------------------------------------
           q = globalRates(T, conc);       // mol / cm^3 - s
 
-          // -------------- Step 3 Calculate Species Source Terms --------------
+          // ------------------------------------------------------
+          // 2d: Species Integration
+          // ------------------------------------------------------
           S = massSource(q);              // kg / m^3 s
           for (int j = 0; j< N_SPECIES; j++){
             massSrcTemp[j] += S[j] * dtChem / rho_kg;         // []
@@ -989,7 +996,9 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           Y[2] = 1.0 - Ysum;// Use sum of Y = 1 to compute last mass fraction
 
 
-          //--------------- Step 2 Calculate Heat Release
+          // ------------------------------------------------------
+          // 2e: Energy Integration
+          // ------------------------------------------------------
           qdot = heatRelease(q, T);
           engSrcTemp += qdot * cellVol * dtChem; // Joules
 
@@ -1001,7 +1010,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         } // dt_advection time integration
 
         // ---------------------------------------------
-        // Modify Source terms
+        // Step 3: Write Source terms
         // ---------------------------------------------
         
         for (int j = 0; j< N_SPECIES; j++){
