@@ -91,9 +91,6 @@ hydrogenBurke::hydrogenBurke(const ProcessorGroup   * myworld,
 {
   Ilb = scinew ICELabel();
   m_modelComputesThermoTransportProps = true;
-
-  d_cv_avg_label    = VarLabel::create("cv_chemAvg",    CCVariable<double>::getTypeDescription());
-  d_gamma_avg_label = VarLabel::create("gamma_chemAvg", CCVariable<double>::getTypeDescription());
 }
 
 hydrogenBurke::~hydrogenBurke()
@@ -109,12 +106,11 @@ hydrogenBurke::~hydrogenBurke()
     VarLabel::destroy(lbl);
   }
 
+  VarLabel::destroy(d_dtChem_label);
+
   for (auto* r : d_regions) {
     delete r;
   }
-
-  VarLabel::destroy(d_cv_avg_label);
-  VarLabel::destroy(d_gamma_avg_label);
 
   delete Ilb;
 }
@@ -139,6 +135,11 @@ void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
 
   hb_ps->appendElement("debug", d_debug);
 
+  hb_ps->appendElement("tol_temp", d_tol);
+  hb_ps->appendElement("safety", d_safety);
+  hb_ps->appendElement("max_grow", d_max_grow);
+  hb_ps->appendElement("max_shrink", d_max_shrink);
+
 }
 
 void hydrogenBurke::scheduleRestartInitialize(SchedulerP&, const LevelP&) {}
@@ -152,12 +153,12 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 
   DOUTR( dout_models_H2Burke, " hydrogenBurke::problemSetup " );
 
-  ProblemSpecP ps = d_params->findBlock("hydrogenBurke");
-  if (!ps) {
+  ProblemSpecP hb_ps = d_params->findBlock("hydrogenBurke");
+  if (!hb_ps) {
     throw ProblemSetupException("Missing <hydrogenBurke> block", __FILE__, __LINE__);
   }
 
-  d_matl = m_materialManager->parseAndLookupMaterial(ps, "material");
+  d_matl = m_materialManager->parseAndLookupMaterial(hb_ps, "material");
 
   std::vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -165,15 +166,20 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
-  ps->require("YN2_init",YN20);
-  ps->require("YH2_init",YH20);
-  ps->require("YO2_init",YO20);
+  hb_ps->require("YN2_init",YN20);
+  hb_ps->require("YH2_init",YH20);
+  hb_ps->require("YO2_init",YO20);
 //   // Stoichmetric Hydrogen Air by default
 //   ps->getWithDefault("YN2_init",YN20,0.7451236);
 //   ps->getWithDefault("YH2_init",YH20,0.02852239);
 //   ps->getWithDefault("YO2_init",YO20,0.22635401);
 
-  ps->getWithDefault("debug", d_debug, false);
+  hb_ps->getWithDefault("debug", d_debug, false);
+
+  hb_ps->getWithDefault("tol_temp", d_tol, 1e-3);
+  hb_ps->getWithDefault("safety", d_safety, 0.9);
+  hb_ps->getWithDefault("max_grow", d_max_grow, 2.0);
+  hb_ps->getWithDefault("max_shrink",d_max_shrink, 0.1);
 
   //__________________________________
   // Bulletproofing
@@ -204,10 +210,12 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     registerTransportedVariable(d_matl_set, Y, S);
   }
 
+  d_dtChem_label = VarLabel::create("dt_chemistry", CCVariable<double>::getTypeDescription());
+
   //----------------------------------------------------------------
   // Geometry-based initialization
   //----------------------------------------------------------------
-  for (ProblemSpecP geom_ps = ps->findBlock("geom_object");
+  for (ProblemSpecP geom_ps = hb_ps->findBlock("geom_object");
        geom_ps != nullptr;
        geom_ps = geom_ps->findNextBlock("geom_object")) {
 
@@ -280,13 +288,13 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
   t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,  d_gn, 0);
 
   t->modifiesVar(Ilb->modelEng_srcLabel);
-  t->computesVar(d_cv_avg_label);
-  t->computesVar(d_gamma_avg_label);
 
   for (int k = 0; k < N_SPECIES; k++) {
     t->requiresVar(Task::OldDW, d_Y_labels[k], d_gn, 0);
     t->modifiesVar(d_Y_src_labels[k]);
   }
+
+  t->computesVar(d_dtChem_label);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -676,7 +684,7 @@ double hydrogenBurke::falloffReaction22(double T,
 
 //______________________________________________________________________
 //
-// Step 1 Calculate rates
+// Calculate rates
 std::vector<double> hydrogenBurke::globalRates(double T,
                                                const std::vector<double>& C)        // more descriptive variable name please.
 {
@@ -720,7 +728,7 @@ std::vector<double> hydrogenBurke::globalRates(double T,
 
 //______________________________________________________________________
 //
-// Step 2 Calculate Heat release (qdot)
+// Calculate Heat release (qdot)
 double hydrogenBurke::heatRelease(std::vector<double>& q,
                                   double T)
 {
@@ -756,7 +764,7 @@ double hydrogenBurke::heatRelease(std::vector<double>& q,
 
 //______________________________________________________________________
 //
-// Step 3 Calculate Mass source terms
+// Calculate Mass source terms
 std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
 {
 #ifdef DEBUG
@@ -793,6 +801,50 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
 
 //______________________________________________________________________
 //
+// Integrate ODE's
+hydrogenBurke::ChemStepResult
+hydrogenBurke::chemStep(double T, 
+                        const std::vector<double>& Y,
+                        double rho_kg, 
+                        double cellVol)
+{
+  // Mixture Specific Heat
+  double cp   = 0.0;
+  double Rmix = 0.0;
+  std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+
+  for (int j = 0; j < (int)Y.size(); j++) {
+    double Ri = 1e3 * Ru / Mw[j];
+    cp   += Y[j] * Ri * cpSpecies[j];
+    Rmix += Y[j] * Ri;
+  }
+
+  double cvTemp = cp - Rmix;
+
+  // Molar Concentrations (mol / cm^3)
+  std::vector<double> conc(Y.size());
+  for (size_t j = 0; j < Y.size(); j++) {
+    conc[j] = 1e-3 * rho_kg * Y[j] / Mw[j];
+  }
+
+  // Reaction rates and mass sources
+  std::vector<double> q = globalRates(T, conc);
+  std::vector<double> S = massSource(q);
+
+  std::vector<double> rhsMass(N_SPECIES);
+  for (int j = 0; j < N_SPECIES; j++) {
+    rhsMass[j] = S[j] / rho_kg;
+  }
+
+  double qdot       = heatRelease(q, T);
+  double rhsEnergy  = qdot / (rho_kg * cvTemp);
+  double engSrc     = qdot * cellVol;
+
+  return {rhsEnergy, rhsMass, engSrc};
+}
+
+//______________________________________________________________________
+//
 void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                                         const PatchSubset     * patches,
                                         const MaterialSubset  * matls,
@@ -818,6 +870,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       CCVariable<double> eng_src;
       new_dw->getModifiable(eng_src, Ilb->modelEng_srcLabel, indx, patch);
 
+      CCVariable<double> dtChem_cc;
+      new_dw->allocateAndPut(dtChem_cc, d_dtChem_label, indx, patch);
+      dtChem_cc.initialize(dtAdv);
+
       std::vector<constCCVariable<double>> Yold(N_SPECIES);
       std::vector<CCVariable<double>>      Ysrc(N_SPECIES);
 
@@ -825,12 +881,6 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         old_dw->get( Yold[k], d_Y_labels[k], indx, patch, d_gn, 0);
         new_dw->getModifiable( Ysrc[k], d_Y_src_labels[k], indx, patch);
       }
-      CCVariable<double> cv_avg, gamma_avg;
-      new_dw->allocateAndPut(cv_avg,    d_cv_avg_label,    indx, patch);
-      new_dw->allocateAndPut(gamma_avg, d_gamma_avg_label, indx, patch);
-      cv_avg.initialize(0.0);
-      gamma_avg.initialize(0.0);
-
       // Pull in Temperature and density from data warehouse
       constCCVariable<double> temp;
       constCCVariable<double> rho;
@@ -870,10 +920,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                << " is outside the hard limits [100, 5000] K";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
-        if (T < 299.0 || T > 3501.0) {
+        if (T < 200.0 || T > 3501.0) {
           std::ostringstream warn;
           warn << "hydrogenBurke WARNING: temperature T=" << T << " K at cell " << c
-               << " is outside the valid NASA-7 polynomial range [300, 3500] K";
+               << " is outside the valid NASA-7 polynomial range [200, 3500] K";
           proc0cout << warn.str() << std::endl;
         }
 
@@ -912,21 +962,23 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         // ------------------------------------------------------------
         //  Step 2: Constant-Volume ODE Integration t -> t + dt_advection
         // ------------------------------------------------------------
-        double dtChem = 1e-9;
+        double dtChem = dtAdv;
         double t = 0.0;
+        double dtChem_min = dtAdv;
 
         double engSrcTemp = 0.0;
-        std::vector<double> massSrcTemp(Y.size());
+        std::vector<double> massSrcTemp(N_SPECIES, 0.0);
 
-        std::vector<double> conc(Y.size());
-        std::vector<double> q;
-        std::vector<double> S;
+        double Torig = T;
+        std::vector<double> Yorig(Y);
 
-        double qdot;
-        double cvTemp;
-        double gammaTemp;
-        double cvSum = 0.0;
-        double gammaSum = 0.0;
+        double Tcourse;
+        double Tfine;
+
+        std::vector<double> Ycourse(Y);
+        std::vector<double> Yfine(Y);
+
+        double error      = 1.0;
 
         while (t < dtAdv){
           // Change timestep if needed to end exactly at dt_advection
@@ -934,93 +986,91 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
             dtChem = dtAdv - t;
           }
 
-          // ------------------------------------------------------
-          // 2a: Mixture Specific Heat
-          // ------------------------------------------------------
-          double cp = 0.0;
-          double Rmix = 0.0;
-          double Ri;
-          // Calculate non dimensional specfic heats for each species from NASA polynomial
-          std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+          Torig = T;
+          Yorig = Y;
+          bool accepted = false;
 
-          // Calculate mixture average specific heat and gas constant
-          // Cp,mix = sum(Yi * Ri * Cp,i[non dim])
-          // R,mix = sum(Yi * Ri)
-          // Ri = Ru / Mw,i
-          for (int j = 0; j<Y.size(); j++){
-            Ri = 1e3 * Ru / Mw[j]; // J/kg-K
-            cp += Y[j] * Ri * cpSpecies[j]; // J/kg-K
-            Rmix += Y[j] * Ri; // J/kg-K
+          // Evaluate RHS once per outer step -- reused on every trial step size
+          auto result1 = chemStep(Torig, Yorig, rho_kg, cellVol);
+
+          while (!accepted && dtChem > 1e-15){
+            double dtHalf = dtChem / 2.0;
+
+            // Coarse step (full dtChem)
+            Ysum = 0.0;
+            for (int j = 0; j < (int)Yorig.size(); j++){
+              if (j == 2) continue;
+              int k = j - (j > 2);
+              Ycourse[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
+              Ysum += Ycourse[j];
+            }
+            Ycourse[2] = 1.0 - Ysum;
+            Tcourse = Torig + dtChem * result1.rhsEnergy;
+
+            // Fine integration: first half-step reuses result1
+            Ysum = 0.0;
+            for (int j = 0; j < (int)Yorig.size(); j++){
+              if (j == 2) continue;
+              int k = j - (j > 2);
+              Yfine[j] = Yorig[j] + result1.rhsMass[k] * dtHalf;
+              Ysum += Yfine[j];
+            }
+            Yfine[2] = 1.0 - Ysum;
+            Tfine = Torig + dtHalf * result1.rhsEnergy;
+
+            // Fine integration: second half-step
+            auto result2 = chemStep(Tfine, Yfine, rho_kg, cellVol);
+
+            Ysum = 0.0;
+            for (int j = 0; j < (int)Yorig.size(); j++){
+              if (j == 2) continue;
+              int k = j - (j > 2);
+              Yfine[j] += result2.rhsMass[k] * dtHalf;
+              Ysum += Yfine[j];
+            }
+            Yfine[2] = 1.0 - Ysum;
+            Tfine += dtHalf * result2.rhsEnergy;
+
+            error = std::abs(Tcourse - Tfine);
+
+            if (error < d_tol){
+              for (int j = 0; j < N_SPECIES; j++){
+                massSrcTemp[j] += dtHalf * (result1.rhsMass[j] + result2.rhsMass[j]);
+              }
+              for (int j = 0; j < (int)Y.size(); j++){
+                Y[j] = Yfine[j];
+              }
+              engSrcTemp += dtHalf * (result1.engSrc + result2.engSrc);
+              T           = Tfine;
+              dtChem_min  = std::min(dtChem_min, 2.0 * dtHalf);
+              t          += 2.0 * dtHalf;
+              dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
+              accepted    = true;
+            } else {
+              dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
+            }
+          } // adaptive time stepping
+
+          // Throw error if never converges
+          if (!accepted){
+            std::ostringstream warn;
+            warn << "Chemistry integration never converged! At cell " << c
+                 << " Error: " << error << " Tolerance: " << d_tol;
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
-
-          // Ideal gas relations
-          // R = Cp - Cv
-          // gamma = Cp / Cv
-          cvTemp    = cp - Rmix;                                                             
-          gammaTemp = cp / cvTemp;
-
-          cvSum    += cvTemp    * dtChem;
-          gammaSum += gammaTemp * dtChem;
-
-          // ------------------------------------------------------
-          // 2b: Molar Concentrations
-          // ------------------------------------------------------
-          // Compute Molar Concentration mol / cm^3
-          for(size_t j = 0; j< Y.size(); j++){
-            conc[j] = 1e-03 * rho_kg * Y[j] / Mw[j];
-
-          }
-          
-          // ------------------------------------------------------
-          // 2c: Reaction rates
-          // ------------------------------------------------------
-          q = globalRates(T, conc);       // mol / cm^3 - s
-
-          // ------------------------------------------------------
-          // 2d: Species Integration
-          // ------------------------------------------------------
-          S = massSource(q);              // kg / m^3 s
-          for (int j = 0; j< N_SPECIES; j++){
-            massSrcTemp[j] += S[j] * dtChem / rho_kg;         // []
-          }
-
-          // ------------- Integrate Species ODE's one chemistry time step forward
-          double Ysum = 0.0;
-          for (int j = 0; j < Y.size(); j++) {
-            if (j == 2) continue; // skip closure mass fraction N2
-
-            int k = j - (j > 2);  // subtract 1 only after index 2
-            Y[j] += dtChem * S[k] / rho_kg;
-            Ysum += Y[j];
-          }
-          Y[2] = 1.0 - Ysum;// Use sum of Y = 1 to compute last mass fraction
-
-
-          // ------------------------------------------------------
-          // 2e: Energy Integration
-          // ------------------------------------------------------
-          qdot = heatRelease(q, T);
-          engSrcTemp += qdot * cellVol * dtChem; // Joules
-
-          // ------------- Integrate Energy ODE one chemistry time step forward
-          T += dtChem * qdot / (rho_kg * cvTemp);
-
-          t += dtChem;    
 
         } // dt_advection time integration
 
         // ---------------------------------------------
         // Step 3: Write Source terms
         // ---------------------------------------------
-        
+        dtChem_cc[c] = dtChem_min;
+
         for (int j = 0; j< N_SPECIES; j++){
           Ysrc[j][c] += massSrcTemp[j];         // []
         }
 
         eng_src[c] += engSrcTemp; // Joules
-
-        cv_avg[c]    = cvSum    / dtAdv;
-        gamma_avg[c] = gammaSum / dtAdv;
       }   // cell iterator
     }   // matl loop
   }   // patches

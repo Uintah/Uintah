@@ -128,6 +128,11 @@ private:
   double YH20{0.0};
   double YO20{0.0};
 
+  double d_tol;
+  double d_safety;
+  double d_max_shrink;
+  double d_max_grow;
+
   //------------------------------------------------------------------
   // Geometry-based initialization
   //------------------------------------------------------------------
@@ -159,6 +164,14 @@ private:
   std::vector<double> globalRates(double T, const std::vector<double>& C);
   double heatRelease(std::vector<double>& q, double T);
   std::vector<double> massSource(const std::vector<double>& q);
+
+  struct ChemStepResult {
+    double rhsEnergy;
+    std::vector<double> rhsMass;
+    double engSrc;
+  };
+
+  ChemStepResult chemStep(double T, const std::vector<double>& Y, double rho_kg, double cellVol);
 
   //------------------------------------------------------------------
   // Constants
@@ -442,16 +455,14 @@ private:
   MaterialSet* d_matl_set{nullptr};
   ProblemSpecP d_params;
 
-  VarLabel* d_cv_avg_label{nullptr};
-  VarLabel* d_gamma_avg_label{nullptr};
-  
-  
   // Species bookkeeping
   static constexpr int N_SPECIES = 8;
 
   // VarLabels for passive scalars and their sources
   std::vector<VarLabel*> d_Y_labels;      // scalar-YH2, scalar-YO2, ...
   std::vector<VarLabel*> d_Y_src_labels;  // scalar_YH2_src, ...
+
+  VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
 
   // Geometry regions for initialization
   std::vector<Region*> d_regions;

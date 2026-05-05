@@ -526,6 +526,10 @@
         <YH2_init spec="REQUIRED DOUBLE"/>
         <YO2_init spec="REQUIRED DOUBLE"/>
         <debug spec="OPTIONAL BOOLEAN"/>
+        <tol_temp spec="OPTIONAL DOUBLE"/>
+        <safety spec="OPTIONAL DOUBLE"/>
+        <max_grow spec="OPTIONAL DOUBLE"/>
+        <max_shrink spec="OPTIONAL DOUBLE"/>
       </hydrogenBurke>
 
     </Model>
