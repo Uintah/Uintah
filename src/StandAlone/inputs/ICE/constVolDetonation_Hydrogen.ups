@@ -13,7 +13,7 @@
     <maxTime>            0.001     </maxTime>
     <initTime>           0.0     </initTime>
     <delt_min>           0.0     </delt_min>
-    <delt_max>           1.0e-9  </delt_max>
+    <delt_max>           1.0e-7  </delt_max>
     <delt_init>          1.0e-9  </delt_init>
     <max_delt_increase>  1.0     </max_delt_increase>
     <timestep_multiplier> 1      </timestep_multiplier>
@@ -55,6 +55,7 @@
     <save label="scalar-YO"/>
     <save label="scalar-YOH"/>
     <save label="scalar-YHO2"/>
+    <save label="scalar-YH2O2"/>
 
     <!-- Species source terms -->
     <save label="scalar_YH2_src"/>
@@ -64,22 +65,25 @@
     <save label="scalar_YO_src"/>
     <save label="scalar_YOH_src"/>
     <save label="scalar_YHO2_src"/>
+    <save label="scalar_YH2O2_src"/>
 
     <!-- Thermodynamic fields -->
     <save label="temp_CC"/>
     <save label="vel_CC"/>
     <save label="rho_CC"/>
     <save label="press_CC"/>
+    <save label="specific_heat"/>
 
     <!-- Source Terms-->
     <save label="modelEng_src"/>
     <save label="modelMom_src"/>
     <save label="modelMass_src"/>
+    <save label="dt_chemistry"/>
   </DataArchiver>
 
   <!--==================== ICE SETUP ====================-->
   <CFD>
-    <cfl>0.0001</cfl>
+    <cfl>0.1</cfl>
     <ICE>
       <advection type="SecondOrder"/>
     </ICE>
@@ -97,10 +101,10 @@
       <material name="source">
         <EOS type="ideal_gas"/>
 
-        <dynamic_viscosity>     0.0    </dynamic_viscosity>
-        <thermal_conductivity>  0.0    </thermal_conductivity>
-        <specific_heat>         718.0  </specific_heat>
-        <gamma>                 1.4    </gamma>
+        <dynamic_viscosity>     0.0                      </dynamic_viscosity>
+        <thermal_conductivity>  0.0                      </thermal_conductivity>
+        <specific_heat>         862.8158241063314       </specific_heat>
+        <gamma>                 1.3340070181445187       </gamma>
 
         <geom_object>
           <box label="domain_box">
@@ -110,9 +114,10 @@
 
           <res> [2,2,2] </res>
           <velocity> [0.0,0.0,0.0] </velocity>
-          <density>  0.320729932   </density>
-          <pressure> 101325.0      </pressure>
-          <temperature> 1100       </temperature>
+          <density>     0.25484163256547593 </density>
+          <pressure>    101325.0             </pressure>
+          <temperature> 1000.0               </temperature>
+          
         </geom_object>
       </material>
     </ICE>
@@ -124,9 +129,9 @@
       <hydrogenBurke>
         
         <!-- Stoichometric Hydrogen-Air -->
-        <YN2_init> 0.7451236  </YN2_init>
-        <YH2_init> 0.02852239 </YH2_init>
-        <YO2_init> 0.22635401 </YO2_init>
+        <YN2_init> 0.7451236055014252   </YN2_init>
+        <YH2_init> 0.028522387527567396 </YH2_init>
+        <YO2_init> 0.22635400697100733  </YO2_init>
         <material>source</material>
       </hydrogenBurke>
     </Model>
