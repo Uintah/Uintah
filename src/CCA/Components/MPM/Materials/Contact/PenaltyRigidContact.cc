@@ -85,7 +85,7 @@ PenaltyRigidContact::PenaltyRigidContact(const ProcessorGroup* myworld,
         is >> t1 >> vx >> vy >> vz >> ox >> oy >> oz >> wx >> wy >> wz;
         if(is) {
          if(t1<=t0){
-           throw ProblemSetupException("ERROR: profile file is not monotomically increasing", __FILE__, __LINE__);
+           throw ProblemSetupException("ERROR: profile file '"+d_filename+"'\n is not monotonically increasing", __FILE__, __LINE__);
          }
          d_vel_profile.push_back(std::pair<double,Vector>(t1,Vector(vx,vy,vz)));
          d_rot_profile.push_back(std::pair<double,Vector>(t1,Vector(wx,wy,wz)));
