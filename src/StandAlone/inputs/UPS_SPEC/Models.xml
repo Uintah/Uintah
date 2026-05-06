@@ -522,7 +522,6 @@
 
       <hydrogenBurke spec="OPTIONAL NO_DATA">
         <material spec="REQUIRED STRING"/>
-        <YN2_init spec="REQUIRED DOUBLE"/>
         <YH2_init spec="REQUIRED DOUBLE"/>
         <YO2_init spec="REQUIRED DOUBLE"/>
         <debug spec="OPTIONAL BOOLEAN"/>
@@ -530,6 +529,9 @@
         <safety spec="OPTIONAL DOUBLE"/>
         <max_grow spec="OPTIONAL DOUBLE"/>
         <max_shrink spec="OPTIONAL DOUBLE"/>
+        <geom_object spec="MULTIPLE">
+          <Y spec="REQUIRED MULTIPLE_DOUBLES"/>
+        </geom_object>
       </hydrogenBurke>
 
     </Model>

@@ -129,7 +129,6 @@ void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
 
   ProblemSpecP hb_ps = model_ps->appendChild("hydrogenBurke");
 
-  hb_ps->appendElement("YN2_init",YN20);
   hb_ps->appendElement("YH2_init",YH20);
   hb_ps->appendElement("YO2_init",YO20);
 
@@ -166,13 +165,8 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
-  hb_ps->require("YN2_init",YN20);
   hb_ps->require("YH2_init",YH20);
   hb_ps->require("YO2_init",YO20);
-//   // Stoichmetric Hydrogen Air by default
-//   ps->getWithDefault("YN2_init",YN20,0.7451236);
-//   ps->getWithDefault("YH2_init",YH20,0.02852239);
-//   ps->getWithDefault("YO2_init",YO20,0.22635401);
 
   hb_ps->getWithDefault("debug", d_debug, false);
 
@@ -183,10 +177,9 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 
   //__________________________________
   // Bulletproofing
-  double Ysum = YH20 + YO20 + YN20;
-  if (Ysum > 1.0 + 1e-6) {
+  if (YH20 + YO20 > 1.0 + 1e-6) {
     std::ostringstream warn;
-    warn << "hydrogenBurke: initial mass fractions YH2 + YO2 + YN2 = " << Ysum << " > 1";
+    warn << "hydrogenBurke: initial mass fractions YH2 + YO2 = " << YH20 + YO20 << " > 1 (N2 would be negative)";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
@@ -222,6 +215,25 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     std::vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_ps, pieces);
 
+    std::vector<double> Yinit;
+    geom_ps->require("Y", Yinit);
+
+    if (Yinit.size() != N_SPECIES) {
+      throw ProblemSetupException(
+          "Initial Y vector must have length 8 (H2,O2,H2O,H,O,OH,HO2,H2O2)",
+          __FILE__, __LINE__);
+    }
+
+    double Ysum = std::accumulate(Yinit.begin(), Yinit.end(), 0.0);
+    if (Ysum > 1.0 + 1e-6) {
+      throw ProblemSetupException(
+          "hydrogenBurke geom_object: Y mass fractions sum > 1 (N2 would be negative)",
+          __FILE__, __LINE__);
+    }
+
+    for (auto& piece : pieces) {
+      d_regions.push_back(scinew Region(piece, Yinit));
+    }
   }
 }
 
@@ -267,6 +279,18 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
       for (int k = 0; k < N_SPECIES; k++) {
         new_dw->allocateAndPut(Y[k], d_Y_labels[k], indx, patch);
         Y[k].initialize(Y0[k]);
+      }
+  
+      for (CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+        Point pt = patch->cellPosition(*iter);
+
+        for (auto* r : d_regions) {
+          if (r->piece->inside(pt)) {
+            for (int k = 0; k < N_SPECIES; k++) {
+              Y[k][*iter] = r->Yinit[k];
+            }
+          }
+        }
       }
     }
   }

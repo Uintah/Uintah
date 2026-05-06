@@ -129,7 +129,6 @@
       <hydrogenBurke>
         
         <!-- Stoichometric Hydrogen-Air -->
-        <YN2_init> 0.7451236055014252   </YN2_init>
         <YH2_init> 0.028522387527567396 </YH2_init>
         <YO2_init> 0.22635400697100733  </YO2_init>
         <material>source</material>

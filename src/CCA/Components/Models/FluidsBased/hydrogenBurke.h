@@ -124,7 +124,6 @@ private:
   hydrogenBurke(const hydrogenBurke&) = delete;
   hydrogenBurke& operator=(const hydrogenBurke&) = delete;
 
-  double YN20{0.0};
   double YH20{0.0};
   double YO20{0.0};
 
