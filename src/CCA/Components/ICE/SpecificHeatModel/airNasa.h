@@ -61,7 +61,7 @@ public:
   }
 
 private:
-  double Rair;
+  const double Rair = 288.1865406176613;
   const double d_Tmid = 1000; // Cutoff between high and low temperature polynomial
   const std::vector<double> d_aOxygenHighTemp = {
     3.28253784e+00, 1.48308754e-03, -7.57966669e-07, 2.09470555e-10, -2.16717794e-14

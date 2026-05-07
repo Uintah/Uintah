@@ -42,7 +42,6 @@ using namespace Uintah;
 airNasa::airNasa( ProblemSpecP& ps )
   : SpecificHeat( ps )
 {
-  ps->require("gas_constant", Rair);
 }
 
 airNasa::~airNasa()
@@ -53,7 +52,6 @@ void airNasa::outputProblemSpec( ProblemSpecP& ice_ps )
 {
   ProblemSpecP model_ps = ice_ps->appendChild("SpecificHeatModel");
   model_ps->setAttribute("type", "airNasa");
-  model_ps->appendElement("gas_constant", Rair);
 }
 
 double airNasa::getGamma( double T )
@@ -68,8 +66,8 @@ double airNasa::getInternalEnergy( double T )
 
 template<class CCVar>
 void airNasa::computeSpecificHeat_impl( CellIterator&       iter,
-                                             CCVar&              temp_CC,
-                                             CCVariable<double>& cv )
+                                        CCVar&              temp_CC,
+                                        CCVariable<double>& cv )
 {
   for ( ; !iter.done(); iter++ ) {
     IntVector c = *iter;

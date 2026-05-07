@@ -64,9 +64,9 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
     else if (cv_model == "Polynomial"){
       return(scinew PolynomialCv(cv_ps));
     }
-    else if (cv_model == "airNasa"){ 
-      return(scinew airNasa(cv_ps));                 
-    } 
+    else if (cv_model == "airNasa"){
+      return(scinew airNasa(cv_ps));
+    }
     else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown specific heat model ("<< cv_model << " )\n"

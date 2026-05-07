@@ -37,7 +37,6 @@
 #  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
 #  include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #  include <CCA/Components/Models/FluidsBased/ethyleneDetonation.h>
-#  include <CCA/Components/Models/FluidsBased/fiveStepHydrogenDetonation.h>
 #  include <CCA/Components/Models/FluidsBased/hydrogenBurke.h>
 #endif
 
@@ -121,9 +120,6 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "ethyleneDetonation") {
       d_models.push_back(scinew ethyleneDetonation(myworld, materialManager, model_ps));
-    }
-    else if(type == "fiveStepHydrogenDetonation") {
-      d_models.push_back(scinew fiveStepHydrogenDetonation(myworld, materialManager, model_ps));
     }
     else if(type == "hydrogenBurke") {
       d_models.push_back(scinew hydrogenBurke(myworld, materialManager, model_ps));

@@ -99,6 +99,7 @@ impVortices_dyn_ups      = modUPS2( the_dir,                    \
 NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", ["exactComparison"]),
                    ("advectPeriodic",     "advect_periodic.ups",     8, "All", ["exactComparison"]),
                    ("advectScalar",       "advectScalar.ups",        4, "All", ["exactComparison"]),
+                   ("BwSmall",            "BwSmall.ups",             2, "All", ["exactComparison"]),
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
@@ -153,6 +154,11 @@ TURBULENCE =  [   ("impVortices_smag",    impVortices_smag_ups,    16, "All", ["
 DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo2 junk junkw"]),
                   ("chanFlow_powerLaw2",  chanFlow_powerLaw2_ups,   8, "All", ["exactComparison", "no_restart", "preProcessCmd=echo junk junkw"])
               ]
+
+RX_MODELS =   [("cvHydrogen1",       "RX_MODELS/cvHydrogen1.ups",       1, "All", ["exactComparison"]),
+               ("cvHydrogen2",       "RX_MODELS/cvHydrogen2.ups",       1, "All", ["exactComparison"]),
+               ("hydrogenShockTube", "RX_MODELS/hydrogenShocktube.ups", 2, "All", ["exactComparison"])
+              ]
 #__________________________________
 
 ADDTL_PATH=["absolutePath=/bin","relativePath tools/pfs"]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
@@ -161,11 +167,11 @@ ADDTL_PATH=["absolutePath=/bin","relativePath tools/pfs"]           # preprocess
 #__________________________________
 # The following line is parsed by the local RT script
 # and allows the user to select the different subsets
-#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS BOUND_CONDS NIGHTLYTESTS TURBULENCE
+#LIST:  AMRTESTS BUILDBOTTESTS DIFFUSION DEBUGGING INITIALIZATION LOCALTESTS BOUND_CONDS NIGHTLYTESTS TURBULENCE RX_MODELS
 #__________________________________
 # returns the list
 
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + BOUND_CONDS + INITIALIZE + TURBULENCE
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + DIFFUSION + BOUND_CONDS + INITIALIZE + TURBULENCE + RX_MODELS
 
 def getTestList(me) :
   if me ==  "AMRTESTS":
@@ -184,6 +190,8 @@ def getTestList(me) :
     TESTS = NIGHTLYTESTS
   elif me == "TURBULENCE":
     TESTS = TURBULENCE
+  elif me == "RX_MODELS":
+    TESTS = RX_MODELS
   elif me == "BUILDBOTTESTS":
     TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:

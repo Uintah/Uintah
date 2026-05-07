@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+<!--______________________________________________________________________-->
+<!--   1d Shocktube problem to test detonation of premixed Hydrogen - air -->
+<!--______________________________________________________________________-->
+
+   <Meta>
+       <title>Hydrogen Shocktube</title>
+   </Meta>    
+
+   <SimulationComponent type="ice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0005       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           1e-15      </delt_min>
+       <delt_max>           1e-6      </delt_max>
+       <delt_init>          1e-9      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"   var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O"   var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH"  var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO"  var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YOH"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YHO2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YOH"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YHO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "y+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="domain">
+              <lower>        [0.0,0,0]          </lower>
+              <upper>        [1.0,0.001,0.001]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [2,1,1]    </patches>
+              <resolution>   [200,1,1]  </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>
+      <filebase>hydrogenShockTube.uda</filebase>
+      <outputInterval> 1.0e-6 </outputInterval>
+        <!-- Species passive scalars -->
+        <save label="scalar-YH2"/>
+        <save label="scalar-YO2"/>
+        <save label="scalar-YH2O"/>
+        <save label="scalar-YH"/>
+        <save label="scalar-YO"/>
+        <save label="scalar-YOH"/>
+        <save label="scalar-YHO2"/>
+        <save label="scalar-YH2O2"/>
+
+        <!-- Species source terms -->
+        <save label="scalar_YH2_src"/>
+        <save label="scalar_YO2_src"/>
+        <save label="scalar_YH2O_src"/>
+        <save label="scalar_YH_src"/>
+        <save label="scalar_YO_src"/>
+        <save label="scalar_YOH_src"/>
+        <save label="scalar_YHO2_src"/>
+        <save label="scalar_YH2O2_src"/>
+
+        <!-- Thermodynamic fields -->
+        <save label="temp_CC"/>
+        <save label="vel_CC"/>
+        <save label="rho_CC"/>
+        <save label="press_CC"/>
+        <save label="specific_heat"/>
+        <save label="viscosity"/>
+        <save label="thermalCond"/>
+
+        <!-- Source Terms-->
+        <save label="modelEng_src"/>
+        <save label="modelMom_src"/>
+        <save label="modelMass_src"/>
+        <checkpoint timestepInterval="500" cycle="2"/>
+      </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.01</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name = "source">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      1.0e-2               </dynamic_viscosity>
+           <thermal_conductivity>   1.0e-2              </thermal_conductivity>
+           <specific_heat>          1250.0              </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           <geom_object>
+             <difference>
+                <box label="wholegrid">
+                    <min>           [-1.0, -1.0, -1.0 ]   </min>
+                    <max>           [ 1.0,  1.0, 1.0 ]   </max>
+                </box> 
+                
+                <box label="hydrogen">          
+                    <min>           [0.0,-1.0, -1.0 ]   </min>
+                    <max>           [0.1,  1.0,  1.0 ]   </max>
+                </box>
+              </difference>
+               <res>            [2,2,2]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    300.0                   </temperature>
+               <density>        0.8494721085515865      </density>
+               <pressure>       101325.0                </pressure>
+
+           </geom_object>
+           <geom_object>
+               <box label="hydrogen">            </box>
+               <res>                  [2,2,2]           </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    1538.821368058565       </temperature>
+               <density>        4.576877183808793       </density>
+               <pressure>       2800294.457388566       </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>  
+    <!--==================== MODEL ====================-->
+    <Models>
+    <Model type="hydrogenBurke">
+      <hydrogenBurke>
+        
+        <!-- Stoichometric Hydrogen-Air -->
+        <YH2_init> 0.028522387527567396 </YH2_init>
+        <YO2_init> 0.22635400697100733  </YO2_init>
+        <material>source</material>
+      </hydrogenBurke>
+    </Model>
+  </Models>                    
+</Uintah_specification>

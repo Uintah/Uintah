@@ -62,7 +62,7 @@
     <!--__________________________________-->
     <!--  Models used by ICE & MPMICE     -->
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'AdiabaticTable, ConstantSources, DDT0, DDT1, ethyleneDetonation, fiveStepHydrogenDetonation, hydrogenBurke, flameSheet_rxn, Gruneisen, IandG, JWL, JWLC, JWLpp, LightTime, mass_momentum_energy_src, MesoBurn, PassiveScalar, Radiation, Simple_Burn, BinaryProperties, SolidReactionModel, Steady_Burn, Test,, TracerParticles, Unsteady_Burn, ZeroOrder'" >
+                                attribute1="type REQUIRED STRING 'AdiabaticTable, ConstantSources, DDT0, DDT1, ethyleneDetonation, hydrogenBurke, flameSheet_rxn, Gruneisen, IandG, JWL, JWLC, JWLpp, LightTime, mass_momentum_energy_src, MesoBurn, PassiveScalar, Radiation, Simple_Burn, BinaryProperties, SolidReactionModel, Steady_Burn, Test,, TracerParticles, Unsteady_Burn, ZeroOrder'" >
 
       <!--__________________________________-->
       <!-- mass momentum and energy source model -->
@@ -514,11 +514,6 @@
         <material spec="REQUIRED STRING"/>
         <debug spec="OPTIONAL BOOLEAN"/>
       </ethyleneDetonation>
-
-      <fiveStepHydrogenDetonation spec="OPTIONAL NO_DATA">
-        <material spec="REQUIRED STRING"/>
-        <debug spec="OPTIONAL BOOLEAN"/>
-      </fiveStepHydrogenDetonation>
 
       <hydrogenBurke spec="OPTIONAL NO_DATA">
         <material spec="REQUIRED STRING"/>

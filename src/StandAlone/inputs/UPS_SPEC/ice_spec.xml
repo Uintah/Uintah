@@ -282,7 +282,6 @@
           <Tmax               spec="OPTIONAL DOUBLE"             need_applies_to='type Polynomial' />
           <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES"   need_applies_to='type Polynomial'/>
 
-          <gas_constant       spec="REQUIRED DOUBLE 'positive'"  need_applies_to='type airNasa'/>
         </SpecificHeatModel>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />

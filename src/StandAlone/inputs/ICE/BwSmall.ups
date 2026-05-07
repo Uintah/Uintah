@@ -151,8 +151,13 @@
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
+      <save label="rho_CC"/>
       <save label="specific_heat"/>
       <save label="delP_Dilatate"/>
+      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>
+      <save label="press_equil_CC"/>
+      <checkpoint timestepInterval="500" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
@@ -161,7 +166,7 @@
     <CFD>
          <cfl>0.25</cfl>
        <ICE>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
@@ -184,9 +189,7 @@
            <thermal_conductivity>   0.0                   </thermal_conductivity>
            <specific_heat>          721.8712622036791     </specific_heat>
            <gamma>                  1.3992215173352451    </gamma>
-           <SpecificHeatModel type="airNasa">
-            <gas_constant> 288.1865406176613 </gas_constant>
-           </SpecificHeatModel>
+           <SpecificHeatModel type="airNasa"/>
            <!--____________________________________ -->
            <!-- How domain gets initialized         -->
            <!--____________________________________ -->
