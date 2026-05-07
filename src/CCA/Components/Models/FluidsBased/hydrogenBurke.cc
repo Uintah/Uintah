@@ -414,23 +414,20 @@ double hydrogenBurke::gibbs(double T,
     return gR1 + gR2 - gP1 - gP2;
 }
 
-std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
-                                                     int n)
+std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T)
 {
   double Tsqr  = T     * T;
   double Tcube = Tsqr  * T;
   double Tquad = Tcube * T;
-  std::vector<double> cpSpecies;
-  // High Temperature Polynomial Coefficients
+  std::array<double, 9> cpSpecies;
   if (T > d_Tmid){
-    for(int i = 0; i < n; i++){
-      cpSpecies.push_back(d_cp0_HighT[i] + d_cp1_HighT[i] * T + d_cp2_HighT[i] * Tsqr + d_cp3_HighT[i] * Tcube + d_cp4_HighT[i] * Tquad);
+    for (int i = 0; i < N_ALL; i++){
+      cpSpecies[i] = d_cp0_HighT[i] + d_cp1_HighT[i] * T + d_cp2_HighT[i] * Tsqr + d_cp3_HighT[i] * Tcube + d_cp4_HighT[i] * Tquad;
     }
-  return cpSpecies;
-  }
-  // Low Temperature Polynomial Coefficients
-  for(int i = 0; i < n; i++){
-    cpSpecies.push_back(d_cp0_LowT[i] + d_cp1_LowT[i] * T + d_cp2_LowT[i] * Tsqr + d_cp3_LowT[i] * Tcube + d_cp4_LowT[i] * Tquad);
+  } else {
+    for (int i = 0; i < N_ALL; i++){
+      cpSpecies[i] = d_cp0_LowT[i] + d_cp1_LowT[i] * T + d_cp2_LowT[i] * Tsqr + d_cp3_LowT[i] * Tcube + d_cp4_LowT[i] * Tquad;
+    }
   }
   return cpSpecies;
 }
@@ -443,7 +440,7 @@ std::vector<double> hydrogenBurke::cpSpecificHeat( double T,
 
 double hydrogenBurke::reaction(double T,
                                double RT,
-                               const std::vector<double>& C,
+                               const std::array<double, 9>& C,
                                int recNum,
                                int R1,
                                int R2,
@@ -472,7 +469,7 @@ double hydrogenBurke::reaction(double T,
 //      what does this function compute?  Recipie equation number?
 double hydrogenBurke::duplicateReaction(double T,
                                         double RT,
-                                        const std::vector<double>& C,
+                                        const std::array<double, 9>& C,
                                         int recNum,
                                         int R1,
                                         int R2,
@@ -506,7 +503,7 @@ double hydrogenBurke::duplicateReaction(double T,
 //  Calculates rate for reaction 14 only.
 double hydrogenBurke::reaction14( double T,
                                   double RT,
-                                  const std::vector<double>& C)
+                                  const std::array<double, 9>& C)
 {
 #ifdef DEBUG
   if (d_debug) {
@@ -536,8 +533,8 @@ double hydrogenBurke::reaction14( double T,
 //    Recipe equation number?
 double hydrogenBurke::thirdBodyReaction2R(double T,
                                           double RT,
-                                          const std::vector<double>& C,
-                                          const std::vector<double>& efficiencies,
+                                          const std::array<double, 9>& C,
+                                          const std::array<double, 9>& efficiencies,
                                           int recNum,
                                           int R1,
                                           int R2,
@@ -573,8 +570,8 @@ double hydrogenBurke::thirdBodyReaction2R(double T,
 //        how does this function differ from the one above?   --Todd
 double hydrogenBurke::thirdBodyReaction2P(double T,
                                           double RT,
-                                          const std::vector<double>& C,
-                                          const std::vector<double>& efficiencies,
+                                          const std::array<double, 9>& C,
+                                          const std::array<double, 9>& efficiencies,
                                           int recNum,
                                           int R1,
                                           int P1,
@@ -609,8 +606,8 @@ double hydrogenBurke::thirdBodyReaction2P(double T,
 // Calculates reaction rate for reaction 15 only
 double hydrogenBurke::falloffReaction15(double T,
                                         double RT,
-                                        const std::vector<double>& C,             // more descriptive variable name please.
-                                        const std::vector<double>& efficiencies,
+                                        const std::array<double, 9>& C,
+                                        const std::array<double, 9>& efficiencies,
                                         int R1,
                                         int R2,
                                         int P1)
@@ -661,8 +658,8 @@ double hydrogenBurke::falloffReaction15(double T,
 // Calculates reaction rate for reaction 22 only
 double hydrogenBurke::falloffReaction22(double T,
                                         double RT,
-                                        const std::vector<double>& C,           // more descriptive variable name please.
-                                        const std::vector<double>& efficiencies,
+                                        const std::array<double, 9>& C,
+                                        const std::array<double, 9>& efficiencies,
                                         int R1,
                                         int P1,
                                         int P2)
@@ -709,8 +706,8 @@ double hydrogenBurke::falloffReaction22(double T,
 //______________________________________________________________________
 //
 // Calculate rates
-std::vector<double> hydrogenBurke::globalRates(double T,
-                                               const std::vector<double>& C)        // more descriptive variable name please.
+std::array<double, 27> hydrogenBurke::globalRates(double T,
+                                                   const std::array<double, 9>& C)
 {
 #ifdef DEBUG
   if (d_debug) {
@@ -746,14 +743,14 @@ std::vector<double> hydrogenBurke::globalRates(double T,
   double q25 = reaction(T, RT, C, 25, H2O2, O, OH, HO2);
   double q26 = duplicateReaction(T, RT, C, 26, H2O2, OH, HO2, H2O);
 
-  std::vector<double> q = {q1, q2, 0.0, q4, q5, q6, 0.0, 0.0, q9, 0.0, 0.0, q12, q13, q14, q15, q16, q17, q18, q19, q20, 0.0, q22, q23, q24, q25, q26, 0.0};
+  std::array<double, 27> q = {q1, q2, 0.0, q4, q5, q6, 0.0, 0.0, q9, 0.0, 0.0, q12, q13, q14, q15, q16, q17, q18, q19, q20, 0.0, q22, q23, q24, q25, q26, 0.0};
   return q;
 }
 
 //______________________________________________________________________
 //
 // Calculate Heat release (qdot)
-double hydrogenBurke::heatRelease(std::vector<double>& q,
+double hydrogenBurke::heatRelease(std::array<double, 27>& q,
                                   double T)
 {
 #ifdef DEBUG
@@ -789,7 +786,7 @@ double hydrogenBurke::heatRelease(std::vector<double>& q,
 //______________________________________________________________________
 //
 // Calculate Mass source terms
-std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
+std::array<double, hydrogenBurke::N_SPECIES> hydrogenBurke::massSource(const std::array<double, 27>& q)
 {
 #ifdef DEBUG
   if (d_debug) {
@@ -805,20 +802,14 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
   double sHO2 = q[14] + q[23] + q[24] + q[25] - q[15] - q[16] - q[17] - q[18] - 2 * q[19];
   double sH2O2 = q[19] + q[20] - q[21] - q[22] - q[23] - q[24] - q[25] - q[26];
 
-  std::vector<double> S;
-  std::vector<double> sDot;
-
   //[H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
-  sDot = {sH2, sO2, 0.0, sH2O, sH, sO, sOH, sHO2, sH2O2};
+  const std::array<double, N_ALL> sDot = {sH2, sO2, 0.0, sH2O, sH, sO, sOH, sHO2, sH2O2};
 
-  double temp;
-  for(size_t k = 0; k < Mw.size(); k++){
-    if(k == 2){
-      continue;
-    }
-
-    temp = Mw[k] * sDot[k] * 1e3; // kg / m^3 s               // !!!HARDWIRED UNITS!!!
-    S.push_back(temp);
+  std::array<double, N_SPECIES> S;
+  int si = 0;
+  for (int k = 0; k < N_ALL; k++){
+    if (k == 2) continue;
+    S[si++] = d_Mw[k] * sDot[k] * 1e3; // kg / m^3 s            // !!!HARDWIRED UNITS!!!
   }
   return S;
 }
@@ -827,35 +818,34 @@ std::vector<double> hydrogenBurke::massSource(const std::vector<double>& q)
 //
 // Integrate ODE's
 hydrogenBurke::ChemStepResult
-hydrogenBurke::chemStep(double T, 
-                        const std::vector<double>& Y,
-                        double rho_kg, 
+hydrogenBurke::chemStep(double T,
+                        const std::array<double, 9>& Y,
+                        double rho_kg,
                         double cellVol)
 {
   // Mixture Specific Heat
   double cp   = 0.0;
   double Rmix = 0.0;
-  std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+  const auto cpSpecies = cpSpecificHeat(T);
 
-  for (int j = 0; j < (int)Y.size(); j++) {
-    double Ri = 1e3 * Ru / Mw[j];
-    cp   += Y[j] * Ri * cpSpecies[j];
-    Rmix += Y[j] * Ri;
+  for (int j = 0; j < N_ALL; j++) {
+    cp   += Y[j] * d_Ri[j] * cpSpecies[j];
+    Rmix += Y[j] * d_Ri[j];
   }
 
   double cvTemp = cp - Rmix;
 
   // Molar Concentrations (mol / cm^3)
-  std::vector<double> conc(Y.size());
-  for (size_t j = 0; j < Y.size(); j++) {
-    conc[j] = 1e-3 * rho_kg * Y[j] / Mw[j];
+  std::array<double, N_ALL> conc;
+  for (int j = 0; j < N_ALL; j++) {
+    conc[j] = 1e-3 * rho_kg * Y[j] / d_Mw[j];
   }
 
   // Reaction rates and mass sources
-  std::vector<double> q = globalRates(T, conc);
-  std::vector<double> S = massSource(q);
+  auto q = globalRates(T, conc);
+  auto S = massSource(q);
 
-  std::vector<double> rhsMass(N_SPECIES);
+  std::array<double, N_SPECIES> rhsMass;
   for (int j = 0; j < N_SPECIES; j++) {
     rhsMass[j] = S[j] / rho_kg;
   }
@@ -951,22 +941,20 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           proc0cout << warn.str() << std::endl;
         }
 
-        // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
-        std::vector<double> Y;
-        double Ytmp;
-
-        for (int j = 0; j< N_SPECIES; j++){
-          Ytmp = Yold[j][c];
-          Y.push_back(Ytmp);            // Start mass fraction vector with tracked species
+        // Build the mass fraction array for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+        std::array<double, N_ALL> Y;
+        double Ysum_build = 0.0;
+        for (int j = 0; j < N_SPECIES; j++){
+          int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
+          Y[idx] = Yold[j][c];
+          Ysum_build += Yold[j][c];
         }
-
-        double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
-        Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen
+        Y[N2] = 1.0 - Ysum_build;
 
 
         //__________________________________
         // Bulletproofing: check mass fraction species vector
-        for (size_t j = 0; j < Y.size(); j++) {
+        for (int j = 0; j < N_ALL; j++) {
           if (Y[j] < 0.0) {
             std::ostringstream warn;
             warn << "hydrogenBurke: negative mass fraction Y[" << j << "]=" << Y[j]
@@ -991,16 +979,16 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         double dtChem_min = dtAdv;
 
         double engSrcTemp = 0.0;
-        std::vector<double> massSrcTemp(N_SPECIES, 0.0);
+        std::array<double, N_SPECIES> massSrcTemp = {};
 
         double Torig = T;
-        std::vector<double> Yorig(Y);
+        auto Yorig = Y;
 
         double Tcourse;
         double Tfine;
 
-        std::vector<double> Ycourse(Y);
-        std::vector<double> Yfine(Y);
+        auto Ycourse = Y;
+        auto Yfine   = Y;
 
         double error      = 1.0;
 
@@ -1022,7 +1010,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
             // Coarse step (full dtChem)
             Ysum = 0.0;
-            for (int j = 0; j < (int)Yorig.size(); j++){
+            for (int j = 0; j < N_ALL; j++){
               if (j == 2) continue;
               int k = j - (j > 2);
               Ycourse[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
@@ -1033,7 +1021,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
             // Fine integration: first half-step reuses result1
             Ysum = 0.0;
-            for (int j = 0; j < (int)Yorig.size(); j++){
+            for (int j = 0; j < N_ALL; j++){
               if (j == 2) continue;
               int k = j - (j > 2);
               Yfine[j] = Yorig[j] + result1.rhsMass[k] * dtHalf;
@@ -1046,7 +1034,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
             auto result2 = chemStep(Tfine, Yfine, rho_kg, cellVol);
 
             Ysum = 0.0;
-            for (int j = 0; j < (int)Yorig.size(); j++){
+            for (int j = 0; j < N_ALL; j++){
               if (j == 2) continue;
               int k = j - (j > 2);
               Yfine[j] += result2.rhsMass[k] * dtHalf;
@@ -1061,9 +1049,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
               for (int j = 0; j < N_SPECIES; j++){
                 massSrcTemp[j] += dtHalf * (result1.rhsMass[j] + result2.rhsMass[j]);
               }
-              for (int j = 0; j < (int)Y.size(); j++){
-                Y[j] = Yfine[j];
-              }
+              Y = Yfine;
               engSrcTemp += dtHalf * (result1.engSrc + result2.engSrc);
               T           = Tfine;
               dtChem_min  = std::min(dtChem_min, 2.0 * dtHalf);
@@ -1143,11 +1129,11 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
         constCCVariable<double> temp;
         old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
                                                                                                                      
-        CCVariable<double> cv, gamma, mu, k;
+        CCVariable<double> cv, gamma, mu, lambda;
         new_dw->getModifiable(cv,    Ilb->specific_heatLabel, indx, patch);
         new_dw->getModifiable(gamma, Ilb->gammaLabel,         indx, patch);
         new_dw->getModifiable(mu,    Ilb->viscosityLabel,     indx, patch);
-        new_dw->getModifiable(k,     Ilb->thermalCondLabel, indx, patch);
+        new_dw->getModifiable(lambda,Ilb->thermalCondLabel,   indx, patch);
 
         CellIterator iter = patch->getExtraCellIterator();
         for ( ; !iter.done(); iter++) {
@@ -1156,27 +1142,25 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           // Gather Cell State
           //-------------------------------------------------------------------------
 
-          // Build the mass and mol fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
-          std::vector<double> Y;
-          std::vector<double> X;
-          double Ytmp, Xtmp;
+          // Build the mass and mol fraction arrays for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+          std::array<double, N_ALL> Y;
+          std::array<double, N_ALL> X;
 
-          for (int j = 0; j< N_SPECIES; j++){
-            Ytmp = Yold[j][c];
-            Y.push_back(Ytmp);            // Start mass fraction vector with tracked species
+          double Ysum_build = 0.0;
+          for (int j = 0; j < N_SPECIES; j++){
+            int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
+            Y[idx] = Yold[j][c];
+            Ysum_build += Yold[j][c];
+          }
+          Y[N2] = 1.0 - Ysum_build;
+
+          double Ntotal = 0.0;
+          for (int j = 0; j < N_ALL; j++){
+            Ntotal += Y[j] / d_Mw[j];
           }
 
-          double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
-          Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen
-
-          double Ntotal = 0;
-          for (int j = 0; j < (int)Y.size(); j++){
-            Ntotal += Y[j] / Mw[j];
-          }
-          
-          for (int j = 0; j < (int)Y.size(); j++){
-            Xtmp = Y[j] / (Ntotal * Mw[j]);
-            X.push_back(Xtmp); // Build mol fraction vector
+          for (int j = 0; j < N_ALL; j++){
+            X[j] = Y[j] / (Ntotal * d_Mw[j]);
           }
           double T  = temp[c]; // Current cell temperature
 
@@ -1185,18 +1169,11 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           //-------------------------------------------------------------------------
           double cp = 0.0;
           double Rmix = 0.0;
-          double Ri;
-          // Calculate non dimensional specfic heats for each species from NASA polynomial
-          std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
+          const auto cpSpecies = cpSpecificHeat(T);
 
-          // Calculate mixture average specific heat and gas constant
-          // Cp,mix = sum(Yi * Ri * Cp,i[non dim])
-          // R,mix = sum(Yi * Ri)
-          // Ri = Ru / Mw,i
-          for (int j = 0; j<(int)Y.size(); j++){
-            Ri = 1e3 * Ru / Mw[j]; // J/kg-K
-            cp += Y[j] * Ri * cpSpecies[j]; // J/kg-K
-            Rmix += Y[j] * Ri; // J/kg-K
+          for (int j = 0; j < N_ALL; j++){
+            cp   += Y[j] * d_Ri[j] * cpSpecies[j]; // J/kg-K
+            Rmix += Y[j] * d_Ri[j]; // J/kg-K
           }
 
           // Ideal gas relations
@@ -1216,7 +1193,6 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           //-------------------------------------------------------------------------
           // Cell Viscosity
           //-------------------------------------------------------------------------
-          int N = X.size();
           double lnT    = std::log(T);
           double lnT2   = lnT * lnT;
           double lnT3   = lnT * lnT2;
@@ -1224,32 +1200,27 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           double Tsqrt  = std::sqrt(T);
           double Tsqrt2 = std::sqrt(Tsqrt);
 
-          std::vector<double> sqrtvisc;
-          std::vector<double> eta;
-          std::vector<std::vector<double>> phi(N, std::vector<double>(N));
-          double MwRatio, sqrtviscRatio, Mwsqrt2, tmp, num, den, denomI, muTmp = 0.0;
-          for (int j = 0; j < N; j++){
+          double sqrtvisc[N_ALL];
+          double eta[N_ALL];
+          double phi[N_ALL][N_ALL];
+          double sqrtviscRatio, tmp, num, denomI, muTmp = 0.0;
+          for (int j = 0; j < N_ALL; j++){
             tmp = Tsqrt2 * (d_mu0[j] + d_mu1[j] * lnT + d_mu2[j] * lnT2 + d_mu3[j] * lnT3 + d_mu4[j] * lnT4);
-            sqrtvisc.push_back(tmp);
-            eta.push_back(tmp * tmp);
+            sqrtvisc[j] = tmp;
+            eta[j]      = tmp * tmp;
           }
-          
-          for (int i = 0; i < N; i++){
-            for (int j = 0; j < N; j++){
-              MwRatio = Mw[j] / Mw[i];
+
+          for (int i = 0; i < N_ALL; i++){
+            for (int j = 0; j < N_ALL; j++){
               sqrtviscRatio = sqrtvisc[i] / sqrtvisc[j];
-              Mwsqrt2 = std::sqrt(std::sqrt(MwRatio));
-
-              tmp = 1.0 + sqrtviscRatio * Mwsqrt2;
+              tmp = 1.0 + sqrtviscRatio * d_Mwsqrt2[i][j];
               num = tmp * tmp;
-              den = std::sqrt(8.0 + 8.0 / MwRatio);
-
-              phi[i][j] = num / den;
+              phi[i][j] = num / d_phi_denom[i][j];
             }
           }
-          for (int i = 0; i < N; i++){
+          for (int i = 0; i < N_ALL; i++){
             denomI = 0.0;
-            for (int j = 0; j < N; j++){
+            for (int j = 0; j < N_ALL; j++){
               denomI += phi[i][j] * X[j];
             }
             muTmp += X[i] * eta[i] / denomI;
@@ -1267,27 +1238,25 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           //-------------------------------------------------------------------------
           // Cell Thermal Conductivity
           //-------------------------------------------------------------------------
-          std::vector<double> lamK;
           double lamArith = 0.0;
           double lamHarm  = 0.0;
-          double kTmp;
-          for (int j = 0; j < N; j++){
+          double lamTmp;
+          for (int j = 0; j < N_ALL; j++){
             tmp = Tsqrt * (d_k0[j] + d_k1[j] * lnT + d_k2[j] * lnT2 + d_k3[j] * lnT3 + d_k4[j] * lnT4);
-            lamK.push_back(tmp);
             lamArith += X[j] * tmp;
             lamHarm  += X[j] / tmp;
           }
           lamHarm = 1.0 / lamHarm;
-          kTmp = 0.5 * (lamArith + lamHarm);
+          lamTmp  = 0.5 * (lamArith + lamHarm);
 
           // Bulletproofing
-          if (kTmp < 0.0) {
+          if (lamTmp < 0.0) {
             std::ostringstream warn;
-            warn << "Thermal Conductivy is negative at: " << c << " k = " << kTmp;
+            warn << "Thermal Conductivy is negative at: " << c << " k = " << lamTmp;
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
 
-          k[c] = kTmp;
+          lambda[c] = lamTmp;
 
         } // cell iterator
       } // matl loop

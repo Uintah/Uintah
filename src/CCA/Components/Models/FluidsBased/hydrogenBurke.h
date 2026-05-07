@@ -32,6 +32,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
+#include <array>
 #include <vector>
 #include <string>
 
@@ -124,6 +125,9 @@ private:
   hydrogenBurke(const hydrogenBurke&) = delete;
   hydrogenBurke& operator=(const hydrogenBurke&) = delete;
 
+  static constexpr int N_SPECIES = 8;   // tracked species (no N2)
+  static constexpr int N_ALL     = 9;   // all species including N2
+
   double YH20{0.0};
   double YO20{0.0};
 
@@ -148,44 +152,77 @@ private:
   //------------------------------------------------------------------
   double enthalpy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
-  std::vector<double> cpSpecificHeat(double T, int n);
-  
-  double reaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
-  double duplicateReaction(double T, double RT, const std::vector<double>& C, int recNum, int R1, int R2, int P1, int P2);
-  double reaction14(double T, double RT, const std::vector<double>& C);
-  
-  double thirdBodyReaction2R(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int R2, int P1);
-  double thirdBodyReaction2P(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int recNum, int R1, int P1, int P2);
-  
-  double falloffReaction15(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int R2, int P1);
-  double falloffReaction22(double T, double RT, const std::vector<double>& C, const std::vector<double>& efficiencies, int R1, int P1, int P2);
-  
-  std::vector<double> globalRates(double T, const std::vector<double>& C);
-  double heatRelease(std::vector<double>& q, double T);
-  std::vector<double> massSource(const std::vector<double>& q);
+  std::array<double, 9> cpSpecificHeat(double T);
+
+  double reaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);
+  double duplicateReaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);
+  double reaction14(double T, double RT, const std::array<double, 9>& C);
+
+  double thirdBodyReaction2R(double T, double RT, const std::array<double, 9>& C, const std::array<double, 9>& efficiencies, int recNum, int R1, int R2, int P1);
+  double thirdBodyReaction2P(double T, double RT, const std::array<double, 9>& C, const std::array<double, 9>& efficiencies, int recNum, int R1, int P1, int P2);
+
+  double falloffReaction15(double T, double RT, const std::array<double, 9>& C, const std::array<double, 9>& efficiencies, int R1, int R2, int P1);
+  double falloffReaction22(double T, double RT, const std::array<double, 9>& C, const std::array<double, 9>& efficiencies, int R1, int P1, int P2);
+
+  std::array<double, 27> globalRates(double T, const std::array<double, 9>& C);
+  double heatRelease(std::array<double, 27>& q, double T);
+  std::array<double, N_SPECIES> massSource(const std::array<double, 27>& q);
 
   struct ChemStepResult {
     double rhsEnergy;
-    std::vector<double> rhsMass;
+    std::array<double, N_SPECIES> rhsMass;
     double engSrc;
   };
 
-  ChemStepResult chemStep(double T, const std::vector<double>& Y, double rho_kg, double cellVol);
+  ChemStepResult chemStep(double T, const std::array<double, 9>& Y, double rho_kg, double cellVol);
 
   //------------------------------------------------------------------
   // Constants
   //------------------------------------------------------------------
 
-  // Molecular Weights                         [H2,    O2,     N2,     H2O,     H,     O,      OH,     HO2,    H2O2] g/mol
-  inline static const std::vector<double> Mw = {2.016, 31.998, 28.014, 18.015,  1.008, 15.999, 17.007, 33.006, 34.014};
+  // Molecular Weights                           [H2,    O2,     N2,     H2O,     H,     O,      OH,     HO2,    H2O2] g/mol
+  inline static const std::vector<double> d_Mw = {2.016, 31.998, 28.014, 18.015,  1.008, 15.999, 17.007, 33.006, 34.014};
 
-  // Chaperon Efficiencies                                  [H2,  O2,   N2,  H2O,  H,   O,   OH,  HO2, H2O2]
-  inline static const std::vector<double> r6Efficiencies  = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-  inline static const std::vector<double> r9Efficiencies  = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-  inline static const std::vector<double> r12Efficiencies = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-  inline static const std::vector<double> r13Efficiencies = {3.0, 1.5,  2.0, 0.0,  1.0, 1.0, 1.0, 1.0, 1.0};
-  inline static const std::vector<double> r15Efficiencies = {2.0, 0.78, 1.0, 14.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-  inline static const std::vector<double> r22Efficiencies = {3.7, 1.2,  1.5, 7.5,  1.0, 1.0, 1.0, 1.0, 7.7};
+  // Species gas constants Ri = 1e3*Ru/Mw  [J/kg-K]
+  inline static const std::array<double,9> d_Ri = {
+      4.1242374097e+03, 2.5984319701e+02, 2.9679669515e+02,  // H2, O2, N2
+      4.6152998157e+02, 8.2484748194e+03, 5.1968639402e+02,  // H2O, H, O
+      4.8888473088e+02, 2.5190761128e+02, 2.4444236544e+02   // OH, HO2, H2O2
+  };
+
+  // Precomputed (MW[j]/MW[i])^0.25  — row i, col j
+  inline static const std::array<std::array<double,9>,9> d_Mwsqrt2 = {{
+      {{1.0000000000e+00, 1.9959886922e+00, 1.9307282411e+00, 1.7289639365e+00, 8.4089641525e-01, 1.6784197362e+00, 1.7042538979e+00, 2.0115257289e+00, 2.0267108612e+00}},  // H2
+      {{5.0100484231e-01, 1.0000000000e+00, 9.6730419798e-01, 8.6621930438e-01, 4.2129317592e-01, 8.4089641525e-01, 8.5383945539e-01, 1.0077841306e+00, 1.0153919554e+00}},  // O2
+      {{5.1793928255e-01, 1.0338009512e+00, 1.0000000000e+00, 8.9549834084e-01, 4.3553328601e-01, 8.6931951397e-01, 8.8270004118e-01, 1.0418481929e+00, 1.0497131694e+00}},  // N2
+      {{5.7838106329e-01, 1.1544420621e+00, 1.1166966530e+00, 1.0000000000e+00, 4.8635856277e-01, 9.7076619165e-01, 9.8570818160e-01, 1.1634283899e+00, 1.1722111829e+00}},  // H2O
+      {{1.1892071150e+00, 2.3736439543e+00, 2.2960357615e+00, 2.0560962149e+00, 1.0000000000e+00, 1.9959886922e+00, 2.0267108612e+00, 2.3921207088e+00, 2.4101789762e+00}},  // H
+      {{5.9579852312e-01, 1.1892071150e+00, 1.1503250346e+00, 1.0301141599e+00, 5.0100484231e-01, 1.0000000000e+00, 1.0153919554e+00, 1.1984640585e+00, 1.2075113379e+00}},  // O
+      {{5.8676703114e-01, 1.1711803591e+00, 1.1328876780e+00, 1.0144990360e+00, 4.9341029307e-01, 9.8484136560e-01, 1.0000000000e+00, 1.1802969800e+00, 1.1892071150e+00}},  // OH
+      {{4.9713507793e-01, 9.9227599407e-01, 9.5983273462e-01, 8.5952862134e-01, 4.1803910493e-01, 8.3440132635e-01, 8.4724439437e-01, 1.0000000000e+00, 1.0075490619e+00}},  // HO2
+      {{4.9341029307e-01, 9.8484136560e-01, 9.5264118729e-01, 8.5308860264e-01, 4.1490694669e-01, 8.2814957393e-01, 8.4089641525e-01, 9.9250749942e-01, 1.0000000000e+00}}   // H2O2
+  }};
+
+  // Precomputed sqrt(8 + 8*MW[i]/MW[j])  — row i, col j
+  inline static const std::array<std::array<double,9>,9> d_phi_denom = {{
+      {{4.0000000000e+00, 2.9161672623e+00, 2.9284316867e+00, 2.9824912330e+00, 4.8989794856e+00, 3.0013435331e+00, 2.9913734972e+00, 2.9135268026e+00, 2.9110406558e+00}},  // H2
+      {{1.1617925395e+01, 4.0000000000e+00, 4.1397725609e+00, 4.7126947801e+00, 1.6184943032e+01, 4.8989794856e+00, 4.8012169916e+00, 3.9693426137e+00, 3.9402845456e+00}},  // O2
+      {{1.0916348596e+01, 3.8734916737e+00, 4.0000000000e+00, 4.5210949725e+00, 1.5176736584e+01, 4.6912552150e+00, 4.6019162030e+00, 3.8457818678e+00, 3.8195309096e+00}},  // N2
+      {{8.9156096392e+00, 3.5361040004e+00, 3.6255441760e+00, 4.0000000000e+00, 1.2287236893e+01, 4.1240832926e+00, 4.0588369886e+00, 3.5166004638e+00, 3.4981536344e+00}},  // H2O
+      {{3.4641016151e+00, 2.8726321990e+00, 2.8788636772e+00, 2.9064801698e+00, 4.0000000000e+00, 2.9161672623e+00, 2.9110406558e+00, 2.8712922552e+00, 2.8700311583e+00}},  // H
+      {{8.4550632900e+00, 3.4641016151e+00, 3.5452585841e+00, 3.8864824771e+00, 1.1617925395e+01, 4.0000000000e+00, 3.9402845456e+00, 3.4464242909e+00, 3.4297115258e+00}},  // O
+      {{8.6883885294e+00, 3.5002879526e+00, 3.5856260959e+00, 3.9436497084e+00, 1.1957265175e+01, 4.0625154156e+00, 4.0000000000e+00, 3.4816891888e+00, 3.4641016151e+00}},  // OH
+      {{1.1788816331e+01, 4.0313788895e+00, 4.1743949176e+00, 4.7599494816e+00, 1.6430227660e+01, 4.9501546948e+00, 4.8503445548e+00, 4.0000000000e+00, 3.9702545448e+00}},  // HO2
+      {{1.1957265175e+01, 4.0625154156e+00, 4.2087324695e+00, 4.8067396481e+00, 1.6671903939e+01, 5.0008062354e+00, 4.8989794856e+00, 4.0304241979e+00, 4.0000000000e+00}}   // H2O2
+  }};
+
+  // Chaperon Efficiencies                                        [H2,  O2,   N2,  H2O,  H,   O,   OH,  HO2, H2O2]
+  inline static const std::array<double, 9> r6Efficiencies  = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  inline static const std::array<double, 9> r9Efficiencies  = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  inline static const std::array<double, 9> r12Efficiencies = {2.5, 1.0,  1.0, 12.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  inline static const std::array<double, 9> r13Efficiencies = {3.0, 1.5,  2.0, 0.0,  1.0, 1.0, 1.0, 1.0, 1.0};
+  inline static const std::array<double, 9> r15Efficiencies = {2.0, 0.78, 1.0, 14.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  inline static const std::array<double, 9> r22Efficiencies = {3.7, 1.2,  1.5, 7.5,  1.0, 1.0, 1.0, 1.0, 7.7};
 
   // Universial gas constant
   static constexpr double Ru = 8.314462618; //(J / mol K)
@@ -509,9 +546,6 @@ private:
   Material*    d_matl{nullptr};
   MaterialSet* d_matl_set{nullptr};
   ProblemSpecP d_params;
-
-  // Species bookkeeping
-  static constexpr int N_SPECIES = 8;
 
   // VarLabels for passive scalars and their sources
   std::vector<VarLabel*> d_Y_labels;      // scalar-YH2, scalar-YO2, ...
