@@ -1116,6 +1116,8 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
                                                                                                                      
     t->modifiesVar(Ilb->specific_heatLabel);
     t->modifiesVar(Ilb->gammaLabel);
+    t->modifiesVar(Ilb->viscosityLabel);
+    t->modifiesVar(Ilb->thermalCondLabel);
 
     sched->addTask(t, level->eachPatch(), matls);                                                                    
   }     
@@ -1141,17 +1143,23 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
         constCCVariable<double> temp;
         old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
                                                                                                                      
-        CCVariable<double> cv, gamma;
+        CCVariable<double> cv, gamma, mu, k;
         new_dw->getModifiable(cv,    Ilb->specific_heatLabel, indx, patch);
         new_dw->getModifiable(gamma, Ilb->gammaLabel,         indx, patch);
+        new_dw->getModifiable(mu,    Ilb->viscosityLabel,     indx, patch);
+        new_dw->getModifiable(k,     Ilb->thermalCondLabel, indx, patch);
 
         CellIterator iter = patch->getExtraCellIterator();
         for ( ; !iter.done(); iter++) {
           IntVector c = *iter;
+          //-------------------------------------------------------------------------
+          // Gather Cell State
+          //-------------------------------------------------------------------------
 
-          // Build the mass fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+          // Build the mass and mol fraction vector for all species [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
           std::vector<double> Y;
-          double Ytmp;
+          std::vector<double> X;
+          double Ytmp, Xtmp;
 
           for (int j = 0; j< N_SPECIES; j++){
             Ytmp = Yold[j][c];
@@ -1161,11 +1169,23 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           double YN2 = 1.0 - std::accumulate(Y.begin(), Y.end(), 0.0);// Use sum of Y = 1 to compute last mass fraction
           Y.insert(Y.begin() + 2, YN2); // Insert closure mass fraction nitrogen
 
+          double Ntotal = 0;
+          for (int j = 0; j < (int)Y.size(); j++){
+            Ntotal += Y[j] / Mw[j];
+          }
+          
+          for (int j = 0; j < (int)Y.size(); j++){
+            Xtmp = Y[j] / (Ntotal * Mw[j]);
+            X.push_back(Xtmp); // Build mol fraction vector
+          }
+          double T  = temp[c]; // Current cell temperature
+
+          //-------------------------------------------------------------------------
+          // Cell Specific Heat
+          //-------------------------------------------------------------------------
           double cp = 0.0;
           double Rmix = 0.0;
           double Ri;
-          double T  = temp[c]; // Current cell temperature
-
           // Calculate non dimensional specfic heats for each species from NASA polynomial
           std::vector<double> cpSpecies = cpSpecificHeat(T, Y.size());
 
@@ -1182,8 +1202,92 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           // Ideal gas relations
           // R = Cp - Cv
           // gamma = Cp / Cv
-          cv[c]    = cp - Rmix;
-          gamma[c] = cp / cv[c];
+          double cvTmp = cp - Rmix;
+
+          // Bulletproofing
+          if (cvTmp < 0.0) {
+            std::ostringstream warn;
+            warn << "Specific Heat is negative at: " << c << " Cv = " << cvTmp;
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+          cv[c]    = cvTmp;
+          gamma[c] = cp / cvTmp;
+
+          //-------------------------------------------------------------------------
+          // Cell Viscosity
+          //-------------------------------------------------------------------------
+          int N = X.size();
+          double lnT    = std::log(T);
+          double lnT2   = lnT * lnT;
+          double lnT3   = lnT * lnT2;
+          double lnT4   = lnT * lnT3;
+          double Tsqrt  = std::sqrt(T);
+          double Tsqrt2 = std::sqrt(Tsqrt);
+
+          std::vector<double> sqrtvisc;
+          std::vector<double> eta;
+          std::vector<std::vector<double>> phi(N, std::vector<double>(N));
+          double MwRatio, sqrtviscRatio, Mwsqrt2, tmp, num, den, denomI, muTmp = 0.0;
+          for (int j = 0; j < N; j++){
+            tmp = Tsqrt2 * (d_mu0[j] + d_mu1[j] * lnT + d_mu2[j] * lnT2 + d_mu3[j] * lnT3 + d_mu4[j] * lnT4);
+            sqrtvisc.push_back(tmp);
+            eta.push_back(tmp * tmp);
+          }
+          
+          for (int i = 0; i < N; i++){
+            for (int j = 0; j < N; j++){
+              MwRatio = Mw[j] / Mw[i];
+              sqrtviscRatio = sqrtvisc[i] / sqrtvisc[j];
+              Mwsqrt2 = std::sqrt(std::sqrt(MwRatio));
+
+              tmp = 1.0 + sqrtviscRatio * Mwsqrt2;
+              num = tmp * tmp;
+              den = std::sqrt(8.0 + 8.0 / MwRatio);
+
+              phi[i][j] = num / den;
+            }
+          }
+          for (int i = 0; i < N; i++){
+            denomI = 0.0;
+            for (int j = 0; j < N; j++){
+              denomI += phi[i][j] * X[j];
+            }
+            muTmp += X[i] * eta[i] / denomI;
+          }
+
+          // Bulletproofing
+          if (muTmp < 0.0) {
+            std::ostringstream warn;
+            warn << "Viscosity is negative at: " << c << " mu = " << muTmp;
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+
+          mu[c] = muTmp;
+
+          //-------------------------------------------------------------------------
+          // Cell Thermal Conductivity
+          //-------------------------------------------------------------------------
+          std::vector<double> lamK;
+          double lamArith = 0.0;
+          double lamHarm  = 0.0;
+          double kTmp;
+          for (int j = 0; j < N; j++){
+            tmp = Tsqrt * (d_k0[j] + d_k1[j] * lnT + d_k2[j] * lnT2 + d_k3[j] * lnT3 + d_k4[j] * lnT4);
+            lamK.push_back(tmp);
+            lamArith += X[j] * tmp;
+            lamHarm  += X[j] / tmp;
+          }
+          lamHarm = 1.0 / lamHarm;
+          kTmp = 0.5 * (lamArith + lamHarm);
+
+          // Bulletproofing
+          if (kTmp < 0.0) {
+            std::ostringstream warn;
+            warn << "Thermal Conductivy is negative at: " << c << " k = " << kTmp;
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+
+          k[c] = kTmp;
 
         } // cell iterator
       } // matl loop
