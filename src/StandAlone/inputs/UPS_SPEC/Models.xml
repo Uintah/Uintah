@@ -527,6 +527,13 @@
         <geom_object spec="MULTIPLE">
           <Y spec="REQUIRED MULTIPLE_DOUBLES"/>
         </geom_object>
+        <tanhProfile spec="OPTIONAL NO_DATA">
+          <axis    spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
+          <x0      spec="REQUIRED DOUBLE"/>
+          <delta   spec="REQUIRED DOUBLE 'positive'"/>
+          <Y_left  spec="REQUIRED MULTIPLE_DOUBLES"/>
+          <Y_right spec="REQUIRED MULTIPLE_DOUBLES"/>
+        </tanhProfile>
       </hydrogenBurke>
 
     </Model>
