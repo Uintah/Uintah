@@ -163,7 +163,7 @@ private:
   //------------------------------------------------------------------
   // Combustion Function declarations
   //------------------------------------------------------------------
-  double enthalpy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
+  double intEnergy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   std::array<double, 9> cpSpecificHeat(double T);
 

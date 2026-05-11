@@ -375,8 +375,10 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
 // ----------------------------------------------------------------
 //  Combustion Functions
 // ----------------------------------------------------------------
-// Enthalpy calculator (J / mol)  Valid for Temperatures T = 200K - 3500K
-double hydrogenBurke::enthalpy(double T,
+// Internal Energy calculator (J / mol)  Valid for Temperatures T = 200K - 3500K
+// Uses NASA7 enthalpy polynomials and converts to internal energy using relation h = u + RT
+// In this case u/R = h/R - T
+double hydrogenBurke::intEnergy(double T,
                                int R1,
                                int P1,
                                const int* R2,
@@ -384,7 +386,7 @@ double hydrogenBurke::enthalpy(double T,
 {
 #ifdef DEBUG
   if (d_debug) {
-    std::cout << "Running: hydrogenBurke::enthalpy" << std::endl;
+    std::cout << "Running: hydrogenBurke::intEnergy" << std::endl;
   }
 #endif
   double Tsqr  = T * T;
@@ -392,34 +394,35 @@ double hydrogenBurke::enthalpy(double T,
   double Tquad = Tcube * T;
   double Tpent = Tquad * T;
 
+
   if (T > d_Tmid){
-    auto speciesH = [&](int idx) {
-      return (d_h0_HighT[idx] * T) + (d_h1_HighT[idx] * Tsqr) + (d_h2_HighT[idx] * Tcube) + (d_h3_HighT[idx] * Tquad) + (d_h4_HighT[idx] * Tpent) + d_h5_HighT[idx];
+    auto speciesU = [&](int idx) {
+      return (d_h0_HighT[idx] * T) + (d_h1_HighT[idx] * Tsqr) + (d_h2_HighT[idx] * Tcube) + (d_h3_HighT[idx] * Tquad) + (d_h4_HighT[idx] * Tpent) + d_h5_HighT[idx] - T;
     };
 
-    double hR1 = speciesH( R1 );
-    double hP1 = speciesH( P1 );
+    double uR1 = speciesU( R1 );
+    double uP1 = speciesU( P1 );
 
-    double hR2 = (R2 != nullptr) ? speciesH( *R2 ) : 0.0;
-    double hP2 = (P2 != nullptr) ? speciesH( *P2 ) : 0.0;
-    return Ru * (hR1 + hR2 - hP1 - hP2);
+    double uR2 = (R2 != nullptr) ? speciesU( *R2 ) : 0.0;
+    double uP2 = (P2 != nullptr) ? speciesU( *P2 ) : 0.0;
+    return Ru * (uR1 + uR2 - uP1 - uP2);
   }
 
-  auto speciesH = [&](int idx) {
-    return (d_h0_LowT[idx] * T) + (d_h1_LowT[idx] * Tsqr) + (d_h2_LowT[idx] * Tcube) + (d_h3_LowT[idx] * Tquad) + (d_h4_LowT[idx] * Tpent) + d_h5_LowT[idx];
+  auto speciesU = [&](int idx) {
+    return (d_h0_LowT[idx] * T) + (d_h1_LowT[idx] * Tsqr) + (d_h2_LowT[idx] * Tcube) + (d_h3_LowT[idx] * Tquad) + (d_h4_LowT[idx] * Tpent) + d_h5_LowT[idx] - T;
   };
 
-  double hR1 = speciesH( R1 );
-  double hP1 = speciesH( P1 );
+  double uR1 = speciesU( R1 );
+  double uP1 = speciesU( P1 );
 
-  double hR2 = (R2 != nullptr) ? speciesH( *R2 ) : 0.0;
-  double hP2 = (P2 != nullptr) ? speciesH( *P2 ) : 0.0;
+  double uR2 = (R2 != nullptr) ? speciesU( *R2 ) : 0.0;
+  double uP2 = (P2 != nullptr) ? speciesU( *P2 ) : 0.0;
 
-  return Ru * (hR1 + hR2 - hP1 - hP2);
+  return Ru * (uR1 + uR2 - uP1 - uP2);
 }
 //______________________________________________________________________
 //
-// Gibbs calculator (dimensionless) Valid for Temperatures T = 1000K - 3500K
+// Gibbs calculator (dimensionless) Valid for Temperatures T = 200K - 3500K
 double hydrogenBurke::gibbs(double T,
                             int R1,
                             int P1,
@@ -677,7 +680,8 @@ double hydrogenBurke::falloffReaction15(double T,
   double log10Pr = std::log10(Pr);
 
   // Calculate Troe Center Factor (Fc)
-  double Fc      = (1 - a15) * std::exp(-T/T3) + a15 * std::exp(-T/T1);
+  // double Fc      = (1 - a15) * std::exp(-T/T3) + a15 * std::exp(-T/T1);
+  double Fc = a15; // above expression simplifies to this
   double log10Fc = std::log10(Fc);
 
   // Calculate Troe falloff Factor (F)
@@ -807,26 +811,27 @@ double hydrogenBurke::heatRelease(std::array<double, 27>& q,
     std::cout << "Running: hydrogenBurke::heatRelease" << std::endl;
   }
 #endif
-  q[0]  *= enthalpy(T, H,    O,    &O2,     &OH);  // (W / cm^3) reaction 1
-  q[1]  *= enthalpy(T, O,    H,    &H2,     &OH);  // (W / cm^3) reaction 2
-  q[3]  *= enthalpy(T, H2,   H2O,  &OH,     &H);   // (W / cm^3) reaction 4
-  q[4]  *= enthalpy(T, OH,   O,    &OH,     &H2O); // (W / cm^3) reaction 5
-  q[5]  *= enthalpy(T, H2,   H,    nullptr, &H);   // (W / cm^3) reaction 6
-  q[8]  *= enthalpy(T, O,    O2,   &O);            // (W / cm^3) reaction 9
-  q[11] *= enthalpy(T, O,    OH,   &H);            // (W / cm^3) reaction 12
-  q[12] *= enthalpy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 13
-  q[13] *= enthalpy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 14
-  q[14] *= enthalpy(T, H,    HO2,  &O2);           // (W / cm^3) reaction 15
-  q[15] *= enthalpy(T, HO2,  H2,   &H,      &O2);  // (W / cm^3) reaction 16
-  q[16] *= enthalpy(T, HO2,  OH,   &H,      &OH);  // (W / cm^3) reaction 17
-  q[17] *= enthalpy(T, HO2,  O2,   &O,      &OH);  // (W / cm^3) reaction 18
-  q[18] *= enthalpy(T, HO2,  H2O,  &OH,     &O2);  // (W / cm^3) reaction 19
-  q[19] *= enthalpy(T, HO2,  H2O2, &HO2,    &O2);  // (W / cm^3) reaction 20
-  q[21] *= enthalpy(T, H2O2, OH,   nullptr, &OH);  // (W / cm^3) reaction 22
-  q[22] *= enthalpy(T, H2O2, H2O,  &H,      &OH);  // (W / cm^3) reaction 23
-  q[23] *= enthalpy(T, H2O2, HO2,  &H,      &H2);  // (W / cm^3) reaction 24
-  q[24] *= enthalpy(T, H2O2, OH,   &O,      &HO2); // (W / cm^3) reaction 25
-  q[25] *= enthalpy(T, H2O2, HO2,  &OH,     &H2O); // (W / cm^3) reaction 26
+
+  q[0]  *= intEnergy(T, H,    O,    &O2,     &OH);  // (W / cm^3) reaction 1
+  q[1]  *= intEnergy(T, O,    H,    &H2,     &OH);  // (W / cm^3) reaction 2
+  q[3]  *= intEnergy(T, H2,   H2O,  &OH,     &H);   // (W / cm^3) reaction 4
+  q[4]  *= intEnergy(T, OH,   O,    &OH,     &H2O); // (W / cm^3) reaction 5
+  q[5]  *= intEnergy(T, H2,   H,    nullptr, &H);   // (W / cm^3) reaction 6
+  q[8]  *= intEnergy(T, O,    O2,   &O);            // (W / cm^3) reaction 9
+  q[11] *= intEnergy(T, O,    OH,   &H);            // (W / cm^3) reaction 12
+  q[12] *= intEnergy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 13
+  q[13] *= intEnergy(T, H2O,  H,    nullptr, &OH);  // (W / cm^3) reaction 14
+  q[14] *= intEnergy(T, H,    HO2,  &O2);           // (W / cm^3) reaction 15
+  q[15] *= intEnergy(T, HO2,  H2,   &H,      &O2);  // (W / cm^3) reaction 16
+  q[16] *= intEnergy(T, HO2,  OH,   &H,      &OH);  // (W / cm^3) reaction 17
+  q[17] *= intEnergy(T, HO2,  O2,   &O,      &OH);  // (W / cm^3) reaction 18
+  q[18] *= intEnergy(T, HO2,  H2O,  &OH,     &O2);  // (W / cm^3) reaction 19
+  q[19] *= intEnergy(T, HO2,  H2O2, &HO2,    &O2);  // (W / cm^3) reaction 20
+  q[21] *= intEnergy(T, H2O2, OH,   nullptr, &OH);  // (W / cm^3) reaction 22
+  q[22] *= intEnergy(T, H2O2, H2O,  &H,      &OH);  // (W / cm^3) reaction 23
+  q[23] *= intEnergy(T, H2O2, HO2,  &H,      &H2);  // (W / cm^3) reaction 24
+  q[24] *= intEnergy(T, H2O2, OH,   &O,      &HO2); // (W / cm^3) reaction 25
+  q[25] *= intEnergy(T, H2O2, HO2,  &OH,     &H2O); // (W / cm^3) reaction 26
 
   double qdot = std::accumulate(q.begin(), q.end(), 0.0) * 1e6; // W / m^3            // !!!HARDWIRED UNITS!!!
   return qdot;
@@ -1137,7 +1142,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
       //__________________________________
       //  Species diffusion
-      CCVariable<double> diff_src;
+      CCVariable<double> diff_src; // m^3
       CCVariable<double> placeHolder;
       new_dw->allocateTemporary(diff_src, patch);
       bool use_vol_frac = false;
@@ -1147,7 +1152,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         scalarDiffusionOperator(new_dw, patch, use_vol_frac, Yold[k],
                                 placeHolder, diff_src, diffCoef[k], double(dtAdv));
         for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-          Ysrc[k][*iter] += diff_src[*iter];
+          Ysrc[k][*iter] += diff_src[*iter] / cellVol; // []
         }
       }
     }   // matl loop
