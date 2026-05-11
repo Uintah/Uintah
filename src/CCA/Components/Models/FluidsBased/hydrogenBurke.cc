@@ -61,27 +61,10 @@
 //
 // Written by James Karr April 2026
 
-//--------------------------------------------------------------
-
-//______________________________________________________________________
-//      TO DO
-//      - mapping of equation numbers in recipe to function names
-//      - more descriptive variable names as needed.
-//      - 2 space indentation
-//      - Save diagnostice variables for debugging and regression testing.
-//      - Add multiple regression tests.
-//
-
-
-//------------------------------------------------------------------
-
-
 using namespace Uintah;
 using namespace SpeciesIndexHydrogenBurke;
 
 Dout dout_models_H2Burke("hydrogenBurke_tasks", "Models::hydrogenBurke", "Prints task scheduling & execution", false);
-
-
 
 // Constructor / Destructor
 //------------------------------------------------------------------
@@ -173,8 +156,12 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   hb_ps->require("YH2_init",YH20);
   hb_ps->require("YO2_init",YO20);
 
-  hb_ps->getWithDefault("debug", d_debug, false);
+  ProblemSpecP phys_ps = d_params->getRootNode()->findBlock("PhysicalConstants");
+  if (phys_ps) {
+    phys_ps->require("reference_pressure", d_ref_press);
+  }
 
+  hb_ps->getWithDefault("debug", d_debug, false);
   hb_ps->getWithDefault("tol_temp", d_tol, 1e-3);
   hb_ps->getWithDefault("safety", d_safety, 0.9);
   hb_ps->getWithDefault("max_grow", d_max_grow, 2.0);
@@ -253,8 +240,10 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 
     std::string axis;
     tanh_ps->require("axis",    axis);
-    tanh_ps->require("x0",     ti.x0);
-    tanh_ps->require("delta",  ti.delta);
+    tanh_ps->require("x0",      ti.x0);
+    tanh_ps->require("delta",   ti.delta);
+    tanh_ps->require("T_left",  ti.T_left);
+    tanh_ps->require("T_right", ti.T_right);
     tanh_ps->require("Y_left",  ti.Y_left);
     tanh_ps->require("Y_right", ti.Y_right);
 
@@ -288,6 +277,25 @@ void hydrogenBurke::scheduleInitialize(SchedulerP   & sched,
     t->computesVar(lbl);
   }
 
+  if (d_tanhInit.isActive) {
+    MaterialSubset* press_matl = scinew MaterialSubset();
+    press_matl->add(0);
+    press_matl->addReference();
+
+    t->modifiesVar(Ilb->temp_CCLabel);
+    t->modifiesVar(Ilb->rho_micro_CCLabel);
+    t->modifiesVar(Ilb->rho_CCLabel);
+    t->modifiesVar(Ilb->sp_vol_CCLabel);
+    t->modifiesVar(Ilb->speedSound_CCLabel);
+    t->modifiesVar(Ilb->press_CCLabel, press_matl);
+
+    press_matl->removeReference();
+  } else {
+    t->requiresVar(Task::NewDW, Ilb->temp_CCLabel, d_gn, 0);
+  }
+  t->modifiesVar(Ilb->specific_heatLabel);
+  t->modifiesVar(Ilb->gammaLabel);
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -307,7 +315,7 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
     for (int m = 0; m < matls->size(); m++) {
       int indx = matls->get(m);
 
-      std::vector<CCVariable<double>> Y(N_SPECIES);       // More descriptive variable name --Todd
+      std::vector<CCVariable<double>> Y(N_SPECIES);
       //                  Y0 = [YH2,  YO2,  YH2O,YH,  YO,  YOH, YHO2,YH2O2]
       std::vector<double> Y0 = {YH20, YO20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -318,18 +326,59 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
   
       if (d_tanhInit.isActive) {
         const TanhInit& ti = d_tanhInit;
-        for (CellIterator iter(patch->getCellIterator()); !iter.done(); ++iter) {
-          Point pt = patch->cellPosition(*iter);
-          double x = pt(ti.axis);
+
+        CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_CC;
+        new_dw->getModifiable(temp_CC,    Ilb->temp_CCLabel,       indx, patch);
+        new_dw->getModifiable(rho_micro,  Ilb->rho_micro_CCLabel,  indx, patch);
+        new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,        indx, patch);
+        new_dw->getModifiable(sp_vol,     Ilb->sp_vol_CCLabel,     indx, patch);
+        new_dw->getModifiable(speedSound, Ilb->speedSound_CCLabel, indx, patch);
+        new_dw->getModifiable(press_CC,   Ilb->press_CCLabel,      0,    patch);
+
+        CCVariable<double> cv, gamma_cc;
+        new_dw->getModifiable(cv,       Ilb->specific_heatLabel, indx, patch);
+        new_dw->getModifiable(gamma_cc, Ilb->gammaLabel,         indx, patch);
+
+        for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
+          IntVector c = *iter;
+          double x = patch->cellPosition(c)(ti.axis);
           double f = 0.5 * (1.0 + std::tanh((x - ti.x0) / ti.delta));
+
           for (int k = 0; k < N_SPECIES; k++) {
-            Y[k][*iter] = ti.Y_left[k] + (ti.Y_right[k] - ti.Y_left[k]) * f;
+            Y[k][c] = ti.Y_left[k] + (ti.Y_right[k] - ti.Y_left[k]) * f;
           }
+
+          double T = ti.T_left + (ti.T_right - ti.T_left) * f;
+          temp_CC[c] = T;
+
+          std::array<double, N_ALL> Yall;
+          double Ysum = 0.0;
+          for (int j = 0; j < N_SPECIES; j++) {
+            int idx   = j + (j >= 2 ? 1 : 0);
+            Yall[idx] = Y[j][c];
+            Ysum     += Y[j][c];
+          }
+          Yall[2] = 1.0 - Ysum;  // N2
+
+          double cp_mix = 0.0, R_mix = 0.0;
+          const auto cpS = cpSpecificHeat(T);
+          for (int j = 0; j < N_ALL; j++) {
+            cp_mix += Yall[j] * d_Ri[j] * cpS[j];
+            R_mix  += Yall[j] * d_Ri[j];
+          }
+          double cv_tmp   = cp_mix - R_mix;
+          cv[c]           = cv_tmp;
+          gamma_cc[c]     = cp_mix / cv_tmp;
+          rho_micro[c]    = d_ref_press / (R_mix * T);
+          rho_CC[c]       = rho_micro[c];
+          sp_vol[c]       = 1.0 / rho_micro[c];
+          press_CC[c]     = d_ref_press;
+          speedSound[c]   = std::sqrt(gamma_cc[c] * d_ref_press / rho_micro[c]);
         }
+
       } else {
         for (CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
           Point pt = patch->cellPosition(*iter);
-
           for (auto* r : d_regions) {
             if (r->piece->inside(pt)) {
               for (int k = 0; k < N_SPECIES; k++) {
@@ -337,6 +386,38 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
               }
             }
           }
+        }
+
+        // Correct cv and gamma from mixture species for the first timestep.
+        constCCVariable<double> temp_CC;
+        new_dw->get(temp_CC, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
+
+        CCVariable<double> cv, gamma_cc;
+        new_dw->getModifiable(cv,       Ilb->specific_heatLabel, indx, patch);
+        new_dw->getModifiable(gamma_cc, Ilb->gammaLabel,         indx, patch);
+
+        for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
+          IntVector c = *iter;
+          double T = temp_CC[c];
+
+          std::array<double, N_ALL> Yall;
+          double Ysum = 0.0;
+          for (int j = 0; j < N_SPECIES; j++) {
+            int idx   = j + (j >= 2 ? 1 : 0);
+            Yall[idx] = Y[j][c];
+            Ysum     += Y[j][c];
+          }
+          Yall[2] = 1.0 - Ysum;
+
+          double cp_mix = 0.0, R_mix = 0.0;
+          const auto cpS = cpSpecificHeat(T);
+          for (int j = 0; j < N_ALL; j++) {
+            cp_mix += Yall[j] * d_Ri[j] * cpS[j];
+            R_mix  += Yall[j] * d_Ri[j];
+          }
+          double cv_tmp = cp_mix - R_mix;
+          cv[c]         = cv_tmp;
+          gamma_cc[c]   = cp_mix / cv_tmp;
         }
       }
     }
@@ -488,7 +569,6 @@ std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T)
 //
 //    Standard Reaction rate calculator (mol / cm^3 - s)
 //    Takes in the temp (T), concentrations (C), along with Reactant 1 and 2 (R1, R2) and Product 1 and 2 (P1, P2)
-//    What equation in the recipe?
 
 double hydrogenBurke::reaction(double T,
                                double RT,
@@ -517,8 +597,6 @@ double hydrogenBurke::reaction(double T,
   return q;
 }
 
-//______________________________________________________________________
-//      what does this function compute?  Recipie equation number?
 double hydrogenBurke::duplicateReaction(double T,
                                         double RT,
                                         const std::array<double, 9>& C,
@@ -551,7 +629,6 @@ double hydrogenBurke::duplicateReaction(double T,
 }
 
 //______________________________________________________________________
-//
 //  Calculates rate for reaction 14 only.
 double hydrogenBurke::reaction14( double T,
                                   double RT,
@@ -582,7 +659,6 @@ double hydrogenBurke::reaction14( double T,
 //______________________________________________________________________
 //
 //    Third Body Reaction Rate calculator (2 Reactants 1 Producet) (mol / cm^3 - s)
-//    Recipe equation number?
 double hydrogenBurke::thirdBodyReaction2R(double T,
                                           double RT,
                                           const std::array<double, 9>& C,

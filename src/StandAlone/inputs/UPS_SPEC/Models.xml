@@ -531,6 +531,8 @@
           <axis    spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
           <x0      spec="REQUIRED DOUBLE"/>
           <delta   spec="REQUIRED DOUBLE 'positive'"/>
+          <T_left  spec="REQUIRED DOUBLE 'positive'"/>
+          <T_right spec="REQUIRED DOUBLE 'positive'"/>
           <Y_left  spec="REQUIRED MULTIPLE_DOUBLES"/>
           <Y_right spec="REQUIRED MULTIPLE_DOUBLES"/>
         </tanhProfile>

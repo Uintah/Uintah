@@ -115,18 +115,6 @@ class ICEMaterial : public Material {
 
     std::vector<GeometryObject*> d_geom_objs;
 
-    struct TanhProfile {
-      bool   isActive      {false};
-      int    axis          {0};      // 0=x, 1=y, 2=z
-      double x0            {0};
-      double delta         {1e-3};
-      double T_left        {0};
-      double T_right       {0};
-      double rho_left      {0};
-      double rho_right     {0};
-      double ref_pressure  {0};     // >0: compute rho = P/(R*T) for constant pressure
-    } d_tanhProfile;
-
     // Prevent copying of this class
     // copy constructor
     ICEMaterial(const ICEMaterial &icem);

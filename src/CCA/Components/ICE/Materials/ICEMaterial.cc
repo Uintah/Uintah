@@ -42,9 +42,6 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <cmath>
-#include <cctype>
-
 //#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc
 
 using namespace std;
@@ -127,24 +124,6 @@ ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
       d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
     }
 
-    //__________________________________
-    // Optional tanh profile (overrides geom_objects for T, rho)
-    ProblemSpecP tanh_ps = ps->findBlock("tanhProfile");
-    if (tanh_ps) {
-      string axis;
-      tanh_ps->require("axis",      axis);
-      tanh_ps->require("x0",        d_tanhProfile.x0);
-      tanh_ps->require("delta",     d_tanhProfile.delta);
-      tanh_ps->require("T_left",    d_tanhProfile.T_left);
-      tanh_ps->require("T_right",   d_tanhProfile.T_right);
-      tanh_ps->require("rho_left",  d_tanhProfile.rho_left);
-      tanh_ps->require("rho_right", d_tanhProfile.rho_right);
-      tanh_ps->get("ref_pressure",  d_tanhProfile.ref_pressure);
-
-      for (char& c : axis) c = (char)toupper(c);
-      d_tanhProfile.axis     = (axis == "X") ? 0 : (axis == "Y") ? 1 : 2;
-      d_tanhProfile.isActive = true;
-    }
   }
 }
 //__________________________________
@@ -454,38 +433,5 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
   //__________________________________
   // Tanh profile override: sets rho_micro, rho_CC, and temp consistently
-  if (d_tanhProfile.isActive) {
-    const int    ax    = d_tanhProfile.axis;
-    const double x0    = d_tanhProfile.x0;
-    const double delta = d_tanhProfile.delta;
-    const double T_L   = d_tanhProfile.T_left;
-    const double T_R   = d_tanhProfile.T_right;
-    const double rho_L = d_tanhProfile.rho_left;
-    const double rho_R = d_tanhProfile.rho_right;
-    const double P_ref = d_tanhProfile.ref_pressure;
-
-    // Derive R_mix at each endpoint from the ideal gas law so that
-    // R(x) can be tanh-interpolated and rho = P/(R*T) stays at constant pressure.
-    const double R_L = (P_ref > 0.0) ? P_ref / (rho_L * T_L) : 0.0;
-    const double R_R = (P_ref > 0.0) ? P_ref / (rho_R * T_R) : 0.0;
-
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); ++iter) {
-      IntVector c = *iter;
-      double x    = patch->cellPosition(c)(ax);
-      double f    = 0.5 * (1.0 + tanh((x - x0) / delta));
-
-      temp[c]        = T_L + (T_R - T_L) * f;
-      vol_frac_CC[c] = 1.0;
-
-      if (P_ref > 0.0) {
-        double R     = R_L + (R_R - R_L) * f;
-        rho_micro[c] = P_ref / (R * temp[c]);
-      } else {
-        rho_micro[c] = rho_L + (rho_R - rho_L) * f;
-      }
-
-      rho_CC[c] = rho_micro[c] + d_tiny_rho * rho_micro[c];
-    }
-  }
 }
 

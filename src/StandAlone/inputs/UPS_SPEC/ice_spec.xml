@@ -285,16 +285,6 @@
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />
-        <tanhProfile          spec="OPTIONAL NO_DATA">
-          <ref_pressure       spec="OPTIONAL DOUBLE 'positive'" />
-          <axis               spec="REQUIRED STRING 'x, X, y, Y, z, Z'" />
-          <x0                 spec="REQUIRED DOUBLE" />
-          <delta              spec="REQUIRED DOUBLE 'positive'" />
-          <T_left             spec="REQUIRED DOUBLE 'positive'" />
-          <T_right            spec="REQUIRED DOUBLE 'positive'" />
-          <rho_left           spec="REQUIRED DOUBLE 'positive'" />
-          <rho_right          spec="REQUIRED DOUBLE 'positive'" />
-        </tanhProfile>
         <includeFlowWork      spec="OPTIONAL BOOLEAN" />
         <isSurroundingMatl    spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
         <specific_heat        spec="REQUIRED DOUBLE 'positive'" />

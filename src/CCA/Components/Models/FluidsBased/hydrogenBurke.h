@@ -130,6 +130,7 @@ private:
 
   double YH20{0.0};
   double YO20{0.0};
+  double d_ref_press{101325.0};
 
   double d_tol;
   double d_safety;
@@ -156,6 +157,8 @@ private:
     int    axis     {0};      // 0=x, 1=y, 2=z
     double x0       {0};
     double delta    {1e-3};
+    double T_left   {0};      // temperature, burned side
+    double T_right  {0};      // temperature, unburned side
     std::vector<double> Y_left;   // size = N_SPECIES (burned side)
     std::vector<double> Y_right;  // size = N_SPECIES (unburned side)
   };
