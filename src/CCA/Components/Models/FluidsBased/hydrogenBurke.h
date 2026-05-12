@@ -159,6 +159,8 @@ private:
     double delta    {1e-3};
     double T_left   {0};      // temperature, burned side
     double T_right  {0};      // temperature, unburned side
+    Vector V_left   {0,0,0};  // velocity, burned side
+    Vector V_right  {0,0,0};  // velocity, unburned side
     std::vector<double> Y_left;   // size = N_SPECIES (burned side)
     std::vector<double> Y_right;  // size = N_SPECIES (unburned side)
   };

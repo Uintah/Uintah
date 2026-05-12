@@ -132,7 +132,7 @@
               <lower>        [0.0,0,0]          </lower>
               <upper>        [1.0,0.001,0.001]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [2,1,1]    </patches>
+              <patches>      [4,1,1]    </patches>
               <resolution>   [200,1,1]  </resolution>
            </Box>
        </Level>
@@ -176,7 +176,7 @@
         <save label="modelEng_src"/>
         <save label="modelMom_src"/>
         <save label="modelMass_src"/>
-        <checkpoint timestepInterval="500" cycle="2"/>
+        <checkpoint interval="0.00001" cycle="2"/>
       </DataArchiver>
 
     <!--____________________________________________________________________-->

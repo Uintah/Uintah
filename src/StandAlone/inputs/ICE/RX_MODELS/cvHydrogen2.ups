@@ -81,10 +81,8 @@
     <save label="modelMom_src"/>
     <save label="modelMass_src"/>
 
-    <save label="KineticEnergy"/>
-    <save label="TotalIntEng"/>
     <save label="dt_chemistry"/>
-    <checkpoint timestepInterval="500" cycle="2"/>
+    <checkpoint interval="0.0001" cycle="2"/>
   </DataArchiver>
 
   <!--==================== ICE SETUP ====================-->
@@ -133,7 +131,6 @@
   <Models>
     <Model type="hydrogenBurke">
       <hydrogenBurke>
-        
         <!-- Stoichometric Hydrogen-Air -->
         <YH2_init> 0.028522387527567396 </YH2_init>
         <YO2_init> 0.22635400697100733  </YO2_init>

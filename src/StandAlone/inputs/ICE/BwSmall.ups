@@ -154,10 +154,8 @@
       <save label="rho_CC"/>
       <save label="specific_heat"/>
       <save label="delP_Dilatate"/>
-      <save label="KineticEnergy"/>
-      <save label="TotalIntEng"/>
       <save label="press_equil_CC"/>
-      <checkpoint timestepInterval="500" cycle="2"/>
+      <checkpoint interval="0.0001" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->

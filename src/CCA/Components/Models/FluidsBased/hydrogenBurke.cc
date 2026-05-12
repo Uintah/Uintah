@@ -244,6 +244,8 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     tanh_ps->require("delta",   ti.delta);
     tanh_ps->require("T_left",  ti.T_left);
     tanh_ps->require("T_right", ti.T_right);
+    tanh_ps->getWithDefault("V_left",  ti.V_left,  Vector(0,0,0));
+    tanh_ps->getWithDefault("V_right", ti.V_right, Vector(0,0,0));
     tanh_ps->require("Y_left",  ti.Y_left);
     tanh_ps->require("Y_right", ti.Y_right);
 
@@ -283,6 +285,7 @@ void hydrogenBurke::scheduleInitialize(SchedulerP   & sched,
     press_matl->addReference();
 
     t->modifiesVar(Ilb->temp_CCLabel);
+    t->modifiesVar(Ilb->vel_CCLabel);
     t->modifiesVar(Ilb->rho_micro_CCLabel);
     t->modifiesVar(Ilb->rho_CCLabel);
     t->modifiesVar(Ilb->sp_vol_CCLabel);
@@ -328,7 +331,9 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
         const TanhInit& ti = d_tanhInit;
 
         CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_CC;
+        CCVariable<Vector> vel_CC;
         new_dw->getModifiable(temp_CC,    Ilb->temp_CCLabel,       indx, patch);
+        new_dw->getModifiable(vel_CC,     Ilb->vel_CCLabel,        indx, patch);
         new_dw->getModifiable(rho_micro,  Ilb->rho_micro_CCLabel,  indx, patch);
         new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,        indx, patch);
         new_dw->getModifiable(sp_vol,     Ilb->sp_vol_CCLabel,     indx, patch);
@@ -350,6 +355,7 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
 
           double T = ti.T_left + (ti.T_right - ti.T_left) * f;
           temp_CC[c] = T;
+          vel_CC[c]  = ti.V_left + (ti.V_right - ti.V_left) * f;
 
           std::array<double, N_ALL> Yall;
           double Ysum = 0.0;
@@ -1115,7 +1121,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         std::array<double, N_SPECIES> massSrcTemp = {};
 
         double Torig = T;
-        auto Yorig = Y;
+        auto Yorig   = Y;
 
         double Tcourse;
         double Tfine;
@@ -1123,12 +1129,13 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         auto Ycourse = Y;
         auto Yfine   = Y;
 
-        double error      = 1.0;
+        double error = 1.0;
 
         while (t < dtAdv){
           // Change timestep if needed to end exactly at dt_advection
           if ((t + dtChem) > dtAdv){
             dtChem = dtAdv - t;
+            if (dtChem <= 1e-15) break;  // avoid using machine prescion timesteps at the end of intervals
           }
 
           Torig = T;
@@ -1178,7 +1185,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
             error = std::abs(Tcourse - Tfine);
 
-            if (error < d_tol){
+            if (error < d_tol){ // accept fine integration if error is small enough
               for (int j = 0; j < N_SPECIES; j++){
                 massSrcTemp[j] += dtHalf * (result1.rhsMass[j] + result2.rhsMass[j]);
               }
@@ -1189,7 +1196,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
               t          += 2.0 * dtHalf;
               dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
               accepted    = true;
-            } else {
+            } else { // predict new timestep and repeat if error is too big
               dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
             }
           } // adaptive time stepping
