@@ -260,6 +260,7 @@ void LSTasks::updateLineSegments(const ProcessorGroup*,
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeights(right, ni, S, size);
         Vector vel(0.0,0.0,0.0);
+        Vector velBU(0.0,0.0,0.0);
         Vector surf(0.0,0.0,0.0);
 //        Vector v = left - right;
 
@@ -268,14 +269,19 @@ void LSTasks::updateLineSegments(const ProcessorGroup*,
 //                         / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
   
         double sumSk =0.0;
+        double nodeMassMin =1.0e99;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          velBU += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          nodeMassMin = min(nodeMassMin, gmass[adv_matl][node]);
           sumSk += gmass[adv_matl][node]*S[k];
+          vel   += gvelocity[adv_matl][node]*S[k];
 //          surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
         }
-        vel/=sumSk;
+        if(nodeMassMin < 1.e-90){
+          vel = velBU/sumSk;
+        }
   
         right += vel*delT;
         right += surf*delT;
@@ -284,17 +290,23 @@ void LSTasks::updateLineSegments(const ProcessorGroup*,
         // Get the node indices that surround the cell
         NN = interpolator->findCellAndWeights(left, ni, S, size);
         vel = Vector(0.0,0.0,0.0);
-        surf = Vector(0.0,0.0,0.0);
+        velBU = Vector(0.0,0.0,0.0);
+//        surf = Vector(0.0,0.0,0.0);
   
         sumSk=0.0;
+        nodeMassMin =1.0e99;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          velBU += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          nodeMassMin = min(nodeMassMin, gmass[adv_matl][node]);
           sumSk += gmass[adv_matl][node]*S[k];
+          vel   += gvelocity[adv_matl][node]*S[k];
 //          surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
         }
-        vel/=sumSk;
+        if(nodeMassMin < 1.e-90){
+          vel = velBU/sumSk;
+        }
   
         left += vel*delT;
         left += surf*delT;
@@ -373,14 +385,7 @@ void LSTasks::scheduleFindNearestLS(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,               lineseg_matls,gac, 2);
   t->requires(Task::OldDW, LSl->lsMidToEndVectorLabel,lineseg_matls,gac, 2);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
-  z_matl->add(0);
-  z_matl->addReference();
-  t->computes(lb->gNearestLSLabel,               z_matl);
-
-  // The task will have a reference to z_matl
-  if (z_matl->removeReference())
-    delete z_matl; // shouln't happen, but...
+  t->modifies(lb->gNearestLSLabel,               mpm_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -403,13 +408,6 @@ void LSTasks::findNearestLS(const ProcessorGroup*,
 
     int numLSMatls=d_materialManager->getNumMatls("LineSegment");
 
-    // Allocate nodal data for nearest line segment
-    NCVariable<Point> nearestLS;
-    new_dw->allocateAndPut(nearestLS,lb->gNearestLSLabel,0,patch);
-    nearestLS.initialize(Point(9.e89,9.e89,9.e89));
-    NCVariable<double> DisToNearestLS;
-    new_dw->allocateTemporary(DisToNearestLS,     patch);
-    DisToNearestLS.initialize(9.e89);
     Matrix3 size(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -419,6 +417,15 @@ void LSTasks::findNearestLS(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gac, 2, lb->pXLabel);
+
+      int mpm_idx = t_matl->getAssociatedMaterial();
+ 
+      // Allocate nodal data for nearest line segment
+      NCVariable<Point> nearestLS;
+      NCVariable<double> DisToNearestLS;
+      new_dw->getModifiable(nearestLS, lb->gNearestLSLabel, mpm_idx, patch);
+      new_dw->allocateTemporary(DisToNearestLS,     patch);
+      DisToNearestLS.initialize(9.e89);
 
       constParticleVariable<Point> tx;
       constParticleVariable<Vector> lsMidToEndVec;

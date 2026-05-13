@@ -158,8 +158,6 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triMassDispLabel,       triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCementThicknessLabel,triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triNearbyMatsLabel,     triangle_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,                      triangle_matls);
@@ -173,8 +171,6 @@ void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triAreaLabel_preReloc,               triangle_matls);
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
-  t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
-  t->computes(TriL->triCementThicknessLabel_preReloc,    triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
   t->computes(TriL->triNearbyMatsLabel_preReloc,         triangle_matls);
 
@@ -282,9 +278,8 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
                                triMidToN1Vec_new, triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
-      constParticleVariable<double> triArea, triClay, triMassDisp, triCemThick;
-      ParticleVariable<double>      triArea_new, triClay_new, triMassDisp_new;
-      ParticleVariable<double>      triCemThick_new;
+      constParticleVariable<double> triArea, triClay;
+      ParticleVariable<double>      triArea_new, triClay_new;
       constParticleVariable<Vector> triAreaAtNodes;
       constParticleVariable<Matrix3> triNearbyMats;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
@@ -301,8 +296,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       old_dw->get(triArea,         TriL->triAreaLabel,                  pset);
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
-      old_dw->get(triMassDisp,     TriL->triMassDispLabel,              pset);
-      old_dw->get(triCemThick,     TriL->triCementThicknessLabel,       pset);
       old_dw->get(triNearbyMats,   TriL->triNearbyMatsLabel,            pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
@@ -323,10 +316,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
                                    TriL->triAreaAtNodesLabel_preReloc,    pset);
       new_dw->allocateAndPut(triClay_new,
                                    TriL->triClayLabel_preReloc,           pset);
-      new_dw->allocateAndPut(triMassDisp_new,
-                                   TriL->triMassDispLabel_preReloc,       pset);
-      new_dw->allocateAndPut(triCemThick_new,
-                                   TriL->triCementThicknessLabel_preReloc,pset);
       new_dw->allocateAndPut(triNormal_new,
                                    TriL->triNormalLabel_preReloc,         pset);
       new_dw->allocateAndPut(triNearbyMats_new,
@@ -337,9 +326,7 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
-      triMassDisp_new.copyData(triMassDisp);
       triNearbyMats_new.copyData(triNearbyMats);
-      triCemThick_new.copyData(triCemThick);
       tsize_new.copyData(tsize);  // This isn't really used
 
       if(prof_size < 1){
@@ -353,8 +340,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
         P[0] = tx[idx] + triMidToN0Vec[idx];
         P[1] = tx[idx] + triMidToN1Vec[idx];
         P[2] = tx[idx] + triMidToN2Vec[idx];
-        // Keep track of how much of the triangle's motion is due to mass change
-        Vector surf[3] = {Vector(0.0),Vector(0.0),Vector(0.0)};
  
         // Loop over the vertices
         int deleteThisTriangle = 0;
@@ -367,7 +352,9 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
           Vector vel(0.0,0.0,0.0);
+          Vector velBU(0.0,0.0,0.0);
           double sumSk=0.0;
+          double nodeMassMin=1.0e99;
           Vector gSN(0.,0.,0.);
           vector< std::pair <double,int> > matlMass(numMPMMatls);
           for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -384,8 +371,10 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           } else {
             for (int k = 0; k < NN; k++) {
               IntVector node = ni[k];
-              vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+              vel   += gvelocity[adv_matl][node]*S[k];
+              velBU += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
               sumSk += gmass[adv_matl][node]*S[k];
+              nodeMassMin = min(nodeMassMin, gmass[adv_matl][node]);
               gSN   += gSurfNorm[adv_matl][node]*S[k];
             }
           }
@@ -409,11 +398,14 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
           if(sumSk > 1.e-90){
             // This is the normal condition, when at least one of the nodes
             // influencing a vertex has mass on it.
-            vel/=sumSk;
+            // The condition immediately below uses mass weighted nodal
+            // velocities in case any of the nodes around the vertex has no mass
+            // Otherwise just use the linearly interpolated velocity from nodes
+            if(nodeMassMin < 1.e-90){
+              vel = velBU/sumSk;
+            }
             P[itv] += vel*delT;
-            surf[itv]/=(gSN.length()+1.e-100);
-            P[itv] += surf[itv]*delT;
-            vertexVel[itv] = vel + surf[itv];
+            vertexVel[itv] = vel;
             populatedVertex[itv] = 1.;
           } else {
             deleteThisTriangle++;
@@ -459,9 +451,6 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
         double triNormLength = triNorm.length()+1.e-100;
         triArea_new[idx]=0.5*triNormLength;
         triNormal_new[idx]=triNorm/triNormLength;
-        double tMD = Dot(triNormal_new[idx],(surf[0]+surf[1]+surf[2])*delT/3.);
-        triMassDisp_new[idx] += tMD;
-        triCemThick_new[idx] += std::max(0.0, tMD);
 
         triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
         triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
@@ -565,14 +554,7 @@ void TriangleTasks::scheduleFindNearestTri(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,triangle_matls, gac, 2);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
-  z_matl->add(0);
-  z_matl->addReference();
-  t->computes(lb->gNearestLSLabel,               z_matl);
-
-  // The task will have a reference to z_matl
-  if (z_matl->removeReference())
-    delete z_matl; // shouln't happen, but...
+  t->modifies(lb->gNearestLSLabel, mpm_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -595,13 +577,6 @@ void TriangleTasks::findNearestTri(const ProcessorGroup*,
 
     int numLSMatls=d_materialManager->getNumMatls("Triangle");
 
-    // Allocate nodal data for nearest line segment
-    NCVariable<Point> nearestLS;
-    new_dw->allocateAndPut(nearestLS,lb->gNearestLSLabel,0,patch);
-    nearestLS.initialize(Point(9.e89,9.e89,9.e89));
-    NCVariable<double> DisToNearestLS;
-    new_dw->allocateTemporary(DisToNearestLS,     patch);
-    DisToNearestLS.initialize(9.e89);
     Matrix3 size(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -611,6 +586,15 @@ void TriangleTasks::findNearestTri(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gac, 2, lb->pXLabel);
+
+      int mpm_idx = t_matl->getAssociatedMaterial();
+
+      // Allocate nodal data for nearest line segment
+      NCVariable<Point> nearestLS;
+      new_dw->getModifiable(nearestLS, lb->gNearestLSLabel, mpm_idx, patch);
+      NCVariable<double> DisToNearestLS;
+      new_dw->allocateTemporary(DisToNearestLS,     patch);
+      DisToNearestLS.initialize(9.e89);
 
       constParticleVariable<Point> tx;
       constParticleVariable<Vector> lsMidToEndVec;
@@ -746,8 +730,6 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<double> >     triClay(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
-    std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
-    std::vector<constParticleVariable<double> >     triCemThick(numLSMatls);
     std::vector<constParticleVariable<Matrix3> >    triNearbyMats(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
@@ -799,15 +781,6 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
       old_dw->get(triNearbyMats[tmo],  TriL->triNearbyMatsLabel,      pset0);
-
-      ParticleVariable<double>   triMassDisp_tmp;
-      new_dw->allocateTemporary(triMassDisp_tmp,  pset0);
-      for(ParticleSubset::iterator iter0 = pset0->begin();
-          iter0 != pset0->end(); iter0++){
-        particleIndex idx0 = *iter0;
-        triMassDisp_tmp[idx0] = 0.;
-      }
-      triMassDisp[tmo]=triMassDisp_tmp;
 
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
@@ -978,6 +951,7 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
               totalContactArea += triAreaAtNodes[tmo][idx0][iu];
               totalContactAreaTri += 0.5*totalArea;
 
+#if 0
               if(m_output->isOutputTimeStep()){
                 // triangle_ids[tmo][idx0] is the triangle that is penetrating
                 // iu is the vertex of the penetrating triangle
@@ -989,6 +963,7 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
                  triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
                  fflush(fp);
               }
+#endif
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
 //                cout << "totalAreaA, closest  = " << 0.5*totalArea 
@@ -1138,6 +1113,7 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
                 totalContactArea += triAreaAtNodes[tmo][idx0][iu];
                 totalContactAreaTri += 0.5*totalArea;
 
+#if 0
                 if(m_output->isOutputTimeStep()){
                  fprintf(fp,"%i %i %i %i %ld %ld %i %8.6e %8.6e %8.6e\n",
                  tmo, tmi, adv_matl0, adv_matl1,
@@ -1146,6 +1122,7 @@ void TriangleTasks::computeTriangleForces(const ProcessorGroup*,
                  triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
                  fflush(fp);
                 }
+#endif
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
 //                cout << "totalAreaA, closest  = " << 0.5*totalArea 
@@ -1460,10 +1437,7 @@ void TriangleTasks::scheduleRefineTriangles(SchedulerP& sched,
   t->modifies(TriL->triClayLabel_preReloc);
   t->modifies(TriL->triNormalLabel_preReloc);
   t->modifies(TriL->triAreaAtNodesLabel_preReloc);
-  t->modifies(TriL->triMassDispLabel_preReloc);
   t->modifies(TriL->triNearbyMatsLabel_preReloc);
-  t->modifies(TriL->triMassDispLabel_preReloc);
-  t->modifies(TriL->triCementThicknessLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1494,7 +1468,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
       ParticleVariable<long64> tids;
       ParticleVariable<IntVector> tUseInPenalty;
       ParticleVariable<Vector> tMTN0Vec,tMTN1Vec,tMTN2Vec,tAreaAtNodes,tNormal;
-      ParticleVariable<double> tArea, tClay, tMassDisp, tCemThick;
+      ParticleVariable<double> tArea, tClay;
       ParticleVariable<int> tRefine;
 
       new_dw->getModifiable(px,        lb->pXLabel_preReloc,              pset);
@@ -1514,10 +1488,6 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
       new_dw->getModifiable(tAreaAtNodes, 
                                      TriL->triAreaAtNodesLabel_preReloc,  pset);
       new_dw->getModifiable(tClay,   TriL->triClayLabel_preReloc,         pset);
-      new_dw->getModifiable(tMassDisp,
-                                     TriL->triMassDispLabel_preReloc,     pset);
-      new_dw->getModifiable(tCemThick,
-                                   TriL->triCementThicknessLabel_preReloc,pset);
 
       new_dw->allocateTemporary(tRefine,       pset);
 
@@ -1551,7 +1521,7 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
         ParticleVariable<IntVector> tUseInPenaltytmp;
         ParticleVariable<Vector> tMTN0Vectmp,tMTN1Vectmp,tMTN2Vectmp;
         ParticleVariable<Vector> tAreaAtNodestmp,tNormaltmp;
-        ParticleVariable<double> tAreatmp, tClaytmp, tMassDisptmp, tCemThicktmp;
+        ParticleVariable<double> tAreatmp, tClaytmp;
         ParticleVariable<int> tRefinetmp;
 
         new_dw->allocateTemporary(pxtmp,            pset);
@@ -1567,8 +1537,6 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
         new_dw->allocateTemporary(tNormaltmp,       pset);
         new_dw->allocateTemporary(tAreatmp,         pset);
         new_dw->allocateTemporary(tClaytmp,         pset);
-        new_dw->allocateTemporary(tMassDisptmp,     pset);
-        new_dw->allocateTemporary(tCemThicktmp,     pset);
 
         // copy data from old variables
         for( unsigned int pp=0; pp<oldNumTri; ++pp ){
@@ -1585,8 +1553,6 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
            tNormaltmp[pp]=tNormal[pp];
            tAreatmp[pp]=tArea[pp];
            tClaytmp[pp]=tClay[pp];
-           tMassDisptmp[pp]=tMassDisp[pp];
-           tCemThicktmp[pp]=tCemThick[pp];
         }
         int numRefTri=0;
           double oneThird = (1./3.);
@@ -1646,8 +1612,6 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
                 tNormaltmp[new_index]       = tNormal[idx];
                 tFtmp[new_index]            = tF[idx];
                 tClaytmp[new_index]         = tClay[idx];
-                tMassDisptmp[new_index]     = tMassDisp[idx];
-                tCemThicktmp[new_index]     = tCemThick[idx];
                 tidstmp[new_index]          = -tids[idx]*pow(10,i);
               }
               numRefTri++;
@@ -1671,8 +1635,6 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
         new_dw->put(tAreaAtNodestmp, 
                                   TriL->triAreaAtNodesLabel_preReloc,    true);
         new_dw->put(tClaytmp,     TriL->triClayLabel_preReloc,           true);
-        new_dw->put(tMassDisptmp, TriL->triMassDispLabel_preReloc,       true);
-        new_dw->put(tCemThicktmp, TriL->triCementThicknessLabel_preReloc,true);
       } // Some triangle(s) needs to be refined
     } // Loop over matls
   } // Loop over patches

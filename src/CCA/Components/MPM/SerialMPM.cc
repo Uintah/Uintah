@@ -1364,6 +1364,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if (flags->d_with_color) {
     t->computes(lb->gColorLabel);
   }
+  if (flags->d_useMMP) {
+    t->computes(lb->gNearestLSLabel);
+  }
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
 #ifdef INCLUDE_THERMAL
@@ -2937,7 +2940,7 @@ void SerialMPM::readPrescribedDeformations(string filename)
         is >> t1 >> F11 >> F12 >> F13 >> F21 >> F22 >> F23 >> F31 >> F32 >> F33 >> Theta >> a1 >> a2 >> a3;
         if(is) {
             if(t1<=t0){
-              throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotomically increasing", __FILE__, __LINE__);
+              throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotonically increasing", __FILE__, __LINE__);
             }
             d_prescribedTimes.push_back(t1);
             d_prescribedF.push_back(Matrix3(F11,F12,F13,F21,F22,F23,F31,F32,F33));
@@ -3106,6 +3109,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gSp_vol;
       NCVariable<double> gColor;
+      NCVariable<Point>  gNearestLS;
 #ifdef INCLUDE_THERMAL
       NCVariable<double> gTemperature;
       NCVariable<double> gTemperatureNoBC;
@@ -3131,6 +3135,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         new_dw->allocateAndPut(gColor,         lb->gColorLabel,      dwi,patch);
         gColor.initialize(0.);
       }
+      if(flags->d_useMMP){
+        new_dw->allocateAndPut(gNearestLS,     lb->gNearestLSLabel,  dwi,patch);
+        gNearestLS.initialize(Point(9.e89,9.e89,9.e89));
+      }
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -3147,7 +3155,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // JBH -- Scalar diffusion related
       NCVariable<double>  gConcentration, gConcentrationNoBC;
       NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
-      if (flags->d_doScalarDiffusion) {
+      if (flags->d_doScalarDiffusion){
         new_dw->allocateAndPut(gConcentration,lb->diffusion->gConcentration,
                                                dwi, patch);
         new_dw->allocateAndPut(gConcentrationNoBC, 
@@ -6633,10 +6641,11 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,
            m_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
-  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl,Ghost::None);
+
   if(flags->d_useMMP){
-    t->requires(Task::NewDW, lb->gNearestLSLabel,  z_matl,Ghost::None);
+    t->requires(Task::NewDW, lb->gNearestLSLabel,      Ghost::None);
   }
+  t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl,Ghost::None);
 
   t->computes(lb->gMatlProminenceLabel);
   t->computes(lb->gAlphaMaterialLabel);
@@ -6683,11 +6692,6 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 
     constNCVariable<double>    NC_CCweight;
     old_dw->get(NC_CCweight,   lb->NC_CCweightLabel,  0, patch, gnone, 0);
-
-    constNCVariable<Point>    nearestSurf;
-    if(flags->d_useMMP){
-      new_dw->get(nearestSurf,   lb->gNearestLSLabel,   0, patch, gnone, 0);
-    }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -6972,6 +6976,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // the normal and the particle corners
 
     std::vector<NCVariable<double> >      d_x_p_dot_n(numMPMMatls);
+    std::vector<constNCVariable<Point> >  nearestSurf(numMPMMatls);
 
     for(unsigned int m=0;m<numMPMMatls;m++){
       MPMMaterial* mpm_matl =
@@ -6987,6 +6992,10 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       new_dw->get(pcursize,                 lb->pCurSizeLabel,         pset);
       new_dw->get(psurf,                    lb->pSurfLabel_preReloc,   pset);
       new_dw->allocateAndPut(d_x_p_dot_n[m],lb->gMatlProminenceLabel,dwi,patch);
+      if(flags->d_useMMP){
+        new_dw->get(nearestSurf[m],         lb->gNearestLSLabel,     dwi,patch,
+                                                                      gnone, 0);
+      }
 
       d_x_p_dot_n[m].initialize(-99.);
 
@@ -7129,20 +7138,25 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 
    // if using Mixed Mesh Particle, use the nearest surf for
    // the projected point at the node
+#if 1
    if(flags->d_useMMP){
      for(unsigned int m=0;m<numMPMMatls;m++){
       for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
 
-         double proj = Dot(nearestSurf[c], normAlphaToBeta[c]);
-         if(IsRigidMaterial[m] && (int) m==alphaMaterial[c] 
-                               && HasSurfaceDescription[m]){
-            d_x_p_dot_n[m][c] = proj;
+         if(HasSurfaceDescription[m]){
+//           if(m==alphaMaterial[c]){
+             double proj = Dot(nearestSurf[m][c], normAlphaToBeta[c]);
+             d_x_p_dot_n[m][c] = proj;
+//            } else {
+//             proj = Dot(nearestSurf[m][c], normAlphaToBeta[c]);
+//             d_x_p_dot_n[m][c] = proj;
+//            }
          }
       } // Loop over nodes
      }  // loop over matls
    }  // if use MMP
-   
+#endif
 
     delete interpolator;
   }    // patches
