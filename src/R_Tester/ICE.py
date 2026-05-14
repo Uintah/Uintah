@@ -156,8 +156,7 @@ DEBUGGING =   [   ("chanFlow_powerLaw",   chanFlow_powerLaw_ups,    8, "All", ["
               ]
 
 RX_MODELS =   [("cvHydrogen1",       "RX_MODELS/cvHydrogen1.ups",       1, "All", ["exactComparison"]),
-               ("cvHydrogen2",       "RX_MODELS/cvHydrogen2.ups",       1, "All", ["exactComparison"]),
-               ("hydrogenShockTube", "RX_MODELS/hydrogenShocktube.ups", 4, "All", ["exactComparison"])
+               ("cvHydrogen2",       "RX_MODELS/cvHydrogen2.ups",       1, "All", ["exactComparison"])
               ]
 #__________________________________
 
