@@ -6866,6 +6866,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
        Vector nhat_k(phi[0],phi[1],phi[2]);
        Vector nhat_backup(0.);
        double error_min=1.0;
+       bool is_psi_nan = false;
        while(!converged){
         num_iters++;
         // Initialize the coefficient matrix
@@ -6896,6 +6897,10 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
             double denom   = (1.0 + expterm)*(1.0 + expterm);
             double fEq20   = 2./(1+expterm) - 1.0;
             double psi = num/denom;
+            
+            if(isnan(psi)){
+               is_psi_nan=true;
+            }
             double psi2wp = psi*psi*wp;
             // Construct coefficient matrix, Eqs. 54 and 55
             // Inner terms
@@ -6920,10 +6925,12 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }     // Loop over materials
 
         // Solve (FMJtWJ)^(-1)*RHS.  The solution comes back in the RHS array
-        FMJtWJ.destructiveSolve(RHS);
+        if(!is_psi_nan){
+          FMJtWJ.destructiveSolve(RHS);
 
-        for(int i = 0; i<4; i++){
-          phi[i]+=RHS[i];
+          for(int i = 0; i<4; i++){
+            phi[i]+=RHS[i];
+          }
         }
         Vector nhat_kp1(phi[0],phi[1],phi[2]);
         nhat_kp1/=(nhat_kp1.length()+1.e-100);
@@ -6932,9 +6939,9 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
           error_min = error;
           nhat_backup = nhat_kp1;
         }
-        if(error < tol || num_iters > 50){
+        if(error < tol || num_iters > 50 || is_psi_nan){
           converged=true;
-          if(num_iters > 50){
+          if(num_iters > 50 || is_psi_nan){
            normAlphaToBeta[c] = nhat_backup;
           } else {
            normAlphaToBeta[c] = nhat_kp1;
