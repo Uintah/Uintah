@@ -519,6 +519,8 @@
         <material spec="REQUIRED STRING"/>
         <YH2_init spec="REQUIRED DOUBLE"/>
         <YO2_init spec="REQUIRED DOUBLE"/>
+        <doChemistry spec="OPTIONAL BOOLEAN"/>
+        <doDiffusion spec="OPTIONAL BOOLEAN"/>
         <debug spec="OPTIONAL BOOLEAN"/>
         <tol_temp spec="OPTIONAL DOUBLE"/>
         <safety spec="OPTIONAL DOUBLE"/>
@@ -527,17 +529,10 @@
         <geom_object spec="MULTIPLE">
           <Y spec="REQUIRED MULTIPLE_DOUBLES"/>
         </geom_object>
-        <tanhProfile spec="OPTIONAL NO_DATA">
-          <axis    spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
-          <x0      spec="REQUIRED DOUBLE"/>
-          <delta   spec="REQUIRED DOUBLE 'positive'"/>
-          <T_left  spec="REQUIRED DOUBLE 'positive'"/>
-          <T_right spec="REQUIRED DOUBLE 'positive'"/>
-          <V_left  spec="OPTIONAL VECTOR"/>
-          <V_right spec="OPTIONAL VECTOR"/>
-          <Y_left  spec="REQUIRED MULTIPLE_DOUBLES"/>
-          <Y_right spec="REQUIRED MULTIPLE_DOUBLES"/>
-        </tanhProfile>
+        <initProfile spec="OPTIONAL NO_DATA">
+          <filename spec="REQUIRED STRING"/>
+          <axis     spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
+        </initProfile>
       </hydrogenBurke>
 
     </Model>

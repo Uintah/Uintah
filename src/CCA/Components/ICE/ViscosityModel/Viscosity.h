@@ -141,6 +141,10 @@ public:
     return m_callOrder;
   }
 
+  bool isLastCallOrder(){
+    return m_callOrder == Last;
+  }
+
   //__________________________________
   //    check that the order of the models is correct
   static

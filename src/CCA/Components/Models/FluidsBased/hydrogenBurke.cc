@@ -28,6 +28,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/ICE/Core/Diffusion.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
+#include <CCA/Components/ICE/Materials/ICEMaterial.h>
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -42,7 +43,10 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/StringUtil.h>
 
+#include <algorithm>
+#include <fstream>
 #include <numeric>
+#include <sstream>
 
 
 #define DEBUG           // switch for compiling debug output.
@@ -95,6 +99,7 @@ hydrogenBurke::~hydrogenBurke()
   }
 
   VarLabel::destroy(d_dtChem_label);
+  VarLabel::destroy(d_HRR_label);
 
   for (auto* r : d_regions) {
     delete r;
@@ -120,7 +125,9 @@ void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
   hb_ps->appendElement("YH2_init",YH20);
   hb_ps->appendElement("YO2_init",YO20);
 
-  hb_ps->appendElement("debug", d_debug);
+  hb_ps->appendElement("doChemistry", d_doChemistry);
+  hb_ps->appendElement("doDiffusion", d_doDiffusion);
+  hb_ps->appendElement("debug",       d_debug);
 
   hb_ps->appendElement("tol_temp", d_tol);
   hb_ps->appendElement("safety", d_safety);
@@ -156,12 +163,9 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   hb_ps->require("YH2_init",YH20);
   hb_ps->require("YO2_init",YO20);
 
-  ProblemSpecP phys_ps = d_params->getRootNode()->findBlock("PhysicalConstants");
-  if (phys_ps) {
-    phys_ps->require("reference_pressure", d_ref_press);
-  }
-
-  hb_ps->getWithDefault("debug", d_debug, false);
+  hb_ps->getWithDefault("doChemistry", d_doChemistry, true);
+  hb_ps->getWithDefault("doDiffusion", d_doDiffusion, true);
+  hb_ps->getWithDefault("debug",       d_debug,       false);
   hb_ps->getWithDefault("tol_temp", d_tol, 1e-3);
   hb_ps->getWithDefault("safety", d_safety, 0.9);
   hb_ps->getWithDefault("max_grow", d_max_grow, 2.0);
@@ -198,7 +202,8 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     registerTransportedVariable(d_matl_set, Y, S);
   }
 
-  d_dtChem_label = VarLabel::create("dt_chemistry", CCVariable<double>::getTypeDescription());
+  d_dtChem_label = VarLabel::create("dt_chemistry",     CCVariable<double>::getTypeDescription());
+  d_HRR_label    = VarLabel::create("HeatReleaseRate", CCVariable<double>::getTypeDescription());
 
   //----------------------------------------------------------------
   // Geometry-based initialization
@@ -232,34 +237,65 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   }
 
   //----------------------------------------------------------------
-  // Tanh-profile species initialization (overrides geom_object when present)
+  // 1D profile initialization from .dat file (overrides geom_object when present)
   //----------------------------------------------------------------
-  ProblemSpecP tanh_ps = hb_ps->findBlock("tanhProfile");
-  if (tanh_ps) {
-    TanhInit ti;
+  ProblemSpecP prof_ps = hb_ps->findBlock("initProfile");
+  if (prof_ps) {
+    ProfileInit pi;
 
     std::string axis;
-    tanh_ps->require("axis",    axis);
-    tanh_ps->require("x0",      ti.x0);
-    tanh_ps->require("delta",   ti.delta);
-    tanh_ps->require("T_left",  ti.T_left);
-    tanh_ps->require("T_right", ti.T_right);
-    tanh_ps->getWithDefault("V_left",  ti.V_left,  Vector(0,0,0));
-    tanh_ps->getWithDefault("V_right", ti.V_right, Vector(0,0,0));
-    tanh_ps->require("Y_left",  ti.Y_left);
-    tanh_ps->require("Y_right", ti.Y_right);
+    prof_ps->require("filename", pi.filename);
+    prof_ps->require("axis",     axis);
 
     std::string axisUpper = string_toupper(axis);
-    ti.axis = (axisUpper == "X") ? 0 : (axisUpper == "Y") ? 1 : 2;
+    pi.axis = (axisUpper == "X") ? 0 : (axisUpper == "Y") ? 1 : 2;
 
-    if ((int)ti.Y_left.size() != N_SPECIES || (int)ti.Y_right.size() != N_SPECIES) {
+    std::ifstream infile(pi.filename);
+    if (!infile.is_open()) {
       throw ProblemSetupException(
-          "hydrogenBurke tanhProfile: Y_left and Y_right must each have 8 entries (H2,O2,H2O,H,O,OH,HO2,H2O2)",
+          "hydrogenBurke initProfile: cannot open file: " + pi.filename,
           __FILE__, __LINE__);
     }
 
-    ti.isActive = true;
-    d_tanhInit  = ti;
+    std::string line;
+    int lineNum = 0;
+    while (std::getline(infile, line)) {
+      ++lineNum;
+      if (line.empty() || line[0] == '#') continue;
+
+      std::istringstream iss(line);
+      double xv, Tv, uv, rhov, pv;
+      std::array<double, N_SPECIES> Yv;
+
+      if (!(iss >> xv >> Tv >> uv >> rhov >> pv)) {
+        throw ProblemSetupException(
+            "hydrogenBurke initProfile: parse error at line " + std::to_string(lineNum)
+            + " in file: " + pi.filename, __FILE__, __LINE__);
+      }
+      for (int k = 0; k < N_SPECIES; k++) {
+        if (!(iss >> Yv[k])) {
+          throw ProblemSetupException(
+              "hydrogenBurke initProfile: not enough species columns at line "
+              + std::to_string(lineNum) + " in file: " + pi.filename,
+              __FILE__, __LINE__);
+        }
+      }
+      pi.x.push_back(xv);
+      pi.T.push_back(Tv);
+      pi.u.push_back(uv);
+      pi.rho.push_back(rhov);
+      pi.press.push_back(pv);
+      pi.Y.push_back(Yv);
+    }
+
+    if (pi.x.size() < 2) {
+      throw ProblemSetupException(
+          "hydrogenBurke initProfile: file must contain at least 2 data rows: " + pi.filename,
+          __FILE__, __LINE__);
+    }
+
+    pi.isActive    = true;
+    d_profileInit  = std::move(pi);
   }
 }
 
@@ -279,7 +315,7 @@ void hydrogenBurke::scheduleInitialize(SchedulerP   & sched,
     t->computesVar(lbl);
   }
 
-  if (d_tanhInit.isActive) {
+  if (d_profileInit.isActive) {
     MaterialSubset* press_matl = scinew MaterialSubset();
     press_matl->add(0);
     press_matl->addReference();
@@ -327,8 +363,8 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
         Y[k].initialize(Y0[k]);
       }
   
-      if (d_tanhInit.isActive) {
-        const TanhInit& ti = d_tanhInit;
+      if (d_profileInit.isActive) {
+        const ProfileInit& pi = d_profileInit;
 
         CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_CC;
         CCVariable<Vector> vel_CC;
@@ -346,16 +382,38 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
 
         for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
           IntVector c = *iter;
-          double x = patch->cellPosition(c)(ti.axis);
-          double f = 0.5 * (1.0 + std::tanh((x - ti.x0) / ti.delta));
+          double xq = patch->cellPosition(c)(pi.axis);
 
-          for (int k = 0; k < N_SPECIES; k++) {
-            Y[k][c] = ti.Y_left[k] + (ti.Y_right[k] - ti.Y_left[k]) * f;
+          // Find bracketing index and interpolation fraction (clamped at endpoints)
+          size_t i = 0;
+          double frac = 0.0;
+          if (xq <= pi.x.front()) {
+            i = 0; frac = 0.0;
+          } else if (xq >= pi.x.back()) {
+            i = pi.x.size() - 2; frac = 1.0;
+          } else {
+            auto it = std::lower_bound(pi.x.begin(), pi.x.end(), xq);
+            i = static_cast<size_t>(it - pi.x.begin()) - 1;
+            frac = (xq - pi.x[i]) / (pi.x[i+1] - pi.x[i]);
           }
 
-          double T = ti.T_left + (ti.T_right - ti.T_left) * f;
+          auto lerp = [&](const std::vector<double>& v) {
+            return v[i] + frac * (v[i+1] - v[i]);
+          };
+
+          double T        = lerp(pi.T);
+          double u        = lerp(pi.u);
+          double rho_val  = lerp(pi.rho);
+          double pres_val = lerp(pi.press);
+
+          for (int k = 0; k < N_SPECIES; k++) {
+            Y[k][c] = pi.Y[i][k] + frac * (pi.Y[i+1][k] - pi.Y[i][k]);
+          }
+
           temp_CC[c] = T;
-          vel_CC[c]  = ti.V_left + (ti.V_right - ti.V_left) * f;
+          Vector vel_val(0, 0, 0);
+          vel_val[pi.axis] = u;
+          vel_CC[c] = vel_val;
 
           std::array<double, N_ALL> Yall;
           double Ysum = 0.0;
@@ -375,11 +433,12 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
           double cv_tmp   = cp_mix - R_mix;
           cv[c]           = cv_tmp;
           gamma_cc[c]     = cp_mix / cv_tmp;
-          rho_micro[c]    = d_ref_press / (R_mix * T);
-          rho_CC[c]       = rho_micro[c];
-          sp_vol[c]       = 1.0 / rho_micro[c];
-          press_CC[c]     = d_ref_press;
-          speedSound[c]   = std::sqrt(gamma_cc[c] * d_ref_press / rho_micro[c]);
+          double rho_eos  = pres_val / (R_mix * T);   // enforce P = ρRT consistency
+          rho_micro[c]    = rho_eos;
+          rho_CC[c]       = rho_eos;
+          sp_vol[c]       = 1.0 / rho_eos;
+          press_CC[c]     = pres_val;
+          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_val / rho_val);
         }
 
       } else {
@@ -455,6 +514,7 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
   }
 
   t->computesVar(d_dtChem_label);
+  t->computesVar(d_HRR_label);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -1024,6 +1084,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       new_dw->allocateAndPut(dtChem_cc, d_dtChem_label, indx, patch);
       dtChem_cc.initialize(dtAdv);
 
+      CCVariable<double> hrr;
+      new_dw->allocateAndPut(hrr, d_HRR_label, indx, patch);
+      hrr.initialize(0.0);
+
       Ghost::GhostType gac = Ghost::AroundCells;
       std::vector<constCCVariable<double>> Yold(N_SPECIES);
       std::vector<CCVariable<double>>      Ysrc(N_SPECIES);
@@ -1131,7 +1195,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
         double error = 1.0;
 
-        while (t < dtAdv){
+        if (d_doChemistry) while (t < dtAdv){
           // Change timestep if needed to end exactly at dt_advection
           if ((t + dtChem) > dtAdv){
             dtChem = dtAdv - t;
@@ -1220,22 +1284,25 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           Ysrc[j][c] += massSrcTemp[j];         // []
         }
 
-        eng_src[c] += engSrcTemp; // Joules
+        eng_src[c] += engSrcTemp;                     // Joules
+        hrr[c]      = engSrcTemp / (cellVol * dtAdv); // W/m³
       }   // cell iterator
 
       //__________________________________
       //  Species diffusion
-      CCVariable<double> diff_src; // m^3
-      CCVariable<double> placeHolder;
-      new_dw->allocateTemporary(diff_src, patch);
-      bool use_vol_frac = false;
+      if (d_doDiffusion) {
+        CCVariable<double> diff_src; // m^3
+        CCVariable<double> placeHolder;
+        new_dw->allocateTemporary(diff_src, patch);
+        bool use_vol_frac = false;
 
-      for (int k = 0; k < N_SPECIES; k++) {
-        diff_src.initialize(0.0);
-        scalarDiffusionOperator(new_dw, patch, use_vol_frac, Yold[k],
-                                placeHolder, diff_src, diffCoef[k], double(dtAdv));
-        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-          Ysrc[k][*iter] += diff_src[*iter] / cellVol; // []
+        for (int k = 0; k < N_SPECIES; k++) {
+          diff_src.initialize(0.0);
+          scalarDiffusionOperator(new_dw, patch, use_vol_frac, Yold[k],
+                                  placeHolder, diff_src, diffCoef[k], double(dtAdv));
+          for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+            Ysrc[k][*iter] += diff_src[*iter] / cellVol; // []
+          }
         }
       }
     }   // matl loop
@@ -1356,6 +1423,7 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
             warn << "Specific Heat is negative at: " << c << " Cv = " << cvTmp;
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
+          
           cv[c]    = cvTmp;
           gamma[c] = cp / cvTmp;
 
@@ -1460,6 +1528,29 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
             }
           }
         } // cell iterator
+
+        if (!d_doDiffusion) {
+          mu.initialize(0.0);
+          lambda.initialize(0.0);
+          for (int k = 0; k < N_SPECIES; k++) {
+            diffCoef[k].initialize(0.0);
+          }
+        }
+
+        // Re-apply Last-order viscosity models (e.g. SpongeLayer) so they override the mixture viscosity
+        unsigned int numICEMatls = m_materialManager->getNumMatls("ICE");
+        for (unsigned int i = 0; i < numICEMatls; i++) {
+          ICEMaterial* ice_matl = (ICEMaterial*)m_materialManager->getMaterial("ICE", i);
+          if (ice_matl->getDWIndex() == indx) {
+            for (auto* viscModel : ice_matl->getDynViscosityModels()) {
+              if (viscModel->isLastCallOrder()) {
+                viscModel->computeDynViscosity(patch, temp, mu);
+              }
+            }
+            break;
+          }
+        }
       } // matl loop
     } // patches
   }
+

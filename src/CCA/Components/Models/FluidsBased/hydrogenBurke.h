@@ -130,7 +130,6 @@ private:
 
   double YH20{0.0};
   double YO20{0.0};
-  double d_ref_press{101325.0};
 
   double d_tol;
   double d_safety;
@@ -149,20 +148,22 @@ private:
   };
 
   //------------------------------------------------------------------
-  // Tanh species profile for 1D flame initialization
-  // Yi(x) = Yi_left + (Yi_right - Yi_left) * 0.5*(1 + tanh((x-x0)/delta))
+  // 1D profile initialization from a .dat file (e.g. from Cantera/SD Toolbox).
+  // File columns: x[m]  T[K]  u[m/s]  rho[kg/m3]  press[Pa]
+  //               Y_H2  Y_O2  Y_H2O  Y_H  Y_O  Y_OH  Y_HO2  Y_H2O2
+  // Lines beginning with '#' are ignored.  Values are linearly interpolated
+  // onto cell centres; cells outside the profile range are clamped.
   //------------------------------------------------------------------
-  struct TanhInit {
-    bool   isActive {false};
-    int    axis     {0};      // 0=x, 1=y, 2=z
-    double x0       {0};
-    double delta    {1e-3};
-    double T_left   {0};      // temperature, burned side
-    double T_right  {0};      // temperature, unburned side
-    Vector V_left   {0,0,0};  // velocity, burned side
-    Vector V_right  {0,0,0};  // velocity, unburned side
-    std::vector<double> Y_left;   // size = N_SPECIES (burned side)
-    std::vector<double> Y_right;  // size = N_SPECIES (unburned side)
+  struct ProfileInit {
+    bool        isActive {false};
+    int         axis     {0};
+    std::string filename;
+    std::vector<double>                    x;
+    std::vector<double>                    T;
+    std::vector<double>                    u;
+    std::vector<double>                    rho;
+    std::vector<double>                    press;
+    std::vector<std::array<double, N_SPECIES>> Y;
   };
 
   //------------------------------------------------------------------
@@ -628,13 +629,16 @@ private:
   std::vector<VarLabel*> d_Y_src_labels;  // scalar_YH2_src, ...
 
   VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
+  VarLabel* d_HRR_label{nullptr};         // heat release rate [W/m³]
   std::vector<VarLabel*> d_diffCoef_labels; // mixture-averaged diffusion coefficient per tracked species
 
   // Geometry regions for initialization
   std::vector<Region*> d_regions;
 
-  TanhInit d_tanhInit;
+  ProfileInit d_profileInit;
 
+  bool d_doChemistry{true};
+  bool d_doDiffusion{true};
   bool d_debug{false};
   IntVector d_debugCell=IntVector(-9);   // cell for debugging output
 };
