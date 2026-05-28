@@ -630,7 +630,8 @@ private:
 
   VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
   VarLabel* d_HRR_label{nullptr};         // heat release rate [W/m³]
-  std::vector<VarLabel*> d_diffCoef_labels; // mixture-averaged diffusion coefficient per tracked species
+  std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s] for 8 tracked species (post-processing)
+  std::vector<VarLabel*> d_rhoDiffCoef_labels; // rho*D_k [kg/(m*s)] for all 9 species (N2 at index 2) — internal use
 
   // Geometry regions for initialization
   std::vector<Region*> d_regions;
