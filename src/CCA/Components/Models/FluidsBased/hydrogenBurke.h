@@ -172,6 +172,8 @@ private:
   double intEnergy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   std::array<double, 9> cpSpecificHeat(double T);
+  std::array<double, N_ALL> enthalpyAllSpecies(double T) const;
+  std::array<double, N_ALL> sensibleEnthalpyAllSpecies(double T) const;
 
   double reaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);
   double duplicateReaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);

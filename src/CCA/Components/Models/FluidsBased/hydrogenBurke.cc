@@ -512,13 +512,13 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
   Task* t = scinew Task("hydrogenBurke::computeModelSources",
                         this, &hydrogenBurke::computeModelSources);
 
+  Ghost::GhostType gac = Ghost::AroundCells;
+
   t->requiresVar(Task::OldDW, Ilb->delTLabel);
-  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel, d_gn, 0);
+  t->requiresVar(Task::OldDW, Ilb->temp_CCLabel, gac, 1);
   t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,  d_gn, 0);
 
   t->modifiesVar(Ilb->modelEng_srcLabel);
-
-  Ghost::GhostType gac = Ghost::AroundCells;
   for (int k = 0; k < N_SPECIES; k++) {
     t->requiresVar(Task::OldDW, d_Y_labels[k], gac, 1);
     t->modifiesVar(d_Y_src_labels[k]);
@@ -643,6 +643,51 @@ std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T)
     }
   }
   return cpSpecies;
+}
+
+std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::enthalpyAllSpecies(double T) const
+{
+  double Tsqr  = T * T;
+  double Tcube = Tsqr * T;
+  double Tquad = Tcube * T;
+  double Tpent = Tquad * T;
+  std::array<double, N_ALL> h;
+  if (T > d_Tmid) {
+    for (int i = 0; i < N_ALL; i++) {
+      h[i] = d_Ri[i] * (d_h0_HighT[i]*T    + d_h1_HighT[i]*Tsqr  + d_h2_HighT[i]*Tcube
+                       + d_h3_HighT[i]*Tquad + d_h4_HighT[i]*Tpent + d_h5_HighT[i]);
+    }
+  } else {
+    for (int i = 0; i < N_ALL; i++) {
+      h[i] = d_Ri[i] * (d_h0_LowT[i]*T    + d_h1_LowT[i]*Tsqr  + d_h2_LowT[i]*Tcube
+                       + d_h3_LowT[i]*Tquad + d_h4_LowT[i]*Tpent + d_h5_LowT[i]);
+    }
+  }
+  return h;
+}
+
+// Sensible enthalpy h_s,k = cp_k * T  [J/kg]  — no formation enthalpy (d_h5 omitted).
+// Use this (not enthalpyAllSpecies) in the diffusion energy source because ICE tracks
+// sensible internal energy cv*T only; formation energy is handled by the chemistry term.
+std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::sensibleEnthalpyAllSpecies(double T) const
+{
+  double Tsqr  = T * T;
+  double Tcube = Tsqr * T;
+  double Tquad = Tcube * T;
+  double Tpent = Tquad * T;
+  std::array<double, N_ALL> h_s;
+  if (T > d_Tmid) {
+    for (int i = 0; i < N_ALL; i++) {
+      h_s[i] = d_Ri[i] * (d_h0_HighT[i]*T    + d_h1_HighT[i]*Tsqr  + d_h2_HighT[i]*Tcube
+                          + d_h3_HighT[i]*Tquad + d_h4_HighT[i]*Tpent);
+    }
+  } else {
+    for (int i = 0; i < N_ALL; i++) {
+      h_s[i] = d_Ri[i] * (d_h0_LowT[i]*T    + d_h1_LowT[i]*Tsqr  + d_h2_LowT[i]*Tcube
+                          + d_h3_LowT[i]*Tquad + d_h4_LowT[i]*Tpent);
+    }
+  }
+  return h_s;
 }
 
 //______________________________________________________________________
@@ -1119,7 +1164,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       constCCVariable<double> temp;
       constCCVariable<double> rho;
 
-      old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
+      old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, gac, 1);
       old_dw->get( rho,  Ilb->rho_CCLabel,  indx, patch, d_gn, 0);
 
       //__________________________________
@@ -1393,37 +1438,89 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           Vc_Z[*iter] += rhoD_FC * (Ysum_R - Ysum_L) / dx.z();
         }
 
-        // Apply corrected diffusion source to each tracked species:
-        //   ΔYk = [-div(J_k^Fick) + div(Yk * Vc)] * dt / cellVol
-        // Sign: fick_src is negative-divergence (standard); corr_src is positive-divergence
-        // because Vc stored here is sum(J^Fick) = -V_c_physical, so div(Yk*Vc_stored) = -div(Yk*V_c)
-        // and the correction term -div(Yk*V_c) = +div(Yk*Vc_stored).
-        for (int k = 0; k < N_SPECIES; k++) {
-          for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-            IntVector c     = *iter;
-            IntVector right = c + IntVector(1, 0, 0);
-            IntVector top   = c + IntVector(0, 1, 0);
-            IntVector front = c + IntVector(0, 0, 1);
+        // One cell loop: corrected flux j_k = j*_k - Y_k*Vc at each face,
+        // then -div(j_k) for species and -sum_k cp_k * j_k_avg · grad(T) for energy.
+        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+          IntVector c  = *iter;
+          IntVector xr = c + IntVector( 1, 0, 0);
+          IntVector xl = c + IntVector(-1, 0, 0);
+          IntVector yt = c + IntVector( 0, 1, 0);
+          IntVector yb = c + IntVector( 0,-1, 0);
+          IntVector zf = c + IntVector( 0, 0, 1);
+          IntVector zk = c + IntVector( 0, 0,-1);
 
-            // Fickian: -div(J_k^Fick) * cellVol * dt
-            double fick_src = -((J_X[k][right] - J_X[k][c]) * areaX +
-                                (J_Y[k][top]   - J_Y[k][c]) * areaY +
-                                (J_Z[k][front] - J_Z[k][c]) * areaZ) * dtAdv;
+          // Sensible enthalpy h_s,k [J/kg] at the 6 neighbouring cell centres (CCVariable).
+          // Central difference (hs[xr] - hs[xl]) / (2*dx) gives dh_k/dx at cell c,
+          // matching CANTERA's finite-difference of stored enthalpies (grad_hk).
+          // Formation enthalpy drops out because it is spatially constant.
+          const auto hs_xr = enthalpyAllSpecies(temp[xr]);
+          const auto hs_xl = enthalpyAllSpecies(temp[xl]);
+          const auto hs_yt = enthalpyAllSpecies(temp[yt]);
+          const auto hs_yb = enthalpyAllSpecies(temp[yb]);
+          const auto hs_zf = enthalpyAllSpecies(temp[zf]);
+          const auto hs_zk = enthalpyAllSpecies(temp[zk]);
 
-            // Correction: +div(Yk * Vc_stored) * cellVol * dt  (Yk averaged to face)
-            double Yk_Xright = 0.5 * (Yold[k][c] + Yold[k][right]);
-            double Yk_Xleft  = 0.5 * (Yold[k][c + IntVector(-1, 0,  0)] + Yold[k][c]);
-            double Yk_Ytop   = 0.5 * (Yold[k][c] + Yold[k][top]);
-            double Yk_Ybot   = 0.5 * (Yold[k][c + IntVector( 0,-1,  0)] + Yold[k][c]);
-            double Yk_Zfront = 0.5 * (Yold[k][c] + Yold[k][front]);
-            double Yk_Zback  = 0.5 * (Yold[k][c + IntVector( 0, 0, -1)] + Yold[k][c]);
+          double S_eng = 0.0;
 
-            double corr_src = ((Yk_Xright * Vc_X[right] - Yk_Xleft * Vc_X[c]) * areaX +
-                               (Yk_Ytop   * Vc_Y[top]   - Yk_Ybot  * Vc_Y[c]) * areaY +
-                               (Yk_Zfront * Vc_Z[front] - Yk_Zback * Vc_Z[c]) * areaZ) * dtAdv;
+          for (int k = 0; k < N_SPECIES; k++) {
+            int ka = k + (k >= 2 ? 1 : 0);
 
-            Ysrc[k][c] += (fick_src + corr_src) / (rho[c] * cellVol);
+            // Corrected flux at each face: j_k = j*_k - Y_k * Vc
+            double jxr = J_X[k][xr] - 0.5*(Yold[k][c] +Yold[k][xr])*Vc_X[xr];
+            double jxl = J_X[k][c]  - 0.5*(Yold[k][xl]+Yold[k][c] )*Vc_X[c];
+            double jyt = J_Y[k][yt] - 0.5*(Yold[k][c] +Yold[k][yt])*Vc_Y[yt];
+            double jyb = J_Y[k][c]  - 0.5*(Yold[k][yb]+Yold[k][c] )*Vc_Y[c];
+            double jzf = J_Z[k][zf] - 0.5*(Yold[k][c] +Yold[k][zf])*Vc_Z[zf];
+            double jzk = J_Z[k][c]  - 0.5*(Yold[k][zk]+Yold[k][c] )*Vc_Z[c];
+
+            // div(j_k) [kg/m^3/s]
+            double divj = ((jxr - jxl)*areaX + (jyt - jyb)*areaY + (jzf - jzk)*areaZ) / cellVol;
+
+            // Species: -div(j_k) * dt / rho
+            Ysrc[k][c] += -divj * dtAdv / rho[c];
+
+            // Energy: j_k_avg · grad(h_k),  grad(h_k) from central difference of NASA7 values
+            double dh_dx = (hs_xr[ka] - hs_xl[ka]) / (2.0 * dx.x());
+            double dh_dy = (hs_yt[ka] - hs_yb[ka]) / (2.0 * dx.y());
+            double dh_dz = (hs_zf[ka] - hs_zk[ka]) / (2.0 * dx.z());
+            S_eng += 0.5*(jxl+jxr)*dh_dx + 0.5*(jyb+jyt)*dh_dy + 0.5*(jzk+jzf)*dh_dz;
+
+            // Flow-work correction for sensible internal-energy (cv*T) formulation:
+            // -RT/W_k * div(j_k).  d_Ri[ka] = R_universal/W_k [J/(kg.K)], so d_Ri[ka]*T = RT/W_k.
+            S_eng += d_Ri[ka] * temp[c] * divj;
           }
+
+          // N2: only contributes to energy (not a tracked species)
+          {
+            double Yc=0, Yr=0, Yl=0, Yt=0, Yb=0, Yf=0, Ybk=0;
+            for (int k = 0; k < N_SPECIES; k++) {
+              Yc+=Yold[k][c]; Yr+=Yold[k][xr]; Yl+=Yold[k][xl];
+              Yt+=Yold[k][yt]; Yb+=Yold[k][yb]; Yf+=Yold[k][zf]; Ybk+=Yold[k][zk];
+            }
+            auto rhoD_N2 = [&](IntVector L, IntVector R) {
+              return 2.0*rhoDiffCoef[N2][L]*rhoDiffCoef[N2][R]/
+                     (rhoDiffCoef[N2][L]+rhoDiffCoef[N2][R]+1.0e-100);
+            };
+            double jN2_xr = rhoD_N2(c, xr)*(Yr-Yc)/dx.x() - (1.0-0.5*(Yc+Yr))*Vc_X[xr];
+            double jN2_xl = rhoD_N2(xl,c )*(Yc-Yl)/dx.x() - (1.0-0.5*(Yl+Yc))*Vc_X[c];
+            double jN2_yt = rhoD_N2(c, yt)*(Yt-Yc)/dx.y() - (1.0-0.5*(Yc+Yt))*Vc_Y[yt];
+            double jN2_yb = rhoD_N2(yb,c )*(Yc-Yb)/dx.y() - (1.0-0.5*(Yb+Yc))*Vc_Y[c];
+            double jN2_zf = rhoD_N2(c, zf)*(Yf-Yc)/dx.z() - (1.0-0.5*(Yc+Yf))*Vc_Z[zf];
+            double jN2_zk = rhoD_N2(zk,c )*(Yc-Ybk)/dx.z()- (1.0-0.5*(Ybk+Yc))*Vc_Z[c];
+            double dh_N2_dx = (hs_xr[N2] - hs_xl[N2]) / (2.0 * dx.x());
+            double dh_N2_dy = (hs_yt[N2] - hs_yb[N2]) / (2.0 * dx.y());
+            double dh_N2_dz = (hs_zf[N2] - hs_zk[N2]) / (2.0 * dx.z());
+            S_eng += 0.5*(jN2_xl+jN2_xr)*dh_N2_dx
+                   + 0.5*(jN2_yb+jN2_yt)*dh_N2_dy
+                   + 0.5*(jN2_zk+jN2_zf)*dh_N2_dz;
+
+            // Flow-work correction: -RT/W_N2 * div(j_N2)
+            double divj_N2 = ((jN2_xr - jN2_xl)*areaX + (jN2_yt - jN2_yb)*areaY
+                            + (jN2_zf - jN2_zk)*areaZ) / cellVol;
+            S_eng += d_Ri[N2] * temp[c] * divj_N2;
+          }
+
+          eng_src[c] -= S_eng * cellVol * dtAdv;
         }
       }
     }   // matl loop
