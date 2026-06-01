@@ -1056,6 +1056,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                sched, patches, matls);
+  if(flags->d_useTriangles && flags->d_insertParticles){
+    triangleTasks->scheduleInsertTriangles(sched, patches, triangle_matls);
+  }
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(   sched, patches, matls);
     if(flags->d_useLineSegments){
@@ -2962,7 +2965,8 @@ void SerialMPM::readInsertParticlesFile(string filename)
  if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR Opening particle insertion file '"+filename+"'\n",
+      throw ProblemSetupException(
+                       "ERROR Opening particle insertion file '"+filename+"'\n",
                                   __FILE__, __LINE__);
     }
     while(is) {

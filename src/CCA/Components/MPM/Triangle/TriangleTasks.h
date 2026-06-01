@@ -74,6 +74,18 @@ namespace Uintah {
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
+    virtual void scheduleInsertTriangles(SchedulerP&, 
+                                         const PatchSet*,
+                                         const MaterialSet*);
+    //////////
+    // Allow blocks of triangles to be moved according to a prescribed schedule:
+    virtual void insertTriangles(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+
     virtual void scheduleFindNearestTri(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSubset*,
@@ -124,6 +136,8 @@ namespace Uintah {
                                          const PatchSet*,
                                          const MaterialSet*);
 
+    void readInsertParticlesFile(std::string filename);
+ 
     // Add new triangles to the simulation based on criteria 
     virtual void refineTriangles(const ProcessorGroup*,
                                  const PatchSubset* patches,
@@ -142,6 +156,11 @@ namespace Uintah {
     MaterialManagerP d_materialManager;
     int NGN, NGP;
     Output* m_output;
+
+    // The following are used iff the d_insertParticles flag is true.
+    std::vector<double> d_IPTimes;
+    std::vector<double> d_IPColor;
+    std::vector<Vector> d_IPTranslate;
   };
 
 } // End of namespace Uintah

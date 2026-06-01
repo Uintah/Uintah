@@ -101,6 +101,7 @@ WARNING
    std::string getTriangleFilename() const;
 
    int getAssociatedMaterial() const;
+   double getColor() const;
    int    getProfileSize();
    Vector findVelFromProfile(const double t);
    Vector findRotFromProfile(const double t);
@@ -117,6 +118,7 @@ WARNING
 
    std::string d_triangle_filename;
    int d_associated_material;
+   double d_color;
 
    std::string    d_filename;
 

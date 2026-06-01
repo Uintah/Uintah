@@ -55,6 +55,7 @@ TriangleMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("triangle_filename",   d_triangle_filename);
   ps->get("filename",                d_filename);
   ps->getWithDefault("include_rotation", d_includeRotation, false);
+  ps->getWithDefault("color", d_color, -1);
 
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
@@ -125,6 +126,7 @@ ProblemSpecP TriangleMaterial::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP triangle_ps = ps->appendChild("Triangle");
 
   triangle_ps->appendElement("associated_material", d_associated_material);
+  triangle_ps->appendElement("color",               d_color);
   triangle_ps->appendElement("triangle_filename",   d_triangle_filename);
   triangle_ps->appendElement("filename",            d_filename);
   triangle_ps->appendElement("include_rotation",    d_includeRotation);
@@ -148,6 +150,11 @@ Triangle* TriangleMaterial::getTriangle()
 int TriangleMaterial::getAssociatedMaterial() const
 {
   return d_associated_material;
+}
+
+double TriangleMaterial::getColor() const
+{
+  return d_color;
 }
 
 string TriangleMaterial::getTriangleFilename() const

@@ -327,8 +327,6 @@ Triangle::countTriangles(const Patch* patch, const string fileroot)
   Point dom_min = domain.min();
   Point dom_max = domain.max();
 
-  double gridLength = dx.minComponent();
-
   string ptsfilename = fileroot + ".pts";
   string trifilename = fileroot + ".tri";
 

@@ -120,6 +120,9 @@ void TriangleTasks::triangleProblemSetup(const ProblemSpecP& prob_spec,
       d_materialManager->registerMaterial("Triangle", mat);
     }
   }
+  if (flags->d_insertParticles){
+    readInsertParticlesFile(flags->d_insertParticlesFile);
+  }
 }
 
 void TriangleTasks::scheduleUpdateTriangles(SchedulerP& sched,
@@ -530,6 +533,83 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
 
     delete interpolator;
   }    // patches
+}
+
+void TriangleTasks::scheduleInsertTriangles(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+{
+  if (!d_flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  if(d_flags->d_insertParticles){
+    printSchedule(patches,cout_doing,"TriangleTasks::scheduleInsertTriangles");
+
+    Task* t=scinew Task("TriangleTasks::insertTriangles",this,
+                  &TriangleTasks::insertTriangles);
+
+    t->requires(Task::OldDW, lb->simulationTimeLabel);
+    t->requires(Task::OldDW, lb->delTLabel );
+
+    t->modifies(lb->pXLabel_preReloc);
+    //t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+
+    sched->addTask(t, patches, matls);
+  }
+}
+
+void TriangleTasks::insertTriangles(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing TriangleTasks::insertParticles");
+
+    // Get the current simulation time
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
+    int index = -999;
+    for(int i = 0; i<(int) d_IPTimes.size(); i++){
+      if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
+        int i = 0;
+        index = i;
+        if(index>=0){
+          unsigned int numTriMatls=d_materialManager->getNumMatls("Triangle");
+          for(unsigned int m = 0; m < numTriMatls; m++){
+            TriangleMaterial* t_matl = (TriangleMaterial *) 
+                                d_materialManager->getMaterial("Triangle", m);
+            int dwi = t_matl->getDWIndex();
+            double thisColor = t_matl->getColor();
+
+            ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+            // Get the arrays of particle values to be changed
+            ParticleVariable<Point> px;
+
+            new_dw->getModifiable(px,       lb->pXLabel_preReloc,         pset);
+
+            // Loop over particles here
+            for(ParticleSubset::iterator iter  = pset->begin();
+                                         iter != pset->end();   iter++){
+              particleIndex idx = *iter;
+              if(thisColor==d_IPColor[index]){
+                px[idx] = px[idx] + d_IPTranslate[index];
+              } // end if
+            }   // end for
+          }     // end for
+        }       // end if
+      }         // end if
+    }           // end for
+  }             // end for
 }
 
 void TriangleTasks::scheduleFindNearestTri(SchedulerP& sched,
@@ -1638,4 +1718,27 @@ void TriangleTasks::refineTriangles(const ProcessorGroup*,
       } // Some triangle(s) needs to be refined
     } // Loop over matls
   } // Loop over patches
+}
+
+void TriangleTasks::readInsertParticlesFile(string filename)
+{
+
+ if(filename!="") {
+    std::ifstream is(filename.c_str());
+    if (!is ){
+      throw ProblemSetupException(
+                       "ERROR Opening particle insertion file '"+filename+"'\n",
+                                  __FILE__, __LINE__);
+    }
+    while(is) {
+        double t1,color,transx,transy,transz,v_new_x,v_new_y,v_new_z;
+        is >> t1 >> color >> transx >> transy >> transz >> v_new_x >> v_new_y >> v_new_z;
+        if(is) {
+            d_IPTimes.push_back(t1);
+            d_IPColor.push_back(color);
+            d_IPTranslate.push_back(Vector(transx,transy,transz));
+//            d_IPVelNew.push_back(Vector(v_new_x,v_new_y,v_new_z));
+        }
+    }
+  }
 }
