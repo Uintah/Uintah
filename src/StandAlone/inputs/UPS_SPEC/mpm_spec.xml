@@ -322,6 +322,7 @@
         <associated_material               spec="OPTIONAL INTEGER" />
         <triangle_filename                  spec="REQUIRED STRING" />
         <filename                           spec="OPTIONAL STRING" />
+        <color                              spec="OPTIONAL DOUBLE" />
         <include_rotation                   spec="OPTIONAL BOOLEAN" />
       </Triangle>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
