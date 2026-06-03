@@ -580,7 +580,6 @@ void TriangleTasks::insertTriangles(const ProcessorGroup*,
     int index = -999;
     for(int i = 0; i<(int) d_IPTimes.size(); i++){
       if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
-        int i = 0;
         index = i;
         if(index>=0){
           unsigned int numTriMatls=d_materialManager->getNumMatls("Triangle");
