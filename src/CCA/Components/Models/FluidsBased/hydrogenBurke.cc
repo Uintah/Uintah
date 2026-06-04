@@ -97,9 +97,6 @@ hydrogenBurke::~hydrogenBurke()
   for (auto* lbl : d_diffCoef_labels) {
     VarLabel::destroy(lbl);
   }
-  for (auto* lbl : d_rhoDiffCoef_labels) {
-    VarLabel::destroy(lbl);
-  }
 
   VarLabel::destroy(d_dtChem_label);
   VarLabel::destroy(d_HRR_label);
@@ -194,24 +191,16 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   };
 
   for (int i = 0; i < N_SPECIES; i++) {
-    std::string yname = std::string("scalar-") + names[i];
-    std::string sname = std::string("scalar_") + names[i] + "_src";
-    std::string dname = std::string("diffCoef-") + names[i];
-
-    VarLabel* Y = VarLabel::create(yname, CCVariable<double>::getTypeDescription());
-    VarLabel* S = VarLabel::create(sname, CCVariable<double>::getTypeDescription());
-    VarLabel* D = VarLabel::create(dname, CCVariable<double>::getTypeDescription());
-
+    VarLabel* Y = VarLabel::create(std::string("scalar-")  + names[i], CCVariable<double>::getTypeDescription());
+    VarLabel* S = VarLabel::create(std::string("scalar_")  + names[i] + "_src", CCVariable<double>::getTypeDescription());
     d_Y_labels.push_back(Y);
     d_Y_src_labels.push_back(S);
-    d_diffCoef_labels.push_back(D);
-
     registerTransportedVariable(d_matl_set, Y, S);
   }
-
+  // d_diffCoef_labels indexed by all-species index: H2=0,O2=1,N2=2,H2O=3,H=4,O=5,OH=6,HO2=7,H2O2=8
   for (int k = 0; k < N_ALL; k++) {
-    std::string rname = std::string("rhoDiffCoef-") + allnames[k];
-    d_rhoDiffCoef_labels.push_back(VarLabel::create(rname, CCVariable<double>::getTypeDescription()));
+    d_diffCoef_labels.push_back(VarLabel::create(std::string("diffCoef-") + allnames[k],
+                                                  CCVariable<double>::getTypeDescription()));
   }
 
   d_dtChem_label = VarLabel::create("dt_chemistry",    CCVariable<double>::getTypeDescription());
@@ -450,7 +439,7 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
           rho_CC[c]       = rho_eos;
           sp_vol[c]       = 1.0 / rho_eos;
           press_CC[c]     = pres_val;
-          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_val / rho_val);
+          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_val / rho_eos);
         }
 
       } else {
@@ -516,15 +505,12 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
 
   t->requiresVar(Task::OldDW, Ilb->delTLabel);
   t->requiresVar(Task::OldDW, Ilb->temp_CCLabel, gac, 1);
-  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,  d_gn, 0);
+  t->requiresVar(Task::OldDW, Ilb->rho_CCLabel,  gac, 1);
 
   t->modifiesVar(Ilb->modelEng_srcLabel);
   for (int k = 0; k < N_SPECIES; k++) {
     t->requiresVar(Task::OldDW, d_Y_labels[k], gac, 1);
     t->modifiesVar(d_Y_src_labels[k]);
-  }
-  for (int k = 0; k < N_ALL; k++) {
-    t->requiresVar(Task::NewDW, d_rhoDiffCoef_labels[k], gac, 1);
   }
 
   t->computesVar(d_dtChem_label);
@@ -645,30 +631,7 @@ std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T)
   return cpSpecies;
 }
 
-std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::enthalpyAllSpecies(double T) const
-{
-  double Tsqr  = T * T;
-  double Tcube = Tsqr * T;
-  double Tquad = Tcube * T;
-  double Tpent = Tquad * T;
-  std::array<double, N_ALL> h;
-  if (T > d_Tmid) {
-    for (int i = 0; i < N_ALL; i++) {
-      h[i] = d_Ri[i] * (d_h0_HighT[i]*T    + d_h1_HighT[i]*Tsqr  + d_h2_HighT[i]*Tcube
-                       + d_h3_HighT[i]*Tquad + d_h4_HighT[i]*Tpent + d_h5_HighT[i]);
-    }
-  } else {
-    for (int i = 0; i < N_ALL; i++) {
-      h[i] = d_Ri[i] * (d_h0_LowT[i]*T    + d_h1_LowT[i]*Tsqr  + d_h2_LowT[i]*Tcube
-                       + d_h3_LowT[i]*Tquad + d_h4_LowT[i]*Tpent + d_h5_LowT[i]);
-    }
-  }
-  return h;
-}
-
-// Sensible enthalpy h_s,k = cp_k * T  [J/kg]  — no formation enthalpy (d_h5 omitted).
-// Use this (not enthalpyAllSpecies) in the diffusion energy source because ICE tracks
-// sensible internal energy cv*T only; formation energy is handled by the chemistry term.
+// Returns sensible enthalpy h_s,k [J/kg] for each species (no formation term).
 std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::sensibleEnthalpyAllSpecies(double T) const
 {
   double Tsqr  = T * T;
@@ -688,6 +651,59 @@ std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::sensibleEnthalpyAllSpeci
     }
   }
   return h_s;
+}
+
+// Mixture-averaged diffusion coefficients D_k [m^2/s] for all 9 species.
+// Inputs: T [K], rho [kg/m^3], Y[N_ALL] mass fractions (all species including N2).
+// Computes Rmix, X_k, and pressure internally; valid at cell centres or face-averaged conditions.
+std::array<double, hydrogenBurke::N_ALL>
+hydrogenBurke::mixtureAvgDiffCoeffs(double T, double rho,
+                                     const std::array<double, N_ALL>& Y) const
+{
+  double Rmix = 0.0;
+  for (int k = 0; k < N_ALL; k++) {
+    Rmix += Y[k] * d_Ri[k];
+  }
+
+  double invMw = 0.0;
+  for (int k = 0; k < N_ALL; k++) {
+    invMw += Y[k] / d_Mw[k];
+  }
+
+  std::array<double, N_ALL> X;
+  for (int k = 0; k < N_ALL; k++) {
+    X[k] = Y[k] / (invMw * d_Mw[k]);
+  }
+
+  double Mmix = 1.0 / invMw;
+  double P    = rho * Rmix * T;
+
+  double lnT   = std::log(T);
+  double lnT2  = lnT * lnT;
+  double lnT3  = lnT * lnT2;
+  double lnT4  = lnT * lnT3;
+  double Tsqrt = std::sqrt(T);
+
+  double Darray[N_ALL][N_ALL] = {};
+  for (int j = 0; j < N_ALL; j++) {
+    for (int k = j + 1; k < N_ALL; k++) {
+      double tmp = T * Tsqrt * (d_D0[j][k] + d_D1[j][k]*lnT + d_D2[j][k]*lnT2
+                                            + d_D3[j][k]*lnT3 + d_D4[j][k]*lnT4);
+      Darray[j][k] = tmp;
+      Darray[k][j] = tmp;
+    }
+  }
+
+  std::array<double, N_ALL> Dk;
+  for (int k = 0; k < N_ALL; k++) {
+    double sum = 0.0;
+    for (int j = 0; j < N_ALL; j++) {
+      if (j == k) continue;
+      sum += X[j] / Darray[j][k];
+    }
+    Dk[k] = (Mmix - X[k] * d_Mw[k]) / (P * Mmix * sum);
+  }
+  return Dk;
 }
 
 //______________________________________________________________________
@@ -1150,14 +1166,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       Ghost::GhostType gac = Ghost::AroundCells;
       std::vector<constCCVariable<double>> Yold(N_SPECIES);
       std::vector<CCVariable<double>>      Ysrc(N_SPECIES);
-      std::vector<constCCVariable<double>> rhoDiffCoef(N_ALL);
 
       for (int k = 0; k < N_SPECIES; k++) {
         old_dw->get( Yold[k], d_Y_labels[k],       indx, patch, gac, 1);
         new_dw->getModifiable( Ysrc[k], d_Y_src_labels[k], indx, patch);
-      }
-      for (int k = 0; k < N_ALL; k++) {
-        new_dw->get(rhoDiffCoef[k], d_rhoDiffCoef_labels[k], indx, patch, gac, 1);
       }
 
       // Pull in Temperature and density from data warehouse
@@ -1165,7 +1177,7 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       constCCVariable<double> rho;
 
       old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, gac, 1);
-      old_dw->get( rho,  Ilb->rho_CCLabel,  indx, patch, d_gn, 0);
+      old_dw->get( rho,  Ilb->rho_CCLabel,  indx, patch, gac, 1);
 
       //__________________________________
       //
@@ -1350,177 +1362,249 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         hrr[c]      = engSrcTemp / (cellVol * dtAdv); // W/m³
       }   // cell iterator
 
-      //__________________________________
-      //  Species diffusion with velocity correction
-      //  Corrected flux: J_k = -D_k*grad(Yk) + Yk*Vc
-      //  where Vc = sum_all_k D_k*grad(Yk) ensures sum_k J_k = 0 (all 9 species, including N2)
-      //  Density-weighted: J_k = -rho*D_k*grad(Yk) [kg/m^2/s], source = -div(J_k)/(rho*cellVol)
-      //  d_diffCoef_labels store rho*D_k [kg/m/s] with proper DW ghost cells.
-      //  Correction flux: rho*Yk*Vc = Yk*sum(J^Fick) — rho cancels, form unchanged.
       if (d_doDiffusion) {
-        CCVariable<double> placeHolder;
-        bool use_vol_frac = false;
         double areaX = dx.y() * dx.z();
         double areaY = dx.x() * dx.z();
         double areaZ = dx.x() * dx.y();
 
-        // Compute density-weighted Fickian face fluxes J_k [kg/m^2/s] for each tracked species
-        // rhoDiffCoef[all-species index] stores rho*D_k [kg/m/s] with proper DW ghost cells
-        std::vector<SFCXVariable<double>> J_X(N_SPECIES);
-        std::vector<SFCYVariable<double>> J_Y(N_SPECIES);
-        std::vector<SFCZVariable<double>> J_Z(N_SPECIES);
-        for (int k = 0; k < N_SPECIES; k++) {
-          int kall = k + (k >= 2 ? 1 : 0);  // tracked index → all-species index (skip N2 at slot 2)
-          q_flux_allFaces(new_dw, patch, use_vol_frac, Yold[k], rhoDiffCoef[kall],
-                          placeHolder, J_X[k], J_Y[k], J_Z[k]);
+        //__________________________________
+        // Mole fraction gradients at faces via q_flux_allFaces with unit coefficient.
+        // Gives -(X_k[R] - X_k[L])/dx at each face — no diffusivity baked in.
+        // X_k[N_ALL]: cell-centered mole fractions; fill from Yold before this block.
+        CCVariable<double> ones;
+        CCVariable<double> invMwMix;
+        new_dw->allocateTemporary(ones,     patch, Ghost::AroundCells, 1);
+        new_dw->allocateTemporary(invMwMix, patch, Ghost::AroundCells, 1);
+        ones.initialize(1.0);
+        invMwMix.initialize(0.0);
+
+        std::vector<CCVariable<double>>         X(N_ALL);      // mole fractions
+        std::vector<CCVariable<double>>         Y(N_ALL);      // mass fractions for all species including N2
+        std::vector<SFCXVariable<double>> gradX_X(N_ALL);     // -(X[R]-X[L])/dx at X-faces
+        std::vector<SFCYVariable<double>> gradX_Y(N_ALL);     // -(X[T]-X[B])/dy at Y-faces
+        std::vector<SFCZVariable<double>> gradX_Z(N_ALL);     // -(X[F]-X[K])/dz at Z-faces
+
+        std::vector<SFCXVariable<double>> jX(N_ALL);           // corrected mass flux j_k [kg/m^2/s], all-species index
+        std::vector<SFCYVariable<double>> jY(N_ALL);
+        std::vector<SFCZVariable<double>> jZ(N_ALL);
+        SFCXVariable<double> phiX;                             // energy flux sum_k h_s,k * j_k [W/m^2]
+        SFCYVariable<double> phiY;
+        SFCZVariable<double> phiZ;
+
+        for (int k = 0; k < N_ALL; k++) {
+          new_dw->allocateTemporary(X[k], patch, Ghost::AroundCells, 1);
+          new_dw->allocateTemporary(Y[k], patch, Ghost::AroundCells, 1);
+          X[k].initialize(0.0);
+          Y[k].initialize(0.0);
+        }
+        for (int k = 0; k < N_ALL; k++) {
+          new_dw->allocateTemporary(jX[k], patch, Ghost::AroundCells, 1);
+          new_dw->allocateTemporary(jY[k], patch, Ghost::AroundCells, 1);
+          new_dw->allocateTemporary(jZ[k], patch, Ghost::AroundCells, 1);
+          jX[k].initialize(0.0);
+          jY[k].initialize(0.0);
+          jZ[k].initialize(0.0);
+        }
+        new_dw->allocateTemporary(phiX, patch, Ghost::AroundCells, 1); phiX.initialize(0.0);
+        new_dw->allocateTemporary(phiY, patch, Ghost::AroundCells, 1); phiY.initialize(0.0);
+        new_dw->allocateTemporary(phiZ, patch, Ghost::AroundCells, 1); phiZ.initialize(0.0);
+        // ---- Assemble Mole Fraction and inverse average Molecular weight for each cell -----
+        for (CellIterator iter = patch->getExtraCellIterator(1); !iter.done(); iter++){
+          IntVector c = *iter;
+
+          double Ysum = 0.0;
+          for (int j = 0; j < N_SPECIES; j++){
+            int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
+            Y[idx][c]  = Yold[j][c];
+            Ysum      += Yold[j][c];
+          }
+          Y[N2][c] = 1.0 - Ysum;
+
+          double MwMix_temp = 0.0;
+          for (int k = 0; k < N_ALL; k++){
+            MwMix_temp += Y[k][c] / d_Mw[k];
+          }
+          invMwMix[c] = MwMix_temp;
+
+          for (int k = 0; k < N_ALL; k++){
+            X[k][c] = Y[k][c] / (MwMix_temp * d_Mw[k]);
+          }
+        }
+        // ------ Compute mol fraction gradient -nabla X -------
+        for (int k = 0; k < N_ALL; k++) {
+          q_flux_allFaces(new_dw, patch, false, X[k], ones, ones,
+                          gradX_X[k], gradX_Y[k], gradX_Z[k]);
         }
 
-        // Accumulate correction velocity Vc = sum_all_k J_k^Fick at each face (all 9 species)
-        // N2 face fluxes are computed inline from Yold[k] ghost cells (Y_N2 = 1 - sum(Yk))
-        // avoiding a temporary CCVariable whose MPI ghost cells would be uninitialized.
-        SFCXVariable<double> Vc_X;
-        SFCYVariable<double> Vc_Y;
-        SFCZVariable<double> Vc_Z;
-        new_dw->allocateTemporary(Vc_X, patch, Ghost::AroundCells, 1);
-        new_dw->allocateTemporary(Vc_Y, patch, Ghost::AroundCells, 1);
-        new_dw->allocateTemporary(Vc_Z, patch, Ghost::AroundCells, 1);
-        Vc_X.initialize(0.0);
-        Vc_Y.initialize(0.0);
-        Vc_Z.initialize(0.0);
-
+        //__________________________________
+        // Face iterator limits — extend hi on patch boundary faces (noNeighborsHigh)
         IntVector offset = IntVector(1,1,1) - patch->noNeighborsHigh();
 
-        IntVector low_x = patch->getSFCXIterator().begin();
-        IntVector hi_x  = patch->getSFCXIterator().end();
-        hi_x[0] += offset[0];
-        IntVector low_y = patch->getSFCYIterator().begin();
-        IntVector hi_y  = patch->getSFCYIterator().end();
-        hi_y[1] += offset[1];
-        IntVector low_z = patch->getSFCZIterator().begin();
-        IntVector hi_z  = patch->getSFCZIterator().end();
-        hi_z[2] += offset[2];
+        IntVector lowX = patch->getSFCXIterator().begin();
+        IntVector hiX  = patch->getSFCXIterator().end();
+        hiX[0] += offset[0];
 
-        // Tracked species contributions
-        for (int k = 0; k < N_SPECIES; k++) {
-          for (CellIterator iter(low_x, hi_x); !iter.done(); iter++) Vc_X[*iter] += J_X[k][*iter];
-          for (CellIterator iter(low_y, hi_y); !iter.done(); iter++) Vc_Y[*iter] += J_Y[k][*iter];
-          for (CellIterator iter(low_z, hi_z); !iter.done(); iter++) Vc_Z[*iter] += J_Z[k][*iter];
+        IntVector lowY = patch->getSFCYIterator().begin();
+        IntVector hiY  = patch->getSFCYIterator().end();
+        hiY[1] += offset[1];
+
+        IntVector lowZ = patch->getSFCZIterator().begin();
+        IntVector hiZ  = patch->getSFCZIterator().end();
+        hiZ[2] += offset[2];
+
+        //__________________________________
+        // X-face loop
+        // f = face index = left boundary of cell (i,j,k); R shares index f, L is one step left
+        for (CellIterator iter(lowX, hiX); !iter.done(); iter++) {
+          IntVector f = *iter;
+          IntVector L = f + IntVector(-1, 0, 0); // left  cell centre (i-1,j,k): CCVar[L]
+          //                                        right cell centre (i,  j,k): CCVar[f]
+          // face average of scalar q: 0.5*(q[L] + q[f])
+          // gradX_X[k][f] = -(X[k][f] - X[k][L]) / dx.x()
+
+          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
+          double Tface        = 0.5*(temp[L]      + temp[f]);
+
+          std::array<double, N_ALL> Yface;
+          for (int k = 0; k < N_ALL; k++) {
+            Yface[k] = 0.5*(Y[k][L] + Y[k][f]);
+          }
+
+          auto DkFace = mixtureAvgDiffCoeffs(Tface, rhoFace, Yface);
+
+          double S = 0.0;
+          std::array<double, N_ALL> jstar;
+          for (int k = 0; k < N_ALL; k++) {
+            jstar[k] = rhoFace * DkFace[k] * d_Mw[k] * invMwMixFace * gradX_X[k][f];
+            S += jstar[k]; // correction term
+          }
+          double sumJX = 0.0;
+          for (int k = 0; k < N_ALL; k++) {
+            jX[k][f] = jstar[k] - Yface[k] * S;
+            sumJX += jX[k][f];
+          }
+          if (std::abs(sumJX) > 1e-12) {
+            std::ostringstream warn;
+            warn << "X-face mass flux not conserved at " << f << ": |sum(jX)| = " << std::abs(sumJX);
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+          auto hLeft  = sensibleEnthalpyAllSpecies(temp[L]);
+          auto hRight = sensibleEnthalpyAllSpecies(temp[f]);
+          double tmp  = 0.0;
+          for (int k = 0; k < N_ALL; k++){
+            tmp += jX[k][f] * 0.5 * (hLeft[k] + hRight[k]);
+          }
+          phiX[f] = tmp;
         }
 
-        // N2 contribution: J_N2 = -D_N2_FC * (Y_N2[R] - Y_N2[L]) / dx
-        //                        = -D_N2_FC * ((1-sum_k Y_k[R]) - (1-sum_k Y_k[L])) / dx
-        //                        = D_N2_FC * (sum_k Y_k[R] - sum_k Y_k[L]) / dx
-        for (CellIterator iter(low_x, hi_x); !iter.done(); iter++) {
-          IntVector R = *iter;
-          IntVector L = R + IntVector(-1, 0, 0);
-          double rhoD_FC = 2.0 * rhoDiffCoef[N2][L] * rhoDiffCoef[N2][R] /
-                           (rhoDiffCoef[N2][L] + rhoDiffCoef[N2][R] + 1.0e-100);
-          double Ysum_R = 0.0, Ysum_L = 0.0;
-          for (int k = 0; k < N_SPECIES; k++) { Ysum_R += Yold[k][R]; Ysum_L += Yold[k][L]; }
-          Vc_X[*iter] += rhoD_FC * (Ysum_R - Ysum_L) / dx.x();
-        }
-        for (CellIterator iter(low_y, hi_y); !iter.done(); iter++) {
-          IntVector R = *iter;
-          IntVector L = R + IntVector(0, -1, 0);
-          double rhoD_FC = 2.0 * rhoDiffCoef[N2][L] * rhoDiffCoef[N2][R] /
-                           (rhoDiffCoef[N2][L] + rhoDiffCoef[N2][R] + 1.0e-100);
-          double Ysum_R = 0.0, Ysum_L = 0.0;
-          for (int k = 0; k < N_SPECIES; k++) { Ysum_R += Yold[k][R]; Ysum_L += Yold[k][L]; }
-          Vc_Y[*iter] += rhoD_FC * (Ysum_R - Ysum_L) / dx.y();
-        }
-        for (CellIterator iter(low_z, hi_z); !iter.done(); iter++) {
-          IntVector R = *iter;
-          IntVector L = R + IntVector(0, 0, -1);
-          double rhoD_FC = 2.0 * rhoDiffCoef[N2][L] * rhoDiffCoef[N2][R] /
-                           (rhoDiffCoef[N2][L] + rhoDiffCoef[N2][R] + 1.0e-100);
-          double Ysum_R = 0.0, Ysum_L = 0.0;
-          for (int k = 0; k < N_SPECIES; k++) { Ysum_R += Yold[k][R]; Ysum_L += Yold[k][L]; }
-          Vc_Z[*iter] += rhoD_FC * (Ysum_R - Ysum_L) / dx.z();
+        //__________________________________
+        // Y-face loop
+        // f = face index = bottom boundary of cell (i,j,k); R shares index f, L is one step below
+        for (CellIterator iter(lowY, hiY); !iter.done(); iter++) {
+          IntVector f = *iter;
+          IntVector L = f + IntVector(0, -1, 0); // bottom cell centre (i,j-1,k): CCVar[L]
+          //                                        top    cell centre (i,j,  k): CCVar[f]
+          // face average of scalar q: 0.5*(q[L] + q[f])
+          // gradX_Y[k][f] = -(X[k][f] - X[k][L]) / dx.y()
+
+          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
+          double Tface        = 0.5*(temp[L]      + temp[f]);
+
+          std::array<double, N_ALL> Yface;
+          for (int k = 0; k < N_ALL; k++) {
+            Yface[k] = 0.5*(Y[k][L] + Y[k][f]);
+          }
+
+          auto DkFace = mixtureAvgDiffCoeffs(Tface, rhoFace, Yface);
+
+          double S = 0.0;
+          std::array<double, N_ALL> jstar;
+          for (int k = 0; k < N_ALL; k++) {
+            jstar[k] = rhoFace * DkFace[k] * d_Mw[k] * invMwMixFace * gradX_Y[k][f];
+            S += jstar[k];
+          }
+          double sumJY = 0.0;
+          for (int k = 0; k < N_ALL; k++) {
+            jY[k][f] = jstar[k] - Yface[k] * S;
+            sumJY += jY[k][f];
+          }
+          if (std::abs(sumJY) > 1e-12) {
+            std::ostringstream warn;
+            warn << "Y-face mass flux not conserved at " << f << ": |sum(jY)| = " << std::abs(sumJY);
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+          auto hLeft  = sensibleEnthalpyAllSpecies(temp[L]);
+          auto hRight = sensibleEnthalpyAllSpecies(temp[f]);
+          double tmp  = 0.0;
+          for (int k = 0; k < N_ALL; k++){
+            tmp += jY[k][f] * 0.5 * (hLeft[k] + hRight[k]);
+          }
+          phiY[f] = tmp;
         }
 
-        // One cell loop: corrected flux j_k = j*_k - Y_k*Vc at each face,
-        // then -div(j_k) for species and -sum_k cp_k * j_k_avg · grad(T) for energy.
+        //__________________________________
+        // Z-face loop
+        // f = face index = back boundary of cell (i,j,k); R shares index f, L is one step back
+        for (CellIterator iter(lowZ, hiZ); !iter.done(); iter++) {
+          IntVector f = *iter;
+          IntVector L = f + IntVector(0, 0, -1); // back  cell centre (i,j,k-1): CCVar[L]
+          //                                        front cell centre (i,j,k  ): CCVar[f]
+          // face average of scalar q: 0.5*(q[L] + q[f])
+          // gradX_Z[k][f] = -(X[k][f] - X[k][L]) / dx.z()
+
+          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
+          double Tface        = 0.5*(temp[L]      + temp[f]);
+
+          std::array<double, N_ALL> Yface;
+          for (int k = 0; k < N_ALL; k++) {
+            Yface[k] = 0.5*(Y[k][L] + Y[k][f]);
+          }
+
+          auto DkFace = mixtureAvgDiffCoeffs(Tface, rhoFace, Yface);
+
+          double S = 0.0;
+          std::array<double, N_ALL> jstar;
+          for (int k = 0; k < N_ALL; k++) {
+            jstar[k] = rhoFace * DkFace[k] * d_Mw[k] * invMwMixFace * gradX_Z[k][f];
+            S += jstar[k];
+          }
+          double sumJZ = 0.0;
+          for (int k = 0; k < N_ALL; k++) {
+            jZ[k][f] = jstar[k] - Yface[k] * S;
+            sumJZ += jZ[k][f];
+          }
+          if (std::abs(sumJZ) > 1e-12) {
+            std::ostringstream warn;
+            warn << "Z-face mass flux not conserved at " << f << ": |sum(jZ)| = " << std::abs(sumJZ);
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+          auto hLeft  = sensibleEnthalpyAllSpecies(temp[L]);
+          auto hRight = sensibleEnthalpyAllSpecies(temp[f]);
+          double tmp  = 0.0;
+          for (int k = 0; k < N_ALL; k++){
+            tmp += jZ[k][f] * 0.5 * (hLeft[k] + hRight[k]);
+          }
+          phiZ[f] = tmp;
+        }
+
+        //__________________________________
+        // Cell loop: accumulate -div(j_k)*dt into Ysrc and -div(hs_k*j_k)*dt into eng_src
+        // divJ [kg/(m^3*s)]; divJ/rho [1/s]; *dtAdv -> [-] matches Ysrc units
         for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
           IntVector c  = *iter;
-          IntVector xr = c + IntVector( 1, 0, 0);
-          IntVector xl = c + IntVector(-1, 0, 0);
-          IntVector yt = c + IntVector( 0, 1, 0);
-          IntVector yb = c + IntVector( 0,-1, 0);
-          IntVector zf = c + IntVector( 0, 0, 1);
-          IntVector zk = c + IntVector( 0, 0,-1);
-
-          // Sensible enthalpy h_s,k [J/kg] at the 6 neighbouring cell centres (CCVariable).
-          // Central difference (hs[xr] - hs[xl]) / (2*dx) gives dh_k/dx at cell c,
-          // matching CANTERA's finite-difference of stored enthalpies (grad_hk).
-          // Formation enthalpy drops out because it is spatially constant.
-          const auto hs_xr = enthalpyAllSpecies(temp[xr]);
-          const auto hs_xl = enthalpyAllSpecies(temp[xl]);
-          const auto hs_yt = enthalpyAllSpecies(temp[yt]);
-          const auto hs_yb = enthalpyAllSpecies(temp[yb]);
-          const auto hs_zf = enthalpyAllSpecies(temp[zf]);
-          const auto hs_zk = enthalpyAllSpecies(temp[zk]);
-
-          double S_eng = 0.0;
-
-          for (int k = 0; k < N_SPECIES; k++) {
-            int ka = k + (k >= 2 ? 1 : 0);
-
-            // Corrected flux at each face: j_k = j*_k - Y_k * Vc
-            double jxr = J_X[k][xr] - 0.5*(Yold[k][c] +Yold[k][xr])*Vc_X[xr];
-            double jxl = J_X[k][c]  - 0.5*(Yold[k][xl]+Yold[k][c] )*Vc_X[c];
-            double jyt = J_Y[k][yt] - 0.5*(Yold[k][c] +Yold[k][yt])*Vc_Y[yt];
-            double jyb = J_Y[k][c]  - 0.5*(Yold[k][yb]+Yold[k][c] )*Vc_Y[c];
-            double jzf = J_Z[k][zf] - 0.5*(Yold[k][c] +Yold[k][zf])*Vc_Z[zf];
-            double jzk = J_Z[k][c]  - 0.5*(Yold[k][zk]+Yold[k][c] )*Vc_Z[c];
-
-            // div(j_k) [kg/m^3/s]
-            double divj = ((jxr - jxl)*areaX + (jyt - jyb)*areaY + (jzf - jzk)*areaZ) / cellVol;
-
-            // Species: -div(j_k) * dt / rho
-            Ysrc[k][c] += -divj * dtAdv / rho[c];
-
-            // Energy: j_k_avg · grad(h_k),  grad(h_k) from central difference of NASA7 values
-            double dh_dx = (hs_xr[ka] - hs_xl[ka]) / (2.0 * dx.x());
-            double dh_dy = (hs_yt[ka] - hs_yb[ka]) / (2.0 * dx.y());
-            double dh_dz = (hs_zf[ka] - hs_zk[ka]) / (2.0 * dx.z());
-            S_eng += 0.5*(jxl+jxr)*dh_dx + 0.5*(jyb+jyt)*dh_dy + 0.5*(jzk+jzf)*dh_dz;
-
-            // Flow-work correction for sensible internal-energy (cv*T) formulation:
-            // -RT/W_k * div(j_k).  d_Ri[ka] = R_universal/W_k [J/(kg.K)], so d_Ri[ka]*T = RT/W_k.
-            S_eng += d_Ri[ka] * temp[c] * divj;
+          for (int j = 0; j < N_SPECIES; j++) {
+            int idx = j + (j >= 2 ? 1 : 0);  // all-species index (skips N2 slot 2)
+            double divJ = ((jX[idx][c + IntVector(1,0,0)] - jX[idx][c]) * areaX
+                         + (jY[idx][c + IntVector(0,1,0)] - jY[idx][c]) * areaY
+                         + (jZ[idx][c + IntVector(0,0,1)] - jZ[idx][c]) * areaZ) / cellVol;
+            Ysrc[j][c] -= divJ * dtAdv / rho[c]; // [-]
           }
-
-          // N2: only contributes to energy (not a tracked species)
-          {
-            double Yc=0, Yr=0, Yl=0, Yt=0, Yb=0, Yf=0, Ybk=0;
-            for (int k = 0; k < N_SPECIES; k++) {
-              Yc+=Yold[k][c]; Yr+=Yold[k][xr]; Yl+=Yold[k][xl];
-              Yt+=Yold[k][yt]; Yb+=Yold[k][yb]; Yf+=Yold[k][zf]; Ybk+=Yold[k][zk];
-            }
-            auto rhoD_N2 = [&](IntVector L, IntVector R) {
-              return 2.0*rhoDiffCoef[N2][L]*rhoDiffCoef[N2][R]/
-                     (rhoDiffCoef[N2][L]+rhoDiffCoef[N2][R]+1.0e-100);
-            };
-            double jN2_xr = rhoD_N2(c, xr)*(Yr-Yc)/dx.x() - (1.0-0.5*(Yc+Yr))*Vc_X[xr];
-            double jN2_xl = rhoD_N2(xl,c )*(Yc-Yl)/dx.x() - (1.0-0.5*(Yl+Yc))*Vc_X[c];
-            double jN2_yt = rhoD_N2(c, yt)*(Yt-Yc)/dx.y() - (1.0-0.5*(Yc+Yt))*Vc_Y[yt];
-            double jN2_yb = rhoD_N2(yb,c )*(Yc-Yb)/dx.y() - (1.0-0.5*(Yb+Yc))*Vc_Y[c];
-            double jN2_zf = rhoD_N2(c, zf)*(Yf-Yc)/dx.z() - (1.0-0.5*(Yc+Yf))*Vc_Z[zf];
-            double jN2_zk = rhoD_N2(zk,c )*(Yc-Ybk)/dx.z()- (1.0-0.5*(Ybk+Yc))*Vc_Z[c];
-            double dh_N2_dx = (hs_xr[N2] - hs_xl[N2]) / (2.0 * dx.x());
-            double dh_N2_dy = (hs_yt[N2] - hs_yb[N2]) / (2.0 * dx.y());
-            double dh_N2_dz = (hs_zf[N2] - hs_zk[N2]) / (2.0 * dx.z());
-            S_eng += 0.5*(jN2_xl+jN2_xr)*dh_N2_dx
-                   + 0.5*(jN2_yb+jN2_yt)*dh_N2_dy
-                   + 0.5*(jN2_zk+jN2_zf)*dh_N2_dz;
-
-            // Flow-work correction: -RT/W_N2 * div(j_N2)
-            double divj_N2 = ((jN2_xr - jN2_xl)*areaX + (jN2_yt - jN2_yb)*areaY
-                            + (jN2_zf - jN2_zk)*areaZ) / cellVol;
-            S_eng += d_Ri[N2] * temp[c] * divj_N2;
-          }
-
-          eng_src[c] -= S_eng * cellVol * dtAdv;
+          eng_src[c] -= ((phiX[c + IntVector(1,0,0)] - phiX[c]) * areaX
+                       + (phiY[c + IntVector(0,1,0)] - phiY[c]) * areaY
+                       + (phiZ[c + IntVector(0,0,1)] - phiZ[c]) * areaZ) * dtAdv; // [joules]
         }
       }
     }   // matl loop
@@ -1535,7 +1619,8 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
                                                                const MaterialSet* matls )
   {                                                                                                                  
     Task* t = scinew Task("hydrogenBurke::modifyThermoTransportProperties",
-                           this, &hydrogenBurke::modifyThermoTransportProperties);                                   
+                           this, &hydrogenBurke::modifyThermoTransportProperties);
+    printSchedule( level, dout_models_H2Burke, " hydrogenBurke::scheduleModifyThermoTransportProperties" );                                   
     for (int k = 0; k < N_SPECIES; k++) {
       t->requiresVar(Task::OldDW, d_Y_labels[k], d_gn, 0);                                                           
     }     
@@ -1547,11 +1632,8 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
     t->modifiesVar(Ilb->viscosityLabel);
     t->modifiesVar(Ilb->thermalCondLabel);
 
-    for (int k = 0; k < N_SPECIES; k++) {
-      t->computesVar(d_diffCoef_labels[k]);
-    }
     for (int k = 0; k < N_ALL; k++) {
-      t->computesVar(d_rhoDiffCoef_labels[k]);
+      t->computesVar(d_diffCoef_labels[k]);
     }
 
     sched->addTask(t, level->eachPatch(), matls);
@@ -1563,13 +1645,14 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
                                                        const MaterialSubset* matls,
                                                        DataWarehouse*        old_dw,
                                                        DataWarehouse*        new_dw )                                
-  {                                                                                
+  {   
+
     for (int p = 0; p < patches->size(); p++) {                                                                      
       const Patch* patch = patches->get(p);    
-                                                                                                                     
+      printTask( patches, patch, dout_models_H2Burke, " hydrogenBurke::modifyThermoTransportProperties" );        
+
       for (int m = 0; m < matls->size(); m++) {
-        int indx = matls->get(m);                                                                                    
-                                 
+        int indx = matls->get(m);                                                                                                           
         std::vector<constCCVariable<double>> Yold(N_SPECIES);                                                           
         for (int k = 0; k < N_SPECIES; k++) {                                                                        
           old_dw->get(Yold[k], d_Y_labels[k], indx, patch, d_gn, 0);
@@ -1586,15 +1669,10 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
         new_dw->getModifiable(mu,    Ilb->viscosityLabel,     indx, patch);
         new_dw->getModifiable(lambda,Ilb->thermalCondLabel,   indx, patch);
 
-        std::vector<CCVariable<double>> diffCoef(N_SPECIES);
-        for (int k = 0; k < N_SPECIES; k++) {
+        std::vector<CCVariable<double>> diffCoef(N_ALL);
+        for (int k = 0; k < N_ALL; k++) {
           new_dw->allocateAndPut(diffCoef[k], d_diffCoef_labels[k], indx, patch);
           diffCoef[k].initialize(0.0);
-        }
-        std::vector<CCVariable<double>> rhoDiffCoef(N_ALL);
-        for (int k = 0; k < N_ALL; k++) {
-          new_dw->allocateAndPut(rhoDiffCoef[k], d_rhoDiffCoef_labels[k], indx, patch);
-          rhoDiffCoef[k].initialize(0.0);
         }
 
         CellIterator iter = patch->getExtraCellIterator();
@@ -1608,21 +1686,21 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
           std::array<double, N_ALL> Y;
           std::array<double, N_ALL> X;
 
-          double Ysum_build = 0.0;
+          double Ysum = 0.0;
           for (int j = 0; j < N_SPECIES; j++){
             int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
-            Y[idx] = Yold[j][c];
-            Ysum_build += Yold[j][c];
+            Y[idx]  = Yold[j][c];
+            Ysum   += Yold[j][c];
           }
-          Y[N2] = 1.0 - Ysum_build;
+          Y[N2] = 1.0 - Ysum;
 
-          double Ntotal = 0.0;
+          double MwMix = 0.0;
           for (int j = 0; j < N_ALL; j++){
-            Ntotal += Y[j] / d_Mw[j];
+            MwMix += Y[j] / d_Mw[j];
           }
 
           for (int j = 0; j < N_ALL; j++){
-            X[j] = Y[j] / (Ntotal * d_Mw[j]);
+            X[j] = Y[j] / (MwMix * d_Mw[j]);
           }
           double T  = temp[c]; // Current cell temperature
 
@@ -1723,36 +1801,12 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
 
           //-------------------------------------------------------------------------
           // Molecular Diffusion coefficients  [m^2/s]
-          // d_diffCoef_labels[k] maps to tracked species: H2(0),O2(1),H2O(2),H(3),O(4),OH(5),HO2(6),H2O2(7)
+          // d_diffCoef_labels indexed by all-species index: H2=0,O2=1,N2=2,H2O=3,H=4,O=5,OH=6,HO2=7,H2O2=8
           //-------------------------------------------------------------------------
-          double Darray[N_ALL][N_ALL] = {};
-          double sum;
-          double P  = rho[c] * Rmix * T; // current cell pressure
-
-          double Mmix = 0.0;
-          for (int j = 0; j < N_ALL; j++){
-            Mmix += X[j] * d_Mw[j];
-          }
-
-          for (int j = 0; j < N_ALL; j++){
-            for (int k = j + 1; k < N_ALL; k++){ // Build a symmetric matrix calculating only the upper triangle
-              tmp = T * Tsqrt * (d_D0[j][k] + d_D1[j][k] * lnT + d_D2[j][k] * lnT2 + d_D3[j][k] * lnT3 + d_D4[j][k] * lnT4);
-              Darray[j][k] = tmp;
-              Darray[k][j] = tmp; // mirror to lower triangle
-            }
-          }
-
-          for (int k = 0; k < N_ALL; k++){
-            sum = 0.0;
-            for (int j = 0; j < N_ALL; j++){
-              if (k == j) continue;
-              sum += X[j] / Darray[j][k];
-            }
-            double Dk = (Mmix - X[k] * d_Mw[k]) / (P * Mmix * sum);
-            rhoDiffCoef[k][c] = rho[c] * Dk;
-            if (k != 2) {
-              int idx = k - (k >= 2 ? 1 : 0);  // map all-species index to tracked-species index
-              diffCoef[idx][c] = Dk;
+          {
+            auto Dk = mixtureAvgDiffCoeffs(T, rho[c], Y);
+            for (int k = 0; k < N_ALL; k++){
+              diffCoef[k][c] = Dk[k];
             }
           }
         } // cell iterator
@@ -1760,11 +1814,8 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
         if (!d_doDiffusion) {
           mu.initialize(0.0);
           lambda.initialize(0.0);
-          for (int k = 0; k < N_SPECIES; k++) {
-            diffCoef[k].initialize(0.0);
-          }
           for (int k = 0; k < N_ALL; k++) {
-            rhoDiffCoef[k].initialize(0.0);
+            diffCoef[k].initialize(0.0);
           }
         }
 
@@ -1785,3 +1836,69 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
     } // patches
   }
 
+// //------------------------------------------------------------------
+// // computeSpecificHeat
+// // Called by ICE::conservedtoPrimitive_Vars after the transported
+// // species have been recovered from their advected quantities.
+// // Uses one Newton step: estimate T from the old cv already in
+// // cv_new, recompute cv at that T with the post-advection species,
+// // then write cv_new.  One iteration is sufficient because the
+// // residual is O(ΔT_correction × dcv/dT / cv), second-order small.
+// //------------------------------------------------------------------
+// void hydrogenBurke::computeSpecificHeat(CCVariable<double>& cv_new,
+//                                         const Patch*        patch,
+//                                         DataWarehouse*      new_dw,
+//                                         const int           indx)
+// {
+//   // Post-advection species (set by conservedtoPrimitive_Vars just
+//   // before this call via the transported-variable loop).
+//   std::vector<constCCVariable<double>> Y_new(N_SPECIES);
+//   for (int k = 0; k < N_SPECIES; k++) {
+//     new_dw->get(Y_new[k], d_Y_labels[k], indx, patch, d_gn, 0);
+//   }
+
+//   // Advected energy and mass for T estimate.
+//   constCCVariable<double> eng_adv;
+//   constCCVariable<double> mass_adv;
+//   new_dw->get(eng_adv,  Ilb->eng_advLabel,  indx, patch, d_gn, 0);
+//   new_dw->get(mass_adv, Ilb->mass_advLabel, indx, patch, d_gn, 0);
+
+//   for (CellIterator iter(patch->getCellIterator()); !iter.done(); ++iter) {
+//     IntVector c = *iter;
+
+//     // One-step estimate: T from current (old) cv
+//     double T_est = eng_adv[c] / (mass_adv[c] * cv_new[c]);
+
+//     if (T_est < 100.0 || T_est > 5000.0) {
+//       std::ostringstream warn;
+//       warn << "hydrogenBurke::computeSpecificHeat: T_est=" << T_est
+//            << " K at cell " << c << " is outside the hard limits [100, 5000] K";
+//       throw InvalidValue(warn.str(), __FILE__, __LINE__);
+//     }
+//     if (T_est < 200.0 || T_est > 3501.0) {
+//       std::ostringstream warn;
+//       warn << "hydrogenBurke::computeSpecificHeat WARNING: T_est=" << T_est
+//            << " K at cell " << c << " is outside the valid NASA-7 polynomial range [200, 3500] K";
+//       proc0cout << warn.str() << std::endl;
+//     }
+
+//     // Build post-advection species array [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
+//     std::array<double, N_ALL> Y;
+//     double Ysum = 0.0;
+//     for (int j = 0; j < N_SPECIES; j++) {
+//       int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
+//       Y[idx]  = Y_new[j][c];
+//       Ysum   += Y_new[j][c];
+//     }
+//     Y[N2] = 1.0 - Ysum;
+
+//     // Recompute cv at T_est with updated composition
+//     double cp_mix = 0.0, R_mix = 0.0;
+//     const auto cpS = cpSpecificHeat(T_est);
+//     for (int j = 0; j < N_ALL; j++) {
+//       cp_mix += Y[j] * d_Ri[j] * cpS[j];
+//       R_mix  += Y[j] * d_Ri[j];
+//     }
+//     cv_new[c] = cp_mix - R_mix;
+//   }
+// }

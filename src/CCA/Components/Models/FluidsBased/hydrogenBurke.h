@@ -172,8 +172,9 @@ private:
   double intEnergy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   std::array<double, 9> cpSpecificHeat(double T);
-  std::array<double, N_ALL> enthalpyAllSpecies(double T) const;
   std::array<double, N_ALL> sensibleEnthalpyAllSpecies(double T) const;
+  std::array<double, N_ALL> mixtureAvgDiffCoeffs(double T, double rho,
+                                                  const std::array<double, N_ALL>& Y) const;
 
   double reaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);
   double duplicateReaction(double T, double RT, const std::array<double, 9>& C, int recNum, int R1, int R2, int P1, int P2);
@@ -632,8 +633,7 @@ private:
 
   VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
   VarLabel* d_HRR_label{nullptr};         // heat release rate [W/m³]
-  std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s] for 8 tracked species (post-processing)
-  std::vector<VarLabel*> d_rhoDiffCoef_labels; // rho*D_k [kg/(m*s)] for all 9 species (N2 at index 2) — internal use
+  std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s], indexed by all-species index (H2=0,O2=1,N2=2,...)
 
   // Geometry regions for initialization
   std::vector<Region*> d_regions;
