@@ -27,6 +27,11 @@
 
 #include <expression/Expression.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+
 /**
  *  \class OscillatingCylinder
  *  \author Tony Saad
