@@ -368,7 +368,9 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
             for (int k = 0; k < NN; k++) {
               IntVector node = ni[k];
               vel   += gvelocity[adv_matl][node] *S[k];
-              sumSk += S[k];
+              velBU += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+              sumSk += gmass[adv_matl][node]*S[k];
+              nodeMassMin = min(nodeMassMin, gmass[adv_matl][node]);
               gSN   += gSurfNorm[adv_matl][node]*S[k];
             }
           } else {
@@ -450,6 +452,7 @@ void TriangleTasks::updateTriangles(const ProcessorGroup*,
         }
 
         tx_new[idx] = (P[0]+P[1]+P[2])/3.;
+
         Vector triNorm = Cross(P[1]-P[0],P[2]-P[0]);
         double triNormLength = triNorm.length()+1.e-100;
         triArea_new[idx]=0.5*triNormLength;
@@ -553,7 +556,6 @@ void TriangleTasks::scheduleInsertTriangles(SchedulerP& sched,
     t->requires(Task::OldDW, lb->delTLabel );
 
     t->modifies(lb->pXLabel_preReloc);
-    //t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
 
     sched->addTask(t, patches, matls);
   }
@@ -567,7 +569,7 @@ void TriangleTasks::insertTriangles(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing TriangleTasks::insertParticles");
+    printTask(patches, patch,cout_doing,"Doing TriangleTasks::insertTriangles");
 
     // Get the current simulation time
     simTime_vartype simTimeVar;
