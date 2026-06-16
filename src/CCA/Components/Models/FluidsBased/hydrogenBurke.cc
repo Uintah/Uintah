@@ -298,6 +298,7 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
     pi.isActive    = true;
     d_profileInit  = std::move(pi);
   }
+
 }
 
 //------------------------------------------------------------------
@@ -327,7 +328,7 @@ void hydrogenBurke::scheduleInitialize(SchedulerP   & sched,
     t->modifiesVar(Ilb->rho_CCLabel);
     t->modifiesVar(Ilb->sp_vol_CCLabel);
     t->modifiesVar(Ilb->speedSound_CCLabel);
-    t->modifiesVar(Ilb->press_CCLabel, press_matl);
+    t->computesVar(Ilb->press_equil_CCLabel, press_matl);
 
     press_matl->removeReference();
   } else {
@@ -367,15 +368,15 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
       if (d_profileInit.isActive) {
         const ProfileInit& pi = d_profileInit;
 
-        CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_CC;
+        CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_eq;
         CCVariable<Vector> vel_CC;
-        new_dw->getModifiable(temp_CC,    Ilb->temp_CCLabel,       indx, patch);
-        new_dw->getModifiable(vel_CC,     Ilb->vel_CCLabel,        indx, patch);
-        new_dw->getModifiable(rho_micro,  Ilb->rho_micro_CCLabel,  indx, patch);
-        new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,        indx, patch);
-        new_dw->getModifiable(sp_vol,     Ilb->sp_vol_CCLabel,     indx, patch);
-        new_dw->getModifiable(speedSound, Ilb->speedSound_CCLabel, indx, patch);
-        new_dw->getModifiable(press_CC,   Ilb->press_CCLabel,      0,    patch);
+        new_dw->getModifiable(temp_CC,    Ilb->temp_CCLabel,        indx, patch);
+        new_dw->getModifiable(vel_CC,     Ilb->vel_CCLabel,         indx, patch);
+        new_dw->getModifiable(rho_micro,  Ilb->rho_micro_CCLabel,   indx, patch);
+        new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,         indx, patch);
+        new_dw->getModifiable(sp_vol,     Ilb->sp_vol_CCLabel,      indx, patch);
+        new_dw->getModifiable(speedSound, Ilb->speedSound_CCLabel,  indx, patch);
+        new_dw->allocateAndPut(press_eq,   Ilb->press_equil_CCLabel, 0,    patch);
 
         CCVariable<double> cv, gamma_cc;
         new_dw->getModifiable(cv,       Ilb->specific_heatLabel, indx, patch);
@@ -434,12 +435,12 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
           double cv_tmp   = cp_mix - R_mix;
           cv[c]           = cv_tmp;
           gamma_cc[c]     = cp_mix / cv_tmp;
-          double rho_eos  = pres_val / (R_mix * T);   // enforce P = ρRT consistency
-          rho_micro[c]    = rho_eos;
-          rho_CC[c]       = rho_eos;
-          sp_vol[c]       = 1.0 / rho_eos;
-          press_CC[c]     = pres_val;
-          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_val / rho_eos);
+          double pres_eos = rho_val * R_mix * T;        // enforce P = ρRT consistency
+          rho_micro[c]    = rho_val;
+          rho_CC[c]       = rho_val;
+          sp_vol[c]       = 1.0 / rho_val;
+          press_eq[c]     = pres_eos;
+          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_eos / rho_val);
         }
 
       } else {
@@ -639,15 +640,14 @@ std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::sensibleEnthalpyAllSpeci
   double Tquad = Tcube * T;
   double Tpent = Tquad * T;
   std::array<double, N_ALL> h_s;
+  // Sensible enthalpy: h_s = h_total(T) - h_ref(298.15K)
   if (T > d_Tmid) {
     for (int i = 0; i < N_ALL; i++) {
-      h_s[i] = d_Ri[i] * (d_h0_HighT[i]*T    + d_h1_HighT[i]*Tsqr  + d_h2_HighT[i]*Tcube
-                          + d_h3_HighT[i]*Tquad + d_h4_HighT[i]*Tpent);
+      h_s[i] = d_Ri[i] * (d_h0_HighT[i] * T + d_h1_HighT[i] * Tsqr + d_h2_HighT[i] * Tcube + d_h3_HighT[i] * Tquad + d_h4_HighT[i] * Tpent + d_h5_HighT[i]) - d_href[i];
     }
   } else {
     for (int i = 0; i < N_ALL; i++) {
-      h_s[i] = d_Ri[i] * (d_h0_LowT[i]*T    + d_h1_LowT[i]*Tsqr  + d_h2_LowT[i]*Tcube
-                          + d_h3_LowT[i]*Tquad + d_h4_LowT[i]*Tpent);
+      h_s[i] = d_Ri[i] * (d_h0_LowT[i] * T + d_h1_LowT[i] * Tsqr + d_h2_LowT[i] * Tcube + d_h3_LowT[i] * Tquad + d_h4_LowT[i] * Tpent + d_h5_LowT[i]) - d_href[i];
     }
   }
   return h_s;
@@ -1836,69 +1836,3 @@ void hydrogenBurke::scheduleModifyThermoTransportProperties( SchedulerP&        
     } // patches
   }
 
-// //------------------------------------------------------------------
-// // computeSpecificHeat
-// // Called by ICE::conservedtoPrimitive_Vars after the transported
-// // species have been recovered from their advected quantities.
-// // Uses one Newton step: estimate T from the old cv already in
-// // cv_new, recompute cv at that T with the post-advection species,
-// // then write cv_new.  One iteration is sufficient because the
-// // residual is O(ΔT_correction × dcv/dT / cv), second-order small.
-// //------------------------------------------------------------------
-// void hydrogenBurke::computeSpecificHeat(CCVariable<double>& cv_new,
-//                                         const Patch*        patch,
-//                                         DataWarehouse*      new_dw,
-//                                         const int           indx)
-// {
-//   // Post-advection species (set by conservedtoPrimitive_Vars just
-//   // before this call via the transported-variable loop).
-//   std::vector<constCCVariable<double>> Y_new(N_SPECIES);
-//   for (int k = 0; k < N_SPECIES; k++) {
-//     new_dw->get(Y_new[k], d_Y_labels[k], indx, patch, d_gn, 0);
-//   }
-
-//   // Advected energy and mass for T estimate.
-//   constCCVariable<double> eng_adv;
-//   constCCVariable<double> mass_adv;
-//   new_dw->get(eng_adv,  Ilb->eng_advLabel,  indx, patch, d_gn, 0);
-//   new_dw->get(mass_adv, Ilb->mass_advLabel, indx, patch, d_gn, 0);
-
-//   for (CellIterator iter(patch->getCellIterator()); !iter.done(); ++iter) {
-//     IntVector c = *iter;
-
-//     // One-step estimate: T from current (old) cv
-//     double T_est = eng_adv[c] / (mass_adv[c] * cv_new[c]);
-
-//     if (T_est < 100.0 || T_est > 5000.0) {
-//       std::ostringstream warn;
-//       warn << "hydrogenBurke::computeSpecificHeat: T_est=" << T_est
-//            << " K at cell " << c << " is outside the hard limits [100, 5000] K";
-//       throw InvalidValue(warn.str(), __FILE__, __LINE__);
-//     }
-//     if (T_est < 200.0 || T_est > 3501.0) {
-//       std::ostringstream warn;
-//       warn << "hydrogenBurke::computeSpecificHeat WARNING: T_est=" << T_est
-//            << " K at cell " << c << " is outside the valid NASA-7 polynomial range [200, 3500] K";
-//       proc0cout << warn.str() << std::endl;
-//     }
-
-//     // Build post-advection species array [H2, O2, N2, H2O, H, O, OH, HO2, H2O2]
-//     std::array<double, N_ALL> Y;
-//     double Ysum = 0.0;
-//     for (int j = 0; j < N_SPECIES; j++) {
-//       int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
-//       Y[idx]  = Y_new[j][c];
-//       Ysum   += Y_new[j][c];
-//     }
-//     Y[N2] = 1.0 - Ysum;
-
-//     // Recompute cv at T_est with updated composition
-//     double cp_mix = 0.0, R_mix = 0.0;
-//     const auto cpS = cpSpecificHeat(T_est);
-//     for (int j = 0; j < N_ALL; j++) {
-//       cp_mix += Y[j] * d_Ri[j] * cpS[j];
-//       R_mix  += Y[j] * d_Ri[j];
-//     }
-//     cv_new[c] = cp_mix - R_mix;
-//   }
-// }
