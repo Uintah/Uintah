@@ -134,6 +134,7 @@ WARNING
    double getInitialDensity() const;
    bool   getIsPistonMaterial() const;
    Vector getMotionInDirection() const;
+   Vector getPreventMotionInDirection() const;
 
    // Get the specific heats at room temperature
    double getInitialCp() const;
@@ -207,6 +208,7 @@ WARNING
    bool   d_allFileGeometry = false;
    bool   d_isPistonMaterial;
    Vector d_motionInDirection;
+   Vector d_preventMotionInDirection;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

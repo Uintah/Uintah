@@ -136,6 +136,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   if(d_motionInDirection.length() > 1.e-10){
      d_motionInDirection/=d_motionInDirection.length();
   }
+
+  ps->getWithDefault("PreventMotionInDirection",d_preventMotionInDirection, 
+                                                Vector(0.,0.,0.));
+  // Normalize this vector
+  if(d_preventMotionInDirection.length() > 1.e-10){
+     d_preventMotionInDirection/=d_preventMotionInDirection.length();
+  }
   
   // Also use for Darcy momentum exchange model
   ps->get("permeability", d_permeability);
@@ -332,6 +339,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("hasSurfaceDescription",d_hasSurfaceDescription);
   mpm_ps->appendElement("PistonMaterial",      d_isPistonMaterial);
   mpm_ps->appendElement("MotionInDirection",   d_motionInDirection);
+  mpm_ps->appendElement("PreventMotionInDirection", d_preventMotionInDirection);
   mpm_ps->appendElement("is_force_transmitting_material",
                        d_is_force_transmitting_material);
   mpm_ps->appendElement("is_active",d_is_active);
@@ -441,6 +449,11 @@ bool MPMMaterial::getIsPistonMaterial() const
 Vector MPMMaterial::getMotionInDirection() const
 {
   return d_motionInDirection;
+}
+
+Vector MPMMaterial::getPreventMotionInDirection() const
+{
+  return d_preventMotionInDirection;
 }
 
 double MPMMaterial::getInitialCp() const
