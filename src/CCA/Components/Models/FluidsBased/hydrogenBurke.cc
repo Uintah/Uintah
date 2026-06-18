@@ -129,7 +129,9 @@ void hydrogenBurke::outputProblemSpec(ProblemSpecP& ps)
   hb_ps->appendElement("doDiffusion", d_doDiffusion);
   hb_ps->appendElement("debug",       d_debug);
 
-  hb_ps->appendElement("tol_temp", d_tol);
+  hb_ps->appendElement("rtol",   d_rtol);
+  hb_ps->appendElement("atol_Y", d_atol_Y);
+  hb_ps->appendElement("atol_T", d_atol_T);
   hb_ps->appendElement("safety", d_safety);
   hb_ps->appendElement("max_grow", d_max_grow);
   hb_ps->appendElement("max_shrink", d_max_shrink);
@@ -166,7 +168,9 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   hb_ps->getWithDefault("doChemistry", d_doChemistry, true);
   hb_ps->getWithDefault("doDiffusion", d_doDiffusion, true);
   hb_ps->getWithDefault("debug",       d_debug,       false);
-  hb_ps->getWithDefault("tol_temp", d_tol, 1e-3);
+  hb_ps->getWithDefault("rtol",   d_rtol,   1e-12);
+  hb_ps->getWithDefault("atol_Y", d_atol_Y, 1e-12);
+  hb_ps->getWithDefault("atol_T", d_atol_T, 1e-12);
   hb_ps->getWithDefault("safety", d_safety, 0.9);
   hb_ps->getWithDefault("max_grow", d_max_grow, 2.0);
   hb_ps->getWithDefault("max_shrink",d_max_shrink, 0.1);
@@ -1251,29 +1255,28 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         // ------------------------------------------------------------
         //  Step 2: Constant-Volume ODE Integration t -> t + dt_advection
         // ------------------------------------------------------------
-        double dtChem = dtAdv;
-        double t = 0.0;
+        double dtChem     = dtAdv;
+        double t          = 0.0;
         double dtChem_min = dtAdv;
-
         double engSrcTemp = 0.0;
         std::array<double, N_SPECIES> massSrcTemp = {};
-
         double Torig = T;
-        auto Yorig   = Y;
-
+        auto   Yorig = Y;
         double Tcourse;
         double Tfine;
+        auto   Ycourse = Y;
+        auto   Yfine   = Y;
 
-        auto Ycourse = Y;
-        auto Yfine   = Y;
-
-        double error = 1.0;
+        double errNorm     = 1.0;   // weighted-RMS error over full state (normalized: accept if <= 1)
+        int    iworst      = -1;    // variable limiting the current trial (species index, or N_ALL = T)
+        int    iworstAtMin = -1;    // worst offender at the smallest accepted substep (diagnostic)
 
         if (d_doChemistry) while (t < dtAdv){
+
           // Change timestep if needed to end exactly at dt_advection
           if ((t + dtChem) > dtAdv){
             dtChem = dtAdv - t;
-            if (dtChem <= 1e-15) break;  // avoid using machine prescion timesteps at the end of intervals
+            if (dtChem <= 1e-15) break;  // avoid machine-precision steps at end of interval
           }
 
           Torig = T;
@@ -1289,64 +1292,95 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
             // Coarse step (full dtChem)
             Ysum = 0.0;
             for (int j = 0; j < N_ALL; j++){
-              if (j == 2) continue;
-              int k = j - (j > 2);
+              if (j == N2) continue;
+              int k = j - (j > N2);
               Ycourse[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
               Ysum += Ycourse[j];
             }
-            Ycourse[2] = 1.0 - Ysum;
+            Ycourse[N2] = 1.0 - Ysum;
             Tcourse = Torig + dtChem * result1.rhsEnergy;
 
             // Fine integration: first half-step reuses result1
             Ysum = 0.0;
             for (int j = 0; j < N_ALL; j++){
-              if (j == 2) continue;
-              int k = j - (j > 2);
+              if (j == N2) continue;
+              int k = j - (j > N2);
               Yfine[j] = Yorig[j] + result1.rhsMass[k] * dtHalf;
               Ysum += Yfine[j];
             }
-            Yfine[2] = 1.0 - Ysum;
+            Yfine[N2] = 1.0 - Ysum;
             Tfine = Torig + dtHalf * result1.rhsEnergy;
 
             // Fine integration: second half-step
             auto result2 = chemStep(Tfine, Yfine, rho_kg, cellVol);
-
             Ysum = 0.0;
             for (int j = 0; j < N_ALL; j++){
-              if (j == 2) continue;
-              int k = j - (j > 2);
+              if (j == N2) continue;
+              int k = j - (j > N2);
               Yfine[j] += result2.rhsMass[k] * dtHalf;
               Ysum += Yfine[j];
             }
-            Yfine[2] = 1.0 - Ysum;
+            Yfine[N2] = 1.0 - Ysum;
             Tfine += dtHalf * result2.rhsEnergy;
 
-            error = std::abs(Tcourse - Tfine);
+            // ----------------------------------------------------------
+            // Weighted-RMS error over the WHOLE integrated state.
+            // Forward Euler is order p=1, so the step-doubling error estimate is
+            //   e = (y_fine - y_coarse)/(2^p - 1) = y_fine - y_coarse.
+            // Per-variable scale sc = rtol*|y| + atol: the atol floor stops a trace
+            // radical near zero from blowing up the relative error and forcing
+            // spurious rejections, while still watching every species.
+            // ----------------------------------------------------------
+            errNorm = 0.0;
+            double worst = 0.0;
+            iworst = -1;
+            int nNorm = 0;
+            for (int j = 0; j < N_ALL; j++){
+              if (j == N2) continue;                 // closure species: set by difference, not integrated
+              double e  = Yfine[j] - Ycourse[j];
+              double sc = d_rtol * std::abs(Yfine[j]) + d_atol_Y;
+              double r  = e / sc;
+              errNorm  += r * r;
+              if (std::abs(r) > worst){ worst = std::abs(r); iworst = j; }
+              nNorm++;
+            }
+            {                                        // temperature term, separate Kelvin floor
+              double e  = Tfine - Tcourse;
+              double sc = d_rtol * std::abs(Tfine) + d_atol_T;
+              double r  = e / sc;
+              errNorm  += r * r;
+              if (std::abs(r) > worst){ worst = std::abs(r); iworst = N_ALL; } // N_ALL flags T
+              nNorm++;
+            }
+            errNorm = std::sqrt(errNorm / nNorm);
+            // Stricter per-component guarantee instead of RMS: replace line above with  errNorm = worst;
 
-            if (error < d_tol){ // accept fine integration if error is small enough
+            // h_new = safety * h * errNorm^(-1/(p+1)); p=1 -> exponent -1/2
+            double fac = d_safety * std::pow(std::max(errNorm, 1e-300), -0.5);
+            fac        = std::min(d_max_grow, std::max(d_max_shrink, fac));
+
+            if (errNorm <= 1.0){ // accept fine integration
               for (int j = 0; j < N_SPECIES; j++){
                 massSrcTemp[j] += dtHalf * (result1.rhsMass[j] + result2.rhsMass[j]);
               }
-              Y = Yfine;
+              Y           = Yfine;
               engSrcTemp += dtHalf * (result1.engSrc + result2.engSrc);
               T           = Tfine;
-              dtChem_min  = std::min(dtChem_min, 2.0 * dtHalf);
+              if (2.0 * dtHalf < dtChem_min){ dtChem_min = 2.0 * dtHalf; iworstAtMin = iworst; }
               t          += 2.0 * dtHalf;
-              dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
+              dtChem     *= fac;
               accepted    = true;
-            } else { // predict new timestep and repeat if error is too big
-              dtChem     *= std::min(d_max_grow, std::max(d_max_shrink, d_safety * (d_tol / error)));
+            } else { // reject: shrink and retry from the same start state (result1 still valid)
+              dtChem     *= fac;
             }
           } // adaptive time stepping
 
           // Throw error if never converges
           if (!accepted){
             std::ostringstream warn;
-            warn << "Chemistry integration never converged! At cell " << c
-                 << " Error: " << error << " Tolerance: " << d_tol;
+            warn << "Chemistry integration never converged! At cell " << c;
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
-
         } // dt_advection time integration
 
         // ---------------------------------------------

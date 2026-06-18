@@ -131,7 +131,9 @@ private:
   double YH20{0.0};
   double YO20{0.0};
 
-  double d_tol;
+  double d_rtol;
+  double d_atol_Y;
+  double d_atol_T;
   double d_safety;
   double d_max_shrink;
   double d_max_grow;
