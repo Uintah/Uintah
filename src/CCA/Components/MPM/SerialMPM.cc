@@ -4131,6 +4131,35 @@ void SerialMPM::computeGridVelocityForFTM(const ProcessorGroup*,
           gacceleration[c] = FTM_acc;
           gvelocity_star[c] = gvelocity[c] + FTM_acc*delT;
         }
+
+        // Restrict motion of material to a user-specified direction
+        Vector motionIn = mpm_matl->getMotionInDirection();
+        if(motionIn.length()>1.e-8){
+          for(NodeIterator iter=patch->getExtraNodeIterator();
+                            !iter.done();iter++){
+            IntVector c = *iter;
+  
+            double accDot = Dot(gacceleration[c],motionIn);
+            gacceleration[c] = accDot*motionIn;
+            double velStarDot = Dot(gvelocity_star[c],motionIn);
+            gvelocity_star[c] = velStarDot*motionIn;
+          }
+        }
+
+        // Prevent motion of material in a user-specified direction
+        Vector noMotionIn = mpm_matl->getPreventMotionInDirection();
+        if(noMotionIn.length()>1.e-8){
+          for(NodeIterator iter=patch->getExtraNodeIterator();
+                            !iter.done();iter++){
+            IntVector c = *iter;
+
+            double accDot = Dot(gacceleration[c],noMotionIn);
+            gacceleration[c] -= accDot*noMotionIn;
+            double velStarDot = Dot(gvelocity_star[c],noMotionIn);
+            gvelocity_star[c] -= velStarDot*noMotionIn;
+          }
+        } // if noMotionIn ...
+
       } // is FTM
     } // matl loop
   }  // patch loop
