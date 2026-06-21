@@ -70,7 +70,8 @@ SRCS   += \
         $(SRCDIR)/TongeRamesh_gitInfo.cc        \
         $(SRCDIR)/ArrudaBoyce8Chain.cc          \
         $(SRCDIR)/VUMAT.cc                        \
-        $(SRCDIR)/RFElasticPlastic.cc			
+        $(SRCDIR)/RFElasticPlastic.cc             \
+        $(SRCDIR)/CeramicFiberDamage.cc
 
 # $(SRCDIR)/SVK.cc                        \
 

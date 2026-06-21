@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- CeramicFiberDamage uniaxial tensile test
+     1 mm cubic specimen pulled in the x-direction (fiber axis).
+
+     Boundary conditions reproduce the Python reference test:
+       F = diag(1+eps, 1, 1)
+     x-: symmetry  -> v_x = 0 at left face  (fixed grip)
+     x+: Dirichlet -> v_x = v_pull           (moving grip, 0.1 m/s)
+     y-, y+, z-, z+: symmetry -> v_y = v_z = 0 everywhere
+       (no Poisson contraction, matches Python F_22 = F_33 = 1)
+
+     Material: SiC matrix / carbon fiber cross-ply CMC
+               with Tandon-Weng porous-matrix + damage model.
+
+     Expected behavior:
+       Linear elastic until eps_11 ~ 1.57% (eps_o = 0.0157),
+       then matrix cracking (rho, nu rise) with fiber fracture (psi drops),
+       stiffness degrades beyond eps_o.
+
+     v_pull = 0.1 m/s, L = 1 mm  ->  strain rate ~ 100 /s
+     t_end  = 2.5e-4 s           ->  final strain ~ 2.5 %
+-->
+
+<Uintah_specification>
+
+  <Meta>
+    <title>CeramicFiberDamage uniaxial tensile test</title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+    <maxTime>2.5e-4</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-11</delt_min>
+    <delt_max>5.0e-8</delt_max>
+    <timestep_multiplier>0.3</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>ceramicFiber_tensile.uda</filebase>
+    <outputInterval>1.0e-5</outputInterval>
+
+    <save label="p.x"/>
+    <save label="p.particleID"/>
+    <save label="p.velocity"/>
+    <save label="p.volume"/>
+    <save label="p.deformationMeasure"/>
+    <save label="p.stress"/>
+    <save label="p.crackDensity"/>
+    <save label="p.crackOpening"/>
+    <save label="p.fiberFracture"/>
+    <save label="StrainEnergy"/>
+    <save label="KineticEnergy"/>
+
+    <checkpoint cycle="2" interval="5.0e-5"/>
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>linear</interpolator>
+  </MPM>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <MPM>
+      <material name="SiC_carbon_CMC">
+        <!-- Density: 42% C-fiber (1760 kg/m3) + 53% SiC matrix (3200 kg/m3) + 5% voids -->
+        <density>2450.0</density>
+        <thermal_conductivity>30.0</thermal_conductivity>
+        <specific_heat>700.0</specific_heat>
+
+        <constitutive_model type="ceramic_fiber_damage">
+
+          <!-- Matrix: silicon carbide -->
+          <E_matrix>140.0e9</E_matrix>
+          <nu_matrix>0.2</nu_matrix>
+
+          <!-- Fiber: carbon (AS4 / T300 class) -->
+          <E_fiber_transverse>74.1e9</E_fiber_transverse>
+          <E_fiber_longitudinal>185.0e9</E_fiber_longitudinal>
+          <G_fiber_longitudinal>80.0e9</G_fiber_longitudinal>
+          <K_fiber>100.0e9</K_fiber>
+          <nu_fiber>0.16</nu_fiber>
+
+          <!-- Microstructure -->
+          <fiber_volume_fraction>0.42</fiber_volume_fraction>
+          <porosity>0.05</porosity>
+
+          <!-- Damage model constants — identical to Python reference test-case values -->
+          <alpha_matrix>2.02e-6</alpha_matrix>
+          <sigma_o>54.1e6</sigma_o>
+          <rho_o>0.0</rho_o>
+          <rho_c>0.059</rho_c>
+          <rho_n>1.03</rho_n>
+          <nu_o>0.0</nu_o>
+          <nu_n>0.29</nu_n>
+          <v_f_eff>0.21</v_f_eff>
+          <E_fiber_damage>185.0e9</E_fiber_damage>
+          <E_matrix_damage>140.0e9</E_matrix_damage>
+          <residual_stress>-25.0e6</residual_stress>
+          <T_reference>300.0</T_reference>
+          <psi_c>-0.693</psi_c>
+          <psi_n>5.5</psi_n>
+          <eps_o>0.0157</eps_o>
+          <eps_f>0.0162</eps_f>
+
+        </constitutive_model>
+
+        <geom_object>
+          <!-- 1 mm cube; 4x4x4 cells; 2x2x2 particles per cell = 512 particles -->
+          <box label="specimen">
+            <min>[0.0,    0.0,    0.0   ]</min>
+            <max>[1.0e-3, 1.0e-3, 1.0e-3]</max>
+          </box>
+          <res>[2,2,2]</res>
+          <velocity>[0.0, 0.0, 0.0]</velocity>
+          <temperature>300.0</temperature>
+        </geom_object>
+      </material>
+    </MPM>
+  </MaterialProperties>
+
+  <Grid>
+    <BoundaryConditions>
+
+      <!-- Fixed grip: symmetry holds v_x = 0 at left face -->
+      <Face side="x-">
+        <BCType id="all" var="symmetry" label="Symmetric"/>
+      </Face>
+
+      <!-- Moving grip: pulls right face at 0.1 m/s -->
+      <Face side="x+">
+        <BCType id="all" var="Dirichlet" label="Velocity">
+          <value>[0.1, 0.0, 0.0]</value>
+        </BCType>
+      </Face>
+
+      <!-- Lateral symmetry: enforces zero lateral strain,
+           matching Python reference F = diag(1+eps, 1, 1) -->
+      <Face side="y-">
+        <BCType id="all" var="symmetry" label="Symmetric"/>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="symmetry" label="Symmetric"/>
+      </Face>
+      <Face side="z-">
+        <BCType id="all" var="symmetry" label="Symmetric"/>
+      </Face>
+      <Face side="z+">
+        <BCType id="all" var="symmetry" label="Symmetric"/>
+      </Face>
+
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="domain">
+        <lower>[0.0,    0.0,    0.0   ]</lower>
+        <upper>[1.0e-3, 1.0e-3, 1.0e-3]</upper>
+        <resolution>[4, 4, 4]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

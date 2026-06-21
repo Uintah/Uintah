@@ -72,6 +72,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/CeramicFiberDamage.h>
 
 // Generalized Viscoelastic CMs
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/KelvinVoigt.h>
@@ -320,6 +321,11 @@ else if (cm_type == "HypoplasticB") {
 
   else if (cm_type == "MohrCoulomb") {
           return(scinew MohrCoulomb(child, flags));
+  }
+
+  else if (cm_type == "ceramic_fiber_damage") {
+    computes_pLocalizedMPM = false;
+    return(scinew CeramicFiberDamage(child,flags));
   }
 
   else if (cm_type == "QADamage") {
