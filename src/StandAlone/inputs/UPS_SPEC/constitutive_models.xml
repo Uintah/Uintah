@@ -49,6 +49,7 @@
                                                                              Maxwell_Weichert,
 									     MohrCoulomb,
 									     HypoplasticB,
+									     ceramic_fiber_damage,
 									     QADamage">
 
         <!-- Variable property UCNH -->
@@ -114,6 +115,34 @@
     <failure_variable_mean         spec="OPTIONAL DOUBLE"/>
     <failure_variable_std          spec="OPTIONAL DOUBLE"/>
     <failure_variable_distrib      spec="OPTIONAL STRING"/>
+
+    <!-- For ceramic_fiber_damage -->
+    <E_matrix             spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <nu_matrix             spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <E_fiber_transverse    spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <E_fiber_longitudinal  spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <G_fiber_longitudinal  spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <K_fiber               spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <nu_fiber              spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <fiber_volume_fraction spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <porosity              spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <pore_aspect_ratio     spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <alpha_matrix         spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <sigma_o              spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <rho_o                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <rho_c                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <rho_n                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <nu_o                 spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <nu_n                 spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <v_f_eff              spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <E_fiber_damage       spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <E_matrix_damage      spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <residual_stress      spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <T_reference          spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <psi_c                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <psi_n                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <eps_o                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <eps_f                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
 
     <!--For TransIsoHypoFrictional Model-->
     <E_t           spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
