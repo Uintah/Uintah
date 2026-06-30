@@ -51,56 +51,83 @@ using std::string;
 // Private micromechanics helpers (file scope only)
 // ---------------------------------------------------------------------------
 
-// Eshelby tensor component for a porous matrix with inclusion aspect ratio a.
-// a < 0 or a == 1: spherical pores (Tandon-Weng 1984 isotropic limit).
-// sub: four-digit string label, e.g. "1111", "1122", "2323".
+// Return a component of Eshelby's tensor using a component index ijkl.
 static double eshelbyS(const char* sub, double vm, double a)
 {
   string s(sub);
 
   if (a < 0.0 || std::abs(a - 1.0) < 1e-12) {
     // Spherical pore
-    if (s=="1111"||s=="2222"||s=="3333") return (7-5*vm)/(15*(1-vm));
-    if (s=="1122"||s=="1133"||s=="2211"||s=="2233"||s=="3311"||s=="3322")
-      return (5*vm-1)/(15*(1-vm));
-    if (s=="1212"||s=="2323"||s=="3131") return (4-5*vm)/(15*(1-vm));
+    if (s=="1111" || s=="2222" || s=="3333")
+      return (7 - 5*vm) / (15*(1 - vm));
+
+    if (s=="1122" || s=="1133" || s=="2211" || s=="2233" || s=="3311" || s=="3322")
+      return (5*vm - 1) / (15*(1 - vm));
+
+    if (s=="1212" || s=="2323" || s=="1313")
+      return (4 - 5*vm) / (15*(1 - vm));
+
     return 0.0;
   }
 
-  // General prolate (a>1) or oblate (a<1) spheroid
+  // General prolate (a > 1) or oblate (a < 1) spheroid
   double a2 = a*a;
   double g;
+
   if (a > 1.0) {
-    g = (a/std::pow(a2-1.0, 1.5))*(a*std::sqrt(a2-1.0) - std::acosh(a));
+    g = (a / std::pow(a2 - 1.0, 1.5)) *
+        (a * std::sqrt(a2 - 1.0) - std::acosh(a));
   } else {
-    g = (a/std::pow(1.0-a2, 1.5))*(std::acos(a) - a*std::sqrt(1.0-a2));
+    g = (a / std::pow(1.0 - a2, 1.5)) *
+        (std::acos(a) - a * std::sqrt(1.0 - a2));
   }
 
-  if (s=="1111")
-    return (1.0/(2*(1-vm)))*(1-2*vm+(3*a2-1)/(a2-1)-(1-2*vm+3*a2/(a2-1))*g);
-  if (s=="2222"||s=="3333")
-    return (3.0/(8*(1-vm)))*(a2/(a2-1))
-         + (1.0/(4*(1-vm)))*(1-2*vm-9.0/(4*(a2-1)))*g;
-  if (s=="2233"||s=="3322")
-    return (1.0/(4*(1-vm)))*(a2/(2*(a2-1))-(1-2*vm+3.0/(4*(a2-1)))*g);
-  if (s=="2211"||s=="3311")
-    return -(1.0/(2*(1-vm)))*(a2/(a2-1))
-           + (1.0/(4*(1-vm)))*(3*a2/(a2-1)-(1-2*vm))*g;
-  if (s=="1122"||s=="1133")
-    return -(1.0/(2*(1-vm)))*(1-2*vm+1.0/(a2-1))
-           + (1.0/(2*(1-vm)))*(1-2*vm+3.0/(2*(a2-1)))*g;
-  if (s=="2323"||s=="3232")
-    return (1.0/(4*(1-vm)))*(a2/(2*(a2-1))+(1-2*vm-3.0/(4*(a2-1)))*g);
-  if (s=="1212"||s=="1313")
-    return (1.0/(4*(1-vm)))*(1-2*vm-(a2+1)/(a2-1)
-           -(0.5)*(1-2*vm-3*(a2+1)/(a2-1))*g);
+  if (s=="3333")
+    return (1.0 / (2*(1 - vm))) *
+           (1 - 2*vm + (3*a2 - 1)/(a2 - 1)
+           - (1 - 2*vm + 3*a2/(a2 - 1)) * g);
+
+  if (s=="1111" || s=="2222")
+    return (3.0 / (8*(1 - vm))) * (a2 / (a2 - 1))
+         + (1.0 / (4*(1 - vm))) *
+           (1 - 2*vm - 9.0/(4*(a2 - 1))) * g;
+
+  if (s=="1122" || s=="2211")
+    return (1.0 / (4*(1 - vm))) *
+           (a2 / (2*(a2 - 1))
+           - (1 - 2*vm + 3.0/(4*(a2 - 1))) * g);
+
+  if (s=="1133" || s=="2233")
+    return -(1.0 / (2*(1 - vm))) * (a2 / (a2 - 1))
+           + (1.0 / (4*(1 - vm))) *
+             (3*a2/(a2 - 1) - (1 - 2*vm)) * g;
+
+  if (s=="3311" || s=="3322")
+    return -(1.0 / (2*(1 - vm))) *
+             (1 - 2*vm + 1.0/(a2 - 1))
+           + (1.0 / (2*(1 - vm))) *
+             (1 - 2*vm + 3.0/(2*(a2 - 1))) * g;
+
+  if (s=="1212" || s=="2121")
+    return (1.0 / (4*(1 - vm))) *
+           (a2 / (2*(a2 - 1))
+           + (1 - 2*vm - 3.0/(4*(a2 - 1))) * g);
+
+  if (s=="1313" || s=="2323")
+    return (1.0 / (4*(1 - vm))) *
+           (1 - 2*vm - (a2 + 1)/(a2 - 1)
+           - 0.5 * (1 - 2*vm - 3*(a2 + 1)/(a2 - 1)) * g);
+
   return 0.0;
 }
 
 // ---------------------------------------------------------------------------
-// Porous-matrix effective elastic constants (Tandon-Weng 1984 void limit).
+// Return effective elastiscity moduli of the pourus matrix.
+// Uses the method given in the paper:
+// The Effect of Aspect Ratio of Inclusions on the Elastic Properties of
+// Unidirectionally Aligned Composites G. P. Tandon and G. J. Weng 1984
 // Pores treated as inclusions with zero stiffness.
-// out[7] = [Epm11, Epm33, Gpm12, Gpm23, Kpm, vpm12, vpm23]
+// out[7] = [Epm11, Epm33, Gpm12, Gpm13, Kpm, vpm12, vpm23]
 // ---------------------------------------------------------------------------
 static bool getPorousMatrixElasticity(double Em, double vm, double c,
                                       double a, double out[7])
@@ -109,23 +136,34 @@ static bool getPorousMatrixElasticity(double Em, double vm, double c,
   double lm = Em*vm / ((1+vm)*(1-2*vm));
   double Km = Gm + lm;
 
-  // D constants for void inclusion (inclusion stiffness = 0)
-  double D1 = 1.0 + 2*(-Gm)/(-lm);         // = 1 + 2*Gm/lm
-  double D2 = (lm + 2*Gm)/(-lm);           // = -(1 + 2*Gm/lm)
-  double D3 = lm/(-lm);                    // = -1
+  // D constants for void inclusion, where inclusion stiffness = 0
+  double D1 = 1.0 + 2*(-Gm)/(-lm);
+  double D2 = (lm + 2*Gm)/(-lm);
+  double D3 = lm/(-lm);
 
-  double B1 = c*D1 + D2 + (1-c)*(D1*eshelbyS("1111",vm,a) + 2*eshelbyS("2211",vm,a));
-  double B2 = c + D3 + (1-c)*(D1*eshelbyS("1122",vm,a)
-                               + eshelbyS("2222",vm,a)
-                               + eshelbyS("2233",vm,a));
-  double B3 = c + D3 + (1-c)*(eshelbyS("1111",vm,a)
-                               + (1+D1)*eshelbyS("2211",vm,a));
-  double B4 = c*D1 + D2 + (1-c)*(eshelbyS("1122",vm,a)
-                                  + D1*eshelbyS("2222",vm,a)
-                                  + eshelbyS("2233",vm,a));
-  double B5 = c + D3 + (1-c)*(eshelbyS("1122",vm,a)
-                               + eshelbyS("2222",vm,a)
-                               + D1*eshelbyS("2233",vm,a));
+  // Intermediate B constants
+  double B1 = c*D1 + D2
+            + (1-c)*(D1*eshelbyS("3333", vm, a)
+            + 2*eshelbyS("1133", vm, a));
+
+  double B2 = c + D3
+            + (1-c)*(D1*eshelbyS("3311", vm, a)
+            + eshelbyS("1111", vm, a)
+            + eshelbyS("1122", vm, a));
+
+  double B3 = c + D3
+            + (1-c)*(eshelbyS("3333", vm, a)
+            + (1+D1)*eshelbyS("1133", vm, a));
+
+  double B4 = c*D1 + D2
+            + (1-c)*(eshelbyS("3311", vm, a)
+            + D1*eshelbyS("1111", vm, a)
+            + eshelbyS("1122", vm, a));
+
+  double B5 = c + D3
+            + (1-c)*(eshelbyS("3311", vm, a)
+            + eshelbyS("1111", vm, a)
+            + D1*eshelbyS("1122", vm, a));
 
   double A1 = D1*(B4+B5) - 2*B2;
   double A2 = (1+D1)*B2 - (B4+B5);
@@ -136,29 +174,43 @@ static bool getPorousMatrixElasticity(double Em, double vm, double c,
 
   if (std::abs(A) < 1e-20) return false;
 
+  // Effective Young's moduli
   double E11 = Em / (1 + c*(-2*vm*A3 + (1-vm)*A4 + (1+vm)*A5*A)/(2*A));
   double E33 = Em / (1 + c*(A1 + 2*vm*A2)/A);
 
-  // Effective shear moduli: void inclusion → G_inclusion = 0 → ratio = -1
-  double G12 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("2323",vm,a)));
-  double G23 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("1212",vm,a)));
+  // Effective shear moduli
+  double G12 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("1212", vm, a)));
+  double G13 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("1313", vm, a)));
 
   // Iterative solve for plane-strain bulk modulus K12
   double K12 = 13e10;
   const double tol  = 0.01;
   const int maxIter = 20000;
+
   for (int iter = 0; iter < maxIter; iter++) {
     double inside = (E33/E11) - (E33/4)*((1.0/G12) + (1.0/K12));
+
     if (inside < 0.0) inside = 0.0;
+
     double v32   = std::sqrt(inside);
-    double denom = 1 - vm*(1+2*v32) + c*(2*(v32-vm)*A3 + (1-vm*(1+2*v32))*A4)/A;
+    double denom = 1 - vm*(1+2*v32)
+                 + c*(2*(v32-vm)*A3
+                 + (1-vm*(1+2*v32))*A4)/A;
+
     double K12n  = Km*((1+vm)*(1-2*vm)/denom);
-    if (std::abs(K12n - K12) < tol) { K12 = K12n; break; }
+
+    if (std::abs(K12n - K12) < tol) {
+      K12 = K12n;
+      break;
+    }
+
     K12 = K12n;
   }
 
   double inside = (E33/E11) - (E33/4)*((1.0/G12) + (1.0/K12));
+
   if (inside < 0.0) inside = 0.0;
+
   double v32 = std::sqrt(inside);
   double v23 = v32*(E11/E33);
   double v12 = E11/(2*G12) - 1.0;
@@ -166,10 +218,11 @@ static bool getPorousMatrixElasticity(double Em, double vm, double c,
   out[0] = E11;   // Epm11
   out[1] = E33;   // Epm33
   out[2] = G12;   // Gpm12
-  out[3] = G23;   // Gpm23
-  out[4] = K12;   // Kpm  (plane-strain bulk)
+  out[3] = G13;   // Gpm13
+  out[4] = K12;   // Kpm, plane-strain bulk modulus
   out[5] = v12;   // vpm12
   out[6] = v23;   // vpm23
+
   return true;
 }
 
@@ -218,7 +271,8 @@ static void buildVoigtStiffness(const double m[9], double C[6][6])
 
 // ---------------------------------------------------------------------------
 // Compute the 9 undamaged cross-ply composite moduli and store in moduli[9].
-// Cross-ply = average of 0° ply and 90°-about-z ply (Voigt rotation shortcut).
+// This version follows the Python InitializeElasicityModuli() logic.
+// moduli[9] = [Ec11, Ec22, Ec33, Gc23, Gc13, Gc12, vc12, vc13, vc23]
 // ---------------------------------------------------------------------------
 static bool buildCompositeModuli(double Em, double vm,
                                  double Eft, double Efl, double Gfl,
@@ -228,83 +282,191 @@ static bool buildCompositeModuli(double Em, double vm,
 {
   double mvf = 1.0 - fiberVF;
 
+  // Get porous matrix properties
   double porous[7];
   if (!getPorousMatrixElasticity(Em, vm, porosity, a, porous)) return false;
-  double Epm11 = porous[0], Epm33 = porous[1], Gpm12 = porous[2], Gpm23 = porous[3];
-  double Kpm   = porous[4], vpm12 = porous[5], vpm23 = porous[6];
 
-  // Single-ply fiber-matrix composite (Hashin-Rosen mixing rules)
+  double Epm11 = porous[0];
+  double Epm33 = porous[1];
+  double Gpm12 = porous[2];
+  double Gpm23 = porous[3];
+  double Kpm   = porous[4];
+  double vpm12 = porous[5];
+  double vpm23 = porous[6];
+
+  // -------------------------------------------------------------------------
+  // Single-ply fiber-matrix composite properties
+  // Matches the Python Hashin-style calculation
+  // -------------------------------------------------------------------------
+
+  double denomEs11 = fiberVF/Kpm + mvf/Kf + 1.0/Gpm12;
+  if (std::abs(denomEs11) < 1e-30) return false;
+
   double Es11 = Efl*fiberVF + Epm11*mvf
-              + (4*(vpm12-vf)*(vpm12-vf)*fiberVF*mvf)
-                / (fiberVF/Kpm + mvf/Kf + 1.0/Gfl);
-  double Es33 = Eft*Epm33 / (Epm33*fiberVF + Eft*mvf);
-  double Es22 = Eft*Epm11 / (Epm11*fiberVF + Eft*mvf);
+              + (4.0*(vpm12 - vf)*(vpm12 - vf)*fiberVF*mvf) / denomEs11;
 
-  double vs12 = vpm12*mvf + vf*fiberVF
-              + ((vf-vpm12)*(1.0/Kpm - 1.0/Kf)*mvf*fiberVF)
-                / (mvf/Kf + fiberVF/Kpm + 1.0/Gpm12);
+  double Es33 = (Eft * Epm33) / (Epm33*fiberVF + Eft*mvf);
+
+  double denomVs13 = mvf/Kf + fiberVF/Kpm + 1.0/Gpm23;
+  if (std::abs(denomVs13) < 1e-30) return false;
+
   double vs13 = vpm23*mvf + vf*fiberVF
-              + ((vf-vpm23)*(1.0/Kpm - 1.0/Kf)*mvf*fiberVF)
-                / (mvf/Kf + fiberVF/Kpm + 1.0/Gpm23);
+              + ((vf - vpm23)*(1.0/Kpm - 1.0/Kf)*mvf*fiberVF) / denomVs13;
 
-  double Gs12 = Gpm12*(Gpm12*mvf + Gfl*(1+fiberVF))
-                     / (Gpm12*(1+fiberVF) + Gfl*mvf);
-  double Gs13 = Gpm23*(Gpm23*mvf + Gfl*(1+fiberVF))
-                     / (Gpm23*(1+fiberVF) + Gfl*mvf);
-  double Kc   = Kpm + fiberVF/(1.0/(Kf-Kpm) + mvf/(Kpm+Gpm12));
-  double denom23 = 4.0/Es33 - 1.0/Kc - 4*vs12*vs12/Es11;
-  if (std::abs(denom23) < 1e-30) return false;
-  double Gs23 = 1.0/denom23;
-  double vs23 = Es33/(2*Gs23) - 1.0;
+  double Gs13 = Gpm23 * ((Gpm23*mvf + Gfl*(1.0 + fiberVF))
+              / (Gpm23*(1.0 + fiberVF) + Gfl*mvf));
 
-  // Build Voigt stiffness for single 0° ply
-  // Ordering: [E11, E22, E33, G23, G13, G12, v12, v13, v23]
-  double singlePly[9] = { Es11, Es22, Es33, Gs23, Gs13, Gs12, vs12, vs13, vs23 };
-  double C[6][6];
-  buildVoigtStiffness(singlePly, C);
+  double denomKc = 1.0/(Kf - Kpm) + mvf/(Kpm + Gpm12);
+  if (std::abs(denomKc) < 1e-30) return false;
 
-  // Cross-ply average: rotate 90° about z → x↔y, Voigt 0↔1, 3↔4.
-  // For an orthotropic material this is exact without leaving the Voigt basis.
-  double Ca[6][6] = {};
-  Ca[0][0] = Ca[1][1] = 0.5*(C[0][0] + C[1][1]);
-  Ca[2][2] = C[2][2];
-  Ca[0][1] = Ca[1][0] = C[0][1];
-  Ca[0][2] = Ca[2][0] = Ca[1][2] = Ca[2][1] = 0.5*(C[0][2] + C[1][2]);
-  Ca[3][3] = Ca[4][4] = 0.5*(C[3][3] + C[4][4]);
-  Ca[5][5] = C[5][5];
+  double Kc = Kpm + fiberVF / denomKc;
 
-  // Invert upper-left 3x3 of Ca to extract engineering constants
-  double A[3][3] = {
-    {Ca[0][0], Ca[0][1], Ca[0][2]},
-    {Ca[1][0], Ca[1][1], Ca[1][2]},
-    {Ca[2][0], Ca[2][1], Ca[2][2]}
+  double denomGs23 = 4.0/Es33 - 1.0/Kc - 4.0*vs13*vs13/Es11;
+  if (std::abs(denomGs23) < 1e-30) return false;
+
+  double Gs23 = 1.0 / denomGs23;
+
+  double vs23 = Es33/(2.0*Gs23) - 1.0;
+
+  // -------------------------------------------------------------------------
+  // Build compliance matrix for the unidirectional ply.
+  // Python ordering: [11, 22, 33, 23, 13, 12]
+  //
+  // Python uses:
+  // E11 = Es11
+  // E22 = Es33
+  // E33 = Es33
+  // G23 = Gs23
+  // G13 = Gs13
+  // G12 = Gs13
+  // v12 = vs13
+  // v13 = vs13
+  // v23 = vs23
+  // -------------------------------------------------------------------------
+
+  double S0[6][6] = {};
+
+  S0[0][0] = 1.0/Es11;
+  S0[0][1] = -vs13/Es11;
+  S0[0][2] = -vs13/Es11;
+
+  S0[1][0] = -vs13/Es11;
+  S0[1][1] = 1.0/Es33;
+  S0[1][2] = -vs23/Es33;
+
+  S0[2][0] = -vs13/Es11;
+  S0[2][1] = -vs23/Es33;
+  S0[2][2] = 1.0/Es33;
+
+  S0[3][3] = 1.0/Gs23;
+  S0[4][4] = 1.0/Gs13;
+  S0[5][5] = 1.0/Gs13;
+
+  // Build stiffness matrix for the same unidirectional ply
+  double singlePly[9] = {
+    Es11, Es33, Es33,
+    Gs23, Gs13, Gs13,
+    vs13, vs13, vs23
   };
+
+  double C0[6][6];
+  buildVoigtStiffness(singlePly, C0);
+
+  // -------------------------------------------------------------------------
+  // Rotate 90 degrees about x3.
+  // For this orthotropic Voigt form, the 90-degree rotation swaps:
+  // 11 <-> 22
+  // 23 <-> 13
+  // 33 and 12 stay in place
+  // -------------------------------------------------------------------------
+
+  double C90[6][6] = {};
+  double S90[6][6] = {};
+
+  int p[6] = {1, 0, 2, 4, 3, 5};
+
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      C90[i][j] = C0[p[i]][p[j]];
+      S90[i][j] = S0[p[i]][p[j]];
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Voigt average stiffness and Reuss average compliance
+  // -------------------------------------------------------------------------
+
+  double Cv[6][6] = {};
+  double Sr[6][6] = {};
+
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      Cv[i][j] = 0.5*(C0[i][j] + C90[i][j]);
+      Sr[i][j] = 0.5*(S0[i][j] + S90[i][j]);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Invert Voigt average stiffness to get Voigt average compliance
+  // Only the upper-left 3x3 block needs inversion because shear is diagonal.
+  // -------------------------------------------------------------------------
+
+  double A[3][3] = {
+    {Cv[0][0], Cv[0][1], Cv[0][2]},
+    {Cv[1][0], Cv[1][1], Cv[1][2]},
+    {Cv[2][0], Cv[2][1], Cv[2][2]}
+  };
+
   double det = A[0][0]*(A[1][1]*A[2][2] - A[1][2]*A[2][1])
              - A[0][1]*(A[1][0]*A[2][2] - A[1][2]*A[2][0])
              + A[0][2]*(A[1][0]*A[2][1] - A[1][1]*A[2][0]);
+
   if (std::abs(det) < 1e-20) return false;
-  double inv = 1.0/det;
 
-  double S[3][3];
-  S[0][0] = inv*(A[1][1]*A[2][2] - A[1][2]*A[2][1]);
-  S[0][1] = inv*(A[0][2]*A[2][1] - A[0][1]*A[2][2]);
-  S[0][2] = inv*(A[0][1]*A[1][2] - A[0][2]*A[1][1]);
-  S[1][0] = S[0][1];
-  S[1][1] = inv*(A[0][0]*A[2][2] - A[0][2]*A[2][0]);
-  S[1][2] = inv*(A[0][2]*A[1][0] - A[0][0]*A[1][2]);
-  S[2][0] = S[0][2];
-  S[2][1] = S[1][2];
-  S[2][2] = inv*(A[0][0]*A[1][1] - A[0][1]*A[1][0]);
+  double invDet = 1.0/det;
 
-  double Ec11 = 1.0/S[0][0];
-  double Ec22 = 1.0/S[1][1];
-  double Ec33 = 1.0/S[2][2];
-  double Gc23 = Ca[3][3];
-  double Gc13 = Ca[4][4];
-  double Gc12 = Ca[5][5];
-  double vc12 = -S[0][1]*Ec11;
-  double vc13 = -S[0][2]*Ec11;
-  double vc23 = -S[1][2]*Ec22;
+  double Sv[6][6] = {};
+
+  Sv[0][0] = invDet*(A[1][1]*A[2][2] - A[1][2]*A[2][1]);
+  Sv[0][1] = invDet*(A[0][2]*A[2][1] - A[0][1]*A[2][2]);
+  Sv[0][2] = invDet*(A[0][1]*A[1][2] - A[0][2]*A[1][1]);
+
+  Sv[1][0] = Sv[0][1];
+  Sv[1][1] = invDet*(A[0][0]*A[2][2] - A[0][2]*A[2][0]);
+  Sv[1][2] = invDet*(A[0][2]*A[1][0] - A[0][0]*A[1][2]);
+
+  Sv[2][0] = Sv[0][2];
+  Sv[2][1] = Sv[1][2];
+  Sv[2][2] = invDet*(A[0][0]*A[1][1] - A[0][1]*A[1][0]);
+
+  if (std::abs(Cv[3][3]) < 1e-30) return false;
+  if (std::abs(Cv[4][4]) < 1e-30) return false;
+  if (std::abs(Cv[5][5]) < 1e-30) return false;
+
+  Sv[3][3] = 1.0/Cv[3][3];
+  Sv[4][4] = 1.0/Cv[4][4];
+  Sv[5][5] = 1.0/Cv[5][5];
+
+  // -------------------------------------------------------------------------
+  // Calculate final cross-ply elastic moduli
+  // Matches the Python final section
+  // -------------------------------------------------------------------------
+
+  double Ec11 = 1.0/Sv[0][0];
+  double Ec22 = Ec11;
+  double Ec33 = 1.0/Sr[2][2];
+
+  double Gc12 = 0.5*(1.0/Sv[5][5] + 1.0/Sr[5][5]);
+  double Gc13 = 0.5*(1.0/Sv[4][4] + 1.0/Sr[4][4]);
+  double Gc23 = Gc13;
+
+  double vc12 = -0.5*(Sv[1][0]*(1.0/Sv[0][0])
+                    + Sr[1][0]*(1.0/Sr[0][0]));
+
+  double vc13 = -0.5*(Sv[2][0]*(1.0/Sv[0][0])
+                    + Sr[2][0]*(1.0/Sr[0][0]));
+
+  double vc23 = vc13;
 
   moduli[0] = Ec11;
   moduli[1] = Ec22;
@@ -315,6 +477,7 @@ static bool buildCompositeModuli(double Em, double vm,
   moduli[6] = vc12;
   moduli[7] = vc13;
   moduli[8] = vc23;
+
   return true;
 }
 
@@ -594,18 +757,20 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
         double sigM = d.EMatrix*(eps_dir[i] - d.alphaM*(T - d.TRef)) + d.residualStress;
 
         // Crack-opening fraction (monotonically non-decreasing)
-        double nu_new = 0.0;
-        if (sigM >= 0.0) {
-          nu_new = d.nuO + (1-d.nuO)*(1 - std::exp(-0.693*std::pow(sigM/d.sigO, d.nuN)));
-        }
-        nu[i] = std::max(nu_new, nu[i]);
+	double nu_new  = 0.0;
+	double rho_new = 0.0;
 
-        // Matrix crack density (monotonically non-decreasing)
-        double rho_new = 0.0;
-        if (nu[i] > 0.0) {
-          rho_new = d.rhoO + (1-d.rhoO)*(1 - std::exp(-d.rhoC*std::pow(sigM/d.sigO, d.rhoN)));
-        }
-        rho[i] = std::max(rho_new, rho[i]);
+	if (sigM > 0.0 && d.sigO > 0.0) {
+	  double x = sigM / d.sigO;
+
+	  nu_new = d.nuO + (1.0 - d.nuO) *
+		   (1.0 - std::exp(-0.693 * std::pow(x, d.nuN)));
+
+	  rho_new = d.rhoO + (1.0 - d.rhoO) *
+		    (1.0 - std::exp(-d.rhoC * std::pow(x, d.rhoN)));
+	}
+	nu[i]  = std::max(nu[i],  nu_new);
+	rho[i] = std::max(rho[i], rho_new);
 
         // Fiber fracture factor (monotonically non-increasing)
         if (eps_dir[i] >= d.epsO && std::abs(d.epsF - d.epsO) > 1e-15) {
