@@ -100,6 +100,8 @@ hydrogenBurke::~hydrogenBurke()
 
   VarLabel::destroy(d_dtChem_label);
   VarLabel::destroy(d_HRR_label);
+  VarLabel::destroy(d_es_label);
+  VarLabel::destroy(d_es_src_label);
 
   for (auto* r : d_regions) {
     delete r;
@@ -209,6 +211,13 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
 
   d_dtChem_label = VarLabel::create("dt_chemistry",    CCVariable<double>::getTypeDescription());
   d_HRR_label    = VarLabel::create("HeatReleaseRate", CCVariable<double>::getTypeDescription());
+
+  // Sensible energy e_s(T,Y) transported as a mass-specific scalar.  This is the
+  // caloric-EOS-consistent energy carrier; ICE's m*cv*T carrier is not a state
+  // function of (T,Y) when cv varies (see computeTemperature).
+  d_es_label     = VarLabel::create("scalar-es",      CCVariable<double>::getTypeDescription());
+  d_es_src_label = VarLabel::create("scalar_es_src",  CCVariable<double>::getTypeDescription());
+  registerTransportedVariable(d_matl_set, d_es_label, d_es_src_label, true);
 
   //----------------------------------------------------------------
   // Geometry-based initialization
@@ -320,6 +329,7 @@ void hydrogenBurke::scheduleInitialize(SchedulerP   & sched,
   for (auto* lbl : d_Y_labels) {
     t->computesVar(lbl);
   }
+  t->computesVar(d_es_label);
 
   if (d_profileInit.isActive) {
     MaterialSubset* press_matl = scinew MaterialSubset();
@@ -368,7 +378,11 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
         new_dw->allocateAndPut(Y[k], d_Y_labels[k], indx, patch);
         Y[k].initialize(Y0[k]);
       }
-  
+
+      CCVariable<double> es;
+      new_dw->allocateAndPut(es, d_es_label, indx, patch);
+      es.initialize(0.0);
+
       if (d_profileInit.isActive) {
         const ProfileInit& pi = d_profileInit;
 
@@ -439,6 +453,7 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
           double cv_tmp   = cp_mix - R_mix;
           cv[c]           = cv_tmp;
           gamma_cc[c]     = cp_mix / cv_tmp;
+          es[c]           = sensibleEnergy(T, Yall);
           double pres_eos = rho_val * R_mix * T;        // enforce P = ρRT consistency
           rho_micro[c]    = rho_val;
           rho_CC[c]       = rho_val;
@@ -489,6 +504,7 @@ void hydrogenBurke::initialize(const ProcessorGroup *,
           double cv_tmp = cp_mix - R_mix;
           cv[c]         = cv_tmp;
           gamma_cc[c]   = cp_mix / cv_tmp;
+          es[c]         = sensibleEnergy(T, Yall);
         }
       }
     }
@@ -517,6 +533,7 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
     t->requiresVar(Task::OldDW, d_Y_labels[k], gac, 1);
     t->modifiesVar(d_Y_src_labels[k]);
   }
+  t->modifiesVar(d_es_src_label);
 
   t->computesVar(d_dtChem_label);
   t->computesVar(d_HRR_label);
@@ -618,7 +635,7 @@ double hydrogenBurke::gibbs(double T,
     return gR1 + gR2 - gP1 - gP2;
 }
 
-std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T)
+std::array<double, 9> hydrogenBurke::cpSpecificHeat(double T) const
 {
   double Tsqr  = T     * T;
   double Tcube = Tsqr  * T;
@@ -655,6 +672,52 @@ std::array<double, hydrogenBurke::N_ALL> hydrogenBurke::sensibleEnthalpyAllSpeci
     }
   }
   return h_s;
+}
+
+// Mixture sensible internal energy e_s(T,Y) [J/kg], reference T0 = 298.15 K:
+//   e_s = sum_k Y_k * [ h_s,k(T) - R_k (T - T0) ]
+// since u_k(T) - u_k(T0) = [h_k(T) - R_k T] - [h_k(T0) - R_k T0].
+double hydrogenBurke::sensibleEnergy(double T, const std::array<double, N_ALL>& Y) const
+{
+  const auto h_s = sensibleEnthalpyAllSpecies(T);
+  double e_s = 0.0;
+  for (int k = 0; k < N_ALL; k++) {
+    e_s += Y[k] * (h_s[k] - d_Ri[k] * (T - d_Tref));
+  }
+  return e_s;
+}
+
+// Invert e_s(T,Y) = e_s for T via Newton iteration; d(e_s)/dT = cv(T,Y) > 0 so
+// the function is monotone and the iteration is globally convergent from any
+// in-range guess.
+double hydrogenBurke::temperatureFromSensibleEnergy(double e_s,
+                                                    const std::array<double, N_ALL>& Y,
+                                                    double Tguess) const
+{
+  double T = std::min(std::max(Tguess, 200.0), 3500.0);
+
+  for (int iter = 0; iter < 50; iter++) {
+    double f = sensibleEnergy(T, Y) - e_s;
+
+    double cv = 0.0;
+    const auto cpS = cpSpecificHeat(T);
+    for (int k = 0; k < N_ALL; k++) {
+      cv += Y[k] * d_Ri[k] * (cpS[k] - 1.0);
+    }
+
+    double dT = f / cv;
+    T -= dT;
+    T  = std::min(std::max(T, 100.0), 5000.0);
+
+    if (std::abs(dT) < 1e-10 * T) {
+      return T;
+    }
+  }
+
+  std::ostringstream warn;
+  warn << "hydrogenBurke::temperatureFromSensibleEnergy: Newton iteration failed"
+       << " for e_s = " << e_s << " (last T = " << T << ")";
+  throw InvalidValue(warn.str(), __FILE__, __LINE__);
 }
 
 // Mixture-averaged diffusion coefficients D_k [m^2/s] for all 9 species.
@@ -1176,6 +1239,9 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         new_dw->getModifiable( Ysrc[k], d_Y_src_labels[k], indx, patch);
       }
 
+      CCVariable<double> esSrc;
+      new_dw->getModifiable(esSrc, d_es_src_label, indx, patch);
+
       // Pull in Temperature and density from data warehouse
       constCCVariable<double> temp;
       constCCVariable<double> rho;
@@ -1260,6 +1326,8 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         double dtChem_min = dtAdv;
         double engSrcTemp = 0.0;
         std::array<double, N_SPECIES> massSrcTemp = {};
+        const double Tstart = T;   // cell state entering the chemistry integration
+        const auto   Ystart = Y;
         double Torig = T;
         auto   Yorig = Y;
         double Tcourse;
@@ -1394,6 +1462,13 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
 
         eng_src[c] += engSrcTemp;                     // Joules
         hrr[c]      = engSrcTemp / (cellVol * dtAdv); // W/m³
+
+        // Sensible-energy source from chemistry, as an exact state-function
+        // difference over the constant-volume sub-integration:
+        //   de_s = cv dT + sum_k e_s,k dY_k
+        // The path integral of q_dot/(rho) only captures the cv dT part; the
+        // composition-shift term is what the cv*T carrier silently dropped.
+        esSrc[c] += sensibleEnergy(T, Y) - sensibleEnergy(Tstart, Ystart); // J/kg
       }   // cell iterator
 
       if (d_doDiffusion) {
@@ -1636,13 +1711,55 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
                          + (jZ[idx][c + IntVector(0,0,1)] - jZ[idx][c]) * areaZ) / cellVol;
             Ysrc[j][c] -= divJ * dtAdv / rho[c]; // [-]
           }
-          eng_src[c] -= ((phiX[c + IntVector(1,0,0)] - phiX[c]) * areaX
-                       + (phiY[c + IntVector(0,1,0)] - phiY[c]) * areaY
-                       + (phiZ[c + IntVector(0,0,1)] - phiZ[c]) * areaZ) * dtAdv; // [joules]
+          double divPhi = ((phiX[c + IntVector(1,0,0)] - phiX[c]) * areaX
+                         + (phiY[c + IntVector(0,1,0)] - phiY[c]) * areaY
+                         + (phiZ[c + IntVector(0,0,1)] - phiZ[c]) * areaZ); // [W]
+
+          eng_src[c] -= divPhi * dtAdv;                       // [joules]
+          esSrc[c]   -= divPhi * dtAdv / (rho[c] * cellVol);  // [J/kg]
         }
       }
     }   // matl loop
   }   // patches
+}
+
+//------------------------------------------------------------------
+// Temperature recovery from the advected sensible energy.
+// Called by ICE::conservedtoPrimitive_Vars after the transported scalars
+// (including scalar-es) have been divided by mass_adv, so new_dw holds the
+// time-advanced mass-specific e_s and mass fractions.
+//------------------------------------------------------------------
+bool hydrogenBurke::computeTemperature(CCVariable<double>& temp,
+                                       const Patch*   patch,
+                                       DataWarehouse* new_dw,
+                                       const int      indx)
+{
+  printTask( patch, dout_models_H2Burke, " hydrogenBurke::computeTemperature" );
+
+  constCCVariable<double> es;
+  new_dw->get(es, d_es_label, indx, patch, d_gn, 0);
+
+  std::vector<constCCVariable<double>> Ynew(N_SPECIES);
+  for (int k = 0; k < N_SPECIES; k++) {
+    new_dw->get(Ynew[k], d_Y_labels[k], indx, patch, d_gn, 0);
+  }
+
+  for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    IntVector c = *iter;
+
+    std::array<double, N_ALL> Y;
+    double Ysum = 0.0;
+    for (int j = 0; j < N_SPECIES; j++) {
+      int idx = j + (j >= 2 ? 1 : 0);  // skip slot 2 (N2)
+      Y[idx]  = Ynew[j][c];
+      Ysum   += Ynew[j][c];
+    }
+    Y[N2] = 1.0 - Ysum;
+
+    double Tguess = d_Tref + es[c] / 1000.0;  // cv ~ O(1 kJ/kg-K); Newton is monotone
+    temp[c] = temperatureFromSensibleEnergy(es[c], Y, Tguess);
+  }
+  return true;
 }
 
 //------------------------------------------------------------------

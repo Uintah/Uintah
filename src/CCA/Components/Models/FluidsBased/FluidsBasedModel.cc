@@ -82,13 +82,15 @@ FluidsBasedModel::~FluidsBasedModel()
 //
 void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
                                                    const VarLabel* var,
-                                                   const VarLabel* src)
+                                                   const VarLabel* src,
+                                                   const bool isSensibleEnergy)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matlSet = matlSet;
   t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
+  t->isSensibleEnergy = isSensibleEnergy;
   t->var_Lagrangian = VarLabel::create( var->getName()+"_L",   var->typeDescription());
   t->var_adv        = VarLabel::create( var->getName()+"_adv", var->typeDescription());
   d_transVars.push_back(t);

@@ -1739,6 +1739,10 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP        & sched,
             t->requiresVar( Task::NewDW, tvar->src,tvar->matls, m_gn,0 );
           }
 
+          if(tvar->isSensibleEnergy){  // e_s carrier gets flow work + conduction
+            t->requiresVar( Task::NewDW, lb->int_eng_source_CCLabel, tvar->matls, m_gn,0 );
+          }
+
           t->computesVar( tvar->var_Lagrangian, tvar->matls );
         }
       }
@@ -4983,6 +4987,18 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup *,
                   }
                 }
 
+                // The sensible-energy carrier e_s(T,Y) also receives ICE's
+                // thermodynamic work + heat conduction source (Joules -> J/kg)
+                if(tvar->isSensibleEnergy){
+                  constCCVariable<double> int_eng_source;
+                  new_dw->get( int_eng_source, lb->int_eng_source_CCLabel, indx, patch, m_gn,0 );
+
+                  for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+                    IntVector c = *iter;
+                    q_L_CC[c] += int_eng_source[c]/mass_L[m][c];
+                  }
+                }
+
                 //__________________________________
                 // Set boundary conditions on q_L_CC
                 // must use var q_CC_name not var_Lagrangian
@@ -5398,11 +5414,30 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup  *,
         }
       }
       //__________________________________
+      // A model that defines the caloric EOS e_s(T,Y) owns the temperature
+      // recovery (inverts its advected sensible-energy scalar).
+      bool modelSetTemp = false;
+
+      if(d_models.size() != 0){
+        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                              m_iter != d_models.end(); m_iter++){
+          FluidsBasedModel* fb_model =
+            dynamic_cast<FluidsBasedModel*>( *m_iter );
+
+          if(fb_model && fb_model->computesTemperature() ) {
+            modelSetTemp |= fb_model->computeTemperature(temp_CC, patch, new_dw, indx);
+          }
+        }
+      }
+
+      //__________________________________
       // Backout primitive quantities from
       // the conserved ones.
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        temp_CC[c] = int_eng_adv[c]/ (mass_adv[c]*cv_new[c]);
+      if( !modelSetTemp ){
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+          IntVector c = *iter;
+          temp_CC[c] = int_eng_adv[c]/ (mass_adv[c]*cv_new[c]);
+        }
       }
 
       //__________________________________

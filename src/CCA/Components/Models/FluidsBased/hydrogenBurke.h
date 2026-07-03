@@ -121,6 +121,14 @@ public:
   virtual void computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int) {}
   virtual void scheduleErrorEstimate(const LevelP&, SchedulerP&) {}
 
+  // Caloric EOS ownership: temperature is recovered from the transported
+  // sensible energy e_s(T,Y) rather than ICE's cv*T carrier.
+  virtual bool computesTemperature() const { return true; }
+  virtual bool computeTemperature(CCVariable<double>& temp,
+                                  const Patch* patch,
+                                  DataWarehouse* new_dw,
+                                  const int indx);
+
 private:
   hydrogenBurke(const hydrogenBurke&) = delete;
   hydrogenBurke& operator=(const hydrogenBurke&) = delete;
@@ -173,8 +181,11 @@ private:
   //------------------------------------------------------------------
   double intEnergy(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
   double gibbs(double T, int R1, int P1, const int* R2 = nullptr, const int* P2 = nullptr);
-  std::array<double, 9> cpSpecificHeat(double T);
+  std::array<double, 9> cpSpecificHeat(double T) const;
   std::array<double, N_ALL> sensibleEnthalpyAllSpecies(double T) const;
+  double sensibleEnergy(double T, const std::array<double, N_ALL>& Y) const;
+  double temperatureFromSensibleEnergy(double e_s, const std::array<double, N_ALL>& Y,
+                                       double Tguess) const;
   std::array<double, N_ALL> mixtureAvgDiffCoeffs(double T, double rho,
                                                   const std::array<double, N_ALL>& Y) const;
 
@@ -371,7 +382,8 @@ private:
   //__________________________________
   //
   // NASA7 polynomial coefficients for molar enthalpy [H2, O2, N2, H2O, H, O, OH, HO2, H2O2] 
-  static constexpr double d_Tmid = 1000; // [K] switch off between low and high temp polynomials
+  static constexpr double d_Tmid = 1000;    // [K] switch off between low and high temp polynomials
+  static constexpr double d_Tref = 298.15;  // [K] reference temperature for sensible enthalpy/energy
 
   // Note tradtionally enthalpy is calculated like a0 + a1T + (a2/2)T^2 + (a3/3)T^3... 
   // division of coefficients (a2/2, a3/3, a4/4) is already computed below
@@ -642,6 +654,8 @@ private:
 
   VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
   VarLabel* d_HRR_label{nullptr};         // heat release rate [W/m³]
+  VarLabel* d_es_label{nullptr};          // transported sensible energy e_s(T,Y) [J/kg]
+  VarLabel* d_es_src_label{nullptr};      // e_s source (chemistry + diffusion) [J/kg]
   std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s], indexed by all-species index (H2=0,O2=1,N2=2,...)
 
   // Geometry regions for initialization

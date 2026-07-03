@@ -86,6 +86,32 @@
       </MassMomEng_src>
 
       <!--__________________________________-->
+      <!-- ConstantSources model -->
+      <ConstantSources          spec="OPTIONAL NO_DATA">
+        <material               spec="REQUIRED STRING"/>
+        <qdot_Wm3               spec="OPTIONAL DOUBLE"  />
+        <scalar_remove_per_s    spec="REQUIRED DOUBLE"  />
+        <phi_init               spec="OPTIONAL DOUBLE"  />
+        <geom_object            spec="OPTIONAL"         />
+        <!-- qdotProfile: 2-column file  x[m]  qdot[W/m3]
+                         or 4-column file  x[m]  qdot[W/m3]  cv[J/kg-K]  gamma[-]
+                         or 6-column file  x[m]  qdot[W/m3]  cv[J/kg-K]  gamma[-]  mu[Pa-s]  k[W/m-K]
+                         Comment lines begin with #.  Optional columns are applied every timestep
+                         via modifyThermoTransportProperties. -->
+        <qdotProfile            spec="OPTIONAL NO_DATA">
+          <filename             spec="REQUIRED STRING"/>
+          <axis                 spec="REQUIRED STRING  'X, Y, Z'"/>
+        </qdotProfile>
+        <!-- initProfile: 5-column file  x[m]  T[K]  u[m/s]  rho[kg/m3]  press[Pa]
+                          Comment lines begin with #.  Extra columns are ignored.
+                          Applied only at t=0. -->
+        <initProfile            spec="OPTIONAL NO_DATA">
+          <filename             spec="REQUIRED STRING"/>
+          <axis                 spec="REQUIRED STRING  'X, Y, Z'"/>
+        </initProfile>
+      </ConstantSources>
+
+      <!--__________________________________-->
       <!--  TracerParticles -->
       <TracerParticles        spec="OPTIONAL NO_DATA">
         <modelPreviouslyInitialized
@@ -522,7 +548,9 @@
         <doChemistry spec="OPTIONAL BOOLEAN"/>
         <doDiffusion spec="OPTIONAL BOOLEAN"/>
         <debug spec="OPTIONAL BOOLEAN"/>
-        <tol_temp spec="OPTIONAL DOUBLE"/>
+        <rtol spec="OPTIONAL DOUBLE"/>
+        <atol_T spec="OPTIONAL DOUBLE"/>
+        <atol_Y spec="OPTIONAL DOUBLE"/>
         <safety spec="OPTIONAL DOUBLE"/>
         <max_grow spec="OPTIONAL DOUBLE"/>
         <max_shrink spec="OPTIONAL DOUBLE"/>

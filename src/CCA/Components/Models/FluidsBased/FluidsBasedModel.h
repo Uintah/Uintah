@@ -84,6 +84,7 @@ namespace Uintah {
     const VarLabel* src;
     const VarLabel* var_Lagrangian;
     const VarLabel* var_adv;
+    bool isSensibleEnergy;    // carrier of e_s(T,Y); ICE adds int_eng_source to it
   };
       
   struct AMRRefluxVariable {
@@ -143,7 +144,17 @@ namespace Uintah {
     // Method specific to FluidsBasedModels
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
                                              const VarLabel* var,
-                                             const VarLabel* src);
+                                             const VarLabel* src,
+                                             const bool isSensibleEnergy = false);
+
+    // A model may define the caloric EOS e_s(T,Y) and own the temperature
+    // recovery from the advected sensible energy.  Returns true if temp was set.
+    virtual bool computesTemperature() const { return false; }
+
+    virtual bool computeTemperature(CCVariable<double>& /*temp*/,
+                                    const Patch*  /*patch*/,
+                                    DataWarehouse* /*new_dw*/,
+                                    const int /*indx*/) { return false; }
                                         
     virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
                                            const VarLabel* var);
