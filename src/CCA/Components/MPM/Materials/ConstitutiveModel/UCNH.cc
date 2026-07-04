@@ -69,6 +69,8 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   ps->get("useModifiedEOS",           d_useModifiedEOS);
 
   ps->getWithDefault( "reinitializeCMData", d_reinitializeCMData, false );
+  ps->getWithDefault("yield_stress_factor", 
+                                      d_initialData.YSF, 1.0);
   d_8or27=Mflag->d_8or27;
 
   //__________________________________
@@ -150,6 +152,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
   cm_ps->appendElement("compressive_modulus_ratio",d_initialData.compModRat);
+  cm_ps->appendElement("yield_stress_factor",      d_initialData.YSF);
 
   // Plasticity
   if(d_usePlasticity) {
@@ -751,8 +754,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
       // Check for plastic loading
       double alpha;
+      double YSF = d_initialData.YSF; // Yield Stress Factor
       if(d_usePlasticity) {
-        flow = pYieldStress[idx];
+        flow = YSF*pYieldStress[idx];
         alpha  = pPlasticStrain[idx];
         double fTrial = sTnorm - sqtwthds*(K*alpha + flow);
         bElBar_new[idx] = bElBarTrial;

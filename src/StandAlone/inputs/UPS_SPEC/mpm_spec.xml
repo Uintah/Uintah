@@ -242,6 +242,7 @@
                                                                       need_applies_to="type Threshold"/> 
           <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
           <exponent               spec="OPTIONAL DOUBLE" />
+          <failure_scale_factor   spec="OPTIONAL DOUBLE" />
           <LocalizeParticles    spec="OPTIONAL BOOLEAN"               need_applies_to="type Threshold"/>
           <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
                                                                       need_applies_to="type Threshold"/> 

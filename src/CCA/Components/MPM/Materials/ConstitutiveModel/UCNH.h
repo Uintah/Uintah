@@ -80,6 +80,13 @@ namespace Uintah {
       double compModRat;  // Factor by which to increase Young's modulus in 
                           // compression over the values provided, which are
                           // used in spherical tension
+      double YSF;         // Yield Stress Factor.  Since the yield stress is
+                          // stored on a particle by particle basis, to
+                          // allow for spatially variable distributions,
+                          // changing the yield stress in a checkpoint file
+                          // will not have an effect.  This value allows
+                          // the user to increase or reduce the yield stress
+                          // by this multiplicative factor.
       // For Plasticity
       double FlowStress;
       double K;

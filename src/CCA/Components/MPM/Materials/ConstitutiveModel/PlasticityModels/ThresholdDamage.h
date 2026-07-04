@@ -53,6 +53,9 @@ namespace Uintah {
       std::string scaling; /* Volume scaling method: "none" or "kayenta" */
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
+      double FSF;          // Failure scale factor.  Allow user to scale the
+                           // failure stress/strain up or down by this
+                           // multiplicative factor
       bool localizeOrNot;
       
       void print(){

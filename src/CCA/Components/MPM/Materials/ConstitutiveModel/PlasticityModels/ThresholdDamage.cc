@@ -68,6 +68,7 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
 
   ps->require("failure_mean",d_epsf.mean);        // Mean val. of failure stress/strain
   ps->get("failure_distrib", d_epsf.dist);        // "constant", "weibull" or "gauss"
+  ps->getWithDefault("failure_scale_factor", d_epsf.FSF, 1.0);  // multiplicative value of failure stress/strain
 
   // Only require std if using a non-constant distribution
   if( d_epsf.dist != "constant" ){
@@ -130,6 +131,7 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("exponent",         d_epsf.exponent);
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
   dam_ps->appendElement("LocalizeParticles",d_epsf.localizeOrNot);
+  dam_ps->appendElement("failure_scale_factor",d_epsf.FSF);
 
   if(d_failure_criteria=="MohrCoulomb"){
     dam_ps->appendElement("friction_angle", d_friction_angle);
@@ -334,6 +336,7 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
 
     //__________________________________
     //
+    double FSF = d_epsf.FSF;  // Failure scale factor
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -353,12 +356,12 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
           pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
   
           //The first eigenvalue returned by "eigen" is always the largest
-          if ( maxEigen > pFailureStrain[idx] ){
+          if ( maxEigen > FSF*pFailureStrain[idx] ){
             pLocalized_new[idx] = 1;
           }
           if ( pLocalized[idx] != pLocalized_new[idx]) {
             cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
-                 << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
+                 << maxEigen << " eps_f = " << FSF*pFailureStrain[idx] << endl;
           }
         }
         else if( d_failure_criteria=="MaximumPrincipalStrain" ){
@@ -371,19 +374,19 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
           double maxEigen=0., medEigen=0., minEigen=0.;
           ee.getEigenValues(maxEigen,medEigen,minEigen);
   
-          if ( maxEigen > pFailureStrain[idx] ){
+          if ( maxEigen > FSF*pFailureStrain[idx] ){
             pLocalized_new[idx] = 1;
           }
           if ( pLocalized[idx] != pLocalized_new[idx]) {
             cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
-                 << " eps_f = " << pFailureStrain[idx] << endl;
+                 << " eps_f = " << FSF*pFailureStrain[idx] << endl;
           }
         }
         else if( d_failure_criteria=="MohrCoulomb" ){
           double maxEigen=0., medEigen=0., minEigen=0.;
           pStress[idx].getEigenValues(maxEigen, medEigen, minEigen);
   
-          double cohesion = pFailureStrain[idx];
+          double cohesion = FSF*pFailureStrain[idx];
   
           double epsMax=0.;
           // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
