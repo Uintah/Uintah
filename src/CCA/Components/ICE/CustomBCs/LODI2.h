@@ -45,14 +45,17 @@ namespace Uintah {
   // iceMatl_indx:    user input, ice material index.
   
   struct Lodi_globalVars{
-    double press_infinity;  
+    double press_infinity;
     double sigma;
     int iceMatl_indx;
     std::vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;
     Vector d_gravity;
-    double  Li_scale;
-  };    
+    double Li_scale;
+    bool d_useInflowTargets;
+    Vector vel_infinity;
+    double rho_infinity;
+  };
   //____________________________________________________________
   // This struct contains the additional (local) variables required to 
   // apply the Lodi Temperature, density and velocity BC.

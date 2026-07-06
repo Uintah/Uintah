@@ -9,6 +9,8 @@
         <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
         <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
         <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
+        <vel_infinity       spec="OPTIONAL VECTOR"/>
+        <rho_infinity       spec="OPTIONAL DOUBLE 'positive'"/>
         <material           spec="REQUIRED STRING"/>
       </LODI>
 

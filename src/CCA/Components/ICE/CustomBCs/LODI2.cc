@@ -135,7 +135,16 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     lodi->require("press_infinity",     global->press_infinity);
     lodi->getWithDefault("sigma",       global->sigma, 0.27);
     lodi->getWithDefault("Li_scale",    global->Li_scale, 1.0);
-    
+
+    global->d_useInflowTargets = false;
+    if (lodi->get("vel_infinity", global->vel_infinity) &&
+        lodi->get("rho_infinity", global->rho_infinity)) {
+      global->d_useInflowTargets = true;
+      proc0cout << "\n LODI inflow targets active:"
+                << "  vel = " << global->vel_infinity
+                << "  rho = " << global->rho_infinity << "\n" << endl;
+    }
+
     ProblemSpecP params = lodi;
     Material* matl = materialManager->parseAndLookupMaterial(params, "material");
     global->iceMatl_indx = matl->getDWIndex();
@@ -570,7 +579,7 @@ void debugging_Li(const IntVector c,
 {
   int n_dir = dir[0];
   double normalVel = vel_CC[n_dir];
-  double Mach = fabs(vel_CC.length()/speedSound);
+  double Mach = fabs(normalVel/speedSound);
    cout.setf(ios::scientific,ios::floatfield);
    cout.precision(10);  
   //__________________________________
@@ -673,7 +682,7 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   
   int n_dir = dir[0];
   double normalVel = vel_CC[n_dir];
-  double Mach = fabs(vel_CC.length()/speedSound);
+  double Mach = fabs(normalVel/speedSound);
   
   double speedSoundsqr = speedSound * speedSound;
   
@@ -724,7 +733,24 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
     L2 = s[2];
     L3 = s[3];
     L4 = s[4];
-    L5 = rightFace * L5 + leftFace * s[5]; 
+    L5 = rightFace * L5 + leftFace * s[5];
+
+    if (gv->d_useInflowTargets) {
+      double mFactor = 1.0 - Mach * Mach;
+
+      // Normal velocity relaxation on the incoming acoustic wave (L5 at left face, L1 at right face).
+      // Drives u_n toward vel_infinity[n_dir] using the same sigma and (1-M^2) weighting as outflow.
+      double velRelax = gv->sigma * rho * speedSoundsqr * mFactor
+                      * (normalVel - gv->vel_infinity[n_dir]) / domainLength[n_dir];
+      L5 += leftFace  * velRelax;
+      L1 -= rightFace * velRelax;
+
+      // Density relaxation on the incoming entropy wave.
+      // Drives rho toward rho_infinity to hit the target mass flux with vel_infinity.
+      double rhoRelax = gv->sigma * speedSound * mFactor
+                      * (rho - gv->rho_infinity) / domainLength[n_dir];
+      L2 += rhoRelax;
+    }
   }
   //__________________________________
   // Subsonic non-reflective outflow
@@ -1216,7 +1242,8 @@ int FaceTemp_LODI(const Patch* patch,
     double term3 = ( gamma[in] - 1.0);
     double term4 = L[5][in][P_dir]/(vel_norm + C);
     double term5 = L[1][in][P_dir]/(vel_norm - C);
-    double dtemp_dx = term1 * (-term2 + term3*(term4 + term5) );
+    double dtemp_dx = -(temp_CC[in]/rho_CC[in]) * term2
+                    + term1 * term3 * (term4 + term5);
     
     temp_CC[c] = temp_CC[in] + plus_minus_one * dx * dtemp_dx;
    
