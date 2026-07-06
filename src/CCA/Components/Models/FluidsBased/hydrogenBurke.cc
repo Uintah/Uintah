@@ -99,6 +99,7 @@ hydrogenBurke::~hydrogenBurke()
   }
 
   VarLabel::destroy(d_dtChem_label);
+  VarLabel::destroy(d_dtChemLimiter_label);
   VarLabel::destroy(d_HRR_label);
   VarLabel::destroy(d_es_label);
   VarLabel::destroy(d_es_src_label);
@@ -210,6 +211,9 @@ void hydrogenBurke::problemSetup(GridP&, const bool)
   }
 
   d_dtChem_label = VarLabel::create("dt_chemistry",    CCVariable<double>::getTypeDescription());
+  // Which variable limited the smallest chemistry substep: all-species index
+  // (see allnames above; N2 never occurs), N_ALL = temperature, -1 = no substepping
+  d_dtChemLimiter_label = VarLabel::create("dt_chemistry_limiter", CCVariable<int>::getTypeDescription());
   d_HRR_label    = VarLabel::create("HeatReleaseRate", CCVariable<double>::getTypeDescription());
 
   // Sensible energy e_s(T,Y) transported as a mass-specific scalar.  This is the
@@ -536,6 +540,7 @@ void hydrogenBurke::scheduleComputeModelSources(SchedulerP   & sched,
   t->modifiesVar(d_es_src_label);
 
   t->computesVar(d_dtChem_label);
+  t->computesVar(d_dtChemLimiter_label);
   t->computesVar(d_HRR_label);
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -1226,6 +1231,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
       new_dw->allocateAndPut(dtChem_cc, d_dtChem_label, indx, patch);
       dtChem_cc.initialize(dtAdv);
 
+      CCVariable<int> dtChemLimiter_cc;
+      new_dw->allocateAndPut(dtChemLimiter_cc, d_dtChemLimiter_label, indx, patch);
+      dtChemLimiter_cc.initialize(-1);
+
       CCVariable<double> hrr;
       new_dw->allocateAndPut(hrr, d_HRR_label, indx, patch);
       hrr.initialize(0.0);
@@ -1330,10 +1339,10 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         const auto   Ystart = Y;
         double Torig = T;
         auto   Yorig = Y;
-        double Tcourse;
-        double Tfine;
-        auto   Ycourse = Y;
-        auto   Yfine   = Y;
+        double Tpred;              // 1st-order Euler predictor (embedded error estimate)
+        double Theun;              // 2nd-order Heun solution
+        auto   Ypred = Y;
+        auto   Yheun = Y;
 
         double errNorm     = 1.0;   // weighted-RMS error over full state (normalized: accept if <= 1)
         int    iworst      = -1;    // variable limiting the current trial (species index, or N_ALL = T)
@@ -1355,46 +1364,39 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
           auto result1 = chemStep(Torig, Yorig, rho_kg, cellVol);
 
           while (!accepted && dtChem > 1e-15){
-            double dtHalf = dtChem / 2.0;
+            // Heun-Euler embedded pair (RK2(1)):
+            //   predictor  y* = y0 + dt*k1            (1st order, error estimate)
+            //   corrector  y1 = y0 + dt/2*(k1 + k2)   (2nd order, carried solution)
+            // with k2 = f(y*). Same two RHS evals per trial as step doubling.
 
-            // Coarse step (full dtChem)
+            // Euler predictor (full dtChem, reuses result1 on every retry)
             Ysum = 0.0;
             for (int j = 0; j < N_ALL; j++){
               if (j == N2) continue;
               int k = j - (j > N2);
-              Ycourse[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
-              Ysum += Ycourse[j];
+              Ypred[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
+              Ysum += Ypred[j];
             }
-            Ycourse[N2] = 1.0 - Ysum;
-            Tcourse = Torig + dtChem * result1.rhsEnergy;
+            Ypred[N2] = 1.0 - Ysum;
+            Tpred = Torig + dtChem * result1.rhsEnergy;
 
-            // Fine integration: first half-step reuses result1
+            // Heun corrector: second RHS eval at the predictor state
+            auto result2 = chemStep(Tpred, Ypred, rho_kg, cellVol);
             Ysum = 0.0;
             for (int j = 0; j < N_ALL; j++){
               if (j == N2) continue;
               int k = j - (j > N2);
-              Yfine[j] = Yorig[j] + result1.rhsMass[k] * dtHalf;
-              Ysum += Yfine[j];
+              Yheun[j] = Yorig[j] + 0.5 * dtChem * (result1.rhsMass[k] + result2.rhsMass[k]);
+              Ysum += Yheun[j];
             }
-            Yfine[N2] = 1.0 - Ysum;
-            Tfine = Torig + dtHalf * result1.rhsEnergy;
-
-            // Fine integration: second half-step
-            auto result2 = chemStep(Tfine, Yfine, rho_kg, cellVol);
-            Ysum = 0.0;
-            for (int j = 0; j < N_ALL; j++){
-              if (j == N2) continue;
-              int k = j - (j > N2);
-              Yfine[j] += result2.rhsMass[k] * dtHalf;
-              Ysum += Yfine[j];
-            }
-            Yfine[N2] = 1.0 - Ysum;
-            Tfine += dtHalf * result2.rhsEnergy;
+            Yheun[N2] = 1.0 - Ysum;
+            Theun = Torig + 0.5 * dtChem * (result1.rhsEnergy + result2.rhsEnergy);
 
             // ----------------------------------------------------------
             // Weighted-RMS error over the WHOLE integrated state.
-            // Forward Euler is order p=1, so the step-doubling error estimate is
-            //   e = (y_fine - y_coarse)/(2^p - 1) = y_fine - y_coarse.
+            // Embedded estimate: e = y_heun - y_pred = dt/2*(k2 - k1), the local
+            // error of the 1st-order (Euler) member; the 2nd-order Heun solution
+            // is what gets carried (local extrapolation).
             // Per-variable scale sc = rtol*|y| + atol: the atol floor stops a trace
             // radical near zero from blowing up the relative error and forcing
             // spurious rejections, while still watching every species.
@@ -1405,16 +1407,16 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
             int nNorm = 0;
             for (int j = 0; j < N_ALL; j++){
               if (j == N2) continue;                 // closure species: set by difference, not integrated
-              double e  = Yfine[j] - Ycourse[j];
-              double sc = d_rtol * std::abs(Yfine[j]) + d_atol_Y;
+              double e  = Yheun[j] - Ypred[j];
+              double sc = d_rtol * std::abs(Yheun[j]) + d_atol_Y;
               double r  = e / sc;
               errNorm  += r * r;
               if (std::abs(r) > worst){ worst = std::abs(r); iworst = j; }
               nNorm++;
             }
             {                                        // temperature term, separate Kelvin floor
-              double e  = Tfine - Tcourse;
-              double sc = d_rtol * std::abs(Tfine) + d_atol_T;
+              double e  = Theun - Tpred;
+              double sc = d_rtol * std::abs(Theun) + d_atol_T;
               double r  = e / sc;
               errNorm  += r * r;
               if (std::abs(r) > worst){ worst = std::abs(r); iworst = N_ALL; } // N_ALL flags T
@@ -1423,19 +1425,20 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
             errNorm = std::sqrt(errNorm / nNorm);
             // Stricter per-component guarantee instead of RMS: replace line above with  errNorm = worst;
 
-            // h_new = safety * h * errNorm^(-1/(p+1)); p=1 -> exponent -1/2
+            // h_new = safety * h * errNorm^(-1/(p+1)); estimate is for the
+            // 1st-order member, so p=1 -> exponent -1/2
             double fac = d_safety * std::pow(std::max(errNorm, 1e-300), -0.5);
             fac        = std::min(d_max_grow, std::max(d_max_shrink, fac));
 
-            if (errNorm <= 1.0){ // accept fine integration
+            if (errNorm <= 1.0){ // accept Heun solution
               for (int j = 0; j < N_SPECIES; j++){
-                massSrcTemp[j] += dtHalf * (result1.rhsMass[j] + result2.rhsMass[j]);
+                massSrcTemp[j] += 0.5 * dtChem * (result1.rhsMass[j] + result2.rhsMass[j]);
               }
-              Y           = Yfine;
-              engSrcTemp += dtHalf * (result1.engSrc + result2.engSrc);
-              T           = Tfine;
-              if (2.0 * dtHalf < dtChem_min){ dtChem_min = 2.0 * dtHalf; iworstAtMin = iworst; }
-              t          += 2.0 * dtHalf;
+              Y           = Yheun;
+              engSrcTemp += 0.5 * dtChem * (result1.engSrc + result2.engSrc);
+              T           = Theun;
+              if (dtChem < dtChem_min){ dtChem_min = dtChem; iworstAtMin = iworst; }
+              t          += dtChem;
               dtChem     *= fac;
               accepted    = true;
             } else { // reject: shrink and retry from the same start state (result1 still valid)
@@ -1454,7 +1457,8 @@ void hydrogenBurke::computeModelSources(const ProcessorGroup  *,
         // ---------------------------------------------
         // Step 3: Write Source terms
         // ---------------------------------------------
-        dtChem_cc[c] = dtChem_min;
+        dtChem_cc[c]        = dtChem_min;
+        dtChemLimiter_cc[c] = iworstAtMin;
 
         for (int j = 0; j< N_SPECIES; j++){
           Ysrc[j][c] += massSrcTemp[j];         // []

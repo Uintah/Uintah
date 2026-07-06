@@ -652,8 +652,9 @@ private:
   std::vector<VarLabel*> d_Y_labels;      // scalar-YH2, scalar-YO2, ...
   std::vector<VarLabel*> d_Y_src_labels;  // scalar_YH2_src, ...
 
-  VarLabel* d_dtChem_label{nullptr};      // minimum chemistry substep taken per cell
-  VarLabel* d_HRR_label{nullptr};         // heat release rate [W/m³]
+  VarLabel* d_dtChem_label{nullptr};        // minimum chemistry substep taken per cell
+  VarLabel* d_dtChemLimiter_label{nullptr}; // limiter at that substep: all-species index, N_ALL = T, -1 = no substepping
+  VarLabel* d_HRR_label{nullptr};           // heat release rate [W/m³]
   VarLabel* d_es_label{nullptr};          // transported sensible energy e_s(T,Y) [J/kg]
   VarLabel* d_es_src_label{nullptr};      // e_s source (chemistry + diffusion) [J/kg]
   std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s], indexed by all-species index (H2=0,O2=1,N2=2,...)
