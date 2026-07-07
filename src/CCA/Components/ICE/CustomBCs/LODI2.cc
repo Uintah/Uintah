@@ -579,7 +579,7 @@ void debugging_Li(const IntVector c,
 {
   int n_dir = dir[0];
   double normalVel = vel_CC[n_dir];
-  double Mach = fabs(normalVel/speedSound);
+  double Mach = fabs(vel_CC.length()/speedSound);
    cout.setf(ios::scientific,ios::floatfield);
    cout.precision(10);  
   //__________________________________
@@ -682,7 +682,7 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   
   int n_dir = dir[0];
   double normalVel = vel_CC[n_dir];
-  double Mach = fabs(normalVel/speedSound);
+  double Mach = fabs(vel_CC.length()/speedSound);
   
   double speedSoundsqr = speedSound * speedSound;
   
