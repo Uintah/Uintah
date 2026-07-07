@@ -25,6 +25,8 @@
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
 #include <CCA/Components/Models/MultiMatlExchange/Scalar.h>
 
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
+
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -448,6 +450,22 @@ void ScalarExch::sched_AddExch_Vel_Temp_CC( SchedulerP           & sched,
   t->requiresVar(Task::NewDW,  Ilb->sp_vol_CCLabel,    gn);
   t->requiresVar(Task::NewDW,  Ilb->vol_frac_CCLabel,  gn);
 
+  //__________________________________
+  //  A model owning a material's caloric EOS converts T <-> e_s(T,Y) inside
+  //  this task, so it needs its composition scalars in Lagrangian form.
+  //  These requires also force computeLagrangian_Transported_Vars to run first.
+  for( auto& model : d_fbModels ){
+    for( auto& tvar : model->getTransportedVars() ){
+      bool owned = false;
+      for(int i = 0; i < tvar->matls->size(); i++){
+        owned |= model->ownsCaloricEOS( tvar->matls->get(i) );
+      }
+      if( owned ){
+        t->requiresVar( Task::NewDW, tvar->var_Lagrangian, tvar->matls, gn );
+      }
+    }
+  }
+
   computesRequires_CustomBCs(t, "CC_Exchange", Ilb, ice_matls, BC_globalVars);
 
   t->computesVar(Ilb->Tdot_CCLabel);
@@ -539,6 +557,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     Vector bb[MAX_MATLS];
     vector<double> sp_vol(numALLMatls);
 
+    std::vector<FluidsBasedModel*> eosOwner(numALLMatls, nullptr);
+    std::vector<int>               dwIndx(numALLMatls, -9);
+
     double tmp;
     FastMatrix beta(numALLMatls, numALLMatls);
     FastMatrix acopy(numALLMatls, numALLMatls);
@@ -560,6 +581,9 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
       new_dw->allocateTemporary(cv[m], patch);
+
+      dwIndx[m]   = indx;
+      eosOwner[m] = caloricEOSOwner( indx );
 
       if(mpm_matl){                 // M P M
         CCVariable<double> oldTemp;
@@ -592,11 +616,27 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     }
 
     // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m][c]);
-        vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
+    for (int m = 0; m < numALLMatls; m++) {
+      if( eosOwner[m] ){    // carrier is e_s(T,Y): model inverts it
+        CCVariable<double> es_spec;
+        new_dw->allocateTemporary(es_spec, patch);
+
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          es_spec[c]   = int_eng_L[m][c]/mass_L[m][c];
+          vel_CC[m][c] = mom_L[m][c]/mass_L[m][c];
+        }
+
+        eosOwner[m]->computeTempFromSensibleEnergy( Temp_CC[m], es_spec,
+                              patch->getExtraCellIterator(), patch, new_dw,
+                              FluidsBasedModel::YForm::Lagrangian, dwIndx[m] );
+      }
+      else {                // carrier is cv*T
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m][c]);
+          vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
+        }
       }
     }
 
@@ -801,12 +841,29 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
 
     //__________________________________
     // Convert vars. primitive-> flux
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numALLMatls; m++) {
-        int_eng_L_ME[m][c] = Temp_CC[m][c]*cv[m][c] * mass_L[m][c];
-        mom_L_ME[m][c]     = vel_CC[m][c]           * mass_L[m][c];
-        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
+    for (int m = 0; m < numALLMatls; m++) {
+      if( eosOwner[m] ){    // carrier is e_s(T,Y)
+        CCVariable<double> es_new;
+        new_dw->allocateTemporary(es_new, patch);
+
+        eosOwner[m]->computeSensibleEnergy( es_new, Temp_CC[m],
+                              patch->getExtraCellIterator(), patch, new_dw,
+                              FluidsBasedModel::YForm::Lagrangian, dwIndx[m] );
+
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          int_eng_L_ME[m][c] = es_new[c]    * mass_L[m][c];
+          mom_L_ME[m][c]     = vel_CC[m][c] * mass_L[m][c];
+          Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
+        }
+      }
+      else {                // carrier is cv*T
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          int_eng_L_ME[m][c] = Temp_CC[m][c]*cv[m][c] * mass_L[m][c];
+          mom_L_ME[m][c]     = vel_CC[m][c]           * mass_L[m][c];
+          Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
+        }
       }
     }
   } //patches
@@ -866,12 +923,30 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
     new_dw->allocateTemporary(vel_CC,  patch);
     new_dw->allocateTemporary(Temp_CC, patch);
 
+    FluidsBasedModel* eosOwner = caloricEOSOwner( indx );
+
     //__________________________________
     // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      Temp_CC[c] = int_eng_L[c]/(mass_L[c]*cv[c]);
-      vel_CC[c]  = mom_L[c]/mass_L[c];
+    if( eosOwner ){         // carrier is e_s(T,Y): model inverts it
+      CCVariable<double> es_spec;
+      new_dw->allocateTemporary(es_spec, patch);
+
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        es_spec[c] = int_eng_L[c]/mass_L[c];
+        vel_CC[c]  = mom_L[c]/mass_L[c];
+      }
+
+      eosOwner->computeTempFromSensibleEnergy( Temp_CC, es_spec,
+                            patch->getExtraCellIterator(), patch, new_dw,
+                            FluidsBasedModel::YForm::Lagrangian, indx );
+    }
+    else {                  // carrier is cv*T
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        Temp_CC[c] = int_eng_L[c]/(mass_L[c]*cv[c]);
+        vel_CC[c]  = mom_L[c]/mass_L[c];
+      }
     }
 
     //__________________________________
@@ -903,11 +978,28 @@ void ScalarExch::addExch_Vel_Temp_CC_1matl( const ProcessorGroup * pg,
 
     //__________________________________
     // Convert vars. primitive-> flux
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      int_eng_L_ME[c] = Temp_CC[c]*cv[c] * mass_L[c];
-      mom_L_ME[c]     = vel_CC[c]        * mass_L[c];
-      Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
+    if( eosOwner ){
+      CCVariable<double> es_new;
+      new_dw->allocateTemporary(es_new, patch);
+
+      eosOwner->computeSensibleEnergy( es_new, Temp_CC,
+                            patch->getExtraCellIterator(), patch, new_dw,
+                            FluidsBasedModel::YForm::Lagrangian, indx );
+
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        int_eng_L_ME[c] = es_new[c] * mass_L[c];
+        mom_L_ME[c]     = vel_CC[c] * mass_L[c];
+        Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
+      }
+    }
+    else {
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        int_eng_L_ME[c] = Temp_CC[c]*cv[c] * mass_L[c];
+        mom_L_ME[c]     = vel_CC[c]        * mass_L[c];
+        Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
+      }
     }
   } //patches
 }

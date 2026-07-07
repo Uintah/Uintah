@@ -29,6 +29,7 @@
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -84,7 +85,6 @@ namespace Uintah {
     const VarLabel* src;
     const VarLabel* var_Lagrangian;
     const VarLabel* var_adv;
-    bool isSensibleEnergy;    // carrier of e_s(T,Y); ICE adds int_eng_source to it
   };
       
   struct AMRRefluxVariable {
@@ -144,18 +144,42 @@ namespace Uintah {
     // Method specific to FluidsBasedModels
     virtual void registerTransportedVariable(const MaterialSet* matlSet,
                                              const VarLabel* var,
-                                             const VarLabel* src,
-                                             const bool isSensibleEnergy = false);
+                                             const VarLabel* src);
 
-    // A model may define the caloric EOS e_s(T,Y) and own the temperature
-    // recovery from the advected sensible energy.  Returns true if temp was set.
-    virtual bool computesTemperature() const { return false; }
+    //__________________________________
+    //  Caloric equation of state ownership.
+    //  A model may declare that ICE's internal energy carrier for material
+    //  indx is the true sensible energy e_s(T,Y) instead of cv*T.  ICE and
+    //  the exchange model then delegate every T <-> energy conversion to the
+    //  model through the two hooks below.  Which DW holds the model's
+    //  composition scalars depends on the call site:
+    enum class YForm {
+      OldPrimitive,   // tvar->var            in comp_dw = old_dw  (mass specific)
+      Lagrangian,     // tvar->var_Lagrangian in comp_dw = new_dw  (mass weighted)
+      NewPrimitive    // tvar->var            in comp_dw = new_dw  (mass specific)
+    };
 
-    virtual bool computeTemperature(CCVariable<double>& /*temp*/,
-                                    const Patch*  /*patch*/,
-                                    DataWarehouse* /*new_dw*/,
-                                    const int /*indx*/) { return false; }
-                                        
+    virtual bool ownsCaloricEOS(const int /*indx*/) const { return false; }
+
+    // es[c] = e_s( temp[c], Y[c] )   [J/kg]  for every cell in iter
+    virtual void computeSensibleEnergy(CCVariable<double>   & es,
+                                       const Array3<double> & temp,
+                                       CellIterator           iter,
+                                       const Patch          * patch,
+                                       DataWarehouse        * comp_dw,
+                                       const YForm            yform,
+                                       const int              indx);
+
+    // temp[c] = T such that e_s( T, Y[c] ) = es[c]   (monotone Newton)
+    virtual void computeTempFromSensibleEnergy(CCVariable<double>   & temp,
+                                               const Array3<double> & es,
+                                               CellIterator           iter,
+                                               const Patch          * patch,
+                                               DataWarehouse        * comp_dw,
+                                               const YForm            yform,
+                                               const int              indx);
+
+
     virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
                                            const VarLabel* var);
 

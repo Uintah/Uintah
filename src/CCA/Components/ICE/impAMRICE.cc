@@ -211,17 +211,20 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
     scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
+    // must be scheduled before the exchange task: a model-owned caloric EOS
+    // makes the exchange require the Lagrangian transported scalars, and a
+    // NewDW requires only binds to computes of earlier-scheduled tasks
+    scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                            all_matls);
+
     d_exchModel->sched_AddExch_Vel_Temp_CC( sched, patches, ice_matls_sub,
                                                             mpm_matls_sub,
                                                             all_matls,
                                                             d_BC_globalVars);
 
     scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
-                                                            mpm_matls_sub, 
+                                                            mpm_matls_sub,
                                                             d_press_matl,
-                                                            all_matls);
-
-    scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                             all_matls);
 
     scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,

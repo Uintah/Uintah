@@ -29,6 +29,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/Regridder.h>
 
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Grid/MaterialManager.h>
@@ -82,18 +83,45 @@ FluidsBasedModel::~FluidsBasedModel()
 //
 void FluidsBasedModel::registerTransportedVariable(const MaterialSet* matlSet,
                                                    const VarLabel* var,
-                                                   const VarLabel* src,
-                                                   const bool isSensibleEnergy)
+                                                   const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matlSet = matlSet;
   t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
-  t->isSensibleEnergy = isSensibleEnergy;
   t->var_Lagrangian = VarLabel::create( var->getName()+"_L",   var->typeDescription());
   t->var_adv        = VarLabel::create( var->getName()+"_adv", var->typeDescription());
   d_transVars.push_back(t);
+}
+
+//______________________________________________________________________
+//  Caloric EOS hooks: a model that returns true from ownsCaloricEOS()
+//  must override both of these.
+void FluidsBasedModel::computeSensibleEnergy(CCVariable<double>   &,
+                                             const Array3<double> &,
+                                             CellIterator          ,
+                                             const Patch          *,
+                                             DataWarehouse        *,
+                                             const YForm           ,
+                                             const int             )
+{
+  throw InternalError("FluidsBasedModel::computeSensibleEnergy: model claims"
+                      " ownsCaloricEOS() but does not implement this hook",
+                      __FILE__, __LINE__);
+}
+
+void FluidsBasedModel::computeTempFromSensibleEnergy(CCVariable<double>   &,
+                                                     const Array3<double> &,
+                                                     CellIterator          ,
+                                                     const Patch          *,
+                                                     DataWarehouse        *,
+                                                     const YForm           ,
+                                                     const int             )
+{
+  throw InternalError("FluidsBasedModel::computeTempFromSensibleEnergy: model"
+                      " claims ownsCaloricEOS() but does not implement this hook",
+                      __FILE__, __LINE__);
 }
 
 //______________________________________________________________________

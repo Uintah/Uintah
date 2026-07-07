@@ -504,6 +504,19 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
                                           particle_ghost_layer );
       }
     }
+
+    //__________________________________
+    //  Hand the fluids-based models to the exchange model so a model that
+    //  owns a material's caloric EOS can perform the T <-> internal energy
+    //  conversions inside the exchange task.
+    vector<FluidsBasedModel*> fbModels;
+    for( auto& model : d_models ){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+      if( fb_model ){
+        fbModels.push_back( fb_model );
+      }
+    }
+    d_exchModel->setFluidsBasedModels( fbModels );
   }
 
   //__________________________________
@@ -977,6 +990,11 @@ ICE::scheduleTimeAdvance( const LevelP & level,
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
+  // must be scheduled before the exchange task: a model-owned caloric EOS
+  // makes the exchange require the Lagrangian transported scalars, and a
+  // NewDW requires only binds to computes of earlier-scheduled tasks
+  scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                          all_matls);
 
   d_exchModel->sched_AddExch_Vel_Temp_CC( sched, patches, ice_mss,
                                                           mpm_mss,
@@ -986,9 +1004,6 @@ ICE::scheduleTimeAdvance( const LevelP & level,
   scheduleComputeLagrangianSpecificVolume(sched, patches, ice_mss,
                                                           mpm_mss,
                                                           d_press_matl,
-                                                          all_matls);
-
-  scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                           all_matls);
 
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_mss,
@@ -1621,6 +1636,25 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP        & sched,
     t->requiresVar( Task::NewDW, lb->modelMass_srcLabel,   m_gn );
     t->requiresVar( Task::NewDW, lb->modelMom_srcLabel,    m_gn );
     t->requiresVar( Task::NewDW, lb->modelEng_srcLabel,    m_gn );
+
+    //__________________________________
+    //  A model owning a material's caloric EOS builds the internal energy
+    //  carrier as e_s(T_old, Y_old) and needs its composition scalars.
+    for( auto& model : d_models ){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+
+      if( fb_model ){
+        for( auto& tvar : fb_model->getTransportedVars() ){
+          bool owned = false;
+          for(int i = 0; i < tvar->matls->size(); i++){
+            owned |= fb_model->ownsCaloricEOS( tvar->matls->get(i) );
+          }
+          if( owned ){
+            t->requiresVar( Task::OldDW, tvar->var, tvar->matls, m_gn );
+          }
+        }
+      }
+    }
   }
 
   t->computesVar( lb->mom_L_CCLabel );
@@ -1737,10 +1771,6 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP        & sched,
 
           if(tvar->src){     // require q_src
             t->requiresVar( Task::NewDW, tvar->src,tvar->matls, m_gn,0 );
-          }
-
-          if(tvar->isSensibleEnergy){  // e_s carrier gets flow work + conduction
-            t->requiresVar( Task::NewDW, lb->int_eng_source_CCLabel, tvar->matls, m_gn,0 );
           }
 
           t->computesVar( tvar->var_Lagrangian, tvar->matls );
@@ -2033,6 +2063,25 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
     t->requiresVar( Task::NewDW,lb->int_eng_L_CCLabel,  m_gn );
     t->requiresVar( Task::NewDW,lb->mom_L_ME_CCLabel,   m_gn );
     t->requiresVar( Task::NewDW,lb->eng_L_ME_CCLabel,   m_gn );
+
+    //__________________________________
+    //  A model owning a material's caloric EOS evaluates e_s(T,Y) for the
+    //  internal energy sum and needs its composition scalars.
+    for( auto& model : d_models ){
+      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+
+      if( fb_model ){
+        for( auto& tvar : fb_model->getTransportedVars() ){
+          bool owned = false;
+          for(int i = 0; i < tvar->matls->size(); i++){
+            owned |= fb_model->ownsCaloricEOS( tvar->matls->get(i) );
+          }
+          if( owned ){
+            t->requiresVar( Task::NewDW, tvar->var, tvar->matls, m_gn );
+          }
+        }
+      }
+    }
 
     //__________________________________
     //  Create reductionMatlSubSet that includes all ice matls
@@ -4601,6 +4650,25 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
       new_dw->allocateAndPut( int_eng_L, lb->int_eng_L_CCLabel, indx,patch );
       new_dw->allocateAndPut( mass_L,    lb->mass_L_CCLabel,    indx,patch );
 
+      //__________________________________
+      //  Does a model own this material's caloric EOS?  If so the internal
+      //  energy carrier is the true sensible energy e_s(T,Y), not cv*T.
+      FluidsBasedModel* eosOwner = nullptr;
+
+      for( auto& model : d_models ){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+        if( fb_model && fb_model->ownsCaloricEOS( indx ) ){
+          eosOwner = fb_model;
+        }
+      }
+
+      CCVariable<double> es_old;
+      if( eosOwner ){
+        new_dw->allocateTemporary(es_old, patch);
+        eosOwner->computeSensibleEnergy( es_old, temp_CC,
+                              patch->getExtraCellIterator(), patch, old_dw,
+                              FluidsBasedModel::YForm::OldPrimitive, indx );
+      }
 
       //__________________________________
       //  NO mass exchange
@@ -4661,8 +4729,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
           }
 
           // must have a minimum int_eng
-          double min_int_eng = min_mass * cv[c] * temp_CC[c];
-          double int_eng_tmp = mass * cv[c] * temp_CC[c];
+          double spec_eng    = eosOwner ? es_old[c] : cv[c]*temp_CC[c];
+          double min_int_eng = min_mass * spec_eng;
+          double int_eng_tmp = mass * spec_eng;
 
           //  Glossary:
           //  int_eng_tmp    = the amount of internal energy for this
@@ -4680,7 +4749,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
                          int_eng_source[c] +
                          modelEng_src[c];
 
-          int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
+          // e_s(T,Y) is legal below zero (T < T_ref); only clamp a
+          // positive carrier.  cv*T is always positive.
+          if( spec_eng > 0.0 ){
+            int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
+          }
 
          }
 #if 0
@@ -4694,10 +4767,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
         // ignore BP if recompute time step has already been requested
+        // ignore BP for a model-owned e_s(T,Y) carrier: e_s < 0 is legal
         IntVector neg_cell;
         bool rts = new_dw->recomputeTimeStep();
 
-        if (!areAllValuesPositive(int_eng_L, neg_cell) && !rts ) {
+        if (!eosOwner && !areAllValuesPositive(int_eng_L, neg_cell) && !rts ) {
          ostringstream warn;
          int idx = getLevel(patches)->getIndex();
 
@@ -4984,18 +5058,6 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup *,
                   for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
                     IntVector c = *iter;
                     q_L_CC[c]  += q_src[c];     // with source
-                  }
-                }
-
-                // The sensible-energy carrier e_s(T,Y) also receives ICE's
-                // thermodynamic work + heat conduction source (Joules -> J/kg)
-                if(tvar->isSensibleEnergy){
-                  constCCVariable<double> int_eng_source;
-                  new_dw->get( int_eng_source, lb->int_eng_source_CCLabel, indx, patch, m_gn,0 );
-
-                  for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-                    IntVector c = *iter;
-                    q_L_CC[c] += int_eng_source[c]/mass_L[m][c];
                   }
                 }
 
@@ -5414,26 +5476,34 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup  *,
         }
       }
       //__________________________________
-      // A model that defines the caloric EOS e_s(T,Y) owns the temperature
-      // recovery (inverts its advected sensible-energy scalar).
-      bool modelSetTemp = false;
+      // A model that owns this material's caloric EOS inverts the advected
+      // sensible energy e_s(T,Y) for the temperature.
+      FluidsBasedModel* eosOwner = nullptr;
 
-      if(d_models.size() != 0){
-        for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-                                              m_iter != d_models.end(); m_iter++){
-          FluidsBasedModel* fb_model =
-            dynamic_cast<FluidsBasedModel*>( *m_iter );
-
-          if(fb_model && fb_model->computesTemperature() ) {
-            modelSetTemp |= fb_model->computeTemperature(temp_CC, patch, new_dw, indx);
-          }
+      for( auto& model : d_models ){
+        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+        if( fb_model && fb_model->ownsCaloricEOS( indx ) ){
+          eosOwner = fb_model;
         }
       }
 
       //__________________________________
       // Backout primitive quantities from
       // the conserved ones.
-      if( !modelSetTemp ){
+      if( eosOwner ){
+        CCVariable<double> es_spec;
+        new_dw->allocateTemporary(es_spec, patch);
+
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+          IntVector c = *iter;
+          es_spec[c] = int_eng_adv[c]/mass_adv[c];
+        }
+
+        eosOwner->computeTempFromSensibleEnergy( temp_CC, es_spec,
+                              patch->getCellIterator(), patch, new_dw,
+                              FluidsBasedModel::YForm::NewPrimitive, indx );
+      }
+      else {
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
           IntVector c = *iter;
           temp_CC[c] = int_eng_adv[c]/ (mass_adv[c]*cv_new[c]);
@@ -5624,9 +5694,32 @@ void ICE::TestConservation(const ProcessorGroup  *,
         new_dw->get( cv,      lb->specific_heatLabel,indx,patch,m_gn,0 );
         total_int_eng[indx] = 0.0;
 
-        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-          IntVector c = *iter;
-          int_eng[c] = mass[m][c] * cv[c] * temp_CC[c];
+        FluidsBasedModel* eosOwner = nullptr;
+        for( auto& model : d_models ){
+          FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
+          if( fb_model && fb_model->ownsCaloricEOS( indx ) ){
+            eosOwner = fb_model;
+          }
+        }
+
+        if( eosOwner ){       // carrier is e_s(T,Y)
+          CCVariable<double> es_tmp;
+          new_dw->allocateTemporary(es_tmp, patch);
+
+          eosOwner->computeSensibleEnergy( es_tmp, temp_CC,
+                                patch->getExtraCellIterator(), patch, new_dw,
+                                FluidsBasedModel::YForm::NewPrimitive, indx );
+
+          for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+            IntVector c = *iter;
+            int_eng[c] = mass[m][c] * es_tmp[c];
+          }
+        }
+        else {                // carrier is cv*T
+          for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+            IntVector c = *iter;
+            int_eng[c] = mass[m][c] * cv[c] * temp_CC[c];
+          }
         }
 
         double mat_int_eng(0);

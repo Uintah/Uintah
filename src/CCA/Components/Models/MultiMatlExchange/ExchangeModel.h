@@ -36,9 +36,12 @@
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
+#include <vector>
+
 namespace Uintah {
 
   class DataWarehouse;
+  class FluidsBasedModel;
   class Material;
   class Patch;
   class ExchangeModel {
@@ -99,6 +102,15 @@ namespace Uintah {
                                       DataWarehouse        * new_dw,
                                       customBC_globalVars  * BC_globalVars) = 0;
 
+    //__________________________________
+    //  Caloric EOS ownership.  ICE hands the exchange model the fluids-based
+    //  models so the T <-> internal energy conversions can be delegated to a
+    //  model that owns the caloric EOS e_s(T,Y) for a material.
+    void setFluidsBasedModels( const std::vector<FluidsBasedModel*>& models );
+
+    // returns the model owning matl indx's caloric EOS, or nullptr
+    FluidsBasedModel* caloricEOSOwner( const int indx ) const;
+
     void schedComputeSurfaceNormal( SchedulerP           & sched,
                                     const PatchSet       * patches,
                                     const MaterialSubset * mpmMatls );
@@ -124,7 +136,9 @@ namespace Uintah {
     MPMLabel* Mlb;
     ICELabel* Ilb;
     bool d_with_mpm;
-    
+
+    std::vector<FluidsBasedModel*> d_fbModels;
+
   };
 }
 

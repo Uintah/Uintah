@@ -691,7 +691,17 @@ void SlipExch::sched_AddExch_Vel_Temp_CC(SchedulerP           & sched,
                                          const MaterialSet    * all_matls,
                                          customBC_globalVars  * BC_globalVars)
 {
-
+  //__________________________________
+  //  The T <-> internal energy conversions below assume e = cv*T.
+  //  Delegating them to a model-owned caloric EOS has not been implemented
+  //  for the slip exchange model.
+  for( int m = 0; m < d_numMatls; m++ ){
+    if( caloricEOSOwner( m ) ){
+      throw ProblemSetupException( "ERROR: the slip exchange model does not"
+            " support a fluids-based model that owns a caloric EOS",
+            __FILE__, __LINE__);
+    }
+  }
 
   //__________________________________
   //

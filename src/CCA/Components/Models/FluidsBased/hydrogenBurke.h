@@ -121,13 +121,27 @@ public:
   virtual void computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int) {}
   virtual void scheduleErrorEstimate(const LevelP&, SchedulerP&) {}
 
-  // Caloric EOS ownership: temperature is recovered from the transported
-  // sensible energy e_s(T,Y) rather than ICE's cv*T carrier.
-  virtual bool computesTemperature() const { return true; }
-  virtual bool computeTemperature(CCVariable<double>& temp,
-                                  const Patch* patch,
-                                  DataWarehouse* new_dw,
-                                  const int indx);
+  // Caloric EOS ownership: ICE's internal energy carrier for this material
+  // is the true sensible energy e_s(T,Y) rather than cv*T.  ICE and the
+  // exchange model delegate every T <-> energy conversion to these hooks.
+  virtual bool ownsCaloricEOS(const int indx) const
+  { return d_matl_set && d_matl_set->getSubset(0)->contains(indx); }
+
+  virtual void computeSensibleEnergy(CCVariable<double>   & es,
+                                     const Array3<double> & temp,
+                                     CellIterator           iter,
+                                     const Patch          * patch,
+                                     DataWarehouse        * comp_dw,
+                                     const YForm            yform,
+                                     const int              indx);
+
+  virtual void computeTempFromSensibleEnergy(CCVariable<double>   & temp,
+                                             const Array3<double> & es,
+                                             CellIterator           iter,
+                                             const Patch          * patch,
+                                             DataWarehouse        * comp_dw,
+                                             const YForm            yform,
+                                             const int              indx);
 
 private:
   hydrogenBurke(const hydrogenBurke&) = delete;
@@ -186,6 +200,15 @@ private:
   double sensibleEnergy(double T, const std::array<double, N_ALL>& Y) const;
   double temperatureFromSensibleEnergy(double e_s, const std::array<double, N_ALL>& Y,
                                        double Tguess) const;
+
+  // Fetch the 8 tracked mass fractions from the DW form requested by the
+  // caloric EOS hooks (see FluidsBasedModel::YForm)
+  void gatherMassFractions(std::vector<constCCVariable<double> >& Y,
+                           constCCVariable<double>& massL,
+                           const Patch* patch,
+                           DataWarehouse* comp_dw,
+                           const YForm yform,
+                           const int indx) const;
   std::array<double, N_ALL> mixtureAvgDiffCoeffs(double T, double rho,
                                                   const std::array<double, N_ALL>& Y) const;
 
@@ -655,8 +678,6 @@ private:
   VarLabel* d_dtChem_label{nullptr};        // minimum chemistry substep taken per cell
   VarLabel* d_dtChemLimiter_label{nullptr}; // limiter at that substep: all-species index, N_ALL = T, -1 = no substepping
   VarLabel* d_HRR_label{nullptr};           // heat release rate [W/m³]
-  VarLabel* d_es_label{nullptr};          // transported sensible energy e_s(T,Y) [J/kg]
-  VarLabel* d_es_src_label{nullptr};      // e_s source (chemistry + diffusion) [J/kg]
   std::vector<VarLabel*> d_diffCoef_labels;    // D_k [m^2/s], indexed by all-species index (H2=0,O2=1,N2=2,...)
 
   // Geometry regions for initialization

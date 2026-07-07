@@ -567,6 +567,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
     d_ice->scheduleComputeLagrangianValues(   sched, ice_patches, ice_matls);
 
+    // must be scheduled before the exchange task: a model-owned caloric EOS
+    // makes the exchange require the Lagrangian transported scalars, and a
+    // NewDW requires only binds to computes of earlier-scheduled tasks
+    d_ice->scheduleComputeLagrangian_Transported_Vars(
+                                              sched, ice_patches, ice_matls);
+
     d_ice->d_exchModel->sched_AddExch_Vel_Temp_CC(
                                               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
@@ -578,9 +584,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
-
-    d_ice->scheduleComputeLagrangian_Transported_Vars(
-                                              sched, ice_patches, ice_matls);
 
   }
 

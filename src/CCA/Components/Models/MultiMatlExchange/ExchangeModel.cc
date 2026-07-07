@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
+#include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -85,9 +86,33 @@ ExchangeModel::~ExchangeModel()
   if( d_with_mpm ){
     delete Mlb;
   }
-  
+
 }
 
+//______________________________________________________________________
+//
+void ExchangeModel::setFluidsBasedModels( const std::vector<FluidsBasedModel*>& models )
+{
+  d_fbModels = models;
+}
+
+//______________________________________________________________________
+//  Return the model that owns the caloric EOS for material indx, or nullptr.
+FluidsBasedModel* ExchangeModel::caloricEOSOwner( const int indx ) const
+{
+  FluidsBasedModel* owner = nullptr;
+
+  for( auto& model : d_fbModels ){
+    if( model->ownsCaloricEOS( indx ) ){
+      if( owner ){
+        throw ProblemSetupException( "ERROR: two fluids-based models claim to"
+              " own the caloric EOS for the same material", __FILE__, __LINE__);
+      }
+      owner = model;
+    }
+  }
+  return owner;
+}
 
 //______________________________________________________________________
 //
