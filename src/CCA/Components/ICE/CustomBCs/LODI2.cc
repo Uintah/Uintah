@@ -1242,8 +1242,9 @@ int FaceTemp_LODI(const Patch* patch,
     double term3 = ( gamma[in] - 1.0);
     double term4 = L[5][in][P_dir]/(vel_norm + C);
     double term5 = L[1][in][P_dir]/(vel_norm - C);
-    double dtemp_dx = -(temp_CC[in]/rho_CC[in]) * term2
-                    + term1 * term3 * (term4 + term5);
+    double dtemp_dx = term1 * (-term2 + term3 * (term4 + term5) ); // potential error James
+    // double dtemp_dx = -(temp_CC[in]/rho_CC[in]) * term2
+    //                 + term1 * term3 * (term4 + term5);
     
     temp_CC[c] = temp_CC[in] + plus_minus_one * dx * dtemp_dx;
    
