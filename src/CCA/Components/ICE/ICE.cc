@@ -514,6 +514,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
       if( fb_model ){
         fbModels.push_back( fb_model );
+
+        for( unsigned int m = 0; m < m_materialManager->getNumMatls( "ICE" ); m++ ){
+          if( fb_model->ownsCaloricEOS( m ) ){
+            d_anyModelOwnsCaloricEOS = true;
+          }
+        }
       }
     }
     d_exchModel->setFluidsBasedModels( fbModels );
@@ -990,16 +996,25 @@ ICE::scheduleTimeAdvance( const LevelP & level,
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
 
-  // must be scheduled before the exchange task: a model-owned caloric EOS
-  // makes the exchange require the Lagrangian transported scalars, and a
-  // NewDW requires only binds to computes of earlier-scheduled tasks
-  scheduleComputeLagrangian_Transported_Vars(sched, patches,
-                                                          all_matls);
+  if( d_anyModelOwnsCaloricEOS ){
+    // must be scheduled before the exchange task: a model-owned caloric EOS
+    // makes the exchange require the Lagrangian transported scalars, and a
+    // NewDW requires only binds to computes of earlier-scheduled tasks
+    scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                            all_matls);
+  }
 
   d_exchModel->sched_AddExch_Vel_Temp_CC( sched, patches, ice_mss,
                                                           mpm_mss,
                                                           all_matls,
                                                           d_BC_globalVars);
+
+  if( !d_anyModelOwnsCaloricEOS ){
+    // original ordering: no model needs the exchange task to see
+    // Lagrangian transported scalars, so run this after exchange as before
+    scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                            all_matls);
+  }
 
   scheduleComputeLagrangianSpecificVolume(sched, patches, ice_mss,
                                                           mpm_mss,
@@ -4729,9 +4744,21 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
           }
 
           // must have a minimum int_eng
-          double spec_eng    = eosOwner ? es_old[c] : cv[c]*temp_CC[c];
-          double min_int_eng = min_mass * spec_eng;
-          double int_eng_tmp = mass * spec_eng;
+          double min_int_eng, int_eng_tmp;
+          bool   clampPositive = true;  // non-owner: cv*T is always positive
+
+          if( eosOwner ){
+            double spec_eng = es_old[c];
+            min_int_eng   = min_mass * spec_eng;
+            int_eng_tmp   = mass * spec_eng;
+            clampPositive = (spec_eng > 0.0);  // e_s(T,Y) may legally be < 0
+          }
+          else{
+            // same associativity as the pre-8e381d22 expression, so a
+            // material with no caloric-EOS-owning model rounds identically
+            min_int_eng = min_mass * cv[c] * temp_CC[c];
+            int_eng_tmp = mass * cv[c] * temp_CC[c];
+          }
 
           //  Glossary:
           //  int_eng_tmp    = the amount of internal energy for this
@@ -4751,7 +4778,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
 
           // e_s(T,Y) is legal below zero (T < T_ref); only clamp a
           // positive carrier.  cv*T is always positive.
-          if( spec_eng > 0.0 ){
+          if( clampPositive ){
             int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
           }
 

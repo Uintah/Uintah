@@ -791,6 +791,12 @@ using namespace ExchangeModels;
       // exchange Model
       ExchangeModel* d_exchModel;
 
+      // true iff some FluidsBasedModel owns the caloric EOS e_s(T,Y) for at
+      // least one material; gates the transported-vars/exchange scheduling
+      // order so simulations without such a model keep the original task
+      // graph and bit-identical results.
+      bool d_anyModelOwnsCaloricEOS{false};
+
       // flags for the conservation test
        struct conservationTest_flags{
         bool onOff;
