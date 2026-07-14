@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<mechanism name="h2o2">
+  <units length="cm" time="s" quantity="mol" activation-energy="cal/mol" />
+  <phase name="ohmech" id="ohmech">
+    <thermo model="ideal-gas" />
+    <kinetics model="gas" />
+    <transport model="mixture-averaged" />
+    <elementArray>O H Ar N</elementArray>
+    <speciesArray>H2 H O O2 OH H2O HO2 H2O2 AR N2</speciesArray>
+    <state>
+      <temperature units="K">300</temperature>
+      <pressure units="Pa">1 atm</pressure>
+    </state>
+  </phase>
+  <phase name="ohmech-RK" id="ohmech-RK">
+    <thermo model="Redlich-Kwong" />
+    <kinetics model="gas" />
+    <transport model="mixture-averaged" />
+    <elementArray>O H Ar N</elementArray>
+    <speciesArray>H2 H O O2 OH H2O HO2 H2O2 AR N2</speciesArray>
+    <state>
+      <temperature units="K">300</temperature>
+      <pressure units="Pa">1 atm</pressure>
+    </state>
+  </phase>
+  <speciesData id="species_data">
+    <species name="H2">
+      <atomArray>H:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">2.34433112, 0.00798052075, -1.9478151e-05, 2.01572094e-08, -7.37611761e-12, -917.935173, 0.683010238</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">3.3372792, -4.94024731e-05, 4.99456778e-07, -1.79566394e-10, 2.00255376e-14, -950.158922, -3.20502331</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">2.92</diameter>
+        <well_depth units="K">38</well_depth>
+        <polarizability units="A3">0.79</polarizability>
+        <rotational_relaxation>280</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-7.9650490934554945e-04 7.4332270354511120e-04 -1.4636911006630926e-04 1.3684952702801833e-05 -4.7252640911538522e-07</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-6.8782374167583593e-01 4.1214848763689438e-01 -9.0623352797032403e-02 8.7629726024752025e-03 -3.1172760273226853e-04</conductivityFit>
+    </species>
+    <species name="H">
+      <atomArray>H:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">2.5, 7.05332819e-13, -1.99591964e-15, 2.30081632e-18, -9.27732332e-22, 25473.6599, -0.446682853</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">2.50000001, -2.30842973e-11, 1.61561948e-14, -4.73515235e-18, 4.98197357e-22, 25473.6599, -0.446682914</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">2.05</diameter>
+        <well_depth units="K">145</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-3.6109993281380334e-03 1.9558732021979926e-03 -3.2904755696958374e-04 2.4970320703467370e-05 -6.9185662895912590e-07</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-9.1655010127115050e-02 3.7702041728777044e-02 -4.0374438772818790e-03 1.0442546893033603e-04 5.2739555137140205e-06</conductivityFit>
+    </species>
+    <species name="O">
+      <atomArray>O:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.1682671, -0.00327931884, 6.64306396e-06, -6.12806624e-09, 2.11265971e-12, 29122.2592, 2.05193346</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">2.56942078, -8.59741137e-05, 4.19484589e-08, -1.00177799e-11, 1.22833691e-15, 29217.5791, 4.78433864</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">2.75</diameter>
+        <well_depth units="K">80</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.2161380275043082e-03 3.2555602561190025e-03 -6.3476003164950805e-04 5.6473245533891118e-05 -1.8740736534637209e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">1.8968475347176527e-03 -1.3340071152543674e-03 6.1354926215053274e-04 -8.4522983596221467e-05 4.1169303970416837e-06</conductivityFit>
+    </species>
+    <species name="O2">
+      <atomArray>O:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.78245636, -0.00299673416, 9.84730201e-06, -9.68129509e-09, 3.24372837e-12, -1063.94356, 3.65767573</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">3.28253784, 0.00148308754, -7.57966669e-07, 2.09470555e-10, -2.16717794e-14, -1088.45772, 5.45323129</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.458</diameter>
+        <well_depth units="K">107.4</well_depth>
+        <polarizability units="A3">1.6</polarizability>
+        <rotational_relaxation>3.8</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.7693399675583876e-03 3.3782112906907114e-03 -6.3440347258032163e-04 5.4228524248100080e-05 -1.7297023901657746e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">5.8917748245018518e-02 -3.5902301512928496e-02 8.1793269468450787e-03 -8.1209168663587904e-04 3.0214288371056938e-05</conductivityFit>
+    </species>
+    <species name="OH">
+      <atomArray>O:1 H:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.99201543, -0.00240131752, 4.61793841e-06, -3.88113333e-09, 1.3641147e-12, 3615.08056, -0.103925458</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">3.09288767, 0.000548429716, 1.26505228e-07, -8.79461556e-11, 1.17412376e-14, 3858.657, 4.4766961</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">2.75</diameter>
+        <well_depth units="K">80</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.2964179581467402e-03 3.3056655543664088e-03 -6.4452942253734010e-04 5.7342407394770379e-05 -1.9029169283393640e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-1.9774605402797643e-01 1.2211007282818984e-01 -2.7655486045428623e-02 2.7555501164734713e-03 -1.0102144588163330e-04</conductivityFit>
+    </species>
+    <species name="H2O">
+      <atomArray>H:2 O:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">4.19864056, -0.0020364341, 6.52040211e-06, -5.48797062e-09, 1.77197817e-12, -30293.7267, -0.849032208</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">3.03399249, 0.00217691804, -1.64072518e-07, -9.7041987e-11, 1.68200992e-14, -30004.2971, 4.9667701</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>nonlinear</geometry>
+        <diameter units="A">2.605</diameter>
+        <well_depth units="K">572.4</well_depth>
+        <dipole units="Debye">1.844</dipole>
+        <rotational_relaxation>4</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">1.5746146611984296e-03 -3.9296390025169922e-04 -1.6901425406941098e-05 1.8068018257240965e-05 -1.2907359354694898e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-2.6791070423802593e-01 1.7139387270226847e-01 -4.0636077662062356e-02 4.2240513735599177e-03 -1.6057555695473072e-04</conductivityFit>
+    </species>
+    <species name="HO2">
+      <atomArray>H:1 O:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">4.30179801, -0.00474912051, 2.11582891e-05, -2.42763894e-08, 9.29225124e-12, 294.80804, 3.71666245</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">4.0172109, 0.00223982013, -6.3365815e-07, 1.1424637e-10, -1.07908535e-14, 111.856713, 3.78510215</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>nonlinear</geometry>
+        <diameter units="A">3.458</diameter>
+        <well_depth units="K">107.4</well_depth>
+        <rotational_relaxation>1</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.8142455112223978e-03 3.4045055315351058e-03 -6.3934133947615615e-04 5.4650610895244154e-05 -1.7431654945466059e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">2.6322434267991475e-02 -1.4614087721222802e-02 2.9815700183796041e-03 -2.5390221414325648e-04 8.3681833228911676e-06</conductivityFit>
+    </species>
+    <species name="H2O2">
+      <atomArray>H:2 O:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">4.27611269, -0.000542822417, 1.67335701e-05, -2.15770813e-08, 8.62454363e-12, -17702.5821, 3.43505074</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">4.16500285, 0.00490831694, -1.90139225e-06, 3.71185986e-10, -2.87908305e-14, -17861.7877, 2.91615662</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>nonlinear</geometry>
+        <diameter units="A">3.458</diameter>
+        <well_depth units="K">107.4</well_depth>
+        <rotational_relaxation>3.8</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.8581340543075160e-03 3.4302042722254554e-03 -6.4416737578137798e-04 5.5063138313710208e-05 -1.7563236925918600e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">1.8954659289351767e-02 -8.6963027945767685e-03 1.2144634982208949e-03 -2.4053405580519830e-05 -2.1816658072623769e-06</conductivityFit>
+    </species>
+    <species name="AR">
+      <atomArray>Ar:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="300" Tmax="1000">
+          <floatArray size="7">2.5, 0, 0, 0, 0, -745.375, 4.366</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="5000">
+          <floatArray size="7">2.5, 0, 0, 0, 0, -745.375, 4.366</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">3.33</diameter>
+        <well_depth units="K">136.5</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.9767873305581398e-03 3.3052260259245625e-03 -5.7786834930822247e-04 4.5821138910522679e-05 -1.3433235430125048e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-6.8496602498361644e-03 3.1205084882877450e-03 -4.3858433697269194e-04 2.5784583149484914e-05 -3.9775594672253472e-07</conductivityFit>
+    </species>
+    <species name="N2">
+      <atomArray>N:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="300" Tmax="1000">
+          <floatArray size="7">3.298677, 0.0014082404, -3.963222e-06, 5.641515e-09, -2.444854e-12, -1020.8999, 3.950372</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="5000">
+          <floatArray size="7">2.92664, 0.0014879768, -5.68476e-07, 1.0097038e-10, -6.753351e-15, -922.7977, 5.980528</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.621</diameter>
+        <well_depth units="K">97.53</well_depth>
+        <polarizability units="A3">1.76</polarizability>
+        <rotational_relaxation>4</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.1827081984780208e-03 3.0957037955676265e-03 -5.9047180946604082e-04 5.1287648269836614e-05 -1.6626994722049248e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-5.1575147923254426e-02 3.2944698573788324e-02 -7.7536888539008510e-03 8.1165761751155851e-04 -3.1352051019928829e-05</conductivityFit>
+    </species>
+  </speciesData>
+  <reactionData id="reaction_data">
+    <!--Reaction 1-->
+    <reaction id="1" reversible="yes" type="three-body" thirdBody="M">
+      <equation>2 O + M &lt;=&gt; O2 + M</equation>
+      <reactants>O:2</reactants>
+      <products>O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.2e+17</A>
+          <b>-1</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">H2:2.4 H2O:15.4 AR:0.83</efficiencies>
+    </reaction>
+    <!--Reaction 2-->
+    <reaction id="2" reversible="yes" type="three-body" thirdBody="M">
+      <equation>O + H + M &lt;=&gt; OH + M</equation>
+      <reactants>O:1 H:1</reactants>
+      <products>OH:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>5e+17</A>
+          <b>-1</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">H2:2 H2O:6 AR:0.7</efficiencies>
+    </reaction>
+    <!--Reaction 3-->
+    <reaction id="3" reversible="yes" type="elementary">
+      <equation>O + H2 &lt;=&gt; H + OH</equation>
+      <reactants>O:1 H2:1</reactants>
+      <products>H:1 OH:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>38700</A>
+          <b>2.7</b>
+          <E units="cal/mol">6260</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 4-->
+    <reaction id="4" reversible="yes" type="elementary">
+      <equation>O + HO2 &lt;=&gt; OH + O2</equation>
+      <reactants>O:1 HO2:1</reactants>
+      <products>OH:1 O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2e+13</A>
+          <b>0</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 5-->
+    <reaction id="5" reversible="yes" type="elementary">
+      <equation>O + H2O2 &lt;=&gt; OH + HO2</equation>
+      <reactants>O:1 H2O2:1</reactants>
+      <products>OH:1 HO2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>9630000</A>
+          <b>2</b>
+          <E units="cal/mol">4000</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 6-->
+    <reaction id="6" reversible="yes" type="three-body" thirdBody="M">
+      <equation>H + O2 + M &lt;=&gt; HO2 + M</equation>
+      <reactants>H:1 O2:1</reactants>
+      <products>HO2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.8e+18</A>
+          <b>-0.86</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">O2:0 H2O:0 N2:0 AR:0</efficiencies>
+    </reaction>
+    <!--Reaction 7-->
+    <reaction id="7" reversible="yes" type="elementary">
+      <equation>H + 2 O2 &lt;=&gt; HO2 + O2</equation>
+      <reactants>H:1 O2:2</reactants>
+      <products>HO2:1 O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.08e+19</A>
+          <b>-1.24</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 8-->
+    <reaction id="8" reversible="yes" type="elementary">
+      <equation>H + O2 + H2O &lt;=&gt; HO2 + H2O</equation>
+      <reactants>H:1 O2:1 H2O:1</reactants>
+      <products>HO2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.126e+19</A>
+          <b>-0.76</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 9-->
+    <reaction id="9" reversible="yes" type="elementary">
+      <equation>H + O2 + N2 &lt;=&gt; HO2 + N2</equation>
+      <reactants>H:1 O2:1 N2:1</reactants>
+      <products>HO2:1 N2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.6e+19</A>
+          <b>-1.24</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 10-->
+    <reaction id="10" reversible="yes" type="elementary">
+      <equation>H + O2 + AR &lt;=&gt; HO2 + AR</equation>
+      <reactants>H:1 O2:1 AR:1</reactants>
+      <products>HO2:1 AR:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>7e+17</A>
+          <b>-0.8</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 11-->
+    <reaction id="11" reversible="yes" type="elementary">
+      <equation>H + O2 &lt;=&gt; O + OH</equation>
+      <reactants>H:1 O2:1</reactants>
+      <products>O:1 OH:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.65e+16</A>
+          <b>-0.6707</b>
+          <E units="cal/mol">17041</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 12-->
+    <reaction id="12" reversible="yes" type="three-body" thirdBody="M">
+      <equation>2 H + M &lt;=&gt; H2 + M</equation>
+      <reactants>H:2</reactants>
+      <products>H2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1e+18</A>
+          <b>-1</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">H2:0 H2O:0 AR:0.63</efficiencies>
+    </reaction>
+    <!--Reaction 13-->
+    <reaction id="13" reversible="yes" type="elementary">
+      <equation>2 H + H2 &lt;=&gt; 2 H2</equation>
+      <reactants>H:2 H2:1</reactants>
+      <products>H2:2</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>9e+16</A>
+          <b>-0.6</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 14-->
+    <reaction id="14" reversible="yes" type="elementary">
+      <equation>2 H + H2O &lt;=&gt; H2 + H2O</equation>
+      <reactants>H:2 H2O:1</reactants>
+      <products>H2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>6e+19</A>
+          <b>-1.25</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 15-->
+    <reaction id="15" reversible="yes" type="three-body" thirdBody="M">
+      <equation>H + OH + M &lt;=&gt; H2O + M</equation>
+      <reactants>H:1 OH:1</reactants>
+      <products>H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.2e+22</A>
+          <b>-2</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">H2:0.73 H2O:3.65 AR:0.38</efficiencies>
+    </reaction>
+    <!--Reaction 16-->
+    <reaction id="16" reversible="yes" type="elementary">
+      <equation>H + HO2 &lt;=&gt; O + H2O</equation>
+      <reactants>H:1 HO2:1</reactants>
+      <products>O:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>3.97e+12</A>
+          <b>0</b>
+          <E units="cal/mol">671</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 17-->
+    <reaction id="17" reversible="yes" type="elementary">
+      <equation>H + HO2 &lt;=&gt; O2 + H2</equation>
+      <reactants>H:1 HO2:1</reactants>
+      <products>O2:1 H2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>4.48e+13</A>
+          <b>0</b>
+          <E units="cal/mol">1068</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 18-->
+    <reaction id="18" reversible="yes" type="elementary">
+      <equation>H + HO2 &lt;=&gt; 2 OH</equation>
+      <reactants>H:1 HO2:1</reactants>
+      <products>OH:2</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>8.4e+13</A>
+          <b>0</b>
+          <E units="cal/mol">635</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 19-->
+    <reaction id="19" reversible="yes" type="elementary">
+      <equation>H + H2O2 &lt;=&gt; HO2 + H2</equation>
+      <reactants>H:1 H2O2:1</reactants>
+      <products>HO2:1 H2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>12100000</A>
+          <b>2</b>
+          <E units="cal/mol">5200</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 20-->
+    <reaction id="20" reversible="yes" type="elementary">
+      <equation>H + H2O2 &lt;=&gt; OH + H2O</equation>
+      <reactants>H:1 H2O2:1</reactants>
+      <products>OH:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1e+13</A>
+          <b>0</b>
+          <E units="cal/mol">3600</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 21-->
+    <reaction id="21" reversible="yes" type="elementary">
+      <equation>OH + H2 &lt;=&gt; H + H2O</equation>
+      <reactants>OH:1 H2:1</reactants>
+      <products>H:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>216000000</A>
+          <b>1.51</b>
+          <E units="cal/mol">3430</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 22-->
+    <reaction id="22" reversible="yes" type="falloff" thirdBody="M">
+      <equation>2 OH (+M) &lt;=&gt; H2O2 (+M)</equation>
+      <reactants>OH:2</reactants>
+      <products>H2O2:1</products>
+      <rateCoeff>
+        <Arrhenius name="k0">
+          <A>2.3e+18</A>
+          <b>-0.9</b>
+          <E units="cal/mol">-1700</E>
+        </Arrhenius>
+        <Arrhenius name="kInf">
+          <A>7.4e+13</A>
+          <b>-0.37</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+        <falloff type="Troe">0.7346 94 1756 5182</falloff>
+      </rateCoeff>
+      <efficiencies default="1">H2:2 H2O:6 AR:0.7</efficiencies>
+    </reaction>
+    <!--Reaction 23-->
+    <reaction id="23" reversible="yes" type="elementary">
+      <equation>2 OH &lt;=&gt; O + H2O</equation>
+      <reactants>OH:2</reactants>
+      <products>O:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>35700</A>
+          <b>2.4</b>
+          <E units="cal/mol">-2110</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 24-->
+    <reaction id="24" reversible="yes" type="elementary" duplicate="yes">
+      <equation>OH + HO2 &lt;=&gt; O2 + H2O</equation>
+      <reactants>OH:1 HO2:1</reactants>
+      <products>O2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.45e+13</A>
+          <b>0</b>
+          <E units="cal/mol">-500</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 25-->
+    <reaction id="25" reversible="yes" type="elementary" duplicate="yes">
+      <equation>OH + H2O2 &lt;=&gt; HO2 + H2O</equation>
+      <reactants>OH:1 H2O2:1</reactants>
+      <products>HO2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2e+12</A>
+          <b>0</b>
+          <E units="cal/mol">427</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 26-->
+    <reaction id="26" reversible="yes" type="elementary" duplicate="yes">
+      <equation>OH + H2O2 &lt;=&gt; HO2 + H2O</equation>
+      <reactants>OH:1 H2O2:1</reactants>
+      <products>HO2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.7e+18</A>
+          <b>0</b>
+          <E units="cal/mol">29410</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 27-->
+    <reaction id="27" reversible="yes" type="elementary" duplicate="yes">
+      <equation>2 HO2 &lt;=&gt; O2 + H2O2</equation>
+      <reactants>HO2:2</reactants>
+      <products>O2:1 H2O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.3e+11</A>
+          <b>0</b>
+          <E units="cal/mol">-1630</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 28-->
+    <reaction id="28" reversible="yes" type="elementary" duplicate="yes">
+      <equation>2 HO2 &lt;=&gt; O2 + H2O2</equation>
+      <reactants>HO2:2</reactants>
+      <products>O2:1 H2O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>4.2e+14</A>
+          <b>0</b>
+          <E units="cal/mol">12000</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 29-->
+    <reaction id="29" reversible="yes" type="elementary" duplicate="yes">
+      <equation>OH + HO2 &lt;=&gt; O2 + H2O</equation>
+      <reactants>OH:1 HO2:1</reactants>
+      <products>O2:1 H2O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>5e+15</A>
+          <b>0</b>
+          <E units="cal/mol">17330</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+  </reactionData>
+  <binaryDiffusionFits form="P*D=T^1.5*poly(lnT)" units="Pa-m2/s">
+    <pair s1="H2" s2="H2" coeffs="-8.2063992343059024e-03 5.3012738429435210e-03 -1.0318125355060182e-03 9.5768879606857358e-05 -3.2006810041426889e-06" />
+    <pair s1="H2" s2="H" coeffs="-2.4290549306303734e-02 1.3560108899962495e-02 -2.5166133461942759e-03 2.1702540621735842e-04 -6.8363502643430537e-06" />
+    <pair s1="H2" s2="O" coeffs="-9.5463581956071811e-03 5.6428417167573184e-03 -1.0795044785875461e-03 9.6601827593106911e-05 -3.1475063839961242e-06" />
+    <pair s1="H2" s2="O2" coeffs="-8.1641431820443124e-03 4.6900996560414760e-03 -8.8656712233460707e-04 7.8066563390580507e-05 -2.5091137601146643e-06" />
+    <pair s1="H2" s2="OH" coeffs="-9.5146514625561330e-03 5.6240999020987130e-03 -1.0759190735956394e-03 9.6280979758065117e-05 -3.1370524346846788e-06" />
+    <pair s1="H2" s2="H2O" coeffs="-3.0557893227113657e-04 -1.4215124691519469e-03 7.0558330612842130e-04 -9.2673035573975486e-05 4.0862499443045836e-06" />
+    <pair s1="H2" s2="HO2" coeffs="-8.1567521075047549e-03 4.6858536653254547e-03 -8.8576450489638559e-04 7.7995889006718950e-05 -2.5068422361568000e-06" />
+    <pair s1="H2" s2="H2O2" coeffs="-8.1497929461603249e-03 4.6818557981275748e-03 -8.8500879011970562e-04 7.7929344631229525e-05 -2.5047034535485462e-06" />
+    <pair s1="H2" s2="AR" coeffs="-9.0037080765635082e-03 5.0566073898578529e-03 -9.4292247052949407e-04 8.1727774603289062e-05 -2.5879014484240725e-06" />
+    <pair s1="H2" s2="N2" coeffs="-7.5252620011763390e-03 4.3619889313855327e-03 -8.2760672396238715e-04 7.3242247412833698e-05 -2.3639490113798180e-06" />
+    <pair s1="H" s2="H" coeffs="-1.9493398595153814e-02 6.7473574106770131e-03 -2.1900189123830841e-04 -5.8227737990005467e-05 4.6118452469463946e-06" />
+    <pair s1="H" s2="O" coeffs="-2.0293240236545333e-02 1.0233279703059680e-02 -1.6767514690537186e-03 1.2665347553641372e-04 -3.3663898181502918e-06" />
+    <pair s1="H" s2="O2" coeffs="-1.2300519581279982e-02 5.6494545924390431e-03 -7.7246829906759003e-04 4.5257274162812614e-05 -6.6893241350552071e-07" />
+    <pair s1="H" s2="OH" coeffs="-2.0257570506235494e-02 1.0215292515056897e-02 -1.6738042180444862e-03 1.2643085483750229e-04 -3.3604726646566642e-06" />
+    <pair s1="H" s2="H2O" coeffs="5.1124827502969969e-02 -3.3146757818728043e-02 7.8736146251703557e-03 -7.8927156340830300e-04 2.9068717698335739e-05" />
+    <pair s1="H" s2="HO2" coeffs="-1.2294782924852702e-02 5.6468198273165382e-03 -7.7210803906439644e-04 4.5236167295756280e-05 -6.6862044006798993e-07" />
+    <pair s1="H" s2="H2O2" coeffs="-1.2289383806863039e-02 5.6443400888230846e-03 -7.7176897635661225e-04 4.5216302333170477e-05 -6.6832682280080085e-07" />
+    <pair s1="H" s2="AR" coeffs="-9.3868705376437874e-03 3.6196713702981186e-03 -2.7656065328296816e-04 -5.8632658761878479e-06 1.2499692889327672e-06" />
+    <pair s1="H" s2="N2" coeffs="-1.2725165762732886e-02 6.0786893854061974e-03 -9.0407535795965146e-04 6.0384779470984797e-05 -1.2832773393059283e-06" />
+    <pair s1="O" s2="O" coeffs="-5.8159509889526406e-03 3.1965698200497705e-03 -5.8488352965132000e-04 4.9704466794632052e-05 -1.5411130578397067e-06" />
+    <pair s1="O" s2="O2" coeffs="-3.9584893066060937e-03 2.1015050153210392e-03 -3.7074771577128127e-04 3.0335753365290785e-05 -9.0020740349558017e-07" />
+    <pair s1="O" s2="OH" coeffs="-5.7291324060713576e-03 3.1488524884585776e-03 -5.7615258276200176e-04 4.8962495038294302e-05 -1.5181078344465161e-06" />
+    <pair s1="O" s2="H2O" coeffs="5.0678865786216182e-03 -3.8248421583644207e-03 1.0272173053128390e-03 -1.1037013894524252e-04 4.2924306010115384e-06" />
+    <pair s1="O" s2="HO2" coeffs="-3.9382907794705711e-03 2.0907819078953226e-03 -3.6885594413368401e-04 3.0180962613026737e-05 -8.9561401893339862e-07" />
+    <pair s1="O" s2="H2O2" coeffs="-3.9191942923802068e-03 2.0806438576727259e-03 -3.6706738834382932e-04 3.0034617308618635e-05 -8.9127125134441424e-07" />
+    <pair s1="O" s2="AR" coeffs="-3.7136719889150739e-03 1.8940881323729519e-03 -3.1567530492736723e-04 2.4310085182105980e-05 -6.6480523244621272e-07" />
+    <pair s1="O" s2="N2" coeffs="-3.8924290255194240e-03 2.0931047011604354e-03 -3.7503291134831032e-04 3.1178210425630437e-05 -9.4325307772475672e-07" />
+    <pair s1="O2" s2="O2" coeffs="-2.3857493317874130e-03 1.2045298336306222e-03 -1.9775066399321101e-04 1.4970557238035444e-05 -3.9926545878060316e-07" />
+    <pair s1="O2" s2="OH" coeffs="-3.8795012839786063e-03 2.0595714106435080e-03 -3.6334978522375907e-04 2.9730431236626308e-05 -8.8224459060021842e-07" />
+    <pair s1="O2" s2="H2O" coeffs="8.0429111109897901e-03 -5.2773938559774070e-03 1.2671104663727925e-03 -1.2790783181829834e-04 4.7383781309998405e-06" />
+    <pair s1="O2" s2="HO2" coeffs="-2.3674656261999591e-03 1.1952986589392981e-03 -1.9623515904340915e-04 1.4855827137296898e-05 -3.9620560164923408e-07" />
+    <pair s1="O2" s2="H2O2" coeffs="-2.3501356588885207e-03 1.1865490127114398e-03 -1.9479870782172475e-04 1.4747081736411836e-05 -3.9330535674347227e-07" />
+    <pair s1="O2" s2="AR" coeffs="-2.0134131894618589e-03 9.4881918327830860e-04 -1.3724885194222008e-04 8.8043595954075406e-06 -1.7034238544755768e-07" />
+    <pair s1="O2" s2="N2" coeffs="-2.4222746917086360e-03 1.2444369347730986e-03 -2.0957179640621650e-04 1.6326836259801444e-05 -4.5384454261118976e-07" />
+    <pair s1="OH" s2="OH" coeffs="-5.6409777828846869e-03 3.1004008408247129e-03 -5.6728727642442272e-04 4.8209105171552299e-05 -1.4947485865540166e-06" />
+    <pair s1="OH" s2="H2O" coeffs="4.9877153360793841e-03 -3.7643352106223483e-03 1.0109672794972942e-03 -1.0862414265228028e-04 4.2245266553535030e-06" />
+    <pair s1="OH" s2="HO2" coeffs="-3.8588893331578723e-03 2.0486288225320727e-03 -3.6141929278266088e-04 2.9572472225480931e-05 -8.7755718859069356e-07" />
+    <pair s1="OH" s2="H2O2" coeffs="-3.8393979376225734e-03 2.0382811210989176e-03 -3.5959375030648704e-04 2.9423100553173697e-05 -8.7312461414155306e-07" />
+    <pair s1="OH" s2="AR" coeffs="-3.6342471884826108e-03 1.8535790156904944e-03 -3.0892391488202816e-04 2.3790162132853913e-05 -6.5058695385683848e-07" />
+    <pair s1="OH" s2="N2" coeffs="-3.8183098603542906e-03 2.0532480532839191e-03 -3.6789157977434373e-04 3.0584518694054393e-05 -9.2529176611007876e-07" />
+    <pair s1="H2O" s2="H2O" coeffs="-9.7171890813825405e-04 1.3709978134076341e-03 -5.1622254349484612e-04 7.6493211618111300e-05 -3.6781263216106473e-06" />
+    <pair s1="H2O" s2="HO2" coeffs="5.9644605296682810e-03 -4.0656016854819094e-03 1.0088295111117048e-03 -1.0389334323206385e-04 3.9116737662883547e-06" />
+    <pair s1="H2O" s2="H2O2" coeffs="5.9331757349831591e-03 -4.0442767872171867e-03 1.0035379974921135e-03 -1.0334840175816969e-04 3.8911562509089422e-06" />
+    <pair s1="H2O" s2="AR" coeffs="8.1870699543319398e-03 -5.3509120640699874e-03 1.2802562785763840e-03 -1.2894116164199524e-04 4.7675948514726020e-06" />
+    <pair s1="H2O" s2="N2" coeffs="6.9815753712095096e-03 -4.6507524267233383e-03 1.1315906647176048e-03 -1.1518063495101908e-04 4.2961014446940444e-06" />
+    <pair s1="HO2" s2="HO2" coeffs="-2.3490396140684144e-03 1.1859956357636731e-03 -1.9470785854965725e-04 1.4740204064316798e-05 -3.9312192890925241e-07" />
+    <pair s1="HO2" s2="H2O2" coeffs="-2.3315726950563420e-03 1.1771768446302948e-03 -1.9326005563606417e-04 1.4630599292554378e-05 -3.9019876454038140e-07" />
+    <pair s1="HO2" s2="AR" coeffs="-1.9962708031138034e-03 9.4074084888598453e-04 -1.3608030250674802e-04 8.7293984624742541e-06 -1.6889207460292788e-07" />
+    <pair s1="HO2" s2="N2" coeffs="-2.4049483153629368e-03 1.2355355567648767e-03 -2.0807274271566358e-04 1.6210051441563397e-05 -4.5059822154956538e-07" />
+    <pair s1="H2O2" s2="H2O2" coeffs="-2.3139739316363397e-03 1.1682914871912922e-03 -1.9180132436682308e-04 1.4520167198342197e-05 -3.8725353544543100e-07" />
+    <pair s1="H2O2" s2="AR" coeffs="-1.9800088837413732e-03 9.3307743377618591e-04 -1.3497177208865324e-04 8.6582874820364528e-06 -1.6751625459977026e-07" />
+    <pair s1="H2O2" s2="N2" coeffs="-2.3885340566681080e-03 1.2271027766818988e-03 -2.0665260416054948e-04 1.6099414561743359e-05 -4.4752279754768405e-07" />
+    <pair s1="AR" s2="AR" coeffs="-1.5353552761969448e-03 6.3661139205803473e-04 -6.5764229592263742e-05 1.7009193910837182e-06 8.8052879903566744e-08" />
+    <pair s1="AR" s2="N2" coeffs="-2.1553875004702381e-03 1.0500881783672635e-03 -1.6219556458071287e-04 1.1399997242937682e-05 -2.6842043212798180e-07" />
+    <pair s1="N2" s2="N2" coeffs="-2.4677005701275387e-03 1.2893643521426062e-03 -2.2253927304172582e-04 1.7800367232093505e-05 -5.1297172000522091e-07" />
+  </binaryDiffusionFits>
+</mechanism>

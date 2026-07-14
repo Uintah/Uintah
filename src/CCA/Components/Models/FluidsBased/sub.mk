@@ -46,9 +46,12 @@ SRCS += \
 ifeq ($(BUILD_ICE),yes)
   SRCS += \
        $(SRCDIR)/AdiabaticTable.cc     \
+       $(SRCDIR)/ConstantSources.cc    \
        $(SRCDIR)/flameSheet_rxn.cc     \
        $(SRCDIR)/ethyleneDetonation.cc \
        $(SRCDIR)/hydrogenBurke.cc      \
+       $(SRCDIR)/gasCombustion.cc      \
+       $(SRCDIR)/gasCombustionMechanism.cc \
        $(SRCDIR)/MaterialProperties.cc \
        $(SRCDIR)/Mixing.cc             \
        $(SRCDIR)/NonAdiabaticTable.cc  \

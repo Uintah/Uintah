@@ -38,6 +38,7 @@
 #  include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #  include <CCA/Components/Models/FluidsBased/ethyleneDetonation.h>
 #  include <CCA/Components/Models/FluidsBased/hydrogenBurke.h>
+#  include <CCA/Components/Models/FluidsBased/gasCombustion.h>
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
@@ -123,6 +124,9 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "hydrogenBurke") {
       d_models.push_back(scinew hydrogenBurke(myworld, materialManager, model_ps));
+    }
+    else if(type == "gasCombustion") {
+      d_models.push_back(scinew gasCombustion(myworld, materialManager, model_ps));
     }
 
 #endif

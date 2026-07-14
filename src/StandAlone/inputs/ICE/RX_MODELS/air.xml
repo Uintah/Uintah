@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<mechanism name="air">
+  <units length="cm" time="s" quantity="mol" activation-energy="cal/mol" />
+  <phase name="air" id="air">
+    <thermo model="ideal-gas" />
+    <kinetics model="gas" />
+    <transport model="mixture-averaged" />
+    <elementArray>O N Ar</elementArray>
+    <speciesArray>O O2 N NO NO2 N2O N2 AR</speciesArray>
+    <state>
+      <temperature units="K">300</temperature>
+      <pressure units="Pa">1 atm</pressure>
+    </state>
+  </phase>
+  <speciesData id="species_data">
+    <species name="O">
+      <atomArray>O:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.1682671, -0.00327931884, 6.64306396e-06, -6.12806624e-09, 2.11265971e-12, 29122.2592, 2.05193346</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">2.56942078, -8.59741137e-05, 4.19484589e-08, -1.00177799e-11, 1.22833691e-15, 29217.5791, 4.78433864</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">2.75</diameter>
+        <well_depth units="K">80</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.2161380275043082e-03 3.2555602561190025e-03 -6.3476003164950805e-04 5.6473245533891118e-05 -1.8740736534637209e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">1.8968475347176527e-03 -1.3340071152543674e-03 6.1354926215053274e-04 -8.4522983596221467e-05 4.1169303970416837e-06</conductivityFit>
+    </species>
+    <species name="O2">
+      <atomArray>O:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.78245636, -0.00299673416, 9.84730201e-06, -9.68129509e-09, 3.24372837e-12, -1063.94356, 3.65767573</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="3500">
+          <floatArray size="7">3.28253784, 0.00148308754, -7.57966669e-07, 2.09470555e-10, -2.16717794e-14, -1088.45772, 5.45323129</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.458</diameter>
+        <well_depth units="K">107.4</well_depth>
+        <polarizability units="A3">1.6</polarizability>
+        <rotational_relaxation>3.8</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.7693399675583876e-03 3.3782112906907114e-03 -6.3440347258032163e-04 5.4228524248100080e-05 -1.7297023901657746e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">5.8917748245018518e-02 -3.5902301512928496e-02 8.1793269468450787e-03 -8.1209168663587904e-04 3.0214288371056938e-05</conductivityFit>
+    </species>
+    <species name="N">
+      <atomArray>N:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">2.5, 0, 0, 0, 0, 56104.637, 4.1939087</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="6000">
+          <floatArray size="7">2.4159429, 0.00017489065, -1.1902369e-07, 3.0226245e-11, -2.0360982e-15, 56133.773, 4.6496096</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">3.298</diameter>
+        <well_depth units="K">71.4</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-3.8077354603421316e-03 2.4445204379228368e-03 -4.8116921733361317e-04 4.3294145982010506e-05 -1.4520698037791004e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">1.4838170654094325e-02 -1.0043530168436862e-02 2.6646516691117891e-03 -2.9619846445285379e-04 1.2136913239966920e-05</conductivityFit>
+    </species>
+    <species name="NO">
+      <atomArray>N:1 O:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">4.2184763, -0.004638976, 1.1041022e-05, -9.3361354e-09, 2.803577e-12, 9844.623, 2.2808464</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="6000">
+          <floatArray size="7">3.2606056, 0.0011911043, -4.2917048e-07, 6.9457669e-11, -4.0336099e-15, 9920.9746, 6.3693027</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.621</diameter>
+        <well_depth units="K">97.53</well_depth>
+        <polarizability units="A3">1.76</polarizability>
+        <rotational_relaxation>4</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.2725133727486344e-03 3.1493456770327745e-03 -6.0070341458825778e-04 5.2176352787693694e-05 -1.6915104741249004e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">2.2409826959621107e-03 7.0703810989061094e-04 -5.7248092373662668e-04 1.0676214356672229e-04 -5.6356346268581663e-06</conductivityFit>
+    </species>
+    <species name="NO2">
+      <atomArray>N:1 O:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">3.9440312, -0.001585429, 1.6657812e-05, -2.0475426e-08, 7.8350564e-12, 2896.6179, 6.3119917</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="6000">
+          <floatArray size="7">4.8847542, 0.0021723956, -8.2806906e-07, 1.574751e-10, -1.0510895e-14, 2316.4983, -0.11741695</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>nonlinear</geometry>
+        <diameter units="A">3.5</diameter>
+        <well_depth units="K">200</well_depth>
+        <rotational_relaxation>1</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-1.3456881037163001e-03 3.0363268276744807e-04 1.1567122905751365e-04 -2.3498814074573686e-05 1.2023119441342565e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">1.2527853376657122e-01 -7.5790190021864282e-02 1.6904313987222207e-02 -1.6404685350259875e-03 5.9215258833072713e-05</conductivityFit>
+    </species>
+    <species name="N2O">
+      <atomArray>N:2 O:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="200" Tmax="1000">
+          <floatArray size="7">2.2571502, 0.011304728, -1.3671319e-05, 9.6819806e-09, -2.9307182e-12, 8741.7744, 10.757992</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="6000">
+          <floatArray size="7">4.8230729, 0.0026270251, -9.5850874e-07, 1.6000712e-10, -9.7752303e-15, 8073.4048, -2.2017207</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.828</diameter>
+        <well_depth units="K">232.4</well_depth>
+        <rotational_relaxation>1</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">1.8793715327909597e-03 -1.6120942887569655e-03 5.2312516818876255e-04 -6.1756250307487800e-05 2.5366713067716009e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">4.6540996443085639e-02 -2.7803616862610268e-02 6.0013488859997450e-03 -5.4740662184032105e-04 1.8329661539988059e-05</conductivityFit>
+    </species>
+    <species name="N2">
+      <atomArray>N:2</atomArray>
+      <thermo>
+        <NASA7 Tmin="300" Tmax="1000">
+          <floatArray size="7">3.298677, 0.0014082404, -3.963222e-06, 5.641515e-09, -2.444854e-12, -1020.8999, 3.950372</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="5000">
+          <floatArray size="7">2.92664, 0.0014879768, -5.68476e-07, 1.0097038e-10, -6.753351e-15, -922.7977, 5.980528</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>linear</geometry>
+        <diameter units="A">3.621</diameter>
+        <well_depth units="K">97.53</well_depth>
+        <polarizability units="A3">1.76</polarizability>
+        <rotational_relaxation>4</rotational_relaxation>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.1827081984780208e-03 3.0957037955676265e-03 -5.9047180946604082e-04 5.1287648269836614e-05 -1.6626994722049248e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-5.1575147923254426e-02 3.2944698573788324e-02 -7.7536888539008510e-03 8.1165761751155851e-04 -3.1352051019928829e-05</conductivityFit>
+    </species>
+    <species name="AR">
+      <atomArray>Ar:1</atomArray>
+      <thermo>
+        <NASA7 Tmin="300" Tmax="1000">
+          <floatArray size="7">2.5, 0, 0, 0, 0, -745.375, 4.366</floatArray>
+        </NASA7>
+        <NASA7 Tmin="1000" Tmax="5000">
+          <floatArray size="7">2.5, 0, 0, 0, 0, -745.375, 4.366</floatArray>
+        </NASA7>
+      </thermo>
+      <transport model="gas">
+        <geometry>atom</geometry>
+        <diameter units="A">3.33</diameter>
+        <well_depth units="K">136.5</well_depth>
+      </transport>
+      <viscosityFit form="sqrt(mu)=T^0.25*poly(lnT)">-5.9767873305581398e-03 3.3052260259245625e-03 -5.7786834930822247e-04 4.5821138910522679e-05 -1.3433235430125048e-06</viscosityFit>
+      <conductivityFit form="lambda=sqrt(T)*poly(lnT)">-6.8496602498361644e-03 3.1205084882877450e-03 -4.3858433697269194e-04 2.5784583149484914e-05 -3.9775594672253472e-07</conductivityFit>
+    </species>
+  </speciesData>
+  <reactionData id="reaction_data">
+    <!--Reaction 1-->
+    <reaction id="1" reversible="yes" type="three-body" thirdBody="M">
+      <equation>2 O + M &lt;=&gt; O2 + M</equation>
+      <reactants>O:2</reactants>
+      <products>O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.2e+17</A>
+          <b>-1</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">AR:0.83</efficiencies>
+    </reaction>
+    <!--Reaction 2-->
+    <reaction id="2" reversible="yes" type="elementary">
+      <equation>N + NO &lt;=&gt; N2 + O</equation>
+      <reactants>N:1 NO:1</reactants>
+      <products>N2:1 O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.7e+13</A>
+          <b>0</b>
+          <E units="cal/mol">355</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 3-->
+    <reaction id="3" reversible="yes" type="elementary">
+      <equation>N + O2 &lt;=&gt; NO + O</equation>
+      <reactants>N:1 O2:1</reactants>
+      <products>NO:1 O:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>9e+09</A>
+          <b>1</b>
+          <E units="cal/mol">6500</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 4-->
+    <reaction id="4" reversible="yes" type="elementary">
+      <equation>N2O + O &lt;=&gt; N2 + O2</equation>
+      <reactants>N2O:1 O:1</reactants>
+      <products>N2:1 O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.4e+12</A>
+          <b>0</b>
+          <E units="cal/mol">10810</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 5-->
+    <reaction id="5" reversible="yes" type="elementary">
+      <equation>N2O + O &lt;=&gt; 2 NO</equation>
+      <reactants>N2O:1 O:1</reactants>
+      <products>NO:2</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>2.9e+13</A>
+          <b>0</b>
+          <E units="cal/mol">23150</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+    <!--Reaction 6-->
+    <reaction id="6" reversible="yes" type="falloff" thirdBody="M">
+      <equation>N2O (+M) &lt;=&gt; N2 + O (+M)</equation>
+      <reactants>N2O:1</reactants>
+      <products>N2:1 O:1</products>
+      <rateCoeff>
+        <Arrhenius name="k0">
+          <A>6.37e+14</A>
+          <b>0</b>
+          <E units="cal/mol">56640</E>
+        </Arrhenius>
+        <Arrhenius name="kInf">
+          <A>7.91e+10</A>
+          <b>0</b>
+          <E units="cal/mol">56020</E>
+        </Arrhenius>
+        <falloff type="Lindemann" />
+      </rateCoeff>
+      <efficiencies default="1">AR:0.625</efficiencies>
+    </reaction>
+    <!--Reaction 7-->
+    <reaction id="7" reversible="yes" type="three-body" thirdBody="M">
+      <equation>NO + O + M &lt;=&gt; NO2 + M</equation>
+      <reactants>NO:1 O:1</reactants>
+      <products>NO2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>1.06e+20</A>
+          <b>-1.41</b>
+          <E units="cal/mol">0</E>
+        </Arrhenius>
+      </rateCoeff>
+      <efficiencies default="1">AR:0.7</efficiencies>
+    </reaction>
+    <!--Reaction 8-->
+    <reaction id="8" reversible="yes" type="elementary">
+      <equation>NO2 + O &lt;=&gt; NO + O2</equation>
+      <reactants>NO2:1 O:1</reactants>
+      <products>NO:1 O2:1</products>
+      <rateCoeff>
+        <Arrhenius>
+          <A>3.9e+12</A>
+          <b>0</b>
+          <E units="cal/mol">-240</E>
+        </Arrhenius>
+      </rateCoeff>
+    </reaction>
+  </reactionData>
+  <binaryDiffusionFits form="P*D=T^1.5*poly(lnT)" units="Pa-m2/s">
+    <pair s1="O" s2="O" coeffs="-5.8159509889526406e-03 3.1965698200497705e-03 -5.8488352965132000e-04 4.9704466794632052e-05 -1.5411130578397067e-06" />
+    <pair s1="O" s2="O2" coeffs="-3.9584893066060937e-03 2.1015050153210392e-03 -3.7074771577128127e-04 3.0335753365290785e-05 -9.0020740349558017e-07" />
+    <pair s1="O" s2="N" coeffs="-4.9471772234354399e-03 2.7519528114553437e-03 -5.0929132358147611e-04 4.3787579475891865e-05 -1.3750273145708093e-06" />
+    <pair s1="O" s2="NO" coeffs="-3.8451582299228061e-03 2.0676854259872109e-03 -3.7047840207433892e-04 3.0799573126780404e-05 -9.3179793669460656e-07" />
+    <pair s1="O" s2="NO2" coeffs="-2.6766494848325458e-03 1.2150813180177610e-03 -1.6177444640911643e-04 9.0353461150393602e-06 -1.1030316924673269e-07" />
+    <pair s1="O" s2="N2O" coeffs="-2.0614156304999023e-03 8.5654585785928546e-04 -8.9128972623539913e-05 2.3914383176043970e-06 1.1351140356892017e-07" />
+    <pair s1="O" s2="N2" coeffs="-3.8924290255194240e-03 2.0931047011604354e-03 -3.7503291134831032e-04 3.1178210425630437e-05 -9.4325307772475672e-07" />
+    <pair s1="O" s2="AR" coeffs="-3.7136719889150739e-03 1.8940881323729519e-03 -3.1567530492736723e-04 2.4310085182105980e-05 -6.6480523244621272e-07" />
+    <pair s1="O2" s2="O2" coeffs="-2.3857493317874130e-03 1.2045298336306222e-03 -1.9775066399321101e-04 1.4970557238035444e-05 -3.9926545878060316e-07" />
+    <pair s1="O2" s2="N" coeffs="-3.5402845038531999e-03 1.9076842263878824e-03 -3.4257655968293138e-04 2.8545874837588106e-05 -8.6594564941394727e-07" />
+    <pair s1="O2" s2="NO" coeffs="-2.3790017334976736e-03 1.2222055719726278e-03 -2.0582788097884639e-04 1.6035163929845580e-05 -4.4573679331629643e-07" />
+    <pair s1="O2" s2="NO2" coeffs="-1.0452257322499665e-03 3.4419245013490499e-04 -3.6240382988971029e-06 -4.1736734094554648e-06 2.9329275293568932e-07" />
+    <pair s1="O2" s2="N2O" coeffs="-5.4687424048953522e-04 5.5312892328402793e-05 5.5817314579556439e-05 -9.6542538236154659e-06 4.8021692064315216e-07" />
+    <pair s1="O2" s2="N2" coeffs="-2.4222746917086360e-03 1.2444369347730986e-03 -2.0957179640621650e-04 1.6326836259801444e-05 -4.5384454261118976e-07" />
+    <pair s1="O2" s2="AR" coeffs="-2.0134131894618589e-03 9.4881918327830860e-04 -1.3724885194222008e-04 8.8043595954075406e-06 -1.7034238544755768e-07" />
+    <pair s1="N" s2="N" coeffs="-4.2189949962729116e-03 2.3735098862615765e-03 -4.4317451459051843e-04 3.8466062114099997e-05 -1.2197625517415546e-06" />
+    <pair s1="N" s2="NO" coeffs="-3.4071061462149373e-03 1.8565391376720560e-03 -3.3728428738611082e-04 2.8443256209158692e-05 -8.7471849946306258e-07" />
+    <pair s1="N" s2="NO2" coeffs="-2.6432640687669247e-03 1.2581596175620584e-03 -1.8578226030253395e-04 1.2282675000037202e-05 -2.5519953524991979e-07" />
+    <pair s1="N" s2="N2O" coeffs="-2.1086261085732916e-03 9.4163551206196544e-04 -1.2056480452698285e-04 6.2343192685845313e-06 -4.8623915250086175e-08" />
+    <pair s1="N" s2="N2" coeffs="-3.4454549075754624e-03 1.8774354565104054e-03 -3.4108059841745541e-04 2.8763399931690824e-05 -8.8456391359324338e-07" />
+    <pair s1="N" s2="AR" coeffs="-3.3901975771631946e-03 1.7636689600388198e-03 -3.0243069795900235e-04 2.4026102146298781e-05 -6.8603733557869004e-07" />
+    <pair s1="NO" s2="NO" coeffs="-2.3843532419268914e-03 1.2458156837472372e-03 -2.1502294223081666e-04 1.7199154480558061e-05 -4.9564594603570337e-07" />
+    <pair s1="NO" s2="NO2" coeffs="-1.2872968836426580e-03 5.0657740600173183e-04 -4.2627299786146066e-05 -1.9482903715083264e-07 1.4474599906951979e-07" />
+    <pair s1="NO" s2="N2O" coeffs="-7.9794414009746626e-04 2.2019479990787401e-04 1.6891462781872582e-05 -5.7318967011026874e-06 3.3527782094667272e-07" />
+    <pair s1="NO" s2="N2" coeffs="-2.4263848093504848e-03 1.2677770210976728e-03 -2.1881338365322108e-04 1.7502342535266952e-05 -5.0438323195115303e-07" />
+    <pair s1="NO" s2="AR" coeffs="-2.1128999045550260e-03 1.0293885490947491e-03 -1.5899832064850762e-04 1.1175277337015843e-05 -2.6312925415887092e-07" />
+    <pair s1="NO2" s2="NO2" coeffs="1.1943986228329592e-03 -9.9770919200280455e-04 2.8652892618345060e-04 -3.1767287719976671e-05 1.2634456134528204e-06" />
+    <pair s1="NO2" s2="N2O" coeffs="1.7250373957351064e-03 -1.2915448811782679e-03 3.4487294199202228e-04 -3.6949213400795388e-05 1.4339788846057990e-06" />
+    <pair s1="NO2" s2="N2" coeffs="-1.3147160323436630e-03 5.1736739656289344e-04 -4.3535252167998318e-05 -1.9897885402390160e-07 1.4782905793669900e-07" />
+    <pair s1="NO2" s2="AR" coeffs="-2.8486525138889655e-04 -1.2408495876895247e-04 1.0000095136464462e-04 -1.4206563357496416e-05 6.5153889790686999e-07" />
+    <pair s1="N2O" s2="N2O" coeffs="2.1939567634165283e-03 -1.5473801001372901e-03 3.9483539122998744e-04 -4.1307196800357216e-05 1.5745500882036665e-06" />
+    <pair s1="N2O" s2="N2" coeffs="-8.1464480534373680e-04 2.2480339273697514e-04 1.7244994628698908e-05 -5.8518631038001221e-06 3.4229505733101079e-07" />
+    <pair s1="N2O" s2="AR" coeffs="2.7044321949217832e-04 -4.4058139200659310e-04 1.6447461490418924e-04 -2.0085647602366743e-05 8.5012959114738479e-07" />
+    <pair s1="N2" s2="N2" coeffs="-2.4677005701275387e-03 1.2893643521426062e-03 -2.2253927304172582e-04 1.7800367232093505e-05 -5.1297172000522091e-07" />
+    <pair s1="N2" s2="AR" coeffs="-2.1553875004702381e-03 1.0500881783672635e-03 -1.6219556458071287e-04 1.1399997242937682e-05 -2.6842043212798180e-07" />
+    <pair s1="AR" s2="AR" coeffs="-1.5353552761969448e-03 6.3661139205803473e-04 -6.5764229592263742e-05 1.7009193910837182e-06 8.8052879903566744e-08" />
+  </binaryDiffusionFits>
+</mechanism>
