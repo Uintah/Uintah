@@ -34,7 +34,7 @@
 #include <expression/ExprLib.h>
 
 // forward declarations -----
-struct AllocInfo;
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 namespace Uintah{ class Patch; }
 
