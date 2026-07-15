@@ -323,6 +323,7 @@ def generateGS() :
 
             #  Defaults
             sus_options    = ""
+            mpirun_options = ""
             preProcess_cmd = ""
             do_restart     = 1
             do_gpu         = 0    # run test if gpu is supported
@@ -340,16 +341,22 @@ def generateGS() :
 
               #  parse the user flags
               for i in range(len(flags)):
+                #print(" %i %s" % (i, flags[i]) )
+                
                 if flags[i] == "gpu":
                   do_gpu = 1
 
                 if flags[i] == "no_restart":
                   do_restart = 0
 
-                tmp = flags[i].rsplit('=')
+                tmp = flags[i].split('=', 1)
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
                   print( "sus_option: %s \n"%(sus_options) )
+
+                if tmp[0] == "mpirun_options":
+                  mpirun_options = tmp[1]
+                  print( "mpirun_options: %s \n"%(mpirun_options) )
 
                 if tmp[0] == "preProcessCmd":
                   preProcess_cmd = tmp[1]
@@ -433,7 +440,7 @@ def generateGS() :
             #__________________________________
             #  Run sus and check return codes
             np = int( getMPISize( test ) )
-            my_mpirun = "%s %s  " % (MPIHEAD, np)
+            my_mpirun = "%s %s %s  " % (MPIHEAD, np, mpirun_options)
 
             command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " >> sus_log.txt 2>&1 "
 

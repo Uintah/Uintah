@@ -362,6 +362,7 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
     do_cuda         = 1           # test will run if this is a cuda build
     abs_tolerance   = 1e-9        # defaults used in compare_uda
     rel_tolerance   = 1e-6
+    mpirun_options  = ""
     sus_options     = ""
     compareUda_options = ""
     startFrom       = "inputFile"
@@ -417,11 +418,13 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
         #    abs_tolerance=<number>
         #    rel_tolerance=<number>
         #    sus_option=" "
-        tmp = flags[i].rsplit('=')
+        tmp = flags[i].split('=', 1)
         if tmp[0] == "preProcessCmd":
           preProcess_cmd    = tmp[1]
         if tmp[0] == "sus_options":
            sus_options      = tmp[1]
+        if tmp[0] == "mpirun_options":
+           mpirun_options   = tmp[1]
         if tmp[0] == "compareUda_options":
            compareUda_options = tmp[1]
         if tmp[0] == "abs_tolerance":
@@ -469,7 +472,7 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
 
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
-    varBucket   = [sus_options, do_plots, compareUda_options, preProcess_cmd]
+    varBucket   = [mpirun_options, sus_options, do_plots, compareUda_options, preProcess_cmd]
 
     ran_any_tests = 1
 
@@ -670,10 +673,11 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "Skipping test %s because it requires mpi and max_parallism < 1.1" % testname )
       return -1;
 
-  sus_options             = varBucket[0]
-  do_plots                = varBucket[1]
-  compareUda_options      = varBucket[2]
-  preProcess_cmd          = varBucket[3]
+  mpirun_options          = varBucket[0]
+  sus_options             = varBucket[1]
+  do_plots                = varBucket[2]
+  compareUda_options      = varBucket[3]
+  preProcess_cmd          = varBucket[4]
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
@@ -753,7 +757,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   #SVN_OPTIONS = "-svnStat -svnDiff"
   GIT_OPTIONS = "" # When debugging, if you don't want to spend time waiting for git, uncomment this line.
 
-  command = "/usr/bin/time -p %s %s %s/sus %s %s " % (MPIHEAD, int(np), susdir, sus_options, GIT_OPTIONS)
+  command = "/usr/bin/time -p %s %s %s %s/sus %s %s " % (MPIHEAD, int(np), mpirun_options, susdir, sus_options, GIT_OPTIONS)
   mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer

@@ -26,6 +26,7 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
+#       mpirun_options="string"     - Additional command line options for mpirun
 #       compareUda_options="string" - Additional command line options for compare_uda
 #       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
 #                                     The command's final argument is the ups filename

@@ -26,6 +26,7 @@ from helpers.modUPS import modUPS
 #       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
 #       sus_options="string"        - Additional command line options for sus command
+#       mpirun_options="string"     - Additional command line options for mpirun
 #       compareUda_options="string" - Additional command line options for compare_uda
 #       preProcessCmd="string"      - command run prior to running sus.  The command path must be defined with ADDTL_PATH
 #                                     The command's final argument is the ups filename
@@ -42,7 +43,7 @@ NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            
 
 LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
                ("switchExample3",         "Switcher/switchExample3.ups",        1, "All", ["no_restart","no_memoryTest"]),
-               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test"]),
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "All", ["do_performance_test", "mpirun_options=numactl --cpunodebind=0 --membind=0"]),
                ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "All", ["do_performance_test"]),
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.
              ]
