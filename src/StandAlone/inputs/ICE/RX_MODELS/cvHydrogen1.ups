@@ -80,6 +80,7 @@
     <save label="modelEng_src"/>
     <save label="modelMom_src"/>
     <save label="modelMass_src"/>
+    <save label="HeatReleaseRate"/>
     
     <save label="dt_chemistry"/>
     <checkpoint interval="0.0001" cycle="2"/>
@@ -87,7 +88,7 @@
 
   <!--==================== ICE SETUP ====================-->
   <CFD>
-    <cfl>0.01</cfl>
+    <cfl>0.5</cfl>
     <ICE>
       <advection type="SecondOrder"/>
     </ICE>
@@ -129,13 +130,14 @@
 
   <!--==================== MODEL ====================-->
   <Models>
-    <Model type="hydrogenBurke">
-      <hydrogenBurke>
+    <Model type="gasCombustion">
+      <gasCombustion>
         <!-- Stoichometric Hydrogen-Air -->
-        <YH2_init> 0.028522387527567396 </YH2_init>
-        <YO2_init> 0.22635400697100733  </YO2_init>
+        <Y_init> [0.0, 0.028522387527567396, 0.0, 0.0, 0.0, 0.22635400697103147, 0.0, 0.0] </Y_init>
         <material>source</material>
-      </hydrogenBurke>
+        <closureSpecies> N2 </closureSpecies>
+        <mechanismFile> inputs/ICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
+      </gasCombustion>
     </Model>
   </Models>
 

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+<!--______________________________________________________________________-->
+<!--   1d Laminar Flame. Testing hydrogen combustion model  -->
+<!--______________________________________________________________________-->
+
+   <Meta>
+       <title>1d Hydrogen Flame</title>
+   </Meta>    
+
+   <SimulationComponent type="ice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1e-4       </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           1e-15      </delt_min>
+       <delt_max>           1e-3       </delt_max>
+       <delt_init>          1e-10      </delt_init>
+       <timestep_multiplier>1.0        </timestep_multiplier>
+       <!-- <max_Timesteps>     10          </max_Timesteps> -->
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <LODI>
+           <press_infinity> 1.01325e+05          </press_infinity>
+           <vel_infinity>   [2.33140215, 0., 0.] </vel_infinity>
+           <rho_infinity>   0.84947211           </rho_infinity>
+           <sigma>          0.54          </sigma>
+           <material>       source        </material>
+      </LODI>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2" var = "Dirichlet">
+                              <value> 0.028522387527567396 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"   var = "Dirichlet">
+                              <value> 0.22635400697100733 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O"   var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH"  var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO"  var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YOH"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YHO2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YOH"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YHO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YH2O2"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "y+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="domain">
+              <lower>        [0.0,0.0,0.0]          </lower>
+              <upper>        [0.06,0.01,0.01]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [12,1,1]    </patches>
+              <resolution>   [3000,1,1]  </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>
+      <filebase>hydrogenFlame1.uda</filebase>
+      <outputInitTimestep/>
+      <outputInterval> 1e-5 </outputInterval>
+        <!-- Species passive scalars -->
+        <save label="scalar-YH2"/>
+        <save label="scalar-YO2"/>
+        <save label="scalar-YH2O"/>
+        <save label="scalar-YH"/>
+        <save label="scalar-YO"/>
+        <save label="scalar-YOH"/>
+        <save label="scalar-YHO2"/>
+        <save label="scalar-YH2O2"/>
+
+        <!-- Thermodynamic fields -->
+        <save label="temp_CC"/>
+        <save label="vel_CC"/>
+        <save label="rho_CC"/>
+        <save label="press_CC"/>
+        <save label="specific_heat"/>
+        <save label="viscosity"/>
+        <save label="thermalCond"/>
+        <save label="diffCoef-YH2"/>                                                                                                                         
+        <save label="diffCoef-YO2"/>                                                                                                                         
+        <save label="diffCoef-YH2O"/>                                                                                                                        
+        <save label="diffCoef-YH"/>                                                                                                                          
+        <save label="diffCoef-YO"/>
+        <save label="diffCoef-YOH"/>                                                                                                                         
+        <save label="diffCoef-YHO2"/>
+        <save label="diffCoef-YH2O2"/>
+
+        <!-- Source Terms-->
+        <save label="modelEng_src"/>
+        <save label="modelMom_src"/>
+        <save label="modelMass_src"/>
+        <save label="HeatReleaseRate"/>
+
+        <save label="TotalMass"/>
+        <checkpoint cycle = "2" timestepInterval = "50000"/>
+      </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.5</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+      </ICE>   
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name = "source">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      1.8518e-05          </dynamic_viscosity>
+           <thermal_conductivity>   4.2731e-02          </thermal_conductivity>
+           <specific_heat>          1250.0              </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           <geom_object>
+              <box label="wholegrid">
+                  <min>           [-1.0, -1.0, -1.0 ]  </min>
+                  <max>           [ 1.0,  1.0, 1.0 ]   </max>
+              </box> 
+              <res>            [2,2,2]                 </res>
+              <velocity>       [0.0,0.0,0.0]    </velocity>
+              <temperature>    300.0            </temperature>
+              <density>        1.0              </density>
+              <pressure>       101325.0         </pressure>
+
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>  
+    <!--==================== MODEL ====================-->
+    <Models>
+    <Model type="gasCombustion">
+      <gasCombustion>
+        
+        <!-- Stoichometric Hydrogen-Air -->
+        <Y_init> [0.0, 0.028522387527567396, 0.0, 0.0, 0.0, 0.22635400697103147, 0.0, 0.0] </Y_init>
+        <material>source</material>
+        <closureSpecies> N2 </closureSpecies>
+        <mechanismFile> inputs/ICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
+
+        <rtol> 1e-9 </rtol>
+        <atol_Y> 1e-11 </atol_Y>
+        <atol_T> 1e-5 </atol_T>
+        <initProfile>
+          <filename> inputs/ICE/RX_MODELS/laminarFlameProfile_phi1.00.dat </filename>
+          <axis> x </axis>
+        </initProfile>     
+
+        <doChemistry> true </doChemistry>
+        <doDiffusion> true </doDiffusion>         
+      </gasCombustion>
+    </Model>
+  </Models> 
+</Uintah_specification>
