@@ -186,7 +186,7 @@
         <save label="HeatReleaseRate"/>
 
         <save label="TotalMass"/>
-        <checkpoint cycle = "2" timestepInterval = "50000"/>
+        <checkpoint cycle = "2" timestepInterval = "1000"/>
       </DataArchiver>
 
     <!--____________________________________________________________________-->
