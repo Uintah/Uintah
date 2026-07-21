@@ -44,7 +44,9 @@
 #include <Core/Util/StringUtil.h>
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
+#include <map>
 #include <numeric>
 #include <sstream>
 
@@ -59,6 +61,56 @@
 using namespace Uintah;
 
 Dout dout_models_gasComb("gasCombustion_tasks", "Models::gasCombustion", "Prints task scheduling & execution", false);
+
+//------------------------------------------------------------------
+// Unit tables: ups unit string -> multiplicative factor to SI.
+// Temperature is restricted to absolute scales (K, R): Celsius and
+// Fahrenheit need an additive offset, which breaks Uintah's
+// consistent-units premise (and ICE's P = rho*R*T on the raw field).
+//------------------------------------------------------------------
+namespace {
+
+const std::map<std::string, double> lenUnits {
+  {"m", 1.0}, {"cm", 1e-2}, {"mm", 1e-3}, {"ft", 0.3048}, {"in", 0.0254}
+};
+const std::map<std::string, double> massUnits {
+  // lbm and ft are exact by definition; slug = lbf*s^2/ft = lbm*g0/ft
+  {"kg", 1.0}, {"g", 1e-3}, {"lbm", 0.45359237}, {"slug", 0.45359237 * 9.80665 / 0.3048}
+};
+const std::map<std::string, double> timeUnits {
+  {"s", 1.0}, {"ms", 1e-3}, {"us", 1e-6}
+};
+const std::map<std::string, double> tempUnits {
+  {"K", 1.0}, {"R", 5.0/9.0}
+};
+
+// Parse one child of <units>: read the unit string (defaulting to SI),
+// validate it against the table, and return its user->SI factor.
+double parseUnit(ProblemSpecP& units_ps,
+                 const std::string& dimension,
+                 const std::map<std::string, double>& table,
+                 const std::string& siDefault,
+                 std::string& unitOut)
+{
+  unitOut = siDefault;
+  if (units_ps) {
+    units_ps->getWithDefault(dimension, unitOut, siDefault);
+  }
+
+  auto it = table.find(unitOut);
+  if (it == table.end()) {
+    std::ostringstream warn;
+    warn << "gasCombustion <units>: " << dimension << " unit '" << unitOut
+         << "' is not supported. Choose from:";
+    for (const auto& entry : table) {
+      warn << " " << entry.first;
+    }
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  return it->second;
+}
+
+} // anonymous namespace
 
 // Constructor / Destructor
 //------------------------------------------------------------------
@@ -127,6 +179,12 @@ void gasCombustion::outputProblemSpec(ProblemSpecP& ps)
   gc_ps->appendElement("safety", d_safety);
   gc_ps->appendElement("max_grow", d_max_grow);
   gc_ps->appendElement("max_shrink", d_max_shrink);
+
+  ProblemSpecP units_ps = gc_ps->appendChild("units");
+  units_ps->appendElement("length",      d_lenUnit);
+  units_ps->appendElement("mass",        d_massUnit);
+  units_ps->appendElement("time",        d_timeUnit);
+  units_ps->appendElement("temperature", d_tempUnit);
 }
 
 void gasCombustion::scheduleRestartInitialize(SchedulerP&, const LevelP&) {}
@@ -199,6 +257,28 @@ void gasCombustion::problemSetup(GridP&, const bool)
   gc_ps->getWithDefault("safety",      d_safety, 0.9);
   gc_ps->getWithDefault("max_grow",    d_max_grow, 2.0);
   gc_ps->getWithDefault("max_shrink",  d_max_shrink, 0.1);
+
+  //__________________________________
+  // Unit system.  The ups (and hence the DataWarehouse) is in the user's
+  // units; the mechanism and all internal math are SI.  Inputs are
+  // multiplied by these factors at the point of read, outputs divided at
+  // the point of write.  Everything defaults to SI.
+  ProblemSpecP units_ps = gc_ps->findBlock("units");
+  d_lenConv  = parseUnit(units_ps, "length",      lenUnits,  "m",  d_lenUnit);
+  d_massConv = parseUnit(units_ps, "mass",        massUnits, "kg", d_massUnit);
+  d_timeConv = parseUnit(units_ps, "time",        timeUnits, "s",  d_timeUnit);
+  d_tempConv = parseUnit(units_ps, "temperature", tempUnits, "K",  d_tempUnit);
+
+  d_rhoConv     = d_massConv / std::pow(d_lenConv, 3);
+  d_velConv     = d_lenConv / d_timeConv;
+  d_specEngConv = d_velConv * d_velConv;
+  d_engConv     = d_massConv * d_specEngConv;
+  d_cvConv      = d_specEngConv / d_tempConv;
+  d_pressConv   = d_massConv / (d_lenConv * d_timeConv * d_timeConv);
+  d_viscConv    = d_massConv / (d_lenConv * d_timeConv);
+  d_condConv    = d_massConv * d_lenConv / (std::pow(d_timeConv, 3) * d_tempConv);
+  d_diffConv    = d_lenConv * d_lenConv / d_timeConv;
+  d_hrrConv     = d_massConv / (d_lenConv * std::pow(d_timeConv, 3));
 
   //__________________________________
   // Background initial mass fractions (tracked order)
@@ -471,21 +551,25 @@ void gasCombustion::initialize(const ProcessorGroup *,
           }
           Yall[d_closure] = 1.0 - Ysum;
 
+          // Mechanism math in SI; the DW fields keep the user's units
+          double T_SI   = d_tempConv * T;
+          double rho_SI = d_rhoConv  * rho_val;
+
           double cp_mix = 0.0, R_mix = 0.0;
-          d_mech.cpSpecificHeat(T, cpS);
+          d_mech.cpSpecificHeat(T_SI, cpS);
           for (int j = 0; j < d_nAll; j++) {
             cp_mix += Yall[j] * Ri[j] * cpS[j];
             R_mix  += Yall[j] * Ri[j];
           }
           double cv_tmp   = cp_mix - R_mix;
-          cv[c]           = cv_tmp;
+          cv[c]           = cv_tmp / d_cvConv;
           gamma_cc[c]     = cp_mix / cv_tmp;
-          double pres_eos = rho_val * R_mix * T;        // enforce P = ρRT consistency
+          double pres_eos = rho_SI * R_mix * T_SI;      // enforce P = ρRT consistency [Pa]
           rho_micro[c]    = rho_val;
           rho_CC[c]       = rho_val;
           sp_vol[c]       = 1.0 / rho_val;
-          press_eq[c]     = pres_eos;
-          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_eos / rho_val);
+          press_eq[c]     = pres_eos / d_pressConv;
+          speedSound[c]   = std::sqrt(gamma_cc[c] * pres_eos / rho_SI) / d_velConv;
         }
 
       } else {
@@ -510,7 +594,7 @@ void gasCombustion::initialize(const ProcessorGroup *,
 
         for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
           IntVector c = *iter;
-          double T = temp_CC[c];
+          double T = d_tempConv * temp_CC[c];   // [K]
 
           double Ysum = 0.0;
           for (int j = 0; j < d_nTracked; j++) {
@@ -527,7 +611,7 @@ void gasCombustion::initialize(const ProcessorGroup *,
             R_mix  += Yall[j] * Ri[j];
           }
           double cv_tmp = cp_mix - R_mix;
-          cv[c]         = cv_tmp;
+          cv[c]         = cv_tmp / d_cvConv;
           gamma_cc[c]   = cp_mix / cv_tmp;
         }
       }
@@ -620,6 +704,10 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
   delt_vartype dtAdv;
   old_dw->get(dtAdv, Ilb->delTLabel);
 
+  // Chemistry integrates in SI seconds; dtAdv (and the DW) stay in user
+  // units.  The 1e-15 step floors and rtol/atol are SI by definition.
+  const double dtSI = d_timeConv * dtAdv;
+
   const std::vector<double>& Mw = d_mech.Mw();
 
   for (int p = 0; p < patches->size(); p++) { // loop over patches
@@ -627,8 +715,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
 
     printTask( patches, patch, dout_models_gasComb, " gasCombustion::computeModelSources" );
 
-    Vector dx = patch->dCell();
-    double cellVol = dx.x() * dx.y() * dx.z();
+    Vector dx = patch->dCell();   // user length units
+    double cellVol = (d_lenConv * dx.x()) * (d_lenConv * dx.y()) * (d_lenConv * dx.z()); // [m^3]
 
     //__________________________________
     //
@@ -689,15 +777,15 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         // Step 1: Build cell state / Bulletproofing
         // ----------------------------------------------------
 
-        // Current Properties for cell
-        double T      = temp[c];
-        double rho_kg = rho[c];
+        // Current Properties for cell, converted to SI at the point of read
+        double T      = d_tempConv * temp[c];   // [K]
+        double rho_kg = d_rhoConv  * rho[c];    // [kg/m^3]
 
         //__________________________________
         // Bulletproofing: Density, Temperature, Nasa poly
         if (rho_kg <= 0.0) {
           std::ostringstream warn;
-          warn << "gasCombustion: non-positive density rho=" << rho_kg << " at cell " << c;
+          warn << "gasCombustion: non-positive density rho=" << rho_kg << " kg/m^3 at cell " << c;
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
@@ -748,9 +836,9 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         // ------------------------------------------------------------
         //  Step 2: Constant-Volume ODE Integration t -> t + dt_advection
         // ------------------------------------------------------------
-        double dtChem     = dtAdv;
+        double dtChem     = dtSI;
         double t          = 0.0;
-        double dtChem_min = dtAdv;
+        double dtChem_min = dtSI;
         double engSrcTemp = 0.0;
         std::fill(massSrcTemp.begin(), massSrcTemp.end(), 0.0);
         const double Tstart = T;   // cell state entering the chemistry integration
@@ -766,11 +854,11 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         int    iworst      = -1;    // variable limiting the current trial (all-species index, or nAll = T)
         int    iworstAtMin = -1;    // worst offender at the smallest accepted substep (diagnostic)
 
-        if (d_doChemistry) while (t < dtAdv){
+        if (d_doChemistry) while (t < dtSI){
 
           // Change timestep if needed to end exactly at dt_advection
-          if ((t + dtChem) > dtAdv){
-            dtChem = dtAdv - t;
+          if ((t + dtChem) > dtSI){
+            dtChem = dtSI - t;
             if (dtChem <= 1e-15) break;  // avoid machine-precision steps at end of interval
           }
 
@@ -875,7 +963,7 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         // ---------------------------------------------
         // Step 3: Write Source terms
         // ---------------------------------------------
-        dtChem_cc[c]        = dtChem_min;
+        dtChem_cc[c]        = dtChem_min / d_timeConv; // back to user time units
         dtChemLimiter_cc[c] = iworstAtMin;
 
         for (int j = 0; j < d_nTracked; j++){
@@ -888,15 +976,16 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         // A path integral of q_dot dt only captures the cv dT part.  ICE adds
         // this to the e_s(T_old,Y_old) carrier, giving e_s(T,Y) exactly.
         eng_src[c] += rho_kg * cellVol *
-                      ( d_mech.sensibleEnergy(T, Y) - d_mech.sensibleEnergy(Tstart, Ystart) ); // Joules
+                      ( d_mech.sensibleEnergy(T, Y) - d_mech.sensibleEnergy(Tstart, Ystart) )
+                      / d_engConv;                              // user energy units
 
-        hrr[c]      = engSrcTemp / (cellVol * dtAdv); // W/m³
+        hrr[c]      = engSrcTemp / (cellVol * dtSI) / d_hrrConv; // user W/m³
       }   // cell iterator
 
       if (d_doDiffusion) {
-        double areaX = dx.y() * dx.z();
-        double areaY = dx.x() * dx.z();
-        double areaZ = dx.x() * dx.y();
+        double areaX = (d_lenConv * dx.y()) * (d_lenConv * dx.z()); // [m^2]
+        double areaY = (d_lenConv * dx.x()) * (d_lenConv * dx.z());
+        double areaZ = (d_lenConv * dx.x()) * (d_lenConv * dx.y());
 
         //__________________________________
         // Mole fraction gradients at faces via q_flux_allFaces with unit coefficient.
@@ -1000,9 +1089,9 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
           // face average of scalar q: 0.5*(q[L] + q[f])
           // gradX_X[k][f] = -(X[k][f] - X[k][L]) / dx.x()
 
-          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double rhoFace      = d_rhoConv * 0.5*(rho[L] + rho[f]);   // [kg/m^3]
           double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
-          double Tface        = 0.5*(temp[L]     + temp[f]);
+          double Tface        = d_tempConv * 0.5*(temp[L] + temp[f]); // [K]
 
           for (int k = 0; k < d_nAll; k++) {
             Yface[k] = 0.5*(Yall[k][L] + Yall[k][f]);
@@ -1012,7 +1101,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
 
           double S = 0.0;
           for (int k = 0; k < d_nAll; k++) {
-            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_X[k][f];
+            // gradX is per user length (patch dx); /lenConv makes it per metre
+            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_X[k][f] / d_lenConv;
             S += jstar[k]; // correction term
           }
           double sumJX = 0.0;
@@ -1025,8 +1115,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             warn << "X-face mass flux not conserved at " << f << ": |sum(jX)| = " << std::abs(sumJX);
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
-          d_mech.sensibleEnthalpyAllSpecies(temp[L], hLeft);
-          d_mech.sensibleEnthalpyAllSpecies(temp[f], hRight);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[L], hLeft);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[f], hRight);
           double tmp = 0.0;
           for (int k = 0; k < d_nAll; k++){
             tmp += jX[k][f] * 0.5 * (hLeft[k] + hRight[k]);
@@ -1044,9 +1134,9 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
           // face average of scalar q: 0.5*(q[L] + q[f])
           // gradX_Y[k][f] = -(X[k][f] - X[k][L]) / dx.y()
 
-          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double rhoFace      = d_rhoConv * 0.5*(rho[L] + rho[f]);   // [kg/m^3]
           double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
-          double Tface        = 0.5*(temp[L]     + temp[f]);
+          double Tface        = d_tempConv * 0.5*(temp[L] + temp[f]); // [K]
 
           for (int k = 0; k < d_nAll; k++) {
             Yface[k] = 0.5*(Yall[k][L] + Yall[k][f]);
@@ -1056,7 +1146,7 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
 
           double S = 0.0;
           for (int k = 0; k < d_nAll; k++) {
-            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_Y[k][f];
+            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_Y[k][f] / d_lenConv;
             S += jstar[k];
           }
           double sumJY = 0.0;
@@ -1069,8 +1159,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             warn << "Y-face mass flux not conserved at " << f << ": |sum(jY)| = " << std::abs(sumJY);
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
-          d_mech.sensibleEnthalpyAllSpecies(temp[L], hLeft);
-          d_mech.sensibleEnthalpyAllSpecies(temp[f], hRight);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[L], hLeft);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[f], hRight);
           double tmp = 0.0;
           for (int k = 0; k < d_nAll; k++){
             tmp += jY[k][f] * 0.5 * (hLeft[k] + hRight[k]);
@@ -1088,9 +1178,9 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
           // face average of scalar q: 0.5*(q[L] + q[f])
           // gradX_Z[k][f] = -(X[k][f] - X[k][L]) / dx.z()
 
-          double rhoFace      = 0.5*(rho[L]      + rho[f]);
+          double rhoFace      = d_rhoConv * 0.5*(rho[L] + rho[f]);   // [kg/m^3]
           double invMwMixFace = 0.5*(invMwMix[L] + invMwMix[f]);
-          double Tface        = 0.5*(temp[L]     + temp[f]);
+          double Tface        = d_tempConv * 0.5*(temp[L] + temp[f]); // [K]
 
           for (int k = 0; k < d_nAll; k++) {
             Yface[k] = 0.5*(Yall[k][L] + Yall[k][f]);
@@ -1100,7 +1190,7 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
 
           double S = 0.0;
           for (int k = 0; k < d_nAll; k++) {
-            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_Z[k][f];
+            jstar[k] = rhoFace * DkFace[k] * Mw[k] * invMwMixFace * gradX_Z[k][f] / d_lenConv;
             S += jstar[k];
           }
           double sumJZ = 0.0;
@@ -1113,8 +1203,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             warn << "Z-face mass flux not conserved at " << f << ": |sum(jZ)| = " << std::abs(sumJZ);
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
-          d_mech.sensibleEnthalpyAllSpecies(temp[L], hLeft);
-          d_mech.sensibleEnthalpyAllSpecies(temp[f], hRight);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[L], hLeft);
+          d_mech.sensibleEnthalpyAllSpecies(d_tempConv * temp[f], hRight);
           double tmp = 0.0;
           for (int k = 0; k < d_nAll; k++){
             tmp += jZ[k][f] * 0.5 * (hLeft[k] + hRight[k]);
@@ -1132,13 +1222,13 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             double divJ = ((jX[idx][c + IntVector(1,0,0)] - jX[idx][c]) * areaX
                          + (jY[idx][c + IntVector(0,1,0)] - jY[idx][c]) * areaY
                          + (jZ[idx][c + IntVector(0,0,1)] - jZ[idx][c]) * areaZ) / cellVol;
-            Ysrc[j][c] -= divJ * dtAdv / rho[c]; // [-]
+            Ysrc[j][c] -= divJ * dtSI / (d_rhoConv * rho[c]); // [-]
           }
           double divPhi = ((phiX[c + IntVector(1,0,0)] - phiX[c]) * areaX
                          + (phiY[c + IntVector(0,1,0)] - phiY[c]) * areaY
                          + (phiZ[c + IntVector(0,0,1)] - phiZ[c]) * areaZ); // [W]
 
-          eng_src[c] -= divPhi * dtAdv;                       // [joules]
+          eng_src[c] -= divPhi * dtSI / d_engConv;            // user energy units
         }
       }
     }   // matl loop
@@ -1212,7 +1302,7 @@ void gasCombustion::computeSensibleEnergy(CCVariable<double>   & es,
     }
     Y[d_closure] = 1.0 - Ysum;
 
-    es[c] = d_mech.sensibleEnergy(temp[c], Y);
+    es[c] = d_mech.sensibleEnergy(d_tempConv * temp[c], Y) / d_specEngConv;
   }
 }
 
@@ -1248,10 +1338,11 @@ void gasCombustion::computeTempFromSensibleEnergy(CCVariable<double>   & temp,
     }
     Y[d_closure] = 1.0 - Ysum;
 
-    double Tguess = d_mech.Tref() + es[c] / 1000.0;  // cv ~ O(1 kJ/kg-K); Newton is monotone
+    double esSI   = d_specEngConv * es[c];           // [J/kg]
+    double Tguess = d_mech.Tref() + esSI / 1000.0;   // cv ~ O(1 kJ/kg-K); Newton is monotone
 
     try {
-      temp[c] = d_mech.temperatureFromSensibleEnergy(es[c], Y, Tguess);
+      temp[c] = d_mech.temperatureFromSensibleEnergy(esSI, Y, Tguess) / d_tempConv;
     }
     catch (const std::exception& e) {
       std::ostringstream warn;
@@ -1357,7 +1448,7 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
         for (int j = 0; j < d_nAll; j++){
           X[j] = Y[j] / (MwMix * Mw[j]);
         }
-        double T = temp[c]; // Current cell temperature
+        double T = d_tempConv * temp[c]; // Current cell temperature [K]
 
         //-------------------------------------------------------------------------
         // Cell Specific Heat
@@ -1379,11 +1470,11 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
         // Bulletproofing
         if (cvTmp < 0.0) {
           std::ostringstream warn;
-          warn << "Specific Heat is negative at: " << c << " Cv = " << cvTmp;
+          warn << "Specific Heat is negative at: " << c << " Cv = " << cvTmp << " J/kg-K";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        cv[c]    = cvTmp;
+        cv[c]    = cvTmp / d_cvConv;
         gamma[c] = cp / cvTmp;
 
         //-------------------------------------------------------------------------
@@ -1398,7 +1489,7 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        mu[c] = muTmp;
+        mu[c] = muTmp / d_viscConv;
 
         //-------------------------------------------------------------------------
         // Cell Thermal Conductivity [W / m-K]
@@ -1412,14 +1503,14 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
-        lambda[c] = lamTmp;
+        lambda[c] = lamTmp / d_condConv;
 
         //-------------------------------------------------------------------------
         // Molecular Diffusion coefficients  [m^2/s], all-species indexed
         //-------------------------------------------------------------------------
-        d_mech.mixtureAvgDiffCoeffs(T, rho[c], Y, w, Dk);
+        d_mech.mixtureAvgDiffCoeffs(T, d_rhoConv * rho[c], Y, w, Dk);
         for (int k = 0; k < d_nAll; k++){
-          diffCoef[k][c] = Dk[k];
+          diffCoef[k][c] = Dk[k] / d_diffConv;
         }
       } // cell iterator
 

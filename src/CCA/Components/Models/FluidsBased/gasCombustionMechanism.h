@@ -204,8 +204,7 @@ private:
   // mechanism file receive the <Mechanism> root node (mech_ps) and
   // query it with findBlock / findNextBlock / require / getAttribute;
   // the rest derive their tables from members already filled.  Each
-  // stage fills the members named in its comment.  (Bodies implemented
-  // by James; they currently throw "not implemented".)
+  // stage fills the members named in its comment. 
   //------------------------------------------------------------------
 
   // d_names, d_nAll, d_nTracked, d_closure, d_trackedToAll, d_allToTracked

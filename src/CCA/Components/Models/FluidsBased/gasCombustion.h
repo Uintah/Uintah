@@ -163,13 +163,44 @@ private:
   // Background (whole-domain) initial mass fractions, tracked order
   std::vector<double> d_Yinit_bg;
 
-  // ODE integrator controls (from ups, not the mechanism file)
+  // ODE integrator controls (from ups, not the mechanism file).
+  // rtol/atol_Y/atol_T act on the SI integration state (T in Kelvin),
+  // independent of the ups <units> selection.
   double d_rtol;
   double d_atol_Y;
   double d_atol_T;
   double d_safety;
   double d_max_shrink;
   double d_max_grow;
+
+  //------------------------------------------------------------------
+  // Unit system (ups <units> block).  The mechanism and every internal
+  // evaluation are SI; the DataWarehouse carries the user's units.
+  // Inputs are multiplied by these factors (user -> SI) at the point of
+  // read, outputs divided (SI -> user) at the point of write.
+  //------------------------------------------------------------------
+  std::string d_lenUnit {"m"};
+  std::string d_massUnit{"kg"};
+  std::string d_timeUnit{"s"};
+  std::string d_tempUnit{"K"};
+
+  // Base factors, user -> SI
+  double d_lenConv {1.0};
+  double d_massConv{1.0};
+  double d_timeConv{1.0};
+  double d_tempConv{1.0};
+
+  // Derived factors, user -> SI (computed once in problemSetup)
+  double d_rhoConv    {1.0};   // density            [kg/m^3]
+  double d_velConv    {1.0};   // velocity           [m/s]
+  double d_specEngConv{1.0};   // specific energy    [J/kg]
+  double d_engConv    {1.0};   // energy             [J]
+  double d_cvConv     {1.0};   // specific heat      [J/kg-K]
+  double d_pressConv  {1.0};   // pressure           [Pa]
+  double d_viscConv   {1.0};   // dynamic viscosity  [Pa-s]
+  double d_condConv   {1.0};   // thermal cond.      [W/m-K]
+  double d_diffConv   {1.0};   // diffusion coeff.   [m^2/s]
+  double d_hrrConv    {1.0};   // heat release rate  [W/m^3]
 
   //------------------------------------------------------------------
   // Geometry-based initialization
@@ -184,7 +215,7 @@ private:
 
   //------------------------------------------------------------------
   // 1D profile initialization from a .dat file (e.g. from Cantera/SD Toolbox).
-  // File columns: x[m]  T[K]  u[m/s]  rho[kg/m3]  press[Pa]
+  // File columns: x  T  u  rho  press  (in the ups <units> system; SI default)
   //               then nTracked mass fraction columns in tracked order
   //               (mechanism species order, closure species omitted).
   // Lines beginning with '#' are ignored.  Values are linearly interpolated
@@ -245,8 +276,8 @@ private:
 
   VarLabel* d_dtChem_label{nullptr};        // minimum chemistry substep taken per cell
   VarLabel* d_dtChemLimiter_label{nullptr}; // limiter at that substep: all-species index, nAll = T, -1 = no substepping
-  VarLabel* d_HRR_label{nullptr};           // heat release rate [W/m³]
-  std::vector<VarLabel*> d_diffCoef_labels; // D_k [m^2/s], all-species indexed
+  VarLabel* d_HRR_label{nullptr};           // heat release rate [W/m³ in user units]
+  std::vector<VarLabel*> d_diffCoef_labels; // D_k [m^2/s in user units], all-species indexed
 
   // Geometry regions for initialization
   std::vector<Region*> d_regions;

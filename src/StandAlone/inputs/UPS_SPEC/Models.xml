@@ -584,6 +584,14 @@
           <filename spec="REQUIRED STRING"/>
           <axis     spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
         </initProfile>
+        <!-- Unit system of the ups file; the model converts to SI for the
+             chemistry and back.  Absolute temperature scales only. -->
+        <units spec="OPTIONAL NO_DATA">
+          <length      spec="OPTIONAL STRING 'm, cm, mm, ft, in'"/>
+          <mass        spec="OPTIONAL STRING 'kg, g, lbm, slug'"/>
+          <time        spec="OPTIONAL STRING 's, ms, us'"/>
+          <temperature spec="OPTIONAL STRING 'K, R'"/>
+        </units>
       </gasCombustion>
 
     </Model>
