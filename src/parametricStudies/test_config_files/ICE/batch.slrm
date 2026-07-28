@@ -6,8 +6,9 @@
 # additional information for allocated clusters
 #SBATCH --account  = [acct]         # account
 #SBATCH --partition= [partition]    # partition
-#SBATCH --exclude=notch055
-#
-# load appropriate modules
-module load mpich/3.2
 
+
+# load appropriate modules
+module purge
+module load gcc/11.2.0 openmpi/4.1.6 intel-oneapi-mkl/2024.0.0 hypre/2.31.0 boost/1.88.0
+module list
