@@ -79,6 +79,11 @@ WARNING
 
     std::vector<const VarLabel* > pStateVarLabel;
     std::vector<const VarLabel* > pStateVarLabel_preReloc;
+    const VarLabel * pEnerInternLabel;
+    const VarLabel * pEnerInternLabel_preReloc;    
+    const VarLabel * pEnerInelasLabel;
+    const VarLabel * pEnerInelasLabel_preReloc;
+    
   private:
     CMData d_initialData;
          

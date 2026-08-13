@@ -74,13 +74,30 @@ VUMAT::VUMAT(ProblemSpecP& ps, MPMFlags* Mflag)
    pStateVarLabel_preReloc.push_back(VarLabel::create("p.statevar+"+vlnum.str(),
                                                                         P_dbl));
   }
+  pEnerInternLabel = VarLabel::create("p.enerIntern", P_dbl);
+  pEnerInternLabel_preReloc = VarLabel::create("p.enerIntern+", P_dbl);
+  pEnerInelasLabel = VarLabel::create("p.enerInelas", P_dbl);
+  pEnerInelasLabel_preReloc = VarLabel::create("p.enerInelas+", P_dbl);  
+
+  // Load up the specific vumat library described by the arguments below
+  loadLibrary(d_initialData.library.c_str(), d_initialData.function.c_str());
+  
 }
 
 VUMAT::~VUMAT()
 {
   for(int i = 0; i< d_initialData.nstatev; i++){
     VarLabel::destroy(pStateVarLabel[i]);
+    VarLabel::destroy(pStateVarLabel_preReloc[i]);
   }
+  VarLabel::destroy(pEnerInternLabel);
+  VarLabel::destroy(pEnerInternLabel_preReloc);
+  VarLabel::destroy(pEnerInelasLabel);
+  VarLabel::destroy(pEnerInelasLabel_preReloc);  
+  
+  // Close down vumat library
+  dlclose(lib_handle);
+  
 }
 
 // A simple helper to trim whitespace from the beginning and end of a string.
@@ -202,6 +219,19 @@ VUMAT::initializeCMData(const Patch* patch,
     }
   }
 
+  //
+  // initialize energy state variables and set to zero
+  //
+  ParticleVariable<double> pEnerIntern;
+  new_dw->allocateAndPut(pEnerIntern, pEnerInternLabel, pset);
+  ParticleVariable<double> pEnerInelas;
+  new_dw->allocateAndPut(pEnerInelas, pEnerInelasLabel, pset);
+  for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++){
+    pEnerIntern[*iter] = 0.0;
+    pEnerInelas[*iter] = 0.0;
+  } 
+  
   computeStableTimeStep(patch, matl, new_dw);
 }
 
@@ -257,28 +287,38 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
     double c_dil = 0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Vector dx=patch->dCell();
-
+    
     int dwi = matl->getDWIndex();
 
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Matrix3> pDeformGrad, pstressOld;
+    constParticleVariable<Matrix3> pDeformGrad, pstressOld, pDeformGradOld;
     constParticleVariable<Matrix3> velGrad;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
     constParticleVariable<double> pvolume;
+    constParticleVariable<double> pvolumeOld;
     constParticleVariable<Vector> pvelocity;
     ParticleVariable<double> pdTdt, p_q;
+    constParticleVariable<double> pEnerIntern_old, pEnerInelas_old;
+    ParticleVariable<double> pEnerIntern_new, pEnerInelas_new;
     std::vector<constParticleVariable<double> > 
                                            pStateVar_old(d_initialData.nstatev);
     std::vector<ParticleVariable<double> > pStateVar_new(d_initialData.nstatev);
+    constParticleVariable<int> pLocalized;
+    ParticleVariable<int> pLocalized_new;
 
     delt_vartype delT;
+    simTime_vartype simTime(0);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
+    old_dw->get(simTime, lb->simulationTimeLabel);
+    old_dw->get(pDeformGradOld,  lb->pDeformationMeasureLabel, pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pstressOld,          lb->pStressLabel,             pset);
+    old_dw->get(pvolumeOld,          lb->pVolumeLabel,             pset);
+    old_dw->get(pLocalized,          lb->pLocalizedMPMLabel,       pset);
+
     new_dw->get(pvolume,             lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDeformGrad, lb->pDeformationMeasureLabel_preReloc,pset);
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
@@ -286,77 +326,197 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
+    new_dw->allocateAndPut(pLocalized_new,      lb->pLocalizedMPMLabel_preReloc,        pset);
 
     for(int i = 0; i< d_initialData.nstatev; i++){
       old_dw->get(pStateVar_old[i], pStateVarLabel[i],             pset);
       new_dw->allocateAndPut(pStateVar_new[i],
                                       pStateVarLabel_preReloc[i],  pset);
     }
-
+    old_dw->get(pEnerIntern_old,      pEnerInternLabel,             pset);
+    old_dw->get(pEnerInelas_old,      pEnerInelasLabel,             pset);
+    new_dw->allocateAndPut(pEnerIntern_new, pEnerInternLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pEnerInelas_new, pEnerInelasLabel_preReloc,  pset);
+    
     double E  = d_initialData.E;
     double PR = d_initialData.PR;
 
-    int nblock = 1, ndir = 3, nshr = 3, nprops = d_initialData.props.size();
-    const int& iptr = 0;
-    Matrix3 tensorU, tensorR;
+    // 
+    // Inputs
+    //
+    int nblock = pset->numParticles();
+    int ndir = 3;
+    int nshr = 3;
+    int nstatev = d_initialData.nstatev;
+    int nfieldv = 0;
+    int nprops = d_initialData.props.size();
+    int lanneal = 0;
+    double stepTime = delT;
+    double totalTime = simTime + delT;
+    double dt = delT;
+    std::vector<double> density(nblock, 0.0);
+    std::vector<double> strainInc(nblock * (ndir + nshr), 0.0);
+    std::vector<double> stretchOld(nblock * (ndir + nshr), 0.0);
+    std::vector<double> defgradOld(nblock * (ndir + 2 * nshr), 0.0);
+    std::vector<double> stressOld(nblock * (ndir + nshr), 0.0);
+    std::vector<double> stateOld(nblock * nstatev, 0.0);
+    std::vector<double> enerInternOld(nblock, 0.0);
+    std::vector<double> enerInelasOld(nblock, 0.0);
+    std::vector<double> stretchNew(nblock * (ndir + nshr), 0.0);
+    std::vector<double> defgradNew(nblock * (ndir + 2 * nshr), 0.0);
 
-    // Load up the specific vumat library described by the arguments below
-    loadLibrary(d_initialData.library.c_str(), d_initialData.function.c_str());
+    //
+    // Not used / unsupported
+    // Could be filled in future versions
+    //
+    char * cmname = nullptr;
+    std::vector<double> coordMp(nblock, 0.0);
+    std::vector<double> charLength(nblock, 0.0);
+    std::vector<double> relSpinInc(nblock * nshr, 0.0);
+    std::vector<double> fieldOld(nblock * nfieldv, 0.0);
+    std::vector<double> fieldNew(nblock * nfieldv, 0.0);
+    std::vector<double> tempOld(nblock, 0.0);
+    std::vector<double> tempNew(nblock, 0.0);
+    
+    //
+    // Outputs
+    //
+    std::vector<double> stressNew(nblock * (ndir + nshr));
+    std::vector<double> stateNew(nblock * nstatev);
+    std::vector<double> enerInternNew(nblock);
+    std::vector<double> enerInelasNew(nblock);
+    
+    Matrix3 tensorU, tensorR, tensorUOld, tensorROld;
 
-    std::vector<double> stateOld(d_initialData.nstatev*nblock,0.0);
-    std::vector<double> stateNew(d_initialData.nstatev*nblock,0.0);
-    std::vector<double> defgradOld(9,0.0);
-    std::vector<double> defgradNew(9,0.0);
-
-    for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
+    //
+    // iterate over particles and pack data for VUMAT call
+    //
+    int vumatBlockId = 0;
+    for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++, vumatBlockId++){
       particleIndex idx = *iter;
-
-      // This is evidently not used by this model
-      Matrix3 SO = pstressOld[idx];
-      double stressOld[6]={SO(0,0),SO(1,1),SO(2,2), SO(0,1), SO(1,2), SO(2,0)}; 
 
       // Compute polar decomposition of F (F = RU)
       pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+      pDeformGradOld[idx].polarDecompositionRMB(tensorUOld, tensorROld);
 
-      double stressNew[6] = {0.0};
-      double strainInc[6] = {0.0}; // Not used
-      double stretchNew[6] = {tensorU(0,0), tensorU(1,1), tensorU(2,2), 
-                              tensorU(0,1), tensorU(1,2), tensorU(0,2)};
-      // Need to load deformationGradient into defgradOld/New
-      // Don't know what the format is
+      stretchOld[vumatBlockId + 0 * nblock] = tensorUOld(0,0);
+      stretchOld[vumatBlockId + 1 * nblock] = tensorUOld(1,1);
+      stretchOld[vumatBlockId + 2 * nblock] = tensorUOld(2,2);
+      stretchOld[vumatBlockId + 3 * nblock] = tensorUOld(0,1);
+      stretchOld[vumatBlockId + 4 * nblock] = tensorUOld(1,2);
+      stretchOld[vumatBlockId + 5 * nblock] = tensorUOld(0,2);
 
-      for(int i = 0; i< d_initialData.nstatev; i++){
-        stateOld[i] = pStateVar_old[i][idx];
-      }
-      double stepTime = 0.;
-      double totalTime = 1.;  // FIX 
-      const double tempNew = 300;
-      const double tempOld = 300.0;
-
-      // Call the VUMAT function directly
-      vumat_func(nblock, ndir, nshr, d_initialData.nstatev, iptr, nprops, iptr, 
-                 stepTime, totalTime, delT, nullptr, nullptr, nullptr, 
-                 &(d_initialData.props[0]), nullptr, strainInc, nullptr, 
-		 &(tempOld), nullptr, &(defgradOld[0]), nullptr, 
-		 stressOld, &(stateOld[0]),nullptr, nullptr, 
-                 &(tempNew), stretchNew, &(defgradNew[0]), nullptr, 
-		 stressNew, &(stateNew[0]), nullptr, nullptr);
-
-      for(int i = 0; i< d_initialData.nstatev; i++){
-        pStateVar_new[i][idx] = stateNew[i];
+      stretchNew[vumatBlockId + 0 * nblock] = tensorU(0,0);
+      stretchNew[vumatBlockId + 1 * nblock] = tensorU(1,1);
+      stretchNew[vumatBlockId + 2 * nblock] = tensorU(2,2);
+      stretchNew[vumatBlockId + 3 * nblock] = tensorU(0,1);
+      stretchNew[vumatBlockId + 4 * nblock] = tensorU(1,2);
+      stretchNew[vumatBlockId + 5 * nblock] = tensorU(0,2);
+      
+      for(int i = 0; i<nstatev; i++){
+        stateOld[vumatBlockId + i * nblock] = pStateVar_old[i][idx];
       }
 
+      density[vumatBlockId] = pmass[idx]/pvolume[idx];
+      //density[vumatBlockId] = pmass[idx]/(0.5 * (pvolume[idx] + pvolumeOld[idx]));
+
+      // rotate stress old into material coordinates 
+      Matrix3 SO = pstressOld[idx];
+      SO = (tensorROld.Transpose()) * SO * tensorROld;
+
+      stressOld[vumatBlockId + 0 * nblock] = SO(0,0);
+      stressOld[vumatBlockId + 1 * nblock] = SO(1,1);
+      stressOld[vumatBlockId + 2 * nblock] = SO(2,2);
+      stressOld[vumatBlockId + 3 * nblock] = SO(0,1);
+      stressOld[vumatBlockId + 4 * nblock] = SO(1,2);
+      stressOld[vumatBlockId + 5 * nblock] = SO(2,0);
+
+      // compute strain increment and rotate into material coordinates
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5 * delT;
+      Matrix3 corotD = (tensorR.Transpose()) * D * tensorR;
+
+      strainInc[vumatBlockId + 0 * nblock] = corotD(0,0);
+      strainInc[vumatBlockId + 1 * nblock] = corotD(1,1);
+      strainInc[vumatBlockId + 2 * nblock] = corotD(2,2);
+      strainInc[vumatBlockId + 3 * nblock] = corotD(0,1);
+      strainInc[vumatBlockId + 4 * nblock] = corotD(1,2);
+      strainInc[vumatBlockId + 5 * nblock] = corotD(2,0);
+     
+      defgradOld[vumatBlockId + 0 * nblock] = pDeformGradOld[idx](0,0);
+      defgradOld[vumatBlockId + 1 * nblock] = pDeformGradOld[idx](1,1);
+      defgradOld[vumatBlockId + 2 * nblock] = pDeformGradOld[idx](2,2);
+      defgradOld[vumatBlockId + 3 * nblock] = pDeformGradOld[idx](0,1);
+      defgradOld[vumatBlockId + 4 * nblock] = pDeformGradOld[idx](1,2);
+      defgradOld[vumatBlockId + 5 * nblock] = pDeformGradOld[idx](2,0);
+      defgradOld[vumatBlockId + 6 * nblock] = pDeformGradOld[idx](1,0);
+      defgradOld[vumatBlockId + 7 * nblock] = pDeformGradOld[idx](2,1);
+      defgradOld[vumatBlockId + 8 * nblock] = pDeformGradOld[idx](0,2);
+
+      defgradNew[vumatBlockId + 0 * nblock] = pDeformGrad[idx](0,0);
+      defgradNew[vumatBlockId + 1 * nblock] = pDeformGrad[idx](1,1);
+      defgradNew[vumatBlockId + 2 * nblock] = pDeformGrad[idx](2,2);
+      defgradNew[vumatBlockId + 3 * nblock] = pDeformGrad[idx](0,1);
+      defgradNew[vumatBlockId + 4 * nblock] = pDeformGrad[idx](1,2);
+      defgradNew[vumatBlockId + 5 * nblock] = pDeformGrad[idx](2,0);
+      defgradNew[vumatBlockId + 6 * nblock] = pDeformGrad[idx](1,0);
+      defgradNew[vumatBlockId + 7 * nblock] = pDeformGrad[idx](2,1);
+      defgradNew[vumatBlockId + 8 * nblock] = pDeformGrad[idx](0,2);
+
+      enerInternOld[vumatBlockId] =  pEnerIntern_old[idx];
+      enerInelasOld[vumatBlockId] = pEnerInelas_old[idx];
+
+    }
+
+    //
+    // Call VUMAT
+    //
+    vumat_func(nblock, ndir, nshr, nstatev, nfieldv, nprops, lanneal, 
+	       stepTime, totalTime, dt, cmname, &(coordMp[0]), &(charLength[0]), 
+	       &(d_initialData.props[0]), &(density[0]), &(strainInc[0]), &(relSpinInc[0]), 
+	       &(tempOld[0]), &(stretchOld[0]), &(defgradOld[0]), &(fieldOld[0]), 
+	       &(stressOld[0]), &(stateOld[0]), &(enerInternOld[0]), &(enerInelasOld[0]), 
+	       &(tempNew[0]), &(stretchNew[0]), &(defgradNew[0]), &(fieldNew[0]), 
+	       &(stressNew[0]), &(stateNew[0]), &(enerInternNew[0]), &(enerInelasNew[0]));
+
+    //
+    // iterate over particles and unpack VUMAT output
+    //
+    vumatBlockId = 0;
+    for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++, vumatBlockId++){
+      particleIndex idx = *iter;   
+
+      // Compute polar decomposition of F (F = RU)
+      pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+      
+      for(int i = 0; i< nstatev; i++){
+        pStateVar_new[i][idx] = stateNew[vumatBlockId + i * nblock];
+      }
+      pEnerIntern_new[idx] = enerInternNew[vumatBlockId];
+      pEnerInelas_new[idx] = enerInelasNew[vumatBlockId];
+      
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      pstress[idx] = Matrix3(stressNew[0], stressNew[3], stressNew[5],
-                             stressNew[3], stressNew[1], stressNew[4],
-                             stressNew[5], stressNew[4], stressNew[2]);
+      pstress[idx] = Matrix3(stressNew[vumatBlockId + 0 * nblock],
+			     stressNew[vumatBlockId + 3 * nblock],
+			     stressNew[vumatBlockId + 5 * nblock],
+                             stressNew[vumatBlockId + 3 * nblock],
+			     stressNew[vumatBlockId + 1 * nblock],
+			     stressNew[vumatBlockId + 4 * nblock],
+                             stressNew[vumatBlockId + 5 * nblock],
+			     stressNew[vumatBlockId + 4 * nblock],
+			     stressNew[vumatBlockId + 2 * nblock]);
+      
+      // Rotate the stress back to the laboratory coordinates
+      pstress[idx] = (tensorR*pstress[idx])*(tensorR.Transpose());
 
+      const double rhoHalfStep =  pmass[idx]/(0.5 * (pvolume[idx] + pvolumeOld[idx]));
+      
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
+      
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
-      double rho_cur = pmass[idx]/pvolume[idx];
-      c_dil = sqrt(E/rho_cur);
+      c_dil = sqrt(E/rhoHalfStep);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -365,21 +525,55 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double bulk = E/(3.*(1. -2.*PR));
-        double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
-        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	double G = E/(2.*(1. + PR));
+	double c_bulk = sqrt((bulk + 4.0/3.0 * G)/rhoHalfStep);
+
+	double vdov = D.Trace();
+	
+	//
+	// compute characteristic length in a different way as the element deforms
+	//
+	//Vector newExtents = pDeformGrad[idx] * dx;
+	//double vol = newExtents[0] * newExtents[1] * newExtents[2];
+	//double area1 = newExtents[0] * newExtents[1];
+	//double area2 = newExtents[0] * newExtents[2];
+	//double area3 = newExtents[1] * newExtents[2];
+	//double maxarea = std::max(area1, std::max(area2, area3));
+	//dx_ave = vol / maxarea;
+
+	/*
+	std::cout << "vdov " << vdov << std::endl;
+	std::cout << "ss " << c_bulk << std::endl;
+	std::cout << "rho " << rhoHalfStep << std::endl;
+	std::cout << "arealg " << dx_ave << std::endl;
+	*/
+	
+        p_q[idx] = artificialBulkViscosity(vdov, c_bulk, rhoHalfStep, dx_ave);
+	
+	// add qdV to internal energy
+	//double dV = pvolume[idx] - pvolumeOld[idx];
+	//double qdV = (p_q[idx] * dV) / pmass[idx]; // pEnerIntern is per unit mass 
+	double qdV = p_q[idx]*vdov/rhoHalfStep * delT; 
+	
+	pEnerIntern_new[idx] = pEnerIntern_new[idx] - qdV;
+	
       } else {
         p_q[idx] = 0.;
       }
 
+      // check whether to erode the particle
+      if (pmass[idx]/pvolume[idx] < 0.0) {
+	pLocalized_new[idx] = -999;
+      }
+      else {
+	pLocalized_new[idx] = pLocalized[idx];
+      }
+
       // Compute the strain energy for all the particles
       double e = 0.;  // Fix this
-
       se += e;
+      
     }  // end loop over particles
-
-    // Close down
-    dlclose(lib_handle);
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -394,6 +588,7 @@ void VUMAT::computeStressTensor(const PatchSubset* patches,
       new_dw->put(sum_vartype(se),      lb->StrainEnergyLabel);
     }
   }
+
 }
 
 void VUMAT::carryForward(const PatchSubset* patches,
@@ -429,6 +624,10 @@ void VUMAT::addParticleState(std::vector<const VarLabel*>& from,
     from.push_back(pStateVarLabel[i]);
     to.push_back(pStateVarLabel_preReloc[i]);
   }
+  from.push_back(pEnerInternLabel);
+  to.push_back(pEnerInternLabel_preReloc);
+  from.push_back(pEnerInelasLabel);
+  to.push_back(pEnerInelasLabel_preReloc);
 }
 
 void VUMAT::addComputesAndRequires(Task* task,
@@ -446,6 +645,13 @@ void VUMAT::addComputesAndRequires(Task* task,
     task->requiresVar(Task::OldDW, pStateVarLabel[i],   matlset, gnone);
     task->computesVar(pStateVarLabel_preReloc[i],       matlset);
   }
+  task->requiresVar(Task::OldDW, pEnerInternLabel,   matlset, gnone);
+  task->computesVar(pEnerInternLabel_preReloc,       matlset);
+  task->requiresVar(Task::OldDW, pEnerInelasLabel,   matlset, gnone);
+  task->computesVar(pEnerInelasLabel_preReloc,       matlset);
+
+  task->requiresVar(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
+  task->computesVar(lb->pLocalizedMPMLabel_preReloc,     matlset);
 }
 
 //______________________________________________________________________
@@ -459,6 +665,8 @@ void VUMAT::addInitialComputesAndRequires(Task* task,
   for(int i = 0; i< d_initialData.nstatev; i++){
     task->computesVar(pStateVarLabel[i],       matlset);
   }
+  task->computesVar(pEnerInternLabel,       matlset);
+  task->computesVar(pEnerInelasLabel,       matlset);
 }
 
 void 
