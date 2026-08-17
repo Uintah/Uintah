@@ -199,6 +199,25 @@
         </variable_friction>
       </contact>
       
+      <dissolution                       spec="MULTIPLE NO_DATA" >
+        <Vm_cm3_mol                      spec="OPTIONAL DOUBLE 'positive'" /> 
+        <R_ug-cm2_us2-mol-K              spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ao_mol_cm2-us                   spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ea_ug-cm2_us2-mol               spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ao_clay_mol_cm2-us              spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ea_clay_ug-cm2_us2-mol          spec="OPTIONAL DOUBLE 'positive'" /> 
+        <StressThreshold                 spec="OPTIONAL DOUBLE 'positive'" />
+        <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
+        <MaxCementThickness_cm           spec="OPTIONAL DOUBLE 'positive'" />
+        <GrowthRate_cmPerMY              spec="OPTIONAL DOUBLE 'positive'" />
+        <GrowthRateClay_cmPerMY          spec="OPTIONAL DOUBLE 'positive'" />
+        <CrystalPressure                 spec="OPTIONAL DOUBLE 'positive'" />
+        <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
+        <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, particleBasedDissolution, saltPrecipitationModel, NewQuartzOvergrowth, QuartzOvergrowth'" />
+        <masterModalID                   spec="REQUIRED INTEGER" />
+        <InContactWithModalID            spec="OPTIONAL INTEGER" />
+      </dissolution>
+
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
