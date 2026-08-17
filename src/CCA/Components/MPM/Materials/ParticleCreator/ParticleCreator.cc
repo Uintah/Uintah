@@ -775,7 +775,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
   if(d_flags->d_useLogisticRegression ||
-     d_useLoadCurves){
+     d_useLoadCurves || d_flags->d_doingDissolution){
     GeometryPieceP piece = (*obj)->getPiece();
     pvars.psurface[i] = checkForSurface(piece,p,dxpp);
   } else {
@@ -936,10 +936,14 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
+    particle_state.push_back(d_lb->pSurfLabel);
+    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+/*
   if(d_flags->d_useLogisticRegression || d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
   }
+*/
 
   if(d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfGradLabel);

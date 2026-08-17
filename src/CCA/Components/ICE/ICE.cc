@@ -40,6 +40,7 @@
 #include <CCA/Components/Models/HEChem/HEChemModel.h>
 #include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
+#include <CCA/Components/Models/SolidReactionModel/Ablation0.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
@@ -1344,6 +1345,11 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
       SolidReactionModel* sr_model = dynamic_cast<SolidReactionModel*>( *m_iter );
       if( sr_model ){
         sr_model->scheduleComputeModelSources( sched, level );
+      }
+
+      Ablation0* ab_model = dynamic_cast<Ablation0*>( *m_iter );
+      if( ab_model ){
+        ab_model->scheduleComputeModelSources( sched, level );
       }
 
       ParticleModel*  p_model = dynamic_cast<ParticleModel*>( *m_iter );

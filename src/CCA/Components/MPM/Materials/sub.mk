@@ -36,6 +36,7 @@ SRCS += $(SRCDIR)/MPMMaterial.cc
 
 SUBDIRS := \
 	$(SRCDIR)/Contact           \
+	$(SRCDIR)/Dissolution       \
 	$(SRCDIR)/ConstitutiveModel \
 	$(SRCDIR)/Diffusion         \
 	$(SRCDIR)/ParticleCreator

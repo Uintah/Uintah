@@ -1,0 +1,175 @@
+/*
+ * Copyright © 2026 by Geocosm LLC                                   
+ */
+
+// QuartzOvergrowth.cc
+// One of the derived Dissolution classes.
+//
+// The dissolution rate is converted to a rate of mass decrease which is
+// then applied to identified surface particles in 
+// interpolateToParticlesAndUpdate
+
+#include <CCA/Components/MPM/Materials/Dissolution/QuartzOvergrowth.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/MaterialManager.h>
+#include <Core/Grid/MaterialManagerP.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <vector>
+
+using namespace std;
+using namespace Uintah;
+
+QuartzOvergrowth::QuartzOvergrowth(const ProcessorGroup* myworld,
+                                 ProblemSpecP& ps, MaterialManagerP& d_sS, 
+                                 MPMLabel* Mlb)
+  : Dissolution(myworld, Mlb, ps)
+{
+  // Constructor
+  d_materialManager = d_sS;
+  lb = Mlb;
+  ps->require("masterModalID",             d_masterModalID);
+  ps->require("GrowthRate_cmPerMY",        d_growthRate);
+  ps->getWithDefault("GrowthRateClay_cmPerMY",  d_growthRateClay, d_growthRate);
+}
+
+QuartzOvergrowth::~QuartzOvergrowth()
+{
+}
+
+void QuartzOvergrowth::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
+  dissolution_ps->appendElement("type",                   "QuartzOvergrowth");
+  dissolution_ps->appendElement("masterModalID",          d_masterModalID);
+  dissolution_ps->appendElement("GrowthRate_cmPerMY",     d_growthRate);
+  dissolution_ps->appendElement("GrowthRateClay_cmPerMY", d_growthRateClay);
+}
+
+void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* matls,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
+{
+   int numMatls = d_materialManager->getNumMatls("MPM");
+   ASSERTEQ(numMatls, matls->size());
+
+   delt_vartype delT;
+   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
+//   string interp_type = flags->d_interpolator_type;
+
+//  proc0cout << "phase = " << d_phase << endl;
+  if(d_phase=="precipitation" || d_phase=="dissolution_and_precipitation"){
+
+   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    Ghost::GhostType  gnone = Ghost::None;
+
+    // Retrieve necessary data from DataWarehouse
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
+    std::vector<constNCVariable<double> > gSurfaceClay(numMatls);
+    std::vector<constNCVariable<Vector> > gContactForce(numMatls);
+    std::vector<NCVariable<double> >  massBurnRate(numMatls);
+    std::vector<NCVariable<double> >  dLdt(numMatls);
+    constNCVariable<double> NC_CCweight;
+    std::vector<bool> masterMatls(numMatls);
+    std::vector<double> rho(numMatls);
+    old_dw->get(NC_CCweight,  lb->NC_CCweightLabel, 0, patch, gnone, 0);
+
+    for(int m=0;m<matls->size();m++){
+      int dwi = matls->get(m);
+      new_dw->get(gmass[m],     lb->gMassLabel,           dwi, patch, gnone, 0);
+      new_dw->get(gSurfaceArea[m],
+                                lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gSurfaceClay[m],
+                                lb->gSurfaceClayLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gContactForce[m],
+                                lb->gLSContactForceLabel, dwi, patch, gnone, 0);
+      new_dw->getModifiable(massBurnRate[m],
+                                lb->massBurnFractionLabel,dwi, patch);
+      new_dw->getModifiable(dLdt[m],
+                                lb->dLdtDissolutionLabel, dwi, patch);
+
+      MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
+      rho[m] = mat->getInitialDensity();
+      if(mat->getModalID()==d_masterModalID){
+        mat->setNeedSurfaceParticles(true);
+        masterMatls[m]=true;
+      } else{
+        masterMatls[m]=false;
+      }
+    } // loop over matls to fill arrays
+
+    for(int m=0; m < numMatls; m++){
+     if(masterMatls[m]){
+      int md=m;
+//    MPMMaterial* mpm_matl = 
+//                      (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+//    int dwi = mpm_matl->getDWIndex();
+
+      double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
+      double dL_dt_clay =  -d_growthRateClay*3.1536e19*d_timeConversionFactor;
+//      double massAddedTotal=0.;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+
+        if(gmass[md][c] > 2.e-100 && gContactForce[md][c].length() < 1.e-8
+                                  && NC_CCweight[c] < 0.2) {
+
+          double surfClay = gSurfaceClay[md][c];
+          double localSurfRate = (dL_dt*(1.-surfClay)  + dL_dt_clay*surfClay);
+          massBurnRate[md][c] += rho[m]*localSurfRate*gSurfaceArea[md][c];
+          dLdt[md][c] += localSurfRate;
+//          massAddedTotal+=massBurnRate[md][c];
+        } // mass is present
+      } // nodes
+//      MPMBoundCond bc;
+//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",dLdt[md],"gimp");
+//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",massBurnRate[md],"gimp");
+     } // endif a masterMaterial
+    } // materials
+  } // patches
+ } // if dissolution
+}
+
+void QuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
+                                                      SchedulerP & sched,
+                                                      const PatchSet* patches,
+                                                      const MaterialSet* ms)
+{
+  Task * t = scinew Task("QuartzOvergrowth::computeMassBurnFraction", 
+                      this, &QuartzOvergrowth::computeMassBurnFraction);
+  
+  const MaterialSubset* mss = ms->getUnion();
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
+
+  t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfaceClayLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
+
+  t->modifies(lb->massBurnFractionLabel, mss);
+  t->modifies(lb->dLdtDissolutionLabel,  mss);
+
+  sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference())
+    delete z_matl;
+}

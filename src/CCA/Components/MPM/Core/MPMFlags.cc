@@ -79,6 +79,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_do_contact_friction           =  false;
   d_computeNormals                =  false;
   d_useLogisticRegression         =  false;
+  d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
   d_restartOnLargeNodalVelocity   =  false;
   d_ndim                          =  3;
@@ -279,6 +280,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("do_contact_friction_heating",d_do_contact_friction);
   mpm_flag_ps->get("computeNormals",             d_computeNormals);
   mpm_flag_ps->get("useLogisticRegression",       d_useLogisticRegression);
+  mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",     d_computeColinearNormals);
   mpm_flag_ps->get("d_ndim",                      d_ndim);
   mpm_flag_ps->get("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
@@ -480,6 +482,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_contact_friction_heating",d_do_contact_friction);
   ps->appendElement("computeNormals",             d_computeNormals);
   ps->appendElement("useLogisticRegression",       d_useLogisticRegression);
+  ps->appendElement("doingDissolution",            d_doingDissolution);
   ps->appendElement("computeColinearNormals",     d_computeColinearNormals);
   ps->appendElement("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);

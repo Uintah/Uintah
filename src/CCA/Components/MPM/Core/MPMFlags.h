@@ -104,6 +104,7 @@ class Output;
     bool        d_doCapDensity;
     bool        d_computeNormals;
     bool        d_useLogisticRegression;
+    bool        d_doingDissolution;
     bool        d_computeColinearNormals;
     int         d_ndim;
     bool        d_restartOnLargeNodalVelocity;

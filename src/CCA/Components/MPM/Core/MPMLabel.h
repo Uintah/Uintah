@@ -177,7 +177,9 @@ namespace Uintah {
       const VarLabel* numInCellLabel;
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
+      const VarLabel* dLdtDissolutionLabel; //for burn modeling
       const VarLabel* massBurnFractionLabel; //for burn modeling
+      const VarLabel* NodalWeightSumLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
 
@@ -217,6 +219,7 @@ namespace Uintah {
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
       const VarLabel* gDisplacementLabel;
+      const VarLabel* pDeltaMassLabel;
 
       // Debugging Labels
       const VarLabel* pColorLabel;

@@ -1,4 +1,6 @@
 #
+#  Copyright © 2026 by Geocosm LLC                                   
+#  A derivative work of (c) 1997-2026 The University of Utah
 #  The MIT License
 #
 #  Copyright (c) 1997-2026 The University of Utah
@@ -27,21 +29,18 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Models/SolidReactionModel
 
-ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+SRCDIR   := CCA/Components/MPM/Materials/Dissolution
 
-SRCS	+= \
-       $(SRCDIR)/SolidReactionModel.cc       \
-       $(SRCDIR)/Ablation0.cc                \
-       $(SRCDIR)/NthOrderModel.cc            \
-       $(SRCDIR)/PowerModel.cc               \
-       $(SRCDIR)/AvaramiErofeevModel.cc      \
-       $(SRCDIR)/DiffusionModel.cc           \
-       $(SRCDIR)/ContractingCylinderModel.cc \
-       $(SRCDIR)/ContractingSphereModel.cc   \
-       $(SRCDIR)/ProutTompkinsModel.cc       \
-       $(SRCDIR)/Arrhenius.cc                \
-       $(SRCDIR)/ModifiedArrhenius.cc
+SRCS     += \
+	$(SRCDIR)/ContactStressIndependent.cc \
+	$(SRCDIR)/ParticleBasedDissolution.cc \
+	$(SRCDIR)/NullDissolution.cc          \
+	$(SRCDIR)/DissolutionFactory.cc       \
+	$(SRCDIR)/CompositeDissolution.cc     \
+	$(SRCDIR)/Dissolution.cc
 
-endif
+#	$(SRCDIR)/SaltPrecipitationModel.cc   \
+#	$(SRCDIR)/QuartzOvergrowth.cc         \
+#	$(SRCDIR)/NewQuartzOvergrowth.cc      \
+#	$(SRCDIR)/ContactStressDependent.cc   \

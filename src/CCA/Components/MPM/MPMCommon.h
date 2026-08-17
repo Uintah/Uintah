@@ -55,6 +55,8 @@ namespace Uintah {
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
 
+    virtual void dissolutionProblemSetup(const ProblemSpecP& prob_spec,
+                                         MPMFlags* flags);
     // Used by the switcher
     virtual void setupForSwitching() {
   

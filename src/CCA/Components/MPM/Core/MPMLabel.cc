@@ -118,6 +118,9 @@ MPMLabel::MPMLabel()
   pMassLabel = VarLabel::create( "p.mass",
                         ParticleVariable<double>::getTypeDescription() );
   
+  pDeltaMassLabel = VarLabel::create( "p.deltaMass",
+                        ParticleVariable<double>::getTypeDescription() );
+  
   pVelocityLabel = VarLabel::create( "p.velocity", 
                         ParticleVariable<Vector>::getTypeDescription() );
   
@@ -443,6 +446,12 @@ MPMLabel::MPMLabel()
   massBurnFractionLabel  = VarLabel::create("massBurnFraction",
                         NCVariable<double>::getTypeDescription());
                      
+  dLdtDissolutionLabel  = VarLabel::create("dLdtDissolution",
+                        NCVariable<double>::getTypeDescription());
+                     
+  NodalWeightSumLabel  = VarLabel::create("NodalWeightSum",
+                        NCVariable<double>::getTypeDescription());
+
   gSp_volLabel     =  VarLabel::create("g.sp_vol",
                         NCVariable<double>::getTypeDescription()); 
  
@@ -683,6 +692,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
+  VarLabel::destroy(dLdtDissolutionLabel);
   VarLabel::destroy(frictionalWorkLabel);
   VarLabel::destroy(gNumNearParticlesLabel);
 
@@ -714,6 +724,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
   VarLabel::destroy(gDisplacementLabel);
+  VarLabel::destroy(pDeltaMassLabel);
 
   // Destroy Material point erosion labels
   VarLabel::destroy(pErosionLabel);
