@@ -397,19 +397,22 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   // diagnostic task
   //d_mpm->scheduleTotalParticleCount(          sched, mpm_patches, mpm_matls);
 
-  d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeCurrentParticleSize(  sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleFindSurfaceParticles(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(         sched, mpm_patches, mpm_matls);
 
-  if(d_mpm->flags->d_computeNormals){
+//  if(d_mpm->flags->d_computeNormals){
     d_mpm->scheduleComputeNormals(            sched, mpm_patches, mpm_matls);
-  }
+//  }
   if(d_mpm->flags->d_useLogisticRegression){
     d_mpm->scheduleFindSurfaceParticles(      sched, mpm_patches, mpm_matls);
     d_mpm->scheduleComputeLogisticRegression( sched, mpm_patches, mpm_matls);
   }
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
+  // JIM
+  d_mpm->scheduleComputeMassBurnFrac(         sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl,
@@ -439,7 +442,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleComputeTempFC(             sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
+
+    // JIM
     d_ice->scheduleComputeModelSources(       sched, ice_level,   all_matls);
+
 
     d_ice->scheduleUpdateVolumeFraction(      sched, ice_level,   press_matl,
                                                                   all_matls);
@@ -600,10 +606,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeParticleGradients(       sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
   if( d_mpm->flags->d_computeScaleFactor ){
     d_mpm->scheduleComputeParticleScaleFactor(sched, mpm_patches, mpm_matls);
   }
+  d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
 
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
@@ -1937,6 +1943,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         mat_volume[m] = ( rho_CC_old[m][c]*cell_vol )/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
+
+      total_mat_vol = max(total_mat_vol, .75*cell_vol);
 
       TMV_CC[c] = total_mat_vol;
 
