@@ -54,6 +54,7 @@
 #  include <CCA/Components/Models/HEChem/DDT1.h>
 
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
+#  include <CCA/Components/Models/SolidReactionModel/Ablation0.h>
 #endif
 
 #include <CCA/Ports/ModelInterface.h>
@@ -168,6 +169,9 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "SolidReactionModel") {
       d_models.push_back(scinew SolidReactionModel(myworld, materialManager, model_ps, prob_spec));
+    }
+    else if(type == "Ablation0") {
+      d_models.push_back(scinew Ablation0(myworld, materialManager, model_ps, prob_spec));
     }
 #endif
 
