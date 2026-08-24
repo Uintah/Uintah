@@ -274,6 +274,13 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  // Insert Documentation Here:
+  virtual void computeNodalDeltaMass(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+
   virtual void computeNormals(const ProcessorGroup  *,
                               const PatchSubset     * patches,
                               const MaterialSubset  * ,
@@ -498,6 +505,9 @@ protected:
 
   virtual void scheduleComputeMassBurnFrac(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
+
+  virtual void scheduleComputeNodalDeltaMass(SchedulerP&, const PatchSet*,
+                                             const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);

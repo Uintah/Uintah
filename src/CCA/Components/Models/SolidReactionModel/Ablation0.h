@@ -35,6 +35,7 @@ namespace Uintah {
 
   class ICELabel;
   class MPMLabel;
+  class MPMICELabel;
 
   /**************************************
 
@@ -112,6 +113,7 @@ namespace Uintah {
 
       ICELabel *Ilb;                          // Used to get handles on temperature, pressure, etc.
       MPMLabel *Mlb;                          // Used to get handles on particle data.
+      MPMICELabel *MIlb;                      // Used to get handle on CC solid data.
       MaterialSet *d_myMatls;                   // All the materials referenced by this model
 
       // Variables used for tracking the Reaction

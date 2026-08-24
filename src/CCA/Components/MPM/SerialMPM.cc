@@ -2000,6 +2000,96 @@ void SerialMPM::scheduleComputeMassBurnFrac(SchedulerP& sched,
   dissolutionModel->addComputesAndRequiresMassBurnFrac(sched, patches, matls);
 }
 
+void SerialMPM::scheduleComputeNodalDeltaMass(SchedulerP& sched,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalDeltaMass");
+
+  Task * t = scinew Task( "MPM::computeNodalDeltaMass", this,
+                           &SerialMPM::computeNodalDeltaMass );
+
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+
+  t->requiresVar(Task::OldDW, lb->pXLabel,                gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,          gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pDeltaMassLabel,        gan, NGP);
+
+  t->computesVar(lb->gDeltaMassLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::computeNodalDeltaMass(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* ,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    printTask(patches,patch,cout_doing,
+              "Doing MPM::computeNodalDeltaMass");
+
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+
+    Ghost::GhostType  gan = Ghost::AroundNodes;
+
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl =
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+
+      // Create arrays for the particle data
+      constParticleVariable<Point>  px;
+      constParticleVariable<double> pDeltaMass;
+      constParticleVariable<Matrix3> psize;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      old_dw->get(px,             lb->pXLabel,             pset);
+      new_dw->get(psize,          lb->pCurSizeLabel,       pset);
+      new_dw->get(pDeltaMass,     lb->pDeltaMassLabel,     pset);
+
+      // Create arrays for the grid data
+      NCVariable<double> gDeltaMass;
+      new_dw->allocateAndPut(gDeltaMass,    lb->gDeltaMassLabel,     dwi,patch);
+      gDeltaMass.initialize(d_SMALL_NUM_MPM);
+
+     if(mpm_matl->getIsActive()){
+      //loop over all particles in the patch:
+      for (ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end();
+           iter++){
+        particleIndex idx = *iter;
+        int NN =
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+
+        // Add each particles contribution to the local mass & velocity
+        // Must use the node indices
+        IntVector node;
+        // Iterate through the nodes that receive data from the current particle
+        for(int k = 0; k < NN; k++) {
+          node = ni[k];
+          if(patch->containsNode(node)) {
+            gDeltaMass[node]   += pDeltaMass[idx]* S[k];
+          }
+        } // loop over nodes near particle
+      } // loop over particles
+     }
+    } // loop over matls
+  } // loop over patches
+}
+
 void
 SerialMPM::scheduleRefine( const PatchSet   * patches,
                                  SchedulerP & sched )
@@ -4776,9 +4866,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 {
+#if 0
   timeStep_vartype timeStep;
   old_dw->get(timeStep, lb->timeStepLabel);
   int timestep = timeStep;
+#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -4800,7 +4892,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     double dissolvedmass = 0;
     double addedmass = 0;
-    double pistonmass = 0;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;

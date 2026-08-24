@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
@@ -80,6 +81,7 @@ Ablation0::Ablation0(const ProcessorGroup* myworld,
   d_myMatls = 0;
   Ilb = scinew ICELabel();
   Mlb = scinew MPMLabel();
+  MIlb = scinew MPMICELabel();
   d_saveConservedVars = scinew saveConservedVars();
 
   // Labels
@@ -105,6 +107,7 @@ Ablation0::~Ablation0()
 
   delete Ilb;
   delete Mlb;
+  delete MIlb;
   delete d_saveConservedVars;
 
   VarLabel::destroy(reactedFractionLabel);
@@ -273,6 +276,7 @@ void Ablation0::scheduleComputeModelSources(SchedulerP& sched,
 
   //__________________________________
   // Reactants
+  t->requiresVar(Task::NewDW, MIlb->cDeltaMassLabel,  react_matl, gn);
   t->requiresVar(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
   t->requiresVar(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
   t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
@@ -331,6 +335,8 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
 
     printTask(patches, patch,dout_models_ab0,"Ablation0::computeModelSources");
 
+    constCCVariable<double> cDeltaMass;
+
     CCVariable<double> mass_src_0;
     CCVariable<double> mass_src_1;
     CCVariable<double> mass_0;
@@ -350,6 +356,9 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     constParticleVariable<Point> px;
     new_dw->get(pDeltaMass,               Mlb->pDeltaMassLabel,         pset);
     old_dw->get(px,                       Mlb->pXLabel,                 pset);
+
+    Ghost::GhostType  gn  = Ghost::None;
+    new_dw->get( cDeltaMass,    MIlb->cDeltaMassLabel,  m0, patch, gn, 0);
 
     new_dw->getModifiable( mass_src_0,    Ilb->modelMass_srcLabel,  m0,patch);
     new_dw->getModifiable( momentum_src_0,Ilb->modelMom_srcLabel,   m0,patch);
@@ -376,7 +385,6 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    Ghost::GhostType  gn  = Ghost::None;
 
     //__________________________________
     // Reactant data
@@ -386,6 +394,7 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     new_dw->get( rctSpvol,   Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get( rctVolFrac, Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
 
+#if 0
     new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
     Fr.initialize(0.);
@@ -398,6 +407,7 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     new_dw->get(press_CC,      Ilb->press_equil_CCLabel,0,  patch,gn, 0);
+#endif
 
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0;
@@ -412,6 +422,7 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     }
 
 
+#if 0
     // iterate over the particles, reduce the mass at the cell center by
     // the amount of mass removed from the particles in the cell
     for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
@@ -419,7 +430,7 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
 
       IntVector c;
       patch->findCell(px[idx],c);
-      c=c+IntVector(1,0,0);
+      //c=c+IntVector(1,0,0);
 
       double burnedMass = pDeltaMass[idx];
       
@@ -443,27 +454,15 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
       sp_vol_src_0[c]   -= createdVolx;
       sp_vol_src_1[c]   += createdVolx;
     }  // End loop over particles
+#endif
 
+#if 1
     //__________________________________
     //    iterate over the domain
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
 
-      double burnedMass = 0.;;
-      double F = prodRho[c]/(rctRho[c]+prodRho[c]);
-
-      if( F >= 0.0 && F < 1.0 ){
-        double k  = 1.0; //d_rateConstantModel->getConstant(rctTemp[c]);
-        double df = 1.0; //d_rateModel->getDifferentialFractionChange(F);
-        delF[c] = 0.; //k * df;
-      }
-
-      delF[c] *=delT;
-      Fr[c]    = F;
-      double rctMass = rctRho[c]*cell_vol;
-      double prdMass = prodRho[c]*cell_vol;
-      burnedMass = min( delF[c]*(prdMass + rctMass), rctMass);
-
+      double burnedMass = cDeltaMass[c];
       //__________________________________
       // conservation of mass, momentum and energy
       mass_src_0[c]   -= burnedMass;
@@ -484,21 +483,24 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
       sp_vol_src_0[c]   -= createdVolx;
       sp_vol_src_1[c]   += createdVolx;
     }  // cell iterator
+#endif
 
     //__________________________________
     //  set symetric BC
     setBC(mass_src_0, "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
     setBC(mass_src_1, "set_if_sym_BC",patch, m_materialManager, m1, new_dw, isNotInitialTimeStep);
+#if 0
     setBC(delF,       "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
     setBC(Fr,         "set_if_sym_BC",patch, m_materialManager, m0, new_dw, isNotInitialTimeStep);
+#endif
   }
 
   //__________________________________
   //save total quantities
   if(d_saveConservedVars->mass ){
-    new_dw->put(sum_vartype(totalBurnedMass),   Ablation0::totalMassBurnedLabel);
+    new_dw->put(sum_vartype(totalBurnedMass),  Ablation0::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-    new_dw->put(sum_vartype(totalHeatReleased), Ablation0::totalHeatReleasedLabel);
+    new_dw->put(sum_vartype(totalHeatReleased),Ablation0::totalHeatReleasedLabel);
   }
 }

@@ -413,6 +413,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   // JIM
   d_mpm->scheduleComputeMassBurnFrac(         sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeNodalDeltaMass(       sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl,
@@ -825,6 +826,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                         this, &MPMICE::interpolateNCToCC_0);
     const MaterialSubset* mss = mpm_matls->getUnion();
     t->requiresVar(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
+    t->requiresVar(Task::NewDW, Mlb->gDeltaMassLabel,  Ghost::AroundCells, 1);
     t->requiresVar(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
     t->requiresVar(Task::NewDW, Mlb->gVelocityBCLabel, Ghost::AroundCells, 1);
     t->requiresVar(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
@@ -837,6 +839,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requiresVar(Task::OldDW, Ilb->timeStepLabel);
 
     t->computesVar(MIlb->cMassLabel);
+    t->computesVar(MIlb->cDeltaMassLabel);
     t->computesVar(MIlb->vel_CCLabel);
     t->computesVar(MIlb->temp_CCLabel);
     t->computesVar(Ilb->sp_vol_CCLabel, mss);
@@ -1375,16 +1378,18 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel,  0, patch, gac, 1);
 
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int indx = mpm_matl->getDWIndex();
       // Create arrays for the grid data
-      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
+      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol,gDeltaMass;
       constNCVariable<Vector> gvelocity;
-      CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
+      CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC, cDeltaMass;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);
+      new_dw->allocateAndPut(cDeltaMass, MIlb->cDeltaMassLabel,indx, patch);
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch);
@@ -1392,8 +1397,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
+      cDeltaMass.initialize(0.0);
 
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
+      new_dw->get(gDeltaMass,   Mlb->gDeltaMassLabel,   indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
       new_dw->get(gvelocity,    Mlb->gVelocityBCLabel,  indx, patch,gac, 1);
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
@@ -1420,6 +1427,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
+          cDeltaMass[c]+=NC_CCweight[nodeIdx[in]] * gDeltaMass[nodeIdx[in]];
         }
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;
@@ -1450,6 +1458,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(vel_CC,  "Velocity",   patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
       //  Set if symmetric Boundary conditions
       setBC(cmass,    "set_if_sym_BC",patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
+      setBC(cDeltaMass,    "set_if_sym_BC",patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
       setBC(sp_vol_CC,"set_if_sym_BC",patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
 
       //---- B U L L E T   P R O O F I N G------
@@ -1944,7 +1953,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
 
-      total_mat_vol = max(total_mat_vol, .75*cell_vol);
+      //total_mat_vol = max(total_mat_vol, .75*cell_vol);
 
       TMV_CC[c] = total_mat_vol;
 

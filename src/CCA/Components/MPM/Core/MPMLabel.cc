@@ -283,6 +283,9 @@ MPMLabel::MPMLabel()
   gMassF1Label = VarLabel::create( "g.massF1",
                         NCVariable<double>::getTypeDescription() );
 
+  gDeltaMassLabel = VarLabel::create( "g.deltaMass",
+                        NCVariable<double>::getTypeDescription() );
+  
   gVelocityLabel = VarLabel::create( "g.velocity",
                         NCVariable<Vector>::getTypeDescription() );
   
@@ -637,6 +640,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gMassF0Label);
   VarLabel::destroy(gMassF1Label);
+  VarLabel::destroy(gDeltaMassLabel);
   VarLabel::destroy(gVelocityF0Label);
   VarLabel::destroy(gVelocityF1Label);
   VarLabel::destroy(gVelocityStarF0Label);

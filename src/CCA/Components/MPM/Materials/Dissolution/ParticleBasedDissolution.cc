@@ -123,7 +123,7 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
       //new_dw->getModifiable(dLdt[m],
       //                          lb->dLdtDissolutionLabel, dwi, patch);
 
-      double dL_dt = 0.1;
+      double dL_dt = 0.01;
       // dMdt = dL_dt*area*density
       //        0.1*(0.001*0.001)*1000. = 1.e-4
 

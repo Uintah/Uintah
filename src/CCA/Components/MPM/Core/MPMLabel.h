@@ -121,6 +121,7 @@ namespace Uintah {
       const VarLabel* gMassAllLabel;
       const VarLabel* gMassF0Label;
       const VarLabel* gMassF1Label;
+      const VarLabel* gDeltaMassLabel;
       const VarLabel* gVelocityF0Label;
       const VarLabel* gVelocityF1Label;
       const VarLabel* gInternalForceF0Label;
