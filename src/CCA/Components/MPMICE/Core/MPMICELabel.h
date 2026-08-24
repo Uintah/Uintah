@@ -52,6 +52,7 @@ namespace Uintah {
       const VarLabel* gVelocityLabel;
       const VarLabel* TempGradLabel;      // Needed by burn model --- temporary 
       const VarLabel* aveSurfTempLabel;    
+      const VarLabel* cDeltaMassLabel;
     };
 
 } // end namespace Uintah

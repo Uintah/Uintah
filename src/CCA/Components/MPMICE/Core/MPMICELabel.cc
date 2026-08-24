@@ -79,11 +79,13 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription());
   aveSurfTempLabel     = VarLabel::create("aveSurfTemp",
                      CCVariable<double>::getTypeDescription());
+  cDeltaMassLabel         = VarLabel::create( "c.deltaMass",
+                     CCVariable<double>::getTypeDescription() );
 } 
 
 MPMICELabel::~MPMICELabel()
 {
-  
+
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(vel_CCLabel);
   VarLabel::destroy(temp_CCLabel);
@@ -103,4 +105,5 @@ MPMICELabel::~MPMICELabel()
   //  WSB1 burn model
   VarLabel::destroy(TempGradLabel);
   VarLabel::destroy(aveSurfTempLabel);
+  VarLabel::destroy(cDeltaMassLabel);
 }
