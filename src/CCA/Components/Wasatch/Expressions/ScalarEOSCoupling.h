@@ -35,6 +35,10 @@
 
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
 
 /**
  *  \ingroup 	Expressions
