@@ -583,6 +583,16 @@
         <initProfile spec="OPTIONAL NO_DATA">
           <filename spec="REQUIRED STRING"/>
           <axis     spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
+          <!-- perturbation: samples the 1D profile at (x - amplitude*sin(2*pi*xt/wavelength + phase))
+               instead of x, where xt is the coordinate along <axis> below. Corrugates the
+               otherwise-planar front to seed cellular structure. <axis> here must differ
+               from initProfile's own <axis> (it is the transverse coordinate). -->
+          <perturbation spec="OPTIONAL NO_DATA">
+            <axis       spec="REQUIRED STRING 'x, X, y, Y, z, Z'"/>
+            <amplitude  spec="REQUIRED DOUBLE"/>
+            <wavelength spec="REQUIRED DOUBLE 'positive'"/>
+            <phase      spec="OPTIONAL DOUBLE"/>
+          </perturbation>
         </initProfile>
         <!-- Unit system of the ups file; the model converts to SI for the
              chemistry and back.  Absolute temperature scales only. -->

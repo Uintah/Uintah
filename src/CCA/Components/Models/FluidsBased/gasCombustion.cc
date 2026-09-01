@@ -241,7 +241,7 @@ void gasCombustion::problemSetup(GridP&, const bool)
   // Temperature bulletproofing bounds, derived from the mechanism's own
   // declared NASA7 range: warn outside the range every species' polynomial
   // actually fits; throw outside a wider sanity margin +- 40%
-  d_Twarn_lo = d_mech.Tlow();
+  d_Twarn_lo = 0.99 * d_mech.Tlow();
   d_Twarn_hi = d_mech.Thigh();
   d_Thard_lo = 0.6 * d_Twarn_lo;
   d_Thard_hi = 1.4 * d_Twarn_hi;
@@ -418,6 +418,39 @@ void gasCombustion::problemSetup(GridP&, const bool)
           __FILE__, __LINE__);
     }
 
+    //--------------------------------------------------------------
+    // Optional front perturbation: sample the 1D profile at
+    // (x - amplitude*sin(2*pi*x_t/wavelength + phase)) instead of x,
+    // where x_t is the coordinate along <perturbation><axis>.  Seeds
+    // cellular structure by giving the initially-planar front a
+    // sinusoidal corrugation.
+    //--------------------------------------------------------------
+    ProblemSpecP pert_ps = prof_ps->findBlock("perturbation");
+    if (pert_ps) {
+      std::string paxis;
+      pert_ps->require("axis",       paxis);
+      pert_ps->require("amplitude",  pi.perturbAmplitude);
+      pert_ps->require("wavelength", pi.perturbWavelength);
+      pert_ps->getWithDefault("phase", pi.perturbPhase, 0.0);
+
+      std::string paxisUpper = string_toupper(paxis);
+      pi.perturbAxis = (paxisUpper == "X") ? 0 : (paxisUpper == "Y") ? 1 : 2;
+
+      if (pi.perturbAxis == pi.axis) {
+        throw ProblemSetupException(
+            "gasCombustion initProfile/perturbation: <perturbation><axis> must differ from "
+            "<initProfile><axis> (perturbation is transverse to the profile direction)",
+            __FILE__, __LINE__);
+      }
+      if (pi.perturbWavelength <= 0.0) {
+        throw ProblemSetupException(
+            "gasCombustion initProfile/perturbation: <wavelength> must be > 0",
+            __FILE__, __LINE__);
+      }
+
+      pi.perturbActive = true;
+    }
+
     pi.isActive    = true;
     d_profileInit  = std::move(pi);
   }
@@ -510,6 +543,12 @@ void gasCombustion::initialize(const ProcessorGroup *,
         for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
           IntVector c = *iter;
           double xq = patch->cellPosition(c)(pi.axis);
+
+          if (pi.perturbActive) {
+            double xt = patch->cellPosition(c)(pi.perturbAxis);
+            xq -= pi.perturbAmplitude
+                * std::sin(2.0 * M_PI * xt / pi.perturbWavelength + pi.perturbPhase);
+          }
 
           // Find bracketing index and interpolation fraction (clamped at endpoints)
           size_t i = 0;
@@ -702,7 +741,7 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
                                         DataWarehouse         * new_dw)
 {
   delt_vartype dtAdv;
-  old_dw->get(dtAdv, Ilb->delTLabel);
+  old_dw->get(dtAdv, Ilb->delTLabel, getLevel(patches));
 
   // Chemistry integrates in SI seconds; dtAdv (and the DW) stay in user
   // units.  The 1e-15 step floors and rtol/atol are SI by definition.

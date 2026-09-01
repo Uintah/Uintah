@@ -231,6 +231,16 @@ private:
     std::vector<double>              rho;
     std::vector<double>              press;
     std::vector<std::vector<double>> Y;   // rows sized nTracked
+
+    // Optional sinusoidal perturbation of the front position, used to seed
+    // cellular structure: the profile is sampled at (x - shift) instead of
+    // x, where shift = amplitude * sin(2*pi*(transverse coord)/wavelength
+    // + phase).  transverse coord is read along perturbAxis (!= axis).
+    bool   perturbActive    {false};
+    int    perturbAxis      {1};
+    double perturbAmplitude {0.0};
+    double perturbWavelength{1.0};
+    double perturbPhase     {0.0};
   };
 
   //------------------------------------------------------------------
