@@ -68,6 +68,35 @@ std::vector<double> parseDoubles(std::string s)
   return v;
 }
 
+// Fast integer power: avoids the generic pow() slow path for the small
+// integer exponents (typically -2..2) that show up as reaction-order
+// differences.  Used in globalRates() for the Kc pressure-reference term.
+double ipow(double base, int exp)
+{
+  if (exp < 0) {
+    return 1.0 / ipow(base, -exp);
+  }
+  double result = 1.0;
+  while (exp) {
+    if (exp & 1) result *= base;
+    base *= base;
+    exp >>= 1;
+  }
+  return result;
+}
+
+// exp(-x) for x >= 0, guarded against libm's slow underflow/error-handling
+// path for pathologically large x.  Troe falloff blocks commonly encode a
+// constant blending factor via T3->1e-30 or T1->1e+30 (Chemkin/Cantera
+// convention), which otherwise drives an argument like T/T3 to ~1e33 on
+// every reaction-rate evaluation -- exp() still returns the mathematically
+// correct 0.0, just via a much more expensive code path.  745 is comfortably
+// past the point (~709) where exp(-x) underflows to 0.0 in double precision.
+double safeExpNeg(double x)
+{
+  return (x > 745.0) ? 0.0 : std::exp(-x);
+}
+
 // The <species name="X"> block for one species
 ProblemSpecP findSpeciesBlock(const ProblemSpecP& mech_ps, const std::string& name)
 {
@@ -1212,7 +1241,8 @@ double ReactionMech::thermalConductivity(double T, const std::vector<double>& X)
 void ReactionMech::globalRates(double T, const std::vector<double>& C,
                                Workspace& w, std::vector<double>& q) const
 {
-  const double RT = Ru * T;   // J/mol
+  const double RT   = Ru * T;   // J/mol
+  const double logT = std::log(T);
 
   // Gibbs/RuT for every species, once per call
   w.g.resize(d_nAll);
@@ -1225,7 +1255,11 @@ void ReactionMech::globalRates(double T, const std::vector<double>& C,
     const std::vector<int>& R = d_reactants[r];
     const std::vector<int>& P = d_products[r];
 
-    double kf = d_A[r] * std::pow(T, d_n[r]) * std::exp(-d_Ea[r] / RT);
+    // kf = A*T^n*exp(-Ea/RT) = A*exp(n*logT - Ea/RT); logT is shared
+    // across every reaction in this call, so this folds the T^n pow()
+    // into the same exp() as the Arrhenius exponential (was 2 transcendental
+    // calls per reaction, now 1).
+    double kf = d_A[r] * std::exp(d_n[r] * logT - d_Ea[r] / RT);
 
     // Third-body concentration
     double M = 1.0;
@@ -1237,7 +1271,7 @@ void ReactionMech::globalRates(double T, const std::vector<double>& C,
     }
 
     if (d_rxnType[r] == FALLOFF_TROE) {
-      double k0   = d_A0[r] * std::pow(T, d_n0[r]) * std::exp(-d_Ea0[r] / RT);
+      double k0   = d_A0[r] * std::exp(d_n0[r] * logT - d_Ea0[r] / RT);
       double kinf = kf;
 
       double Pr      = std::max(k0 * M / kinf, 1e-300);
@@ -1245,10 +1279,10 @@ void ReactionMech::globalRates(double T, const std::vector<double>& C,
 
       // Troe center factor; the T2 term is present only when the
       // mechanism supplies the 4-parameter form
-      double Fc = (1.0 - d_troe_a[r]) * std::exp(-T / d_troe_T3[r])
-                +        d_troe_a[r]  * std::exp(-T / d_troe_T1[r]);
+      double Fc = (1.0 - d_troe_a[r]) * safeExpNeg(T / d_troe_T3[r])
+                +        d_troe_a[r]  * safeExpNeg(T / d_troe_T1[r]);
       if (d_troe_useT2[r]) {
-        Fc += std::exp(-d_troe_T2[r] / T);
+        Fc += safeExpNeg(d_troe_T2[r] / T);
       }
       double log10Fc = std::log10(Fc);
 
@@ -1271,7 +1305,7 @@ void ReactionMech::globalRates(double T, const std::vector<double>& C,
     int dn = static_cast<int>(P.size()) - static_cast<int>(R.size());
     double Kc = Kp;
     if (dn != 0) {
-      Kc *= std::pow(1e-6 * Patm / RT, dn);   // (mol/cm^3)^dn
+      Kc *= ipow(1e-6 * Patm / RT, dn);   // (mol/cm^3)^dn -- dn is a small int
     }
     double kr = kf / Kc;
 
