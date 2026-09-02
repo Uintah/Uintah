@@ -11,6 +11,7 @@ from subprocess import PIPE, Popen
 import shutil
 import socket
 import resource
+import platform
 import re         # regular expressions
 
 #______________________________________________________________________
@@ -275,7 +276,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     if solotest != "" and testname != solotest:
       continue
 
-    if getTestOS(test) != environ['OS'].upper() and getTestOS(test) != "ALL":
+    if getTestOS(test) != platform.system().upper() and getTestOS(test) != "ALL":
       continue
 
     print( "__________________" )
@@ -651,7 +652,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   MPIHEAD="%s -n" % MPIRUN       #default
   
   # pass in environmental variables to mpirun
-  if environ['OS'] == "Linux":
+  if platform.system() == "Linux":
     MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi

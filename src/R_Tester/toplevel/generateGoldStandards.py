@@ -424,7 +424,7 @@ def generateGS() :
             # pass in environmental variables to mpirun
             if MALLOC_FLAG is not None:
 
-              if environ['OS'] == "Linux":
+              if platform.system() == "Linux":
                 MPIHEAD="%s %s -n" % (MPIRUN, MALLOC_FLAG)
 
                                              # openmpi
