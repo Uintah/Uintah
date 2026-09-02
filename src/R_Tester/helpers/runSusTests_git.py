@@ -11,6 +11,7 @@ from helpers.utilities  import writeDividerLine, appendFile
 import shutil
 import socket
 import resource
+import platform
 import re         # regular expressions
 
 #______________________________________________________________________
@@ -344,7 +345,7 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
     if solotest != "" and testname != solotest:
       continue
 
-    if getTestOS(test) != environ['OS'].upper() and getTestOS(test) != "ALL":
+    if getTestOS(test) != platform.system().upper() and getTestOS(test) != "ALL":
       continue
 
     print( "__________________" )
