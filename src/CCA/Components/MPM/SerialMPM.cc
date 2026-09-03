@@ -7155,9 +7155,11 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pids,                lb->pParticleIDLabel,         pset);
+//      old_dw->get(pcolor,              lb->pColorLabel,              pset);
 
       old_dw->get(pxOP,                lb->pXLabel,                  psetOP);
       old_dw->get(pidsOP,              lb->pParticleIDLabel,         psetOP);
+//      old_dw->get(pcolorOP,            lb->pColorLabel,              psetOP);
       old_dw->get(pSurfOld,            lb->pSurfLabel,               psetOP);
 
       new_dw->allocateAndPut(pSurf,    lb->pSurfLabel_preReloc,      psetOP);
@@ -7235,6 +7237,9 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
          } // if particle is/is not already a surface particle
         } // outer loop over particles
 
+#if 0
+        // I don't recall what the purpose of this was, it doesn't appear
+        // in the Cyberstone code, and it breaks running in parallel
         for (ParticleSubset::iterator iter = psetOP->begin();
              iter != psetOP->end();
              iter++){
@@ -7254,6 +7259,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
             }
           }
         } // outer loop over particles
+#endif
       } 
     }   // matl loop
   }    // patches
