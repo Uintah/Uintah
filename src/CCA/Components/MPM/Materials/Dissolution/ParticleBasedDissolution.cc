@@ -21,6 +21,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/ParticleBasedDissolution.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -39,25 +40,14 @@ using namespace Uintah;
 
 ParticleBasedDissolution::ParticleBasedDissolution(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, MaterialManagerP& d_sS, 
-                                 MPMLabel* Mlb)
-  : Dissolution(myworld, Mlb, ps)
+                                 MPMLabel* Mlb, MPMFlags* flag)
+  : Dissolution(myworld, Mlb, ps, flag)
 {
   // Constructor
   d_materialManager = d_sS;
   lb = Mlb;
-/*
-  ps->require("masterModalID",        d_masterModalID);
-  ps->require("InContactWithModalID", d_inContactWithModalID);
-  ps->require("Ao_mol_cm2-us",        d_Ao);
-  ps->require("Ea_ug-cm2_us2-mol",    d_Ea);
-  ps->require("R_ug-cm2_us2-mol-K",   d_R);
-  ps->require("Vm_cm3_mol",           d_Vm);
-  ps->require("StressThreshold",      d_StressThresh);
-  ps->getWithDefault("Temperature",   d_temperature, 300.0);
-  ps->getWithDefault("MaxCementThickness_cm", d_maxCemThickness, 9.e99);
-  ps->getWithDefault("Ao_clay_mol_cm2-us",        d_Ao_clay, d_Ao);
-  ps->getWithDefault("Ea_clay_ug-cm2_us2-mol",    d_Ea_clay, d_Ea);
-*/
+
+  ps->require("dLdt",        d_dLdt);
 }
 
 ParticleBasedDissolution::~ParticleBasedDissolution()
@@ -68,19 +58,7 @@ void ParticleBasedDissolution::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
   dissolution_ps->appendElement("type",         "particleBasedDissolution");
-/*
-  dissolution_ps->appendElement("masterModalID",        d_masterModalID);
-  dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
-  dissolution_ps->appendElement("Ao_mol_cm2-us",        d_Ao);
-  dissolution_ps->appendElement("Ea_ug-cm2_us2-mol",    d_Ea);
-  dissolution_ps->appendElement("R_ug-cm2_us2-mol-K",   d_R);
-  dissolution_ps->appendElement("Vm_cm3_mol",           d_Vm);
-  dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
-  dissolution_ps->appendElement("Temperature",          d_temperature);
-  dissolution_ps->appendElement("MaxCementThickness_cm",d_maxCemThickness);
-  dissolution_ps->appendElement("Ao_clay_mol_cm2-us",     d_Ao_clay);
-  dissolution_ps->appendElement("Ea_clay_ug-cm2_us2-mol", d_Ea_clay);
-*/
+  dissolution_ps->appendElement("dLdt",          d_dLdt);
 }
 
 void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
@@ -89,41 +67,47 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
-   int numMatls = d_materialManager->getNumMatls("MPM");
-   ASSERTEQ(numMatls, matls->size());
+//   int numMatls = d_materialManager->getNumMatls("MPM");
+//   ASSERTEQ(numMatls, matls->size());
 
+   Ghost::GhostType gac   = Ghost::AroundCells;
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    double area = dx.x()*dx.y();
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Retrieve necessary data from DataWarehouse
     constParticleVariable<double> pmass, psurf, pvolume;
+    constParticleVariable<Matrix3> psize, pcursize;
+    constParticleVariable<Point> px;
     ParticleVariable<double> pdeltaMass;
-//    std::vector<NCVariable<double> >  massBurnRate(numMatls);
-//    std::vector<NCVariable<double> >  dLdt(numMatls);
-//    constNCVariable<double> NC_CCweight;
-//    std::vector<bool> masterMatls(numMatls);
-//    std::vector<bool> inContactWithMatls(numMatls);
+    constNCVariable<Vector> gSurfNorm;
 
     for(int m=0;m<matls->size();m++){
-      MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
-      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) d_materialManager->getMaterial( "MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      old_dw->get(pmass,              lb->pMassLabel,               pset);
-      old_dw->get(pvolume,            lb->pVolumeLabel,             pset);
+      old_dw->get(px,                 lb->pXLabel,                   pset);
+      old_dw->get(pmass,              lb->pMassLabel,                pset);
+      old_dw->get(psize,              lb->pSizeLabel,                pset);
+      old_dw->get(pvolume,            lb->pVolumeLabel,              pset);
+      new_dw->get(pcursize,           lb->pCurSizeLabel,             pset);
       new_dw->get(psurf,              lb->pSurfLabel_preReloc,      pset);
+      new_dw->get(gSurfNorm,          lb->gSurfNormLabel, dwi,patch,gac,2);
+
       new_dw->allocateAndPut(pdeltaMass,
                                       lb->pDeltaMassLabel,          pset);
-      //new_dw->getModifiable(massBurnRate[m],
-      //                          lb->massBurnFractionLabel,dwi, patch);
-      //new_dw->getModifiable(dLdt[m],
-      //                          lb->dLdtDissolutionLabel, dwi, patch);
 
-      double dL_dt = 0.01;
+      // For the 1-D test case
       // dMdt = dL_dt*area*density
       //        0.1*(0.001*0.001)*1000. = 1.e-4
 
@@ -132,10 +116,91 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         if(psurf[idx] > 0){
+
+          // The surface normal at the grid interpolated to the particle
+          Vector pSN(0.0,0.0,0.0);
+          // Get the node indices that surround the cell
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                    pcursize[idx]);
+          // Accumulate the contribution from each surrounding vertex
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            pSN      += gSurfNorm[node]      * S[k];
+          }
+          double pSNL = pSN.length();
+          // Normalize particle surface normal
+          pSN /= (pSNL + 1.e-100);
+          int maxDir = 0; double maxComp=fabs(pSN.x());
+          for(int i = 1; i<3; i++){
+            if(fabs(pSN[i])>maxComp){
+              maxComp=fabs(pSN[i]);
+              maxDir=i;
+            }
+          }
+          int maxDirP1 = (maxDir+1)%3;
+          int maxDirP2 = (maxDir+2)%3;
+
+          Vector L[3];
+          double Ll[3];
+          double dL[3];
+          double pSNdotL[3];
+          Vector deltaLength;
+
+          for(int i=0;i<3;i++){
+            L[i]=Vector(psize[idx](0,i),
+                        psize[idx](1,i),
+                        psize[idx](2,i));
+            Ll[i] = L[i].length();
+
+            L[i]/=Ll[i];
+            pSNdotL[i] = fabs(Dot(pSN,L[i]));
+          }
+
+//          double dL1overdL0 = pSNdotL[maxDirP1]/(pSNdotL[maxDir]+1.e-100);
+//          double dL2overdL0 = pSNdotL[maxDirP2]/(pSNdotL[maxDir]+1.e-100);
+
+          deltaLength = pSN*d_dLdt*delT;
+          for(int i=0;i<3;i++){
+            deltaLength[i]/=dx[i];
+            //cout << "deltaLength[" << i << "] = " << deltaLength[i] << endl;
+          }
+          for(int i=0;i<3;i++){
+            dL[i]=fabs(Dot(deltaLength,L[i]));
+            //cout << "dL[" << i << "] = " << dL[i] << endl;
+            L[i] *= max(Ll[i] -dL[i],0.);
+            //cout << "L[" << i << "] = " << L[i] << endl;
+          }
+
+/*
+          dL[maxDir] = d_dLdt*delT*(Ll[0]*Ll[1]*Ll[2])/
+                                   (Ll[maxDirP1]*Ll[maxDirP2]
+                               + dL1overdL0*Ll[maxDir]*Ll[maxDirP2]
+                               + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]
+                               + 1.e-100);
+
+          dL[maxDirP1] = dL1overdL0*dL[maxDir];
+          dL[maxDirP2] = dL2overdL0*dL[maxDir];
+          for(int i=0;i<3;i++){
+          //cout << "dL[" << i << "] = " << dL[i] << endl;
+          }
+          L[maxDir]   *= (Ll[maxDir]   - dL[maxDir]);
+          L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
+          L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
+*/
+
+          Matrix3 psizeNew = Matrix3(L[0].x(), L[1].x(), L[2].x(),
+                                     L[0].y(), L[1].y(), L[2].y(),
+                                     L[0].z(), L[1].z(), L[2].z());
+
+          double massRatio = psizeNew.Determinant()/psize[idx].Determinant();
+          pdeltaMass[idx] = pmass[idx]*(1. - massRatio);
+          //cout << "pdeltaMassNewWay = " << pdeltaMass[idx] << endl;
+
           // Need some work here
-          double pEdgeLength = dx.y(); //cbrt(pvolume[idx]);
-          double density = pmass[idx]/pvolume[idx];
-          pdeltaMass[idx] = density*pEdgeLength*pEdgeLength*dL_dt*delT;
+//          double pEdgeLength = dx.y(); //cbrt(pvolume[idx]);
+//          double density = pmass[idx]/pvolume[idx];
+//          pdeltaMass[idx] = density*pEdgeLength*pEdgeLength*d_dLdt*delT;
+          //cout << "pdeltaMassOldWay = " << pdeltaMass[idx] << endl;
         } else {
           pdeltaMass[idx] = 0.0;
         }
@@ -148,30 +213,26 @@ void ParticleBasedDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & s
                                                       const PatchSet* patches,
                                                       const MaterialSet* ms)
 {
-#if 1
   Task * t = scinew Task("ParticleBasedDissolution::computeMassBurnFraction", 
                       this, &ParticleBasedDissolution::computeMassBurnFraction);
   
-  const MaterialSubset* mss = ms->getUnion();
+  //const MaterialSubset* mss = ms->getUnion();
   Ghost::GhostType gnone = Ghost::None;
+  Ghost::GhostType gac   = Ghost::AroundCells;
 
   t->requiresVar(Task::OldDW, lb->delTLabel);
   t->requiresVar(Task::OldDW, lb->pXLabel,                  gnone);
   t->requiresVar(Task::OldDW, lb->pMassLabel,               gnone);
+  t->requiresVar(Task::NewDW, lb->pCurSizeLabel,            gnone);
+  t->requiresVar(Task::OldDW, lb->pSizeLabel,               gnone);
+  t->requiresVar(Task::NewDW, lb->gSurfNormLabel,           gac, 2);
+
 
   t->computesVar(lb->pDeltaMassLabel);
 //  t->requiresVar(Task::NewDW, lb->gMassLabel,               Ghost::None);
 //  t->requiresVar(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
 //  t->requiresVar(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
-//  t->requiresVar(Task::NewDW, lb->gSurfaceClayLabel,        Ghost::None);
-//  t->requiresVar(Task::NewDW, lb->gSurfaceCementLabel,      Ghost::None);
-//  t->requiresVar(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
 //  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
-//  t->modifiesVar(lb->massBurnFractionLabel, mss);
-//  t->modifiesVar(lb->dLdtDissolutionLabel,  mss);
-
   sched->addTask(t, patches, ms);
-
-#endif
 }

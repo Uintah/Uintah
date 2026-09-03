@@ -19,6 +19,7 @@ namespace Uintah {
   class Patch;
   class VarLabel;
   class Task;
+  class MPMFlags;
 
 /**************************************
 
@@ -47,7 +48,8 @@ WARNING
   class Dissolution {
     public:
      // Constructor
-     Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, ProblemSpecP ps);
+     Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, ProblemSpecP ps,
+                                                                MPMFlags* flag);
      virtual ~Dissolution();
 
      virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
@@ -77,6 +79,7 @@ WARNING
      double d_timeConversionFactor;
      double d_growthFractionRate;
      std::string d_phase;
+     MPMFlags* flag;
     };
 
 //    inline bool compare(double num1, double num2) {

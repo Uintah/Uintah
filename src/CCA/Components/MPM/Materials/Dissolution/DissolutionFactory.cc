@@ -4,8 +4,8 @@
 
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionFactory.h>
 #include <CCA/Components/MPM/Materials/Dissolution/NullDissolution.h>
-#include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
 #include <CCA/Components/MPM/Materials/Dissolution/ParticleBasedDissolution.h>
+//#include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/SaltPrecipitationModel.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/QuartzOvergrowth.h>
@@ -43,42 +43,15 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",dis_type, "null");
      
      if (dis_type == "null") {
-      dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
+      dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
       flag->d_doingDissolution=false;
       flag->d_computeNormals=false;
      }
-     else if (dis_type == "contactStressIndependent") {
-      dissolution_list->add(scinew ContactStressIndependent(myworld,child,ss,lb));
-      flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
-     }
      else if (dis_type == "particleBasedDissolution") {
-      dissolution_list->add(scinew ParticleBasedDissolution(myworld,child,ss,lb));
+      dissolution_list->add(scinew ParticleBasedDissolution(myworld,child,ss,lb,flag));
       flag->d_doingDissolution=true;
       flag->d_computeNormals=true;
      }
-/*
-     else if (dis_type == "contactStressDependent") {
-      dissolution_list->add(scinew ContactStressDependent(myworld,child,ss,lb));
-      flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
-     }
-     else if (dis_type == "saltPrecipitationModel") {
-      dissolution_list->add(scinew SaltPrecipitationModel(myworld,child,ss,lb));
-      flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
-     }
-     else if (dis_type == "QuartzOvergrowth") {
-      dissolution_list->add(scinew QuartzOvergrowth(myworld,child,ss,lb));
-      flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
-     }
-     else if (dis_type == "NewQuartzOvergrowth") {
-      dissolution_list->add(scinew NewQuartzOvergrowth(myworld,child,ss,lb));
-      flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
-     }
-*/
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;
        throw ProblemSetupException(" ERROR----->MPM:Unknown Dissolution type",
@@ -89,7 +62,7 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
    // 
    if( dissolution_list->size() == 0 ) {
      proc0cout << "no dissolution - using null\n";
-     dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
+     dissolution_list->add(scinew NullDissolution(myworld,ss,lb,flag));
    }
 
    return dissolution_list;

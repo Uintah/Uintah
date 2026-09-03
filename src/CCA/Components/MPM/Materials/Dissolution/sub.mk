@@ -33,13 +33,13 @@
 SRCDIR   := CCA/Components/MPM/Materials/Dissolution
 
 SRCS     += \
-	$(SRCDIR)/ContactStressIndependent.cc \
 	$(SRCDIR)/ParticleBasedDissolution.cc \
 	$(SRCDIR)/NullDissolution.cc          \
 	$(SRCDIR)/DissolutionFactory.cc       \
 	$(SRCDIR)/CompositeDissolution.cc     \
 	$(SRCDIR)/Dissolution.cc
 
+#	$(SRCDIR)/ContactStressIndependent.cc \
 #	$(SRCDIR)/SaltPrecipitationModel.cc   \
 #	$(SRCDIR)/QuartzOvergrowth.cc         \
 #	$(SRCDIR)/NewQuartzOvergrowth.cc      \

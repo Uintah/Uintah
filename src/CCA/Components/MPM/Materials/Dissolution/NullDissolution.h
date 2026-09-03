@@ -55,7 +55,7 @@ WARNING
     public:
       // Constructor
       NullDissolution(const ProcessorGroup* myworld,
-                      MaterialManagerP& ss, MPMLabel* lb);
+                      MaterialManagerP& ss, MPMLabel* lb, MPMFlags* flag);
 
       // Destructor
       virtual ~NullDissolution();

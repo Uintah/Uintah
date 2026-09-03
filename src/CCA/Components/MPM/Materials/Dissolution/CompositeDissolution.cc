@@ -10,7 +10,7 @@ using namespace Uintah;
 
 CompositeDissolution::CompositeDissolution(const ProcessorGroup* myworld,
                                            MPMLabel* Mlb)
-  : Dissolution(myworld, Mlb, 0)
+  : Dissolution(myworld, Mlb, 0, 0)
 {
 }
 

@@ -36,7 +36,7 @@ KEYWORDS
    Dissolution_Model_Particle_Based
 
 DESCRIPTION
-  One of the derived Dissolution classes.
+  Constant rate of dissolution prescribed by dLdt
 WARNING
   
 ****************************************/
@@ -52,22 +52,13 @@ WARNING
         MaterialManagerP    d_materialManager;
 
         // Dissolution rate
-        double d_Vm;
-        double d_R;
-        double d_StressThresh;
-        double d_maxCemThickness;  // Diss doesn't occur for thicker overgrowth
-        double d_Ao;
-        double d_Ea;
-        double d_Ao_clay; // Modified value in the presence of clay
-        double d_Ea_clay; // Modified value in the presence of clay
-        // master material
-        int    d_masterModalID;
-        int    d_inContactWithModalID;
+        double d_dLdt;
 
       public:
          // Constructor
          ParticleBasedDissolution(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb);
+                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
+                          MPMFlags* flag);
 
          // Destructor
          virtual ~ParticleBasedDissolution();

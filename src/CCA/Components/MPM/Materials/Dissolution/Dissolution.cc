@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 by Geocosm LLC                                   
+ * Copyright © 2026 by Geocosm LLC
  */
 
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
@@ -8,8 +8,8 @@ using namespace Uintah;
 using namespace std;
 
 Dissolution::Dissolution(const ProcessorGroup* myworld, MPMLabel* Mlb, 
-                         ProblemSpecP ps)
-                         : lb(Mlb)
+                         ProblemSpecP ps, MPMFlags* flags)
+                         : lb(Mlb), flag(flags)
 {
 }
 

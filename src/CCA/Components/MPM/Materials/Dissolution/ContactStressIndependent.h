@@ -67,7 +67,8 @@ WARNING
       public:
          // Constructor
          ContactStressIndependent(const ProcessorGroup* myworld,
-                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb);
+                          ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
+                          MPMFlags* flag);
 
          // Destructor
          virtual ~ContactStressIndependent();

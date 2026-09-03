@@ -306,6 +306,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   dissolutionProblemSetup(restart_mat_ps, flags);
 
+  dissolutionModel = 
+                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
+                                     restart_mat_ps,m_materialManager,lb,flags);
+
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
   contactModel->setContactMaterialAttributes();
@@ -313,10 +317,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
   cohesiveZoneTasks->cohesiveZoneProblemSetup(restart_mat_ps, flags);
-
-  dissolutionModel = 
-                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
-                                     restart_mat_ps,m_materialManager,lb,flags);
 
   MPMGranularTasks   = scinew MPMGranular(m_materialManager, flags); //HK 
   MPMGranularTasks->MPMGranularProblemSetup(restart_mat_ps, flags); //HK
@@ -1117,7 +1117,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computesVar(lb->gTemperatureRateLabel);
   t->computesVar(lb->gExternalHeatRateLabel);
 //  t->computesVar(lb->massBurnFractionLabel);
-  t->computesVar(lb->dLdtDissolutionLabel);
   t->computesVar(lb->NodalWeightSumLabel);
 
   if(flags->d_with_ice){
@@ -1555,7 +1554,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
 
   t->requiresVar(Task::NewDW, lb->NodalWeightSumLabel,    gac,NGN);
-  t->requiresVar(Task::NewDW, lb->massBurnFractionLabel,  gac,NGN);
+//  t->requiresVar(Task::NewDW, lb->massBurnFractionLabel,  gac,NGN);
   if(flags->d_with_ice){
     t->requiresVar(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
   }
@@ -2920,7 +2919,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gSp_vol;
       NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
-      NCVariable<double> gTemperatureRate,massBurnFrac,dLdt;
+      NCVariable<double> gTemperatureRate,massBurnFrac;
       NCVariable<double> nodalWeightSum;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
@@ -2938,8 +2937,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
 //      new_dw->allocateAndPut(massBurnFrac,     lb->massBurnFractionLabel,
 //                             dwi,patch);
-      new_dw->allocateAndPut(dLdt,             lb->dLdtDissolutionLabel,
-                             dwi,patch);
       new_dw->allocateAndPut(nodalWeightSum,   lb->NodalWeightSumLabel,
                              dwi,patch);
       if (flags->d_with_color) {
@@ -2956,7 +2953,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gSp_vol.initialize(0.);
-      dLdt.initialize(0.);
 //      massBurnFrac.initialize(0.);
       nodalWeightSum.initialize(0.0);
 
@@ -4714,7 +4710,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
         if (flags->d_doingDissolution){
-          Vector pSN=Vector(1.,0.,0.);
+//          Vector pSN=Vector(1.,0.,0.);
           double pSNL = pSN.length();
           if(pSurf[idx]>=0.99 && burnFraction != 0.0 && pSNL > 0.){
             // Normalize particle surface normal
@@ -4914,12 +4910,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp;
+      constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp,pNormal;
       constParticleVariable<Matrix3> psize, pFOld, pcursize;
       constParticleVariable<double> pmass, pVolumeOld, pTemperature;
       constParticleVariable<long64> pids;
       ParticleVariable<Point> pxnew;
-      ParticleVariable<Vector> pvelnew, pdispnew;
+      ParticleVariable<Vector> pvelnew, pdispnew,pNormalNew;
       ParticleVariable<Matrix3> psizeNew;
       ParticleVariable<double> pmassNew,pTempNew;
       ParticleVariable<long64> pids_new;
@@ -4947,6 +4943,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       } 
+      if(flags->d_useParticleNormals){
+        old_dw->get(pNormal,    lb->pNormalLabel,                    pset);
+        new_dw->allocateAndPut(pNormalNew,lb->pNormalLabel_preReloc, pset);
+        pNormalNew.copyData(pNormal);
+      }
       if (flags->d_doingDissolution){
         new_dw->get(pSurf,          lb->pSurfLabel_preReloc,   pset);
       } else {
@@ -5016,7 +5017,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         gGrowthDir = gSN_create;                     // reference created data
       }
 
-      new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+//      new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
       Vector dx = patch->dCell();
@@ -5066,6 +5067,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
         }
 
+#if 0
         if(pSurf[idx]>=0.99){
           //cout << "pSurf = " << pSurf[idx] << endl;
           for (int k = 0; k < NN; k++) {
@@ -5074,6 +5076,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                            /(nodalWeightSum[node]+1.e-100);
           }
         }
+#endif
 
         // Update particle vel and pos using Nairn's XPIC(2) method
 	// if useXPIC, otherwise just standard FLIP
@@ -5090,9 +5093,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
         if (flags->d_doingDissolution){
           double pSNL = pSN.length();
-//          if(pSurf[idx]>=0.99 && burnFraction != 0.0 && pSNL > 0.){
-          //cout << "pSURF = " << pSurf[idx] << endl;
-          //cout << "bF = " << burnFraction << endl;
+          if(pSurf[idx]>=0.99 /* && burnFraction != 0.0 && pSNL > 0.*/){
+
             // Normalize particle surface normal
             pSN /= (pSNL + 1.e-100);
             int maxDir = 0; double maxComp=fabs(pSN.x());
@@ -5104,7 +5106,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
             int maxDirP1 = (maxDir+1)%3;
             int maxDirP2 = (maxDir+2)%3;
-//            pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
             pmassNew[idx]    = Max(pmass[idx] - pdeltamass[idx], 0.);
             double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
             Vector L[3];
@@ -5142,10 +5143,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                          dL[1]*dx.y()*pSN.y(),
                                          dL[2]*dx.z()*pSN.z());
             pxnew[idx] = pxnew[idx] - deltaPos;
-//          } else {
-//            pmassNew[idx] = pmass[idx];
-//            psizeNew[idx] = psize[idx];
-//          }
+          } else {
+            pmassNew[idx] = pmass[idx];
+            psizeNew[idx] = psize[idx];
+          }
         } else {
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
@@ -7253,8 +7254,8 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
             }
           }
         } // outer loop over particles
-
-      } }   // matl loop
+      } 
+    }   // matl loop
   }    // patches
 }
 

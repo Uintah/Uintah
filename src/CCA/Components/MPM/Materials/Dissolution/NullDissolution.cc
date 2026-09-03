@@ -23,8 +23,8 @@ using namespace Uintah;
 
 NullDissolution::NullDissolution(const ProcessorGroup* myworld,
                          MaterialManagerP& d_sS,
-                         MPMLabel* Mlb)
-  : Dissolution(myworld, Mlb, 0)
+                         MPMLabel* Mlb, MPMFlags* flag)
+  : Dissolution(myworld, Mlb, 0, flag)
 {
   // Constructor
   d_materialManager = d_sS;
