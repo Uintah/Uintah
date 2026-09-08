@@ -2358,7 +2358,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
             badCell = c;
           }
         }  // iter loop
-        // cout << " Conservative delT based on swept volumes "<< delt<<endl;
+        ostringstream mesg;
+        mesg << "matl: " << indx << " patch: " << patch->getID() << " using conservative timestep scheme  " << delt<< " final DelT: " << delt;
+        DOUTR( m_ice_DelT, mesg.str() );
       }
     }  // matl loop
 
