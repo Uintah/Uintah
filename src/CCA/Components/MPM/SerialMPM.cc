@@ -7166,7 +7166,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
       double cellVol=dx.x()*dx.y()*dx.z();
       double tol = 0.200*cbrt(cellVol);
-      int nclose = 2*flags->d_ndim;
+      int nclose = 2*flags->d_ndim + 1;
 
       // Either carry forward the particle surface data, or recompute it every
       // N timesteps.
@@ -7221,11 +7221,43 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           } // Inner particle loop
 
           // Get the centroid of the nearest neighbors
-          Vector neighborCent(0.,0.,0.);
-          for(int i=0;i<nclose;i++){
-            neighborCent+= px[close[i]].asVector();
+          Vector neighborCent0(0.,0.,0.);
+          for(int i=0;i<(nclose-1);i++){
+            neighborCent0+= px[close[i]].asVector();
           }
-          neighborCent/=((double) nclose);
+          neighborCent0/=((double) (nclose-1));
+
+          Vector neighborCent1(0.,0.,0.);
+          for(int i=0;i<(nclose-2);i++){
+            neighborCent1+= px[close[i]].asVector();
+          }
+          neighborCent1+= px[close[nclose-1]].asVector();
+          neighborCent1/=((double) (nclose-1));
+
+          Vector neighborCent = neighborCent0;
+          if((pxOP[idx].asVector() - neighborCent1).length() < 
+             (pxOP[idx].asVector() - neighborCent0).length()){
+             neighborCent = neighborCent1;
+          }
+
+#if 0
+          if(pidsOP[idx] == 223339479040){
+            cout << "LEFT NC = " << neighborCent << endl;
+            for(int i=0;i<nclose;i++){
+              cout << "LCS = " << closestSep[i] << endl;
+              cout << "Lpx = " << px[close[i]] << endl;
+            }
+            cout << "LPD = " << (pxOP[idx].asVector() - neighborCent).length() << endl;
+          }
+          if(pidsOP[idx] == 223341641730){
+            cout << "RIGHT NC = " << neighborCent << endl;
+            for(int i=0;i<nclose;i++){
+              cout << "RCS = " << closestSep[i] << endl;
+              cout << "Rpx = " << px[close[i]] << endl;
+            }
+            cout << "RPD = " << (pxOP[idx].asVector() - neighborCent).length() << endl;
+          }
+#endif
 
           // Compare centroid of neighbors to the location of current particle
           Vector posDiff = pxOP[idx].asVector() - neighborCent;
