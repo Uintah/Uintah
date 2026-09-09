@@ -9,6 +9,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/NullDissolution.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
@@ -20,7 +21,7 @@
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 using namespace Uintah;
-
+ 
 NullDissolution::NullDissolution(const ProcessorGroup* myworld,
                          MaterialManagerP& d_sS,
                          MPMLabel* Mlb, MPMFlags* flag)
@@ -46,9 +47,31 @@ void NullDissolution::outputProblemSpec(ProblemSpecP& ps)
 void NullDissolution::computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
-                                              DataWarehouse* /*old_dw*/,
+                                              DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    ParticleVariable<double> pdeltaMass;
+
+    for(int m=0;m<matls->size();m++){
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) d_materialManager->getMaterial( "MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      new_dw->allocateAndPut(pdeltaMass,lb->pDeltaMassLabel, pset);
+
+      ParticleSubset::iterator iter;
+      for( iter= pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        pdeltaMass[idx] = 0.0;
+      }
+    }
+  }
+
 }
 
 void NullDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
@@ -57,6 +80,7 @@ void NullDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
 {
   Task * t = scinew Task("NullDissolution::computeMassBurnFraction", this, 
                          &NullDissolution::computeMassBurnFraction);
-  
+
+  t->computesVar(lb->pDeltaMassLabel);  
   sched->addTask(t, patches, ms);
 }

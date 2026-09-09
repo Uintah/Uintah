@@ -307,7 +307,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   dissolutionProblemSetup(restart_mat_ps, flags);
 
   dissolutionModel = 
-                  DissolutionFactory::create(UintahParallelComponent::d_myworld,
+                  DissolutionFactory::create(d_myworld,
                                      restart_mat_ps,m_materialManager,lb,flags);
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
@@ -1595,7 +1595,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   //  Create reductionMatlSubSet that could include all mpm matls
   // and the global matl.  Needed for per matl reduction variables
 
-/*
   const MaterialSubset* global_mss = t->getGlobalMatlSubset();
   const MaterialSubset* mpm_mss    = matls->getUnion();
 
@@ -1624,7 +1623,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if(flags->d_reductionVars->centerOfMass){
     t->computesVar(lb->CenterOfMassPositionLabel, reduction_mss,Task::OutOfDomain);
   }
-*/
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -1650,11 +1648,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
 
-/*
   if (reduction_mss && reduction_mss->removeReference()){
     delete reduction_mss;
   }
-*/
 }
 
 void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
