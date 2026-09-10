@@ -215,6 +215,9 @@ main()
     cd "$L"
 
     echo "  Working on $L"
+    #  remove any timesteps/ output left over from a previous run so
+    #  stale files can't linger alongside (or instead of) the new ones
+    /bin/rm -rf timesteps
     mkdir timesteps
 
     #   find all the cell files on this level
@@ -222,16 +225,16 @@ main()
 
     #    extract the header
     header="timesteps/header"
-    grep ^# "${cellFiles[1]}" > "$header"
+    grep ^# "${cellFiles[0]}" > "$header"
 
 
     #   create an array of all the timesteps in the cell file
-    mapfile -t timesteps < <(sed  '/^#/d' "${cellFiles[1]}" | \
+    mapfile -t timesteps < <(sed  '/^#/d' "${cellFiles[0]}" | \
                              tr --squeeze-repeats ' '| \
                              cut -d ' ' -f4 )
 
     #   create an array of all the physical times in the cell file
-    mapfile -t phyTimes < <(sed  '/^#/d' "${cellFiles[1]}" | \
+    mapfile -t phyTimes < <(sed  '/^#/d' "${cellFiles[0]}" | \
                              tr --squeeze-repeats ' '| \
                              cut -d ' ' -f5 )
 
