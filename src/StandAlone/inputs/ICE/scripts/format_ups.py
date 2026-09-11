@@ -3,6 +3,50 @@
 # 2-space indent, unspaced attributes, column-aligned BCType attributes per Face,
 # column-aligned sibling values (via the "column" utility), compacted vector
 # literals, and verbatim-preserved comments.
+#
+# Algorithm, in pseudocode:
+#
+#   for each file argument:
+#      original = parse( file )                       # ElementTree, comments kept as nodes
+#      text     = format_ups_text( original )
+#      back up file to file.bak, then write text over file
+#      reparsed = parse( file )
+#      if signature( reparsed ) != signature( original ):   # tag, attrs, and text
+#         restore file from file.bak                        # of every node, comments included
+#         report failure
+#
+#   format_ups_text( root ):
+#      compute BCType column padding once, for every <Face> in the document
+#      emit the <?xml ...?> prolog and the root element's opening tag
+#      split root's direct children into "sections": each section is a run of
+#         banner comments plus the element they annotate; join sections with
+#         exactly one blank line
+#      for each section, format_element() every child, depth-first
+#      swap the vector-space placeholder back to a real ' ' in the assembled
+#         text (kept as a placeholder throughout so a spaced vector item can't
+#         be mistaken for a field separator by is_batchable_leaf/"column -t")
+#
+#   format_element( elem ):
+#      comment           -> one "<!--...-->" line
+#      childless element -> one line: self-closing, or "<tag>  value  </tag>"
+#                            (a "[a, b, c]"-style vector literal is compacted
+#                            first, collapsing internal whitespace)
+#      container element -> opening tag, then for each child in turn:
+#                              if PRESERVE_BLANK_LINES and the source had a
+#                                 blank line before this child, flush the
+#                                 pending batch (below) and emit a blank line
+#                              if the child is a "batchable leaf" (no children,
+#                                 no attributes, single-token value) -> append
+#                                 it to a pending batch instead of emitting it
+#                              otherwise -> flush the pending batch and
+#                                 recurse into the child
+#                            flush any batch left over, then the closing tag
+#
+#   flush a pending batch:
+#      pipe its lines through the "column -t" utility so the value and
+#      closing-tag columns line up across the batch (e.g. <lower>/<upper>/
+#      <patches> under a <Box>); fall back to the unaligned lines if "column"
+#      isn't installed
 
 import argparse
 import re
@@ -18,10 +62,20 @@ INDENT_WIDTH = 2      # spaces per XML nesting level
 VALUE_PADDING = 3     # spaces on each side of a leaf element's value
 EQUALS_PADDING = 1    # spaces on each side of "=" in an attribute (0 = name="value")
 PRESERVE_BLANK_LINES = True  # keep a single blank line between children that had one in the source
+VECTOR_ITEM_SPACING = 1  # spaces after each comma in a vector literal (0 = [a,b,c])
 
 INDENT_UNIT = ' ' * INDENT_WIDTH
 VALUE_PAD = ' ' * VALUE_PADDING
 EQUALS_PAD = ' ' * EQUALS_PADDING
+
+# A vector's inter-item spaces are rendered with this placeholder instead of a
+# real space, and only swapped back to ' ' once the whole document is assembled
+# (see format_ups_text). This keeps a spaced vector like "[0., 0., 0.]" looking
+# like a single whitespace-free token to is_batchable_leaf() and to the
+# "column -t" alignment pass in align_lines(), both of which split on real
+# whitespace to find field boundaries.
+VECTOR_SPACE_PLACEHOLDER = ''
+VECTOR_SEP = ',' + VECTOR_SPACE_PLACEHOLDER * VECTOR_ITEM_SPACING
 VECTOR_RE = re.compile( r'^\[.*\]$', re.DOTALL )
 WS_RE = re.compile( r'\s+' )
 
@@ -62,7 +116,7 @@ def compact_vector_text( text ):
    
    for part in parts:
       compacted_parts.append( part.strip() )
-   return '[' + ','.join( compacted_parts ) + ']'
+   return '[' + VECTOR_SEP.join( compacted_parts ) + ']'
 
 #______________________________________________________________________
 #   Normalize a leaf element's text: collapse whitespace, compact vector literals.
@@ -257,7 +311,8 @@ def format_ups_text( root ):
          out_lines.append( '' )
          
    out_lines.append( '</%s>' % root.tag )
-   return '\n'.join( out_lines ) + '\n'
+   text = '\n'.join( out_lines ) + '\n'
+   return text.replace( VECTOR_SPACE_PLACEHOLDER, ' ' )
 
 #______________________________________________________________________
 #   Build a whitespace-insensitive (tag, attrs, text) signature of every node,
