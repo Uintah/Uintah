@@ -38,6 +38,7 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -672,7 +673,7 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
           Point here = level->getNodePosition(c) + offset.asVector();
 
           const int w = m_col_width;
-          fprintf(fp,    "%-*E %-*E %-*E %-*i %-*E", w, here.x(),
+          fprintf(fp,    "%-*E %-*E %-*E %-*i %-*E ", w, here.x(),
                                                      w, here.y(),
                                                      w, here.z(),
                                                      w, tv.timeStep,
@@ -684,7 +685,7 @@ void lineExtract::doAnalysis(const ProcessorGroup * pg,
 
           // write CC<int> variables
           for (unsigned int i=0 ; i< CC_integer_data.size(); i++) {
-            fprintf(fp, "%-*i", w, CC_integer_data[i][c]);
+            fprintf(fp, "%-*i ", w, CC_integer_data[i][c]);
           }
 
           fprintf_Arrays( fp, c, CC_double_data,   CC_Vector_data,   CC_Matrix3_data );
@@ -781,7 +782,7 @@ void lineExtract::createFile( const string& filename,
 
    // WARNING If you change the order that these are written
    // out you must also change the order in doAnalysis()
-
+  m_nCols= 0;
   Vector dx = level->dCell();
 
   fp = fopen(filename.c_str(), "w");
@@ -794,7 +795,18 @@ void lineExtract::createFile( const string& filename,
   printHeader( fp,TypeDescription::SFCYVariable);
   printHeader( fp,TypeDescription::SFCZVariable);
 
+  //__________________________________
+  //      Write out column numbers
+  //      Every column is m_col_width wide followed by one space.  The "# " comment
+  //      marker lives inside column 1, exactly as it does in the variable-name header.
   fprintf(fp,"\n");
+  fprintf(fp, "# %-*i ", m_col_width - 2, 1 );
+
+  for (unsigned int i = 1 ; i < m_nCols; i++) {
+    fprintf(fp, "%-*i ", m_col_width, i+1 );
+  }
+  fprintf(fp,"\n");
+
   fflush(fp);
 
   cout << Parallel::getMPIRank() << " lineExtract:Created file " << filename << endl;
@@ -837,11 +849,12 @@ lineExtract::printHeader(FILE*& fp,
       throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__);
   }
 
-  fprintf(fp,"%-*s %-*s %-*s %-*s %-*s", m_col_width, loc[0].c_str(),
+  fprintf(fp,"%-*s %-*s %-*s %-*s %-*s ", m_col_width, loc[0].c_str(),
                                          m_col_width, loc[1].c_str(),
                                          m_col_width, loc[2].c_str(),
                                          m_col_width,"Timestep",
                                          m_col_width,"Time [s]");
+  m_nCols += 5;
 
 }
 
@@ -851,7 +864,6 @@ void
 lineExtract::printHeader( FILE*& fp,
                           const Uintah::TypeDescription::Type myType)
 {
-
   //__________________________________
   // <double/int>
   for (unsigned int i =0 ; i < m_varProperties.size(); i++) {
@@ -866,11 +878,12 @@ lineExtract::printHeader( FILE*& fp,
       colDesc += "_" + to_string(vp.matl) ;
 
       //    add padding
-      int nChars = m_col_width - colDesc.length();
+      int nChars = std::max( 0, m_col_width - (int) colDesc.length() );
       colDesc.append( nChars, ' ');
 
       const char* cstr = colDesc.c_str();
-      fprintf( fp, "%s", cstr );
+      fprintf( fp, "%s ", cstr );
+      m_nCols +=1;
     }
   }
   //__________________________________
@@ -888,14 +901,15 @@ lineExtract::printHeader( FILE*& fp,
       string colDescZ  = colDesc + "_" + matl + ".z";
 
       //    add white space padding
-      int nChars = m_col_width - colDescX.length();
+      int nChars = std::max( 0, m_col_width - (int) colDescX.length() );
       colDescX.append( nChars, ' ');
       colDescY.append( nChars, ' ');
       colDescZ.append( nChars, ' ');
 
-      fprintf( fp, "%s %s %s", colDescX.c_str(),
+      fprintf( fp, "%s %s %s ", colDescX.c_str(),
                                colDescY.c_str(),
                                colDescZ.c_str() );
+      m_nCols += 3;
     }
   }
 
@@ -918,18 +932,19 @@ lineExtract::printHeader( FILE*& fp,
         string colDesc2  = colDesc + "_" + matl + "(" + r + ",2)";
 
         //    add white space padding
-        int nChars = m_col_width - colDesc0.length();
+        int nChars = std::max( 0, m_col_width - (int) colDesc0.length() );
         colDesc0.append( nChars, ' ' );
         colDesc1.append( nChars, ' ' );
         colDesc2.append( nChars, ' ' );
 
 
-        fprintf( fp, "%s %s %s", colDesc0.c_str(),
+        fprintf( fp, "%s %s %s ", colDesc0.c_str(),
                                  colDesc1.c_str(),
                                  colDesc2.c_str() );
       }
+      m_nCols += 9;
     }
-  }
+  }  
 }
 
 //______________________________________________________________________
@@ -945,22 +960,21 @@ void lineExtract::fprintf_Arrays( FILE*& fp,
 
   // double variables
   for (unsigned int i=0 ; i< doubleData.size(); i++) {
-    fprintf(fp, "%-*E", w, doubleData[i][c]);
+    fprintf(fp, "%-*E ", w, doubleData[i][c]);
   }
 
   // Vector variable
   for (unsigned int i=0 ; i< VectorData.size(); i++) {
-    fprintf(fp, "%-*E %-*E %-*E",
+    fprintf(fp, "%-*E %-*E %-*E ",
             w, VectorData[i][c].x(),
             w, VectorData[i][c].y(),
             w, VectorData[i][c].z() );
   }
 
   // Matrix variable
-  w = w + 4;   // needed for matrix (row,col)
   for (unsigned int i=0 ; i< Matrix3Data.size(); i++) {
     for (int row = 0; row<3; row++){
-      fprintf(fp, "%-*E %-*E %-*E",
+      fprintf(fp, "%-*E %-*E %-*E ",
               w, Matrix3Data[i][c](row,0),
               w, Matrix3Data[i][c](row,1),
               w, Matrix3Data[i][c](row,2) );
