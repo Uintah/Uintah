@@ -142,6 +142,7 @@ namespace Uintah {
     // global constants
     std::vector<line*>     m_lines;
     int                    m_col_width = 16;    //  column width
+    unsigned int           m_nCols = 0;
     TypeDescription::Type  m_allVarsBaseType {TypeDescription::Other};
 
     std::vector<varProperty> m_varProperties;   //
