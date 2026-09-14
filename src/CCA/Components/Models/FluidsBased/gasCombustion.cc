@@ -49,6 +49,7 @@
 #include <map>
 #include <numeric>
 #include <sstream>
+#include <stdexcept>
 
 //---------------------------------------------------------------
 // Generalized gas-phase combustion model.  The species set, kinetics,
@@ -454,6 +455,45 @@ void gasCombustion::problemSetup(GridP&, const bool)
     pi.isActive    = true;
     d_profileInit  = std::move(pi);
   }
+
+  //----------------------------------------------------------------
+  // One-time run-log summary.  Printed once here (not per-patch/per-cell)
+  // so a log file alone identifies what configuration produced it: model
+  // name, mechanism (sans the .xml extension), the species set, the ups
+  // unit system, and which initial-condition path is active.
+  //----------------------------------------------------------------
+  std::string mechName = d_mechFile;
+  const std::string xmlExt = ".xml";
+  if (mechName.size() >= xmlExt.size() &&
+      mechName.compare(mechName.size() - xmlExt.size(), xmlExt.size(), xmlExt) == 0) {
+    mechName.erase(mechName.size() - xmlExt.size());
+  }
+
+  std::string initPath;
+  if (d_profileInit.isActive) {
+    initPath = "1D profile (" + d_profileInit.filename + ")";
+  } else if (!d_regions.empty()) {
+    std::ostringstream s;
+    s << d_regions.size() << " geom_object region(s) + uniform background (Y_init)";
+    initPath = s.str();
+  } else {
+    initPath = "uniform background only (Y_init)";
+  }
+
+  std::ostringstream msg;
+  msg << "gasCombustion: model initialized\n"
+      << "  mechanism:      " << mechName << "\n"
+      << "  species (" << d_nAll << "): ";
+  for (int k = 0; k < d_nAll; k++) {
+    msg << d_mech.name(k);
+    if (k == d_closure) { msg << "*"; }
+    if (k != d_nAll - 1) { msg << ", "; }
+  }
+  msg << "   (* = closure species)\n"
+      << "  units:          length=" << d_lenUnit << ", mass=" << d_massUnit
+      << ", time=" << d_timeUnit << ", temperature=" << d_tempUnit << "\n"
+      << "  initialization: " << initPath;
+  proc0cout << msg.str() << std::endl;
 }
 
 //------------------------------------------------------------------
@@ -692,44 +732,79 @@ void gasCombustion::scheduleComputeModelSources(SchedulerP   & sched,
 //
 // Constant-volume chemistry RHS at state (T, Y): wraps the mechanism's
 // rate/thermo evaluators.  res doubles as reusable scratch.
-void gasCombustion::chemStep(double T,
-                             const std::vector<double>& Y,
-                             double rho_kg,
+void gasCombustion::chemStep(const std::vector<double>& C,      // rho*Y_j, kg/m^3, nAll
+                             double rhoEs,                       // rho*e_s, J/m^3
+                             const std::vector<double>& F_C,     // forcing, kg/m^3-s, nAll
+                             double F_rhoEs,                     // forcing, W/m^3
+                             double Tguess,
                              double cellVol,
                              ChemStepResult& res)
 {
   const std::vector<double>& Ri = d_mech.Ri();
   const std::vector<double>& Mw = d_mech.Mw();
 
-  // Mixture Specific Heat
-  d_mech.cpSpecificHeat(T, res.cp);
-
-  double cp   = 0.0;
-  double Rmix = 0.0;
+  // 1. recover primitives
+  double rho = 0.0;
   for (int j = 0; j < d_nAll; j++) {
-    cp   += Y[j] * Ri[j] * res.cp[j];
-    Rmix += Y[j] * Ri[j];
+    rho += C[j];
   }
-  double cvTemp = cp - Rmix;
+  res.rho = rho;
+  for (int j = 0; j < d_nAll; j++) {
+    res.Y[j] = C[j] / rho;
+  }
+  double e_s = rhoEs / rho;
+  double T   = d_mech.temperatureFromSensibleEnergy(e_s, res.Y, Tguess);
+  res.T = T;
 
-  // Molar Concentrations (mol / cm^3)
+  // 2. cv (needed for the error scale, not for the RHS)
+  d_mech.cpSpecificHeat(T, res.cp);
+  double cp = 0.0, Rmix = 0.0;
+  for (int j = 0; j < d_nAll; j++) {
+    cp   += res.Y[j] * Ri[j] * res.cp[j];
+    Rmix += res.Y[j] * Ri[j];
+  }
+  res.cv = cp - Rmix;
+
+  // 3. concentrations 
   res.conc.resize(d_nAll);
   for (int j = 0; j < d_nAll; j++) {
-    res.conc[j] = 1e-3 * rho_kg * Y[j] / Mw[j];
+    res.conc[j] = 1e-3 * C[j] / Mw[j];
   }
-
-  // Reaction rates and mass sources
+  // 4. rates; massSource is TRACKED indexed, so fill closure by mass conservation.
+  // res.rhsC is sized nAll once (constructor); every entry is written exactly
+  // once below (nTracked tracked entries + 1 closure entry = nAll), so no
+  // per-call zero-fill is needed before the "+=" that adds forcing.
   d_mech.globalRates(T, res.conc, res.w, res.q);
-  d_mech.massSource(res.q, res.w, res.S);
+  d_mech.massSource(res.q, res.w, res.S);          // kg/m^3-s, nTracked
 
-  res.rhsMass.resize(d_nTracked);
+  double Ssum = 0.0;
   for (int j = 0; j < d_nTracked; j++) {
-    res.rhsMass[j] = res.S[j] / rho_kg;
+    res.rhsC[ d_mech.trackedToAll(j) ] = res.S[j];
+    Ssum += res.S[j];
   }
+  res.rhsC[d_closure] = -Ssum;                     // exact: sum_j S_j = 0
 
-  double qdot   = d_mech.heatRelease(res.q, T, res.w);
-  res.rhsEnergy = qdot / (rho_kg * cvTemp);
-  res.engSrc    = qdot * cellVol;
+    // 5. energy.  res.rhsC is chemistry-only here; forcing is added at step 6.
+  //    Chemistry conserves rho*e_tot = rho*e_s + sum_k C_k*e_f,k, so
+  //      d(rho e_s)/dt = -sum_k e_f,k * S_k,   e_f,k = href_k - R_k*Tref
+  //    NOT qdot: heatRelease() uses full internal energies (formation
+  //    included), which drives rho*cv*dT/dt, not rho*e_s.
+  const std::vector<double>& href = d_mech.href();     // h_k(Tref) [J/kg]
+  const double Tref = d_mech.Tref();
+
+  double efS = 0.0;
+  for (int j = 0; j < d_nAll; j++) {
+    efS += (href[j] - Ri[j] * Tref) * res.rhsC[j];     // [W/m^3]
+  }
+  res.rhsRhoEs = -efS + F_rhoEs;
+
+  // heat release rate: diagnostic only (d_HRR_label), not part of the state
+  double qdot = d_mech.heatRelease(res.q, T, res.w);   // W/m^3, constant-volume
+  res.engSrc  = qdot * cellVol;
+
+   // 6. forcing, after the energy block: F_rhoEs already carries the
+  //    sensible energy that goes with F_C.
+  for (int j = 0; j < d_nAll; j++) res.rhsC[j] += F_C[j];
 }
 
 //______________________________________________________________________
@@ -797,10 +872,16 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
       // Per-cell state and integrator workspace, hoisted out of the
       // cell loop so vector assignments reuse capacity (no per-cell
       // heap traffic)
-      std::vector<double> Y(d_nAll), Ystart(d_nAll), Yorig(d_nAll);
-      std::vector<double> Ypred(d_nAll), Yheun(d_nAll);
-      std::vector<double> massSrcTemp(d_nTracked);
-      ChemStepResult result1, result2;
+      std::vector<double> Y(d_nAll), Ystart(d_nAll), Y_new(d_nAll);
+      std::vector<double> C(d_nAll), Corig(d_nAll), Cpred(d_nAll), Cheun(d_nAll);
+
+      // Forcing terms (species partial-density and energy sources external
+      // to the chemistry, e.g. from a turbulence/combustion closure model).
+      // TODO: pull these from the DataWarehouse; zero for now.
+      std::vector<double> F_C(d_nAll, 0.0);   // kg/m^3-s, nAll
+      double F_rhoEs = 0.0;                   // W/m^3
+
+      ChemStepResult result1(d_nAll), result2(d_nAll);
 
       //__________________________________
       //
@@ -844,7 +925,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             }
         }
 
-        // Build the mass fraction array for all species
+        // Build the mass fraction array for all species (closure species
+        // set by difference; it is not carried in the DataWarehouse)
         double Ysum_build = 0.0;
         for (int j = 0; j < d_nTracked; j++){
           int idx = d_mech.trackedToAll(j);
@@ -872,6 +954,14 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
 
+        // Build the tracked integration state: partial densities rho*Y_j
+        // and the sensible-energy density rho*e_s
+        for (int j = 0; j < d_nAll; j++) {
+          C[j] = rho_kg * Y[j];
+        }
+        double rhoEs = rho_kg * d_mech.sensibleEnergy(T, Y);
+        const double rhoEs0 = rhoEs;   // start value, for the energy-conservation check
+
         // ------------------------------------------------------------
         //  Step 2: Constant-Volume ODE Integration t -> t + dt_advection
         // ------------------------------------------------------------
@@ -879,15 +969,10 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         double t          = 0.0;
         double dtChem_min = dtSI;
         double engSrcTemp = 0.0;
-        std::fill(massSrcTemp.begin(), massSrcTemp.end(), 0.0);
         const double Tstart = T;   // cell state entering the chemistry integration
         Ystart = Y;
-        double Torig = T;
-        Yorig  = Y;
-        double Tpred;              // 1st-order Euler predictor (embedded error estimate)
-        double Theun;              // 2nd-order Heun solution
-        Ypred  = Y;
-        Yheun  = Y;
+        double Tguess = T;         // Newton seed for temperatureFromSensibleEnergy,
+                                    // refined to the last accepted solution below
 
         double errNorm     = 1.0;   // weighted-RMS error over full state (normalized: accept if <= 1)
         int    iworst      = -1;    // variable limiting the current trial (all-species index, or nAll = T)
@@ -901,12 +986,15 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             if (dtChem <= 1e-15) break;  // avoid machine-precision steps at end of interval
           }
 
-          Torig = T;
-          Yorig = Y;
-          bool accepted = false;
+          Corig            = C;
+          double rhoEsOrig = rhoEs;
+          bool   accepted  = false;
+          double rhoH      = 0.0;   // density of the last-evaluated Heun trial;
+                                     // survives past the retry loop for the
+                                     // post-accept mass-conservation check below
 
           // Evaluate RHS once per outer step -- reused on every trial step size
-          chemStep(Torig, Yorig, rho_kg, cellVol, result1);
+          chemStep(Corig, rhoEsOrig, F_C, F_rhoEs, Tguess, cellVol, result1);
 
           while (!accepted && dtChem > 1e-15){
             // Heun-Euler embedded pair (RK2(1)):
@@ -915,27 +1003,33 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             // with k2 = f(y*). Same two RHS evals per trial as step doubling.
 
             // Euler predictor (full dtChem, reuses result1 on every retry)
-            Ysum = 0.0;
             for (int j = 0; j < d_nAll; j++){
-              if (j == d_closure) continue;
-              int k = d_mech.allToTracked(j);
-              Ypred[j] = Yorig[j] + result1.rhsMass[k] * dtChem;
-              Ysum += Ypred[j];
+              Cpred[j] = Corig[j] + dtChem * result1.rhsC[j];
             }
-            Ypred[d_closure] = 1.0 - Ysum;
-            Tpred = Torig + dtChem * result1.rhsEnergy;
+            double rhoEsPred = rhoEsOrig + dtChem * result1.rhsRhoEs;
 
-            // Heun corrector: second RHS eval at the predictor state
-            chemStep(Tpred, Ypred, rho_kg, cellVol, result2);
-            Ysum = 0.0;
-            for (int j = 0; j < d_nAll; j++){
-              if (j == d_closure) continue;
-              int k = d_mech.allToTracked(j);
-              Yheun[j] = Yorig[j] + 0.5 * dtChem * (result1.rhsMass[k] + result2.rhsMass[k]);
-              Ysum += Yheun[j];
+            // Heun corrector: second RHS eval at the predictor state. Cpred
+            // can be transiently unphysical for an oversized trial dtChem
+            // (e.g. a partial density driven negative enough to blow up the
+            // recovered Y or e_s) -- temperatureFromSensibleEnergy throws
+            // std::runtime_error rather than returning garbage in that case.
+            // Treat the throw exactly like a failed error check: shrink
+            // dtChem and retry: it is not a fatal condition.
+            bool trialOk = true;
+            try {
+              chemStep(Cpred, rhoEsPred, F_C, F_rhoEs, result1.T, cellVol, result2);
+            } catch (const std::runtime_error&) {
+              trialOk = false;
             }
-            Yheun[d_closure] = 1.0 - Ysum;
-            Theun = Torig + 0.5 * dtChem * (result1.rhsEnergy + result2.rhsEnergy);
+            if (!trialOk){
+              dtChem *= d_max_shrink;
+              continue;
+            }
+
+            for (int j = 0; j < d_nAll; j++){
+              Cheun[j] = Corig[j] + 0.5 * dtChem * (result1.rhsC[j] + result2.rhsC[j]);
+            }
+            double rhoEsHeun = rhoEsOrig + 0.5 * dtChem * (result1.rhsRhoEs + result2.rhsRhoEs);
 
             // ----------------------------------------------------------
             // Weighted-RMS error over the WHOLE integrated state.
@@ -946,25 +1040,24 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             // radical near zero from blowing up the relative error and forcing
             // spurious rejections, while still watching every species.
             // ----------------------------------------------------------
-            errNorm = 0.0;
-            double worst = 0.0;
-            iworst = -1;
-            int nNorm = 0;
-            for (int j = 0; j < d_nAll; j++){
-              if (j == d_closure) continue;          // closure species: set by difference, not integrated
-              double e  = Yheun[j] - Ypred[j];
-              double sc = d_rtol * std::abs(Yheun[j]) + d_atol_Y;
+            errNorm = 0.0; double worst = 0.0; iworst = -1; int nNorm = 0;
+            rhoH = 0.0;
+            for (int j = 0; j < d_nAll; j++) rhoH += Cheun[j];
+
+            for (int j = 0; j < d_nAll; j++){        // NO closure exclusion -- it's integrated now
+              double e  = Cheun[j] - Cpred[j];
+              double sc = d_rtol * std::abs(Cheun[j]) + rhoH * d_atol_Y;   // <-- rho * atol_Y
               double r  = e / sc;
-              errNorm  += r * r;
+              errNorm += r*r;
               if (std::abs(r) > worst){ worst = std::abs(r); iworst = j; }
               nNorm++;
             }
-            {                                        // temperature term, separate Kelvin floor
-              double e  = Theun - Tpred;
-              double sc = d_rtol * std::abs(Theun) + d_atol_T;
+            {
+              double e  = rhoEsHeun - rhoEsPred;
+              double sc = d_rtol * std::abs(rhoEsHeun) + rhoH * result1.cv * d_atol_T;  // <-- rho*cv*atol_T
               double r  = e / sc;
-              errNorm  += r * r;
-              if (std::abs(r) > worst){ worst = std::abs(r); iworst = d_nAll; } // nAll flags T
+              errNorm += r*r;
+              if (std::abs(r) > worst){ worst = std::abs(r); iworst = d_nAll; }
               nNorm++;
             }
             errNorm = std::sqrt(errNorm / nNorm);
@@ -976,12 +1069,22 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             fac        = std::min(d_max_grow, std::max(d_max_shrink, fac));
 
             if (errNorm <= 1.0){ // accept Heun solution
-              for (int j = 0; j < d_nTracked; j++){
-                massSrcTemp[j] += 0.5 * dtChem * (result1.rhsMass[j] + result2.rhsMass[j]);
+              // Negative partial density here is a real solver failure, not
+              // roundoff -- clipping would silently break the mass-conservation
+              // check below and hide the underlying problem, so throw instead.
+              for (int j = 0; j < d_nAll; j++){
+                if (Cheun[j] < -1e-15 * rhoH){
+                  std::ostringstream warn;
+                  warn << "gasCombustion: negative partial density C[" << j << "]=" << Cheun[j]
+                       << " (" << d_mech.name(j) << ") at cell " << c;
+                  throw InvalidValue(warn.str(), __FILE__, __LINE__);
+                }
               }
-              Y           = Yheun;
+
+              C          = Cheun;
+              rhoEs      = rhoEsHeun;
+              Tguess     = result2.T;   // seed the next outer step's Newton solve
               engSrcTemp += 0.5 * dtChem * (result1.engSrc + result2.engSrc);
-              T           = Theun;
               if (dtChem < dtChem_min){ dtChem_min = dtChem; iworstAtMin = iworst; }
               t          += dtChem;
               dtChem     *= fac;
@@ -997,6 +1100,51 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
             warn << "Chemistry integration never converged! At cell " << c;
             throw InvalidValue(warn.str(), __FILE__, __LINE__);
           }
+
+          // Mass-conservation check: the species closure guarantees
+          // sum_j rhsC_j = sum_j F_C_j exactly, so rho should track the
+          // (currently zero) forcing exactly; any drift here is a solver
+          // bug, not physics.
+          double F_rho = 0.0;
+          for (int j = 0; j < d_nAll; j++) {
+            F_rho += F_C[j];
+          }
+          double rhoExpect = rho_kg + F_rho * t;
+          if (std::abs(rhoH - rhoExpect) > 1e-10 * rhoExpect) {
+            std::ostringstream warn;
+            warn << "gasCombustion: chemistry integration did not conserve mass at cell " << c
+                 << " (rho=" << rhoH << ", expected=" << rhoExpect << ")";
+            throw InvalidValue(warn.str(), __FILE__, __LINE__);
+          }
+
+          // rho*e_tot is exactly linear in t (slope = forcing only), for any
+          // explicit RK, since the invariant is linear in the state.
+          // Scaled by sum|e_f,k C_k| -- the sum itself is a small difference.
+          {
+            const std::vector<double>& href = d_mech.href();
+            const std::vector<double>& Ri   = d_mech.Ri();
+            const double Tref = d_mech.Tref();
+
+            double eTot  = rhoEs;
+            double eTot0 = rhoEs0;
+            double efF   = 0.0;
+            double eAbs  = std::abs(rhoEs);   // magnitude of the cancelling terms,
+                                              // not of their (much smaller) sum
+            for (int j = 0; j < d_nAll; j++) {
+              const double ef = href[j] - Ri[j] * Tref;   // [J/kg]
+              eTot  += ef * C[j];
+              eTot0 += ef * rho_kg * Ystart[j];
+              efF   += ef * F_C[j];
+              eAbs  += std::abs(ef * C[j]);
+            }
+            const double eTotExpect = eTot0 + (F_rhoEs + efF) * t;
+            if (std::abs(eTot - eTotExpect) > 1e-9 * std::max(eAbs, 1.0)) {
+              std::ostringstream warn;
+              warn << "gasCombustion: chemistry integration did not conserve internal energy at cell "
+                   << c << " (rho*e_tot=" << eTot << ", expected=" << eTotExpect << ")";
+              throw InvalidValue(warn.str(), __FILE__, __LINE__);
+            }
+          }
         } // dt_advection time integration
 
         // ---------------------------------------------
@@ -1005,8 +1153,14 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         dtChem_cc[c]        = dtChem_min / d_timeConv; // back to user time units
         dtChemLimiter_cc[c] = iworstAtMin;
 
-        for (int j = 0; j < d_nTracked; j++){
-          Ysrc[j][c] += massSrcTemp[j];         // []
+        double rho_new = std::accumulate(C.begin(), C.end(), 0.0);
+        for (int j = 0; j < d_nAll; j++) {
+          Y_new[j] = C[j] / rho_new;
+        }
+        double T_new = d_mech.temperatureFromSensibleEnergy(rhoEs / rho_new, Y_new, Tguess);
+
+        for (int j = 0; j < d_nTracked; j++) {
+          Ysrc[j][c] += Y_new[ d_mech.trackedToAll(j) ] - Yold[j][c];
         }
 
         // Chemistry energy source as an exact state-function difference of the
@@ -1015,8 +1169,8 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         // A path integral of q_dot dt only captures the cv dT part.  ICE adds
         // this to the e_s(T_old,Y_old) carrier, giving e_s(T,Y) exactly.
         eng_src[c] += rho_kg * cellVol *
-                      ( d_mech.sensibleEnergy(T, Y) - d_mech.sensibleEnergy(Tstart, Ystart) )
-                      / d_engConv;                              // user energy units
+              ( d_mech.sensibleEnergy(T_new, Y_new)
+              - d_mech.sensibleEnergy(Tstart, Ystart) ) / d_engConv;                             // user energy units
 
         hrr[c]      = engSrcTemp / (cellVol * dtSI) / d_hrrConv; // user W/m³
       }   // cell iterator
