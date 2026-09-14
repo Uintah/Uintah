@@ -245,21 +245,34 @@ private:
 
   //------------------------------------------------------------------
   // Chemistry ODE sub-integration (constant volume).  ChemStepResult
-  // doubles as reusable workspace: create two outside the cell loop,
-  // pass them to chemStep every call -- no per-cell allocation.
+  // doubles as reusable workspace: construct with nAll (sizes rhsC/Y
+  // once), then pass the same instance to chemStep every call -- no
+  // per-call allocation.
   //------------------------------------------------------------------
   struct ChemStepResult {
-    double rhsEnergy{0.0};           // dT/dt [K/s]
-    double engSrc{0.0};              // qdot * cellVol [W]
-    std::vector<double> rhsMass;     // dY/dt, tracked order [1/s]
+    double rho{0.0};                 // recovered density [kg/m^3]
+    double T{0.0};                   // recovered temperature [K]
+    double cv{0.0};                  // mixture cv [J/kg-K], error-scale only
+    double rhsRhoEs{0.0};            // d(rho*e_s)/dt [W/m^3]
+    double engSrc{0.0};              // qdot * cellVol [W], diagnostic only
+    std::vector<double> rhsC;        // d(rho*Y_j)/dt, all-species order [kg/m^3-s]
 
     // scratch reused across calls
-    std::vector<double> cp, conc, q, S;
+    std::vector<double> Y, cp, conc, q, S;
     ReactionMech::Workspace w;
+
+    ChemStepResult() = default;
+    explicit ChemStepResult(int nAll) { resize(nAll); }
+    void resize(int nAll) { Y.assign(nAll, 0.0); rhsC.assign(nAll, 0.0); }
   };
 
-  void chemStep(double T, const std::vector<double>& Y,
-                double rho_kg, double cellVol, ChemStepResult& res);
+  void chemStep(const std::vector<double>& C,      // rho*Y_j, kg/m^3, nAll
+                double rhoEs,                       // rho*e_s, J/m^3
+                const std::vector<double>& F_C,     // forcing, kg/m^3-s, nAll
+                double F_rhoEs,                     // forcing, W/m^3
+                double Tguess,
+                double cellVol,
+                ChemStepResult& res);
 
   // Fetch the tracked mass fractions from the DW form requested by the
   // caloric EOS hooks (see FluidsBasedModel::YForm)
