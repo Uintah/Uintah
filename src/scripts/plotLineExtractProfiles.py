@@ -29,6 +29,8 @@
 #______________________________________________________________________
 
 import argparse
+import functools
+import multiprocessing
 import os
 
 import matplotlib
@@ -92,49 +94,58 @@ def column_descriptors( header_line ):
 
 #______________________________________________________________________
 
-def read_time_value( filepath ):
+def read_timestep_file( filepath ):
 
-    """Return column 5 ( "Time [s]" ), as a string, from the first data
-    row of a timestep file."""
+    """Read a timestep file exactly once, returning ( rows, time_val ).
 
-    f = open( filepath, "r" )
+    rows is a list of data rows, each row a list of floats ( 1-based
+    column N is row[N - 1] ), skipping "#"-commented lines.  time_val is
+    column 5 ( "Time [s]" ) from the first data row, kept as the
+    original string ( not round-tripped through float() ).
+    """
 
+    rows = []
     time_val = None
-    for line in f:
-        if not line.startswith( "#" ):
-            fields = line.split()
-            time_val = fields[4]
-            break
-
-    f.close()
-    return time_val
-
-#______________________________________________________________________
-
-def read_xy( filepath,
-            col_x,
-            col_y ):
-
-    """Return ( x_values, y_values ) for the given 1-based data columns,
-    skipping "#"-commented lines."""
-
-    x_values = []
-    y_values = []
 
     f = open( filepath, "r" )
     for line in f:
         if line.startswith( "#" ):
             continue
+
         fields = line.split()
-        x_values.append( float( fields[col_x - 1] ) )
-        y_values.append( float( fields[col_y - 1] ) )
+
+        if time_val is None:
+            time_val = fields[4]
+
+        row = []
+        for field in fields:
+            row.append( float( field ) )
+        rows.append( row )
     f.close()
+
+    return rows, time_val
+
+#______________________________________________________________________
+
+def extract_xy( rows,
+                col_x,
+                col_y ):
+
+    """Pull two already-parsed 1-based columns out of rows ( see
+    read_timestep_file() )."""
+
+    x_values = []
+    y_values = []
+
+    for row in rows:
+        x_values.append( row[col_x - 1] )
+        y_values.append( row[col_y - 1] )
 
     return x_values, y_values
 
 #______________________________________________________________________
 
-def plot_page( infile,
+def plot_page( rows,
                outfile,
                col_x,
                cols,
@@ -159,7 +170,7 @@ def plot_page( infile,
 
         if panel < len( cols ):
             col = cols[panel]
-            x_values, y_values = read_xy( infile, col_x, col )
+            x_values, y_values = extract_xy( rows, col_x, col )
 
             ax.plot( x_values, y_values, marker=LINE_MARKER, markersize=LINE_MARKERSIZE, linewidth=LINE_WIDTH )
 
@@ -188,7 +199,42 @@ def parse_args():
 
     parser.add_argument( "--level",     default="L-0",
                           help="AMR level subdirectory to read (default: L-0)" )
+
+    parser.add_argument( "--jobs", "-n", type=int, default=4,
+                          help="worker processes to use (default: all CPUs -- %(4)s here)" )
     return parser.parse_args()
+
+#______________________________________________________________________
+
+def process_timestep( file_name,
+                      data_dir,
+                      out_dir,
+                      descriptors,
+                      xlabel ):
+
+    """Read one timestep file and write all of its PAGES PNGs.  Runs in
+    a worker process when called via multiprocessing.Pool.map()."""
+
+    infile = os.path.join( data_dir, file_name )
+    print( "    Working on %s" % infile )
+
+    rows, time_val = read_timestep_file( infile )
+
+    for page in PAGES:
+        outfile = os.path.join( out_dir, "%s_%s.png" % ( page["suffix"], file_name ) )
+
+        titles = []
+        for col in page["cols"]:
+            titles.append( descriptors[col - 1] )
+
+        plot_page( rows,
+                   outfile,
+                   COL_X,
+                   page["cols"],
+                   titles,
+                   xlabel,
+                   file_name,
+                   time_val )
 
 #______________________________________________________________________
 
@@ -210,27 +256,14 @@ def main():
     descriptors = column_descriptors( header_line )
     xlabel = descriptors[COL_X - 1]
 
-    for file_name in file_names:
-        infile = os.path.join( data_dir, file_name )
-        print( "    Working on %s" % infile )
+    worker = functools.partial( process_timestep,
+                                data_dir    =data_dir,
+                                out_dir     =out_dir,
+                                descriptors =descriptors,
+                                xlabel      =xlabel )
 
-        time_val = read_time_value( infile )
-
-        for page in PAGES:
-            outfile = os.path.join( out_dir, "%s_%s.png" % ( page["suffix"], file_name ) )
-
-            titles = []
-            for col in page["cols"]:
-                titles.append( descriptors[col - 1] )
-
-            plot_page( infile,
-                       outfile,
-                       COL_X,
-                       page["cols"],
-                       titles,
-                       xlabel,
-                       file_name,
-                       time_val )
+    with multiprocessing.Pool( args.jobs ) as pool:
+        pool.map( worker, file_names )
 
     print( "Done.  PNGs written to %s/" % out_dir )
 
