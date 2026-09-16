@@ -182,6 +182,7 @@
         <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, friction_LRVar, approach, specified_friction'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
+        <specimen_size                   spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
         <condition                       spec="OPTIONAL STRING" />
         <conditionValue                  spec="OPTIONAL DOUBLE" />

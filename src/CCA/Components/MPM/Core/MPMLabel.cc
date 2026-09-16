@@ -322,6 +322,9 @@ MPMLabel::MPMLabel()
   gMatlProminenceLabel = VarLabel::create( "g.matlProminence",
                         NCVariable<double>::getTypeDescription() );
   
+  gMostProminentLabel = VarLabel::create( "g.mostProminent",
+                        NCVariable<Point>::getTypeDescription() );
+  
   gAlphaMaterialLabel = VarLabel::create( "g.alphaMaterial",
                         NCVariable<int>::getTypeDescription() );
   
@@ -642,6 +645,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gVelocityBCLabel);
   VarLabel::destroy(gVelSPSSPLabel);
   VarLabel::destroy(gMatlProminenceLabel);
+  VarLabel::destroy(gMostProminentLabel);
   VarLabel::destroy(gAlphaMaterialLabel);
   VarLabel::destroy(gNormAlphaToBetaLabel);
   VarLabel::destroy(gPositionLabel);

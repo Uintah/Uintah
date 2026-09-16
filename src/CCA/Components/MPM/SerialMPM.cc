@@ -6079,6 +6079,7 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computesVar(lb->gMatlProminenceLabel);
+  t->computesVar(lb->gMostProminentLabel);
   t->computesVar(lb->gAlphaMaterialLabel);
   t->computesVar(lb->gNormAlphaToBetaLabel,z_matl);
 
@@ -6400,6 +6401,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // the normal and the particle corners
 
     std::vector<NCVariable<double> >      d_x_p_dot_n(numMPMMatls);
+    std::vector<NCVariable<Point> >       mostProminent(numMPMMatls);
 
     for(unsigned int m=0;m<numMPMMatls;m++){
       MPMMaterial* mpm_matl =
@@ -6415,6 +6417,8 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       new_dw->get(pcursize,                 lb->pCurSizeLabel,         pset);
       new_dw->get(psurf,                    lb->pSurfLabel_preReloc,   pset);
       new_dw->allocateAndPut(d_x_p_dot_n[m],lb->gMatlProminenceLabel,dwi,patch);
+      new_dw->allocateAndPut(mostProminent[m],
+                                            lb->gMostProminentLabel, dwi,patch);
 
       d_x_p_dot_n[m].initialize(-99.);
 
@@ -6536,11 +6540,13 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
                   if(proj>projMax[ni[k]]){
                      projMax[ni[k]]=proj;
                      d_x_p_dot_n[m][ni[k]] = proj;
+                     mostProminent[m][ni[k]]=xp_xi.asPoint();
                   }
                 } else {
                   if(proj<projMin[ni[k]]){
                      projMin[ni[k]]=proj;
                      d_x_p_dot_n[m][ni[k]] = proj;
+                     mostProminent[m][ni[k]]=xp_xi.asPoint();
                   }
                 }
               } // Loop over all 8 particle corners

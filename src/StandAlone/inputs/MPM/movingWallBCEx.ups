@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Constitutive Model Tester</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>10.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>2.e-5</delt_min>
+       <delt_max>2.e-2</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>RigidBCTest.uda</filebase>
+       <outputInterval>1.</outputInterval>
+       <save label = "BndyForce_zminus"/>
+       <save label = "RigidReactionForce"/>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.mass"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.stress"/>
+       <save label = "g.mass"/>
+       <save label = "g.velocity_star"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>fast_cpdi</interpolator>
+       <boundary_traction_faces>[zminus]</boundary_traction_faces>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e3</density>
+              <constitutive_model type="rigid">
+                 <shear_modulus>12.e6</shear_modulus>
+                 <bulk_modulus>32.e6</bulk_modulus>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "piston">
+                     <min>[0.0, 0.0, .10]</min>
+                     <max>[0.01,0.01,.12]</max>
+                  </box>
+                  <res>[1,1,2]</res>
+                  <velocity>[0.0,0.0,-1.e-3]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+              <density>1.e3</density>
+                <constitutive_model type="hypo_elastic">
+                   <!-- E=3600, nu = 0.2 -->
+                   <!-- C = E(1-nu)/((1+nu)(1-2*nu)) = 4000 -->
+                    <K>2000.0</K>
+                    <G>1500.0</G>
+<!--
+                    <bulk_modulus>2000.0</bulk_modulus>
+                    <shear_modulus>1500.0</shear_modulus>
+-->
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "box">
+                     <min>[0.0, 0.0, 0.0]</min>
+                     <max>[0.01,0.01,0.1]</max>
+                  </box>
+                  <res>[1,1,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>specified_friction</type>
+             <materials>[0,1]</materials>
+             <mu> 0.5 </mu>
+             <master_material> 0 </master_material>
+             <stop_time>999999.9 </stop_time>
+             <specimen_size> [.01,.01,.1] </specimen_size>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "z+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                   
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0, 0.0, 0.00]</lower>
+              <upper>[0.01,0.01,0.13]</upper>
+              <resolution>[1,1,13]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

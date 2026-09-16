@@ -68,6 +68,7 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
   ps->getWithDefault("ExcludeMaterial",  d_excludeMatl,     -999);
+  ps->getWithDefault("specimen_size",    d_lengthScale, Vector(0.,0.,0.));
 
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
@@ -405,6 +406,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
+  std::vector<constNCVariable<Point> >  gmostprominent(numMatls);    
 
   // per-matl 
   map<int,Vector> zeroV = MPMCommon::initializeMap(Vector(0.));
@@ -436,12 +438,29 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone, 0);
      new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                             dwi,patch,gnone, 0);
+     new_dw->get(gmostprominent[m], lb->gMostProminentLabel,dwi,patch,gnone, 0);
      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,dwi,patch);
     }
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-    
+
+    // Come up with a length scale for velocity gradient to use in Wall BC
+    const Level* level = getLevel(patches);
+    BBox box;
+    level->getInteriorSpatialRange(box);
+    Vector diagonal = box.diagonal();
+    Vector length_scale = d_lengthScale;
+    if(d_lengthScale.x()==0){
+       length_scale[0] = diagonal.x();
+    }
+    if(d_lengthScale.y()==0){
+       length_scale[1] = diagonal.y();
+    }
+    if(d_lengthScale.z()==0){
+       length_scale[2] = diagonal.z();
+    }
+
     // rigid_velocity just means that the master_material's initial velocity
     // remains constant through the simulation, until d_stop_time is reached.
     // If the velocity comes from a profile specified in a file, or after
@@ -549,10 +568,18 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
                      !compare(gmass[n][c],0)) {
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
+            Vector vg = new_vel/length_scale;
+            Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0, 
+                                      0.0,    vg.y(), 0.0,
+                                      0.0,    0.0,    vg.z());
             if(separation <= 0.0){
-              Vector old_vel = gvelocity_star[n][c];
+              Point xwall = gmostprominent[alpha][c];
+              Point xnode = patch->getNodePosition(c);
+//              Vector old_vel = gvelocity_star[n][c];
 
-              Vector deltaVelocity=gvelocity_star[n][c] - new_vel;
+              Vector here_vel = new_vel + (xnode - xwall)*velGrad;
+
+              Vector deltaVelocity=gvelocity_star[n][c] - here_vel;
               Vector normal = -1.0*normAlphaToBeta[c];
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
@@ -650,6 +677,7 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
   t->requiresVar(Task::OldDW, lb->delTLabel);
   t->requiresVar(Task::NewDW, lb->gMassLabel,                    Ghost::None);
   t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMostProminentLabel,           Ghost::None);
   t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
   t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
@@ -681,6 +709,7 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   t->requiresVar(Task::NewDW, lb->gMassLabel,                    Ghost::None);
   t->requiresVar(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
   t->requiresVar(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requiresVar(Task::NewDW, lb->gMostProminentLabel,           Ghost::None);
   t->requiresVar(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
   t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
   t->requiresVar(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);

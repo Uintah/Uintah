@@ -122,6 +122,7 @@ DESCRIPTION
     int       NGN;
     bool      d_includeRotation;
     double    d_mu;
+    Vector    d_lengthScale;
     int       d_excludeMatl;
     std::string    d_filename;
     IntVector d_direction;
