@@ -568,14 +568,15 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
                      !compare(gmass[n][c],0)) {
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
-            Vector vg = new_vel/length_scale;
-            Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0, 
-                                      0.0,    vg.y(), 0.0,
-                                      0.0,    0.0,    vg.z());
             if(separation <= 0.0){
               Point xwall = gmostprominent[alpha][c];
               Point xnode = patch->getNodePosition(c);
 //              Vector old_vel = gvelocity_star[n][c];
+
+              Vector vg = new_vel/length_scale;
+              Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0, 
+                                      0.0,    vg.y(), 0.0,
+                                      0.0,    0.0,    vg.z());
 
               Vector here_vel = new_vel + (xnode - xwall)*velGrad;
 
