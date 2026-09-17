@@ -68,7 +68,7 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
   ps->getWithDefault("ExcludeMaterial",  d_excludeMatl,     -999);
-  ps->getWithDefault("specimen_size",    d_lengthScale, Vector(0.,0.,0.));
+  ps->getWithDefault("specimen_size",    d_lengthScale, Vector(1e99,1e99,1e99));
 
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
@@ -224,6 +224,7 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
   std::vector<NCVariable<Vector> >      gvelocity(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
+  std::vector<constNCVariable<Point> > gmostprominent(numMatls);    
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -242,11 +243,13 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
      new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone, 0);
      new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                             dwi,patch,gnone, 0);
+     new_dw->get(gmostprominent[m], lb->gMostProminentLabel,dwi,patch,gnone, 0);
      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwi,patch);
     }
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
     
     // rigid_velocity just means that the master_material's initial velocity
     // remains constant through the simulation, until d_stop_time is reached.
@@ -281,6 +284,8 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
         rotation_axis=2;
       }
     }
+
+    Vector length_scale = d_lengthScale;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -353,7 +358,17 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
             if(separation <= 0.0){
-              Vector deltaVelocity=gvelocity[n][c] - new_vel;
+              Point xwall = gmostprominent[alpha][c];
+              Point xnode = patch->getNodePosition(c);
+
+              Vector vg = new_vel/length_scale;
+              Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0, 
+                                      0.0,    vg.y(), 0.0,
+                                      0.0,    0.0,    vg.z());
+
+              Vector here_vel = new_vel + (xnode - xwall)*velGrad;
+
+              Vector deltaVelocity=gvelocity[n][c] - here_vel;
               Vector normal = -1.0*normAlphaToBeta[c];
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
@@ -445,12 +460,13 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
+#if 0
+    // Turning this off for now.
     // Come up with a length scale for velocity gradient to use in Wall BC
     const Level* level = getLevel(patches);
     BBox box;
     level->getInteriorSpatialRange(box);
     Vector diagonal = box.diagonal();
-    Vector length_scale = d_lengthScale;
     if(d_lengthScale.x()==0){
        length_scale[0] = diagonal.x();
     }
@@ -460,6 +476,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     if(d_lengthScale.z()==0){
        length_scale[2] = diagonal.z();
     }
+#endif
 
     // rigid_velocity just means that the master_material's initial velocity
     // remains constant through the simulation, until d_stop_time is reached.
@@ -494,6 +511,8 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
         rotation_axis=2;
       }
     }
+
+    Vector length_scale = d_lengthScale;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -569,9 +588,9 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
             if(separation <= 0.0){
+//              Vector old_vel = gvelocity_star[n][c];
               Point xwall = gmostprominent[alpha][c];
               Point xnode = patch->getNodePosition(c);
-//              Vector old_vel = gvelocity_star[n][c];
 
               Vector vg = new_vel/length_scale;
               Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0, 
