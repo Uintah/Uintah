@@ -42,6 +42,8 @@ template<typename myIntVector>
 using BC_List= std::vector<myIntVector>& ;
 //#endif
 
+class BlockRange;
+
 class BlockRange
 {
 public:
