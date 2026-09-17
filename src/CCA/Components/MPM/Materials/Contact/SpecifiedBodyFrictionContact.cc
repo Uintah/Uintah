@@ -68,6 +68,7 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
   ps->getWithDefault("ExcludeMaterial",  d_excludeMatl,     -999);
+  ps->getWithDefault("specimen_size",    d_lengthScale, Vector(1e99,1e99,1e99));
 
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
@@ -234,6 +235,7 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
   std::vector<NCVariable<Vector> >      gvelocity(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
+  std::vector<constNCVariable<Point> >  gmostprominent(numMatls);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -252,6 +254,7 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
      new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone, 0);
      new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                             dwi,patch,gnone, 0);
+     new_dw->get(gmostprominent[m], lb->gMostProminentLabel,dwi,patch,gnone, 0);
      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwi,patch);
     }
 
@@ -291,6 +294,8 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
         rotation_axis=2;
       }
     }
+
+    Vector length_scale = d_lengthScale;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -363,7 +368,17 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
             if(separation <= 0.0){
-              Vector deltaVelocity=gvelocity[n][c] - new_vel;
+              Point xwall = gmostprominent[alpha][c];
+              Point xnode = patch->getNodePosition(c);
+
+              Vector vg = new_vel/length_scale;
+              Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0,
+                                      0.0,    vg.y(), 0.0,
+                                      0.0,    0.0,    vg.z());
+
+              Vector here_vel = new_vel + (xnode - xwall)*velGrad;
+
+              Vector deltaVelocity=gvelocity[n][c] - here_vel;
               Vector normal = -1.0*normAlphaToBeta[c];
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
@@ -416,6 +431,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
+  std::vector<constNCVariable<Point> >  gmostprominent(numMatls);
 
   // per-matl 
   map<int,Vector> zeroV = MPMCommon::initializeMap(Vector(0.));
@@ -447,6 +463,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone, 0);
      new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                             dwi,patch,gnone, 0);
+     new_dw->get(gmostprominent[m], lb->gMostProminentLabel,dwi,patch,gnone, 0);
      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,dwi,patch);
     }
 
@@ -486,6 +503,8 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
         rotation_axis=2;
       }
     }
+
+    Vector length_scale = d_lengthScale;
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -561,9 +580,18 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
             double separation = gmatlprominence[n][c] -
                                 gmatlprominence[alpha][c];
             if(separation <= 0.0){
-              Vector old_vel = gvelocity_star[n][c];
+              //Vector old_vel = gvelocity_star[n][c];
+              Point xwall = gmostprominent[alpha][c];
+              Point xnode = patch->getNodePosition(c);
 
-              Vector deltaVelocity=gvelocity_star[n][c] - new_vel;
+              Vector vg = new_vel/length_scale;
+              Matrix3 velGrad = Matrix3(vg.x(), 0.0,    0.0,
+                                      0.0,    vg.y(), 0.0,
+                                      0.0,    0.0,    vg.z());
+
+              Vector here_vel = new_vel + (xnode - xwall)*velGrad;
+              Vector deltaVelocity=gvelocity_star[n][c] - here_vel;
+
               Vector normal = -1.0*normAlphaToBeta[c];
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
@@ -658,6 +686,7 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gMostProminentLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
   t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
@@ -689,6 +718,7 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gMostProminentLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
   t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
