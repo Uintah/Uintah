@@ -26,6 +26,11 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+using SpatialOps::SVolField;
+using SpatialOps::XVolField;
+using SpatialOps::YVolField;
+using SpatialOps::ZVolField;
+
 // ###################################################################
 //
 //               KineticEnergy Implementation
