@@ -44,7 +44,7 @@ public:
     : m_type(t)
   {
     if (m_type == READER) {
-      std::unique_lock<Uintah::MasterLock>(s_mutex);
+      std::unique_lock<Uintah::MasterLock>s_mutex;
       s_count.fetch_add(1, std::memory_order_relaxed);
     }
     else {
