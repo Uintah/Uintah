@@ -7128,6 +7128,8 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 
   int doit=timestep%interval;
 
+  const Level* level = getLevel(patches);
+
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -7163,6 +7165,13 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
       double cellVol=dx.x()*dx.y()*dx.z();
       double tol = 0.200*cbrt(cellVol);
       int nclose = 2*flags->d_ndim + 1;
+#if 0
+      if(flags->d_ndim==2){
+        nclose = 2*flags->d_ndim + 1;
+      } else {
+        nclose = 2*flags->d_ndim;
+      }
+#endif
 
       // Either carry forward the particle surface data, or recompute it every
       // N timesteps.
@@ -7217,6 +7226,8 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           } // Inner particle loop
 
           // Get the centroid of the nearest neighbors
+          Vector neighborCent(0.,0.,0.);
+//          if(flags->d_ndim==2){
           Vector neighborCent0(0.,0.,0.);
           for(int i=0;i<(nclose-1);i++){
             neighborCent0+= px[close[i]].asVector();
@@ -7230,30 +7241,17 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
           neighborCent1+= px[close[nclose-1]].asVector();
           neighborCent1/=((double) (nclose-1));
 
-          Vector neighborCent = neighborCent0;
+          neighborCent = neighborCent0;
           if((pxOP[idx].asVector() - neighborCent1).length() < 
              (pxOP[idx].asVector() - neighborCent0).length()){
              neighborCent = neighborCent1;
           }
-
-#if 0
-          if(pidsOP[idx] == 223339479040){
-            cout << "LEFT NC = " << neighborCent << endl;
-            for(int i=0;i<nclose;i++){
-              cout << "LCS = " << closestSep[i] << endl;
-              cout << "Lpx = " << px[close[i]] << endl;
-            }
-            cout << "LPD = " << (pxOP[idx].asVector() - neighborCent).length() << endl;
-          }
-          if(pidsOP[idx] == 223341641730){
-            cout << "RIGHT NC = " << neighborCent << endl;
-            for(int i=0;i<nclose;i++){
-              cout << "RCS = " << closestSep[i] << endl;
-              cout << "Rpx = " << px[close[i]] << endl;
-            }
-            cout << "RPD = " << (pxOP[idx].asVector() - neighborCent).length() << endl;
-          }
-#endif
+//          } else {
+//            for(int i=0;i<nclose;i++){
+//              neighborCent+= px[close[i]].asVector();
+//            }
+//            neighborCent/=((double) (nclose));
+//          }
 
           // Compare centroid of neighbors to the location of current particle
           Vector posDiff = pxOP[idx].asVector() - neighborCent;
@@ -7265,9 +7263,9 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
          } // if particle is/is not already a surface particle
         } // outer loop over particles
 
-#if 0
-        // I don't recall what the purpose of this was, it doesn't appear
-        // in the Cyberstone code, and it breaks running in parallel
+#if 1
+        // Don't allow particles that are on the edge of the domain
+        // to become surface particles.
         for (ParticleSubset::iterator iter = psetOP->begin();
              iter != psetOP->end();
              iter++){
@@ -7281,7 +7279,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
             p[4] = Point(px[idx].x(),px[idx].y(),px[idx].z() - dx.z());
             p[5] = Point(px[idx].x(),px[idx].y(),px[idx].z() + dx.z());
             for(int i = 0; i < nclose; i++){
-              if(!patch->containsPoint(p[i])){
+              if(!level->containsPoint(p[i])){
                 pSurf[idx]=0.0;
               }
             }
