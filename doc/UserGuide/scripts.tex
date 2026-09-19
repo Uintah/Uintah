@@ -1,0 +1,252 @@
+%______________________________________________________________________
+%   Notes to authors
+% Please disable your editor's auto newline wrapping feature.
+% Please format \itemize sections
+%______________________________________________________________________
+
+\chapter{Post-Processing Scripts} \label{Chapter:scripts}
+
+
+
+%______________________________________________________________________
+\section{parseVarTrackerVars.py}
+
+The Python scripts described in this chapter parses the output from a simulation
+with the \verb|VarTracker| debugging option enabled.
+\verb|VarTracker| dumps the value of specific variables, for specific
+tasks and materials, at every timestep, into the \verb|sus|
+ output file. These scripts parse that raw log file into per-timestep,
+per-task, per-variable data files, and then into plots.
+
+The scripts live in \verb|src/scripts/VarTracker| and are used in a
+two-stage pipeline:
+
+\begin{enumerate}
+  \item \verb|parseVarTrackerVars.py| parses the raw \verb|sus| output into a
+    directory of small, clean data files.
+  \item \verb|plotVarTrackerVars.py| turns those data files into X-Y
+    plots, one plot per (timestep, variable), with one line per task.  These plots can be hand-tuned after the fact.
+\end{enumerate}
+
+\subsection{Purpose}
+\verb|parseVarTrackerVars.py| was written to aid the developer by showing  
+how a variable changes during a timestep. This is different than examining the variables that are in the \verb|uda| since multiple tasks can modify a variable during a timestep
+
+\subsection{Usage}
+\begin{Verbatim}[fontsize=\footnotesize]
+  parseVarTrackerVars.py sus_output [-t TASK] [-v VARIABLE] [-m MATERIAL]
+\end{Verbatim}
+
+\begin{itemize}
+  \item \verb|sus_output| -- the \verb|sus| log file to parse (required,
+    positional).
+  \item \verb|-t|/\verb|--task| -- a task name to search for. Repeatable.
+    If omitted entirely, defaults to all tasks.
+  \item \verb|-v|/\verb|--variable| -- a variable name to search for.
+    Repeatable. Default: all variables.
+  \item \verb|-m|/\verb|--material| -- a material index to search for.
+    Repeatable. Default: all materials.
+\end{itemize}
+
+\noindent Supplying any \verb|-t|/\verb|-v|/\verb|-m| flag at all replaces that
+flag's default list entirely (the values given are not merged with the
+defaults). For example, to track only \verb|press_CC| for material 0:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  parseVarTrackerVars.py mySimulation.log -v press_CC -m 0
+\end{Verbatim}
+
+\subsection{Output}
+All output is written under a \verb|parsedVarTracker/| directory created
+in the current working directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  parsedVarTracker/<timestep>/<task>/<variable>_<material>
+\end{Verbatim}
+
+\noindent Each such file is plain text, safe to read directly or to feed to
+\verb|gnuplot| (comment lines begin with \verb|#|, which \verb|gnuplot|
+skips natively):
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  # Variable: sp_vol_CC, DW 1, Patch 0, Matl 1
+  # Time: 0
+  # x,  y,  z,  value
+   16, 10, 0, 8.510598642398e-01
+   16, 11, 0, 8.513706469716e-01
+   ...
+\end{Verbatim}
+
+\noindent The \verb|# Time:| line gives the physical simulation time for that
+timestep (parsed from the log's \verb|Timestep N  Time=...| header),
+distinct from the timestep index used in the file's own directory path.
+Intermediate index files the script builds while parsing are deleted
+before it exits -- only the final per-(timestep, task, variable, material)
+files remain.
+
+%______________________________________________________________________
+\section{plotVarTrackerVars.py} \label{Section:plotVarTrackerVars}
+
+\subsection{Purpose}
+\verb|plotVarTrackerVars.py| produces the plots (one PNG file per timestep/variable, one line per
+task) via \verb|gnuplot|, and leaves behind the \verb|gnuplot| scripts used to generate them
+so the plots' appearance can be tuned by hand afterward, without re-running the Python script.
+
+\subsection{Usage}
+\begin{Verbatim}[fontsize=\footnotesize]
+  plotVarTrackerVars.py [parsed_dir] [-o OUTPUT]
+\end{Verbatim}
+ This script depends on \verb|gnuplot| to be in your path; no Python plotting package is needed.
+
+\subsection{Output}
+\begin{Verbatim}[fontsize=\footnotesize]
+  <output>/<variable>/template.gp
+  <output>/<variable>/regenerate_plots.sh
+  <output>/<variable>/<timestep>.png
+\end{Verbatim}
+
+Each variable gets its own subdirectory containing three kinds of files:
+
+\begin{itemize}
+  \item \verb|template.gp| -- one shared \verb|gnuplot| template for
+    \emph{every} timestep's plot of this variable (terminal, font, key
+    placement, grid, etc.). This is the file to hand-edit: any styling
+    change here is picked up by every plot of this variable the next time
+    \verb|regenerate_plots.sh| is run. Other variables' templates are
+    completely independent -- editing one variable's \verb|template.gp|
+    never affects another's.
+  %
+  \item \verb|regenerate_plots.sh| -- a generated, executable shell script
+    that re-renders every PDF for this variable from \verb|template.gp|.
+    It defines \verb|parsed_dir| and \verb|out_dir| shell variables once
+    at the top (so the whole \verb|parsedVarTracker| tree can be moved
+    and only those two lines need updating), then loops over one
+    \verb|gnuplot -e "..."| invocation per timestep, each setting the
+    output file, plot title, axis labels, and plot command for that one
+    timestep before applying \verb|template.gp|.
+  %
+  \item \verb|<timestep>.png| -- the rendered plot itself.
+\end{itemize}
+
+\noindent To change the appearance of every plot of one variable: edit that
+variable's \verb|template.gp|, then run:
+\begin{Verbatim}[fontsize=\footnotesize]
+  bash <output>/<variable>/regenerate_plots.sh
+\end{Verbatim}
+This re-renders only that variable's plots; no Python involved, and no
+effect on any other variable.
+
+\noindent The plot title includes the variable name and, when available, the
+physical simulation time read from the \verb|# Time:| comment
+\verb|parseVarTrackerVars.py| writes into each data file, for example:
+\begin{Verbatim}[fontsize=\footnotesize]
+  sp_vol_CC -- Timestep 2 (Time=3e-08)
+\end{Verbatim}
+
+%______________________________________________________________________
+
+\section{Example}
+
+\noindent Suppose you the following debugging \verb|VarTracker| section was in the \verb|ups| file and a simulation was run.
+
+\begin{Verbatim}[fontsize=\scriptsize]
+
+   <Scheduler>
+      <VarTracker>
+        <output formatFlag="scientific" precision="12"/>
+        
+        <start_time> 0 </start_time>
+        <end_time>  1 </end_time>
+        <start_index> [50,-1,50]  </start_index>
+        <end_index>   [50,100,50] </end_index>
+  
+        <var label="press_CC"        matl_id="0" dw= "NewDW" />
+        <var label="grad_P_YFC"      matl_id="0" dw= "NewDW" singleTask="ICE::computeVel_FC"/>
+        <var label="sp_vol_CC"       matl_id="0" dw= "NewDW"/>
+        <var label="temp_CC"         matl_id="0" dw= "NewDW" singleTask="ICE::conservedtoPrimitive_Vars:afterAdvection"/>
+        
+        <locations after_exec = "true"/>
+        <!--<locations before_exec = "true"/> -->
+        
+        <task name="ICE::computeEquilibrationPressure"/>
+        <task name="ICE::computeVel_FC"/>
+         <task name="ICE::conservedtoPrimitive_Vars:afterAdvection"/>
+      </VarTracker>
+    </Scheduler>   
+\end{Verbatim}
+
+After the simulation was finished the user would then run 
+\begin{Verbatim}[fontsize=\footnotesize]
+  src/scripts/VarTracker/parseVarTrackerVars.py sus_out.txt
+\end{Verbatim}
+
+to parse \verb|sus_out.txt| to produce a series of files:
+
+\begin{Verbatim}[fontsize=\scriptsize]
+parsedVarTracker/
+|-- 0
+|   |-- ICE::computeVel_FC
+|   |   |-- grad_P_YFC_0
+|   |   `-- sp_vol_CC_0
+|   `-- ICE::conservedtoPrimitive_Vars:afterAdvection
+|       |-- press_CC_0
+|       |-- sp_vol_CC_0
+|       `-- temp_CC_0
+|-- 1
+|   |-- ICE::computeVel_FC
+|   |   |-- grad_P_YFC_0
+|   |   `-- sp_vol_CC_0
+|   `-- ICE::conservedtoPrimitive_Vars:afterAdvection
+|       |-- press_CC_0
+|       |-- sp_vol_CC_0
+|       `-- temp_CC_0
+
+ <snip>
+\end{Verbatim}
+
+\noindent To plot these the variables the user would then run:
+\begin{Verbatim}[fontsize=\footnotesize]
+  src/scripts/VarTracker/plotVarTrackerVars.py
+\end{Verbatim}
+
+\noindent to produce a series of png files, 1 per timestep per variable, see Fig.~\ref{fig:varTrackerPlot}.
+
+\begin{Verbatim}[fontsize=\scriptsize]
+parsedVarTracker/plots/
+|-- grad_P_YFC
+|   |-- 0.png
+|   |-- 1.png
+|   |-- 2.png
+|   |-- 3.png
+|   |-- regenerate_plots.sh
+|   `-- template.gp         << This can be hand tuned
+|-- press_CC
+|   |-- 0.png
+|   |-- 1.png
+|   |-- 2.png
+|   |-- 3.png
+|   |-- regenerate_plots.sh
+|   `-- template.gp         << This can be hand tuned
+|-- sp_vol_CC
+|   |-- 0.png
+|   |-- 1.png
+|   |-- 2.png
+|   |-- 3.png
+|   |-- regenerate_plots.sh
+|   `-- template.gp         << This can be hand tuned
+`-- temp_CC
+    |-- 0.png
+    |-- 1.png
+    |-- 2.png
+    |-- 3.png
+    |-- regenerate_plots.sh
+    `-- template.gp         << This can be hand tuned
+\end{Verbatim}
+
+%
+\begin{figure}[h]
+  \centering
+  \fbox{ \includegraphics[scale=0.5]{varTracker.png} }
+  \caption{ Example plot after the VarTracker output has been post processed. }
+  \label{fig:varTrackerPlot}
+\end{figure}
