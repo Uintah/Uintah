@@ -1,4 +1,3 @@
-#! /usr/bin/octave
 
 clear all;
 close all;
@@ -53,9 +52,9 @@ fplus = 0.25 .* (1-tanh(smoothFactorMax(1) .* (gxx - slMax(1))/slLength(1) + buf
 ffminus = isInside( gxx, gyy, slMin, slMax, fminus);
 ffplus  = isInside( gxx, gyy, slMin, slMax, fplus );       
        
-ff = (ffminus .+ ffplus );      
-#ff = (ffminus);      
-visc = minVisc .+ maxVisc .* (ff);
+ff = (ffminus + ffplus );      
+%ff = (ffminus);      
+visc = minVisc + maxVisc .* (ff);
 
 h = figure('position',[100,100,1024,768]);
 
