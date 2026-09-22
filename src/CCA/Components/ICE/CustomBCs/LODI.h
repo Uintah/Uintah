@@ -25,6 +25,11 @@
 #ifndef ICE_CUSTOMBCS_LODI_H
 #define ICE_CUSTOMBCS_LODI_H
 
+// NOTE: LODI.cc/LODI.h are not part of the build -- absent from this directory's
+// sub.mk and never #include'd by the live driver (C_BC_driver.h includes only
+// LODI2.h). LODI2.cc/LODI2.h is the live implementation; this pair is legacy/
+// reference only.
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <Core/Grid/Variables/CCVariable.h>

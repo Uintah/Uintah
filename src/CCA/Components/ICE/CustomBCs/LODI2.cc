@@ -688,6 +688,10 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   
   //__________________________________
   // default Li terms
+  // The leading 0.5 on L1/L5 matches Sutherland & Kennedy Table 5's own convention
+  // (their L1, L5 are defined with a 0.5 factor already included); this differs from
+  // the bare Poinsot-Lele convention, which omits it and applies 0.5 only when later
+  // combining L1/L5 into the d_i terms. Do not "correct" this against Poinsot-Lele.
   double A = rho * speedSound * dVel_dx[n_dir];
   double L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A);
   double L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr);
@@ -708,7 +712,10 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   //____________________________________________________________
   //  Modify the Li terms based on whether or not the normal
   //  component of the velocity if flowing out of the domain.
-  //  Equation 8 & 9 of Sutherland
+  //  Equation 8 & 9 of Sutherland: K = sigma*c*(1-M^2), used below as
+  //  0.5*K*(p-p_infinity)/L -- the paper's own outflow relaxation term already
+  //  has a "/2L" in it (Eq. 8-9); this is not an extra factor stacked on top
+  //  of the 0.5 already inside the default L1/L5 above.
   double K =  sigma * speedSound *(1.0 - maxMach*maxMach);
   
   //__________________________________
@@ -755,6 +762,9 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   //__________________________________
   // Subsonic non-reflective outflow
   else if (flowDir == "outFlow" && Mach < 1.0){
+    // term1 = sigma*c*(1-M^2)*(p-p_infinity) / (2*L), i.e. Sutherland & Kennedy Eq. 8-9
+    // verbatim (K carries sigma*c*(1-M^2); the 0.5 here is their "/2L", not a duplicate
+    // of the 0.5 folded into L1/L5's own definition above).
     double term1 = 0.5 * K * (press - p_infinity)/domainLength[n_dir];
     
     L1 = rightFace * (term1 + s[1]) + leftFace  * L1;
