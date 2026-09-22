@@ -441,28 +441,71 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   //__________________________________
   //compute Li at boundary cells
   if(setLodiBcs){
-    for (int i = 0; i <= 5; i++){ 
-      new_dw->allocateTemporary(lv->Li[i], patch);
+    // Skip the Li computation entirely on interior patches
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    bool patchHasLodiFace = false;
+    
+    for (vector<Patch::FaceType>::const_iterator f = bf.begin(); f != bf.end(); ++f){
+      if (is_LODI_face(patch, *f, materialManager)){
+        patchHasLodiFace = true;
+        break;
+      }
     }
 
-    computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, materialManager, indx,gv, false);
-              
-    if(gv->saveLiTerms  && where == "Advection"){
+    if( patchHasLodiFace ){
+      for (int i = 0; i <= 5; i++){
+        new_dw->allocateTemporary(lv->Li[i], patch);
+      }
+
+      computeLi(lv->Li, 
+                lv->rho_CC,  
+                lv->press_CC, 
+                lv->vel_CC, 
+                lv->speedSound,
+                patch, 
+                new_dw, 
+                materialManager, 
+                indx,
+                gv, 
+                false);
+
+      if(gv->saveLiTerms  && where == "Advection"){
+        
+        CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
+        new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
+        new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
+        new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
+        new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
+        new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
+        
+        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          Li1[c]=lv->Li[1][c];
+          Li2[c]=lv->Li[2][c];
+          Li3[c]=lv->Li[3][c];
+          Li4[c]=lv->Li[4][c];
+          Li5[c]=lv->Li[5][c];
+        }
+      }
+    }
+    else if(gv->saveLiTerms && where == "Advection"){
+      // No LODI face on this patch
+      // Advection task still computesVar(Li1..Li5) for every patch in its
+      // patch subset (see addRequires_Lodi)
+      
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
       new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
       new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
       new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
       new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
       new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
-      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        Li1[c]=lv->Li[1][c];
-        Li2[c]=lv->Li[2][c];
-        Li3[c]=lv->Li[3][c];
-        Li4[c]=lv->Li[4][c];
-        Li5[c]=lv->Li[5][c];
-      }
+      
+      Li1.initialize(Vector(0.0,0.0,0.0));
+      Li2.initialize(Vector(0.0,0.0,0.0));
+      Li3.initialize(Vector(0.0,0.0,0.0));
+      Li4.initialize(Vector(0.0,0.0,0.0));
+      Li5.initialize(Vector(0.0,0.0,0.0));
     }
   }
 }
