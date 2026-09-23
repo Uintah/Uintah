@@ -206,6 +206,13 @@ main()
 
   here=$( pathExists "$1" )
 
+  #  pathExists exits on a bad path, but that exit only kills the
+  #  subshell above ( since it's called inside $() ) 
+  
+  if [[ -z "$here" ]]; then
+    exit 1
+  fi
+
   cd "$here"
   #__________________________________
   #       loop over levels
