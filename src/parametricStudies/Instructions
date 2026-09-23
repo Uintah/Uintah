@@ -13,6 +13,10 @@ Setup:
 -  Edit the components.xml file and uncomment the component you wish to test.
     vim parametricStudies/test_config_files/components.xml
 
+- Create a .tst file for your test. This should be within, e.g., test_config_files/MPMICE 
+
+- Place the ups file that you wish to use within that same directory
+
 Run the tests:
 -  parametricStudies/runTests
 
