@@ -441,28 +441,71 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   //__________________________________
   //compute Li at boundary cells
   if(setLodiBcs){
-    for (int i = 0; i <= 5; i++){ 
-      new_dw->allocateTemporary(lv->Li[i], patch);
+    // Skip the Li computation entirely on interior patches
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    bool patchHasLodiFace = false;
+    
+    for (vector<Patch::FaceType>::const_iterator f = bf.begin(); f != bf.end(); ++f){
+      if (is_LODI_face(patch, *f, materialManager)){
+        patchHasLodiFace = true;
+        break;
+      }
     }
 
-    computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, materialManager, indx,gv, false);
-              
-    if(gv->saveLiTerms  && where == "Advection"){
+    if( patchHasLodiFace ){
+      for (int i = 0; i <= 5; i++){
+        new_dw->allocateTemporary(lv->Li[i], patch);
+      }
+
+      computeLi(lv->Li, 
+                lv->rho_CC,  
+                lv->press_CC, 
+                lv->vel_CC, 
+                lv->speedSound,
+                patch, 
+                new_dw, 
+                materialManager, 
+                indx,
+                gv, 
+                false);
+
+      if(gv->saveLiTerms  && where == "Advection"){
+        
+        CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
+        new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
+        new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
+        new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
+        new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
+        new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
+        
+        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          Li1[c]=lv->Li[1][c];
+          Li2[c]=lv->Li[2][c];
+          Li3[c]=lv->Li[3][c];
+          Li4[c]=lv->Li[4][c];
+          Li5[c]=lv->Li[5][c];
+        }
+      }
+    }
+    else if(gv->saveLiTerms && where == "Advection"){
+      // No LODI face on this patch
+      // Advection task still computesVar(Li1..Li5) for every patch in its
+      // patch subset (see addRequires_Lodi)
+      
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
       new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
       new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
       new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
       new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
       new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
-      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        Li1[c]=lv->Li[1][c];
-        Li2[c]=lv->Li[2][c];
-        Li3[c]=lv->Li[3][c];
-        Li4[c]=lv->Li[4][c];
-        Li5[c]=lv->Li[5][c];
-      }
+      
+      Li1.initialize(Vector(0.0,0.0,0.0));
+      Li2.initialize(Vector(0.0,0.0,0.0));
+      Li3.initialize(Vector(0.0,0.0,0.0));
+      Li4.initialize(Vector(0.0,0.0,0.0));
+      Li5.initialize(Vector(0.0,0.0,0.0));
     }
   }
 }
@@ -688,6 +731,10 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   
   //__________________________________
   // default Li terms
+  // The leading 0.5 on L1/L5 matches Sutherland & Kennedy Table 5's own convention
+  // (their L1, L5 are defined with a 0.5 factor already included); this differs from
+  // the bare Poinsot-Lele convention, which omits it and applies 0.5 only when later
+  // combining L1/L5 into the d_i terms. Do not "correct" this against Poinsot-Lele.
   double A = rho * speedSound * dVel_dx[n_dir];
   double L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A);
   double L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr);
@@ -708,7 +755,10 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   //____________________________________________________________
   //  Modify the Li terms based on whether or not the normal
   //  component of the velocity if flowing out of the domain.
-  //  Equation 8 & 9 of Sutherland
+  //  Equation 8 & 9 of Sutherland: K = sigma*c*(1-M^2), used below as
+  //  0.5*K*(p-p_infinity)/L -- the paper's own outflow relaxation term already
+  //  has a "/2L" in it (Eq. 8-9); this is not an extra factor stacked on top
+  //  of the 0.5 already inside the default L1/L5 above.
   double K =  sigma * speedSound *(1.0 - maxMach*maxMach);
   
   //__________________________________
@@ -755,6 +805,9 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   //__________________________________
   // Subsonic non-reflective outflow
   else if (flowDir == "outFlow" && Mach < 1.0){
+    // term1 = sigma*c*(1-M^2)*(p-p_infinity) / (2*L), i.e. Sutherland & Kennedy Eq. 8-9
+    // verbatim (K carries sigma*c*(1-M^2); the 0.5 here is their "/2L", not a duplicate
+    // of the 0.5 folded into L1/L5's own definition above).
     double term1 = 0.5 * K * (press - p_infinity)/domainLength[n_dir];
     
     L1 = rightFace * (term1 + s[1]) + leftFace  * L1;

@@ -32,6 +32,7 @@ import argparse
 import functools
 import multiprocessing
 import os
+import sys
 
 import matplotlib
 matplotlib.use( "Agg" )
@@ -63,8 +64,8 @@ GRID_LINEWIDTH  = 0.5
 COL_X = 1
 
 PAGES = [
-    { "suffix": "A", "cols": [6, 7, 8, 9] },              #  <<< Change these column numbers
-    { "suffix": "B", "cols": [10, 13, 16] },              #  <<< Change these column numbers
+    { "suffix": "A", "cols": [6, 8, 9, 10] },              #  <<< Change these column numbers
+    #{ "suffix": "B", "cols": [10, 13, 16] },              #  <<< Change these column numbers
 ]
 
 #______________________________________________________________________
@@ -77,6 +78,18 @@ Y_RANGES = {
     # col, yMin, yMax
     6: ( 100000, 102000 ),                              #  <<< Change these to fix the y_range
 }
+
+#______________________________________________________________________
+
+def require_dir( path,
+                 description ):
+
+    """Exit with a clear, specific error message if path is not an
+    existing directory, instead of letting a later os.listdir()/open()
+    fail with an opaque traceback."""
+
+    if not os.path.isdir( path ):
+        sys.exit( "Error: %s not found: %s" % ( description, path ) )
 
 #______________________________________________________________________
 
@@ -238,22 +251,70 @@ def process_timestep( file_name,
 
 #______________________________________________________________________
 
+def describe_columns( descriptors ):
+
+    """Return a "N: name" listing of every column, one per line, for use
+    in error messages."""
+
+    lines = []
+    for i in range( len( descriptors ) ):
+        lines.append( "  %d: %s" % ( i + 1, descriptors[i] ) )
+
+    return "\n".join( lines )
+
+#______________________________________________________________________
+
+def validate_columns( descriptors ):
+
+    """Exit with a clear error message if COL_X or any PAGES column
+    number falls outside the columns this dataset actually has, instead
+    of failing deep inside a worker process with an opaque
+    multiprocessing traceback."""
+
+    n_cols = len( descriptors )
+
+    if not ( 1 <= COL_X <= n_cols ):
+        sys.exit( "Error: COL_X=%d is out of range -- this dataset has %d columns:\n%s" %
+                  ( COL_X, n_cols, describe_columns( descriptors ) ) )
+
+    for page in PAGES:
+        for col in page["cols"]:
+            if not ( 1 <= col <= n_cols ):
+                sys.exit( "Error: PAGES page %r references column %d, but this dataset has only %d columns:\n%s" %
+                          ( page["suffix"], col, n_cols, describe_columns( descriptors ) ) )
+
+#______________________________________________________________________
+
 def main():
     args = parse_args()
 
-    data_dir = os.path.join( args.uda, args.line_name, args.level, "timesteps" )
-    out_dir  = os.path.join( args.uda, args.line_name, args.level, "plots" )
+    require_dir( args.uda, "uda directory" )
+
+    line_dir = os.path.join( args.uda, args.line_name )
+    require_dir( line_dir, "line-name directory" )
+
+    level_dir = os.path.join( line_dir, args.level )
+    require_dir( level_dir, "level directory" )
+
+    data_dir = os.path.join( level_dir, "timesteps" )
+    require_dir( data_dir, "timesteps directory" )
+
+    out_dir = os.path.join( level_dir, "plots" )
 
     if not os.path.isdir( out_dir ):
         os.makedirs( out_dir )
 
     file_names = sorted( os.listdir( data_dir ) )
 
+    if len( file_names ) == 0:
+        sys.exit( "Error: no timestep files found in %s" % data_dir )
+
     sample_file = open( os.path.join( data_dir, file_names[0] ), "r" )
     header_line = sample_file.readline()
     sample_file.close()
 
     descriptors = column_descriptors( header_line )
+    validate_columns( descriptors )
     xlabel = descriptors[COL_X - 1]
 
     worker = functools.partial( process_timestep,

@@ -22,6 +22,10 @@
  * IN THE SOFTWARE.
  */
 
+// NOTE: this file is not part of the build -- it is absent from this directory's
+// sub.mk and is never #include'd by the live driver (C_BC_driver.h includes only
+// LODI2.h). LODI2.cc/LODI2.h is the implementation that actually runs; treat this
+// file as legacy/reference only, not something to fix or maintain in step with it.
 #include <CCA/Components/ICE/CustomBCs/LODI.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
