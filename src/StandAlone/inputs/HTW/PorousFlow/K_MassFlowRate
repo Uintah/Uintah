@@ -1,0 +1,20 @@
+# Column 1 is the exchange coefficient
+# Column 2 is for the "base case", volume fraction of solid, VF_s=0.5
+# Column 3 is for VF_s = 0.75, flow drops to 1/3 of base case
+# Column 4 is VF_s = 0.5, but solid section is half as long
+# Column 5 is VF_s = 0.75, with twice the grid resolution as Column 3
+# Column 6 is same as Col 1, with 2X the pressure drop
+# Column 7 is VF_s = 0.25, original pressure drop (1000 Pa)
+#K     mflux_0.5	mflux_.75	mflux_.5half	mflux_.75_2X	mflux_.5_2dP	mflux_.25
+1.e15  3.37e-11		1.13e-11	1.77e-10	4.33e-11	6.43e-11	9.95e-11
+1.e12  3.37e-11         1.13e-11        1.77e-10	4.33e-11	6.43e-11	9.95e-11
+1.e9   6.3e-11          2.41e-11        2.20e-10	4.86e-11	1.24e-10	1.66e-10
+1.e8   2.56e-10         9.00e-11        6.47e-10	9.91e-11	5.18e-10	7.90e-10
+1.e7   2.45e-9          8.02e-10        4.96e-9		8.02e-10	4.78e-9		7.17e-9
+1.e6   2.37e-8          7.96e-9         4.81e-8		7.91e-9		4.75e-8		7.10e-8
+1.e5   2.38e-7          7.95e-8         4.77e-7		7.90e-8		4.75e-7		7.10e-7
+1.e4   2.37e-6          7.95e-7		4.75e-6		7.90e-7		4.74e-6		7.09e-6
+1.e3   2.03e-5          6.84e-6		3.12e-5		6.81e-6		3.59e-5		5.88e-5
+1.e2   4.69e-5          1.60e-5		4.92e-5		1.59e-5		6.49e-5		1.20e-4
+1.e1   5.12e-5          1.76e-5		5.15e-5		1.76e-5		6.90e-5		1.27e-4
+1.e0   5.17e-5          1.77e-5		5.17e-5		1.78e-5		6.94e-5		1.28e-4

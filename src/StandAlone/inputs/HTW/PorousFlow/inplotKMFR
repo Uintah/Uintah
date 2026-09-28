@@ -1,0 +1,39 @@
+#set terminal x11 1
+#set terminal postscript portrait color solid "Times-Roman" 18 size 10 in, 6.68 in
+#set terminal postscript portrait color solid "Times-Roman" 18 size 8.88889 in, 6.68 in
+set terminal postscript portrait color solid "Times-Roman" 18 size 10.0 in, 10.0 in
+
+#__________________________________
+# generate the  plot script
+set autoscale
+set ytics
+set xtics
+set mxtics
+set mytics
+#set grid xtics ytics
+set pointsize 1.0
+
+#__________________________________
+#   Pressure
+#__________________________________
+set key top right
+set logscale
+set output "MassFlowRateVsK.ps"
+#set xrange [0.0:0.5]
+set xlabel "Exchange Coefficient (kg/(s-m^3))"
+set ylabel "Mass Flow Rate (kg/s)"
+#Note that the VF_s=0.75 is 1/3 the mass flow rate of the VF_s=0.5
+plot "K_MassFlowRate" using 1:2 w lp lw 3 t "VFs=0.5",\
+     "K_MassFlowRate" using 1:3 w lp lw 3 t "VFs=0.75",\
+     "K_MassFlowRate" using 1:4 w lp lw 3 t "VFs=0.5, half length",\
+     "K_MassFlowRate" using 1:5 w lp lw 3 t "VFs=0.75, dx/2",\
+     "K_MassFlowRate" using 1:6 w lp lw 3 t "VFs=0.5, 2XDeltaP",\
+     "K_MassFlowRate" using 1:7 w lp lw 3 t "VFs=0.25"
+pause -1
+# Column 1 is the exchange coefficient
+# Column 2 is for the "base case", volume fraction of solid, VF_s=0.5
+# Column 3 is for VF_s = 0.75, flow drops to 1/3 of base case
+# Column 4 is VF_s = 0.5, but solid section is half as long
+# Column 5 is VF_s = 0.75, with twice the grid resolution as Column 3
+# Column 6 is same as Col 1, with 2X the pressure drop
+# Column 7 is VF_s = 0.25, original pressure drop (1000 Pa)

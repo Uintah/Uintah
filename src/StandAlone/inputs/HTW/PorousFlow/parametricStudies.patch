@@ -1,0 +1,66 @@
+diff --git a/src/parametricStudies/framework_scripts/analyze.pm b/src/parametricStudies/framework_scripts/analyze.pm
+index 9ae209a9a1..9a2dab04e8 100644
+--- a/src/parametricStudies/framework_scripts/analyze.pm
++++ b/src/parametricStudies/framework_scripts/analyze.pm
+@@ -90,10 +90,12 @@ sub analyze{
+ 
+     my $ppOutput = "outPP.$X";
+ 
+-    print "\n\tLaunching: ($cmd_basename -o $ppOutput -uda $uda)\n\n";
++    #print "\n\tLaunching: ($cmd_basename -o $ppOutput -uda $uda)\n\n";
++    print "\n\tLaunching: ($cmd_basename -o $ppOutput)\n\n";
+     `rm -f $ppOutput`;
+ 
+-    my @cmd = ("$cmd_basename", "-o", "$ppOutput", "-uda", "$uda");
++    #my @cmd = ("$cmd_basename", "-o", "$ppOutput", "-uda", "$uda");
++    my @cmd = ("$cmd_basename", "$uda");
+ 
+     print $statsFile "postProcessCmd:  "."@cmd"."\n";
+ 
+diff --git a/src/parametricStudies/test_config_files/MPMICE/whatToRun.xml b/src/parametricStudies/test_config_files/MPMICE/whatToRun.xml
+index 53aba23b58..444d0eee51 100644
+--- a/src/parametricStudies/test_config_files/MPMICE/whatToRun.xml
++++ b/src/parametricStudies/test_config_files/MPMICE/whatToRun.xml
+@@ -2,10 +2,21 @@
+ <postProcessCmd_path>parametricStudies/comparisonUtils</postProcessCmd_path>
+ 
+ 
++
++<test>
++  <name>DarcyVFs25</name>
++  <tst>porousVFs25_K.tst</tst>
++</test>
++<!--
+ <test>
+-  <name>Rayleigh</name>
+-  <tst>rayleigh_dy.tst</tst>
++  <name>DarcyHalf_5</name>
++  <tst>porousHalf_K.tst</tst>
+ </test>
++<test>
++  <name>Darcy2X_5</name>
++  <tst>porous2X_K.tst</tst>
++</test>
++-->
+ 
+ <!--__________________________________-->
+ 
+diff --git a/src/parametricStudies/test_config_files/components.xml b/src/parametricStudies/test_config_files/components.xml
+index d8d8e4db01..04ab96104a 100644
+--- a/src/parametricStudies/test_config_files/components.xml
++++ b/src/parametricStudies/test_config_files/components.xml
+@@ -1,12 +1,13 @@
+ <config>
+ 
+-<component>ICE</component>
++ <component>MPMICE</component>
+ 
+  <!--<component>Arches</component>
+  <component>Arches/RMCRT</component>
+  <component>ICE</component>
+  <component>Examples</component>
+  <component>MPM</component>
++<component>ICE</component>
+  <component>MPMICE</component>
+  <component>MPMICE/Propagation_burning</component>
+  <component>MPMICE/Compare_burn_rates</component>

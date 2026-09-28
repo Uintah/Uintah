@@ -1,0 +1,15 @@
+This 1-D problem consists of a porous block sitting between two reservoirs
+of high and low pressure air.  This test was created to test the relationship
+between momentum exchange coefficients and the mass flow rate.  Other
+variables considered included volume fraction of the solid, pressure drop,
+length of block and grid resolution.
+
+The "parametricStudies" machinery was used, with some modifications, to run
+these tests.  A patch for the src/parametricStudies directory is included here.
+There are Instructions for using the parametricStudies tools at:
+src/parametricStudies/Instructions.
+
+The results from several tests are included here.  This includes the mass flow
+rate data, the gnuplot file used to display it, and a plot showing results.
+
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+~/HTW/branch/Uintah/opt/StandAlone/lineextract -v rho_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda $1 >  rho.out
+~/HTW/branch/Uintah/opt/StandAlone/lineextract -v vel_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda $1 >  vel.out
+grep '0 0 0' rho.out > rhoOnly.out
+grep '0 0 0' vel.out > velOnly.out
+paste rhoOnly.out velOnly.out > rhovelOnly.out
+awk '{print  1.e-6*$4 * $8}' rhovelOnly.out > MFR.out
+mv rhovelOnly.out $1
+mv MFR.out $1
