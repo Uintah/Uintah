@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+
+  <Meta>
+    <title> Conduction Test </title>
+  </Meta>
+
+  <SimulationComponent type="rmpm" />
+
+  <!--____________________________________________________________________-->
+  <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>             120.0      </maxTime>
+    <initTime>            0.0       </initTime>
+    <delt_min>            0.0       </delt_min>
+    <delt_max>            2.0e-3    </delt_max>
+    <delt_init>           1.0e-10    </delt_init>
+    <max_Timesteps>       10000000  </max_Timesteps>
+<!--
+    <max_delt_increase>   0.7       </max_delt_increase>
+-->
+    <timestep_multiplier> 0.40      </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>        [ 0.000, -0.0005, -0.0005]    </lower>
+        <upper>        [ 0.08,  0.0005,  0.0005]    </upper>
+        <extraCells>   [ 1, 1, 1]                   </extraCells>
+        <patches>      [ 1, 1, 1]                   </patches>
+        <resolution>   [ 80,1, 1]               </resolution>
+      </Box>
+    </Level>
+  </Grid>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>
+    <filebase>ConductionMPM.uda</filebase>
+    <outputInterval> 1 </outputInterval>
+    <compression> gzip </compression>
+    <save label="p.x"/>
+    <save label="p.mass"/>
+    <save label="p.temperature"/>
+    <save label="g.temperature"/>
+<!--
+    <save label="p.velocity"/>
+    <save label="p.stress"/>
+    <save label="g.mass"/>
+    <save label= "g.stressFS"/>
+    <save label= "delP_Dilatate"/>
+    <save label= "delP_MassX"/>
+    <save label= "mom_source_CC"/>
+    <save label= "intE_source_CC"/>
+    <save label= "p.localizedMPM"/>
+-->
+    <!-- <checkpoint cycle="1" timestepInterval="3000"/> -->
+    <checkpoint cycle="1" interval="1.e-3"/>
+  </DataArchiver>
+
+  <!--____________________________________________________________________-->
+  <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+  <!--____________________________________________________________________-->
+  <PhysicalConstants>
+    <gravity>            [0,0,0]   </gravity>
+    <reference_pressure> 101325.0  </reference_pressure>
+  </PhysicalConstants>
+
+  <MPM>
+    <time_integrator>               explicit    </time_integrator>
+    <interpolator>                  gimp        </interpolator>
+    <minimum_particle_mass>         3.e-10       </minimum_particle_mass>
+    <artificial_damping_coeff>      0.0         </artificial_damping_coeff>
+<!--
+    <artificial_viscosity>          true        </artificial_viscosity>
+    <artificial_viscosity_coeff1>   0.07        </artificial_viscosity_coeff1>
+    <artificial_viscosity_coeff2>   1.6         </artificial_viscosity_coeff2>
+-->
+    <use_load_curves>               false       </use_load_curves>
+    <do_contact_friction_heating>   false       </do_contact_friction_heating>
+    <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
+  </MPM>
+
+
+  <!--____________________________________________________________________-->
+  <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+  <!--____________________________________________________________________-->
+  <MaterialProperties>
+    <MPM>
+      <material name="Reactant">
+       <!-- These thermal properties are ballpark for ablative TPS matls -->
+        <density>400.0</density>
+        <thermal_conductivity>0.4</thermal_conductivity>
+        <specific_heat>1500.0</specific_heat>
+
+        <constitutive_model type = "rigid">
+          <bulk_modulus>  1.0e8  </bulk_modulus>
+          <shear_modulus> 6.5e7  </shear_modulus>
+          <useModifiedEOS>  true </useModifiedEOS>
+        </constitutive_model>
+
+        <geom_object>
+            <box label="HMX_L">
+              <min>   [0.00, -1.0, -1.0] </min>
+              <max>   [0.05,  1.0,  1.0] </max>
+            </box>
+          <res>              [2,1,1]         </res>
+          <velocity>         [0.0,0.0,0.0]   </velocity>
+          <temperature>      300.0           </temperature>
+        </geom_object>
+      </material>
+
+      <material name="Rigid">
+        <density>2700.0</density>
+        <thermal_conductivity>166.9</thermal_conductivity>
+        <specific_heat>896.0</specific_heat>
+
+        <constitutive_model type = "rigid">
+          <bulk_modulus>  1.0e8  </bulk_modulus>
+          <shear_modulus> 6.5e7  </shear_modulus>
+          <useModifiedEOS>  true </useModifiedEOS>
+        </constitutive_model>
+
+        <geom_object>
+            <box label="HMX_R">
+              <min>   [0.050, -1.0, -1.0] </min>
+              <max>   [0.060,  1.0,  1.0] </max>
+            </box>
+          <res>              [2,1,1]         </res>
+          <velocity>         [0.0,0.0,0.0]   </velocity>
+          <temperature>      1644.0           </temperature>
+        </geom_object>
+      </material>
+
+      <contact>
+        <type>       null      </type>
+      </contact>
+      <thermal_contact> </thermal_contact>
+    </MPM>
+  </MaterialProperties>
+
+  <!--____________________________________________________________________--> 
+</Uintah_specification>

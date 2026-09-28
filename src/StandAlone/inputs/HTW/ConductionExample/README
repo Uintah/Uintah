@@ -1,0 +1,22 @@
+This test was inspired by an example described in Section 2.1 of:
+
+https://jeanlachaud.com/research/NASA_CR-2015-218960.pdf
+
+The test there is actually really poorly described, but I figured I'd give it a
+try anyway.  The problems consists of a 5 cm bar of unspecified TPS material
+that has a temperature BC applied to one end.  The bar starts at 300 K, and the
+right end of the bar is put in contact with 1644 K for 60 seconds, and the 300K
+for 60 seconds.  Temperature is extracted over that time at several points in
+the right half of the bar.  No material properties were specified, so I just
+found nominal thermal properties for TPS materials.
+
+To make this work, I had to make a small modification to RigidMPM.cc.  The
+patch file is in this directory, RigidMPM.cc.patch.  This just makes a dynamic
+change to the boundary temperature at 60 seconds.  The boundary temperature
+is imposed using an additional material and the <thermal_contact> 
+option.
+
+A simple script to extract the temperature over time at several points is
+included here as well, extractTemp.csh.  The results can then be plotted
+using the gnuplot inplot file included here as well.  Results are shown in
+the included .png file.
