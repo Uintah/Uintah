@@ -22,14 +22,14 @@ all: $(STAMP_DIR)/stamp $(DESTS)
 $(STAMP_DIR)/stamp:
 	mkdir $@
 
-$(STAMP_DIR)/stamp/./checkpoints/% : 
+$(STAMP_DIR)/stamp/./checkpoints/% : | $(STAMP_DIR)/stamp
 	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
 	@echo "sending checkpoints/`basename $@`"
-	@${TAR} cBf - checkpoints/`basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && tar xBf - && chgrp -R $(GROUP) `basename $@` " 2>/dev/null 
+	@${TAR} cBf - checkpoints/`basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && tar xBf - && (chgrp -R $(GROUP) `basename $@` || true)" 2>/dev/null
 	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
 
-$(STAMP_DIR)/stamp/% : 
+$(STAMP_DIR)/stamp/% : | $(STAMP_DIR)/stamp
 	@echo "sending `basename $@`"
-	@${TAR} cBf - `basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && tar -xBf - && chgrp -R $(GROUP) `basename $@` " 2>/dev/null 
+	@${TAR} cBf - `basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && tar -xBf - && (chgrp -R $(GROUP) `basename $@` || true)" 2>/dev/null
 	@touch $(STAMP_DIR)/stamp/`basename $@`
 
