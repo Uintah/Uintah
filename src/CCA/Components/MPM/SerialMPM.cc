@@ -7266,6 +7266,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
 #if 1
         // Don't allow particles that are on the edge of the domain
         // to become surface particles.
+        nclose--;
         for (ParticleSubset::iterator iter = psetOP->begin();
              iter != psetOP->end();
              iter++){
