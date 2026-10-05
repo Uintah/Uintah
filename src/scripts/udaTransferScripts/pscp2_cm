@@ -1,0 +1,98 @@
+#! /bin/bash
+#
+#______________________________________________________________________
+# pscp2_cm <num Processors> <transfer entire uda (y/n)> <remove remote directory> <localDirectory> <login@Machine>:<remote dir>
+#
+# Wrapper around pscp2 that authenticates ONCE, via an SSH ControlMaster
+# connection, instead of once per ssh/scp call that pscp2 (and its
+# pscp2_driver_<OS> Makefile) make internally.
+#
+# This relies on the target host having, in ~/.ssh/config:
+#     ControlMaster auto
+#     ControlPath   ~/.ssh/controlmasters/%r@%h:%p
+#
+# Every plain ssh/scp call pscp2 makes will then transparently reuse the
+# one connection this wrapper opens.
+#
+# If THIS script is the one that opens the control-master connection, it
+# is opened with ControlPersist=10d: it stays up in the background, ready
+# for later pscp2/pscp2_cm runs to reuse without re-authenticating, and
+# ssh itself automatically tears it down once it's sat idle (no attached
+# client) for 10 days. If a master for this host was ALREADY running
+# (e.g. an open terminal session elsewhere, or one from an earlier
+# pscp2_cm run), it is left alone and reused as-is.
+#______________________________________________________________________
+
+if test "$#" -ne 5; then
+  echo ""
+  echo "Usage: pscp2_cm <number of Processors> <transfer entire uda (y/n)> <remove remote directory (y/n)> <local dir to be copied> <login@Remote Machine>:<remote dir>"
+  echo ""
+  exit 1
+fi
+
+string=$5
+# NOTE: pscp2 parses this same <login@machine>:<dir> arg independently too
+# (this script needs the login before pscp2 runs) -- keep both in sync.
+remote_machine=$(echo "$string" | cut -d\@ -f2 | cut -d\: -f1)
+user_test=$(echo "$string" | cut -s -d\@ -f1)
+
+if test "$user_test" == ""; then
+  user_test=$USER
+fi
+login=$user_test@$remote_machine
+
+pscp2dir=$(dirname "$(readlink -f "$0")")
+
+#______________________________________________________________________
+# if this host has no ControlPath configured, the transfer connections
+# made by pscp2_driver_<OS> won't multiplex -- offer to add one
+
+configuredControlPath=$(ssh -G "$login" 2>/dev/null | grep -i "^controlpath " | awk '{print $2}')
+
+if test "$configuredControlPath" == ""; then
+  echo ""
+  echo "  WARNING: $remote_machine has no ControlMaster/ControlPath entry in ~/.ssh/config."
+  echo "           Only pscp2's own bulletproofing checks will reuse this connection --"
+  echo "           the actual file-transfer connections will still authenticate separately."
+  echo ""
+  echo -n "  Add a Host stanza for $remote_machine to ~/.ssh/config now? (y/n): "
+  read addStanza
+  if test "$addStanza" == "y" -o "$addStanza" == "Y"; then
+    {
+      echo ""
+      echo "Host    $remote_machine"
+      echo "        ControlMaster auto"
+      echo "        ControlPath ~/.ssh/controlmasters/%r@%h:%p"
+      echo "        ControlPersist 10d"
+    } >> ~/.ssh/config
+    echo "  Added -- this run will pick it up automatically."
+  else
+    echo "  OK, skipping. Only pscp2's bulletproofing checks will multiplex."
+  fi
+  echo ""
+fi
+
+#______________________________________________________________________
+# open (or reuse) the control-master connection
+if ssh -O check "$login" &>/dev/null; then
+
+  echo "Reusing the control-master connection already running to $login."
+
+else
+  echo "Opening a control-master connection to $login -- you may be prompted once."
+  echo "It will stay up for up to 10 days of inactivity, ready for later runs."
+
+  if ! ssh -Nf -o ControlMaster=auto -o ControlPath=~/.ssh/controlmasters/%r@%h:%p -o ControlPersist=10d "$login"; then
+    echo ""
+    echo "  ERROR: could not open a control-master connection to $login."
+    echo ""
+    exit 1
+  fi
+fi
+
+#______________________________________________________________________
+
+"$pscp2dir/pscp2" "$@"
+rc=$?
+
+exit $rc

@@ -36,7 +36,8 @@
 #    <basename><separator><NNN>.<ext>
 #   where ext can be any image extension, <separator> can be any run of
 #   non-digit characters (e.g. "." or "_t"), and NNN is the image number:
-#   consecutive, but not required to start at 0 or be padded with 0.
+#   strictly increasing (gaps are fine, duplicates/decreases are not),
+#   but not required to start at 0 or be padded with 0.
 #
 # Pseudocode:
 #   verify ffmpeg/avconv and display/convert/composite are on PATH
@@ -57,8 +58,9 @@
 #
 #   rename pass (validates + renumbers to 0-based):
 #     for each candidate file, sorted by its original frame number:
-#       if original number != expected next number: error, abort
-#       copy it to <0-based index>.<orgExt>
+#       if original number <= previous frame's number: error, abort
+#       copy it to <0-based index>.<orgExt>  (gaps in the original
+#       numbering collapse away since ffmpeg just needs 0,1,2,...)
 #
 #   if orgExt != target extension:
 #     batch-convert every renamed frame to the target extension (one
@@ -275,10 +277,11 @@ fi
 #  rename
 echo "Now renaming files $orgExt files into $EXT files "
 
-#  pair each frame with its (possibly non-zero-based, non-padded) frame
-#  number, then sort numerically -- the original file's number is only
-#  used to check consecutiveness; the renamed copy is always numbered
-#  from 0 so ffmpeg's %d pattern works regardless of the original range.
+#  pair each frame with its (possibly non-zero-based, non-padded, gapped)
+#  frame number, then sort numerically -- the original file's number is
+#  only used to check that numbers strictly increase; the renamed copy
+#  is always numbered from 0 so ffmpeg's %d pattern works regardless of
+#  gaps or the original range.
 pairs=()
 for f in "$imageName"*."$orgExt"; do
   num=$(extract_frame_num "$f") || continue
@@ -286,23 +289,19 @@ for f in "$imageName"*."$orgExt"; do
 done
 
 count=0
-expectedNum=""
+prevNum=""
 while read -r num i; do
-  if [ -z "$expectedNum" ]; then
-    expectedNum=$num
+  if [ -n "$prevNum" ] && [ "$num" -le "$prevNum" ]; then
+    echo " ERROR: the images are not strictly increasing in number"
+    echo " Image number is: $num but it should be greater than $prevNum"
+    rm -f [0-9]*."$EXT" [0-9]*."$orgExt"
+    exit 0
   fi
 
   echo " Now renaming $i to $count.$orgExt"
   cp "$i" "$count.$orgExt"
 
-  if [ "$num" != "$expectedNum" ]; then
-    echo " ERROR: the images are not consecutively numbered"
-    echo " Image number is: $num but it should be $expectedNum"
-    rm -f [0-9]*."$EXT" [0-9]*."$orgExt"
-    exit 0
-  fi
-
-  expectedNum=$((expectedNum + 1))
+  prevNum=$num
   count=$((count + 1))
 done < <(printf '%s\n' "${pairs[@]}" | sort -n)
 

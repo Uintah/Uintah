@@ -29,7 +29,10 @@
 #______________________________________________________________________
 
 import argparse
+import functools
+import multiprocessing
 import os
+import sys
 
 import matplotlib
 matplotlib.use( "Agg" )
@@ -61,8 +64,8 @@ GRID_LINEWIDTH  = 0.5
 COL_X = 1
 
 PAGES = [
-    { "suffix": "A", "cols": [6, 7, 8, 9] },              #  <<< Change these column numbers
-    { "suffix": "B", "cols": [10, 13, 16] },              #  <<< Change these column numbers
+    { "suffix": "A", "cols": [6, 8, 7, 10] },              #  <<< Change these column numbers
+    #{ "suffix": "B", "cols": [10, 13, 16] },              #  <<< Change these column numbers
 ]
 
 #______________________________________________________________________
@@ -75,6 +78,18 @@ Y_RANGES = {
     # col, yMin, yMax
     6: ( 100000, 102000 ),                              #  <<< Change these to fix the y_range
 }
+
+#______________________________________________________________________
+
+def require_dir( path,
+                 description ):
+
+    """Exit with a clear, specific error message if path is not an
+    existing directory, instead of letting a later os.listdir()/open()
+    fail with an opaque traceback."""
+
+    if not os.path.isdir( path ):
+        sys.exit( "Error: %s not found: %s" % ( description, path ) )
 
 #______________________________________________________________________
 
@@ -92,49 +107,58 @@ def column_descriptors( header_line ):
 
 #______________________________________________________________________
 
-def read_time_value( filepath ):
+def read_timestep_file( filepath ):
 
-    """Return column 5 ( "Time [s]" ), as a string, from the first data
-    row of a timestep file."""
+    """Read a timestep file exactly once, returning ( rows, time_val ).
 
-    f = open( filepath, "r" )
+    rows is a list of data rows, each row a list of floats ( 1-based
+    column N is row[N - 1] ), skipping "#"-commented lines.  time_val is
+    column 5 ( "Time [s]" ) from the first data row, kept as the
+    original string ( not round-tripped through float() ).
+    """
 
+    rows = []
     time_val = None
-    for line in f:
-        if not line.startswith( "#" ):
-            fields = line.split()
-            time_val = fields[4]
-            break
-
-    f.close()
-    return time_val
-
-#______________________________________________________________________
-
-def read_xy( filepath,
-            col_x,
-            col_y ):
-
-    """Return ( x_values, y_values ) for the given 1-based data columns,
-    skipping "#"-commented lines."""
-
-    x_values = []
-    y_values = []
 
     f = open( filepath, "r" )
     for line in f:
         if line.startswith( "#" ):
             continue
+
         fields = line.split()
-        x_values.append( float( fields[col_x - 1] ) )
-        y_values.append( float( fields[col_y - 1] ) )
+
+        if time_val is None:
+            time_val = fields[4]
+
+        row = []
+        for field in fields:
+            row.append( float( field ) )
+        rows.append( row )
     f.close()
+
+    return rows, time_val
+
+#______________________________________________________________________
+
+def extract_xy( rows,
+                col_x,
+                col_y ):
+
+    """Pull two already-parsed 1-based columns out of rows ( see
+    read_timestep_file() )."""
+
+    x_values = []
+    y_values = []
+
+    for row in rows:
+        x_values.append( row[col_x - 1] )
+        y_values.append( row[col_y - 1] )
 
     return x_values, y_values
 
 #______________________________________________________________________
 
-def plot_page( infile,
+def plot_page( rows,
                outfile,
                col_x,
                cols,
@@ -159,7 +183,7 @@ def plot_page( infile,
 
         if panel < len( cols ):
             col = cols[panel]
-            x_values, y_values = read_xy( infile, col_x, col )
+            x_values, y_values = extract_xy( rows, col_x, col )
 
             ax.plot( x_values, y_values, marker=LINE_MARKER, markersize=LINE_MARKERSIZE, linewidth=LINE_WIDTH )
 
@@ -188,49 +212,119 @@ def parse_args():
 
     parser.add_argument( "--level",     default="L-0",
                           help="AMR level subdirectory to read (default: L-0)" )
+
+    parser.add_argument( "--jobs", "-n", type=int, default=4,
+                          help="worker processes to use (default: all CPUs -- %(4)s here)" )
     return parser.parse_args()
+
+#______________________________________________________________________
+
+def process_timestep( file_name,
+                      data_dir,
+                      out_dir,
+                      descriptors,
+                      xlabel ):
+
+    """Read one timestep file and write all of its PAGES PNGs.  Runs in
+    a worker process when called via multiprocessing.Pool.map()."""
+
+    infile = os.path.join( data_dir, file_name )
+    print( "    Working on %s" % infile )
+
+    rows, time_val = read_timestep_file( infile )
+
+    for page in PAGES:
+        outfile = os.path.join( out_dir, "%s_%s.png" % ( page["suffix"], file_name ) )
+
+        titles = []
+        for col in page["cols"]:
+            titles.append( descriptors[col - 1] )
+
+        plot_page( rows,
+                   outfile,
+                   COL_X,
+                   page["cols"],
+                   titles,
+                   xlabel,
+                   file_name,
+                   time_val )
+
+#______________________________________________________________________
+
+def describe_columns( descriptors ):
+
+    """Return a "N: name" listing of every column, one per line, for use
+    in error messages."""
+
+    lines = []
+    for i in range( len( descriptors ) ):
+        lines.append( "  %d: %s" % ( i + 1, descriptors[i] ) )
+
+    return "\n".join( lines )
+
+#______________________________________________________________________
+
+def validate_columns( descriptors ):
+
+    """Exit with a clear error message if COL_X or any PAGES column
+    number falls outside the columns this dataset actually has, instead
+    of failing deep inside a worker process with an opaque
+    multiprocessing traceback."""
+
+    n_cols = len( descriptors )
+
+    if not ( 1 <= COL_X <= n_cols ):
+        sys.exit( "Error: COL_X=%d is out of range -- this dataset has %d columns:\n%s" %
+                  ( COL_X, n_cols, describe_columns( descriptors ) ) )
+
+    for page in PAGES:
+        for col in page["cols"]:
+            if not ( 1 <= col <= n_cols ):
+                sys.exit( "Error: PAGES page %r references column %d, but this dataset has only %d columns:\n%s" %
+                          ( page["suffix"], col, n_cols, describe_columns( descriptors ) ) )
 
 #______________________________________________________________________
 
 def main():
     args = parse_args()
 
-    data_dir = os.path.join( args.uda, args.line_name, args.level, "timesteps" )
-    out_dir  = os.path.join( args.uda, args.line_name, args.level, "plots" )
+    require_dir( args.uda, "uda directory" )
+
+    line_dir = os.path.join( args.uda, args.line_name )
+    require_dir( line_dir, "line-name directory" )
+
+    level_dir = os.path.join( line_dir, args.level )
+    require_dir( level_dir, "level directory" )
+
+    data_dir = os.path.join( level_dir, "timesteps" )
+    require_dir( data_dir, "timesteps directory" )
+
+    out_dir = os.path.join( level_dir, "plots" )
 
     if not os.path.isdir( out_dir ):
         os.makedirs( out_dir )
 
     file_names = sorted( os.listdir( data_dir ) )
 
+    if len( file_names ) == 0:
+        sys.exit( "Error: no timestep files found in %s" % data_dir )
+
     sample_file = open( os.path.join( data_dir, file_names[0] ), "r" )
     header_line = sample_file.readline()
     sample_file.close()
 
     descriptors = column_descriptors( header_line )
+    validate_columns( descriptors )
     xlabel = descriptors[COL_X - 1]
 
-    for file_name in file_names:
-        infile = os.path.join( data_dir, file_name )
-        print( "    Working on %s" % infile )
+    worker = functools.partial( process_timestep,
+                                data_dir    =data_dir,
+                                out_dir     =out_dir,
+                                descriptors =descriptors,
+                                xlabel      =xlabel )
 
-        time_val = read_time_value( infile )
-
-        for page in PAGES:
-            outfile = os.path.join( out_dir, "%s_%s.png" % ( page["suffix"], file_name ) )
-
-            titles = []
-            for col in page["cols"]:
-                titles.append( descriptors[col - 1] )
-
-            plot_page( infile,
-                       outfile,
-                       COL_X,
-                       page["cols"],
-                       titles,
-                       xlabel,
-                       file_name,
-                       time_val )
+    with multiprocessing.Pool( args.jobs ) as pool:
+        pool.map( worker, file_names )
 
     print( "Done.  PNGs written to %s/" % out_dir )
 
