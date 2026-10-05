@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+    <!--
+     2D (y-z plane) linear-acoustics reflection-coefficient test for the
+     LODI outflow boundary condition - the y-z-plane sibling of
+     Lodi_reflectionCoeff_2D_xy.ups. Here the pulse and probe sit on the
+     domain's x-centerline (x thin and symmetric), and the boundary under
+     test is y+ instead of x+, so this exercises a genuinely different
+     boundary face under 2D incidence (not just a relabeled x+ test like
+     the x-z plane file).
+
+     By the gas's isotropy, testing y+ with the curvature provided by z
+     should still land on the same |R| curve as x+ did in the other two
+     planes - this is the cross-check.
+
+     The pulse sits on the domain's z-centerline (z = L/2), and so does
+     the probe - by the z-mirror symmetry of a pulse centered there, the
+     z-component of velocity is exactly zero along that whole line, so
+     the same right-/left-going Riemann-invariant decomposition used
+     elsewhere in this family (here using vy, since y is now the tested
+     axis) remains exact for isolating the y+ reflection, even though the
+     wave itself is genuinely 2D.
+
+     All four y-/y+/z-/z+ faces are LODI; x-/x+ are symmetric (thin
+     direction). Geometry chosen so the z-wall and y- wall reflections
+     arrive well after the y+ reflection being measured - identical
+     construction to Lodi_reflectionCoeff_2D_xy.ups with y in place of x
+     and z in place of y:
+
+       L = 1.0, y_spike = 0.6, y_probe = 0.8, z = L/2 = 0.5 (both)
+       t1 (incident, direct)         = (y_probe - y_spike)/c0        = 7.40e-4 s
+       t2 (y+ reflection, measured)  = (2L - y_spike - y_probe)/c0   = 2.22e-3 s
+       t_z (z-wall reflection)       = sqrt((y_probe-y_spike)^2+L^2)/c0 = 3.78e-3 s
+       t3 (y- wall reflection)       = (y_spike + y_probe)/c0        = 5.18e-3 s
+       (c0 = sqrt(gamma*(gamma-1)*cv*300) = 270.12 m/s for this gas)
+
+     See Lodi_reflectionCoeff_2D_xy.ups for the image-source derivation.
+
+     Post-process with
+     compute_LODI_reflectionCoeff.py -dir y -index 0 160 100 -window <lo> <hi>
+     (see that script's docstring; index 160 along y is the cell nearest
+     y=0.8 m, index 100 along z is the cell nearest z=0.5 m at this
+     resolution; index 0 along x is the thin domain's only cell).
+
+     References: see Lodi_reflectionCoeff_2D_xy.ups.
+    -->
+   <Meta>
+       <title>LODI outflow reflection-coefficient test (2D, y-z plane)</title>
+   </Meta>
+   <SimulationComponent type="ice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0030       </maxTime>
+       <initTime>           0.0          </initTime>
+       <delt_min>           0.0          </delt_min>
+       <delt_max>           1.0          </delt_max>
+       <delt_init>          1.0e-7       </delt_init>
+       <timestep_multiplier>1.0          </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+
+    <Grid>
+    <BoundaryConditions>
+
+      <LODI>
+        <press_infinity>  101325.0  </press_infinity>
+        <sigma>           0.27      </sigma>
+        <material>       atmosphere </material>
+      </LODI>
+
+      <Face side = "x-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="1">
+              <lower>        [0,     0,    0]    </lower>
+              <upper>        [0.005, 1.0,  1.0]  </upper>
+              <extraCells>   [1,1,1]             </extraCells>
+              <patches>      [1,4,4]             </patches>
+              <resolution>   [1,200,200]         </resolution>
+           </Box>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>Lodi_reflectionCoeff_2D_yz.uda</filebase>
+      <outputInterval> 0.0005 </outputInterval>
+      <save label="vel_CC"/>
+      <save label="press_CC"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+
+        <customInitialization>
+          <gaussianTemperature>
+            <origin>     [0.0025, 0.6, 0.5]  </origin>
+            <amplitude>  5.0                 </amplitude>
+            <spread_x>   10.0                </spread_x>
+            <spread_y>   0.03                </spread_y>
+            <spread_z>   0.03                </spread_z>
+          </gaussianTemperature>
+        </customInitialization>
+      </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325 </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name="atmosphere">
+           <EOS type = "ideal_gas"/>
+          <dynamic_viscosity>     0.0    </dynamic_viscosity>
+          <thermal_conductivity>  0.0    </thermal_conductivity>
+          <specific_heat>         652.9  </specific_heat>
+          <gamma>                 1.289  </gamma>
+
+           <geom_object>
+             <box label="Whole grid">
+               <min>  [-2.0,-2.0,-2.0]  </min>
+               <max>  [ 4.0, 4.0, 4.0]  </max>
+             </box>
+             <res>          [2,2,2]                </res>
+             <velocity>     [0.0,0.0,0.0]          </velocity>
+             <density>      1.7899909957225715000  </density>
+             <pressure>     101325.0               </pressure>
+             <temperature>  300.0                  </temperature>
+           </geom_object>
+         </material>
+      </ICE>
+    </MaterialProperties>
+
+    <!--____________________________________________________________________-->
+    <!--      D  A  T  A     A  N  A  L  Y  S  I  S                         -->
+    <!--____________________________________________________________________-->
+    <!--
+     Point probe at (y,z) = (0.8, 0.5) m, on the
+     z-centerline (see the header comment for why that placement keeps
+     the 1D Riemann-invariant decomposition exact).
+     (dy=0.005, cell 160: [0.800,0.805]), pinned at the exact z-center value (cell 100's
+     center, z=0.5025).
+     Written to uda/probe/L-0/i0_j160_k100.
+    -->
+    <DataAnalysis>
+      <Module name = "lineExtract">
+        <material>           atmosphere  </material>
+        <samplingFrequency>  1e7         </samplingFrequency>
+        <timeStart>          0           </timeStart>
+        <timeStop>           1.0         </timeStop>
+
+        <Variables>
+          <analyze label = "press_CC" matl = "0"/>
+          <analyze label = "vel_CC"   matl = "0"/>
+        </Variables>
+
+        <lines>
+          <line name = "probe">
+            <startingPt>  [0.0025, 0.800, 0.5025]  </startingPt>
+            <endingPt>    [0.0025, 0.805, 0.5025]  </endingPt>
+          </line>
+        </lines>
+      </Module>
+    </DataAnalysis>
+</Uintah_specification>

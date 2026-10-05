@@ -53,9 +53,91 @@ static DebugStream cout_doing("ICE_BC_CC", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ______________________________________________________________________
- Function~  read_LODI_BC_inputs--   
+ Function~  faceNameToType--
+ Purpose~   convert a Face side="..." attribute ("x-", "x+", ...) to the
+            matching Patch::FaceType, same mapping used below for LodiFaces.
+ ______________________________________________________________________  */
+static Patch::FaceType faceNameToType(const string& faceName)
+{
+  if (faceName == "x-") {
+    return Patch::xminus;
+  }
+  if (faceName == "x+") {
+    return Patch::xplus;
+  }
+  if (faceName == "y-") {
+    return Patch::yminus;
+  }
+  if (faceName == "y+") {
+    return Patch::yplus;
+  }
+  if (faceName == "z-") {
+    return Patch::zminus;
+  }
+  if (faceName == "z+") {
+    return Patch::zplus;
+  }
+  string warn="ERROR:\n Inputs:LODI Boundary Conditions: invalid face attribute '" + faceName + "'";
+  throw ProblemSetupException(warn, __FILE__, __LINE__);
+}
+
+/* ______________________________________________________________________
+ Function~  readLodiFaceVar--
+ Purpose~   read a <LODI> child tag that may appear once with no "face"
+            attribute (sets the global default) and/or again with a
+            "face" attribute (e.g. face="x+", overrides just that face).
+            Used for press_infinity/vel_infinity/rho_infinity, which only
+            differ by value type (double vs. Vector) and whether a default
+            is mandatory.
+
+            faceSet/faceValue must each point to Patch::numFaces entries;
+            the caller is responsible for initializing faceSet[*] = false
+            before the first call.
+
+            Set requireDefault = true to throw if no tag without a "face"
+            attribute was found; returns whether a default was found.
+ ______________________________________________________________________  */
+template<class T>
+static bool readLodiFaceVar(const ProblemSpecP& lodi_ps,
+                            const string& tagName,
+                            T& defaultValue,
+                            bool faceSet[],
+                            T faceValue[],
+                            bool requireDefault = false)
+{
+  bool foundDefault = false;
+
+  for( ProblemSpecP ps = lodi_ps->findBlock( tagName ); ps != nullptr; ps = ps->findNextBlock( tagName ) ) {
+    map<string,string> attr;
+    ps->getAttributes( attr );
+
+    T value;
+    ps->get( value );
+
+    if ( attr.count( "face" ) == 0 ) {
+      defaultValue = value;
+      foundDefault = true;
+    }
+    else {
+      Patch::FaceType face = faceNameToType( attr["face"] );
+      faceValue[face] = value;
+      faceSet[face]   = true;
+    }
+  }
+
+  if ( requireDefault && !foundDefault ) {
+    string warn = "ERROR:\n Inputs:LODI Boundary Conditions: must specify a <" + tagName
+                + "> with no 'face' attribute to set the default";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
+
+  return foundDefault;
+}
+
+/* ______________________________________________________________________
+ Function~  read_LODI_BC_inputs--
  Purpose~   returns if we are using LODI BC on any face,
-            reads in any lodi parameters 
+            reads in any lodi parameters
             sets which boundaries are lodi
  ______________________________________________________________________  */
 bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
@@ -109,43 +191,83 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
         usingLODI = true;
         is_a_Lodi_face = true;
         // remember which faces are LODI
-        if (face["side"] ==  "x-")
+        if (face["side"] ==  "x-"){
           global->LodiFaces.push_back(Patch::xminus);
-        if (face["side"] == "x+")
+        }
+        if (face["side"] == "x+"){
           global->LodiFaces.push_back(Patch::xplus);
-        if (face["side"] == "y-")
+        }
+        if (face["side"] == "y-"){
           global->LodiFaces.push_back(Patch::yminus);
-        if (face["side"] == "y+")
+        }
+        if (face["side"] == "y+"){
           global->LodiFaces.push_back(Patch::yplus);
-        if (face["side"] == "z-")
+        }
+        if (face["side"] == "z-"){
           global->LodiFaces.push_back(Patch::zminus);
-        if (face["side"] == "z+")
+        }
+        if (face["side"] == "z+"){
           global->LodiFaces.push_back(Patch::zplus);
+        }
       }
     }
   }
   //__________________________________
   //  read in master LODI variables
   if(usingLODI ){
-    ProblemSpecP lodi = bc_ps->findBlock("LODI");
-    if (!lodi) {
+    ProblemSpecP lodi_ps = bc_ps->findBlock("LODI");
+    if (!lodi_ps) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    lodi->require("press_infinity",     global->press_infinity);
-    lodi->getWithDefault("sigma",       global->sigma, 0.27);
-    lodi->getWithDefault("Li_scale",    global->Li_scale, 1.0);
+    lodi_ps->getWithDefault("sigma",       global->sigma, 0.27);
+    lodi_ps->getWithDefault("Li_scale",    global->Li_scale, 1.0);
+
+    //__________________________________
+    //  press_infinity/vel_infinity/rho_infinity: a single tag with no "face"
+    //  attribute sets the default used on every LODI face; an additional tag
+    //  of the same name carrying a "face" attribute (e.g. face="x+") overrides
+    //  just that face. This keeps every existing .ups (one tag, no attribute)
+    //  working unchanged.
+    
+    for (int f = 0; f < Patch::numFaces; f++) {
+      global->press_infinity_faceSet[f] = false;
+      global->vel_infinity_faceSet[f]   = false;
+      global->rho_infinity_faceSet[f]   = false;
+    }
+
+    readLodiFaceVar( lodi_ps, 
+                     "press_infinity", 
+                     global->press_infinity,
+                     global->press_infinity_faceSet, 
+                     global->press_infinity_face,
+                     /*requireDefault*/ true );
+
+    bool foundDefaultVel = 
+    readLodiFaceVar( lodi_ps, 
+                     "vel_infinity", 
+                     global->vel_infinity,
+                     global->vel_infinity_faceSet, 
+                     global->vel_infinity_face );
+
+    bool foundDefaultRho = 
+    readLodiFaceVar( lodi_ps, 
+                     "rho_infinity", 
+                     global->rho_infinity,
+                     global->rho_infinity_faceSet, 
+                     global->rho_infinity_face );
 
     global->d_useInflowTargets = false;
-    if (lodi->get("vel_infinity", global->vel_infinity) &&
-        lodi->get("rho_infinity", global->rho_infinity)) {
+    
+    if ( foundDefaultVel && foundDefaultRho ) {
       global->d_useInflowTargets = true;
+      
       proc0cout << "\n LODI inflow targets active:"
                 << "  vel = " << global->vel_infinity
                 << "  rho = " << global->rho_infinity << "\n" << endl;
     }
 
-    ProblemSpecP params = lodi;
+    ProblemSpecP params = lodi_ps;
     Material* matl = materialManager->parseAndLookupMaterial(params, "material");
     global->iceMatl_indx = matl->getDWIndex();
       
@@ -441,28 +563,71 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   //__________________________________
   //compute Li at boundary cells
   if(setLodiBcs){
-    for (int i = 0; i <= 5; i++){ 
-      new_dw->allocateTemporary(lv->Li[i], patch);
+    // Skip the Li computation entirely on interior patches
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    bool patchHasLodiFace = false;
+    
+    for (vector<Patch::FaceType>::const_iterator f = bf.begin(); f != bf.end(); ++f){
+      if (is_LODI_face(patch, *f, materialManager)){
+        patchHasLodiFace = true;
+        break;
+      }
     }
 
-    computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
-              patch, new_dw, materialManager, indx,gv, false);
-              
-    if(gv->saveLiTerms  && where == "Advection"){
+    if( patchHasLodiFace ){
+      for (int i = 0; i <= 5; i++){
+        new_dw->allocateTemporary(lv->Li[i], patch);
+      }
+
+      computeLi(lv->Li, 
+                lv->rho_CC,  
+                lv->press_CC, 
+                lv->vel_CC, 
+                lv->speedSound,
+                patch, 
+                new_dw, 
+                materialManager, 
+                indx,
+                gv, 
+                false);
+
+      if(gv->saveLiTerms  && where == "Advection"){
+        
+        CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
+        new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
+        new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
+        new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
+        new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
+        new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
+        
+        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          Li1[c]=lv->Li[1][c];
+          Li2[c]=lv->Li[2][c];
+          Li3[c]=lv->Li[3][c];
+          Li4[c]=lv->Li[4][c];
+          Li5[c]=lv->Li[5][c];
+        }
+      }
+    }
+    else if(gv->saveLiTerms && where == "Advection"){
+      // No LODI face on this patch
+      // Advection task still computesVar(Li1..Li5) for every patch in its
+      // patch subset (see addRequires_Lodi)
+      
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
       new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
       new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
       new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
       new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
       new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
-      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        Li1[c]=lv->Li[1][c];
-        Li2[c]=lv->Li[2][c];
-        Li3[c]=lv->Li[3][c];
-        Li4[c]=lv->Li[4][c];
-        Li5[c]=lv->Li[5][c];
-      }
+      
+      Li1.initialize(Vector(0.0,0.0,0.0));
+      Li2.initialize(Vector(0.0,0.0,0.0));
+      Li3.initialize(Vector(0.0,0.0,0.0));
+      Li4.initialize(Vector(0.0,0.0,0.0));
+      Li5.initialize(Vector(0.0,0.0,0.0));
     }
   }
 }
@@ -688,6 +853,10 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   
   //__________________________________
   // default Li terms
+  // The leading 0.5 on L1/L5 matches Sutherland & Kennedy Table 5's own convention
+  // (their L1, L5 are defined with a 0.5 factor already included); this differs from
+  // the bare Poinsot-Lele convention, which omits it and applies 0.5 only when later
+  // combining L1/L5 into the d_i terms. Do not "correct" this against Poinsot-Lele.
   double A = rho * speedSound * dVel_dx[n_dir];
   double L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A);
   double L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr);
@@ -702,13 +871,16 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
   #endif
   //__________________________________
   //  global
-  double p_infinity = gv->press_infinity;
+  double p_infinity = gv->getPressInfinity(face);
   double sigma      = gv->sigma;
   
   //____________________________________________________________
   //  Modify the Li terms based on whether or not the normal
   //  component of the velocity if flowing out of the domain.
-  //  Equation 8 & 9 of Sutherland
+  //  Equation 8 & 9 of Sutherland: K = sigma*c*(1-M^2), used below as
+  //  0.5*K*(p-p_infinity)/L -- the paper's own outflow relaxation term already
+  //  has a "/2L" in it (Eq. 8-9); this is not an extra factor stacked on top
+  //  of the 0.5 already inside the default L1/L5 above.
   double K =  sigma * speedSound *(1.0 - maxMach*maxMach);
   
   //__________________________________
@@ -741,20 +913,23 @@ inline void Li(std::vector<CCVariable<Vector> >& L,
       // Normal velocity relaxation on the incoming acoustic wave (L5 at left face, L1 at right face).
       // Drives u_n toward vel_infinity[n_dir] using the same sigma and (1-M^2) weighting as outflow.
       double velRelax = gv->sigma * rho * speedSoundsqr * mFactor
-                      * (normalVel - gv->vel_infinity[n_dir]) / domainLength[n_dir];
+                      * (normalVel - gv->getVelInfinity(face)[n_dir]) / domainLength[n_dir];
       L5 += leftFace  * velRelax;
       L1 -= rightFace * velRelax;
 
       // Density relaxation on the incoming entropy wave.
       // Drives rho toward rho_infinity to hit the target mass flux with vel_infinity.
       double rhoRelax = gv->sigma * speedSound * mFactor
-                      * (rho - gv->rho_infinity) / domainLength[n_dir];
+                      * (rho - gv->getRhoInfinity(face)) / domainLength[n_dir];
       L2 += rhoRelax;
     }
   }
   //__________________________________
   // Subsonic non-reflective outflow
   else if (flowDir == "outFlow" && Mach < 1.0){
+    // term1 = sigma*c*(1-M^2)*(p-p_infinity) / (2*L), i.e. Sutherland & Kennedy Eq. 8-9
+    // verbatim (K carries sigma*c*(1-M^2); the 0.5 here is their "/2L", not a duplicate
+    // of the 0.5 folded into L1/L5's own definition above).
     double term1 = 0.5 * K * (press - p_infinity)/domainLength[n_dir];
     
     L1 = rightFace * (term1 + s[1]) + leftFace  * L1;

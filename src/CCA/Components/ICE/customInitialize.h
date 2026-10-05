@@ -71,10 +71,15 @@ namespace Uintah {
   };
 
   //__________________________________
-  //
+  //  spread_x/spread_y are required; 
+  //  spread_z is optional and defaults to a value large enough that it has no effect
+  //  Set spread_z finite and spread_y large for a  pulse in the x-z plane. 
+  //  Set spread_z finite and spread_x large for the y-z plane. 
+  //  Set all three finite for a genuine 3D Gaussian blob.
   struct gaussTemp{
-    double spread_x;
+    double spread_x;      
     double spread_y;
+    double spread_z;
     double amplitude;
     Point  origin;
     ~gaussTemp() {};

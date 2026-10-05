@@ -45,7 +45,7 @@ namespace Uintah {
   // iceMatl_indx:    user input, ice material index.
   
   struct Lodi_globalVars{
-    double press_infinity;
+    double press_infinity;        // pressure at infinity
     double sigma;
     int iceMatl_indx;
     std::vector<Patch::FaceType> LodiFaces;
@@ -53,8 +53,42 @@ namespace Uintah {
     Vector d_gravity;
     double Li_scale;
     bool d_useInflowTargets;
-    Vector vel_infinity;
-    double rho_infinity;
+    Vector vel_infinity;          // velocity at infinity
+    double rho_infinity;          // density at infinity
+
+    // Optional per-face overrides for press_infinity/vel_infinity/rho_infinity.
+    // A face without an override falls back to the global default above.
+    bool   press_infinity_faceSet[ Patch::numFaces];
+    double press_infinity_face[    Patch::numFaces];
+    
+    bool   vel_infinity_faceSet[ Patch::numFaces];
+    Vector vel_infinity_face[    Patch::numFaces];
+    
+    bool   rho_infinity_faceSet[ Patch::numFaces];
+    double rho_infinity_face[    Patch::numFaces];
+
+    
+    double getPressInfinity( Patch::FaceType face ) const {
+      if ( press_infinity_faceSet[face] ) {
+        return press_infinity_face[face];
+      }
+      return press_infinity;
+    }
+    
+    Vector getVelInfinity( Patch::FaceType face ) const {
+      if ( vel_infinity_faceSet[face] ) {
+        return vel_infinity_face[face];
+      }
+      return vel_infinity;
+    }
+    
+    double getRhoInfinity(Patch::FaceType face) const {
+      if ( rho_infinity_faceSet[face] ) {
+        return rho_infinity_face[face];
+      }
+      return rho_infinity;
+    }
+    
   };
   //____________________________________________________________
   // This struct contains the additional (local) variables required to 

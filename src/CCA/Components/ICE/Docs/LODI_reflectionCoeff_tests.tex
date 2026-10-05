@@ -1,0 +1,314 @@
+%______________________________________________________________________
+%  To generate the pdf:
+%    pdflatex LODI_reflectionCoeff_tests.tex
+%    pdflatex LODI_reflectionCoeff_tests.tex   (run twice to resolve
+%                                                cross-references/citations)
+%______________________________________________________________________
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\sus}{\texttt{sus}}
+\newcommand{\ups}{\texttt{.ups}}
+
+\title{LODI Outflow Boundary Condition: \\
+       Reflection-Coefficient Validation Tests}
+\author{Todd Harman}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+%______________________________________________________________________
+\section{Motivation}
+\label{sec:motivation}
+
+The LODI (Local One-Dimensional Inviscid) outflow boundary condition in
+\texttt{CCA/\allowbreak Components/\allowbreak ICE/\allowbreak CustomBCs/\allowbreak LODI2.cc} relaxes the boundary pressure
+toward a reference value $p_\infty$ using a user-specified coefficient
+$\sigma$, following the NSCBC (Navier--Stokes Characteristic Boundary
+Conditions) formulation of Sutherland and Kennedy~\cite{SutherlandKennedy2003},
+itself building on Rudy and Strikwerda~\cite{RudyStrikwerda1980} and Poinsot
+and Lele~\cite{PoinsotLele1992}. A larger $\sigma$ anchors the boundary
+pressure more strongly (suppressing long-time drift away from $p_\infty$) at
+the cost of reflecting more of any genuine outgoing disturbance back into the
+domain -- the central trade-off in the NSCBC literature.
+
+A review of \texttt{LODI2.cc} raised the question of whether a factor of
+$0.5$ appearing twice in the code (once in the default characteristic-wave
+definitions $L_1,L_5$, once again in the outflow relaxation term) constituted
+a double-counted, spurious halving of $\sigma$'s effective strength. Reading
+the cited reference directly (Sutherland and Kennedy, Table 5 and Eq.\
+8--9) showed both factors of $0.5$ are part of that paper's own convention
+and are not duplicated -- the code matches its cited source exactly. This
+document describes the follow-up validation effort: a suite of test problems
+that directly measures the boundary's \emph{reflection coefficient} $|R|$ as
+a function of $\sigma$, giving an empirical, reproducible check of the
+boundary's behavior that is independent of the symbolic algebra review.
+
+%______________________________________________________________________
+\section{Background: the outflow relaxation term}
+\label{sec:background}
+
+For a subsonic outflow with the boundary-normal direction aligned with a
+coordinate axis, \texttt{LODI2.cc} sets the incoming characteristic wave
+amplitude ($L_1$ at a right/$+$ boundary, or $L_5$ at a left/$-$ boundary) to
+\begin{equation}
+  L_{\text{relax}} = \frac{1}{2L}\,\sigma\, c\,\bigl(1 - M^2\bigr)\,
+                      \bigl(p - p_\infty\bigr),
+  \label{eq:relax}
+\end{equation}
+where $c$ is the local speed of sound, $M$ is the local Mach number, $L$ is
+the domain length normal to the boundary, and $p_\infty$ is the target
+(ambient) pressure -- this is Sutherland and Kennedy's Eq.\ 8--9 verbatim.
+$\sigma=0$ reduces to a purely characteristic (non-reflecting) extrapolation;
+large $\sigma$ pulls the boundary pressure rigidly toward $p_\infty$, which
+behaves increasingly like a reflecting wall. The tests below measure where a
+given $\sigma$ actually sits on that spectrum.
+
+%______________________________________________________________________
+\section{Test methodology}
+\label{sec:methodology}
+
+%__________________________________
+\subsection{Riemann-invariant decomposition at a probe}
+
+Each test initializes a small-amplitude Gaussian temperature spike at rest,
+off-center in the domain, using \texttt{customInitialization}
+$\rightarrow$ \texttt{gaussianTemperature}. A disturbance introduced this way
+decomposes into outward-traveling acoustic wave packets plus a stationary
+entropy anomaly that never reaches a distant probe. At a probe location
+on the domain's symmetry line (defined precisely for each test family
+below), the probe's $\texttt{press\_CC}$ and the velocity component normal
+to the boundary under test, $u$, are combined into right- and left-going
+Riemann invariants
+\begin{align}
+  p_{+}(t) &= \tfrac{1}{2}\bigl(p(t)-p_\infty\bigr) + \tfrac{1}{2}\rho_0 c_0\, u(t)
+              \qquad \text{(incident, right-going)}, \\
+  p_{-}(t) &= \tfrac{1}{2}\bigl(p(t)-p_\infty\bigr) - \tfrac{1}{2}\rho_0 c_0\, u(t)
+              \qquad \text{(reflected, left-going)},
+  \label{eq:riemann}
+\end{align}
+where $\rho_0,c_0$ are the ambient density and sound speed. The incident wave
+appears as a peak in $p_+(t)$ near the time the pulse first reaches the
+probe; the boundary's reflection appears as a later peak in $p_-(t)$. The
+reflection coefficient reported for each test is
+\begin{equation}
+  |R| \;=\; \frac{\max_t |p_-(t)|}{\max_t |p_+(t)|} .
+  \label{eq:Rdef}
+\end{equation}
+This decomposition is exact only where the transverse velocity component is
+identically zero; both the 1D and 2D test families below are constructed so
+that the probe sits exactly on such a line.
+
+%__________________________________
+\subsection{On-the-fly probe extraction}
+
+The probe history is recorded by the \texttt{DataAnalysis}
+$\rightarrow$ \texttt{lineExtract} on-the-fly analysis module
+(\texttt{CCA/\allowbreak Components/\allowbreak OnTheFlyAnalysis/\allowbreak lineExtract.cc}), sampling
+\texttt{press\_CC} and \texttt{vel\_CC} at the probe cell every timestep into
+one small, continuously-appended text file.
+
+The post-processing itself is \texttt{\footnotesize parametricStudies/postProcessTools/compute\_LODI\_reflectionCoeff.py}, which reads the
+\texttt{lineExtract} output directly (no further simulation queries needed),
+forms Eqs.~\eqref{eq:riemann}--\eqref{eq:Rdef}, and writes $|R|$ to the
+parametric-study framework's result file.
+
+%__________________________________
+\subsection{1D test family}
+\label{sec:methodology-1D}
+
+\texttt{\footnotesize StandAlone/inputs/ICE/LODI\_reflection/Lodi\_reflectionCoeff\_d\{x,y,z\}.ups}
+each use a long, thin domain (1D in the named axis; the other two directions
+are a single cell with symmetric boundaries) of length $L=2.0$~m. The pulse
+sits at $x_{\text{spike}}=1.2$~m; the probe sits at $x_{\text{probe}}=1.6$~m
+(and analogously for $y,z$). Because the pulse is centered off-axis, it
+radiates two equal-amplitude planar wave packets, one toward each boundary.
+The far boundary is also LODI, so with
+\begin{align}
+  t_1 &= \frac{x_{\text{probe}} - x_{\text{spike}}}{c_0}
+         = 1.48\times10^{-3}\ \text{s} &&\text{(incident arrival)}, \\
+  t_2 &= \frac{2L - x_{\text{spike}} - x_{\text{probe}}}{c_0}
+         = 4.44\times10^{-3}\ \text{s} &&\text{(reflection being measured)}, \\
+  t_3 &= \frac{x_{\text{spike}} + x_{\text{probe}}}{c_0}
+         = 10.4\times10^{-3}\ \text{s} &&\text{(far-boundary contamination)},
+  \label{eq:timing1D}
+\end{align}
+($c_0 = \sqrt{\gamma(\gamma-1)c_v T_0} = 270.12$~m/s for this test gas),
+the ordering $t_1 < t_2 \ll t_3$ gives a clean, uncontaminated window around
+$t_2$ in which to find the reflected peak.
+
+%__________________________________
+\subsection{2D test family}
+\label{sec:methodology-2D}
+
+\texttt{Lodi\_reflectionCoeff\_2D\_\{xy,xz,yz\}.ups} replace the 1D family's
+planar pulse with a genuinely two-dimensional, radially-expanding
+(cylindrical) one: both in-plane spreads of the Gaussian are finite, so the
+wavefront that reaches the boundary under test is curved, striking it at a
+continuum of incidence angles rather than head-on. This directly exercises
+the transverse terms that the 1D LODI approximation in
+Eq.~\eqref{eq:relax} drops.
+
+The pulse and the probe both sit on the domain's centerline in the
+\emph{second} active axis (e.g., for the x-y plane test, both are at
+$y=L/2$); by the mirror symmetry of a centered pulse, the velocity
+component along that second axis is exactly zero along the whole
+centerline, which is what keeps the simple decomposition of
+Eq.~\eqref{eq:riemann} exact even though the wave itself is curved. All four
+in-plane boundaries are LODI; the domain size and pulse/probe placement
+($L=1.0$~m, spike at $0.6$~m, probe at $0.8$~m, both on the $0.5$~m
+centerline) are chosen, via the same image-source construction used for
+Eq.~\eqref{eq:timing1D}, so that the two other boundaries' reflections
+arrive safely after the one being measured:
+\begin{equation}
+  t_1 = 7.40\times10^{-4}\ \text{s} \;<\;
+  t_2 = 2.22\times10^{-3}\ \text{s} \;<\;
+  t_{\text{other}} = 3.78\times10^{-3}\ \text{s} \;<\;
+  t_3 = 5.18\times10^{-3}\ \text{s}.
+  \label{eq:timing2D}
+\end{equation}
+
+The x-z and y-z plane variants are the identical construction with the
+in-plane axes relabeled; the x-z plane re-tests the x$+$ boundary (a
+cross-check of the implementation under a different domain orientation and
+patch decomposition), while the y-z plane tests the y$+$ boundary (a
+genuinely different boundary face). By the test gas's isotropy, all three
+should -- and, as reported below, do -- land on the same $|R|(\sigma)$
+curve.
+
+%______________________________________________________________________
+\section{Results}
+\label{sec:results}
+
+%__________________________________
+\subsection{1D (planar incidence)}
+
+Table~\ref{tab:1D} gives $|R|(\sigma)$ for the 1D family. The x, y, and z
+variants are bit-for-bit identical at every $\sigma$, as expected since they
+are the same physics problem with the active axis permuted.
+
+\begin{table}[h]
+\centering
+\caption{1D reflection coefficient vs.\ $\sigma$ (x, y, z variants agree
+         exactly).}
+\label{tab:1D}
+\begin{tabular}{@{}cc@{}}
+\toprule
+$\sigma$ & $|R|$ \\
+\midrule
+0.00 & 0.01386 \\
+0.05 & 0.01415 \\
+0.10 & 0.01444 \\
+0.27 (default) & 0.01546 \\
+0.50 & 0.01700 \\
+1.00 & 0.02116 \\
+2.00 & 0.04060 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%__________________________________
+\subsection{2D (curved incidence)}
+
+Table~\ref{tab:2D} gives $|R|(\sigma)$ for the 2D family. The x-y and y-z
+plane sweeps are bit-for-bit identical at every $\sigma$ tested; the x-z
+plane was spot-checked at $\sigma=0.27$ and also agrees exactly
+($|R|=0.026309$). This is a nontrivial cross-check: the y-z plane result in
+particular tests a genuinely different boundary face (y$+$ instead of x$+$)
+in a different domain orientation, yet the test gas's isotropy still drives
+all three to the same curve.
+
+\begin{table}[h]
+\centering
+\caption{2D reflection coefficient vs.\ $\sigma$ (x-y and y-z plane sweeps
+         agree exactly; x-z spot-checked at $\sigma=0.27$).}
+\label{tab:2D}
+\begin{tabular}{@{}cc@{}}
+\toprule
+$\sigma$ & $|R|$ \\
+\midrule
+0.00 & 0.02436 \\
+0.05 & 0.02467 \\
+0.10 & 0.02505 \\
+0.27 (default) & 0.02631 \\
+0.50 & 0.02809 \\
+1.00 & 0.03255 \\
+2.00 & 0.04477 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%__________________________________
+\subsection{Discussion}
+
+Both families show the reflection coefficient increasing monotonically with
+$\sigma$, consistent with the trade-off described in
+Section~\ref{sec:background}: the default $\sigma=0.27$ keeps $|R|$ to a few
+percent, while $\sigma=2$ pushes $|R|$ toward $4$--$5\%$ in both families.
+
+The 2D family reflects systematically more than the 1D family at every
+$\sigma$ -- roughly $70\%$ more at the default $\sigma=0.27$
+($|R|=0.0263$ vs.\ $0.0155$). This is a real, physically meaningful result,
+not an inconsistency: the 1D LODI approximation underlying
+Eq.~\eqref{eq:relax} is derived assuming a locally one-dimensional,
+normal-incidence wave, and drops the transverse pressure/velocity gradients
+that a genuinely curved wavefront has. The curved-wave test exercises
+exactly the terms the approximation omits, so a larger reflection
+coefficient there is the expected signature of that approximation's known
+limitation, not a defect in the implementation.
+
+%______________________________________________________________________
+\section{Conclusions}
+
+\begin{itemize}
+\item The LODI outflow boundary's $\sigma$ relaxation term behaves as the
+      NSCBC literature predicts: reflection increases monotonically with
+      $\sigma$, and the default $\sigma=0.27$ keeps reflection to a few
+      percent for normal-incidence (1D) waves.
+\item A genuinely curved (2D) wavefront reflects noticeably more than a
+      planar one at every $\sigma$ tested -- an expected consequence of the
+      1D LODI approximation, confirmed quantitatively rather than assumed.
+\item Three independent 2D plane orientations, including two genuinely
+      different boundary faces (x$+$ and y$+$), converge to the same
+      $|R|(\sigma)$ curve, which is strong evidence against any
+      axis-specific implementation bug.
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{SutherlandKennedy2003}
+J.~C. Sutherland and C.~A. Kennedy,
+``Improved boundary conditions for viscous, reacting, compressible flows,''
+\emph{Journal of Computational Physics}, vol.~191, no.~2, pp.~502--524, 2003.
+\url{https://doi.org/10.1016/j.jcp.2003.06.001}
+
+\bibitem{PoinsotLele1992}
+T.~J. Poinsot and S.~K. Lele,
+``Boundary conditions for direct simulations of compressible viscous flows,''
+\emph{Journal of Computational Physics}, vol.~101, no.~1, pp.~104--129, 1992.
+\url{https://doi.org/10.1016/0021-9991(92)90046-2}
+
+\bibitem{RudyStrikwerda1980}
+D.~H. Rudy and J.~C. Strikwerda,
+``A nonreflecting outflow boundary condition for subsonic Navier-Stokes
+calculations,''
+\emph{Journal of Computational Physics}, vol.~36, no.~1, pp.~55--70, 1980.
+\url{https://doi.org/10.1016/0021-9991(80)90174-6}
+
+\bibitem{YooIm2007}
+C.~S. Yoo and H.~G. Im,
+``Characteristic boundary conditions for simulations of compressible
+reacting flows with multi-dimensional, viscous and reaction effects,''
+\emph{Combustion Theory and Modelling}, vol.~11, no.~2, pp.~259--286, 2007.
+\url{https://doi.org/10.1080/13647830600898995}
+
+\end{thebibliography}
+
+\end{document}
