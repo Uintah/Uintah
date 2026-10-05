@@ -3,12 +3,12 @@
 
 <symbolicLinks>
 </symbolicLinks>
-
+<!--
 <test>
   <name>naturalConvection</name>
   <tst>naturalConvection_cavity_dx.tst</tst>
 </test>
-
+-->
 <!--
 <test>
   <name>DNS_ReTau180</name>
@@ -140,11 +140,42 @@
 
 <!--__________________________________-->
 <!--
-<test>  
+<test>
   <name>Lodi_pulse</name>
   <tst>Lodi.tst</tst>
 </test>
 -->
+
+<!--__________________________________-->
+<test>
+  <name>Lodi_reflectionCoeff_dx</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_dx.tst</tst>
+</test>
+
+<test>
+  <name>Lodi_reflectionCoeff_dy</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_dy.tst</tst>
+</test>
+
+<test>
+  <name>Lodi_reflectionCoeff_dz</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_dz.tst</tst>
+</test>
+
+<test>
+  <name>Lodi_reflectionCoeff_2D_xy</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_2D_xy.tst</tst>
+</test>
+
+<test>
+  <name>Lodi_reflectionCoeff_2D_xz</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_2D_xz.tst</tst>
+</test>
+
+<test>
+  <name>Lodi_reflectionCoeff_2D_yz</name>
+  <tst>LODI_reflection/Lodi_reflectionCoeff_2D_yz.tst</tst>
+</test>
 
 <!--__________________________________-->
 <!--
@@ -154,7 +185,6 @@
   <otherFilesToCopy> RiemannProblems/test1.in       </otherFilesToCopy>
   <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
 </test>
-<!--
 <test>
   <name>Test2</name>
   <tst>RiemannProblems/test2_dx.tst</tst>
