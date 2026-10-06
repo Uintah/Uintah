@@ -64,7 +64,7 @@ use File::Spec;
 
 use Cwd;
 use lib dirname (__FILE__) ."/framework_scripts";    # needed to find local Utilities.pm
-use Utilities qw( cleanStr setPath print_XML_ElementTree get_XML_value);
+use Utilities qw( cleanStr setPath my_cp print_XML_ElementTree get_XML_value);
 
 #__________________________________
 # bulletproofing
@@ -102,10 +102,9 @@ if (! -e $PS_path."/framework_scripts" ){
 #__________________________________
 # create the base testing directory
 if (! -e "ps_results" ){
-  system("/bin/rm -rf ps_results");
   mkdir("ps_results") || die "cannot mkdir(ps_results) $!";
 }
-chdir("ps_results");
+chdir("ps_results") || die "cannot chdir(ps_results) $!";
 my $curr_path = cwd;
 
 #__________________________________
@@ -147,14 +146,14 @@ system("which replace_XML_value") == 0 || die("\nERROR: Cannot find the command 
 # loop over each component
 
 foreach my $compNode ( $xmlElements->findnodes('component') ) {
-  chdir($curr_path);
+  chdir($curr_path) || die "cannot chdir($curr_path) $!";
 
   my $component = cleanStr( $compNode->textContent() );
 
   if ( ! -e $component) {
    mkpath($component) || die "cannot mkpath($component) $!";
   }
-  chdir($component);
+  chdir($component) || die "cannot chdir($component) $!";
   print "----------------------------------------------------------------  $component \n";
 
   my $fw_path = $config_files_path."/".$component;  # path to component config files
@@ -212,9 +211,13 @@ foreach my $compNode ( $xmlElements->findnodes('component') ) {
     my $upsFile  = setPath( $ups_tmp, $tstPath, $fw_path, $inputs_path.$component );
 
 
-                  # gnuplot file
+                  # gnuplot file.  <gnuplot> is optional -- only resolve a path if it's there,
+                  # otherwise setPath("") would resolve to a directory and the later cp would fail.
     my $gp_tmp  = cleanStr( $tstData->findvalue('/start/gnuplot/script') );
-    my $gpFile  = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
+    my $gpFile  = "";
+    if ( length($gp_tmp) > 0 ){
+      $gpFile = setPath( $gp_tmp, $tstPath, $fw_path, $inputs_path.$component );
+    }
 
 
                   # restarts
@@ -228,7 +231,7 @@ foreach my $compNode ( $xmlElements->findnodes('component') ) {
 
     #__________________________________
     #               Other files needed.  This could contain wildcards
-    my @otherFiles = "";
+    my @otherFiles = ();
 
     foreach my $node ( $test->findnodes('otherFilesToCopy') ) {
 
@@ -253,7 +256,7 @@ foreach my $compNode ( $xmlElements->findnodes('component') ) {
     unlink( $testNameOld );
     symlink( $testName, $testNameOld  ) || die "ERROR:masterScript.pl:cannot create symlink $!";
 
-    chdir($testName);
+    chdir($testName) || die "ERROR:masterScript.pl:cannot chdir($testName) $!";
 
     #__________________________________
     # bulletproofing
@@ -277,28 +280,35 @@ foreach my $compNode ( $xmlElements->findnodes('component') ) {
     #__________________________________
     # copy the config files to the testing directory
     my $testing_path = $curr_path."/".$component."/".$testName;
-    chdir($fw_path);
+    chdir($fw_path) || die "ERROR:masterScript.pl:cannot chdir($fw_path) $!";
 
     if( $doRestart ){
-      system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path");
+      system("rsync -ap --include=checkpoints/** --exclude='t[0-9]*'  $restartUda $testing_path") == 0
+        || die "ERROR:masterScript.pl: rsync of ($restartUda) to ($testing_path) failed $!";
     }
     else {
-      system("cp -f $upsFile $testing_path");
+      my_cp( $upsFile, $testing_path );
     }
 
-    system("cp -f  $tstFile $testing_path");
+    my_cp( $tstFile, $testing_path );
 
-    system("cp -f  $gpFile $testing_path");
+    if ( length($gpFile) > 0 ){
+      my_cp( $gpFile, $testing_path );
+    }
 
-    system("cp -rf @otherFiles $testing_path ");
+    if ( @otherFiles ){
+      my_cp( "@otherFiles", $testing_path, 1 );
+    }
 
-    system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1");
+    system("echo '$here_path:$postProcessCmd_path'> $testing_path/scriptPath 2>&1") == 0
+      || die "ERROR:masterScript.pl: could not write ($testing_path/scriptPath) $!";
 
-    chdir($testing_path);
+    chdir($testing_path) || die "ERROR:masterScript.pl:cannot chdir($testing_path) $!";
 
     #__________________________________
     # make a symbolic link to sus
     my $sus = `which sus`;
+    chomp($sus);
     system("ln -s $sus > /dev/null 2>&1");
 
     # make a symbolic link to inputs

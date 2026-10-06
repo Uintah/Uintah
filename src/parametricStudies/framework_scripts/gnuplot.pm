@@ -59,10 +59,14 @@ sub modifyAndPlot{
     my $ylabel= $node->findvalue( $xmlTag  . '/ylabel' );
     my $label = $node->findvalue( $xmlTag  . '/label' );
 
-    system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile");
-    system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
-    system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
-    system("sed", "-i", "s/#label/set label   \"$label\"/g",  "$gpFile");
+    system("sed", "-i", "s/#title/set title   \"$title\"/g",  "$gpFile") == 0
+      || die "ERROR(gnuplot.pm): sed of #title failed on ($gpFile) $!";
+    system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile") == 0
+      || die "ERROR(gnuplot.pm): sed of #xlabel failed on ($gpFile) $!";
+    system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile") == 0
+      || die "ERROR(gnuplot.pm): sed of #ylabel failed on ($gpFile) $!";
+    system("sed", "-i", "s/#label/set label   \"$label\"/g",  "$gpFile") == 0
+      || die "ERROR(gnuplot.pm): sed of #label failed on ($gpFile) $!";
 
 
     my @gpCmd = ( "gnuplot -c", "$gpFile", "$arg1", "$arg2" );
@@ -84,7 +88,7 @@ sub modifyAndPlot{
 sub gnuplot_singleTest{
   my( $testNode, $uda, $statsFile, $exitOnCrash ) = @_;
 
-  modifyAndPlot( $testNode, '/gnuplot', $uda, $exitOnCrash );
+  modifyAndPlot( $testNode, 'gnuplot', $uda, $statsFile, $exitOnCrash );
 };
 
 
