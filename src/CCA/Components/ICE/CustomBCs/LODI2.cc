@@ -236,14 +236,29 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       global->rho_infinity_faceSet[f]   = false;
     }
 
-    readLodiFaceVar( lodi_ps, 
-                     "press_infinity", 
+    bool foundDefaultPress =
+    readLodiFaceVar( lodi_ps,
+                     "press_infinity",
                      global->press_infinity,
-                     global->press_infinity_faceSet, 
-                     global->press_infinity_face,
-                     /*requireDefault*/ true );
+                     global->press_infinity_faceSet,
+                     global->press_infinity_face );
 
-    bool foundDefaultVel = 
+    // press_infinity doesn't require a global default - specifying it for every
+    // LODI face individually (no bare <press_infinity>) is also valid. What's
+    // not valid is a LODI face left with no way to resolve a press_infinity at all.
+    if ( !foundDefaultPress ) {
+      vector<Patch::FaceType>::iterator f_iter;
+      for ( f_iter = global->LodiFaces.begin(); f_iter != global->LodiFaces.end(); f_iter++ ) {
+        if ( !global->press_infinity_faceSet[*f_iter] ) {
+          string warn = "ERROR:\n Inputs:LODI Boundary Conditions: face " + Patch::getFaceName(*f_iter)
+                      + " has no <press_infinity>; specify one with no 'face' attribute (the default "
+                      + "for every LODI face) or one with face=\"...\" for this face specifically";
+          throw ProblemSetupException(warn, __FILE__, __LINE__);
+        }
+      }
+    }
+
+    bool foundDefaultVel =
     readLodiFaceVar( lodi_ps, 
                      "vel_infinity", 
                      global->vel_infinity,
