@@ -117,7 +117,7 @@ sub analyze{
       my $nLines = scalar( @lines );
 
       if ( $nLines != 1 ){
-        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );   # HARDCODED
+        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );
         print $all "#______________________________________________________________________\n";
         print $all "# $X\n";
         print $all @lines;
@@ -125,7 +125,7 @@ sub analyze{
       }else{
         my $Y = $lines[0];
         chomp( $Y );
-        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );   # HARDCODED
+        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );
         print $all "$X $Y\n";
         close( $all );
       }

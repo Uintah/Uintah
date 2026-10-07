@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--______________________________________________________________________
+  plotLineExtractProfiles.xml
+
+  Configuration for plotLineExtractProfiles.py - edit this file to change
+  the plot style, which columns are plotted, the page layout, and the
+  y-axis ranges.
+ 
+______________________________________________________________________-->
+<plotConfig>
+
+  <!--____________________________________________________________________
+    Matplotlib style options.  This whole block, or any option inside it,
+    may be omitted to fall back to the script's built-in defaults.
+  ____________________________________________________________________-->
+  <plotOptions>
+    <figsize width="12" height="9" />            <!-- inches -->
+    <line marker="." markersize="3" width="0.5" />
+    <grid linestyle=":" linewidth="0.5" />
+  </plotOptions>
+
+  <!-- the data column used as the x axis of every panel: ( e.g. "X_CC" ),
+       or its 1-based column number -->
+  <colX> X_CC </colX>
+
+  <!--____________________________________________________________________
+    pages - one <page> per PNG to make per timestep.  @
+      suffix names the output file
+      @cols lists 1-4 comma-separated data columns, one per
+    panel -  Each column may be given either by its
+    descriptor name or by its 1-based column number - the two
+    forms can be mixed freely in the same list.
+  ____________________________________________________________________-->
+  <pages>
+    <page suffix="A" cols="press_CC_0, delPDilatate_0, rho_CC_1, vel_CC_1.x" />  <!-- <<< Change these columns -->
+    <page suffix="B" cols="compresiblity_1, TMV_CC_0, vol_frac_CC_1" /> 
+  </pages>
+
+  <!--____________________________________________________________________
+    yRanges - optional fixed y-axis limits, keyed by data column ( name
+    or number, same as @cols above ).  A column with no <range> here
+    autoscales as usual.
+  ____________________________________________________________________-->
+  <yRanges>
+    <range col="press_CC_0" min="100000" max="102000" />  <!-- <<< Change these to fix the y_range -->
+  </yRanges>
+
+</plotConfig>

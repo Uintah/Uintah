@@ -1,10 +1,83 @@
 #!/bin/bash
 
-~/HTW/branch/Uintah/opt/StandAlone/lineextract -v rho_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda $1 >  rho.out
-~/HTW/branch/Uintah/opt/StandAlone/lineextract -v vel_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda $1 >  vel.out
+#______________________________________________________________________
+#   Parse inputs
+if ! options=$(getopt --alternative --name processMassFlowRate --options o: --longoptions uda: -- "$@"); then
+  echo "Usage: processMassFlowRate -uda VALUE -o FILE" >&2
+  exit 1
+fi
+
+eval set -- "$options"
+
+while true; do
+  case "$1" in
+    --uda) uda="$2"; shift 2 ;;
+    -o)    out="$2"; shift 2 ;;
+    --)    shift; break ;;
+    *)     echo "Internal error: unhandled option $1" >&2; exit 1 ;;
+  esac
+done
+
+# Check for required options after parsing
+if [[ -z $uda || -z $out ]]; then
+  echo "--uda and -o are required" >&2
+  exit 1
+fi
+
+
+here=$( pwd )
+
+if [[ $USER == "harman" ]]; then
+  opt="/home/builds/HTW/opt_gcc/StandAlone"
+  src="/home/builds/Fresh/trunk/src/"
+else
+  opt="$HOME/HTW/branch/Uintah/opt/StandAlone/"
+  src="$HOME/HTW/src"
+fi
+
+#______________________________________________________________________
+#         generate movies:
+"$src"/scripts/combineLineExtactData.sh -d x "$uda"/domain > lineExtract.log
+
+"$src"/scripts/plotLineExtractProfiles.py -n 10 \
+                                        --uda "$uda" \
+                                        --config plotLineExtractProfiles.xml \
+                                        --line-name domain > plots.log
+
+cd "$uda"/domain/L-0/plots
+
+"$src"/scripts/ppmToMpeg.sh A_ < /dev/null
+"$src"/scripts/ppmToMpeg.sh B_ < /dev/null
+
+name=$( basename "$uda" .uda )
+mpeg="$name.mpeg"
+
+cd "$here"
+
+ln -s "$uda"/domain/L-0/plots/A_.mpeg "A_$mpeg"
+ln -s "$uda"/domain/L-0/plots/B_.mpeg "B_$mpeg"
+
+#______________________________________________________________________
+#         Mass flow rate
+
+echo "extracting rho_CC"
+"$opt"/lineextract -v rho_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda "$uda" >  rho.out
+
+echo "extracting vel_CC"
+"$opt"/lineextract -v vel_CC -istart 0 0 0 -iend 0 0 0 -m 1 -uda "$uda" >  vel.out
+
 grep '0 0 0' rho.out > rhoOnly.out
 grep '0 0 0' vel.out > velOnly.out
+
 paste rhoOnly.out velOnly.out > rhovelOnly.out
+
 awk '{print  1.e-6*$4 * $8}' rhovelOnly.out > MFR.out
-mv rhovelOnly.out $1
-mv MFR.out $1
+cat MFR.out > "$out"
+
+mv rhovelOnly.out "$uda"
+mv MFR.out "$uda"
+mv rho.out "$uda"
+mv vel.out "$uda"
+
+echo "done with processMassFlowRate"
+exit
