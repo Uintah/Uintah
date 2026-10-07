@@ -15,9 +15,9 @@ set label "Comparison against CPU code run with 1000 Boundary Flux Rays" at scre
 #xlabel
 #ylabel
 
-!paste L2norm.dat L1 > L1.all
-!paste L2norm.dat L2 > L2.all
-!paste L2norm.dat Linf >Linf.all
+!paste allRuns.out L1 > L1.all
+!paste allRuns.out L2 > L2.all
+!paste allRuns.out Linf >Linf.all
 
 set pointsize 1
 plot 'L2.all' using 1:2 t 'W Face',\

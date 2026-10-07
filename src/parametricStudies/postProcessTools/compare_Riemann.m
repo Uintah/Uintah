@@ -241,7 +241,7 @@ end
 nargv = length(output_file);
 if (nargv > 0)
 
-  output_Lnorm( 'L2norm.dat',        allVars, resolution(pDir), L2norm )
+  output_Lnorm( 'allRuns.out',        allVars, resolution(pDir), L2norm )
   output_Lnorm( 'LInfinityNorm.dat', allVars, resolution(pDir), LInfinity )
 
 end
