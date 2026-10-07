@@ -21,10 +21,10 @@ a2 = 0.1; b2 = 0.01;
 a3 = 0.1; b3 = 0.01;
 a4 = 0.1; b4 = 0.01;
 
-fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
-fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
-fit f3(x) 'L2norm.dat' using 1:4 via a3, b3
-fit f4(x) 'L2norm.dat' using 1:5 via a4, b4
+fit f1(x) 'allRuns.out' using 1:2 via a1, b1
+fit f2(x) 'allRuns.out' using 1:3 via a2, b2
+fit f3(x) 'allRuns.out' using 1:4 via a3, b3
+fit f4(x) 'allRuns.out' using 1:5 via a4, b4
 set style line 1  lt 1 lw 0.3 lc 8
 
 
@@ -42,13 +42,13 @@ set multiplot  layout 2,1
 
 set ylabel 'L-2 Norm error'
 unset xlabel
-plot 'L2norm.dat' using 1:2 t 'Density' with linespoints,\
+plot 'allRuns.out' using 1:2 t 'Density' with linespoints,\
       f1(x) with l ls 1 title "",\
-      'L2norm.dat' using 1:3 t 'Velocity' with linespoints,\
+      'allRuns.out' using 1:3 t 'Velocity' with linespoints,\
       f2(x) with l ls 1 title "",\
-      'L2norm.dat' using 1:4 t 'Pressure' with linespoints,\
+      'allRuns.out' using 1:4 t 'Pressure' with linespoints,\
       f3(x) with l ls 1 title "",\
-      'L2norm.dat' using 1:5 t 'Temperature' with linespoints,\
+      'allRuns.out' using 1:5 t 'Temperature' with linespoints,\
       f4(x) with l ls 1 title ""
 
 unset title

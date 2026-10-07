@@ -1,13 +1,14 @@
 <config>
 
-<component>ICE</component>
-
- <!--<component>Arches</component>
+<!--
+ <component>Arches</component>
  <component>Arches/RMCRT</component>
  <component>ICE</component>
  <component>Examples</component>
  <component>MPM</component>
+-->
  <component>MPMICE</component>
+<!-- 
  <component>MPMICE/Propagation_burning</component>
  <component>MPMICE/Compare_burn_rates</component>
  <component>infrastructure</component> -->

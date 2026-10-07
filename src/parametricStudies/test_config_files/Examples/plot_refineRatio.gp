@@ -19,8 +19,8 @@ set label "Resolution:\nCoarse level: 41,41,41 \nFine level:   RR * (41,41,41)" 
 set label "Div Q compared on L-0" at screen 0.2,0.2
 #set key at screen 0.35,0.175
 
-plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
-     'L2norm.dat' using 1:3 t 'Y Error' with points, \
-     'L2norm.dat' using 1:4 t 'Z Error' with points
+plot 'allRuns.out' using 1:2 t 'X Error' with points, \
+     'allRuns.out' using 1:3 t 'Y Error' with points, \
+     'allRuns.out' using 1:4 t 'Z Error' with points
 
 !ps2pdf RR_error.ps

@@ -103,15 +103,33 @@ sub analyze{
       system( "@cmd" );
     }
 
-
-
     #__________________________________
     #   If the script outputs concatenate results
+    #   Depending upon the numbrer of lines in the ppOutput is branches.
+
     if ( -e $ppOutput && -s $ppOutput ){
-      my $L2norm = `cat $ppOutput`;
-      chomp($L2norm);
-      `echo $X $L2norm >> L2norm.dat`;            # HARDCODED
-      `rm -f $ppOutput`;
+
+      open( my $fh, "<", $ppOutput ) or die( "ERROR(analyze.pm): Cannot open ( $ppOutput )\n" );
+
+      my @lines = <$fh>;
+      close( $fh );
+
+      my $nLines = scalar( @lines );
+
+      if ( $nLines != 1 ){
+        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );   # HARDCODED
+        print $all "#______________________________________________________________________\n";
+        print $all "# $X\n";
+        print $all @lines;
+        close( $all );
+      }else{
+        my $Y = $lines[0];
+        chomp( $Y );
+        open( my $all, ">>", "allRuns.out" ) or die( "ERROR(analyze.pm): Cannot open allRuns.out\n" );   # HARDCODED
+        print $all "$X $Y\n";
+        close( $all );
+      }
+      unlink( $ppOutput );
     }
   }
 };

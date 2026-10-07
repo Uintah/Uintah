@@ -16,7 +16,7 @@ set label "1000 Rays/cell" at screen 0.2, 0.15
 #ylabel
 
 
-!paste L2norm.dat Lnorms > Lnorms.all
+!paste allRuns.out Lnorms > Lnorms.all
 
 set pointsize 1
 plot 'Lnorms.all' using 1:4 t ''

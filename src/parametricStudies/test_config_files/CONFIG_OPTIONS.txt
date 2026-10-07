@@ -382,7 +382,7 @@ __________________________________
 4.9 Per-<Test> options
 
   <Title>             Required. Unique test name; used to build <Title>.ups, <Title>.uda,
-                      out.<Title>, the batch job name, and the L2norm.dat row label.
+                      out.<Title>, the batch job name, and the allRuns.out row label.
 
   <sus_cmd>            Required (except pure restart-edit tests). The run command, e.g. sus,
                       mpirun -np 8 sus. For a restart, -restart/-t N flags are stripped and
@@ -396,10 +396,10 @@ __________________________________
   <postProcess_cmd>    Optional. Repeatable. Comparison command run after sus succeeds, e.g.
   
                       "compare_Rayleigh.m -aDir 1 -mat 0 -plot true". Run as "<cmd> -o outPP.<x> -uda <Title>.uda"; 
-                      non-empty output is appended to L2norm.dat.
+                      non-empty output is appended to allRuns.out.
 
   <x>                  Required if <postProcess_cmd> is used. The independent-variable value
-                      for this test point (e.g. resolution), used as L2norm.dat's x-column.
+                      for this test point (e.g. resolution), used as allRuns.out's x-column.
 
   <gnuplot>            Optional. 0 or 1. Per-test plot -- see section 4.8.
 
@@ -516,5 +516,5 @@ A compact file touching most tags: base .ups, an aggregate <gnuplot>, <AllTests>
 
 <upsFile> names the base input. <AllTests> sets maxTime/outputInterval/upper for every test.
 Each <Test> overrides <resolution>, runs sus, compares against the analytic solution, and
-records the error at that resolution into L2norm.dat. Once all tests finish, the top-level
-<gnuplot> plots L2norm.dat (error vs. resolution).
+records the error at that resolution into allRuns.out. Once all tests finish, the top-level
+<gnuplot> plots allRuns.out (error vs. resolution).

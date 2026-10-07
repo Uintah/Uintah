@@ -24,8 +24,8 @@ y_1L=0.0433944
 z_1L=0.0450517
 
 
-plot 'L2norm.dat' using 1:($2/x_1L) lc 1 lt 4 lw 4 pointsize 2 t 'X Error' with points, \
-     'L2norm.dat' using 1:($3/y_1L) lc 2 lt 6 lw 4 pointsize 2 t 'Y Error' with points, \
-     'L2norm.dat' using 1:($4/z_1L) lc 3 lt 8 lw 4 pointsize 2 t 'Z Error' with points
+plot 'allRuns.out' using 1:($2/x_1L) lc 1 lt 4 lw 4 pointsize 2 t 'X Error' with points, \
+     'allRuns.out' using 1:($3/y_1L) lc 2 lt 6 lw 4 pointsize 2 t 'Y Error' with points, \
+     'allRuns.out' using 1:($4/z_1L) lc 3 lt 8 lw 4 pointsize 2 t 'Z Error' with points
 
 !ps2pdf Error.ps

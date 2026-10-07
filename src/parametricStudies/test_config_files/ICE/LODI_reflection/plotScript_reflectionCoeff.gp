@@ -10,6 +10,6 @@ set grid xtics ytics
 #ylabel
 #label
 
-plot 'L2norm.dat' using 1:2 t 'LODI outflow |R|' with linespoints pt 7
+plot 'allRuns.out' using 1:2 t 'LODI outflow |R|' with linespoints pt 7
 
 !ps2pdf orderAccuracy.ps
