@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+    <!--
+     1D (in z) linear-acoustics reflection-coefficient test for the LODI
+     outflow boundary condition.
+
+     A narrow, small-amplitude Gaussian temperature spike at rest decomposes
+     into two equal-amplitude acoustic wave packets, one running toward each
+     boundary (plus a stationary entropy anomaly that stays put, since the
+     induced velocity is tiny and never reaches the probe). The spike is
+     placed asymmetrically (closer to x+, the LODI face under test) and a
+     probe sits between the spike and x+ such that:
+
+       z_spike + z_probe > domainLength
+
+     which guarantees any reflection returning from z- arrives at the probe
+     strictly after the z+ reflection we're measuring (see the companion
+     analysis script for the exact timing). At the probe, decomposing
+     press_CC/vel_CC into right-/left-going Riemann invariants
+
+     (p_plus = 0.5*(p-p_inf) + 0.5*rho0*c0*u,
+     p_minus = the same with a minus sign)
+
+     isolates the incident wave (peaks in p_plus near t1) from the
+     z+ reflection (peaks in p_minus near t2), with
+     |R| = max|p_minus| / max|p_plus| the LODI outflow's reflection
+     coefficient for this sigma.
+
+     References:
+     [1] J.C. Sutherland, C.A. Kennedy, "Improved boundary conditions for
+         viscous, reacting, compressible flows," Journal of Computational
+         Physics, 191(2):502-524, 2003. (doi:10.1016/j.jcp.2003.06.001)
+         - the LODI formulation this .ups exercises (CCA/Components/ICE/
+         CustomBCs/LODI2.cc cites this paper's Table 5 and Eq. 8-9 directly).
+
+     [2] T.J. Poinsot, S.K. Lele, "Boundary conditions for direct
+         simulations of compressible viscous flows," Journal of
+         Computational Physics, 101(1):104-129, 1992.
+         (doi:10.1016/0021-9991(92)90046-2) - origin of the NSCBC outflow
+         relaxation approach and the acoustic-pulse/vortex-convection
+         reflection benchmark this test is modeled on.
+
+     [3] D.H. Rudy, J.C. Strikwerda, "A nonreflecting outflow boundary
+         condition for subsonic Navier-Stokes calculations," Journal of
+         Computational Physics, 36(1):55-70, 1980.
+         (doi:10.1016/0021-9991(80)90174-6) - source of the sigma*c*(1-M^2)
+         outflow relaxation term and the sigma ~ 0.25-0.28 recommendation.
+
+     [4] C.S. Yoo, H.G. Im, "Characteristic boundary conditions for
+         simulations of compressible reacting flows with multi-dimensional,
+         viscous and reaction effects," Combustion Theory and Modelling,
+         11(2):259-286, 2007. (doi:10.1080/13647830600898995) - this test's
+         methodology (measuring boundary reflection via wave-amplitude
+         decomposition at a probe) follows this paper's validation approach.
+    -->
+   <Meta>
+       <title>LODI outflow reflection-coefficient test (z direction)</title>
+   </Meta>
+   <SimulationComponent type="ice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0058       </maxTime>
+       <initTime>           0.0          </initTime>
+       <delt_min>           0.0          </delt_min>
+       <delt_max>           1.0          </delt_max>
+       <delt_init>          1.0e-7       </delt_init>
+       <timestep_multiplier>1.0          </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+
+    <Grid>
+    <BoundaryConditions>
+
+      <LODI>
+        <press_infinity>  101325.0  </press_infinity>
+        <sigma>           0.27      </sigma>
+        <material>       atmosphere </material>
+      </LODI>
+
+      <Face side = "x-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="1">
+              <lower>        [0,      0,     0]    </lower>
+              <upper>        [0.005,  0.005, 2.0]   </upper>
+              <extraCells>   [1,1,1]                </extraCells>
+              <patches>      [1,1,2]                </patches>
+              <resolution>   [1,1,400]               </resolution>
+           </Box>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>Lodi_reflectionCoeff.uda</filebase>
+      <outputInterval> 0.001 </outputInterval>
+      <save label="vel_CC"/>
+      <save label="press_CC"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+
+        <customInitialization>
+          <gaussianTemperature>
+            <origin>     [0.0025, 0.0025, 1.2]  </origin>
+            <amplitude>  5.0                    </amplitude>
+            <spread_x>   10.0                   </spread_x>
+            <spread_y>   10.0                   </spread_y>
+            <spread_z>   0.03                   </spread_z>
+          </gaussianTemperature>
+        </customInitialization>
+      </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325 </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name="atmosphere">
+           <EOS type = "ideal_gas"/>
+          <dynamic_viscosity>     0.0    </dynamic_viscosity>
+          <thermal_conductivity>  0.0    </thermal_conductivity>
+          <specific_heat>         652.9  </specific_heat>
+          <gamma>                 1.289  </gamma>
+
+           <geom_object>
+             <box label="Whole grid">
+               <min>  [-2.0,-2.0,-2.0]  </min>
+               <max>  [ 4.0, 4.0, 4.0]  </max>
+             </box>
+             <res>          [2,2,2]                </res>
+             <velocity>     [0.0,0.0,0.0]          </velocity>
+             <density>      1.7899909957225715000  </density>
+             <pressure>     101325.0               </pressure>
+             <temperature>  300.0                  </temperature>
+           </geom_object>
+         </material>
+      </ICE>
+
+    </MaterialProperties>
+    <!--____________________________________________________________________-->
+    <!--      D  A  T  A     A  N  A  L  Y  S  I  S                         -->
+    <!--____________________________________________________________________-->
+    <!--
+     On-the-fly point probe at z=1.6 m  file (uda/probe/L-0/i0_j0_k320) sampled every timestep.
+    -->
+    <DataAnalysis>
+      <Module name = "lineExtract">
+        <material>           atmosphere  </material>
+        <samplingFrequency>  1e7         </samplingFrequency>
+        <timeStart>          0           </timeStart>
+        <timeStop>           1.0         </timeStop>
+
+        <Variables>
+          <analyze label = "press_CC" matl = "0"/>
+          <analyze label = "vel_CC"   matl = "0"/>
+        </Variables>
+
+        <lines>
+          <line name = "probe">
+            <startingPt>  [0.0025, 0.0025, 1.600]  </startingPt>
+            <endingPt>    [0.0025, 0.0025, 1.605]  </endingPt>
+          </line>
+        </lines>
+      </Module>
+    </DataAnalysis>
+</Uintah_specification>

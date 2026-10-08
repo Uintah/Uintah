@@ -1,0 +1,520 @@
+PARAMETRICSTUDIES CONFIGURATION-FILE REFERENCE
+================================================
+
+Every option you can write in the XML files that drive the parametricStudies/ framework.
+There is no DTD/XSD for this format -- this reference comes from ../Instructions, inline
+comments in example files, and the Perl parser (framework_scripts/masterScript.pl,
+run_tests.pl, run_tests_restart.pl, Utilities.pm, analyze.pm, gnuplot.pm). File/line
+references let you check behavior directly in the code.
+
+For the setup/run workflow (symlinking, uncommenting a component, running
+parametricStudies/runTests) see ../Instructions -- not repeated here.
+
+
+1. OVERVIEW -- THE THREE-TIER HIERARCHY
+______________________________________________________________________
+
+    test_config_files/components.xml             (which Uintah components to test)
+            |
+            v
+    test_config_files/<Component>/whatToRun.xml   (which parametric studies to run
+            |                                       for that component)
+            v
+    test_config_files/<Component>/<study>.tst     (the parametric study itself: base
+                                                     input, per-test parameter edits,
+                                                     post-processing, plotting,
+                                                     optional batch submission)
+
+A fourth, optional file -- a batch-scheduler template (e.g. *.slrm) -- is referenced from a
+.tst file's <batchScheduler> block (section 4.7).
+
+
+2. components.xml
+______________________________________________________________________
+
+Root element: <config>.
+
+  <component>     Required (at least one uncommented). Repeatable. Component subdirectory
+                   under test_config_files/ to test -- e.g. ICE, MPM, MPMICE,
+                   MPMICE/Propagation_burning, Arches, Arches/RMCRT, Examples, infrastructure.
+                   Must have a matching <Component>/whatToRun.xml.
+
+  <sus_path>       Optional. 0 or 1. Path to the sus executable; prepended to PATH. Leave
+                   empty if sus is already on PATH.
+
+  <scripts_path>   Optional. 0 or 1. Extra path prepended to PATH for all components (e.g. an
+                   octave bin directory) needed by post-processing scripts.
+
+mpirun, xmlstarlet, replace_XML_line, and replace_XML_value must also already be on PATH.
+
+Example (only ICE active):
+
+    <config>
+    <component>ICE</component>
+    <sus_path></sus_path>
+    <scripts_path>/path/to/octave/bin/</scripts_path>
+    </config>
+
+
+3. <Component>/whatToRun.xml
+______________________________________________________________________
+
+Root element: <config>.
+
+  <postProcessCmd_path>   Optional. 0 or 1. Path prepended to PATH so this component's
+                           analysis scripts can be found by <postProcess_cmd>.
+
+  <symbolicLinks>          Optional. 0 or 1. Space-separated paths; a symlink to each is
+                           created in every test's result directory (e.g. for lookup tables
+                           needed by the .ups).
+
+  <test>                   Required (at least one). Repeatable. One parametric study to run.
+                           Children:
+                             <name>              Required. Builds the results subdirectory
+                                                  ps_results/<component>/<name>.<N>.
+                             <tst>                Required. Path to the .tst file describing
+                                                  the study (relative to the component
+                                                  directory, or absolute).
+                             <otherFilesToCopy>   Optional. Repeatable. Extra file(s)/
+                                                  directory(ies) (wildcards OK) copied into the
+                                                  test's working directory -- e.g. experimental
+                                                  -data files a comparison script needs.
+
+Example:
+
+    <config>
+    <postProcessCmd_path>/path/to/scripts/</postProcessCmd_path>
+    <symbolicLinks></symbolicLinks>
+
+    <test>
+      <name>Lodi_reflectionCoeff_dx</name>
+      <tst>LODI_reflection/Lodi_reflectionCoeff_dx.tst</tst>
+    </test>
+    </config>
+
+With <otherFilesToCopy>:
+
+    <test>
+      <name>Test1</name>
+      <tst>RiemannProblems/test1_dx.tst</tst>
+      <otherFilesToCopy> RiemannProblems/test1.in       </otherFilesToCopy>
+      <otherFilesToCopy> RiemannProblems/plotResults.gp </otherFilesToCopy>
+    </test>
+
+
+4. *.tst FILES -- THE PARAMETRIC-STUDY SPEC
+______________________________________________________________________
+
+Root element: <start>. Fresh runs use run_tests.pl
+
+4.1 Top-level /start/... options (apply once, before the per-test loop)
+
+  <upsFile>              Required unless <restart_uda> is present. Base .ups file. Resolved
+                         relative to the .tst file's directory, the component directory, or
+                         <inputs_path>. Ignored for restart studies.
+
+  <inputs_path>           Optional. Default: src/StandAlone/inputs/. Overrides the lookup
+                         directory for <upsFile>.
+
+  <exitOnCrash>           Optional. Default: true. true/false. Whether the whole run aborts
+                         on a sus crash/timeout, or continues to the next <Test>.
+
+  <susTimeout_minutes>    Optional. Default: 86400. Wall-clock timeout per sus run, passed
+                         straight to "timeout --preserve-status".
+
+  <AllTests>              Optional. Replacements applied once, to every test, before the
+                         per-test loop. Children: <replace_lines> (section 4.3), <replace_values>
+                         (section 4.4), <preProcess_cmd> (section 4.6) -- same syntax as inside
+                         <Test>.
+
+  <batchScheduler>        Optional. Submits each test as an HPC batch job instead of running
+                         sus directly. See section 4.7.
+
+  <gnuplot>               Optional. A plot generated after all tests finish. Same children as
+                         the per-test <gnuplot>, section 4.8.
+__________________________________
+
+4.2 Restart studies: <restart_uda>
+
+  <restart_uda>           Optional.  
+                          Children:
+                           <uda>                 Required. Path to the existing .uda to
+                                                 restart from.
+                           <checkpoint_timestep> Required. Checkpoint subdirectory (e.g.
+                                                 t01146) used to find
+                                                 checkpoints/<timestep>/timestep.xml and its
+                                                 index for the "-t <N>" restart flag.
+
+<replace_lines>/<replace_values> edit copies of the restart uda's input.xml and
+checkpoints/<timestep>/timestep.xml; a diff.<Title> file is saved per test.
+
+Example:
+
+    <start>
+      <exitOnCrash> false </exitOnCrash>
+
+      <restart_uda>
+        <uda> /path/to/FTRMTest.uda.000 </uda>
+        <checkpoint_timestep>t01146</checkpoint_timestep>
+      </restart_uda>
+
+      <AllTests>
+        <replace_lines>
+          <maxTime> 1.3 </maxTime>
+        </replace_lines>
+      </AllTests>
+
+      <Test>
+        <Title>loadCurve_1</Title>
+        <sus_cmd> mpirun -np 2 sus </sus_cmd>
+        <replace_values>
+          <entry path="Uintah_timestep/PhysicalBC/MPM/pressure/load_curve/time_point[5]/load" value="-1000"/>
+        </replace_values>
+      </Test>
+    </start>
+
+Tip: to find the XPath on a restart uda, run:
+xmlstarlet el -v <uda>/checkpoints/<timestep>/timestep.xml
+
+__________________________________
+
+4.3 <replace_lines>
+
+Used under <AllTests> (every test) and/or inside a <Test> (merges on top of <AllTests>).
+Children: any tag that appears in the target .ups/input.xml/timestep.xml -- e.g. <maxTime>,
+<resolution>, <patches>, <outputInterval>, <upper>. Use when the tag is UNIQUE in the file.
+Does a whole-line, first-match replace (sed-style, not XPath).
+
+Example (ICE/rayleigh_dx.tst, abridged):
+
+    <AllTests>
+      <replace_lines>
+        <maxTime> 0.2 </maxTime>
+        <outputInterval>0.1</outputInterval>
+        <upper> [0.5,0.025,0.01] </upper>
+      </replace_lines>
+    </AllTests>
+
+    <Test>
+      <Title>10</Title>
+      <sus_cmd>sus</sus_cmd>
+      <postProcess_cmd>compare_Rayleigh.m -aDir 1 -mat 0 -plot true</postProcess_cmd>
+      <x>10</x>
+      <replace_lines>
+        <resolution> [20,10,1] </resolution>
+      </replace_lines>
+    </Test>
+
+__________________________________
+
+4.4 <replace_values>
+
+Used under <AllTests> and/or inside a <Test>, same scoping as <replace_lines>. Children: one
+or more <entry path="<xpath>" value="<newvalue>"/>. Use when the tag is NOT unique (target
+one via a predicate, e.g. Box[@label=1]), or to set an ATTRIBUTE instead of element text (e.g.
+.../Face[@side='z-']/@side). Does an XPath-targeted replace via xmlstarlet. The path must
+resolve to exactly one node, or the script dies naming the first path segment that doesn't
+exist.
+
+Example: setting an ATTRIBUTE (ICE/advectScalar1D_dz.tst). <replace_lines> can't rewrite an
+attribute, so flipping which face a boundary condition applies to targets the Face element's
+own "side" attribute directly:
+
+    <replace_values>
+        <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z-']/@side" value ='x-' />
+        <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/@side" value ='x+' />
+    </replace_values>
+
+Example: disambiguating a NON-UNIQUE tag (ICE/cavityFlow_dy.tst). <value> alone isn't unique
+across faces, so the path adds attribute predicates to pin down exactly one:
+
+    <replace_values>
+        <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value"
+               value = '[0,0.02,0]' />
+    </replace_values>
+
+__________________________________
+
+4.5 Finding the XPath for a replace_values entry
+
+The fast way: framework_scripts/findXMLPaths.pl (symlinked at the parametricStudies root as
+findXMLPaths) analyzes a .ups file and prints every <entry path="..." value="..."/> it
+supports, with the file's current value already filled in -- copy a line, then just edit the
+value. It builds each path itself, correctly chaining parent predicates (the thing
+"xmlstarlet el -v" does NOT do, see below), and only emits paths it has verified resolve to
+exactly one node.
+
+    $ findXMLPaths  cavityFlow_dy.ups
+    # -- element values (71) --
+        <entry path="Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/BCType[@id='0' and @label='Velocity' and @var='Dirichlet']/value" value="[0,1,0]"/>
+        ...
+    # -- attributes (125) --
+        <entry path="Uintah_specification/Grid/BoundaryConditions/Face[@side='z-']/@side" value="z-"/>
+        ...
+
+The output is split into two sections -- "element values" (paths ending at a leaf's text,
+e.g. .../value) and "attributes" (paths ending in /@name, e.g. /@side, /@id). For a block
+like BoundaryConditions, where nearly every element also carries disambiguating attributes,
+both sections end up full of BoundaryConditions entries -- that's the same single block
+reported from two angles, not two separate BoundaryConditions sections in the file.
+
+Options:
+  -g, --grep <pattern>   only print paths matching <pattern> (case-insensitive) -- narrow a
+                         large file down to one face/tag, e.g. -g "side='x-'"
+      --no-values        suppress the "element values" section (attributes only)
+      --no-attrs         suppress the "attributes" section (element values only)
+  -h, --help             usage
+
+Doing it by hand instead (what findXMLPaths.pl automates):
+
+  1. "xmlstarlet el -v <file>" lists each element's path with its attribute predicates, e.g.:
+
+         Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']
+         Uintah_specification/Grid/BoundaryConditions/Face/BCType[@id='0' and @label='Velocity' and @var='Dirichlet']/value
+
+     It doesn't chain a parent predicate onto the child's line -- combine them by hand:
+
+         Face[@side='z+']/BCType[@id='0' and @label='Velocity' and @var='Dirichlet']/value
+
+  2. "xmlstarlet sel -t -v "<xpath>" <file>" prints every match -- confirm you get exactly
+     one before using the path:
+
+         $ xmlstarlet sel -t -v "Face/BCType[@label='Velocity']/value" cavityFlow_dy.ups
+          [0.,0.,0.]
+          [0.,0.,0.]
+          [0.,0.,0.]
+          [0,1,0]                     <- 4 matches: still ambiguous
+
+         $ xmlstarlet sel -t -v "Face[@side='z+']/BCType[@label='Velocity']/value" cavityFlow_dy.ups
+          [0,1,0]                     <- 1 match: ready to use
+
+For an attribute, end the path with "/@name", e.g. .../Face[@side='z-']/@side.
+
+__________________________________
+
+4.6 <preProcess_cmd>
+
+Legal under <AllTests> or a <Test> (repeatable). Not used by any current example .tst --
+included for completeness.
+
+    <preProcess_cmd cmd="some_executable args..." which_ups="TEST_UPS|BASE_UPS|none" add_ups="true|false"/>
+
+  cmd         Required. Command to run as a pre-processing step; must be on PATH.
+  which_ups   Required. .ups file to append as the last argument: TEST_UPS, BASE_UPS, or none.
+  add_ups     Required. "true" with which_ups in {TEST_UPS, BASE_UPS}, or "false" with
+              which_ups="none" -- any other pairing is a fatal error.
+
+Output is appended to out.preProcess.
+
+__________________________________
+
+4.7 <batchScheduler> -- HPC job submission
+
+Submits each test as a batch job instead of running sus directly.
+
+  <template>        Required. Path to a scheduler-script template (e.g. a .slrm file, see
+                    below) with [token] placeholders; copied into each test's directory.
+
+  <submissionCmd>    Required. Shell command used to submit the script, e.g. sbatch.
+
+  <batchReplace tag="[name]" value="val"/>
+                    Optional. Repeatable. Global token substitution for every test (e.g.
+                    [acct], [partition], [runTime]).
+
+A <batchReplace> inside a <Test> overrides a token for that test only (commonly [mpiRanks]).
+The framework also auto-injects [jobName] (the test's <Title>) and [output]
+(job-<Title>.out).
+
+Example (abridged):
+
+    <batchScheduler>
+      <template> myBatch.slrm </template>
+      <submissionCmd> sbatch </submissionCmd>
+      <batchReplace tag="[acct]"      value="efd-np" />
+      <batchReplace tag="[partition]" value="efd-np" />
+      <batchReplace tag="[runTime]"   value="30" />
+    </batchScheduler>
+
+    <Test>
+      <Title>1_2</Title>
+      <sus_cmd>mpirun -np 1 sus -nthreads 2</sus_cmd>
+      <batchReplace tag="[mpiRanks]" value="1" />
+    </Test>
+
+The <template> file itself (e.g. *.slrm) is a plain shell/scheduler script with bracketed
+placeholders, filled in by the <batchReplace> entries above (global and per-test) and the
+auto-injected [jobName]/[output]. Any other [token] you invent is legal as long as some
+<batchReplace> supplies it. Whitespace around "=" is stripped after substitution (Slurm
+doesn't tolerate "KEY = value").
+
+Example template:
+
+    #!/bin/bash
+    #SBATCH --job-name=[jobName]
+    #SBATCH --time=[runTime]      # walltime
+    #SBATCH --output=[output]     # stdout and stderr
+    #SBATCH --ntasks=[mpiRanks]   # number of MPI tasks
+    #SBATCH --account=[acct]      # account
+    #SBATCH --partition=[partition] # partition
+
+    module load mpich/3.2
+
+__________________________________
+
+4.8 <gnuplot>
+
+Legal under /start (aggregate plot, after all tests) or inside a <Test> (per-test plot, after
+that test).
+
+  <script>    Required. Path to a .gp gnuplot script.
+  <title>     Optional. Substituted for #title in the script.
+  <xlabel>    Optional. Substituted for #xlabel.
+  <ylabel>    Optional. Substituted for #ylabel.
+  <label>     Optional. Substituted for #label -- a free-form annotation.
+  <arg1>      Optional. First positional argument to "gnuplot -c <script> <arg1> <arg2>".
+  <arg2>      Optional. Second positional argument.
+
+A related tag, <gnuplot_cmd>, triggers the per-test gnuplot step -- but no current example
+sets it; all rely on just the presence of <gnuplot>.
+
+__________________________________
+
+4.9 Per-<Test> options
+
+  <Title>             Required. Unique test name; used to build <Title>.ups, <Title>.uda,
+                      out.<Title>, the batch job name, and the allRuns.out row label.
+
+  <sus_cmd>            Required (except pure restart-edit tests). The run command, e.g. sus,
+                      mpirun -np 8 sus. For a restart, -restart/-t N flags are stripped and
+                      replaced automatically.
+
+  <replace_lines>      Optional. 0 or 1.
+  <replace_values>     Optional. 0 or 1.
+  <preProcess_cmd>     Optional. Repeatable.
+  <batchReplace>       Optional. Repeatable.
+
+  <postProcess_cmd>    Optional. Repeatable. Comparison command run after sus succeeds, e.g.
+  
+                      "compare_Rayleigh.m -aDir 1 -mat 0 -plot true". Run as "<cmd> -o outPP.<x> -uda <Title>.uda"; 
+                      non-empty output is appended to allRuns.out.
+
+  <x>                  Required if <postProcess_cmd> is used. The independent-variable value
+                      for this test point (e.g. resolution), used as allRuns.out's x-column.
+
+  <gnuplot>            Optional. 0 or 1. Per-test plot -- see section 4.8.
+
+
+5. FULL NESTING DIAGRAM
+______________________________________________________________________
+
+
+    components.xml
+      <component>*
+      <sus_path> ?, 
+      <scripts_path> ?
+
+    <Component>/whatToRun.xml
+      <postProcessCmd_path>?, <symbolicLinks>?
+      <test>+
+        <name>
+        <tst>
+        <otherFilesToCopy>*
+
+    <Component>/<study>.tst   (root <start>)
+      <upsFile>  |  <restart_uda><uda/><checkpoint_timestep/></restart_uda>
+      <inputs_path> ?,
+      <exitOnCrash> ?, 
+      <susTimeout_minutes>?
+      
+      <AllTests>?
+          <replace_lines><anyUpsTag>...</anyUpsTag>*</replace_lines>
+          
+          <replace_values>
+            <entry path=".." value=".."/>*
+          </replace_values>
+          
+          <preProcess_cmd cmd=".." which_ups=".." add_ups=".."/>*
+          
+      <batchScheduler>?
+          <template>
+          <submissionCmd>
+          <batchReplace tag=".." value=".."/>*
+          
+      <gnuplot>?               (top-level = run after ALL tests)
+          <script>, 
+          <title>   ?, 
+          <xlabel>  ?, 
+          <ylabel>  ?, 
+          <label>   ?, 
+          <arg1>    ?, 
+          <arg2>    ?
+          
+      <Test>+
+          <Title>, 
+          <sus_cmd>
+          <replace_lines>?, 
+          <replace_values>?, 
+          <preProcess_cmd>*
+          <batchReplace>*
+          <postProcess_cmd>*, <x>?
+          <gnuplot>?           (per-test = run after THIS test)
+
+<AllTests> and a <Test>'s own replace blocks both apply, in order, to the same working .ups
+copy (or input.xml + timestep.xml, for a restart) before each sus run -- turning one base
+input into N parametrically-varied tests.
+
+
+6. WORKED EXAMPLE -- ICE/rayleigh_dx.tst
+______________________________________________________________________
+
+
+A compact file touching most tags: base .ups, an aggregate <gnuplot>, <AllTests> edits, and
+<Test> blocks each varying <resolution>:
+
+    <start>
+    <upsFile> rayleigh_dx.ups </upsFile>
+
+    <gnuplot>
+      <script> plotScript.gp </script>
+      <title>  ICE:Rayleigh Problem X direction </title>
+      <ylabel> Error </ylabel>
+      <xlabel> Resolution </xlabel>
+      <label> "Time: 0.2s, CFL: 0.4\nAdvection: 2nd order scheme\nSemi-implicit pressure\n20 cells in axial direction, 1 cell 'deep'" at graph 0.01,0.1 font "Times,10" </label>
+    </gnuplot>
+
+    <AllTests>
+      <replace_lines>
+        <maxTime>  0.2   </maxTime>
+        <outputInterval> 0.1 </outputInterval>
+        <upper>        [0.5,0.025,0.01]    </upper>
+      </replace_lines>
+    </AllTests>
+
+    <Test>
+        <Title>10</Title>
+        <sus_cmd>sus </sus_cmd>
+        <postProcess_cmd> compare_Rayleigh.m -aDir 1 -mat 0 -plot true </postProcess_cmd>
+        <x>10</x>
+        <replace_lines>
+          <resolution>   [20,10,1]          </resolution>
+        </replace_lines>
+    </Test>
+
+    <Test>
+        <Title>25</Title>
+        <sus_cmd>sus </sus_cmd>
+        <postProcess_cmd>compare_Rayleigh.m -aDir 1 -mat 0 -plot true</postProcess_cmd>
+        <x>25</x>
+        <replace_lines>
+          <resolution>   [20,25,1]          </resolution>
+        </replace_lines>
+    </Test>
+
+    <!-- ...same pattern for Titles 50, 75, 100... -->
+
+    </start>
+
+<upsFile> names the base input. <AllTests> sets maxTime/outputInterval/upper for every test.
+Each <Test> overrides <resolution>, runs sus, compares against the analytic solution, and
+records the error at that resolution into allRuns.out. Once all tests finish, the top-level
+<gnuplot> plots allRuns.out (error vs. resolution).

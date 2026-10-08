@@ -66,7 +66,7 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr setPath modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript print_XML_ElementTree );
+use Utilities qw( cleanStr setPath my_cp modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript print_XML_ElementTree );
 use analyze;
 use gnuplot   qw(gnuplot_singleTest gnuplot_allTests);
 
@@ -171,19 +171,28 @@ my @allTests_node = $tst_dom->findnodes('/start/AllTests');
 
 modify_xml_files( \@editFiles, \@editFiles_dom, @allTests_node );  # passing two references
 
-system(" cp $input_xml    $input_xml_mod0" );
-system(" cp $timestep_xml $timestep_xml_mod0" );
+my_cp( $input_xml,    $input_xml_mod0 );
+my_cp( $timestep_xml, $timestep_xml_mod0 );
+
+# reload the DOMs: modify_xml_files just edited input.xml/timestep.xml on disk via
+# external commands, and the in-memory DOMs loaded above don't reflect that.
+@editFiles_dom = ( XML::LibXML->load_xml(location => $input_xml,    no_blanks => 1),
+                    XML::LibXML->load_xml(location => $timestep_xml, no_blanks => 1) );
 
 #______________________________________________________________________
 #     loop over tests
 #__________________________________
 
 my $statsFile;
-open( $statsFile,">out.stat");
+open( $statsFile,">out.stat") || die "ERROR:run_tests_restart.pl: cannot open out.stat $!";
 
 foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
   my $test_title        = cleanStr( $testNode->findvalue('Title') );
+
+  length($test_title) > 0
+    || die "ERROR:run_tests_restart.pl: a <Test> is missing its required <Title>\n";
+
   my $test_input_xml    = $restartUda."/".$test_title."_input.xml";
   my $test_timestep_xml = $restartUda."/checkpoints/".$timestep."/".$test_title."timestep.xml";
   my $test_output       = "out.".$test_title;
@@ -199,6 +208,9 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   system("replace_XML_line", "$fn", "$input_xml")==0 ||  die("Error replace_XML_line $fn in file $input_xml \n $@");
   print "\treplace_XML_line $fn $input_xml\n";
 
+  # reload input.xml's DOM: the line above just edited it on disk
+  $editFiles_dom[0] = XML::LibXML->load_xml(location => $input_xml, no_blanks => 1);
+
   modify_xml_files( \@editFiles, \@editFiles_dom, $testNode );  # passing two references
 
 
@@ -206,8 +218,13 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   #  create a diff file per test.
   #  This diff will be applied in the batch script
   #  Jobs can start out of order.
-  system(" diff -u     $input_xml_mod0   $input_xml    >> $test_diff");
-  system(" diff -u  $timestep_xml_mod0   $timestep_xml >> $test_diff");
+  # diff exit codes: 0 = identical, 1 = differences found (expected/normal here) -- only
+  # 2+ (trouble, e.g. a missing file) is a real error.
+  my $rc1 = system(" diff -u     $input_xml_mod0   $input_xml    >> $test_diff");
+  (($rc1 >> 8) < 2) || die "ERROR:run_tests_restart.pl: diff of ($input_xml_mod0) vs ($input_xml) failed";
+
+  my $rc2 = system(" diff -u  $timestep_xml_mod0   $timestep_xml >> $test_diff");
+  (($rc2 >> 8) < 2) || die "ERROR:run_tests_restart.pl: diff of ($timestep_xml_mod0) vs ($timestep_xml) failed";
 
   #__________________________________
   #  replace any batch script values per test
@@ -217,7 +234,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
     my ($basename, $parentdir, $ext) = fileparse($batchScript, qr/\.[^.]*$/);
     $test_batch = "batch_$test_title$ext";
-    system(" cp $batchScript $test_batch" );
+    my_cp( $batchScript, $test_batch );
 
     my @batch_nodes = $tst_dom->findnodes('/start/batchScheduler/batchReplace');
     modify_batchScript( $test_batch, @batch_nodes );
@@ -227,6 +244,9 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   #__________________________________
   # print meta data and run sus command
   my $sus_cmd_0 = $testNode->findnodes('sus_cmd');
+
+  $sus_cmd_0->size() > 0
+    || die "ERROR:run_tests_restart.pl: Test ($test_title) is missing its required <sus_cmd>\n";
 
   $sus_cmd_0 =~ s/-restart//;             # remove any restart spec
   $sus_cmd_0 =~ s/-t [0-9] //;
@@ -253,8 +273,12 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   }
 
   # reverse the changes to input.xml and timestep.xml
-  system(" cp $input_xml_mod0    $input_xml");
-  system(" cp $timestep_xml_mod0 $timestep_xml");
+  my_cp( $input_xml_mod0,    $input_xml );
+  my_cp( $timestep_xml_mod0, $timestep_xml );
+
+  # reload the DOMs so the next test's existence checks see the restored mod0 state
+  @editFiles_dom = ( XML::LibXML->load_xml(location => $input_xml,    no_blanks => 1),
+                      XML::LibXML->load_xml(location => $timestep_xml, no_blanks => 1) );
 
   my $fin = time()-$now;
   printf $statsFile ("Running Time :  %.3f [secs]\n", $fin);
@@ -283,7 +307,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
 #__________________________________
 #   Execute any final gnuplot commands
-gnuplot::gnuplot_singleTest( $tst_dom, $statsFile, $exitOnCrash );
+gnuplot::gnuplot_allTests( $tst_dom, $statsFile, $exitOnCrash );
 
 close($statsFile);
 

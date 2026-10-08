@@ -19,20 +19,20 @@ set grid xtics ytics
 f1(x) = a1*x**b1               # define the function to be fit
 a1 = 0.1; 
 b1 = -0.5 
-fit [4:512] f1(x) 'L2norm.dat' using 1:2 via a1, b1
+fit [4:512] f1(x) 'allRuns.out' using 1:2 via a1, b1
 
 # generate the y_curvefit
 f2(x) = a2*x**b2                # define the function to be fit
 a2 = 0.1 
 b2 = -0.5 
-fit [4:512] f2(x) 'L2norm.dat' using 1:3 via a2, b2
+fit [4:512] f2(x) 'allRuns.out' using 1:3 via a2, b2
 
 # generate the z_curvefit
 f3(x) = a3*x**b3                # define the function to be fit
 a3 = 0.1 
 b3 = -0.5
 FIT_LIMIT=1e-8  
-fit [4:512] f3(x) 'L2norm.dat' using 1:4 via a3, b3
+fit [4:512] f3(x) 'allRuns.out' using 1:4 via a3, b3
 
 
 set label 'x_Error = a * (#Rays)^b' at screen 0.2,0.4
@@ -49,9 +49,9 @@ set label sprintf( 'b = %2.3g',b3 ) at screen 0.3,0.15
 
 set yrange [0.001:0.2]
 
-plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
-     'L2norm.dat' using 1:3 t 'Y Error' with points, \
-     'L2norm.dat' using 1:4 t 'Z Error' with points, \
+plot 'allRuns.out' using 1:2 t 'X Error' with points, \
+     'allRuns.out' using 1:3 t 'Y Error' with points, \
+     'allRuns.out' using 1:4 t 'Z Error' with points, \
      f1(x) ls 1 t 'x-curve fit', \
      f2(x) ls 2 t 'y-curve fit', \
      f3(x) ls 3 t 'z-curve fit'

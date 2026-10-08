@@ -33,7 +33,7 @@ use File::Which qw(which where);
 use Exporter 'import';
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(cleanStr setPath print_XML_ElementTree get_XML_value modify_xml_file modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
+our @EXPORT_OK = qw(cleanStr setPath my_cp print_XML_ElementTree get_XML_value modify_xml_file modify_xml_files modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
 
 #______________________________________________________________________
 #
@@ -42,15 +42,9 @@ sub cleanStr {
 
   my @inputs = @_;
   my $n   = scalar @inputs;           # number of array elements
-  my $len = length $inputs[0];        # number of characters in first element
 
   if( ! @inputs  ){
     return undef;
-  }
-
-  # if the first element is empty return ""
-  if( $len == 0 ){
-    return "";
   }
 
   #__________________________________
@@ -121,6 +115,24 @@ sub setPath{
 }
 
 #______________________________________________________________________
+#   usage:  my_cp( <src>, <dst> )            -- plain file copy
+#           my_cp( <src>, <dst>, 1 )         -- recursive copy ("cp -rf"),
+#                                                <src> may be several space-
+#                                                separated files/wildcards
+#   Dies with the src/dst named if the copy fails.
+sub my_cp{
+  my ( $src, $dst, $recursive ) = @_;
+
+  my $flags = "-f";
+  if ( $recursive ){
+    $flags = "-rf";
+  }
+
+  system("cp $flags $src $dst") == 0
+    || die "ERROR:my_cp: cp of ($src) to ($dst) failed $!";
+}
+
+#______________________________________________________________________
 #   usage:  get_XML_value( elementList, <xmltag>, "defaultValue")
 #  This returns either an array or a scalar.  It returns the default value
 #  if the xml tag does not exist.
@@ -187,15 +199,14 @@ sub modify_batchScript{
 
   foreach my $X ( @xmlNodes ){
     my $tag   = $X->{tag};
-    $tag      =~ s/\[/\\[/g;     # add escape chars to the metachars
-    $tag      =~ s/\]/\\]/g;
     my $value = $X->{value};
+    my $pattern = quotemeta( $tag );   # escape all regex metachars, not just [ ]
 
     print "\tmodifying batch script  Changing ($tag) -> ($value)\n";
-    $data =~ s/$tag/$value/g;
+    my $nSubs = ( $data =~ s/$pattern/$value/g );
 
     # bulletproofing
-    if( ! ($data=~/$value/) ){
+    if( ! $nSubs ){
       print "\n\tERROR Modyify_batchScript, Could not find the tag ", $tag, "\n\n";
       die "$!";
     }
@@ -336,7 +347,7 @@ sub modify_xml_files{
       print "      Detailed analysis of the xmlPath is below\n";
       print "*************************************************\n\n";
 
-      for my $i (0 .. 1) {
+      for my $i (0 .. $size) {
         my $ups_dom = $ups_doms[$i];
         my $upsFile = $ups_files[$i];
         isXPathValid($xmlPath, $upsFile, $ups_dom);
@@ -459,7 +470,7 @@ sub runPreProcessCmd {
     my @full_cmd = ( "@cmd", "$upsFile", ">> out.preProcess 2>&1" );
 
     my $outFile;
-    open( $outFile,">>", "out.preProcess");
+    open( $outFile,">>", "out.preProcess") || die "ERROR:runPreProcessCmd: cannot open out.preProcess $!";
     print  $outFile "\n______________________________________________________________________\n";
     print  $outFile "   cmd: (@full_cmd) whichUps: ".$whichUps." Ups: ".$upsFile. "\n";
     print  $outFile "______________________________________________________________________\n";

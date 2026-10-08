@@ -6,11 +6,22 @@
 <BoundaryConditions  spec="REQUIRED NO_DATA" >
 
       <LODI                 spec="OPTIONAL NO_DATA">
-        <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
+        <!--
+          Exactly one <press_infinity> (and, if used, <vel_infinity>/<rho_infinity>)
+          with no "face" attribute is required and sets the default used on every
+          LODI face. An additional tag of the same name carrying a "face" attribute
+          overrides just that face, e.g.:
+            <press_infinity>            101325.0 </press_infinity>
+            <press_infinity face="x+">  103000.0 </press_infinity>
+        -->
+        <press_infinity     spec="MULTIPLE DOUBLE 'positive'"
+                                attribute1="face OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"/>
         <sigma              spec="REQUIRED DOUBLE '0, 3.15'"/>
         <Li_scale           spec="OPTIONAL DOUBLE '0, 1.0'"/>
-        <vel_infinity       spec="OPTIONAL VECTOR"/>
-        <rho_infinity       spec="OPTIONAL DOUBLE 'positive'"/>
+        <vel_infinity       spec="MULTIPLE VECTOR"
+                                attribute1="face OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"/>
+        <rho_infinity       spec="MULTIPLE DOUBLE 'positive'"
+                                attribute1="face OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"/>
         <material           spec="REQUIRED STRING"/>
       </LODI>
 
@@ -100,6 +111,7 @@
           <origin                       spec="REQUIRED VECTOR "/>
           <spread_x                     spec="REQUIRED DOUBLE"/>
           <spread_y                     spec="REQUIRED DOUBLE"/>
+          <spread_z                     spec="OPTIONAL DOUBLE"/>
           <amplitude                    spec="REQUIRED DOUBLE 'positive'"/>
         </gaussianTemperature>
 

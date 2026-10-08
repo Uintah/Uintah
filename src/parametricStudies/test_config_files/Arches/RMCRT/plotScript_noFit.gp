@@ -17,7 +17,7 @@ set grid xtics ytics
 #xlabel
 #ylabel
 
-plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
-     'L2norm.dat' using 1:3 t 'Y Error' with points, \
-     'L2norm.dat' using 1:4 t 'Z Error' with points
+plot 'allRuns.out' using 1:2 t 'X Error' with points, \
+     'allRuns.out' using 1:3 t 'Y Error' with points, \
+     'allRuns.out' using 1:4 t 'Z Error' with points
 

@@ -2462,186 +2462,481 @@ The input file specification is as follows:
 </DataAnalysis>
 \end{verbatim}
 
-\chapter{Order of Accuracy}
+
+%______________________________________________________________________
+
+% Typesets a literal XML tag name inline, e.g. \xmltag{replace_lines} -> <replace_lines>,
+% in the same typewriter font as \TT{} and the verbatim blocks (OT1 tt renders < and >
+% directly; no $\textless$/$\textgreater$ workaround needed inside \texttt), at footnotesize.
+% \xmltagH is the same, but at the surrounding (heading) size -- use inside \section/\subsection
+% titles so the tag doesn't shrink relative to the rest of the heading.
+% Local to this chapter.
+\newcommand{\xmltag}[1]{{\footnotesize\texttt{<#1>}}}
+\newcommand{\xmltagH}[1]{\texttt{<#1>}}
+
+\chapter{Parametric Studies Framework}
 \label{chap:OA}
 
-Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when cell resolution was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull in parametric studies.
+% No first-line paragraph indent in this chapter; add a small inter-paragraph skip instead so
+% paragraph breaks stay visible. Scoped to this chapter only via \begingroup/\endgroup below.
+\begingroup
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5\baselineskip}
+
+The \TT{parametricStudies} framework (located in \TT{src/parametricStudies}, and known in older
+documentation as \TT{orderAccuracy}) runs a series of simulations in which one or more parameters
+are varied, then automatically post-processes and plots the results. It was originally built to
+measure the order of accuracy of a solution scheme as cell resolution is refined, but it is a
+general parametric-study tool: any input-file parameter can be swept, any post-processing script can
+be invoked, and runs can be submitted individually, via MPI, or as HPC batch jobs.
 
 \section{Using The Framework}
+\label{Sec:PS-UsingFramework}
 
-\iffalse
-The first step in using the framework, is to set up the tests you wish to run. All the scripts this framework uses are located inside $\TT{/src/orderAccuracy/framwork\_scripts}$ contains all the scripts the framework uses to run, $\TT{postProcessTools}$ contains all the post processing scripts the study will use, and $\TT{test\_config\_files}$ contains all the studies which the framework can run. The framework has the ability to run any of .tst files located here. \\
-\fi
+A study is described by a chain of three XML configuration files, read in this order:
 
-To run a study using the order of accuracy tools, edit the $\TT{components.xml}$ inside of $\TT{test\_config\_files}$. All of the components (ICE MPM MPMICE Arches Wasatch) should be commented out, un-comment any component you wish to use. Next go into the directory for whichever component you un-commented. In this directory are all the available tests for that component and symbolic links to all the associated input files. To run these studies, edit $\TT{whatToRun.xml}$ and un-comment any simulations you would like to run.
-
-Once all of the above steps have been done, you can follow these steps to run your studies.
 \begin{enumerate}
-
-\item cd to /opt/StandAlone or /dbg/StandAlone
-\item Create a symbolic link to orderAccuracy \\
-\TT{make link\_orderAccuracy}
-\item Run the following command to run your study
-\begin{verbatim}
-orderAccuracy/runTests
-\end{verbatim}
-
+\item \TT{test\_config\_files/components.xml} -- selects which Uintah component(s) to test (ICE,
+  MPM, MPMICE, Arches, Wasatch, \ldots). Uncomment the \xmltag{component} entries you want;
+  every other component should stay commented out.
+\item \TT{test\_config\_files/\xmltag{Component}/whatToRun.xml} -- lists the parametric studies to
+  run for that component. Each \xmltag{test} entry names a study and points to the \TT{.tst}
+  file that describes it.
+\item \TT{test\_config\_files/\xmltag{Component}/\xmltag{study}.tst} -- the parametric study itself:
+  the base input file, the per-test parameter edits, the post-processing command, and
+  (optionally) plotting and HPC batch submission. Section \ref{Sec:PS-TstFile} covers this file
+  in detail.
 \end{enumerate}
 
-This will create a directory called $\TT{order\_of\_accuracy}$ which will contain all the studies you have run.
+Once the configuration files are set up, run the study with:
 
-\section{Tests}
+\begin{enumerate}
+\item \TT{cd} to the build directory's \TT{StandAlone} subdirectory (e.g. \TT{opt/StandAlone} or
+  \TT{dbg/StandAlone}).
+\item Create a symbolic link to the framework: \TT{make link\_parametricStudies}.
+\item Run \TT{parametricStudies/runTests}.
+\end{enumerate}
 
-The order of accuracy framework uses test or .tst files to determine which parameters will be changed. Once a new test has been created you must add it to $\TT{whatToRun.xml}$. An example .tst file will look something like this.
+Results land in \TT{ps\_results/\xmltag{component}/\xmltag{test}.\xmltag{N}}, one subdirectory per
+test, each containing the modified input file, the \TT{.uda}, the sus log, and any
+post-processing/plot output.
 
+\section{The .tst File}
+\label{Sec:PS-TstFile}
+
+The root element of a \TT{.tst} file is \xmltag{start}. Below is a compact, real example
+(\TT{ICE/rayleigh\_dx.tst}) that touches most of what a \TT{.tst} file can do: a base input file, a
+plot generated once all tests finish, a change applied to every test, and five tests that each vary
+the grid resolution and feed the result into a comparison script.
+
+{\footnotesize
 \begin{verbatim}
-
 <start>
-<upsFile>cavityFlow_dx.ups</upsFile>
+<upsFile>rayleigh_dx.ups</upsFile>
 
 <gnuplot>
-  <script>plotScript.gp</script>s
-  <title>ICE:Cavity Flow Res</title>
+  <script>plotScript.gp</script>
+  <title>ICE:Rayleigh Problem X direction</title>
   <ylabel>Error</ylabel>
   <xlabel>Resolution</xlabel>
 </gnuplot>
 
 <AllTests>
-    <replace_lines>
-      <maxTime> 20 </maxTime>
-    </replace_lines>
-    <replace_values>
-      /Uintah_specification/Grid/BoundaryConditions/Face[@side='y+']
-      /BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [1,0,0]
-    </replace_values>
+  <replace_lines>
+    <maxTime>  0.2   </maxTime>
+    <outputInterval>0.1</outputInterval>
+  </replace_lines>
 </AllTests>
+
 <Test>
-    <Title>16</Title>
-    <sus_cmd>mpirun -np 6 sus -mpi </sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
-    -Re 5000</postProcess_cmd>
-    <x>16</x>
+    <Title>10</Title>
+    <sus_cmd>sus </sus_cmd>
+    <postProcess_cmd>compare_Rayleigh.m -aDir 1 -mat 0 -plot true</postProcess_cmd>
+    <x>10</x>
     <replace_lines>
-      <resolution>  [16,16,1]     </resolution>
+      <resolution>   [20,10,1]          </resolution>
     </replace_lines>
 </Test>
-<Test>
-    <Title>32</Title>
-    <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
-    -Re 5000</postProcess_cmd>
-        <x>32</x>
-    <replace_lines>
-      <resolution>  [32,32,1]     </resolution>
-    </replace_lines>
-</Test>
-<Test>
-    <Title>64</Title>
-    <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
-    -Re 5000</postProcess_cmd>
-    <x>64</x>
-    <replace_lines>
-      <resolution>  [64,64,1]     </resolution>
-    </replace_lines>
-</Test>
+
+<!-- ...same pattern for Titles 25, 50, 75, 100... -->
 
 </start>
-
 \end{verbatim}
+}
 
-The following is a list of required parameters for the .tst files. These fields must be present, but many of them may remain empty.
-\begin{itemize}
-\item $\textless$start$\textgreater$
-\item $\textless$upsFile$\textgreater$ \\
-This points the .tst to the input file, only one input file can be specified per test.
-\item $\textless$gnuplot$\textgreater$ \\
-This is a generic gnuplot script which can be used to plot any data output through the post processing script. It was created and originally configured to compute the L2 norm, but can be modified to plot anything by modifying \TT{plotScript.gp} in the directory with the .tst file.
-\item $\textless$AllTests$\textgreater$ \\
-Items put in this section will modify all simulations.
-\item $\textless$Test$\textgreater$ \\
-Items put in this section will modify only this simulation.
-\item $\textless$Title$\textgreater$ \\
-Title of the current test. Many names used for files and directories will be based off this title.
-\item $\textless$sus\_cmd$\textgreater$ \\
-This is the sus command line you would normally give to run an input file, the input and output files are put in automatically and can be omitted.
-\item $\textless$postProcess\_cmd$\textgreater$ : \\
-Optional:  This line is used to feed the current tests uda and output file into a post processing script. The post processing scripts have their own inputs, and can be modified when the scripts are created. The one thing all compare scripts share as an input is -uda $\textless$uda name$\textgreater$ and -o $\textless$output file$\textgreater$ as these are automatically fed into the compare script by the framework, and must be included with all new post processing scripts.
-\item $\textless$x$\textgreater$\\
-this sets the x label for the gnuplot script
-\end{itemize}
+What happens, tag by tag: \xmltag{upsFile} names the base input; \xmltag{AllTests} applies its edits
+to every test before the per-test loop; each \xmltag{Test} then applies its own edits on top, runs
+\TT{sus}, compares against the analytic solution via \xmltag{postProcess\_cmd}, and records the
+error at that resolution (the \xmltag{x} value) into \TT{L2norm.dat}. Once every test has finished,
+the top-level \xmltag{gnuplot} block plots \TT{L2norm.dat} (error vs.\ resolution).
 
-This section is for the two optional parameters, $\textless$replace\_lines$\textgreater$ and $\textless$replace\_values$\textgreater$. These two parameters are what specify the changes between the tests. These can both be placed inside $\textless$Test$\textgreater$ and $\textless$AllTests$\textgreater$.
-\begin{itemize}
-\item $\textless$replace\_lines$\textgreater$\\
-This parameter is used to replace specific lines in the input files, and can be used when there is a unique tag such as $\textless$resolution$\textgreater$. To use this, just replace the line with the one you would like. This method is the simplest way to replace section of an input file.
-\item $\textless$replace\_values$\textgreater$ \\
-This section is for when a tag is not unique and a path to the correct place must be given. In the above example, the velocity value is not unique, it is located inside each face, thus the face must be specified. XML uses unique paths to find tags inside of other tags, this path must be given in order to replace the values. In order to find these tags the command $\TT{xmlstarlet}$ can be run on the input file, and the paths will be given.
-\end{itemize}
+A complete, exhaustive reference for every tag below -- with every example given as a single
+copy-paste-ready line -- is maintained in \TT{test\_config\_files/CONFIG\_OPTIONS.txt}. A few XPath
+examples in this chapter are wrapped across lines purely to fit the printed page; use that file for
+the unwrapped, literal text.
 
-\section{Additional information}
-Order of accuracy has a large amount of small intricacies to learn to fully utilize it, and this section hopes to familiarize you with some things you might not have thought possible.
+\subsection{Top-level Options}
+\label{Sec:PS-TopLevelOptions}
 
-\subsection{Post Processing Tools}
-Inside $\TT{orderAccuracy}$ is a directory called $\TT{postProcessTools}$. This contains all the post processing scripts that are used in the current tests. All of these can be run on their own, but were created to be fed through the system. These scripts have generally been used to pull data out of the uda and compare it to either experimental or exact data. The scripts then plot this data with a unique filename, and output the L2 norm to a file. If you going to use a postprocessing script in a .tst file, be familiar with the script, and which arguments are needed for it to run correctly. Many postprocessing scripts have already been implimented, so be sure to become familiar with those that are already available.
+These apply once, before the per-test loop:
 
-\subsection{Gnuplot scripts}
-Gnuplot is used in many sections of the order of accuracy framework, and learning where and how it uses it can be extremely helpful. plotScript.gp is the main gnuplot script that you can use to plot any data from your post processing script. This script may require a lot of manipulation to get what you want, but due to its integration with the system its much easier to work with. A few other gnuplot scripts are lying around to plot assorted data output through the post processing scripts. These scripts must be used after the fact.
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Tag} & \textbf{Description} \\
+\hline
+\endhead
+\xmltag{upsFile} & Required unless \xmltag{restart\_uda} is present. The base \TT{.ups} input file. \\[0.4em]
+\xmltag{inputs\_path} & Optional. Overrides the default directory for \xmltag{upsFile}
+  (normally \TT{src/StandAlone/inputs/}). \\[0.4em]
+\xmltag{exitOnCrash} & Optional, default \TT{true}. Whether the whole run aborts if \TT{sus} crashes
+  or times out, or continues on to the next test. \\[0.4em]
+\xmltag{susTimeout\_minutes} & Optional, default \TT{86400}. Wall-clock timeout for each \TT{sus}
+  invocation. \\[0.4em]
+\xmltag{AllTests} & Optional. Replacements applied once, to every test, before the per-test loop.
+  Its children are \xmltag{replace\_lines} (Section~\ref{Sec:PS-ReplaceLines}),
+  \xmltag{replace\_values} (Section~\ref{Sec:PS-ReplaceValues}), and \xmltag{preProcess\_cmd}
+  (Section~\ref{Sec:PS-PreProcessCmd}) -- the same syntax as inside a \xmltag{Test}. \\[0.4em]
+\xmltag{batchScheduler} & Optional. Submits each test as an HPC batch job instead of running
+  \TT{sus} directly (Section~\ref{Sec:PS-BatchScheduler}). \\[0.4em]
+\xmltag{gnuplot} & Optional. A plot generated after all tests complete
+  (Section~\ref{Sec:PS-Gnuplot}). \\[0.4em]
+\hline
+\end{longtable}
+
+\subsection{Restart Studies}
+\label{Sec:PS-RestartStudies}
+
+A \xmltag{restart\_uda} block restarts from an existing \TT{.uda}.  Its children are:
+
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Tag} & \textbf{Description} \\
+\hline
+\endhead
+\xmltag{uda} & Required. The existing \TT{.uda} directory to restart from. \\[0.4em]
+\xmltag{checkpoint\_timestep} & Required. The checkpoint subdirectory (e.g.\ \TT{t01146}), used to
+  locate the matching restart index. \\[0.4em]
+\hline
+\end{longtable}
+
+Replacements under \xmltag{AllTests} or \xmltag{Test} then edit copies of the restart uda's
+\TT{input.xml} and \TT{checkpoints/\xmltag{timestep}/timestep.xml}:
+
+{\footnotesize
+\begin{verbatim}
+<start>
+<exitOnCrash> false </exitOnCrash>
+
+<restart_uda>
+  <uda> /path/to/FTRMTest.uda.000 </uda>
+  <checkpoint_timestep>t01146</checkpoint_timestep>
+</restart_uda>
+
+<AllTests>
+  <replace_lines>
+    <maxTime> 1.3 </maxTime>
+  </replace_lines>
+</AllTests>
+
+<Test>
+  <Title>loadCurve_1</Title>
+  <sus_cmd> mpirun -np 2 sus </sus_cmd>
+  <replace_values>
+    <entry path="Uintah_timestep/PhysicalBC/MPM/pressure/load_curve/time_point[5]/load"
+           value="-1000"/>
+  </replace_values>
+</Test>
+</start>
+\end{verbatim}
+}
+
+\subsection{\xmltagH{replace\_lines}}
+\label{Sec:PS-ReplaceLines}
+
+\xmltag{replace\_lines} performs a whole-line, first-match text replacement (sed-style, not XPath)
+and is the simplest way to change a value. Its children are any tag that appears in the target
+\TT{.ups} -- e.g.\ \xmltag{maxTime}, \xmltag{resolution}, \xmltag{patches}, \xmltag{outputInterval}.
+Use it when the tag name is \emph{unique} in the target file. It can be used under \xmltag{AllTests}
+(applies to every test) and/or inside a \xmltag{Test} (merges on top of \xmltag{AllTests}):
+
+{\footnotesize
+\begin{verbatim}
+<AllTests>
+  <replace_lines>
+    <maxTime> 0.2 </maxTime>
+    <outputInterval>0.1</outputInterval>
+  </replace_lines>
+</AllTests>
+
+<Test>
+  <Title>10</Title>
+  <replace_lines>
+    <resolution> [20,10,1] </resolution>
+  </replace_lines>
+</Test>
+\end{verbatim}
+}
+
+\subsection{\xmltagH{replace\_values}}
+\label{Sec:PS-ReplaceValues}
+
+When the tag you want to change is \emph{not} unique in the file -- for example, a \xmltag{value}
+that appears once per boundary face -- or when you need to set an \emph{attribute} rather than an
+element's text, \xmltag{replace\_lines} cannot target it unambiguously. \xmltag{replace\_values}
+instead takes one or more
+
+{\footnotesize
+\begin{verbatim}
+<entry path="<xpath>" value="<newvalue>"/>
+\end{verbatim}
+}
+
+children, each performing an XPath-targeted replace via \TT{xmlstarlet}. The path must resolve to
+exactly one node, or the framework stops with a diagnostic naming the first path segment that does
+not exist.
+
+\paragraph{Disambiguating a non-unique tag.} \TT{ICE/cavityFlow\_dy.tst} has a
+\xmltag{value} element under every \xmltag{BCType} on every face; the path below adds attribute
+predicates to pin down exactly one:
+
+{\footnotesize
+\begin{verbatim}
+<replace_values>
+    <entry path = "Uintah_specification/Grid/BoundaryConditions/
+                    Face[@side='z+']/BCType[@id = '0' and @label ='Velocity'
+                    and @var='Dirichlet']/value"
+           value = '[0,0.02,0]' />
+</replace_values>
+\end{verbatim}
+}
+
+\paragraph{Setting an attribute.} \TT{ICE/advectScalar1D\_dz.tst} flips which face a boundary
+condition applies to by targeting the \xmltag{Face} element's own \TT{side} attribute directly (the
+final \TT{/@side} segment targets the attribute, not the element's text):
+
+{\footnotesize
+\begin{verbatim}
+<replace_values>
+    <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z-']/@side"
+           value ='x-' />
+    <entry path = "Uintah_specification/Grid/BoundaryConditions/Face[@side='z+']/@side"
+           value ='x+' />
+</replace_values>
+\end{verbatim}
+}
+
+\paragraph{Finding the XPath.} The fastest way to find a valid XPath is the
+\TT{findXMLPaths.pl} script (symlinked at the \TT{parametricStudies} root as \TT{findXMLPaths}). Run
+it on the target \TT{.ups} file and it prints every \xmltag{entry path="\ldots" value="\ldots"/} the
+file supports, with the file's current value already filled in -- copy a line, then edit the value:
+
+{\footnotesize
+\begin{verbatim}
+$ findXMLPaths  cavityFlow_dy.ups
+# -- element values (71) --
+    <entry path="Uintah_specification/Grid/BoundaryConditions/
+                  Face[@side='z+']/BCType[@id='0' and @label='Velocity'
+                  and @var='Dirichlet']/value" value="[0,1,0]"/>
+    ...
+# -- attributes (125) --
+    <entry path="Uintah_specification/Grid/BoundaryConditions/Face[@side='z-']/@side"
+           value="z-"/>
+    ...
+\end{verbatim}
+}
+
+It builds each path itself, correctly chaining a parent element's disambiguating predicate onto its
+child's path -- the one thing plain \TT{xmlstarlet el -v} does \emph{not} do -- and only emits paths
+it has verified resolve to exactly one node. Pass \TT{-g \xmltag{pattern}} to narrow the output to
+one face or tag, e.g.\ \TT{findXMLPaths -g "side='x-'" myFile.ups}; see \TT{findXMLPaths -h} for the
+full option list.
+
+To find or verify an XPath by hand instead, run \TT{xmlstarlet el -v \xmltag{file}} to list every
+element's path with its attribute predicates (remembering to manually chain a parent's predicate
+onto its child's path, since \TT{el -v} prints them on separate lines), then confirm a candidate
+path resolves to exactly one node with:
+
+{\footnotesize
+\begin{verbatim}
+$ xmlstarlet sel -t -v "<xpath>" <file>
+\end{verbatim}
+}
+
+A path that is still ambiguous prints more than one line of output; add another predicate until
+exactly one line comes back.
+
+\subsection{\xmltagH{preProcess\_cmd}}
+\label{Sec:PS-PreProcessCmd}
+
+\xmltag{preProcess\_cmd} runs an arbitrary command \emph{before} \TT{sus}, and may be used under
+\xmltag{AllTests} or a \xmltag{Test} (repeatable):
+
+{\footnotesize
+\begin{verbatim}
+<preProcess_cmd cmd="some_executable args..."
+                which_ups="TEST_UPS|BASE_UPS|none" add_ups="true|false"/>
+\end{verbatim}
+}
+
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Attribute} & \textbf{Description} \\
+\hline
+\endhead
+\TT{cmd} & Required. The command to run as a pre-processing step; must already be on \TT{PATH}. \\[0.4em]
+\TT{which\_ups} & Required. Which \TT{.ups} file, if any, is appended as the command's last
+  argument: \TT{TEST\_UPS} (the per-test modified file), \TT{BASE\_UPS} (the unmodified base
+  file), or \TT{none}. \\[0.4em]
+\TT{add\_ups} & Required. Must be \TT{true} paired with \TT{which\_ups} of \TT{TEST\_UPS} or
+  \TT{BASE\_UPS}, or \TT{false} paired with \TT{which\_ups="none"}. \\[0.4em]
+\hline
+\end{longtable}
+
+Output is appended to \TT{out.preProcess} in the test's working directory.
+
+\subsection{\xmltagH{batchScheduler} -- HPC Job Submission}
+\label{Sec:PS-BatchScheduler}
+
+A \xmltag{batchScheduler} block, under \xmltag{start}, submits each test as a batch job
+instead of invoking \TT{sus} directly:
+
+{\footnotesize
+\begin{verbatim}
+<batchScheduler>
+  <template> myBatch.slrm </template>
+  <submissionCmd> sbatch </submissionCmd>
+  <batchReplace tag="[acct]"      value="efd-np" />
+  <batchReplace tag="[partition]" value="efd-np" />
+  <batchReplace tag="[runTime]"   value="30" />
+</batchScheduler>
+
+<Test>
+  <Title>1_2</Title>
+  <sus_cmd>mpirun -np 1 sus -nthreads 2</sus_cmd>
+  <batchReplace tag="[mpiRanks]" value="1" />
+</Test>
+\end{verbatim}
+}
+
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Tag} & \textbf{Description} \\
+\hline
+\endhead
+\xmltag{template} & Required. Names a scheduler-script template (e.g.\ a \TT{.slrm} file)
+  containing bracketed \TT{[token]} placeholders; it is copied into each test's directory and
+  edited. \\[0.4em]
+\xmltag{submissionCmd} & Required. The shell command used to submit the script, e.g.\
+  \TT{sbatch}. \\[0.4em]
+\xmltag{batchReplace} & Optional, repeatable. \TT{tag="[name]" value="val"} attributes substitute
+  one token for every test. A \xmltag{batchReplace} inside an individual \xmltag{Test} overrides
+  a token for that test only (commonly \TT{[mpiRanks]}, since that varies per test). \\[0.4em]
+\hline
+\end{longtable}
+
+The framework also auto-injects \TT{[jobName]} (the test's \xmltag{Title}) and \TT{[output]}
+(\TT{job-\xmltag{Title}.out}).
+
+The template file itself is a plain shell/scheduler script with bracketed placeholders, filled in by
+the \xmltag{batchReplace} entries above and the two auto-injected tokens. Any other \TT{[token]} you
+invent is legal as long as some \xmltag{batchReplace} supplies it. Whitespace around \TT{=} is
+stripped after substitution, since some schedulers (e.g.\ Slurm) do not tolerate \TT{KEY = value}:
+
+{\footnotesize
+\begin{verbatim}
+#!/bin/bash
+#SBATCH --job-name=[jobName]
+#SBATCH --time=[runTime]      # walltime
+#SBATCH --output=[output]     # stdout and stderr
+#SBATCH --ntasks=[mpiRanks]   # number of MPI tasks
+#SBATCH --account=[acct]      # account
+#SBATCH --partition=[partition] # partition
+
+module load mpich/3.2
+\end{verbatim}
+}
+
+\subsection{\xmltagH{gnuplot}}
+\label{Sec:PS-Gnuplot}
+
+A \xmltag{gnuplot} block may appear directly under \xmltag{start} (an aggregate plot, run after all
+tests finish) or inside a \xmltag{Test} (a per-test plot, run after that test finishes):
+
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Tag} & \textbf{Description} \\
+\hline
+\endhead
+\xmltag{script} & Required. Path to a \TT{.gp} gnuplot script to run. \\[0.4em]
+\xmltag{title} & Optional. Substituted for the placeholder \TT{\#title} in the script. \\[0.4em]
+\xmltag{xlabel} & Optional. Substituted for \TT{\#xlabel}. \\[0.4em]
+\xmltag{ylabel} & Optional. Substituted for \TT{\#ylabel}. \\[0.4em]
+\xmltag{label} & Optional. Substituted for \TT{\#label} -- a free-form annotation. \\[0.4em]
+\xmltag{arg1} & Optional. Passed as the first positional argument to the \TT{gnuplot -c} call. \\[0.4em]
+\xmltag{arg2} & Optional. Passed as the second positional argument. \\[0.4em]
+\hline
+\end{longtable}
+
+\subsection{Per-\xmltagH{Test} Options}
+\label{Sec:PS-PerTestOptions}
+
+\begin{longtable}{@{}p{0.23\textwidth}p{0.69\textwidth}@{}}
+\hline
+\textbf{Tag} & \textbf{Description} \\
+\hline
+\endhead
+\xmltag{Title} & Required. A unique name for the test; used to build \xmltag{Title}\TT{.ups},
+  \xmltag{Title}\TT{.uda}, \TT{out.}\xmltag{Title}, the batch job name, and the row label in
+  \TT{L2norm.dat}. \\[0.4em]
+\xmltag{sus\_cmd} & Required (except pure restart-edit tests). The run command, e.g.\ \TT{sus},
+  \TT{mpirun -np 8 sus}. For a restart, any \TT{-restart}/\TT{-t N} flags are stripped and
+  replaced automatically. \\[0.4em]
+\xmltag{replace\_lines}, \xmltag{replace\_values}, \xmltag{preProcess\_cmd},
+  \xmltag{batchReplace} & Optional, test-scoped versions of the options described above. \\[0.4em]
+\xmltag{postProcess\_cmd} & Optional, repeatable. A comparison/analysis command run after
+  \TT{sus} succeeds, e.g.\ \TT{compare\_Rayleigh.m -aDir 1 -mat 0 -plot true}. It is run as
+  \xmltag{cmd} \TT{-o outPP.}\xmltag{x} \TT{-uda} \xmltag{Title}\TT{.uda}; non-empty output is
+  appended to \TT{L2norm.dat}. \\[0.4em]
+\xmltag{x} & Required if \xmltag{postProcess\_cmd} is used. The independent-variable value for
+  this test point (e.g.\ a resolution), used as the x-column of \TT{L2norm.dat}. \\[0.4em]
+\xmltag{gnuplot} & Optional, test-scoped plot (Section~\ref{Sec:PS-Gnuplot}). \\[0.4em]
+\hline
+\end{longtable}
+
+\section{Additional Information}
+\label{Sec:PS-AdditionalInfo}
+
+\subsection{Post-processing Tools}
+
+\TT{parametricStudies/postProcessTools} contains the comparison/analysis scripts used by the current
+tests' \xmltag{postProcess\_cmd} entries (MATLAB/Octave \TT{.m} scripts and Python scripts). Each
+can be run standalone, but is normally invoked by the framework, which always supplies \TT{-uda
+\xmltag{uda name}} and \TT{-o \xmltag{output file}} -- any new post-processing script must accept
+these two arguments. Become familiar with an existing script of the same kind before writing a new
+\TT{.tst} that uses it; several components (ICE, MPMICE) already have scripts covering common
+verification problems.
+
+\subsection{Gnuplot Scripts}
+
+\TT{plotScript.gp}, alongside the relevant \TT{.tst} file, is the gnuplot script most studies use to
+plot the L2-norm error produced by a post-processing script; it typically needs minimal editing
+beyond the \xmltag{title}/\xmltag{xlabel}/\xmltag{ylabel} substitutions described in
+Section~\ref{Sec:PS-Gnuplot}. Other gnuplot scripts in a component's directory plot other output
+produced by that component's post-processing scripts and are generally run by hand after a study
+completes, not through the framework.
 
 \subsection{Debugging}
-Many times an error you have is not brought up to the highest level and you will not see it. The easiest way to find an error is to familiarize yourself with the order of operations the system performs, and locate the point where the process ended. Sometimes the simulation will crash, and it may not be apparent what has happened. Be sure to check the output files of the latest test if something goes wrong.
 
+The framework reports an error and stops as soon as it detects one -- a missing input file, an XPath
+that does not resolve to exactly one node, a failed copy, or a non-zero exit from \TT{sus} or a
+post-processing command -- but the message is not always obviously connected to the \TT{.tst} line
+that caused it. When a run fails, check (in order): the console output from \TT{runTests} itself,
+the per-test \TT{out.}\xmltag{Title} log (the \TT{sus} output) inside
+\TT{ps\_results/\xmltag{component}/\xmltag{test}}, and -- for restart studies -- the per-test
+\TT{diff.}\xmltag{Title} file, which records exactly what the test's replacements changed relative
+to the restart uda's unmodified \TT{input.xml}/\TT{timestep.xml}.
 
-%\section{compare\_uda}
+\endgroup
 
-%__________________________________
-%\section{plotting tools}
-% - plotStats\\
-% - plotRegridder \\
-% - plotCPU\_usage \\
-% - plotComponents
-
-%__________________________________
-%FIXME
-%\subsection{Code}
-%-explain the basic directory structure of src
-%\begin{Verbatim}[fontsize=\footnotesize]
-%|-- CCA
-%|-- Components
-%|   |-- Angio
-%|   |-- Arches
-%|   |-- DataArchiver
-%|   |-- Examples
-%|   |-- ICE
-%|   |-- LoadBalancers
-%|   |-- MPM
-%|   |-- MPMArches
-%|   |-- MPMICE
-%|   |-- Models
-%|   |-- OnTheFlyAnalysis
-%|   |-- Parent
-%|   |-- PatchCombiner
-%|   |-- ProblemSpecification
-%|   |-- Regridder
-%|   |-- Schedulers
-%|   |-- SimulationController
-%|   |-- Solvers
-%|   |-- SpatialOps
-%|   `-- SwitchingCriteria
-%|-- Ports
-%|-- Core
-%|-- R_Tester
-%|-- StandAlone
-%|-- VisIt
-%|-- build_scripts
-%|-- include
-%|-- orderAccuracy
-%|-- scripts
-%|-- testprograms
-%`-- tools
-%\end{Verbatim}
-
-%______________________________________________________________________
-%\section{References}
 \bibliographystyle{plain}
 \bibliography{ucf}

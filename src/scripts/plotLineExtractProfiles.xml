@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--______________________________________________________________________
+  plotLineExtractProfiles.xml
+
+  Configuration for plotLineExtractProfiles.py - edit this file to change
+  the plot style, which columns are plotted, the page layout, and the
+  y-axis ranges, without touching the .py script.
+
+  Point a run at a different copy of this file by passing its path on
+  the command line; see plotLineExtractProfiles.py's own usage message
+  for the exact option name.
+______________________________________________________________________-->
+<plotConfig>
+
+  <!--____________________________________________________________________
+    Matplotlib style options.  This whole block, or any option inside it,
+    may be omitted to fall back to the script's built-in defaults.
+  ____________________________________________________________________-->
+  <plotOptions>
+    <figsize width="12" height="9" />            <!-- inches -->
+    <line marker="." markersize="3" width="0.5" />
+    <grid linestyle=":" linewidth="0.5" />
+  </plotOptions>
+
+  <!-- the data column used as the x axis of every panel: either its
+       descriptor name from the data file's header line ( e.g. "X_CC" ),
+       or its 1-based column number -->
+  <colX> X_CC </colX>
+
+  <!--____________________________________________________________________
+    pages - one <page> per PNG to make per timestep.  @suffix names the
+    output file; @cols lists 1-4 comma-separated data columns, one per
+    panel - a page with fewer than 4 columns leaves the remaining 2x2
+    grid cell(s) blank.  Each column may be given either by its
+    descriptor name or by its 1-based column number - the two
+    forms can be mixed freely in the same list.
+
+    Panel titles are NOT typed here - they are pulled automatically from
+    the column descriptor in the data file's header line.
+  ____________________________________________________________________-->
+  <pages>
+    <page suffix="A" cols="press_CC_0, 8, delP_MassX_0, 10" />  <!-- <<< Change these columns -->
+    <!-- <page suffix="B" cols="10, 13, 16" /> -->
+  </pages>
+
+  <!--____________________________________________________________________
+    yRanges - optional fixed y-axis limits, keyed by data column ( name
+    or number, same as @cols above ).  A column with no <range> here
+    autoscales as usual.
+  ____________________________________________________________________-->
+  <yRanges>
+    <range col="press_CC_0" min="100000" max="102000" />  <!-- <<< Change these to fix the y_range -->
+  </yRanges>
+
+</plotConfig>

@@ -55,7 +55,7 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr setPath modify_xml_file modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
+use Utilities qw( cleanStr setPath my_cp modify_xml_file modify_batchScript read_file write_file runPreProcessCmd runSusCmd submitBatchScript );
 use analyze;
 use gnuplot   qw(gnuplot_singleTest gnuplot_allTests);
 
@@ -133,11 +133,15 @@ runPreProcessCmd( $upsFile, "null", @allTests_nodes);
 #     loop over tests
 
 my $statsFile;
-open( $statsFile,">out.stat");
+open( $statsFile,">out.stat") || die "ERROR:run_tests.pl: cannot open out.stat $!";
 
 foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
   my $test_title  = cleanStr( $testNode->findvalue('Title') );
+
+  length($test_title) > 0
+    || die "ERROR:run_tests.pl: a <Test> is missing its required <Title>\n";
+
   my $test_ups    = $test_title.".ups";
   my $test_output = "out.".$test_title;
   my $uda         = $test_title.".uda";
@@ -147,7 +151,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   print "\n-------------------------------------------------- TEST: $test_title\n";
   print "Now modifying $test_ups\n";
 
-  system(" cp $upsFile $test_ups");
+  my_cp( $upsFile, $test_ups );
   my $fn = "<filebase>".$uda."</filebase>";
   system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
   print "\treplace_XML_line $fn\n";
@@ -164,7 +168,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
 
     my ($basename, $parentdir, $ext) = fileparse($batchScript, qr/\.[^.]*$/);
     $test_batch = "batch_$test_title$ext";
-    system(" cp $batchScript $test_batch" );
+    my_cp( $batchScript, $test_batch );
 
     my @nodes = $tst_dom->findnodes('/start/batchScheduler/batchReplace');
     modify_batchScript( $test_batch, @nodes );
@@ -174,6 +178,9 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   #__________________________________
   #   print meta data and run sus command
   my $sus_cmd_0 = $testNode->findnodes('sus_cmd');
+
+  $sus_cmd_0->size() > 0
+    || die "ERROR:run_tests.pl: Test ($test_title) is missing its required <sus_cmd>\n";
 
   print $statsFile "Test Name :     "."$test_title"."\n";
   print $statsFile "(ups) :         "."$test_ups"."\n";
@@ -209,7 +216,7 @@ foreach my $testNode ($tst_dom->findnodes('/start/Test')) {
   $gnuplot_cmd = $testNode->findvalue('gnuplot_cmd');
 
   if( $rc == 0 && length $gnuplot_cmd != 0){
-    gnuplot::gnuplot_singleTest( $testNode, "$uda", $exitOnCrash );
+    gnuplot::gnuplot_singleTest( $testNode, "$uda", $statsFile, $exitOnCrash );
   }
 
   print $statsFile "---------------------------------------------\n";

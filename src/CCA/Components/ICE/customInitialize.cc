@@ -119,6 +119,14 @@ void customInitialization_problemSetup( const ProblemSpecP     & cfd_ice_ps,
       gaussTemp_ps->require("spread_x",  cib->gaussTemp_vars.spread_x);
       gaussTemp_ps->require("spread_y",  cib->gaussTemp_vars.spread_y);
 
+      // spread_z is optional, defaulting to a value large enough that the
+      // z-term below vanishes for any domain size -- this preserves the
+      // original x-y-plane-only behavior for existing .ups files that
+      // don't specify it. Give spread_z a finite value (and spread_x or
+      // spread_y a large one) to localize the pulse in the x-z or y-z
+      // plane instead, or give all three a finite value for a full 3D
+      // Gaussian blob.
+      gaussTemp_ps->getWithDefault("spread_z", cib->gaussTemp_vars.spread_z, 1e10);
     }
 
     //_______________________________________________
@@ -394,23 +402,28 @@ void customInitialization(const Patch* patch,
       Point origin     = cib->gaussTemp_vars.origin;
       double spread_x  = cib->gaussTemp_vars.spread_x;
       double spread_y  = cib->gaussTemp_vars.spread_y;
+      double spread_z  = cib->gaussTemp_vars.spread_z;
 
       double x0 = origin.x();
       double y0 = origin.y();
+      double z0 = origin.z();
 
       proc0cout_eq(patchID, 0) << "   GaussianTemperaure:\n";
-      proc0cout_eq(patchID, 0) << "   origin: " << origin << ", spread_x: " << spread_x << ", spread_y: " << spread_y << endl;
+      proc0cout_eq(patchID, 0) << "   origin: " << origin << ", spread_x: " << spread_x
+                                << ", spread_y: " << spread_y << ", spread_z: " << spread_z << endl;
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         Point pt = patch->cellPosition(c);
         double x = pt.x();
         double y = pt.y();
+        double z = pt.z();
 
         double a = ( (x-x0) * (x-x0) )/ (2*spread_x*spread_x + 1e-100);
         double b = ( (y-y0) * (y-y0) )/ (2*spread_y*spread_y + 1e-100);
+        double d = ( (z-z0) * (z-z0) )/ (2*spread_z*spread_z + 1e-100);
 
-        double Z = amp*exp(-(a + b));
+        double Z = amp*exp(-(a + b + d));
         temp_CC[c] = 300 + Z;
       }
     }

@@ -17,25 +17,25 @@ set grid xtics ytics
 f1(x) = a1*x**b1               # define the function to be fit
 a1 = 0.1; b1 = -2.2 
 FIT_LIMIT=1e-6
-fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
+fit f1(x) 'allRuns.out' using 1:2 via a1, b1
 
 # generate the y_curvefit
 f2(x) = a2*x**b2                # define the function to be fit
 a2 = 0.1; b2 = -2.2      
 FIT_LIMIT=1e-6  
-fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
+fit f2(x) 'allRuns.out' using 1:3 via a2, b2
 
 # generate the z_curvefit
 f3(x) = a3*x**b3                # define the function to be fit
 a3 = 0.1; b3 = -2.2      
 FIT_LIMIT=1e-6  
-fit f3(x) 'L2norm.dat' using 1:4 via a3, b3
+fit f3(x) 'allRuns.out' using 1:4 via a3, b3
 
 # ideal
 f4(x) = a4*x**-1.0                # define the function to be fit
 a4 = 0.1      
 FIT_LIMIT=1e-6  
-fit f4(x) 'L2norm.dat' using 1:4 via a4
+fit f4(x) 'allRuns.out' using 1:4 via a4
 
 set label 'Ideal = a * (#Grid Cells)^-1' at screen 0.2,0.475
 set label sprintf( 'a = %2.3g',a1 )      at screen 0.2,0.45
@@ -53,9 +53,9 @@ set label sprintf( 'a = %2.3g',a3 )       at screen 0.2,0.175
 set label sprintf( 'b = %2.3g',b3 )       at screen 0.2,0.15
 
 
-plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
-     'L2norm.dat' using 1:3 t 'Y Error' with points, \
-     'L2norm.dat' using 1:4 t 'Z Error' with points, \
+plot 'allRuns.out' using 1:2 t 'X Error' with points, \
+     'allRuns.out' using 1:3 t 'Y Error' with points, \
+     'allRuns.out' using 1:4 t 'Z Error' with points, \
      f1(x) t 'x-curve fit', \
      f2(x) t 'y-curve fit', \
      f3(x) t 'z-curve fit', \
