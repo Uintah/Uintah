@@ -5089,6 +5089,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
         if (flags->d_doingDissolution){
           double pSNL = pSN.length();
+          if(!flags->d_computeNormals){
+            pmassNew[idx]    = Max(pmass[idx] - pdeltamass[idx], 0.);
+            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
+          } else {
+#if 1
           if(pSurf[idx]>=0.99 /* && burnFraction != 0.0 && pSNL > 0.*/){
 
             // Normalize particle surface normal
@@ -5143,6 +5148,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pmassNew[idx] = pmass[idx];
             psizeNew[idx] = psize[idx];
           }
+          }
+#endif
         } else {
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
@@ -5413,15 +5420,15 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
           // stressfree conditions HK - GK - MJ
           double rho_org = mpm_matl->getInitialDensity();
-      double rho_cri = mpm_matl->getCriticalDensity();
-      double rho_cur = rho_org/J;
-      if (flags->d_doGranularMPM && 
-          rho_cur< (rho_cri - 1.0e-6) && 
-          mpm_matl->getDoStressFree() ){ 
-        pFNew[idx]=pFOld[idx];
-        J = pFOld[idx].Determinant();
-       pvolume[idx] = pVolumeOld[idx];
-      } // end if Granular MPM
+          double rho_cri = mpm_matl->getCriticalDensity();
+          double rho_cur = rho_org/J;
+          if (flags->d_doGranularMPM && 
+              rho_cur< (rho_cri - 1.0e-6) && 
+              mpm_matl->getDoStressFree() ){ 
+            pFNew[idx]=pFOld[idx];
+            J = pFOld[idx].Determinant();
+           pvolume[idx] = pVolumeOld[idx];
+          } // end if Granular MPM
         }
       } //end of pressureStabilization loop  at the patch level
 

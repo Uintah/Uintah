@@ -56,7 +56,7 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      else if (dis_type == "particleBasedPyrolysis") {
       dissolution_list->add(scinew ParticleBasedPyrolysis(myworld,child,ss,lb,flag));
       flag->d_doingDissolution=true;
-      flag->d_computeNormals=true;
+      flag->d_computeNormals=false;
      }
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;
