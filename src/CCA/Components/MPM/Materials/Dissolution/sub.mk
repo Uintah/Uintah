@@ -34,6 +34,7 @@ SRCDIR   := CCA/Components/MPM/Materials/Dissolution
 
 SRCS     += \
 	$(SRCDIR)/ParticleBasedDissolution.cc \
+	$(SRCDIR)/ParticleBasedPyrolysis.cc   \
 	$(SRCDIR)/NullDissolution.cc          \
 	$(SRCDIR)/DissolutionFactory.cc       \
 	$(SRCDIR)/CompositeDissolution.cc     \

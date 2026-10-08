@@ -2,10 +2,10 @@
  * Copyright © 2026 by Geocosm LLC                                   
  */
 
-// ParticleBasedDissolution.h
+// ParticleBasedPyrolysis.h
 
-#ifndef __PARTICLE_BASED_DISSOLUTION
-#define __PARTICLE_BASED_DISSOLUTION
+#ifndef __PARTICLE_BASED_PYROLYSIS
+#define __PARTICLE_BASED_PYROLYSIS
 
 #include <CCA/Components/MPM/Materials/Dissolution/Dissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionMaterialSpec.h> 
@@ -27,7 +27,7 @@ CLASS
 
 GENERAL INFORMATION
 
-   ParticleBasedDissolution.h
+   ParticleBasedPyrolysis.h
 
    James E. Guilkey
    Laird Avenue Consulting/University of Utah
@@ -36,36 +36,36 @@ KEYWORDS
    Dissolution_Model_Particle_Based
 
 DESCRIPTION
-  Constant rate of dissolution prescribed by dLdt
+  Constant rate of dissolution prescribed by rate
 WARNING
   
 ****************************************/
 
-      class ParticleBasedDissolution : public Dissolution {
+      class ParticleBasedPyrolysis : public Dissolution {
       private:
 
         // Prevent copying of this class
         // copy constructor
-        ParticleBasedDissolution(const ParticleBasedDissolution &ci);
-        ParticleBasedDissolution& operator=(const ParticleBasedDissolution &ci);
+        ParticleBasedPyrolysis(const ParticleBasedPyrolysis &ci);
+        ParticleBasedPyrolysis& operator=(const ParticleBasedPyrolysis &ci);
 
         MaterialManagerP    d_materialManager;
 
-        // Dissolution rate
-        double d_dLdt;
+        // Pyrolysis rate
+        double d_rate;  // dM/dt
 
       public:
          // Constructor
-         ParticleBasedDissolution(const ProcessorGroup* myworld,
+         ParticleBasedPyrolysis(const ProcessorGroup* myworld,
                           ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,
                           MPMFlags* flag);
 
          // Destructor
-         virtual ~ParticleBasedDissolution();
+         virtual ~ParticleBasedPyrolysis();
 
          virtual void outputProblemSpec(ProblemSpecP& ps);
 
-         // Dissolution methods
+         // Pyrolysis methods
          virtual void computeMassBurnFraction(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* matls,
@@ -78,4 +78,4 @@ WARNING
       };
 } // End namespace Uintah
 
-#endif /* __PARTICLE_BASED_DISSOLUTION*/
+#endif /* __PARTICLE_BASED_PYROLYSIS */

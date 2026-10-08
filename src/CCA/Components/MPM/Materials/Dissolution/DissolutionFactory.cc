@@ -5,6 +5,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/DissolutionFactory.h>
 #include <CCA/Components/MPM/Materials/Dissolution/NullDissolution.h>
 #include <CCA/Components/MPM/Materials/Dissolution/ParticleBasedDissolution.h>
+#include <CCA/Components/MPM/Materials/Dissolution/ParticleBasedPyrolysis.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 //#include <CCA/Components/MPM/Materials/Dissolution/SaltPrecipitationModel.h>
@@ -49,6 +50,11 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      }
      else if (dis_type == "particleBasedDissolution") {
       dissolution_list->add(scinew ParticleBasedDissolution(myworld,child,ss,lb,flag));
+      flag->d_doingDissolution=true;
+      flag->d_computeNormals=true;
+     }
+     else if (dis_type == "particleBasedPyrolysis") {
+      dissolution_list->add(scinew ParticleBasedPyrolysis(myworld,child,ss,lb,flag));
       flag->d_doingDissolution=true;
       flag->d_computeNormals=true;
      }

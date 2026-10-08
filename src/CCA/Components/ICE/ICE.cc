@@ -41,6 +41,7 @@
 #include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #include <CCA/Components/Models/SolidReactionModel/Ablation0.h>
+#include <CCA/Components/Models/SolidReactionModel/Pyrolysis0.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
@@ -349,6 +350,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     isRestart=true;
     matProp_ps = restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
+
 
   if(!matProp_ps){
     throw ProblemSetupException("\n Could not find the <MaterialProperties> section in the input file\n",__FILE__, __LINE__);
@@ -1292,6 +1294,7 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
                                       const LevelP      & level,
                                       const MaterialSet * matls)
 {
+
   if(d_models.size() != 0){
 
     printSchedule( level, m_ice_tasks, " ICE::scheduleComputeModelSources" );
@@ -1351,6 +1354,12 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
       if( ab_model ){
         ab_model->scheduleComputeModelSources( sched, level );
       }
+
+      Pyrolysis0* py_model = dynamic_cast<Pyrolysis0*>( *m_iter );
+      if( py_model ){
+        py_model->scheduleComputeModelSources( sched, level );
+      }
+
 
       ParticleModel*  p_model = dynamic_cast<ParticleModel*>( *m_iter );
       if( p_model ){

@@ -34,6 +34,7 @@ ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
 SRCS	+= \
        $(SRCDIR)/SolidReactionModel.cc       \
        $(SRCDIR)/Ablation0.cc                \
+       $(SRCDIR)/Pyrolysis0.cc                \
        $(SRCDIR)/NthOrderModel.cc            \
        $(SRCDIR)/PowerModel.cc               \
        $(SRCDIR)/AvaramiErofeevModel.cc      \
