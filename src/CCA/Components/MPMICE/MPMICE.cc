@@ -444,9 +444,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   mpm_matls_sub,
                                                                   all_matls);
 
-    // JIM
     d_ice->scheduleComputeModelSources(       sched, ice_level,   all_matls);
-
 
     d_ice->scheduleUpdateVolumeFraction(      sched, ice_level,   press_matl,
                                                                   all_matls);
@@ -1422,7 +1420,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
 
         for (int in=0;in<8;in++){
-          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * 
+                                 (gmass[nodeIdx[in]] - gDeltaMass[nodeIdx[in]]);
           cmass[c]    += NC_CCw_mass;
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
@@ -1946,14 +1945,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         if(ice_matl[m]){                // I C E
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
+//          rho_micro[m][c] = 1./sp_vol_CC[m][c];
           rho_micro[m][c] =  mpm_matl[m]->getConstitutiveModel()->
-            computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m],Temp[m][c],1.0/sp_vol_CC[m][c]);
+            computeRhoMicroCM(press_new[c], press_ref, mpm_matl[m],
+                                            Temp[m][c], 1.0/sp_vol_CC[m][c]);
         }
         mat_volume[m] = ( rho_CC_old[m][c]*cell_vol )/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
-
-      //total_mat_vol = max(total_mat_vol, .75*cell_vol);
 
       TMV_CC[c] = total_mat_vol;
 

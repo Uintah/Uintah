@@ -55,6 +55,7 @@
 
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #  include <CCA/Components/Models/SolidReactionModel/Ablation0.h>
+#  include <CCA/Components/Models/SolidReactionModel/Pyrolysis0.h>
 #endif
 
 #include <CCA/Ports/ModelInterface.h>
@@ -172,6 +173,9 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "Ablation0") {
       d_models.push_back(scinew Ablation0(myworld, materialManager, model_ps, prob_spec));
+    }
+    else if(type == "Pyrolysis0") {
+      d_models.push_back(scinew Pyrolysis0(myworld, materialManager, model_ps, prob_spec));
     }
 #endif
 
