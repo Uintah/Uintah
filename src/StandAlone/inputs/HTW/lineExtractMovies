@@ -1,0 +1,71 @@
+#!/bin/bash
+#______________________________________________________________________
+#   Generate movies from DataAnalysis:lineExtract
+#
+#   usage:
+#   inputs/HTW/lineExtractMovies --uda SolidPyrolysis.uda --config inputs/HTW/solidPyrolysis-plots.xml
+#______________________________________________________________________
+
+if ! options=$(getopt --alternative \
+                      --name lineExtractMovies \
+                      --longoptions uda:,config:\
+                      -- "$@"); then
+  echo "Usage: lineExtractMovies -uda DIR --config FILE" >&2
+  exit 1
+fi
+
+eval set -- "$options"
+
+while true; do
+  case "$1" in
+    --uda)      uda="$2";    shift 2 ;;
+    --config)   config="$2"; shift 2 ;;
+    --)         shift; break ;;
+    *)         echo "Internal error: unhandled option $1" >&2; exit 1 ;;
+  esac
+done
+
+line="domain"
+
+
+# bulletproofing
+if [[ -z $uda || -z $config ]]; then
+  echo "--uda and --config are required" >&2
+  exit 1
+fi
+
+
+here=$( pwd )
+
+if [[ $USER == "harman" ]]; then
+  opt="/home/builds/HTW/opt_gcc/StandAlone"
+  src="/home/builds/Fresh/trunk/src/"
+else
+  opt="$HOME/HTW/branch/Uintah/opt/StandAlone/"
+  src="$HOME/HTW/src"
+fi
+
+
+#______________________________________________________________________
+#   Process the lineExtract files into a time series
+"$src"/scripts/combineLineExtactData.sh -d x "$uda"/"$line"
+
+
+#   Generate line plots from the timeseriesl using the config file
+"$src"/scripts/plotLineExtractProfiles.py -n 10 \
+                                        --uda "$uda" \
+                                        --config "$config" \
+                                        --line-name "$line"
+
+cd "$uda"/"$line"/L-0/plots
+
+#__________________________________
+# loop over all pages and create movie(s)
+
+mapfile -t these < <(find * -name "*.png" | cut -c 1-2 | sort -u)
+
+for val in "${these[@]}"; do
+  echo "$val"
+
+  "$src"/scripts/ppmToMpeg.sh "$val" < /dev/null
+done
