@@ -8,9 +8,10 @@
 
 if ! options=$(getopt --alternative \
                       --name lineExtractMovies \
-                      --longoptions uda:,config:\
+                      --options "" \
+                      --longoptions uda:,config: \
                       -- "$@"); then
-  echo "Usage: lineExtractMovies -uda DIR --config FILE" >&2
+  echo "Usage: lineExtractMovies --uda DIR --config FILE" >&2
   exit 1
 fi
 
@@ -39,7 +40,7 @@ here=$( pwd )
 
 if [[ $USER == "harman" ]]; then
   opt="/home/builds/HTW/opt_gcc/StandAlone"
-  src="/home/builds/Fresh/trunk/src/"
+  src="/home/builds/HTW/src/"
 else
   opt="$HOME/HTW/branch/Uintah/opt/StandAlone/"
   src="$HOME/HTW/src"
@@ -49,6 +50,11 @@ fi
 #______________________________________________________________________
 #   Process the lineExtract files into a time series
 "$src"/scripts/combineLineExtactData.sh -d x "$uda"/"$line"
+rc=$?
+if [[ $rc -ne 0 ]]; then
+  echo "ERROR(lineExtractMovies): combineLineExtactData.sh failed (return code $rc)" >&2
+  exit $rc
+fi
 
 
 #   Generate line plots from the timeseriesl using the config file
@@ -56,8 +62,18 @@ fi
                                         --uda "$uda" \
                                         --config "$config" \
                                         --line-name "$line"
+rc=$?
+if [[ $rc -ne 0 ]]; then
+  echo "ERROR(lineExtractMovies): plotLineExtractProfiles.py failed (return code $rc)" >&2
+  exit $rc
+fi
 
 cd "$uda"/"$line"/L-0/plots
+rc=$?
+if [[ $rc -ne 0 ]]; then
+  echo "ERROR(lineExtractMovies): cannot cd to $uda/$line/L-0/plots (return code $rc)" >&2
+  exit $rc
+fi
 
 #__________________________________
 # loop over all pages and create movie(s)

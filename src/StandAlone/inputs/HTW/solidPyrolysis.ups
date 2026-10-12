@@ -80,7 +80,7 @@
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <DataArchiver>
-    <filebase>        SolidPyrolysis.uda  </filebase>
+    <filebase>        SolidPyrolysis_Test.uda  </filebase>
     <outputInterval>  1e-3                </outputInterval>
     <!--
     <outputTimestepInterval> 1 </outputTimestepInterval>
@@ -219,9 +219,9 @@
         <rate>  5.0e-7                  </rate>
       </dissolution>
     </MPM>
-    
+
     <!--__________________________________-->
-    
+
     <ICE>
       <material name = "Product">
         <EOS type = "ideal_gas"/>
@@ -256,6 +256,7 @@
 
   <!--______________________________________________________________________-->
   <Models>
+<!--
     <Model type = "Pyrolysis0">
       <Pyrolysis0>
         <fromMaterial>  Reactant  </fromMaterial>
@@ -263,11 +264,19 @@
         <E0>            0.0       </E0>
       </Pyrolysis0>
     </Model>
+-->
+    <Model type = "Test">
+      <Test>
+        <fromMaterial>  Reactant  </fromMaterial>
+        <toMaterial>    Product   </toMaterial>
+        <rate>          100       </rate>
+      </Test>
+    </Model>
   </Models>
 
   <!--______________________________________________________________________
   #   To generate movies:
-  #    inputs/HTW/generateMovies --uda SolidPyrolysis.uda --config inputs/HTW/solidPyrolysis-plots.xml
+  #    inputs/HTW/lineExtractMovies \-\-uda SolidPyrolysis.uda \-\-config inputs/HTW/solidPyrolysis-plots.xml
   #   
   #   If you change the variables also change solidPyrolysis-plots.xml
   # ______________________________________________________________________-->
