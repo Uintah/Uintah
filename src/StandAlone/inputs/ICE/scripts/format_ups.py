@@ -11,6 +11,7 @@
 #      text     = format_ups_text( original )
 #      back up file to file.bak, then write text over file
 #      reparsed = parse( file )
+#
 #      if signature( reparsed ) != signature( original ):   # tag, attrs, and text
 #         restore file from file.bak                        # of every node, comments included
 #         report failure
@@ -35,9 +36,11 @@
 #                              if PRESERVE_BLANK_LINES and the source had a
 #                                 blank line before this child, flush the
 #                                 pending batch (below) and emit a blank line
+#
 #                              if the child is a "batchable leaf" (no children,
 #                                 no attributes, single-token value) -> append
 #                                 it to a pending batch instead of emitting it
+#
 #                              otherwise -> flush the pending batch and
 #                                 recurse into the child
 #                            flush any batch left over, then the closing tag

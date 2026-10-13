@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+  <!--Please use a consistent set of units, (mks, cgs,...)-->
+  <Meta>
+    <title>   Advection test   </title>
+  </Meta>
+
+  <SimulationComponent type = "ice"/>
+
+  <Solver type = "hypre"/>
+
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>              0.1     </maxTime>
+    <initTime>             0.0     </initTime>
+    <delt_min>             0.0     </delt_min>
+    <delt_max>             1.0     </delt_max>
+    <delt_init>            1.0e-10  </delt_init>
+    <max_delt_increase>     1       </max_delt_increase>
+    <timestep_multiplier>  1.0     </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"    var = "Neumann">
+          <value>   0.   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+          <value>   [0., 0., 0.]   </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+          <value>   0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+          <value>   0.0   </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label = "1">
+        <lower>       [-0.5, -0.5, -0.5]  </lower>
+        <upper>       [0.5, 0.5, 0.5]     </upper>
+        <extraCells>  [1, 1, 1]           </extraCells>
+        <patches>     [2, 2, 2]           </patches>
+      </Box>
+      <spacing>   [0.02, 0.02, 0.02]   </spacing>
+    </Level>
+  </Grid>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  
+  <!--____________________________________________________________________-->
+  <DataArchiver>
+    <filebase>   Convert_mat1-mat2.uda  </filebase>
+    <outputInterval>  .001                   </outputInterval>
+    <save label = "vel_CC"/>
+    <save label = "press_CC"/>
+    <save label = "rho_CC"/>
+    <save label = "delP_Dilatate"/>
+    <save label = "delP_MassX"/>
+    <save label = "vol_frac_CC"/>
+    <save label = "modelMass_src"/>
+    <save label = "modelMom_src"/>
+    <save label = "modelEng_src"/>
+    <save label = "modelVol_src"/>
+
+    <!-- src/scripts/ICE/plot_dat_files.py Convert_mat1-mat2.uda -o conserved_Qtys.pdf -->
+    <save label = "TotalMass"/>
+    <save label = "TotalMomentum"/>
+    <save label = "TotalIntEng"/>
+    <save label = "KineticEnergy"/>
+  </DataArchiver>
+
+  <!--____________________________________________________________________-->
+  <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+  <!--____________________________________________________________________-->
+  <CFD>
+    <cfl>   0.3   </cfl>
+    <ICE>
+      <advection type = "FirstOrder"/>
+
+      <TimeStepControl>
+        <Scheme_for_delT_calc>  aggressive  </Scheme_for_delT_calc>
+        <knob_for_speedSound>   0.1         </knob_for_speedSound>
+      </TimeStepControl>
+
+      <ImplicitSolver>
+        <max_outer_iterations>           20      </max_outer_iterations>
+        <outer_iteration_tolerance>      1.0e-7  </outer_iteration_tolerance>
+        <iters_before_timestep_restart>  5       </iters_before_timestep_restart>
+        <Parameters variable = "implicitPressure">
+          <!-- Common options -->
+          <tolerance>       1.e-8  </tolerance>
+          <solver>          cg     </solver>
+          <preconditioner>  pfmg   </preconditioner>
+          <maxiterations>   7500   </maxiterations>
+          <npre>            1      </npre>
+          <npost>           1      </npost>
+          <skip>            0      </skip>
+          <jump>            0      </jump>
+        </Parameters>
+      </ImplicitSolver>
+    </ICE>
+  </CFD>
+
+  <!--____________________________________________________________________-->
+  <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+  <!--____________________________________________________________________-->
+  <PhysicalConstants>
+    <gravity>             [0, 0, 0]  </gravity>
+    <reference_pressure>  101325.0   </reference_pressure>
+  </PhysicalConstants>
+
+  <!--____________________________________________________________________-->
+  <!--     MaterialProperties and Initial Conditions                      -->
+  <!--____________________________________________________________________-->
+  <MaterialProperties>
+    <ICE>
+      <material name = "product">
+        <EOS type = "ideal_gas"/>
+        <dynamic_viscosity>     0.0    </dynamic_viscosity>
+        <thermal_conductivity>  0.0    </thermal_conductivity>
+        <specific_heat>         652.9  </specific_heat>
+        <gamma>                 1.289  </gamma>
+        <geom_object>
+          <difference>
+            <box label = "wholeDomain">
+              <min>  [-0.5, -0.5, -0.5]  </min>
+              <max>  [0.5, 0.5, 0.5]     </max>
+            </box>
+            <box label = "block">
+              <min>  [-0.2, -0.2, -0.2]  </min>
+              <max>  [0.2, 0.2, 0.2]     </max>
+            </box>
+          </difference>
+          <res>          [2, 2, 2]           </res>
+          <velocity>     [0, 0, 0]           </velocity>
+          <density>      1.7899909957225715  </density>
+          <pressure>     101325.0            </pressure>
+          <temperature>  300.0               </temperature>
+        </geom_object>
+      </material>
+
+      <material name = "reactant">
+        <EOS type = "ideal_gas"/>
+        <dynamic_viscosity>     0.0    </dynamic_viscosity>
+        <thermal_conductivity>  0.0    </thermal_conductivity>
+        <specific_heat>         652.9  </specific_heat>
+        <gamma>                 1.289  </gamma>
+        <geom_object>
+          <box label = "block"/>
+          <res>          [2, 2, 2]           </res>
+          <velocity>     [0, 0, 0]           </velocity>
+          <density>      1.7899909957225715  </density>
+          <pressure>     101325.0            </pressure>
+          <temperature>  300.0               </temperature>
+        </geom_object>
+      </material>
+    </ICE>
+    <exchange_properties>
+      <exchange_coefficients>
+        <momentum>  [1e10]  </momentum>
+        <heat>      [1e10]  </heat>
+      </exchange_coefficients>
+    </exchange_properties>
+  </MaterialProperties>
+
+  <!--______________________________________________________________________-->
+  <Models>
+    <Model type = "Test">
+      <Test>
+        <fromMaterial>  reactant  </fromMaterial>
+        <toMaterial>    product   </toMaterial>
+        <rate>          100       </rate>
+      </Test>
+    </Model>
+  </Models>
+  
+  <!--______________________________________________________________________
+  #   To generate movies:
+  #    src/scripts/lineExtractMovies.sh \-\-uda Convert_mat1-mat2.uda \-\-config inputs/ICE/LineExtractConfigs/convert_mat1-mat2.xml \-\-line {X,Y,Z}
+  #   
+  #   If you change the variables also change inputs/ICE/LineExtractConfigs/convert_mat1-mat2.xml
+  # ______________________________________________________________________-->
+  <DataAnalysis>
+
+    <Module name = "lineExtract">
+      <material>           product  </material>
+      <samplingFrequency>  1000     </samplingFrequency>
+      <timeStart>          0        </timeStart>
+      <timeStop>           100      </timeStop>
+
+      <Variables>
+        <analyze label = "press_CC" matl = "0"/>
+        <analyze label = "delP_Dilatate" matl = "0"/>
+        <analyze label = "rho_CC" matl = "0"/>
+        <analyze label = "vel_CC" matl = "0"/>
+        <analyze label = "modelMass_src"/>
+        <analyze label = "modelMom_src"/>
+        <analyze label = "modelEng_src"/>
+        <analyze label = "modelVol_src"/>
+        <analyze label = "vol_frac_CC"/>
+      </Variables>
+
+      <lines>
+        <line name = "X">
+          <startingPt>  [-0.5, 0.0, 0.0]  </startingPt>
+          <endingPt>    [0.5, 0.0, 0.0]  </endingPt>
+        </line>
+        <line name = "Y">
+          <startingPt>  [0.0, -0.5, 0.0]  </startingPt>
+          <endingPt>    [0.0, 0.5, 0.0]  </endingPt>
+        </line>
+        <line name = "Z">
+          <startingPt>  [0.0, 0.0, -0.5]  </startingPt>
+          <endingPt>    [0.0, 0.0, 0.5]  </endingPt>
+        </line>
+      </lines>
+    </Module>
+  </DataAnalysis>
+</Uintah_specification>
