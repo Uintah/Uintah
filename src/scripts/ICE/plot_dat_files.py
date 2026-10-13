@@ -33,10 +33,18 @@ SCALAR_LABELS = ["TotalMass", "TotalIntEng", "KineticEnergy"]
 #   formatting without touching the plotting logic below.
 
 FIGURE_SIZE      = (11, 8)   # inches
-LINE_WIDTH       = 1.5
+LINE_WIDTH       = 1.0
 REL_LINESTYLE    = "--"      # style for the relative-difference traces
 GRID             = True
 LEGEND_FONTSIZE  = "small"
+
+# Fonts.  Set any of these to None to keep matplotlib's default.  Sizes
+# are in points (or names like "small", "large").
+FONT_FAMILY      = "Times New Roman"      # e.g. "serif", "sans-serif", "monospace", "Times New Roman"
+FONT_SIZE        = 10        # base size for all text
+LABEL_FONTSIZE   = None      # axis labels
+TICK_FONTSIZE    = None      # tick labels
+FONT_WEIGHT      = None      # e.g. "normal", "bold"
 
 # Cycle these colors through the total + per-material traces on every
 # panel.  Set to None to fall back to matplotlib's default color cycle.
@@ -51,6 +59,28 @@ PANEL_SETTINGS = {
     "KineticEnergy": { "yscale": "linear", "xlim": None, "ylim": None },
     "TotalMomentum": { "yscale": "linear", "xlim": None, "ylim": None },
 }
+#______________________________________________________________________
+
+def apply_font_settings():
+    """Apply the FONT_* settings through matplotlib's rcParams -- call
+    this before creating the figure.  None keeps the default."""
+
+    if FONT_FAMILY is not None:
+        plt.rcParams["font.family"] = FONT_FAMILY
+
+    if FONT_SIZE is not None:
+        plt.rcParams["font.size"] = FONT_SIZE
+
+    if FONT_WEIGHT is not None:
+        plt.rcParams["font.weight"] = FONT_WEIGHT
+
+    if LABEL_FONTSIZE is not None:
+        plt.rcParams["axes.labelsize"] = LABEL_FONTSIZE
+
+    if TICK_FONTSIZE is not None:
+        plt.rcParams["xtick.labelsize"] = TICK_FONTSIZE
+        plt.rcParams["ytick.labelsize"] = TICK_FONTSIZE
+
 #______________________________________________________________________
 
 def set_color_cycle( axes_list ):
@@ -120,12 +150,20 @@ def column( rows,
 
 def relative_difference( values ):
     """1.0 - value/initial_value for every entry -- the diagnostic used
-    to spot conservation-law drift over a run."""
+    to spot conservation-law drift over a run.  If the initial value is
+    zero (e.g. kinetic energy of a fluid starting at rest) the quantity is
+    undefined, so every entry is NaN and matplotlib draws nothing."""
 
     init = values[0]
     rel  = []
-    for v in values:
-        rel.append( 1.0 - v/init )
+
+    if init == 0.0:
+        for v in values:
+            rel.append( float( "nan" ) )
+    else:
+        for v in values:
+            rel.append( 1.0 - v/init )
+
     return rel
 
 #______________________________________________________________________
@@ -255,6 +293,8 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    apply_font_settings()
 
     fig, axes = plt.subplots( 2, 2, figsize=FIGURE_SIZE )
 
