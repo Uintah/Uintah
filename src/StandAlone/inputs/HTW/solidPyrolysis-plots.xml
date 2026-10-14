@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--______________________________________________________________________
+#  so
+# 
+#  Configuration for plotLineExtractProfiles.py - edit this file to change
+#  the plot style, which columns are plotted, the page layout, and the
+#  y-axis ranges.  
+#______________________________________________________________________-->
+<plotConfig>
+
+  <!--____________________________________________________________________
+  #   Matplotlib style options.  This whole block, or any option inside it,
+  #   may be omitted to fall back to the script's built-in defaults.
+  # ____________________________________________________________________-->
+  
+  <plotOptions>
+    <figsize width="12" height="9" />            <!-- inches -->
+    <line marker="." markersize="3" width="0.5" />
+    <grid linestyle=":" linewidth="0.5" />
+  </plotOptions>
+
+  <!-- the data column used as the x axis of every panel: ( e.g. "X_CC" )-->
+  <colX> X_CC </colX>
+
+  <!--____________________________________________________________________
+   # pages - one <page> has 4 subplots per timestep.
+   #   suffix:     names the output file "A_t00001.png"
+   #   @cols:      lists 1-4 comma-separated data columns, one per subpanel.
+   #               Each column may be given either by its
+   #               descriptor name or by its 1-based column number
+  ____________________________________________________________________-->
+  <pages>
+    <page suffix="A" cols="press_CC_0, delPDilatate_0, rho_CC_1, vel_CC_1.x" />
+    <page suffix="B" cols="compresiblity_1, TMV_CC_0, vol_frac_CC_1" /> 
+    <page suffix="C" cols="modelMassSrc_1, modelVol_src_1, modelMomSrc_1.x, modelEng_src_1" />
+  </pages>
+
+  <!--____________________________________________________________________
+  #  yRanges - optional fixed y-axis limits, keyed by data column ( name
+  #  or number, same as @cols above ).  default is autoscale
+  #____________________________________________________________________-->
+  <yRanges>
+   <!-- <range col="press_CC_0"       min="100000"    max="9.5e6" />
+    <range col="delPDilatate_0"   min="-10e-9"    max="10e-9" />  
+    <range col="vel_CC_1.x"       min="-10e-11"   max="10e-11" />
+    <range col="vol_frac_CC_1"    min="0.1"       max="0.35" />
+    <range col="modelMomSrc_1.x"  min="-1e-24"    max="1e-24" />
+     <range col="rho_CC_1"        min="100"       max="200" />
+     <range col="compresiblity_1" min="1e-7"      max="1.38e-6"/> -->
+  </yRanges>
+
+</plotConfig>
