@@ -192,7 +192,7 @@
       <material name="Reactant">
         <density>              1000.0 </density>
         <thermal_conductivity> 0.0    </thermal_conductivity>
-        <specific_heat>        996.0  </specific_heat>
+        <specific_heat>        3.3775 </specific_heat>
 
         <constitutive_model type = "UCNH">
           <bulk_modulus>  1.0e8  </bulk_modulus>
@@ -218,7 +218,7 @@
       </contact>
       <dissolution>
         <type>       particleBasedPyrolysis      </type>
-        <rate> 5.0e-7 </rate>
+        <rate> 5.0e-6 </rate>
       </dissolution>
     </MPM>
 
