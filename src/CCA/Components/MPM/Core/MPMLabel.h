@@ -187,6 +187,7 @@ namespace Uintah {
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* TotalMassFTRMLabel;
       const VarLabel* TotalMomentOfInertiaLabel;
       const VarLabel* NeedAddMPMMaterialLabel;
       const VarLabel* BndyForceLabel[6];

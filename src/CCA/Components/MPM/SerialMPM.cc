@@ -777,7 +777,8 @@ void SerialMPM::scheduleComputeStableTimeStep(const LevelP& level,
   t->computesVar(lb->delTLabel,level.get_rep());
   sched->addTask(t,level->eachPatch(), mpm_matls);
 }
-
+//______________________________________________________________________
+//
 void
 SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched)
@@ -790,15 +791,18 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const MaterialSet* cz_matls = m_materialManager->allMaterials( "CZ" );
   const MaterialSet* all_matls = m_materialManager->allMaterials();
 
-  const MaterialSubset* mpm_matls_sub = (   matls ?    matls->getUnion() : nullptr);;
-  const MaterialSubset*  cz_matls_sub = (cz_matls ? cz_matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_mss = (   matls ?    matls->getUnion() : nullptr);;
+  const MaterialSubset*  cz_mss = (cz_matls ? cz_matls->getUnion() : nullptr);
+
+  MaterialSubset* reduction_mss = m_materialManager->createReductionSubset( "MPM" );
 
   scheduleComputeCurrentParticleSize(     sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   if(flags->d_doScalarDiffusion) {
     d_fluxBC->scheduleApplyExternalScalarFlux(sched, patches, matls);
   }
-  scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  scheduleInterpolateParticlesToGrid(     sched, patches, matls,
+                                                          reduction_mss);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
   }
@@ -812,12 +816,12 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   if(flags->d_useCohesiveZones){
     cohesiveZoneTasks->scheduleUpdateCohesiveZones(
-                                          sched, patches, mpm_matls_sub,
-                                                          cz_matls_sub,
+                                          sched, patches, mpm_mss,
+                                                          cz_mss,
                                                           all_matls);
     cohesiveZoneTasks->scheduleAddCohesiveZoneForces(
-                                          sched, patches, mpm_matls_sub,
-                                                          cz_matls_sub,
+                                          sched, patches, mpm_mss,
+                                                          cz_mss,
                                                           all_matls);
   }
   if(d_bndy_traction_faces.size()>0) {
@@ -830,7 +834,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleDiffusionInterfaceDiv(        sched, patches, matls);
   }
 
-  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  scheduleComputeAndIntegrateAcceleration(sched, patches, matls,
+                                                          reduction_mss);
   if (flags->d_doScalarDiffusion) {
     scheduleComputeAndIntegrateDiffusion( sched, patches, matls);
   }
@@ -852,8 +857,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   // For use with Force/Torque Transmitting materials
-  scheduleReduceVars(                     sched, patches, matls);
-  scheduleComputeGridVelocityForFTM(      sched, patches, matls);
+  scheduleReduceVars(                     sched, patches, matls,
+                                                          reduction_mss);
+  scheduleComputeGridVelocityForFTM(      sched, patches, matls,
+                                                          reduction_mss);
 
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeParticleGradients(       sched, patches, matls);
@@ -888,6 +895,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   SerialMPM::scheduleParticleRelocation(   sched, level,  matls, cz_matls);
 
+  scheduleConservedQtys(                   sched, patches, matls, reduction_mss );
+
   //__________________________________
   //  on the fly analysis
   if(d_analysisModules.size() != 0){
@@ -897,6 +906,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }
+  }
+  
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
   }
 }
 //______________________________________________________________________
@@ -1032,7 +1045,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                    const PatchSet* patches,
-                                                   const MaterialSet* matls)
+                                                   const MaterialSet* matls,
+                                                   const MaterialSubset* reduction_mss)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1387,7 +1401,8 @@ void SerialMPM::scheduleComputeAndIntegrateDiffusion(       SchedulerP  & sched
 
 void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                        const PatchSet* patches,
-                                                       const MaterialSet* matls)
+                                                       const MaterialSet* matls,
+                                                       const MaterialSubset * reduction_mss)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1396,8 +1411,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   printSchedule(patches,cout_doing,
                                 "MPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
-                        this, &SerialMPM::computeAndIntegrateAcceleration);
+  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration", this,
+                        &SerialMPM::computeAndIntegrateAcceleration);
 
   t->requiresVar(Task::OldDW, lb->delTLabel );
 
@@ -1412,30 +1427,11 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   t->computesVar( VarLabel::find(recomputeTimeStep_name) );
   //__________________________________
   //  reduction variables
-  //  Create reductionMatlSubSet that includes all mpm matls
-  // and the global matl.  Needed to output per matl reduction variables
-  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
-  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_mss = matls->getUnion();
 
-  MaterialSubset* reduction_mss = scinew MaterialSubset();
-  reduction_mss->add( global_mss->get(0) );
+  if( flags->d_reductionVars->sumTransmittedForce){
+    t->computesVar(lb->TotalMassFTRMLabel, mpm_mss);
 
-  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
-
-  if( nMatls > 1 ){  // ignore for single matl problems
-    for (unsigned int m = 0; m < nMatls; m++ ) {
-      reduction_mss->add( mpm_mss->get(m) );
-    }
-  }
-
-  reduction_mss->addReference();
-
-  if(flags->d_reductionVars->mass ||
-     flags->d_reductionVars->sumTransmittedForce){
-    t->computesVar(lb->TotalMassLabel,           reduction_mss, Task::OutOfDomain);
-  }
-
-  if( flags->d_reductionVars->sumTransmittedForce ){
     // Tell scheduler to not automatically reduce variable.
     lb->SumTransmittedForceLabel->schedReductionTask(false);
     t->computesVar(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
@@ -1443,9 +1439,6 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
-  if (reduction_mss && reduction_mss->removeReference()){
-    delete reduction_mss;
-  }
 }
 
 void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
@@ -1492,11 +1485,11 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1566,40 +1559,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computesVar(lb->pNormalLabel_preReloc);
   }
 
-  //__________________________________
-  //  reduction variables
-  //  Create reductionMatlSubSet that could include all mpm matls
-  // and the global matl.  Needed for per matl reduction variables
-
-  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
-  const MaterialSubset* mpm_mss    = matls->getUnion();
-
-  MaterialSubset* reduction_mss = scinew MaterialSubset();
-  reduction_mss->add( global_mss->get(0) );
-
-  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
-
-  if( nMatls > 1 ){  // ignore for single matl problems
-    for (unsigned int m = 0; m < nMatls; m++ ) {
-      reduction_mss->add( mpm_mss->get(m) );
-    }
-  }
-
-  reduction_mss->addReference();
-
-  if(flags->d_reductionVars->momentum){
-    t->computesVar(lb->TotalMomentumLabel, reduction_mss, Task::OutOfDomain);
-  }
-  if(flags->d_reductionVars->KE){
-    t->computesVar(lb->KineticEnergyLabel, reduction_mss, Task::OutOfDomain);
-  }
-  if(flags->d_reductionVars->thermalEnergy){
-    t->computesVar(lb->ThermalEnergyLabel, reduction_mss, Task::OutOfDomain);
-  }
-  if(flags->d_reductionVars->centerOfMass){
-    t->computesVar(lb->CenterOfMassPositionLabel, reduction_mss,Task::OutOfDomain);
-  }
-
   // debugging scalar
   if(flags->d_with_color) {
     t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -1624,9 +1583,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
 
-  if (reduction_mss && reduction_mss->removeReference()){
-    delete reduction_mss;
-  }
 }
 
 void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
@@ -1810,9 +1766,10 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
 //  to the tell scheduler to perform the reduction.
 //  The actual task is inside MPIScheduler.
 void
-SerialMPM::scheduleReduceVars(       SchedulerP  & sched,
-                               const PatchSet    * patches,
-                               const MaterialSet * matls )
+SerialMPM::scheduleReduceVars(       SchedulerP     & sched,
+                               const PatchSet       * patches,
+                               const MaterialSet    * matls,
+                               const MaterialSubset * reduction_mss )
 {
 
   if( !flags->d_reductionVars->sumTransmittedForce ){
@@ -1821,42 +1778,21 @@ SerialMPM::scheduleReduceVars(       SchedulerP  & sched,
 
   printSchedule( patches,cout_doing,"MPM::scheduleReduceVars");
 
-  Task* t = scinew Task( "MPM::reductionTask", Task::Reduction);
-
-  //__________________________________
-  // Create reductionMatlSubSet that includes all mpm matls
-  // and the global matl.
-  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
-  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
-
-  MaterialSubset* reduction_mss = scinew MaterialSubset();
-  reduction_mss->add( global_mss->get(0) );
-
-  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
-
-  if( nMatls > 1 ){  // ignore for single matl problems
-    for (unsigned int m = 0; m < nMatls; m++ ) {
-      reduction_mss->add( mpm_mss->get(m) );
-    }
-  }
-
-  reduction_mss->addReference();
+  Task* t = scinew Task( "MPM::reductionTask", Task::Reduction );
 
   // Tell the scheduler to reduce this variable
   lb->SumTransmittedForceLabel->schedReductionTask(true);
   t->computesVar( lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain );
 
   sched->addTask(t, patches, matls);
-
-  if (reduction_mss && reduction_mss->removeReference()){
-    delete reduction_mss;
-  }
 }
-
+//______________________________________________________________________
+//
 void
-SerialMPM::scheduleComputeGridVelocityForFTM(SchedulerP  & sched,
-                                             const PatchSet    * patches,
-                                             const MaterialSet * matls )
+SerialMPM::scheduleComputeGridVelocityForFTM(SchedulerP           & sched,
+                                             const PatchSet       * patches,
+                                             const MaterialSet    * matls,
+                                             const MaterialSubset * reduction_mss )
 {
 
   if( !flags->d_reductionVars->sumTransmittedForce ){
@@ -1866,49 +1802,27 @@ SerialMPM::scheduleComputeGridVelocityForFTM(SchedulerP  & sched,
   printSchedule( patches,cout_doing,"MPM::scheduleComputeGridVelocityForFTM");
 
   Task* t = scinew Task( "MPM::computeGridVelocityForFTM", this,
-                          &SerialMPM::computeGridVelocityForFTM);
+                          &SerialMPM::computeGridVelocityForFTM );
 
   //__________________________________
   // Create reductionMatlSubSet that includes all mpm matls
   // and the global matl.
-  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
-  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_mss    = matls->getUnion();
 
-  MaterialSubset* reduction_mss = scinew MaterialSubset();
-  reduction_mss->add( global_mss->get(0) );
+  t->requiresVar(Task::NewDW, lb->TotalMassFTRMLabel, mpm_mss );
 
-  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
+  // this matl_subset contains global matl.
+  t->requiresVar(Task::NewDW, lb->SumTransmittedForceLabel, nullptr,
+              reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
 
-  if( nMatls > 1 ){  // ignore for single matl problems
-    for (unsigned int m = 0; m < nMatls; m++ ) {
-      reduction_mss->add( mpm_mss->get(m) );
-    }
-  }
-
-  reduction_mss->addReference();
-
-  if( flags->d_reductionVars->mass ||
-      flags->d_reductionVars->sumTransmittedForce){
-    t->requiresVar(Task::NewDW, lb->TotalMassLabel, nullptr,
-                reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
-  }
-  if( flags->d_reductionVars->sumTransmittedForce ){
-    t->requiresVar(Task::NewDW, lb->SumTransmittedForceLabel, nullptr,
-                reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
-  }
-
-  const MaterialSubset* mss = matls->getUnion();
+  
   t->requiresVar(Task::OldDW, lb->delTLabel );
 
-  t->modifiesVar(             lb->gAccelerationLabel,     mss);
-  t->modifiesVar(             lb->gVelocityStarLabel,     mss);
+  t->modifiesVar(             lb->gAccelerationLabel,     mpm_mss);
+  t->modifiesVar(             lb->gVelocityStarLabel,     mpm_mss);
   t->requiresVar(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
   sched->addTask(t, patches, matls);
-
-  if (reduction_mss && reduction_mss->removeReference()){
-    delete reduction_mss;
-  }
 }
 
 //______________________________________________________________________
@@ -3548,7 +3462,7 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
 
 void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                 const PatchSubset* patches,
-                                                const MaterialSubset*,
+                                                const MaterialSubset* matls,
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 {
@@ -3567,8 +3481,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
-    map<int,double> totalMass;
-    double allMatls_totalMass  = 0.0;
+    map<int,double> totalMassFTRM;
     map<int,Vector> STF;
     Vector allMatls_STF  = Vector(0.,0.,0.);
 
@@ -3594,7 +3507,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
 
-      totalMass[dwi] = 0.0;
+      totalMassFTRM[dwi] = 0.0;
       STF[dwi] = Vector(0.,0.,0.);
 
       acceleration.initialize(Vector(0.,0.,0.));
@@ -3612,10 +3525,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
-        totalMass[dwi]     += mass[c];
-        allMatls_totalMass += mass[c];
-        STF[dwi]           +=externalforce[c];
-        allMatls_STF       +=externalforce[c];
+        totalMassFTRM[dwi]  += mass[c];
+        STF[dwi]            +=externalforce[c];
+        allMatls_STF        +=externalforce[c];
       }
 
       if(mpm_matl->getIsFTM()){
@@ -3651,23 +3563,17 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     //__________________________________
     //  put the reduction variables
-    const MaterialSubset* matls = 
-                           m_materialManager->allMaterials( "MPM" )->getUnion();
+    if( flags->d_reductionVars->sumTransmittedForce){
+      new_dw->put_sum_vartype( totalMassFTRM, lb->TotalMassFTRMLabel, matls );
 
-    if( flags->d_reductionVars->mass ||
-        flags->d_reductionVars->sumTransmittedForce){
-      new_dw->put( sum_vartype(allMatls_totalMass),
-                                          lb->TotalMassLabel, nullptr, -1);
-      new_dw->put_sum_vartype( totalMass, lb->TotalMassLabel, matls );
-    }
-    if( flags->d_reductionVars->sumTransmittedForce ){
       new_dw->put(sumvec_vartype(allMatls_STF),
                                      lb->SumTransmittedForceLabel, nullptr, -1);
       new_dw->put_sum_vartype( STF,  lb->SumTransmittedForceLabel, matls);
     }
   }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::computeGridVelocityForFTM(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
@@ -3687,30 +3593,21 @@ void SerialMPM::computeGridVelocityForFTM(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     map<int,double> zeroD = initializeMap(0.0);
     map<int,Vector> zeroV = initializeMap(Vector(0.));
-    map<int,double> totalMass  = zeroD;
-    map<int,double> totalMOI  = zeroD;
-    map<int,Vector> totalSTF   = zeroV;
-    map<int,Vector> totalSTT   = zeroV;
-    map<int,Vector> totalSRI   = zeroV;
-    map<int,Vector> totalMom   = zeroV;
-    map<int,Vector> CMX        = zeroV;
+    map<int,double> totalMassFTRM = zeroD;
+    map<int,Vector> totalSTF     = zeroV;
 
-    Vector allMatls_totalMom(0.0,0.0,0.0);
-    Vector allMatls_CMX(0.0,0.0,0.0);
 
-    if(flags->d_reductionVars->mass ||
-       flags->d_reductionVars->sumTransmittedForce){
-      totalMass = new_dw->get_sum_vartypeD(lb->TotalMassLabel, matls);
-      totalSTF = new_dw->get_sum_vartypeV(lb->SumTransmittedForceLabel,  matls);
-    }
+    totalMassFTRM = new_dw->get_sum_vartypeD( lb->TotalMassFTRMLabel, matls);
+    totalSTF     = new_dw->get_sum_vartypeV( lb->SumTransmittedForceLabel,  matls);
 
     string interp_type = flags->d_interpolator_type;
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+                        
       if(mpm_matl->getIsFTM()){
         int dwi = mpm_matl->getDWIndex();
-        Vector FTM_acc   = totalSTF[dwi]/totalMass[dwi];
+        Vector FTM_acc = totalSTF[dwi]/totalMassFTRM[dwi];
 
         NCVariable<Vector> gvelocity_star, gacceleration;
         constNCVariable<Vector> gvelocity;
@@ -4287,20 +4184,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
 
-    // DON'T MOVE THESE!!!
-    map<int,double> zeroD = initializeMap(0.0);
-    map<int,Vector> zeroV = initializeMap(Vector(0.));
-    map<int,double> kineticEng = zeroD;
-    map<int,double> thermalEng = zeroD;
-    map<int,Vector> totalMom   = zeroV;
-    map<int,Vector> CMX        = zeroV;
-
-//    double allMatls_angMom     = 0.0;
-    double allMatls_kineticEng = 0.0;
-    double allMatls_thermalEng = 0.0;
-    Vector allMatls_totalMom(0.0,0.0,0.0);
-    Vector allMatls_CMX(0.0,0.0,0.0);
-
     double totalConc    =   0.0;
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
@@ -4411,8 +4294,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
-      double Cp=mpm_matl->getSpecificHeat();
-
       // Diffusion related - JBH
       double sdmMaxEffectiveConc = -999;
       double sdmMinEffectiveConc =  999;
@@ -4512,25 +4393,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
           }
 
-          //__________________________________
-          // reduction variables
-
-          Vector centerOfMass = (pxnew[idx]*pmass[idx]).asVector();
-          CMX[dwi]      += centerOfMass;
-          allMatls_CMX  += centerOfMass;
-
-          double thermalEngy   = pTemperature[idx] * pmass[idx] * Cp;
-          thermalEng[dwi]     += thermalEngy;
-          allMatls_thermalEng += thermalEngy;
-
-          double ke            = .5*pmass[idx]*pvelnew[idx].length2();
-          kineticEng[dwi]     += ke;
-          allMatls_kineticEng += ke;
-
-          Vector mom         = pvelnew[idx]*pmass[idx];
-          allMatls_totalMom += mom;
-          totalMom[dwi]     += mom;
-
 //          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
 //          allMatls_angMom += angular_mom.length();
         }
@@ -4599,63 +4461,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
           }
 
-          //__________________________________
-          // reduction variables
-
-          Vector centerOfMass = (pxnew[idx]*pmass[idx]).asVector();
-          CMX[dwi]      += centerOfMass;
-          allMatls_CMX  += centerOfMass;
-
-          double thermalEngy   = pTemperature[idx] * pmass[idx] * Cp;
-          thermalEng[dwi]     += thermalEngy;
-          allMatls_thermalEng += thermalEngy;
-
-          double ke            = .5*pmass[idx]*pvelnew[idx].length2();
-          kineticEng[dwi]     += ke;
-          allMatls_kineticEng += ke;
-
-          Vector mom = pvelnew[idx]*pmass[idx];
-          allMatls_totalMom += mom;
-          totalMom[dwi]     += mom;
-
 //          Vector angular_mom = pmass[idx]*Cross(pvelnew[idx],pxnew[idx].asVector());
 //          allMatls_angMom += angular_mom.length();
         }
       } // use XPIC(2) or not
     }  // loop over materials
-
-    // DON'T MOVE THESE!!!
-    //__________________________________
-    //  reduction variables
-    if( flags->d_reductionVars->momentum ){
-      new_dw->put( sumvec_vartype(allMatls_totalMom), 
-                   lb->TotalMomentumLabel, nullptr, -1);
-
-      new_dw->put_sum_vartype( totalMom,   lb->TotalMomentumLabel, matls );
-    }
-
-    if( flags->d_reductionVars->KE ){
-      new_dw->put( sum_vartype(allMatls_kineticEng),  
-                   lb->KineticEnergyLabel, nullptr, -1);
-
-      new_dw->put_sum_vartype( kineticEng, lb->KineticEnergyLabel, matls );
-    }
-
-    if( flags->d_reductionVars->thermalEnergy ){
-      new_dw->put( sum_vartype(allMatls_thermalEng),  
-                   lb->ThermalEnergyLabel, nullptr, -1);
-
-      new_dw->put_sum_vartype( thermalEng, lb->ThermalEnergyLabel, matls );
-
-    }
-
-    if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(allMatls_CMX), 
-                  lb->CenterOfMassPositionLabel, nullptr, -1);
-
-      new_dw->put_sum_vartype( CMX,  lb->CenterOfMassPositionLabel, matls );
-    }
-
     delete interpolator;
   }
 }

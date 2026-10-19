@@ -479,8 +479,10 @@ protected:
                                             const PatchSet    * patches,
                                             const MaterialSet * matls );
 
-  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
-                                                  const MaterialSet*);
+  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*,
+                                                  const MaterialSubset*);
 
   virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
                                                     const MaterialSet*);
@@ -521,7 +523,8 @@ protected:
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
-                                                       const MaterialSet*);
+                                                       const MaterialSet*,
+                                                       const MaterialSubset *);
 
   virtual void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
                                                 const MaterialSet*);
@@ -531,7 +534,8 @@ protected:
 
   virtual void scheduleComputeGridVelocityForFTM(SchedulerP&,
                                                  const PatchSet*,
-                                                 const MaterialSet*);
+                                                 const MaterialSet*,
+                                                 const MaterialSubset*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
@@ -571,7 +575,8 @@ protected:
                                                   const MaterialSet*);
   virtual void scheduleReduceVars( SchedulerP&, 
                                    const PatchSet*,
-                                   const MaterialSet* );
+                                   const MaterialSet*,
+                                   const MaterialSubset* );
 
 
   // JBH -- Scalar Diffusion Related

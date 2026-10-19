@@ -477,6 +477,9 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
                                  sum_vartype::getTypeDescription() );
 
+  TotalMassFTRMLabel = VarLabel::create( "TotalMassFTRM",
+                                 sum_vartype::getTypeDescription() );
+
   TotalMomentOfInertiaLabel = VarLabel::create( "TotalMomentOfInertia",
                                  sum_vartype::getTypeDescription() );
 
@@ -697,6 +700,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
+  VarLabel::destroy(TotalMassFTRMLabel);
   VarLabel::destroy(TotalMomentOfInertiaLabel);
   VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);

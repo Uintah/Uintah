@@ -84,7 +84,8 @@ protected:
   ///////////////////////////////////////////////////////////////////////////
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                   const PatchSet* patches,
-                                                  const MaterialSet* matls);
+                                                  const MaterialSet* matls,
+                                                  const MaterialSubset * reduction_mss);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -141,7 +142,8 @@ protected:
   //
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSet* matls);
+                                            const MaterialSet* matls,
+                                            const MaterialSubset * reduction_mss);
 
   ///////////////////////////////////////////////////////////////////////////
   //

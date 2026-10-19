@@ -2118,18 +2118,7 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
     // and the global matl
     const MaterialSubset* global_mss = t->getGlobalMatlSubset();
 
-    MaterialSubset* reduction_mss = scinew MaterialSubset();
-    reduction_mss->add( global_mss->get(0) );
-
-    unsigned int numMatls = m_materialManager->getNumMatls();
-
-    if( numMatls > 1 ){  // ignore for single matl problems
-      for ( int m = 0; m < ice_mss->size(); m++ ) {
-        reduction_mss->add( ice_mss->get(m) );
-      }
-    }
-
-    reduction_mss->addReference();
+    MaterialSubset* reduction_mss = m_materialManager->createReductionSubset( "ICE" );
 
     if(d_conservationTest->exchange){
       t->computesVar( lb->mom_exch_errorLabel, global_mss );
@@ -2482,7 +2471,7 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
       // if specified, overide the initialization
       customInitialization( patch, rho_CC[indx], Temp_CC[indx],
-                            vel_CC[indx], press_CC,
+                            vel_CC[indx], press_CC, rho_micro[indx],
                             ice_matl, d_customInitialize_basket);
 
       setBC( rho_CC[indx],     "Density",     patch, m_materialManager, indx, new_dw, isNotInitialTimeStep );

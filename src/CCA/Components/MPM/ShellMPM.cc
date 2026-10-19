@@ -105,10 +105,11 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 void 
 ShellMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                              const PatchSet* patches,
-                                             const MaterialSet* matls)
+                                             const MaterialSet* matls,
+                                             const MaterialSubset * reduction_mss)
 {
   // First do the standard SerialMPM stuff
-  SerialMPM::scheduleInterpolateParticlesToGrid(sched, patches, matls);
+  SerialMPM::scheduleInterpolateParticlesToGrid(sched, patches, matls, reduction_mss);
 
   // Then add a task for interpolating shell normal rotations to the grid
   schedInterpolateParticleRotToGrid(sched, patches, matls);
@@ -223,9 +224,10 @@ ShellMPM::computeRotInternalMoment(const ProcessorGroup*,
 void 
 ShellMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                   const PatchSet* patches,
-                                                  const MaterialSet* matls)
+                                                  const MaterialSet* matls,
+                                                  const MaterialSubset* reduction_mss)
 {
-  SerialMPM::scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  SerialMPM::scheduleComputeAndIntegrateAcceleration(sched, patches, matls, reduction_mss);
 
   // Add a task for the rotational acceleration for the shell
   schedComputeRotAcceleration(sched, patches, matls);
@@ -282,7 +284,7 @@ ShellMPM::computeRotAcceleration(const ProcessorGroup*,
 void 
 ShellMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                   const PatchSet* patches,
-                                                  const MaterialSet* matls)
+                                                  const MaterialSet* matls )
 {
   // First Schedule update of the rate of shell normal rotation
   schedParticleNormalRotRateUpdate(sched, patches, matls);

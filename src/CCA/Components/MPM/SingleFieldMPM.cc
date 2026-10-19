@@ -1301,24 +1301,6 @@ void SingleFieldMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computesVar(lb->pSizeLabel_preReloc);
   t->computesVar(lb->pSurfLabel_preReloc);
 
-  //__________________________________
-  //  reduction variables
-  if(flags->d_reductionVars->momentum){
-    t->computesVar(lb->TotalMomentumLabel);
-  }
-  if(flags->d_reductionVars->KE){
-    t->computesVar(lb->KineticEnergyLabel);
-  }
-  if(flags->d_reductionVars->thermalEnergy){
-    t->computesVar(lb->ThermalEnergyLabel);
-  }
-  if(flags->d_reductionVars->centerOfMass){
-    t->computesVar(lb->CenterOfMassPositionLabel);
-  }
-  if(flags->d_reductionVars->mass){
-    t->computesVar(lb->TotalMassLabel);
-  }
-
   // debugging scalar
   if(flags->d_with_color) {
     t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -3253,12 +3235,6 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
 
-    // DON'T MOVE THESE!!!
-    double thermal_energy = 0.0;
-    double totalmass = 0;
-    Vector CMX(0.0,0.0,0.0);
-    Vector totalMom(0.0,0.0,0.0);
-    double ke=0;
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3440,8 +3416,6 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pRefinedNew.copyData(pRefinedOld);
       }
 
-      double Cp=mpm_matl->getSpecificHeat();
-
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
@@ -3490,33 +3464,9 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
-
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
         }
     }  // loop over materials
 
-    // DON'T MOVE THESE!!!
-    //__________________________________
-    //  reduction variables
-    if(flags->d_reductionVars->mass){
-      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
-    }
-    if(flags->d_reductionVars->momentum){
-      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
-    }
-    if(flags->d_reductionVars->KE){
-      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
-    }
-    if(flags->d_reductionVars->thermalEnergy){
-      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    }
-    if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
-    }
     delete interpolator;
   }
 }

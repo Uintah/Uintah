@@ -55,6 +55,11 @@ namespace Uintah {
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
 
+    void scheduleConservedQtys(SchedulerP           & sched,
+                               const PatchSet       * patches,
+                               const MaterialSet    * matls,
+                               const MaterialSubset * reduction_mss );
+                                      
     // Used by the switcher
     virtual void setupForSwitching() {
   
@@ -100,6 +105,12 @@ namespace Uintah {
                                           const MaterialSubset  * ,
                                           DataWarehouse         * old_dw,
                                           DataWarehouse         * new_dw );
+                                          
+    void conservedQtys(const ProcessorGroup *,
+                       const PatchSubset    * patches,        
+                       const MaterialSubset * ,               
+                       DataWarehouse        * ,               
+                       DataWarehouse        * new_dw);         
   };
 }
 

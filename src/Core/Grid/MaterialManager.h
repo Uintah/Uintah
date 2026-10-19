@@ -102,6 +102,12 @@ public:
     return m_all_matls[idx];
   }
 
+  // Returns a subset holding the global matl (-1) plus the named app's
+  // matls (the app's matls are omitted for single matl problems).  The
+  // caller owns one reference: release it with removeReference() and delete
+  // the subset if that returns true.
+  MaterialSubset * createReductionSubset( const std::string & appName ) const;
+
   Material* getMaterialByName(const std::string& name) const;
 
   // 

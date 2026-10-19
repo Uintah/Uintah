@@ -1437,24 +1437,6 @@ void SingleHydroMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
       t->computesVar(Hlb->pPorosityLabel_preReloc);
   }
 
-  //__________________________________
-  //  reduction variables
-  if(flags->d_reductionVars->momentum){
-    t->computesVar(lb->TotalMomentumLabel);
-  }
-  if(flags->d_reductionVars->KE){
-    t->computesVar(lb->KineticEnergyLabel);
-  }
-  if(flags->d_reductionVars->thermalEnergy){
-    t->computesVar(lb->ThermalEnergyLabel);
-  }
-  if(flags->d_reductionVars->centerOfMass){
-    t->computesVar(lb->CenterOfMassPositionLabel);
-  }
-  if(flags->d_reductionVars->mass){
-    t->computesVar(lb->TotalMassLabel);
-  }
-
   // debugging scalar
   if(flags->d_with_color) {
     t->requiresVar(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -3548,13 +3530,6 @@ void SingleHydroMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
 
-    // DON'T MOVE THESE!!!
-    double thermal_energy = 0.0;
-    double totalmass = 0;
-    Vector CMX(0.0,0.0,0.0);
-    Vector totalMom(0.0,0.0,0.0);
-    double ke=0;
-
     double totalConc    =   0.0;
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
@@ -3779,12 +3754,6 @@ void SingleHydroMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               }
             }
           }
-
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
         }
       } else {  // Not XPIC(2)
         // Loop over particles
@@ -3860,34 +3829,10 @@ void SingleHydroMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               }
             }
           }
-
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
         }
       } // use XPIC(2) or not
     }  // loop over materials
 
-    // DON'T MOVE THESE!!!
-    //__________________________________
-    //  reduction variables
-    if(flags->d_reductionVars->mass){
-      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
-    }
-    if(flags->d_reductionVars->momentum){
-      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
-    }
-    if(flags->d_reductionVars->KE){
-      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
-    }
-    if(flags->d_reductionVars->thermalEnergy){
-      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    }
-    if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
-    }
     delete interpolator;
   }
 }

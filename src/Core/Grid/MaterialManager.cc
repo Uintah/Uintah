@@ -194,6 +194,31 @@ MaterialManager::allMaterials( std::string name ) const
     return nullptr;
 }
 
+//______________________________________________________________________
+//
+MaterialSubset *
+MaterialManager::createReductionSubset( const std::string & appName ) const
+{
+  MaterialSubset * reductionMss = scinew MaterialSubset();
+  reductionMss->add( -1 );  // needed for the -1 matl (all matls)
+
+  const MaterialSet * appMatls = allMaterials( appName );
+
+  if( appMatls && getNumMatls() > 1 ){  // ignore for single matl problems
+    const MaterialSubset * appMss = appMatls->getUnion();
+
+    for( int m = 0; m < appMss->size(); m++ ){
+      reductionMss->add( appMss->get(m) );
+    }
+  }
+
+  reductionMss->addReference();
+
+  return reductionMss;
+}
+
+//______________________________________________________________________
+//
 unsigned int
 MaterialManager::getNumMatls( std::string name ) const
 {
