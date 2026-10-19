@@ -272,7 +272,9 @@ for componentTest in $selectedCompTests; do
     cat "${componentTest}-short.log" >> log
   fi
   
-  
+  # if the component failures summarize the dat failures
+  TestScripts/helpers/summarize_dat_failures.py --component "${componentTest}" >> log 
+
   if test $exitCode != "0"; then
     retval=$exitCode
   fi
