@@ -1080,8 +1080,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requiresVar(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);
 
   t->requiresVar(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
-  t->requiresVar(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
-  t->requiresVar(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  gn);
 
 
   computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls,
@@ -1880,7 +1878,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     std::vector<constCCVariable<double> > Temp(numALLMatls);
     std::vector<constCCVariable<double> > rho_CC_old(numALLMatls);
     std::vector<constCCVariable<double> > mass_CC(numALLMatls);
-    std::vector<constCCVariable<Vector> > vel_CC(numALLMatls);
 
     constCCVariable<double> press;
     CCVariable<double> press_new, delPress_tmp, sumKappa, TMV_CC;
@@ -1915,14 +1912,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         old_dw->get( Temp[m],      Ilb->temp_CCLabel,      indx, patch, gn,0 );
         old_dw->get( rho_CC_old[m],Ilb->rho_CCLabel,       indx, patch, gn,0 );
         old_dw->get( sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx, patch, gn,0 );
-        old_dw->get( vel_CC[m],    Ilb->vel_CCLabel,       indx, patch, gn,0 );
         new_dw->get( cv[m],        Ilb->specific_heatLabel,indx, patch, gn,0 );
         new_dw->get( gamma[m],     Ilb->gammaLabel,        indx, patch, gn,0 );
         new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,  indx,patch);
       }
       if(mpm_matl[m]){                    // M P M
         new_dw->get( Temp[m],     MIlb->temp_CCLabel, indx, patch, gn,0 );
-        new_dw->get( vel_CC[m],   MIlb->vel_CCLabel,  indx, patch, gn,0 );
         new_dw->get( sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx, patch, gn,0 );
         new_dw->get( rho_CC_old[m],Ilb->rho_CCLabel,  indx, patch, gn,0 );
         new_dw->allocateTemporary(rho_CC_new[m],  patch);
