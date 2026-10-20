@@ -2471,7 +2471,7 @@ void ICE::actuallyInitialize(const ProcessorGroup *,
 
       // if specified, overide the initialization
       customInitialization( patch, rho_CC[indx], Temp_CC[indx],
-                            vel_CC[indx], press_CC, rho_micro[indx],
+                            vel_CC[indx], press_CC,
                             ice_matl, d_customInitialize_basket);
 
       setBC( rho_CC[indx],     "Density",     patch, m_materialManager, indx, new_dw, isNotInitialTimeStep );
