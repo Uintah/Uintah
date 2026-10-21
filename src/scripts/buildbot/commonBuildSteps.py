@@ -11,6 +11,7 @@ import pprint
 from buildbot.plugins               import *
 from buildbot.process               import results
 from buildbot.process.results       import FAILURE
+from buildbot.process.results       import EXCEPTION
 from buildbot.process.results       import SKIPPED
 from buildbot.process.results       import statusToString
 # from datetime                       import timedelta
@@ -108,6 +109,7 @@ def compile( factory, numProcs, wrkDir=None ):
 
     runMake = steps.Compile(
                      command        = ["python", "../src/scripts/buildbot/make.py", " 16"],
+                     #command        = ["false"],
                      workdir        = workDir,
                      logEnviron     = False,
                      warnOnFailure  = True,
@@ -118,19 +120,18 @@ def compile( factory, numProcs, wrkDir=None ):
 
 #______________________________________________________________________
 # determine if a step has failed return true if one has.
+
 def hasStepFailed(step):
 
-    myResults = statusToString( step.build.results )
+    # build.results holds the worst result of the steps completed so far
+    myResults = step.build.results
 
-    print("__________________________________hasStepFailed: %s" %(myResults) )
+    print( "__________________________________hasStepFailed: %s" % statusToString( myResults ) )
 
-    if  myResults == "failure" or myResults == "exception":
-      return True
+    if myResults == FAILURE or myResults == EXCEPTION:
+        return True
     else:
-      return False
-
-    return False
-
+        return False
 #__________________________________
 def skipped(results, s):
     return (results ==  SKIPPED)
@@ -265,7 +266,7 @@ def runOrSkip_BuildBot( change ):
     #   skip if the string "skipRT" or "skip-rt" or skip_rt" is in the comments
     LC_comments = change.comments.lower()  # convert comments to lower case
 
-    if "skiprt" in LC_comments or "skip_rt" in LC_comments  or "skip_rt" in LC_comments:
+    if "skiprt" in LC_comments or "skip_rt" in LC_comments  or "skip-rt" in LC_comments:
         print ("  runOrSkip_BuildBot:  __________________________________ Skipping buildbot")
         return False
 
@@ -275,6 +276,7 @@ def runOrSkip_BuildBot( change ):
                 'src/parametricStudies',
                 'src/scripts',
                 'src/testprograms',
+                'src/CCA/Components/FVM',
                 'src/CCA/Components/Arches/Attic',
                 'src/CCA/Components/ICE/Docs',
                 'src/CCA/Components/ICE/Matlab',
