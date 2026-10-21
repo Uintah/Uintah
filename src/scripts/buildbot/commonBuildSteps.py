@@ -27,13 +27,9 @@ m_git_url        ='https://github.com/Uintah/Uintah.git'
 #   returns value from either input argv or the property dictionary
 
 def getValue( Q, Qname):
-    Q_prop = util.Property( Qname )
 
-    # bulletproofing
-    if Q == None and Q_prop == None:
-      print( "ERROR the variable %s has not been set!!! " % Qname )
-
-    if Q == None:
+    # "is None": "==" on a buildbot renderable returns a renderer, which is always true
+    if Q is None:
       return  util.Property( Qname )
     else:
       return Q
@@ -108,12 +104,11 @@ def compile( factory, numProcs, wrkDir=None ):
     workDir = getValue( wrkDir, 'wrkDir' )
 
     runMake = steps.Compile(
-                     command        = ["python", "../src/scripts/buildbot/make.py", " 16"],
-                     #command        = ["false"],
+                     command        = ["python", "../src/scripts/buildbot/make.py", str( numProcs )],
                      workdir        = workDir,
                      logEnviron     = False,
                      warnOnFailure  = True,
-                     haltOnFailure  = False)
+                     haltOnFailure  = True)
 
     factory.addStep( runMake )
 
@@ -147,7 +142,8 @@ def makeclean( factory, wrkDir= None ):
                    description   = ["make clean"],
                    name          = "make clean",
                    command       = ["make", "reallyclean"],
-                   workdir       = util.Property( 'wrkDir' ),
+                   workdir       = wrkDir,
+                   alwaysRun     = True,        # run even after the compile step halts the build
                    logEnviron    = False,
                    warnOnWarnings= True,
                    warnOnFailure = True )
@@ -162,6 +158,7 @@ def copyBuildDir( factory ):
                    dir        = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/' ),
                    name       ="mkdir",
                    doStepIf   = hasStepFailed,
+                   alwaysRun  = True,           # a halted build still saves its copy
                    hideStepIf = skipped )
 
   changePerms = steps.ShellCommand(
@@ -169,8 +166,9 @@ def copyBuildDir( factory ):
                      name          = "Change permissions",
                      command       = ["/bin/sh", "-c", "chgrp -R users . ; chmod -R g+rwX ."],
                      doStepIf      = hasStepFailed,
+                     alwaysRun     = True,
                      hideStepIf    = skipped ,
-                     workdir       = util.Property( 'wrkDir' ),
+                     workdir       = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/' ),
                      logEnviron    = False,
                      warnOnWarnings= True,
                      warnOnFailure = True )
@@ -179,11 +177,12 @@ def copyBuildDir( factory ):
                      description   = ["tarring"],
                      name          = "Tarring the failed uintah build",
                      commands      = [
-                                       util.ShellArg( logfile='tarBall', command=[ "/bin/sh", "-c", 'tar -cf tarBall.tar .' ] ),
-                                       util.ShellArg( logfile='tarBall', command=[ "/bin/sh", "-c", util.Interpolate( 'mv tarBall.tar /data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/') ])
+                                       # write the tarball straight to /data so tar isn't archiving its own output
+                                       util.ShellArg( logfile='tarBall', command=[ "/bin/sh", "-c", util.Interpolate( 'tar -cf /data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/tarBall.tar .' ) ] )
                                       ],
 
                      doStepIf      = hasStepFailed,
+                     alwaysRun     = True,
                      hideStepIf    = skipped ,
                      workdir       = 'build/',
                      logEnviron    = True,
@@ -199,6 +198,7 @@ def copyBuildDir( factory ):
                                       ],
 
                      doStepIf      = hasStepFailed,
+                     alwaysRun     = True,
                      hideStepIf    = skipped ,
                      workdir       = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/'),
                      logEnviron    = True,
@@ -212,10 +212,11 @@ def copyBuildDir( factory ):
                    doStepIf   = hasStepFailed,
                    hideStepIf = skipped )
 
+  # change permissions after untar: extracting as a non-root user resets the group and applies the umask
   factory.addStep( mkdir )
-  factory.addStep( changePerms )
   factory.addStep( tarBall )
   factory.addStep( unTar )
+  factory.addStep( changePerms )
 
 
 
@@ -259,6 +260,18 @@ def runComponentTests(factory):
 #______________________________________________________________________
 #  Utilities:
 #_______________________________________________________________________
+#  Logic for determining if the documentation should be rebuilt:
+#  true if any changed file lives under doc/
+def docChanged( change ):
+
+    for name in change.files:
+      if name.startswith( "doc/" ):
+        return True
+
+    return False
+
+#_______________________________________________________________________
+#_______________________________________________________________________
 #  Logic for determining if the buildBot should be run
 def runOrSkip_BuildBot( change ):
 
@@ -300,9 +313,8 @@ def runOrSkip_BuildBot( change ):
       # Logic
       for pattern in ignoreDirs:
 
-        test = re.match(pattern, path1)
-
-        if test :
+        # exact directory or a subdirectory of it, so 'doc' doesn't also match 'docs/'
+        if path1 == pattern or path1.startswith( pattern + "/" ):
           tag[count] = 1
           break
 

@@ -375,7 +375,13 @@ def runGrep(input, inputFileName):
     input = input.replace("*", "")
 
   commandArgs1 = ["grep", "-n", input, inputFileName]
-  out = subprocess.run(commandArgs1, stdout=subprocess.PIPE, check=True)
+  out = subprocess.run(commandArgs1, stdout=subprocess.PIPE)
+
+  # grep exits 1 when no line matches -- that's an expected outcome here,
+  # not an error.  Anything else (e.g. bad file, bad pattern) is a real error.
+  if out.returncode not in (0, 1):
+    out.check_returncode()
+
   output = str(out.stdout, 'utf-8')
 
   possibleLineNumbers = []

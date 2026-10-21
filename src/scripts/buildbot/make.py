@@ -5,12 +5,8 @@ import os,sys
 #______________________________________________________________________
 
 def compileUintah(num):
-    
-    print "Executing: make cleanreally twice"
-    os.system('make cleanreally')
-    os.system('make cleanreally')
 
-    print "Executing: make -j %s" % str(num)
+    print( "Executing: make -j %s" % str(num) )
     make_command='make -j' + str(num)
     make=os.system(make_command)
 
