@@ -155,6 +155,12 @@ protected:
                                const MaterialSubset*,
                                const MaterialSet*);
 
+  void scheduleComputeDelPMassX(SchedulerP&,
+                                const PatchSet*,
+                                const MaterialSubset*,
+                                const MaterialSubset*,
+                                const MaterialSubset*,
+                                const MaterialSet*);
 
   void scheduleInterpolatePressCCToPressNC(SchedulerP&,
                                           const PatchSet*,
@@ -205,6 +211,12 @@ protected:
                                     DataWarehouse*,
                                     const MaterialSubset* press_matl);
 
+  void computeDelPMassX(const ProcessorGroup*,
+                        const PatchSubset* patch,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        const MaterialSubset* press_matl);
 
   void interpolateCCToNC(const ProcessorGroup*,
                          const PatchSubset* patch,

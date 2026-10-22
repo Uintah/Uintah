@@ -323,10 +323,16 @@ using namespace ExchangeModels;
       void scheduleComputeModelSources(SchedulerP& sched,
                                        const LevelP& level,
                                        const MaterialSet* matls);
+
       void scheduleUpdateVolumeFraction(SchedulerP& sched,
                                         const LevelP& level,
                                         const MaterialSubset* press_matl,
                                         const MaterialSet* matls);
+
+      void scheduleComputeDelPMassX(SchedulerP&,
+                                    const PatchSet*,
+                                    const MaterialSubset*,
+                                    const MaterialSet*);
 
       void scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                       const PatchSet* patches,
@@ -629,6 +635,12 @@ using namespace ExchangeModels;
                                 DataWarehouse*,
                                 DataWarehouse*);
 
+      void computeDelPMassX(const ProcessorGroup*,
+                            const PatchSubset* patch,
+                            const MaterialSubset* matls,
+                            DataWarehouse*,
+                            DataWarehouse*,
+                            const MaterialSubset* press_matl);
 
       void computeLagrangian_Transported_Vars(const ProcessorGroup*,
                                               const PatchSubset* patches,

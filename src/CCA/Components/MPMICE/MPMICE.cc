@@ -439,7 +439,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                   press_matl,
                                                                   all_matls);
 
-
     d_ice->scheduleComputeTempFC(             sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
@@ -447,6 +446,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleComputeModelSources(       sched, ice_level,   all_matls);
 
     d_ice->scheduleUpdateVolumeFraction(      sched, ice_level,   press_matl,
+                                                                  all_matls);
+
+    scheduleComputeDelPMassX(                 sched, ice_patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
                                                                   all_matls);
 
     d_ice->scheduleComputeVel_FC(             sched, ice_patches, ice_matls_sub,
@@ -806,7 +810,6 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
 }
 
 
-
 //______________________________________________________________________
 //
 void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
@@ -1088,6 +1091,37 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->modifiesVar(Ilb->sp_vol_CCLabel,      mpm_matls);
   t->computesVar(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computesVar(Ilb->rho_CCLabel,         ice_matls);
+
+  sched->addTask(t, patches, all_matls);
+}
+
+void MPMICE::scheduleComputeDelPMassX(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSubset* ice_matls,
+                                      const MaterialSubset* mpm_matls,
+                                      const MaterialSubset* press_matl,
+                                      const MaterialSet* all_matls)
+{
+  Task* t = nullptr;
+
+  printSchedule(patches, cout_doing,"MPMICE::scheduleComputeDelPMassX");
+
+  t = scinew Task("MPMICE::computeDelPMassX",
+            this, &MPMICE::computeDelPMassX, press_matl);
+
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+
+  if(d_ice->d_models.size() > 0){
+    t->requiresVar( Task::NewDW, Ilb->modelMass_srcLabel, gn );
+    t->requiresVar( Task::NewDW, Ilb->vol_frac_CCLabel,   gn );
+    t->requiresVar( Task::NewDW, Ilb->sp_vol_CCLabel,     gn );
+    t->requiresVar( Task::NewDW, Ilb->rho_CCLabel,        gn );
+    t->requiresVar( Task::NewDW, Ilb->specific_heatLabel, ice_matls, gn);
+    t->requiresVar( Task::NewDW, Ilb->gammaLabel,         ice_matls, gn);
+  }
+
+  t->computesVar( Ilb->delP_MassXLabel,      press_matl, oims );
 
   sched->addTask(t, patches, all_matls);
 }
@@ -2278,6 +2312,115 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 #endif
 
   }  //patches
+}
+
+/*_____________________________________________________________________*/
+void MPMICE::computeDelPMassX(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const MaterialSubset* press_matl)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing computeDelPMassX");
+
+    Ghost::GhostType  gn = Ghost::None;
+
+    Vector dx      = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+
+    unsigned int numMatls = m_materialManager->getNumMatls();
+    std::vector<double> press_eos(numMatls);
+    std::vector<double> dp_drho(numMatls),dp_de(numMatls);
+
+    double press_ref= d_ice->getRefPress();
+
+    vector<constCCVariable<double> > rho_CC(numMatls);
+    vector<constCCVariable<double> > vol_frac(numMatls);
+    vector<constCCVariable<double> > cv(numMatls);
+    vector<constCCVariable<double> > gamma(numMatls);
+    vector<constCCVariable<double> > Temp(numMatls);
+    vector<constCCVariable<double> > modMass_src(numMatls);
+
+    CCVariable<double> delP_MassX;
+    constCCVariable<double> press_equil;
+
+    new_dw->get( press_equil,           Ilb->press_equil_CCLabel,0, patch,gn,0);
+    new_dw->allocateAndPut( delP_MassX, Ilb->delP_MassXLabel,    0, patch );
+
+    if(d_ice->d_models.size() ){
+     std::vector<MPMMaterial*> mpm_matl(numMatls);
+     std::vector<ICEMaterial*> ice_matl(numMatls);
+     for (unsigned int m = 0; m < numMatls; m++) {
+      Material* matl = m_materialManager->getMaterial( m );
+      ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
+      mpm_matl[m] = dynamic_cast<MPMMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      if(ice_matl[m]){                    // I C E
+        old_dw->get( Temp[m],      Ilb->temp_CCLabel,      indx, patch, gn,0 );
+        new_dw->get( cv[m],        Ilb->specific_heatLabel,indx, patch, gn,0 );
+        new_dw->get( gamma[m],     Ilb->gammaLabel,        indx, patch, gn,0 );
+      }
+      if(mpm_matl[m]){                    // M P M
+        new_dw->get( Temp[m],     Ilb->temp_CCLabel,       indx, patch, gn,0 );
+      }
+      new_dw->get( rho_CC[m],     Ilb->rho_CCLabel,        indx, patch, gn,0 );
+      new_dw->get( vol_frac[m],   Ilb->vol_frac_CCLabel,   indx, patch, gn,0 );
+      new_dw->get( modMass_src[m],Ilb->modelMass_srcLabel, indx, patch, gn,0 );
+     }
+
+     for (CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+
+       //__________________________________
+       // evaluate press_eos at cell i,j,k
+       for (unsigned int m = 0; m < numMatls; m++)  {
+          double rho_micro = (rho_CC[m][c]*cell_vol+modMass_src[m][c])/
+                             (vol_frac[m][c]*cell_vol);
+          if(ice_matl[m]){    // ICE
+            ice_matl[m]->getEOS()->computePressEOS( rho_micro, gamma[m][c],
+                                                   cv[m][c], Temp[m][c],
+                                                   press_eos[m],
+                                                   dp_drho[m], dp_de[m] );
+          } else if(mpm_matl[m]){    // MPM
+            double c_2;
+            mpm_matl[m]->getConstitutiveModel()->
+              computePressEOSCM( rho_micro, press_eos[m], press_ref,
+                                dp_drho[m], c_2,mpm_matl[m],Temp[m][c] );
+          }
+       }
+
+       //__________________________________
+       // - compute delPress
+       // - update press_CC
+       double A = 0., B = 0., C = 0.;
+
+       for (unsigned int m = 0; m < numMatls; m++)   {
+         // rho_CC_new = mass_new/cell_vol
+         double rho_CC_new = ((rho_CC[m][c]*cell_vol + modMass_src[m][c]) /
+                                                                   cell_vol);
+         double Q =  press_equil[c] - press_eos[m];
+         double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
+                       / (dp_drho[m] * rho_CC_new + d_SMALL_NUM);
+
+         A   +=  vol_frac[m][c];
+         B   +=  Q * inv_y;
+         C   +=  inv_y;
+       }
+       double delPress = (A - 1 - B)/C;
+
+       delP_MassX[c] = delPress;
+     } // cell iterator
+    } else {
+     for (CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+       const IntVector& c = *iter;
+       delP_MassX[c] = 0.0;
+     } // cell iterator
+   } // models are/aren't in use
+    
+  } // patches
 }
 
 /* ---------------------------------------------------------------------

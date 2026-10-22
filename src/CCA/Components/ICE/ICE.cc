@@ -44,6 +44,7 @@
 #include <CCA/Components/Models/SolidReactionModel/Pyrolysis0.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
@@ -919,8 +920,8 @@ ICE::scheduleTimeAdvance( const LevelP & level,
 
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
 
-  scheduleComputePressure(                sched, patches, d_press_matl,
-                                                          all_matls);
+  scheduleComputePressure(                 sched, patches, d_press_matl,
+                                                           all_matls);
 
   scheduleComputeTempFC(                   sched, patches, ice_mss,
                                                            mpm_mss,
@@ -929,6 +930,9 @@ ICE::scheduleTimeAdvance( const LevelP & level,
   scheduleComputeModelSources(             sched, level,   all_matls);
 
   scheduleUpdateVolumeFraction(            sched, level,   d_press_matl,
+                                                           all_matls);
+
+  scheduleComputeDelPMassX(                sched, patches, d_press_matl,
                                                            all_matls);
 
 
@@ -1394,7 +1398,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP           & sched,
 {
   if(d_models.size() != 0){
 
-    printSchedule( level, m_ice_tasks, " ICE::scheduleUpdateVolumeFraction" );
+    printSchedule( level, m_ice_tasks, "ICE::scheduleUpdateVolumeFraction" );
 
     Task* task = scinew Task("ICE::updateVolumeFraction",
                        this, &ICE::updateVolumeFraction);
@@ -1412,11 +1416,39 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP           & sched,
   }
 }
 
+void ICE::scheduleComputeDelPMassX(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSubset* press_matl,
+                                   const MaterialSet* all_matls)
+{
+  Task* t = nullptr;
+
+  printSchedule(patches, m_ice_tasks,"ICE::scheduleComputeDelPMassX");
+
+  t = scinew Task("ICE::computeDelPMassX",
+            this, &ICE::computeDelPMassX, press_matl);
+
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+
+  if(d_models.size() > 0){
+    t->requiresVar( Task::NewDW, lb->modelMass_srcLabel, m_gn );
+    t->requiresVar( Task::NewDW, lb->vol_frac_CCLabel,   m_gn );
+    t->requiresVar( Task::NewDW, lb->sp_vol_CCLabel,     m_gn );
+    t->requiresVar( Task::NewDW, lb->rho_CCLabel,        m_gn );
+    t->requiresVar( Task::NewDW, lb->specific_heatLabel, m_gn);
+    t->requiresVar( Task::NewDW, lb->gammaLabel,         m_gn);
+  }
+
+  t->computesVar( lb->delP_MassXLabel,      press_matl, oims );
+
+  sched->addTask(t, patches, all_matls);
+}
+
 /* _____________________________________________________________________
  Task:      ICE::scheduleComputeDelPressAndUpdatePressCC--
  Purpose:   Compute the change in pressure (delP) and add it to the
             equilibration pressure.  Note there could be a change in pressure
-            due to changes in mass.
+            due to changes in mass, that is computed elsewhere.
 _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP            & sched,
                                                   const PatchSet        * patches,
@@ -1443,19 +1475,16 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP            & sched,
   task->requiresVar( Task::NewDW, lb->sp_vol_CCLabel,     m_gn );
   task->requiresVar( Task::NewDW, lb->rho_CCLabel,        m_gn );
   task->requiresVar( Task::NewDW, lb->speedSound_CCLabel, m_gn );
-  task->requiresVar( Task::NewDW, lb->sumKappaLabel,      press_matl,oims,m_gn );
-  task->requiresVar( Task::NewDW, lb->press_equil_CCLabel,press_matl,oims,m_gn );
+  task->requiresVar( Task::NewDW, lb->sumKappaLabel,      press_matl,oims,m_gn);
+  task->requiresVar( Task::NewDW, lb->delP_MassXLabel,    press_matl,oims,m_gn);
+  task->requiresVar( Task::NewDW, lb->press_equil_CCLabel,press_matl,oims,m_gn);
   //__________________________________
-  if(d_models.size() > 0){
-    task->requiresVar( Task::NewDW, lb->modelMass_srcLabel, m_gn );
-  }
 
   computesRequires_CustomBCs(task, "update_press_CC", lb, ice_matls,
                              d_BC_globalVars);
 
   task->computesVar( lb->press_CCLabel,        press_matl, oims );
   task->computesVar( lb->delP_DilatateLabel,   press_matl, oims );
-  task->computesVar( lb->delP_MassXLabel,      press_matl, oims );
   task->computesVar( lb->term2Label,           press_matl, oims );
   task->computesVar( lb->sum_rho_CCLabel,      press_matl, oims );
   task->computesVar( lb->vol_fracX_FCLabel );
@@ -3697,13 +3726,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, m_ice_tasks, "ICE::computeDelPressAndUpdatePressCC" );
+    printTask(patches,patch,m_ice_tasks,"ICE::computeDelPressAndUpdatePressCC");
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
-
-    Vector dx      = patch->dCell();
-    double inv_vol = 1.0/(dx.x()*dx.y()*dx.z());
 
     unsigned int numMatls = m_materialManager->getNumMatls();
 
@@ -3711,43 +3737,39 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
 
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
-    CCVariable<double> delP_MassX;
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
-    CCVariable<double> term1;
     CCVariable<double> term2;
     constCCVariable<double> sumKappa;
     constCCVariable<double> press_equil;
+    constCCVariable<double> delP_MassX;
 
     vector<CCVariable<double> > placeHolder(0);
     vector<constCCVariable<double> > sp_vol_CC(numMatls);
+    vector<constCCVariable<double> > rho_CC(numMatls);
+    vector<constCCVariable<double> > vol_frac(numMatls);
 
     const IntVector gc(1,1,1);
-    new_dw->get( sumKappa,                lb->sumKappaLabel,      0,patch,m_gn,0 );
-    new_dw->get( press_equil,             lb->press_equil_CCLabel,0,patch,m_gn,0 );
+    new_dw->get( sumKappa,            lb->sumKappaLabel,      0, patch,m_gn,0 );
+    new_dw->get( press_equil,         lb->press_equil_CCLabel,0, patch,m_gn,0 );
+    new_dw->get( delP_MassX,          lb->delP_MassXLabel,    0, patch,m_gn,0 );
 
     new_dw->allocateAndPut( press_CC,     lb->press_CCLabel,      0, patch );
     new_dw->allocateAndPut( delP_Dilatate,lb->delP_DilatateLabel, 0, patch );
-    new_dw->allocateAndPut( delP_MassX,   lb->delP_MassXLabel,    0, patch );
     new_dw->allocateAndPut( term2,        lb->term2Label,         0, patch );
     new_dw->allocateAndPut( sum_rho_CC,   lb->sum_rho_CCLabel,    0, patch );
 
     new_dw->allocateTemporary( q_advected, patch );
-    new_dw->allocateTemporary( term1,      patch );
 
-    term1.initialize(0.);
     term2.initialize(0.);
     sum_rho_CC.initialize(0.0);
     delP_Dilatate.initialize(0.0);
-    delP_MassX.initialize(0.0);
 
     for(unsigned int m = 0; m < numMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
 
       constCCVariable<double> speedSound;
-      constCCVariable<double> vol_frac;
-      constCCVariable<double> rho_CC;
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
@@ -3755,8 +3777,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
       new_dw->get( uvel_FC,     lb->uvel_FCMELabel,     indx,patch,m_gac,2 );
       new_dw->get( vvel_FC,     lb->vvel_FCMELabel,     indx,patch,m_gac,2 );
       new_dw->get( wvel_FC,     lb->wvel_FCMELabel,     indx,patch,m_gac,2 );
-      new_dw->get( vol_frac,    lb->vol_frac_CCLabel,   indx,patch,m_gac,2 );
-      new_dw->get( rho_CC,      lb->rho_CCLabel,        indx,patch,m_gn,0 );
+      new_dw->get( vol_frac[m], lb->vol_frac_CCLabel,   indx,patch,m_gac,2 );
+      new_dw->get( rho_CC[m],   lb->rho_CCLabel,        indx,patch,m_gn,0 );
       new_dw->get( sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,m_gn,0 );
       new_dw->get( speedSound,  lb->speedSound_CCLabel, indx,patch,m_gn,0 );
 
@@ -3767,7 +3789,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
       new_dw->allocateAndPut( vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch );
       new_dw->allocateAndPut( vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch );
       new_dw->allocateAndPut( vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch );
-
 
       // lowIndex is the same for all vel_FC
       IntVector lowIndex(patch->getExtraSFCXLowIndex());
@@ -3787,7 +3808,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
       //__________________________________
       //   advect vol_frac
       varBasket->doRefluxing = false;  // don't need to reflux here
-      advector->advectQ(vol_frac, patch, q_advected, varBasket,
+      advector->advectQ(vol_frac[m], patch, q_advected, varBasket,
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
 
       delete varBasket;
@@ -3798,22 +3819,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
       }
 
       //__________________________________
-      //   term1 contribution from models
-      if(d_models.size() > 0){
-        constCCVariable<double> modelMass_src, modelVol_src;
-        new_dw->get(modelMass_src, lb->modelMass_srcLabel, indx, patch, m_gn,0);
-
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-         IntVector c = *iter;
-         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]* inv_vol);
-        }
-      }
-
-      //__________________________________
       //  compute sum_rho_CC used by press_FC
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
-        sum_rho_CC[c] += rho_CC[c];
+        sum_rho_CC[c] += rho_CC[m][c];
       }
     }  //matl loop
     delete advector;
@@ -3822,7 +3831,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
     //  add delP to press_equil
     //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure there
     // THIS COULD BE TROUBLE
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       press_CC[c] = press_equil[c];
     }
@@ -3830,12 +3839,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       double inv_sumKappa = 1.0/sumKappa[c];
-      delP_MassX[c]    =  term1[c] * inv_sumKappa;
       delP_Dilatate[c] = -term2[c] * inv_sumKappa;
       press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
       press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
-//      delP_Dilatate[c] = press_CC[c] - delP_MassX[c] - press_equil[c];
-
     }
 
     //__________________________________
@@ -3854,7 +3860,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
     delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
   }  // patch loop
-
 }
 
 /* _____________________________________________________________________
@@ -4114,6 +4119,98 @@ void ICE::updateVolumeFraction(const ProcessorGroup *,
       }
     }
   }
+}
+
+/*_____________________________________________________________________*/
+void ICE::computeDelPMassX(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const MaterialSubset* press_matl)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,m_ice_tasks,"Doing computeDelPMassX");
+
+    Ghost::GhostType  gn = Ghost::None;
+
+    Vector dx      = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+
+    unsigned int numMatls = m_materialManager->getNumMatls();
+    std::vector<double> press_eos(numMatls);
+    std::vector<double> dp_drho(numMatls),dp_de(numMatls);
+
+    vector<constCCVariable<double> > rho_CC(numMatls);
+    vector<constCCVariable<double> > vol_frac(numMatls);
+    vector<constCCVariable<double> > cv(numMatls);
+    vector<constCCVariable<double> > gamma(numMatls);
+    vector<constCCVariable<double> > Temp(numMatls);
+    vector<constCCVariable<double> > modMass_src(numMatls);
+
+    CCVariable<double> delP_MassX;
+    constCCVariable<double> press_equil;
+
+    new_dw->get( press_equil,           lb->press_equil_CCLabel,0, patch,gn,0);
+    new_dw->allocateAndPut( delP_MassX, lb->delP_MassXLabel,    0, patch );
+
+    if(d_models.size() ){
+     std::vector<ICEMaterial*> ice_matl(numMatls);
+     for (unsigned int m = 0; m < numMatls; m++) {
+      Material* matl = m_materialManager->getMaterial( m );
+      ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      old_dw->get( Temp[m],       lb->temp_CCLabel,       indx, patch, gn,0 );
+      new_dw->get( cv[m],         lb->specific_heatLabel, indx, patch, gn,0 );
+      new_dw->get( gamma[m],      lb->gammaLabel,         indx, patch, gn,0 );
+      new_dw->get( rho_CC[m],     lb->rho_CCLabel,        indx, patch, gn,0 );
+      new_dw->get( vol_frac[m],   lb->vol_frac_CCLabel,   indx, patch, gn,0 );
+      new_dw->get( modMass_src[m],lb->modelMass_srcLabel, indx, patch, gn,0 );
+     }
+
+     for (CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+
+       //__________________________________
+       // evaluate press_eos at cell i,j,k
+       for (unsigned int m = 0; m < numMatls; m++)  {
+          double rho_micro = (rho_CC[m][c]*cell_vol+modMass_src[m][c])/
+                             (vol_frac[m][c]*cell_vol);
+          ice_matl[m]->getEOS()->computePressEOS( rho_micro, gamma[m][c],
+                                                 cv[m][c], Temp[m][c],
+                                                 press_eos[m],
+                                                 dp_drho[m], dp_de[m] );
+       }
+
+       //__________________________________
+       // - compute delPress
+       double A = 0., B = 0., C = 0.;
+
+       for (unsigned int m = 0; m < numMatls; m++)   {
+         // rho_CC_new = mass_new/cell_vol
+         double rho_CC_new = ((rho_CC[m][c]*cell_vol + modMass_src[m][c]) /
+                                                                   cell_vol);
+         double Q =  press_equil[c] - press_eos[m];
+         double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
+                       / (dp_drho[m] * rho_CC_new + d_SMALL_NUM);
+
+         A   +=  vol_frac[m][c];
+         B   +=  Q * inv_y;
+         C   +=  inv_y;
+       }
+       double delPress = (A - 1 - B)/C;
+
+       delP_MassX[c] = delPress;
+     } // cell iterator
+    } else {
+     for (CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+       const IntVector& c = *iter;
+       delP_MassX[c] = 0.0;
+     } // cell iterator
+   } // models are/aren't in use
+
+  } // patches
 }
 
 //______________________________________________________________________
@@ -4977,9 +5074,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup  *,
         IntVector c = *iter;
         //__________________________________
         //  term1
-//        double term1 = -vol_frac[m][c] * kappa[c] * TMV_CC[c] * delP[c];
         double term1 = -vol_frac[m][c] * kappa[c] * vol * delP[c];
-//        double term2 = delT * TMV_CC[c] *
         double term2 = delT * vol *
                              (vol_frac[m][c] * alpha[m][c] * Tdot[m][c] -
                                                f_theta[c] * sum_therm_exp[c]);
