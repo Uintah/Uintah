@@ -32,6 +32,11 @@ ABS_RE    = re.compile( "greatest absolute error:\\s*(\\S+)\\s*\\n"
                          "\\s*UDA1:\\s*(\\S+)\\s*/" )
 XXDIFF_RE = re.compile( "xxdiff\\s+(\\S+)" )
 
+# compare_dats bails out before comparing anything if a dat file present in
+# the new run is absent from the gold standard uda -- the names are listed
+# space/newline-separated inside the parens.
+MISSING_RE = re.compile( "ERROR: Missing dat files \\(([^)]*)\\) in the gold standard uda" )
+
 #______________________________________________________________________
 
 class DatFailure:
@@ -56,6 +61,22 @@ class DatFailure:
         self.timestep_abs = timestep_abs
         self.max_rel      = max_rel
         self.timestep_rel = timestep_rel
+
+#______________________________________________________________________
+
+class MissingDat:
+    """One dat file that compare_dats reported as absent from the gold
+    standard uda, so no comparison could even be attempted."""
+
+    __slots__ = ("component", "test", "datfile")
+
+    def __init__( self,
+                  component,
+                  test,
+                  datfile ):
+        self.component = component
+        self.test      = test
+        self.datfile   = datfile
 
 #______________________________________________________________________
 
@@ -150,17 +171,28 @@ def find_timestep( datfile,
 
 def parse_log( logpath,
                 root ):
-    """Return the list of DatFailure objects found in one
-    compare_sus_runs.log.txt."""
+    """Return (failures, missing) -- the DatFailure and MissingDat
+    objects found in one compare_sus_runs.log.txt."""
 
     with open( logpath, "r", errors="replace" ) as f:
         text = f.read()
 
     section = extract_dat_section( text )
     if not section:
-        return []
+        return [], []
 
     component, test = identify_test( logpath, root )
+    
+    #__________________________________
+    #  Are there any missing dat files?
+    missing   = []
+    missing_m = MISSING_RE.search( section )
+    if missing_m:
+        for datfile in missing_m.group( 1 ).split():
+            missing.append( MissingDat( component, test, datfile ) )
+
+    #__________________________________
+    #   Find comparison failures
 
     markers = list( COMPARING_RE.finditer( section ) )
     results = []
@@ -211,19 +243,23 @@ def parse_log( logpath,
 
         results.append( DatFailure( component, test, datfile, max_abs, timestep_abs, max_rel, timestep_rel ) )
 
-    return results
+    return results, missing
 
 #______________________________________________________________________
 
 def collect( root ):
-    """Parse every compare_sus_runs.log.txt under <root> and return the
-    combined list of DatFailure objects."""
+    """Parse every compare_sus_runs.log.txt under <root> and return
+    (failures, missing) -- the combined lists of DatFailure and
+    MissingDat objects."""
 
     failures = []
+    missing  = []
     for logpath in sorted( find_logs( root ) ):
-        failures.extend( parse_log( logpath, root ) )
+        log_failures, log_missing = parse_log( logpath, root )
+        failures.extend( log_failures )
+        missing.extend( log_missing )
 
-    return failures
+    return failures, missing
 
 #______________________________________________________________________
 
@@ -397,6 +433,22 @@ def print_detail_table( failures,
 
 #______________________________________________________________________
 
+def print_missing_table( missing,
+                          printer ):
+    """Print one row per dat file reported missing from the gold
+    standard uda."""
+
+    missing_rows = []
+    for md in sorted( missing, key=lambda m: (m.component, m.test, m.datfile) ):
+        missing_rows.append( [md.component, md.test, md.datfile] )
+
+    print( "Dat files missing from the gold standard" )
+    print( "=" * 47 )
+    printer( missing_rows, ["Component", "Test", "DatFile"] )
+    print()
+
+#______________________________________________________________________
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Summarize dat-file comparison failures from Uintah regression-test logs."
@@ -424,23 +476,36 @@ def main():
     if not os.path.isdir( root ):
         sys.exit( "error: not a directory: %s" % root )
 
-    failures = collect( root )
+    failures, missing = collect( root )
 
     if args.component:
         wanted = args.component.rstrip( "-results" ) + "-results"
-        kept = []
+
+        kept_failures = []
         for fa in failures:
             if fa.component == wanted:
-                kept.append( fa )
-        failures = kept
+                kept_failures.append( fa )
+        failures = kept_failures
 
-    if not failures:
+        kept_missing = []
+        for md in missing:
+            if md.component == wanted:
+                kept_missing.append( md )
+        missing = kept_missing
+
+    if not failures and not missing:
         return 0
 
     if args.format == "markdown":
         printer = print_markdown_table
     else:
         printer = print_text_table
+
+    if missing:
+        print_missing_table( missing, printer )
+
+    if not failures:
+        return 0
 
     print_summary_table( failures, printer )
 
