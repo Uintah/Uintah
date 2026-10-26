@@ -69,35 +69,43 @@ WARNING
 
   template<class VariableBase, class Variable, class T, class Index>
   class constVariable : public constVariableBase<VariableBase> {
+
   public:
     typedef T value_type;
 
     constVariable()
-      : rep_() {}
+      : m_rep() {}
 
     constVariable(const Variable& copy)
-      : rep_(copy) {}
+      : m_rep(copy) {}
 
     constVariable<VariableBase, Variable, T, Index>&
-    operator=(const constVariable<VariableBase, Variable, T, Index>& v)
-    { copyPointer(v.rep_); return *this; }
+    operator = (const constVariable<VariableBase, Variable, T, Index>& v){
+      copyPointer(v.m_rep);
+      return *this;
+    }
 
-    constVariable<VariableBase, Variable, T, Index>& operator=(const Variable& v)
-    { copyPointer(v); return *this; }
-
-    constVariableBase<VariableBase>&
-    operator=(const constVariableBase<VariableBase>& v)
-    {
-      const constVariable<VariableBase, Variable, T, Index>* cvp =
-        dynamic_cast<const constVariable<VariableBase, Variable, T, Index>*>(&v);
-      ASSERT(cvp != 0);
-      copyPointer(cvp->rep_);
+    constVariable<VariableBase, Variable, T, Index>&
+    operator = (const Variable& v) {
+      copyPointer(v);
       return *this;
     }
 
     constVariableBase<VariableBase>&
-    operator=(const VariableBase& v)
-    { copyPointer(v); return *this; }
+    operator = (const constVariableBase<VariableBase>& v){
+
+      const constVariable<VariableBase, Variable, T, Index>* cvp =
+        dynamic_cast<const constVariable<VariableBase, Variable, T, Index>*>(&v);
+      ASSERT(cvp != 0);
+      copyPointer(cvp->m_rep);
+      return *this;
+    }
+
+    constVariableBase<VariableBase>&
+    operator = (const VariableBase& v){
+      copyPointer(v);
+      return *this;
+    }
 
     // Steve writes: castOffConst() is evil.  It returns a CCVariable
     // from a constCCVariable that you can modify.  However, you
@@ -107,64 +115,70 @@ WARNING
     // let us know why and we will see if we can come up with a better
     // solution.  So the answer to how/where is never/nowhere.
     Variable& castOffConst() {
-      return this->rep_;
+      return this->m_rep;
     }
 
     virtual ~constVariable() {}
 
-    operator const Variable&() const
-    { return this->rep_; }
-    virtual const VariableBase& getBaseRep() const
-    { return this->rep_; }
+    operator const Variable&() const{
+      return this->m_rep;
+    }
+
+    virtual const VariableBase& getBaseRep() const {
+      return this->m_rep;
+    }
 
     // It's ok for a constVariable to copyPointer of a const variable
     // (even though a non-const variable can't).
 //    inline void copyPointer(const Variable& copy)
-//    { this->rep_.copyPointer(const_cast<Variable&>(copy)); }
-    virtual void copyPointer(const VariableBase& copy)
-    { this->rep_.copyPointer(const_cast<VariableBase&>(copy)); }
+//    { this->m_rep.copyPointer(const_cast<Variable&>(copy)); }
+    virtual void copyPointer(const VariableBase& copy){
+      this->m_rep.copyPointer(const_cast<VariableBase&>(copy));
+    }
 
-    virtual const VariableBase* clone() const
-      // need to cast it if it is a GridVariable
-    { return dynamic_cast<const VariableBase*>(this->rep_.clone()); }
+    // need to cast it if it is a GridVariable
+    virtual const VariableBase* clone() const {
+      return dynamic_cast<const VariableBase*>(this->m_rep.clone());
+    }
 
-    virtual VariableBase* cloneType() const
-      // need to cast it if it is a GridVariable
-    { return dynamic_cast<VariableBase*>(this->rep_.cloneType()); }
+    // need to cast it if it is a GridVariable
+    virtual VariableBase* cloneType() const {
+      return dynamic_cast<VariableBase*>(this->m_rep.cloneType());
+    }
 
-    inline const T& operator[](Index idx) const
-    { return this->rep_[idx]; }
+    inline const T& operator[](Index idx) const{
+      return this->m_rep[idx];
+    }
 
 #if defined( KOKKOS_ENABLE_OPENMP ) // && defined( _OPENMP )
-      inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const
-      {
-        auto v = this->rep_.getKokkosView();
+      inline KokkosView3<const T, Kokkos::HostSpace> getKokkosView() const{
+        auto v = this->m_rep.getKokkosView();
         Array3Data<const T>* constA3Data = reinterpret_cast<Array3Data<const T>*>(v.m_A3Data);
         return KokkosView3<const T, Kokkos::HostSpace>( v.m_view, v.m_i, v.m_j, v.m_k, constA3Data );
       }
 #endif
 
-    inline const T& operator()(int i, int j, int k) const
-    {
-      return this->rep_(i,j,k);
+    inline const T& operator()(int i, int j, int k) const{
+      return this->m_rep(i,j,k);
     }
 
 
-    virtual const TypeDescription* virtualGetTypeDescription() const
-    { return this->rep_.virtualGetTypeDescription(); }
+    virtual const TypeDescription* virtualGetTypeDescription() const{
+      return this->m_rep.virtualGetTypeDescription();
+    }
 
     // used to get size info of the underlying data; this is for host-->device variable copy
     virtual size_t getDataSize() const {
-      return this->rep_.getDataSize();
+      return this->m_rep.getDataSize();
     }
 
     // used to copy Variables to contiguous buffer prior to bulk host-->device copy
     virtual bool copyOut(void* dst) const {
-      return this->rep_.copyOut(dst);
+      return this->m_rep.copyOut(dst);
     }
 
   protected:
-    Variable rep_;
+    Variable m_rep;
   };
 
 } // end namespace Uintah

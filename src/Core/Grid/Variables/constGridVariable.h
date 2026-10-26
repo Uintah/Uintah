@@ -39,7 +39,7 @@ namespace Uintah {
 
 CLASS
    constGridVariable
-   
+
    constVariable-based class for the grid (array3) variables:
    CC, NC, SFCX, etc.
 
@@ -52,19 +52,19 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Variable, const, grid
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
-  template<class VariableBase, class Variable, class T> 
+  template<class VariableBase, class Variable, class T>
   class constGridVariable
     : public constVariable<VariableBase, Variable, T, const IntVector&> {
   public:
@@ -74,42 +74,47 @@ WARNING
     constGridVariable(const Variable& copy)
       : constVariable<VariableBase, Variable, T, const IntVector&>(copy) {}
 
-    IntVector getLowIndex() const
-    { return this->rep_.getLowIndex(); }
+    IntVector getLowIndex() const{
+      return this->m_rep.getLowIndex();
+    }
 
-    IntVector getHighIndex() const
-    { return this->rep_.getHighIndex(); }
+    IntVector getHighIndex() const{
+      return this->m_rep.getHighIndex();
+    }
 
-    IntVector getFortLowIndex() const
-    { return this->rep_.getFortLowIndex(); }
+    IntVector getFortLowIndex() const{
+      return this->m_rep.getFortLowIndex();
+    }
 
-    IntVector getFortHighIndex() const
-    { return this->rep_.getFortHighIndex(); }
+    IntVector getFortHighIndex() const{
+      return this->m_rep.getFortHighIndex();
+    }
 
     inline const Array3Window<T>* getWindow() const {
-      return this->rep_.getWindow();
-    }
-    
-    inline const T* getPointer() const {
-      return this->rep_.getPointer();
+      return this->m_rep.getWindow();
     }
 
-    virtual const TypeDescription* virtualGetTypeDescription() const
-    { return this->rep_.virtualGetTypeDescription(); }
+    inline const T* getPointer() const {
+      return this->m_rep.getPointer();
+    }
+
+    virtual const TypeDescription* virtualGetTypeDescription() const{
+      return this->m_rep.virtualGetTypeDescription();
+    }
 
     virtual size_t getDataSize() const {
-      return this->rep_.getDataSize();
+      return this->m_rep.getDataSize();
     }
 
     virtual bool copyOut(void* dst) const {
-      return this->rep_.copyOut(dst);
+      return this->m_rep.copyOut(dst);
     }
 
     operator const Array3<T>&() const
-    { return this->rep_; }
+    { return this->m_rep; }
 
     void print(std::ostream& out) const
-    { this->rep_.print(out); }
+    { this->m_rep.print(out); }
   };
 
   typedef constVariableBase<GridVariableBase> constGridVariableBase;

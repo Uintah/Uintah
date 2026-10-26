@@ -47,7 +47,7 @@ namespace Uintah {
 
 CLASS
    ParticleVariableBase
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -59,29 +59,29 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    ParticleVariableBase
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
   typedef constVariableBase<ParticleVariableBase> constParticleVariableBase;
 
    class ParticleVariableBase : public Variable {
    public:
-      
+
       virtual ~ParticleVariableBase();
 
       //////////
       // Insert Documentation Here:
 //      virtual const ParticleVariableBase* clone() const = 0;
-      virtual ParticleVariableBase* clone() = 0;     
+      virtual ParticleVariableBase* clone() = 0;
 //      virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
       virtual ParticleVariableBase* cloneSubset(ParticleSubset*) = 0;
 
@@ -95,28 +95,34 @@ WARNING
       void setParticleSubset(ParticleSubset* pset);
 
       virtual void copyData(const ParticleVariableBase* src) = 0;
-      
+
       virtual void allocate(const Patch*, const Uintah::IntVector& boundary) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
       virtual void allocate(int totalParticles) = 0;
+
       virtual void gather(ParticleSubset* dest,
                           const std::vector<ParticleSubset*> &subsets,
                           const std::vector<ParticleVariableBase*> &srcs,
                           particleIndex extra = 0) = 0;
+
       virtual void gather(ParticleSubset* dest,
                           const std::vector<ParticleSubset*> &subsets,
                           const std::vector<ParticleVariableBase*> &srcs,
                           const std::vector<const Patch*>& srcPatches,
                           particleIndex extra = 0) = 0;
+
       virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
                              const ProcessorGroup* pg,
                              ParticleSubset* pset) = 0;
+
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
                            const ProcessorGroup* pg,
                            ParticleSubset* pset) = 0;
+
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
                            const ProcessorGroup* pg,
                            ParticleSubset* pset, const Patch* forPatch) = 0;
+
       virtual void packsizeMPI(int* bufpos,
                                const ProcessorGroup* pg,
                                ParticleSubset* pset) = 0;
@@ -136,14 +142,14 @@ WARNING
       virtual void* getBasePointer() const = 0;
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
-     virtual RefCounted* getRefCounted() = 0;
-     virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
+      virtual RefCounted* getRefCounted() = 0;
+      virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                               void*& ptr) const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase(ParticleSubset* pset);
       ParticleVariableBase& operator=(const ParticleVariableBase&);
-      
+
       ParticleSubset*  d_pset;
 
    private:

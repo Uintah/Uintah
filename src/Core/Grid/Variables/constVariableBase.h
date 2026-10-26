@@ -34,7 +34,7 @@ namespace Uintah {
 
 CLASS
    constVariableBase
-   
+
    Version of *VariableBase that is const in the sense that you can't
    modify the data that it points to (although you can change what it
    points to if it is a non-const version of the constVariableBase).
@@ -48,34 +48,37 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Variable, const
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
-  template<class VariableBase> 
+  template<class VariableBase>
   class constVariableBase {
-  public:   
+  public:
     virtual ~constVariableBase() {}
 
     virtual constVariableBase& operator=(const VariableBase&) = 0;
+
     virtual constVariableBase& operator=(const constVariableBase&) = 0;
 
-    operator const VariableBase&() const
-    { return getBaseRep(); }
-   
+    operator const VariableBase&() const{
+      return getBaseRep();
+    }
+
     virtual const VariableBase& getBaseRep() const = 0;
-    
+
     virtual void copyPointer(const VariableBase& copy) = 0;
 
     virtual const VariableBase* clone() const = 0;
+
     virtual VariableBase* cloneType() const = 0;
 
     virtual const TypeDescription* virtualGetTypeDescription() const = 0;
