@@ -45,21 +45,6 @@
 
 // Delete all of this probably...
 
-#if 0
-// Rate Models
-#include <CCA/Components/Models/SolidReactionModel/NthOrderModel.h>
-#include <CCA/Components/Models/SolidReactionModel/PowerModel.h>
-#include <CCA/Components/Models/SolidReactionModel/ProutTompkinsModel.h>
-#include <CCA/Components/Models/SolidReactionModel/DiffusionModel.h>
-#include <CCA/Components/Models/SolidReactionModel/ContractingSphereModel.h>
-#include <CCA/Components/Models/SolidReactionModel/ContractingCylinderModel.h>
-#include <CCA/Components/Models/SolidReactionModel/AvaramiErofeevModel.h>
-
-// Rate Constant Models
-#include <CCA/Components/Models/SolidReactionModel/Arrhenius.h>
-#include <CCA/Components/Models/SolidReactionModel/ModifiedArrhenius.h>
-#endif
-
 #include <iostream>
 
 using namespace Uintah;
@@ -151,62 +136,6 @@ void Ablation0::problemSetup(GridP& grid,
   d_E0 = 0.;
   srm_ps->require("E0",          d_E0);
 
-#if 0
-  ProblemSpecP rcm_ps = srm_ps->findBlock("RateConstantModel");
-  ProblemSpecP rm_ps  = srm_ps->findBlock("RateModel");
-
-  //__________________________________
-  //  Bulletproofing
-  if(!rcm_ps){
-    throw ProblemSetupException("Ablation0: Cannot find RateConstantModel", __FILE__, __LINE__);
-  }
-
-  if(!rm_ps){
-    throw ProblemSetupException("Ablation0: Cannot find RateModel", __FILE__, __LINE__);
-  }
-
-  //__________________________________
-  // Create the rate constant model
-  string modelType;
-  if(!rcm_ps->getAttribute("type", modelType)){
-    throw ProblemSetupException("Ablation0: Cannot find type for RateConstantModel", __FILE__, __LINE__);
-  }
-  if(modelType == "Arrhenius"){
-    d_rateConstantModel = scinew Arrhenius(rcm_ps);
-  }
-  if(modelType == "ModifiedArrhenius"){
-    d_rateConstantModel = scinew ModifiedArrhenius(rcm_ps);
-  }
-
-  //__________________________________
-  // Create the rate model
-  if(!rm_ps->getAttribute("type", modelType)){
-    throw ProblemSetupException("Ablation0: Cannot find type for RateModel", __FILE__, __LINE__);
-  }
-
-  if(modelType == "AvaramiErofeev"){
-    d_rateModel = scinew AvaramiErofeevModel(rm_ps);
-  }
-  if(modelType == "ContractingCylinder"){
-    d_rateModel = scinew ContractingCylinderModel(rm_ps);
-  }
-  if(modelType == "ContractingSphere"){
-    d_rateModel = scinew ContractingSphereModel(rm_ps);
-  }
-  if(modelType == "Diffusion"){
-    d_rateModel = scinew DiffusionModel(rm_ps);
-  }
-  if(modelType == "Power"){
-    d_rateModel = scinew PowerModel(rm_ps);
-  }
-  if(modelType == "ProutTompkins"){
-    d_rateModel = scinew ProutTompkinsModel(rm_ps);
-  }
-  if(modelType == "NthOrder"){
-    d_rateModel = scinew NthOrderModel(rm_ps);
-  }
-#endif
-
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   if ( m_output->isLabelSaved( "totalMassBurned" ) ){
@@ -260,6 +189,7 @@ void Ablation0::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = d_reactant->thisMaterial();
   const MaterialSubset* prod_matl  = d_product->thisMaterial();
+
 
   MaterialSubset* one_matl     = scinew MaterialSubset();
   one_matl->add(0);
@@ -394,21 +324,6 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     new_dw->get( rctSpvol,   Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get( rctVolFrac, Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
 
-#if 0
-    new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
-    new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
-    Fr.initialize(0.);
-    delF.initialize(0.);
-
-    //__________________________________
-    // Product Data,
-    new_dw->get(prodRho,       Ilb->rho_CCLabel,        m1,patch,gn, 0);
-    new_dw->get(cv_product,    Ilb->specific_heatLabel, m1,patch,gn, 0);
-    //__________________________________
-    //   Misc.
-    new_dw->get(press_CC,      Ilb->press_equil_CCLabel,0,  patch,gn, 0);
-#endif
-
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0;
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(m_materialManager->getMaterial(m0));
@@ -422,41 +337,6 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     }
 
 
-#if 0
-    // iterate over the particles, reduce the mass at the cell center by
-    // the amount of mass removed from the particles in the cell
-    for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
-      particleIndex idx = *it;
-
-      IntVector c;
-      patch->findCell(px[idx],c);
-      //c=c+IntVector(1,0,0);
-
-      double burnedMass = pDeltaMass[idx];
-      
-      //__________________________________
-      // conservation of mass, momentum and energy
-      mass_src_0[c]   -= burnedMass;
-      mass_src_1[c]   += burnedMass;
-      totalBurnedMass += burnedMass;
-
-      Vector momX        = rctvel_CC[c] * burnedMass;
-      momentum_src_0[c] -= momX;
-      momentum_src_1[c] += momX;
-
-      double energyX     = cv_rct*rctTemp[c]*burnedMass;
-      double releasedHeat= burnedMass * d_E0;
-      energy_src_0[c]   -= energyX;
-      energy_src_1[c]   += energyX + releasedHeat;
-      totalHeatReleased += releasedHeat;
-
-      double createdVolx = burnedMass * rctSpvol[c];
-      sp_vol_src_0[c]   -= createdVolx;
-      sp_vol_src_1[c]   += createdVolx;
-    }  // End loop over particles
-#endif
-
-#if 1
     //__________________________________
     //    iterate over the domain
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
@@ -483,7 +363,6 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
       sp_vol_src_0[c]   -= createdVolx;
       sp_vol_src_1[c]   += createdVolx;
     }  // cell iterator
-#endif
 
     //__________________________________
     //  set symetric BC
