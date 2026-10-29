@@ -2525,7 +2525,8 @@ void SerialMPM::readPrescribedDeformations(string filename)
  if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR Opening prescribed deformation file '"+filename+"'\n",
+      throw ProblemSetupException(
+                  "ERROR Opening prescribed deformation file '"+filename+"'\n",
                                   __FILE__, __LINE__);
     }
     double t0(-1.e9);
@@ -2534,7 +2535,7 @@ void SerialMPM::readPrescribedDeformations(string filename)
         is >> t1 >> F11 >> F12 >> F13 >> F21 >> F22 >> F23 >> F31 >> F32 >> F33 >> Theta >> a1 >> a2 >> a3;
         if(is) {
             if(t1<=t0){
-              throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotomically increasing", __FILE__, __LINE__);
+              throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotonically increasing", __FILE__, __LINE__);
             }
             d_prescribedTimes.push_back(t1);
             d_prescribedF.push_back(Matrix3(F11,F12,F13,F21,F22,F23,F31,F32,F33));
@@ -2544,7 +2545,8 @@ void SerialMPM::readPrescribedDeformations(string filename)
         t0 = t1;
     }
     if(d_prescribedTimes.size()<2) {
-        throw ProblemSetupException("ERROR: Failed to generate valid deformation profile",
+        throw ProblemSetupException(
+                          "ERROR: Failed to generate valid deformation profile",
                                     __FILE__, __LINE__);
     }
   }
@@ -2556,7 +2558,8 @@ void SerialMPM::readInsertParticlesFile(string filename)
  if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR Opening particle insertion file '"+filename+"'\n",
+      throw ProblemSetupException(
+                       "ERROR Opening particle insertion file '"+filename+"'\n",
                                   __FILE__, __LINE__);
     }
     while(is) {
@@ -2726,7 +2729,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // JBH -- Scalar diffusion related
       NCVariable<double>  gConcentration, gConcentrationNoBC;
       NCVariable<double>  gHydrostaticStress, gExtScalarFlux;
-      if (flags->d_doScalarDiffusion) {
+      if (flags->d_doScalarDiffusion){
         new_dw->allocateAndPut(gConcentration,lb->diffusion->gConcentration,
                                                dwi, patch);
         new_dw->allocateAndPut(gConcentrationNoBC, 
@@ -3076,7 +3079,6 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
   }
 }
 
-
 //______________________________________________________________________
 //
 void SerialMPM::computeContactArea(const ProcessorGroup*,
@@ -3405,14 +3407,16 @@ void SerialMPM::computeAndIntegrateDiffusion(const  ProcessorGroup  *
 {
   for (int p=0; p < patches->size(); ++p) {
     const Patch*  patch = patches->get(p);
-    printTask(patches, patch, cout_doing, "Doing MPM::computeAndIntegrateDiffusion");
+    printTask(patches, patch, cout_doing, 
+                                     "Doing MPM::computeAndIntegrateDiffusion");
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
     Ghost::GhostType  gnone = Ghost::None;
     for (unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); ++m) {
-      MPMMaterial*  mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+      MPMMaterial*  mpm_matl =
+                       (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -3605,7 +3609,7 @@ void SerialMPM::computeGridVelocityForFTM(const ProcessorGroup*,
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
-                        
+
       if(mpm_matl->getIsFTM()){
         int dwi = mpm_matl->getDWIndex();
         Vector FTM_acc = totalSTF[dwi]/totalMassFTRM[dwi];
@@ -3957,7 +3961,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       }
     }
   }
-
 
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
@@ -6552,5 +6555,3 @@ double SerialMPM::recomputeDelT( const double delT )
 {
   return delT * 0.1;
 }
-//______________________________________________________________________
-//
