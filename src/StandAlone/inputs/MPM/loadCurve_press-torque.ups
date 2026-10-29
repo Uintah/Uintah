@@ -111,7 +111,7 @@
             </cylinder>
          </geom_object>
           <load_curve>
-            <id>1</id>
+            <id>6</id>
            <time_point>
              <time> 0.0 </time>
              <load> -0.1 </load>
@@ -139,7 +139,7 @@
             </cylinder>
          </geom_object>
           <load_curve>
-            <id>2</id>
+            <id>9</id>
            <time_point>
              <time> 0.0 </time>
              <load> -0.1 </load>

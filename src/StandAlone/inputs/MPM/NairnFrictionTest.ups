@@ -44,6 +44,7 @@
        <save label = "p.velocity"/>
        <save label = "p.scalefactor"/>
        <save label = "p.particleID"/>
+       <save label = "p.loadCurveID"/>
        <save label = "p.stress"/>
        <save label = "p.externalforce"/>
        <save label = "g.mass"/>
@@ -161,12 +162,13 @@
         <!--  Apply a net force of 35.2941 N to the LHS of the block -->
         <geom_object>
           <box label="x-face">
-            <min>[ 0.0099, 0.028, 0.0]</min>
+            <min>[ 0.0099, 0.025, 0.0]</min>
             <max>[ 0.011,  0.040, 0.005]</max>
           </box>
         </geom_object>
         <load_curve>
-          <id>1</id>
+          <id>3</id>
+          <material> 0 </material>
           <time_point>
             <time> 0 </time>
             <load> 0 </load>
@@ -190,7 +192,8 @@
           </box>
         </geom_object>
         <load_curve>
-          <id>2</id>
+          <id>7</id>
+          <material> 0 </material>
           <time_point>
             <time> 0 </time>
             <load> 0 </load>
