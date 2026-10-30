@@ -1119,6 +1119,8 @@ void MPMICE::scheduleComputeDelPMassX(SchedulerP& sched,
     t->requiresVar( Task::NewDW, Ilb->rho_CCLabel,        gn );
     t->requiresVar( Task::NewDW, Ilb->specific_heatLabel, ice_matls, gn);
     t->requiresVar( Task::NewDW, Ilb->gammaLabel,         ice_matls, gn);
+    t->requiresVar( Task::NewDW, Ilb->TMV_CCLabel,        press_matl,gn);
+    t->requiresVar( Task::NewDW, Ilb->press_equil_CCLabel,press_matl,gn);
   }
 
   t->computesVar( Ilb->delP_MassXLabel,      press_matl, oims );
@@ -2345,9 +2347,11 @@ void MPMICE::computeDelPMassX(const ProcessorGroup*,
     vector<constCCVariable<double> > modMass_src(numMatls);
 
     CCVariable<double> delP_MassX;
+    constCCVariable<double> TMV_CC;
     constCCVariable<double> press_equil;
 
     new_dw->get( press_equil,           Ilb->press_equil_CCLabel,0, patch,gn,0);
+    new_dw->get( TMV_CC,                Ilb->TMV_CCLabel,        0, patch,gn,0);
     new_dw->allocateAndPut( delP_MassX, Ilb->delP_MassXLabel,    0, patch );
 
     if(d_ice->d_models.size() ){
@@ -2378,7 +2382,7 @@ void MPMICE::computeDelPMassX(const ProcessorGroup*,
        // evaluate press_eos at cell i,j,k
        for (unsigned int m = 0; m < numMatls; m++)  {
           double rho_micro = (rho_CC[m][c]*cell_vol+modMass_src[m][c])/
-                             (vol_frac[m][c]*cell_vol);
+                             (vol_frac[m][c]*TMV_CC[c]);
           if(ice_matl[m]){    // ICE
             ice_matl[m]->getEOS()->computePressEOS( rho_micro, gamma[m][c],
                                                    cv[m][c], Temp[m][c],
