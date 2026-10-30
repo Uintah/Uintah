@@ -11,7 +11,7 @@
 // In this model, dissolution occurs if the following criteria are met:
 // 1.
 // 2.
-// The output of this model is pDeltaMassLabel.  This is applied to surface
+// The output of this model is pDeltaMassIntLabel.  This is applied to surface
 // particles and comes from the outer surface.
 
 // The dissolution rate is converted to a rate of mass decrease which is
@@ -86,8 +86,7 @@ void ParticleBasedPyrolysis::computeMassBurnFraction(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      new_dw->allocateAndPut(pdeltaMass,
-                                      lb->pDeltaMassLabel,          pset);
+      new_dw->getModifiable(pdeltaMass,  lb->pDeltaMassIntLabel,        pset);
 
       for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -116,7 +115,7 @@ void ParticleBasedPyrolysis::addComputesAndRequiresMassBurnFrac(SchedulerP & sch
 //  t->requiresVar(Task::OldDW, lb->pSizeLabel,               gnone);
 
 
-  t->computesVar(lb->pDeltaMassLabel);
+  t->modifiesVar(lb->pDeltaMassIntLabel);
 
   sched->addTask(t, patches, ms);
 }

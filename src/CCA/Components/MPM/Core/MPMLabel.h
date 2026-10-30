@@ -220,7 +220,8 @@ namespace Uintah {
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
       const VarLabel* gDisplacementLabel;
-      const VarLabel* pDeltaMassLabel;
+      const VarLabel* pDeltaMassSurfLabel;
+      const VarLabel* pDeltaMassIntLabel;
 
       // Debugging Labels
       const VarLabel* pColorLabel;

@@ -11,7 +11,7 @@
 // In this model, dissolution occurs if the following criteria are met:
 // 1.
 // 2.
-// The output of this model is pDeltaMassLabel.  This is applied to surface
+// The output of this model is pDeltaMassSurfLabel.  This is applied to surface
 // particles and comes from the outer surface.
 
 // The dissolution rate is converted to a rate of mass decrease which is
@@ -101,11 +101,10 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
       old_dw->get(psize,              lb->pSizeLabel,                pset);
       old_dw->get(pvolume,            lb->pVolumeLabel,              pset);
       new_dw->get(pcursize,           lb->pCurSizeLabel,             pset);
-      new_dw->get(psurf,              lb->pSurfLabel_preReloc,      pset);
+      new_dw->get(psurf,              lb->pSurfLabel_preReloc,       pset);
       new_dw->get(gSurfNorm,          lb->gSurfNormLabel, dwi,patch,gac,2);
 
-      new_dw->allocateAndPut(pdeltaMass,
-                                      lb->pDeltaMassLabel,          pset);
+      new_dw->getModifiable(pdeltaMass,lb->pDeltaMassSurfLabel,      pset);
 
       // For the 1-D test case
       // dMdt = dL_dt*area*density
@@ -195,12 +194,6 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
           double massRatio = psizeNew.Determinant()/psize[idx].Determinant();
           pdeltaMass[idx] = pmass[idx]*(1. - massRatio);
           //cout << "pdeltaMassNewWay = " << pdeltaMass[idx] << endl;
-
-          // Need some work here
-//          double pEdgeLength = dx.y(); //cbrt(pvolume[idx]);
-//          double density = pmass[idx]/pvolume[idx];
-//          pdeltaMass[idx] = density*pEdgeLength*pEdgeLength*d_dLdt*delT;
-          //cout << "pdeltaMassOldWay = " << pdeltaMass[idx] << endl;
         } else {
           pdeltaMass[idx] = 0.0;
         }
@@ -228,11 +221,7 @@ void ParticleBasedDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & s
   t->requiresVar(Task::NewDW, lb->gSurfNormLabel,           gac, 2);
 
 
-  t->computesVar(lb->pDeltaMassLabel);
-//  t->requiresVar(Task::NewDW, lb->gMassLabel,               Ghost::None);
-//  t->requiresVar(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
-//  t->requiresVar(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
-//  t->requiresVar(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
+  t->modifiesVar(lb->pDeltaMassSurfLabel);
 
   sched->addTask(t, patches, ms);
 }

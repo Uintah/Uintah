@@ -212,8 +212,6 @@ void Ablation0::scheduleComputeModelSources(SchedulerP& sched,
   t->requiresVar(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
   t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
   t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
-  t->requiresVar(Task::NewDW, Mlb->pDeltaMassLabel,   react_matl, gn);
-  t->requiresVar(Task::OldDW, Mlb->pXLabel,           react_matl, gn);
 
   t->requiresVar(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
   
@@ -281,11 +279,6 @@ void Ablation0::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_1;
 
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch);
-
-    constParticleVariable<double> pDeltaMass;
-    constParticleVariable<Point> px;
-    new_dw->get(pDeltaMass,               Mlb->pDeltaMassLabel,         pset);
-    old_dw->get(px,                       Mlb->pXLabel,                 pset);
 
     Ghost::GhostType  gn  = Ghost::None;
     new_dw->get( cDeltaMass,    MIlb->cDeltaMassLabel,  m0, patch, gn, 0);

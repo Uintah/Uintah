@@ -61,6 +61,7 @@ void NullDissolution::computeMassBurnFraction(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
+#if 0
       new_dw->allocateAndPut(pdeltaMass,lb->pDeltaMassLabel, pset);
 
       ParticleSubset::iterator iter;
@@ -69,6 +70,7 @@ void NullDissolution::computeMassBurnFraction(const ProcessorGroup*,
 
         pdeltaMass[idx] = 0.0;
       }
+#endif
     }
   }
 
@@ -81,6 +83,6 @@ void NullDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & sched,
   Task * t = scinew Task("NullDissolution::computeMassBurnFraction", this, 
                          &NullDissolution::computeMassBurnFraction);
 
-  t->computesVar(lb->pDeltaMassLabel);  
+//  t->computesVar(lb->pDeltaMassLabel);  
   sched->addTask(t, patches, ms);
 }

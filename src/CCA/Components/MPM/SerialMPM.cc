@@ -1039,6 +1039,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   }
   t->computesVar(lb->pExtForceLabel_preReloc);
   t->computesVar(lb->pExternalHeatRateLabel_preReloc);
+  t->computesVar(lb->pDeltaMassSurfLabel);
+  t->computesVar(lb->pDeltaMassIntLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -1541,7 +1543,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   t->requiresVar(Task::OldDW, lb->pXLabel,                         gnone);
   t->requiresVar(Task::OldDW, lb->pMassLabel,                      gnone);
-  t->requiresVar(Task::NewDW, lb->pDeltaMassLabel,                 gnone);
+  t->requiresVar(Task::NewDW, lb->pDeltaMassSurfLabel,             gnone);
+  t->requiresVar(Task::NewDW, lb->pDeltaMassIntLabel,              gnone);
   t->requiresVar(Task::OldDW, lb->pParticleIDLabel,                gnone);
   t->requiresVar(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requiresVar(Task::OldDW, lb->pVelocityLabel,                  gnone);
@@ -2012,7 +2015,8 @@ void SerialMPM::scheduleComputeNodalDeltaMass(SchedulerP& sched,
 
   t->requiresVar(Task::OldDW, lb->pXLabel,                gan, NGP);
   t->requiresVar(Task::NewDW, lb->pCurSizeLabel,          gan, NGP);
-  t->requiresVar(Task::NewDW, lb->pDeltaMassLabel,        gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pDeltaMassSurfLabel,    gan, NGP);
+  t->requiresVar(Task::NewDW, lb->pDeltaMassIntLabel,     gan, NGP);
 
   t->computesVar(lb->gDeltaMassLabel);
 
@@ -2045,15 +2049,16 @@ void SerialMPM::computeNodalDeltaMass(const ProcessorGroup*,
 
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pDeltaMass;
+      constParticleVariable<double> pDeltaMassSurf, pDeltaMassInt;
       constParticleVariable<Matrix3> psize;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      old_dw->get(px,             lb->pXLabel,             pset);
-      new_dw->get(psize,          lb->pCurSizeLabel,       pset);
-      new_dw->get(pDeltaMass,     lb->pDeltaMassLabel,     pset);
+      old_dw->get(px,             lb->pXLabel,                 pset);
+      new_dw->get(psize,          lb->pCurSizeLabel,           pset);
+      new_dw->get(pDeltaMassSurf, lb->pDeltaMassSurfLabel, pset);
+      new_dw->get(pDeltaMassInt,  lb->pDeltaMassIntLabel,  pset);
 
       // Create arrays for the grid data
       NCVariable<double> gDeltaMass;
@@ -2076,7 +2081,7 @@ void SerialMPM::computeNodalDeltaMass(const ProcessorGroup*,
         for(int k = 0; k < NN; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
-            gDeltaMass[node]   += pDeltaMass[idx]* S[k];
+            gDeltaMass[node] += (pDeltaMassSurf[idx] + pDeltaMassInt[idx])*S[k];
           }
         } // loop over nodes near particle
       } // loop over particles
@@ -4227,10 +4232,13 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector>       pExternalForce_new;
       ParticleVariable<double>       pExternalHeatRate_new;
+      ParticleVariable<double>       pDeltaMassSurf, pDeltaMassInt;
       new_dw->allocateAndPut(pExternalForce_new,
-                             lb->pExtForceLabel_preReloc,          pset);
+                             lb->pExtForceLabel_preReloc,            pset);
       new_dw->allocateAndPut(pExternalHeatRate_new,
-                             lb->pExternalHeatRateLabel_preReloc,  pset);
+                             lb->pExternalHeatRateLabel_preReloc,    pset);
+      new_dw->allocateAndPut(pDeltaMassSurf, lb->pDeltaMassSurfLabel,pset);
+      new_dw->allocateAndPut(pDeltaMassInt,  lb->pDeltaMassIntLabel, pset);
 
       // pExternalForce is either:
       //  set to zero (default)
@@ -4242,6 +4250,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
          particleIndex idx = *iter;
          pExternalForce_new[idx] = Vector(0.,0.,0.);
          pExternalHeatRate_new[idx] = 0.;
+         pDeltaMassSurf[idx] = 0.;
+         pDeltaMassInt[idx] = 0.;
       }
 
       string mms_type = flags->d_mms_type;
@@ -4915,7 +4925,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Matrix3> psizeNew;
       ParticleVariable<double> pmassNew,pTempNew;
       ParticleVariable<long64> pids_new;
-      constParticleVariable<double> pSurf, pdeltamass;
+      constParticleVariable<double> pSurf, pDeltaMassSrf, pDeltaMassInt;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;
@@ -4933,7 +4943,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,        lb->pDispLabel,                      pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
-      new_dw->get(pdeltamass,   lb->pDeltaMassLabel,                 pset);
+      new_dw->get(pDeltaMassSrf,lb->pDeltaMassSurfLabel,             pset);
+      new_dw->get(pDeltaMassInt,lb->pDeltaMassIntLabel,              pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       if(flags->d_XPIC2){
@@ -5089,12 +5100,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
         if (flags->d_doingDissolution){
           double pSNL = pSN.length();
-          if(!flags->d_computeNormals){
-            pmassNew[idx]    = Max(pmass[idx] - pdeltamass[idx], 0.);
-            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
-          } else {
-#if 1
-          if(pSurf[idx]>=0.99 /* && burnFraction != 0.0 && pSNL > 0.*/){
+          double isotropic_shrinkage=(pmass[idx]-pDeltaMassInt[idx])/pmass[idx];
+          // if the pDeltaMasses are 0, then the mass and size are carried forward
+          pmassNew[idx] = pmass[idx];
+          psizeNew[idx] = psize[idx];
+          // isotropic particle shrinkage from, e.g., pyrolysis
+          pmassNew[idx]    = Max(pmassNew[idx] - pDeltaMassInt[idx], 0.);
+          psizeNew[idx]    = isotropic_shrinkage*psize[idx];
+          // if surface particle, deal with pDeltaMassSrf
+          // surface retreat due to, e.g., ablation
+          if(pSurf[idx]>=0.99 && pDeltaMassSrf[idx]>0.0){
 
             // Normalize particle surface normal
             pSN /= (pSNL + 1.e-100);
@@ -5107,8 +5122,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
             int maxDirP1 = (maxDir+1)%3;
             int maxDirP2 = (maxDir+2)%3;
-            pmassNew[idx]    = Max(pmass[idx] - pdeltamass[idx], 0.);
-            double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
+            pmassNew[idx]    = Max(pmassNew[idx] - pDeltaMassSrf[idx], 0.);
+            double deltaMassFracSrf = pDeltaMassSrf[idx]/pmass[idx];
             Vector L[3];
             double Ll[3];
             double dL[3];
@@ -5124,8 +5139,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             double dL1overdL0 = pSNdotL[maxDirP1]/(pSNdotL[maxDir]+1.e-100);
             double dL2overdL0 = pSNdotL[maxDirP2]/(pSNdotL[maxDir]+1.e-100);
 
-            dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
-                                       (Ll[maxDirP1]*Ll[maxDirP2] 
+            dL[maxDir] = deltaMassFracSrf*(Ll[0]*Ll[1]*Ll[2])/
+                                          (Ll[maxDirP1]*Ll[maxDirP2] 
                                  + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
                                  + dL2overdL0*Ll[maxDir]*Ll[maxDirP1] 
                                  + 1.e-100);
@@ -5139,18 +5154,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
                                     L[0].y(), L[1].y(), L[2].y(),
                                     L[0].z(), L[1].z(), L[2].z());
+            psizeNew[idx]*=isotropic_shrinkage;
 
             Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
                                          dL[1]*dx.y()*pSN.y(),
                                          dL[2]*dx.z()*pSN.z());
             pxnew[idx] = pxnew[idx] - deltaPos;
-          } else {
-            pmassNew[idx] = pmass[idx];
-            psizeNew[idx] = psize[idx];
           }
-          }
-#endif
-        } else {
+        } else {  // This is other than particle based mass removal
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
         }
@@ -5162,7 +5173,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         totalmass  += pmass[idx];
         dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
         addedmass      += Max(0., (pmassNew[idx] - pmass[idx]));
-      }
+      } // Loop Over Particles
 
     }  // loop over materials
 

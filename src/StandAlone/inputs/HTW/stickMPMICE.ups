@@ -104,7 +104,8 @@ and a grid cell size of .001 in the y and z directions.
     <save label = "p.velocity"/>
     <save label = "p.surface"/>
     <save label = "p.scalefactor"/>
-    <!--  <save label="p.deltaMass"/> -->
+    <save label = "p.deltaMassSurf"/>
+    <save label = "p.deltaMassInt"/>
     <save label = "press_CC"/>
     <save label = "press_equil_CC"/>
     <save label = "delP_MassX"/>

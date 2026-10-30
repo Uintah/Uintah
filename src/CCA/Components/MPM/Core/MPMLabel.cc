@@ -118,7 +118,10 @@ MPMLabel::MPMLabel()
   pMassLabel = VarLabel::create( "p.mass",
                         ParticleVariable<double>::getTypeDescription() );
   
-  pDeltaMassLabel = VarLabel::create( "p.deltaMass",
+  pDeltaMassSurfLabel = VarLabel::create( "p.deltaMassSurf",
+                        ParticleVariable<double>::getTypeDescription() );
+  
+  pDeltaMassIntLabel = VarLabel::create( "p.deltaMassInt",
                         ParticleVariable<double>::getTypeDescription() );
   
   pVelocityLabel = VarLabel::create( "p.velocity", 
@@ -728,7 +731,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
   VarLabel::destroy(gDisplacementLabel);
-  VarLabel::destroy(pDeltaMassLabel);
+  VarLabel::destroy(pDeltaMassSurfLabel);
+  VarLabel::destroy(pDeltaMassIntLabel);
 
   // Destroy Material point erosion labels
   VarLabel::destroy(pErosionLabel);
