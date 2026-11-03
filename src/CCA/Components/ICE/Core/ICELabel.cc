@@ -165,6 +165,27 @@ ICELabel::ICELabel()
   tau_X_FCLabel      = VarLabel::create("tau_X_FC",   SFCX_Vector);
   tau_Y_FCLabel      = VarLabel::create("tau_Y_FC",   SFCY_Vector);
   tau_Z_FCLabel      = VarLabel::create("tau_Z_FC",   SFCZ_Vector);
+
+  //__________________________________
+  //  CentralUpwind (Kurganov-Tadmor) face variables
+  ktAlphaOwn_FCXLabel = VarLabel::create("ktAlphaOwn_FCX", SFCX_double);
+  ktAlphaOwn_FCYLabel = VarLabel::create("ktAlphaOwn_FCY", SFCY_double);
+  ktAlphaOwn_FCZLabel = VarLabel::create("ktAlphaOwn_FCZ", SFCZ_double);
+  ktaSf_FCXLabel      = VarLabel::create("ktaSf_FCX",      SFCX_double);
+  ktaSf_FCYLabel      = VarLabel::create("ktaSf_FCY",      SFCY_double);
+  ktaSf_FCZLabel      = VarLabel::create("ktaSf_FCZ",      SFCZ_double);
+  ktKappa_FCXLabel    = VarLabel::create("ktKappa_FCX",    SFCX_double);
+  ktKappa_FCYLabel    = VarLabel::create("ktKappa_FCY",    SFCY_double);
+  ktKappa_FCZLabel    = VarLabel::create("ktKappa_FCZ",    SFCZ_double);
+  ktPhiOwn_FCXLabel   = VarLabel::create("ktPhiOwn_FCX",   SFCX_double);
+  ktPhiOwn_FCYLabel   = VarLabel::create("ktPhiOwn_FCY",   SFCY_double);
+  ktPhiOwn_FCZLabel   = VarLabel::create("ktPhiOwn_FCZ",   SFCZ_double);
+  ktPhiNei_FCXLabel   = VarLabel::create("ktPhiNei_FCX",   SFCX_double);
+  ktPhiNei_FCYLabel   = VarLabel::create("ktPhiNei_FCY",   SFCY_double);
+  ktPhiNei_FCZLabel   = VarLabel::create("ktPhiNei_FCZ",   SFCZ_double);
+  ktUvol_FCXLabel     = VarLabel::create("ktUvol_FCX",     SFCX_double);
+  ktUvol_FCYLabel     = VarLabel::create("ktUvol_FCY",     SFCY_double);
+  ktUvol_FCZLabel     = VarLabel::create("ktUvol_FCZ",     SFCZ_double);
   //__________________________________
   // Misc labels
   machLabel           = VarLabel::create("mach",       CC_double);
@@ -218,6 +239,14 @@ ICELabel::ICELabel()
   modelMom_srcLabel   = VarLabel::create( "modelMom_src",   CC_Vector);
   modelEng_srcLabel   = VarLabel::create( "modelEng_src",   CC_double);
   modelVol_srcLabel   = VarLabel::create( "modelVol_src",   CC_double);
+
+  //__________________________________
+  //  PIMPLE outer-loop support
+  mass_adv0Label      = VarLabel::create( "mass_adv0",      CC_double);
+  mom_adv0Label       = VarLabel::create( "mom_adv0",       CC_Vector);
+  eng_adv0Label       = VarLabel::create( "eng_adv0",       CC_double);
+  sp_vol_adv0Label    = VarLabel::create( "sp_vol_adv0",    CC_double);
+  pimpleResidualLabel = VarLabel::create( "pimpleResidual", max_variable);
 
   //__________________________________
   // AMR variables
@@ -371,6 +400,26 @@ ICELabel::~ICELabel()
     VarLabel::destroy(tau_Y_FCLabel);
     VarLabel::destroy(tau_Z_FCLabel);
 
+    // CentralUpwind (Kurganov-Tadmor) face variables
+    VarLabel::destroy(ktAlphaOwn_FCXLabel);
+    VarLabel::destroy(ktAlphaOwn_FCYLabel);
+    VarLabel::destroy(ktAlphaOwn_FCZLabel);
+    VarLabel::destroy(ktaSf_FCXLabel);
+    VarLabel::destroy(ktaSf_FCYLabel);
+    VarLabel::destroy(ktaSf_FCZLabel);
+    VarLabel::destroy(ktKappa_FCXLabel);
+    VarLabel::destroy(ktKappa_FCYLabel);
+    VarLabel::destroy(ktKappa_FCZLabel);
+    VarLabel::destroy(ktPhiOwn_FCXLabel);
+    VarLabel::destroy(ktPhiOwn_FCYLabel);
+    VarLabel::destroy(ktPhiOwn_FCZLabel);
+    VarLabel::destroy(ktPhiNei_FCXLabel);
+    VarLabel::destroy(ktPhiNei_FCYLabel);
+    VarLabel::destroy(ktPhiNei_FCZLabel);
+    VarLabel::destroy(ktUvol_FCXLabel);
+    VarLabel::destroy(ktUvol_FCYLabel);
+    VarLabel::destroy(ktUvol_FCZLabel);
+
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);
@@ -414,6 +463,13 @@ ICELabel::~ICELabel()
     VarLabel::destroy(modelMom_srcLabel);
     VarLabel::destroy(modelEng_srcLabel);
     VarLabel::destroy(modelVol_srcLabel);
+
+    // PIMPLE outer-loop support
+    VarLabel::destroy(mass_adv0Label);
+    VarLabel::destroy(mom_adv0Label);
+    VarLabel::destroy(eng_adv0Label);
+    VarLabel::destroy(sp_vol_adv0Label);
+    VarLabel::destroy(pimpleResidualLabel);
 
     // AMR variables
     // magnitude of the gradient of ()

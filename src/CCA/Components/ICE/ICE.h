@@ -30,6 +30,7 @@
 // swapbytes. AS SUCH, Advector.h MUST BE CALLED BEFORE ApplicationCommon.h
 
 #include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE/Core/CentralUpwind.h>
 #include <CCA/Components/Application/ApplicationCommon.h>
 
 #include <CCA/Components/ICE/customInitialize.h>
@@ -120,6 +121,10 @@ using namespace ExchangeModels;
       virtual void scheduleTimeAdvance( const LevelP& level,
                                         SchedulerP&);
 
+      void scheduleFluidChain( SchedulerP& sched,
+                               const LevelP& level,
+                               const bool inOuterLoop );
+
       virtual void scheduleFinalizeTimestep(const LevelP& level,
                                             SchedulerP&);
 
@@ -147,6 +152,14 @@ using namespace ExchangeModels;
                                  const MaterialSubset*,
                                  const MaterialSubset*,
                                  const MaterialSet*);
+
+      void scheduleComputeCentralWeights(SchedulerP&,
+                                         const PatchSet*,
+                                         const MaterialSet*);
+
+      void scheduleComputeCentralFluxes(SchedulerP&,
+                                        const PatchSet*,
+                                        const MaterialSet*);
 
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
                                                     const PatchSet*,
@@ -332,6 +345,58 @@ using namespace ExchangeModels;
                                                       const PatchSet* patches,
                                                       const MaterialSet*);
 
+//__________________________________
+//   P I M P L E   outer loop (sub-scheduler)
+      void schedulePimpleCopyModelSources(SchedulerP& sched,
+                                          const LevelP& level,
+                                          const MaterialSet* matls);
+
+      void pimpleCopyModelSources(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+      void scheduleCapturePimpleAdv0(SchedulerP& sched,
+                                     const LevelP& level,
+                                     const MaterialSet* matls);
+
+      void capturePimpleAdv0(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+      void schedulePimpleBlend(SchedulerP& sched,
+                               const LevelP& level,
+                               const MaterialSet* ice_matls);
+
+      void pimpleBlend(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
+
+      void schedulePimpleResidual(SchedulerP& sched,
+                                  const LevelP& level,
+                                  const MaterialSet* ice_matls);
+
+      void pimpleResidual(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+
+      void schedulePimpleOuterLoop(SchedulerP& sched,
+                                   const LevelP& level);
+
+      void pimpleOuterLoop(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* ParentOldDW,
+                           DataWarehouse* ParentNewDW,
+                           LevelP level);
+
        void setWithMPM() {
          d_with_mpm = true;
        };
@@ -384,6 +449,18 @@ using namespace ExchangeModels;
                          DataWarehouse*,
                          DataWarehouse*);
 
+      void computeCentralWeights(const ProcessorGroup*,
+                                 const PatchSubset*,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse*);
+
+      void computeCentralFluxes(const ProcessorGroup*,
+                                const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse*);
+
       void updateVel_FC(const ProcessorGroup*,
                         const PatchSubset*,
                         const MaterialSubset*,
@@ -403,7 +480,18 @@ using namespace ExchangeModels;
                                             constCCVariable<double>& Temp_CC,
                                             T& Temp_FC);
 
-      template<class T> void computeVelFace(int dir, CellIterator it,
+      //__________________________________
+      // CentralUpwind (Kurganov-Tadmor) face-velocity blend info, passed
+      // into computeVelFace when d_useCentralUpwind && d_ktFaceVel.
+      template<class AT>
+      struct KTFaceVelInfo {
+        const AT * alphaOwn{nullptr};
+        IntVector  lo;
+        IntVector  hi;
+        IntVector  periodic;
+      };
+
+      template<class T, class AT> void computeVelFace(int dir, CellIterator it,
                                             IntVector adj_offset,
                                             double dx,
                                             double delT,
@@ -414,7 +502,8 @@ using namespace ExchangeModels;
                                             constCCVariable<double>& press_CC,
                                             T& vel_FC,
                                             T& gradP_FC,
-                                            bool include_acc);
+                                            bool include_acc,
+                                            const KTFaceVelInfo<AT>* kt = nullptr);
 
       template<class T> void updateVelFace(int dir, CellIterator it,
                                             IntVector adj_offset,
@@ -437,11 +526,24 @@ using namespace ExchangeModels;
                           DataWarehouse*,
                           DataWarehouse*);
 
-      template<class T> void computePressFace(CellIterator it,
+      //__________________________________
+      // CentralUpwind (Kurganov-Tadmor) face-pressure blend info, passed
+      // into computePressFace when d_useCentralUpwind && d_ktFacePress.
+      template<class AT>
+      struct KTFacePressInfo {
+        const AT * alphaOwn{nullptr};
+        IntVector  lo;
+        IntVector  hi;
+        IntVector  periodic;
+      };
+
+      template<class T, class AT> void computePressFace(CellIterator it,
+                                              int dir,
                                               IntVector adj_offset,
                                               constCCVariable<double>& sum_rho,
                                               constCCVariable<double>& press_CC,
-                                              T& press_FC);
+                                              T& press_FC,
+                                              const KTFacePressInfo<AT>* kt = nullptr);
 
       void computeThermoTransportProperties(const ProcessorGroup*,
                                             const PatchSubset* patches,
@@ -783,6 +885,34 @@ using namespace ExchangeModels;
       bool d_useCompatibleFluxes   = true;
       bool d_clampSpecificVolume   = false;
 
+      //__________________________________
+      // CentralUpwind (Kurganov-Tadmor) advection options
+      bool   d_useCentralUpwind{false};              // <advection type="CentralUpwind">
+      std::string d_ktLimiterName{"vanAlbada"};
+      std::string d_ktFluxScheme{"Kurganov"};        // Kurganov | Tadmor
+      std::string d_ktKappaFunction{"MachToAcCourant"}; // MachToAcCourant | one
+      bool   d_ktFaceVel{true};
+      bool   d_ktFacePress{true};
+      bool   d_ktPressureFlux{true};
+      centralUpwind::Limiter    d_ktLimiter{centralUpwind::Limiter::vanAlbada};
+      centralUpwind::FluxScheme d_ktScheme{centralUpwind::FluxScheme::Kurganov};
+      centralUpwind::KappaMode  d_ktKappaMode{centralUpwind::KappaMode::MachToAcCourant};
+      MaterialSubset* d_ktICE_matl = 0;
+
+      //__________________________________
+      // PIMPLE outer-loop options
+      int    d_pimpleOuter{1};      // nOuterCorrectors; 1 = PIMPLE off
+      int    d_pimpleNCorr{1};      // nCorrectors (impICE only, future)
+      double d_pimpleTheta{0.5};    // CrankNicolson weight
+      double d_pimpleTol{0.0};      // 0 = fixed iteration count
+      SchedulerP d_pimpleSched;
+      bool       d_recompilePimpleSched{true};
+      std::vector<const VarLabel*> d_pimpleTvarAdv0Labels;
+      const VarLabel* pimpleTvarAdv0Label( int & idx ) const
+      {
+        return d_pimpleTvarAdv0Labels.at(idx++);
+      }
+
       Turbulence* d_turbulence;
       WallShearStress *d_WallShearStressModel;
 
@@ -790,11 +920,6 @@ using namespace ExchangeModels;
 
       // exchange Model
       ExchangeModel* d_exchModel;
-
-      // true iff some FluidsBasedModel owns the caloric EOS e_s(T,Y) for at
-      // least one material; gates the transported-vars/exchange scheduling
-      // order so simulations without such a model keep the original task
-      // graph and bit-identical results.
       bool d_anyModelOwnsCaloricEOS{false};
 
       // flags for the conservation test
