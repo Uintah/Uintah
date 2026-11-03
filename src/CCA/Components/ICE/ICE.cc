@@ -111,30 +111,6 @@ static DebugStream ds_EqPress("DBG_EqPress",false);
 
 Dout m_ice_tasks(   "ICE_tasks", "ICE", "Print task scheduling & execution", false );
 Dout m_ice_DelT(    "ICE_DelT", "ICE", "Print timestep information ", false );
-Dout m_ice_pimple(  "ICE_PIMPLE", "ICE", "Print PIMPLE outer-loop iteration residual", false );
-
-namespace {
-  //______________________________________________________________________
-  //  CentralUpwind (Kurganov-Tadmor) own/nei stencil validity.  Sets
-  //  firstOrderOwn (Nei) when Pm1 (Np1) lies outside the level at a
-  //  non-periodic boundary, so ownNei() drops that side to first order.
-  //  Uses the LEVEL's cell range, not the patch's.  hi is exclusive;
-  //  lo/hi include the extra cells (Level::findCellIndexRange).
-  //  Same helper as in Advection/CentralUpwindAdvector.cc -- keep the
-  //  two copies in sync.
-  inline void ktStencilFlags( const IntVector & Pm1,
-                              const IntVector & Np1,
-                              const int          dir,
-                              const IntVector & lo,
-                              const IntVector & hi,
-                              const IntVector & periodic,
-                              bool             & firstOrderOwn,
-                              bool             & firstOrderNei )
-  {
-    firstOrderOwn = ( Pm1[dir] <  lo[dir] ) && ( periodic[dir] == 0 );
-    firstOrderNei = ( Np1[dir] >= hi[dir] ) && ( periodic[dir] == 0 );
-  }
-}
 
 //______________________________________________________________________
 //
@@ -200,13 +176,6 @@ ICE::~ICE()
   }
   if (d_press_matlSet && d_press_matlSet->removeReference()){
     delete d_press_matlSet;
-  }
-  if (d_ktICE_matl && d_ktICE_matl->removeReference()){
-    delete d_ktICE_matl;
-  }
-
-  for( auto label : d_pimpleTvarAdv0Labels ){
-    VarLabel::destroy( label );
   }
 
   //__________________________________
@@ -278,118 +247,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   cfd_ice_ps->get( "max_iteration_equilibration",d_max_iter_equilibration );
   cfd_ice_ps->get( "ClampSpecificVolume",        d_clampSpecificVolume );
   cfd_ice_ps->get( "applyHydrostaticPressure",   d_applyHydrostaticPress );
-
-  //__________________________________
-  //  CentralUpwind (Kurganov-Tadmor) advection flags.
-  //  Read the <advection type="..."> attribute ourselves so we can detect
-  //  "CentralUpwind" before handing the spec to AdvectionFactory, which
-  //  does not know about it yet.
-  {
-    ProblemSpecP adv_ps = cfd_ice_ps->findBlock("advection");
-    string advType;
-    if( adv_ps ){
-      adv_ps->getAttribute( "type", advType );
-    }
-
-    if( advType == "CentralUpwind" ){
-      d_useCentralUpwind = true;
-
-      string limiter;
-      if( adv_ps->getAttribute( "limiter", limiter ) ){
-        d_ktLimiterName = limiter;
-      }
-
-      if( d_ktLimiterName != "vanAlbada" && d_ktLimiterName != "vanLeer" &&
-          d_ktLimiterName != "minmod"    && d_ktLimiterName != "MC"     &&
-          d_ktLimiterName != "upwind" ){
-        ostringstream msg;
-        msg << "\n ERROR: <advection type=\"CentralUpwind\"> limiter '" << d_ktLimiterName
-            << "' is not recognized.  Valid values: vanAlbada, vanLeer, minmod, MC, upwind\n";
-        throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-    }
-
-    //__________________________________
-    //  Optional <CentralUpwind> block with the Kurganov-Tadmor scheme details
-    ProblemSpecP cu_ps = cfd_ice_ps->findBlock("CentralUpwind");
-    if( cu_ps ){
-      if( !d_useCentralUpwind ){
-        throw ProblemSetupException(
-          "\n ERROR: <CentralUpwind> requires <advection type=\"CentralUpwind\">\n",
-          __FILE__, __LINE__);
-      }
-
-      cu_ps->getWithDefault( "fluxScheme",     d_ktFluxScheme,     string("Kurganov") );
-      if( d_ktFluxScheme != "Kurganov" && d_ktFluxScheme != "Tadmor" ){
-        throw ProblemSetupException(
-          "\n ERROR: <CentralUpwind><fluxScheme> must be 'Kurganov' or 'Tadmor'\n",
-          __FILE__, __LINE__);
-      }
-
-      cu_ps->getWithDefault( "kappaFunction",  d_ktKappaFunction,  string("MachToAcCourant") );
-      if( d_ktKappaFunction != "MachToAcCourant" && d_ktKappaFunction != "one" ){
-        throw ProblemSetupException(
-          "\n ERROR: <CentralUpwind><kappaFunction> must be 'MachToAcCourant' or 'one'\n",
-          __FILE__, __LINE__);
-      }
-
-      cu_ps->getWithDefault( "faceVelocity",   d_ktFaceVel,      true );
-      cu_ps->getWithDefault( "facePressure",   d_ktFacePress,    true );
-      cu_ps->getWithDefault( "ktPressureFlux", d_ktPressureFlux, true );
-    }
-
-    //__________________________________
-    //  Convert the validated strings to enums once here so the per-face
-    //  math (ICE::computeCentralWeights/computeCentralFluxes and
-    //  CentralUpwindAdvector) never has to re-parse strings.
-    if( d_useCentralUpwind ){
-      if( !centralUpwind::limiterFromString( d_ktLimiterName, d_ktLimiter ) ){
-        throw ProblemSetupException(
-          "\n ERROR: <advection type=\"CentralUpwind\"> unrecognized limiter\n",
-          __FILE__, __LINE__);
-      }
-      if( !centralUpwind::fluxSchemeFromString( d_ktFluxScheme, d_ktScheme ) ){
-        throw ProblemSetupException(
-          "\n ERROR: <CentralUpwind><fluxScheme> unrecognized value\n",
-          __FILE__, __LINE__);
-      }
-      if( !centralUpwind::kappaModeFromString( d_ktKappaFunction, d_ktKappaMode ) ){
-        throw ProblemSetupException(
-          "\n ERROR: <CentralUpwind><kappaFunction> unrecognized value\n",
-          __FILE__, __LINE__);
-      }
-    }
-
-    //__________________________________
-    //  Optional <PIMPLE> block
-    ProblemSpecP pimple_ps = cfd_ice_ps->findBlock("PIMPLE");
-    if( pimple_ps ){
-      pimple_ps->getWithDefault( "nOuterCorrectors", d_pimpleOuter, 1 );
-      if( d_pimpleOuter < 1 ){
-        throw ProblemSetupException(
-          "\n ERROR: <PIMPLE><nOuterCorrectors> must be >= 1\n", __FILE__, __LINE__);
-      }
-
-      pimple_ps->getWithDefault( "nCorrectors", d_pimpleNCorr, 1 );
-      if( d_pimpleNCorr < 1 ){
-        throw ProblemSetupException(
-          "\n ERROR: <PIMPLE><nCorrectors> must be >= 1\n", __FILE__, __LINE__);
-      }
-
-      pimple_ps->getWithDefault( "theta", d_pimpleTheta, 0.5 );
-      if( d_pimpleTheta <= 0.0 || d_pimpleTheta > 1.0 ){
-        throw ProblemSetupException(
-          "\n ERROR: <PIMPLE><theta> must satisfy 0 < theta <= 1\n", __FILE__, __LINE__);
-      }
-
-      pimple_ps->getWithDefault( "outerTolerance", d_pimpleTol, 0.0 );
-      if( d_pimpleTol < 0.0 ){
-        throw ProblemSetupException(
-          "\n ERROR: <PIMPLE><outerTolerance> must be >= 0\n", __FILE__, __LINE__);
-      }
-    }
-
-  }
 
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
   //__________________________________
@@ -520,88 +377,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     else{
       m_materialManager->registerMaterial( "ICE", ice_matl);
     }
-  }
-
-  //__________________________________
-  //  PIMPLE / CentralUpwind bulletproofing that depends on d_impICE (set in
-  //  the <ImplicitSolver> block above), the grid, and the material count
-  //  (just registered above) -- all now known.
-  if( d_pimpleOuter > 1 ){
-    if( d_impICE ){
-      throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop with the implicit pressure solve is not supported yet\n",
-        __FILE__, __LINE__);
-    }
-
-    if( grid->numLevels() > 1 ){
-      throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop is not supported on an AMR grid (more than one level)\n",
-        __FILE__, __LINE__);
-    }
-
-    if( m_materialManager->getNumMatls( "ICE" ) > 1 ){
-      throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop is not supported with more than one ICE material\n",
-        __FILE__, __LINE__);
-    }
-  }
-
-  //__________________________________
-  //  CentralUpwind (Kurganov-Tadmor) bulletproofing / setup, now that
-  //  materials are known.  KT with MPM materials (MPMICE) is supported:
-  //  faces touching MPM solid cells revert to the stock ICE flux / face
-  //  velocity / face pressure through the ktOpen face weight (see
-  //  computeCentralWeights); one ICE material is still required.
-  //  Checked here as well as in the PIMPLE block so KT without PIMPLE is
-  //  covered.
-  if( d_useCentralUpwind ){
-    if( m_materialManager->getNumMatls( "MPM" ) > 0 ){
-      throw ProblemSetupException(
-        "\n ERROR: <advection type=\"CentralUpwind\"> (Kurganov-Tadmor) does not support MPM materials (MPMICE)\n",
-        __FILE__, __LINE__);
-    }
-
-    if( m_materialManager->getNumMatls( "ICE" ) > 1 ){
-      throw ProblemSetupException(
-        "\n ERROR: <advection type=\"CentralUpwind\"> (Kurganov-Tadmor) is only supported with a single ICE material\n",
-        __FILE__, __LINE__);
-    }
-
-    d_ktICE_matl = scinew MaterialSubset();
-    d_ktICE_matl->add( m_materialManager->getMaterial( "ICE", 0 )->getDWIndex() );
-    d_ktICE_matl->addReference();
-  }
-
-  // d_doRefluxing is set later, in AMRICE::problemSetup, so this only
-  // catches the single-level case.  On AMR runs,
-  // CentralUpwindAdvector::checkNoRefluxing throws at the first advect call.
-  if( d_useCentralUpwind && d_doRefluxing ){
-    throw ProblemSetupException(
-      "\n ERROR: CentralUpwind advection is not supported with AMR refluxing (do_Refluxing)\n",
-      __FILE__, __LINE__);
-  }
-
-  //__________________________________
-  //  Startup banner for the new options
-  if( d_useCentralUpwind || d_pimpleOuter > 1 ){
-    proc0cout << "__________________________________ \n";
-    if( d_useCentralUpwind ){
-      proc0cout << " CentralUpwind advection: "
-                << " limiter: "        << d_ktLimiterName
-                << " fluxScheme: "     << d_ktFluxScheme
-                << " kappaFunction: "  << d_ktKappaFunction
-                << " faceVelocity: "   << d_ktFaceVel
-                << " facePressure: "   << d_ktFacePress
-                << " ktPressureFlux: " << d_ktPressureFlux << "\n";
-    }
-    if( d_pimpleOuter > 1 ){
-      proc0cout << " PIMPLE outer loop: "
-                << " nOuterCorrectors: " << d_pimpleOuter
-                << " nCorrectors: "      << d_pimpleNCorr
-                << " theta: "            << d_pimpleTheta
-                << " outerTolerance: "   << d_pimpleTol << "\n";
-    }
-    proc0cout << "__________________________________ \n";
   }
 
   //_________________________________
@@ -754,64 +529,6 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
       }
     }
     d_exchModel->setFluidsBasedModels( fbModels );
-  }
-
-  //__________________________________
-  //  PIMPLE outer-loop sub-scheduler.  Created here -- not right after the
-  //  Phase-3 <PIMPLE> parsing above -- because it needs d_impICE (known
-  //  once <ImplicitSolver> is parsed), the ICE material count (known once
-  //  materials are registered), d_turbulence/usingLodi (read below/above),
-  //  and d_models (just populated above); the PIMPLE bulletproofing
-  //  (explicit ICE, 1 level, 1 ICE material) already ran, above.
-  if( d_pimpleOuter > 1 ){
-
-    // The PIMPLE sub-graph re-runs scheduleFluidChain(), and
-    // ICE::pimpleOuterLoop also re-schedules
-    // scheduleMaxMach_on_Lodi_BC_Faces() in front of it every recompile, so
-    // LODI boundary conditions (which computesRequires_CustomBCs wires into
-    // several of the chain's own tasks -- see maxMach_<face> requires) are
-    // recomputed once per outer iteration, same as the main graph.  There
-    // is no equivalent hookup for the turbulence-variance task
-    // (scheduleViscousShearStress reads it, but it's computed *outside*
-    // scheduleFluidChain by scheduleTimeAdvance) -- refuse that combination
-    // until the sub-graph also recomputes it.
-    if( d_turbulence ){
-      throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop with a turbulence model is not "
-        "supported yet (the sub-graph never recomputes the scalar variance "
-        "that scheduleViscousShearStress reads)\n", __FILE__, __LINE__);
-    }
-
-    d_pimpleSched = m_scheduler->createSubScheduler();
-    d_pimpleSched->initialize(3,1);
-    d_pimpleSched->clearMappings();
-    d_pimpleSched->mapDataWarehouse( Task::ParentOldDW, 0 );
-    d_pimpleSched->mapDataWarehouse( Task::ParentNewDW, 1 );
-    d_pimpleSched->mapDataWarehouse( Task::OldDW,       2 );
-    d_pimpleSched->mapDataWarehouse( Task::NewDW,       3 );
-    // single-level convention (matches SchedulerCommon's own default
-    // mapping): Coarse == Old/New so getSubCycleProgress() degenerates
-    // safely (PIMPLE is single-level only, enforced above).
-    d_pimpleSched->mapDataWarehouse( Task::CoarseOldDW, 2 );
-    d_pimpleSched->mapDataWarehouse( Task::CoarseNewDW, 3 );
-
-    d_recompilePimpleSched = true;
-
-    //__________________________________
-    //  One "*_adv0" capture label per transported species, in the exact
-    //  nested (model, transported-var) order every other loop over
-    //  d_models / FluidsBasedModel::d_transVars uses -- see
-    //  ICE::pimpleTvarAdv0Label().
-    for( auto& model : d_models ){
-      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-      if( fb_model ){
-        for( auto& tvar : fb_model->d_transVars ){
-          d_pimpleTvarAdv0Labels.push_back(
-            VarLabel::create( tvar->var->getName() + "_adv0",
-                             tvar->var->typeDescription() ) );
-        }
-      }
-    }
   }
 
   //__________________________________
@@ -982,13 +699,6 @@ ICE::outputProblemSpec( ProblemSpecP & root_ps )
       am->outputProblemSpec( root );
     }
   }
-
-  //__________________________________
-  //  NOTE: CentralUpwind / PIMPLE options are intentionally NOT written
-  //  here.  The <CFD> section is not part of the per-timestep restart
-  //  spec -- it is re-read from the original input file on restart -- so
-  //  appending a second, partial <CFD><ICE> node into timestep.xml would
-  //  only shadow the real one without ever replacing it.
 }
 
 /* _____________________________________________________________________
@@ -1210,73 +920,16 @@ ICE::scheduleTimeAdvance( const LevelP & level,
 
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls);
 
-  scheduleFluidChain( sched, level, false );
-
-  if( d_pimpleOuter > 1 ){
-    // snapshot the k=0 (main graph) advected conserved state so the outer
-    // loop's sub-graph can read it from ParentNewDW without also modifying
-    // the same label (mass_adv/mom_adv/eng_adv/sp_vol_adv/tvar->var_adv)
-    // in its own NewDW -- see phase6_spec.md step 4's fallback labels.
-    scheduleCapturePimpleAdv0(            sched, level,   ice_matls);
-  }
-
-  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_mss,
-                                                          all_matls,
-                                                          "afterAdvection");
-
-  if( d_pimpleOuter > 1 ){
-    schedulePimpleOuterLoop(              sched, level );
-  }
-#if 0
-  scheduleComputeTaskGraphIndex(          sched, level );
-#endif
-}
-/* _____________________________________________________________________
- Task:  ICE::scheduleFluidChain--
- Purpose:  Schedule the fluid-dynamics portion of a single timestep, from
-           the thermo/transport properties through the advection step.
-           This is factored out of scheduleTimeAdvance so it can be
-           invoked multiple times per timestep by a PIMPLE outer loop.
-_____________________________________________________________________*/
-void
-ICE::scheduleFluidChain( SchedulerP   & sched,
-                         const LevelP & level,
-                         const bool     inOuterLoop )
-{
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-  const MaterialSet* mpm_matls = m_materialManager->allMaterials( "MPM" );
-  const MaterialSet* all_matls = m_materialManager->allMaterials();
-
-  MaterialSubset* one_matl = d_press_matl;
-  const MaterialSubset* ice_mss = (ice_matls ? ice_matls->getUnion() : nullptr);
-  const MaterialSubset* mpm_mss = (mpm_matls ? mpm_matls->getUnion() : nullptr);
-
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
 
   scheduleComputePressure(                sched, patches, d_press_matl,
                                                           all_matls);
 
-  // KT own/nei weights (alphaOwn, aSf, kappa): pure functions of
-  // rho_CC/speedSound_CC/vel_CC, so they can be computed as soon as the
-  // equilibration pressure step has produced rho_CC/speedSound_CC.
-  scheduleComputeCentralWeights(          sched, patches, ice_matls);
-
   scheduleComputeTempFC(                   sched, patches, ice_mss,
                                                            mpm_mss,
                                                            all_matls);
 
-  if( !inOuterLoop ){
-    // chemistry/model sources are evaluated once per timestep, before the
-    // PIMPLE outer loop (reactingPimpleCentralFoam: reaction->correct()
-    // precedes pimple.loop())
-    scheduleComputeModelSources(           sched, level,   all_matls);
-  }
-  else {
-    // PIMPLE outer iterations k>=1: model sources are FROZEN at the k=0
-    // value -- copy them from ParentNewDW instead of recomputing them.
-    schedulePimpleCopyModelSources(         sched, level,   all_matls);
-  }
+  scheduleComputeModelSources(             sched, level,   all_matls);
 
   scheduleUpdateVolumeFraction(            sched, level,   d_press_matl,
                                                            all_matls);
@@ -1298,13 +951,6 @@ ICE::scheduleFluidChain( SchedulerP   & sched,
                                                          all_matls,
                                                          d_BC_globalVars,
                                                          false);
-
-  // KT per-face mass fluxes (phiOwn, phiNei) and the KT volumetric face
-  // velocity: need uvel_FCME (just computed above) and the weights from
-  // scheduleComputeCentralWeights.  Scheduled before the pressure block
-  // in BOTH branches below -- impICE+CentralUpwind isn't supported yet,
-  // but the graph must still compile.
-  scheduleComputeCentralFluxes(           sched, patches, ice_matls);
 
   if(d_impICE) {        //  I M P L I C I T
 
@@ -1383,6 +1029,13 @@ ICE::scheduleFluidChain( SchedulerP   & sched,
 
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_mss,
                                                           all_matls);
+
+  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_mss,
+                                                          all_matls,
+                                                          "afterAdvection");
+#if 0
+  scheduleComputeTaskGraphIndex(          sched, level );
+#endif
 }
 /* _____________________________________________________________________
 Task:     scheduleFinalizeTimestep--
@@ -1621,18 +1274,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP            & sched,
   t->requiresVar( Task::NewDW, lb->press_equil_CCLabel, press_mss, oims, m_gac,1 );
   t->requiresVar( Task::NewDW, lb->sp_vol_CCLabel,    /*all_matls*/ m_gac,1 );
   t->requiresVar( Task::NewDW, lb->rho_CCLabel,       /*all_matls*/ m_gac,1 );
-
-  // KT face velocity: the own/nei stencil reads vel_CC two cells out, so
-  // use 2 ghost cells when it is on.  Must match the get() in
-  // ICE::computeVel_FC.
-  int velCCGhostCells = ( d_useCentralUpwind && d_ktFaceVel ) ? 2 : 1;
-  t->requiresVar( Task::OldDW, lb->vel_CCLabel,         ice_mss,    m_gac,velCCGhostCells );
-
-  if( d_useCentralUpwind && d_ktFaceVel ){
-    t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCXLabel, ice_mss, m_gn,0 );
-    t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCYLabel, ice_mss, m_gn,0 );
-    t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCZLabel, ice_mss, m_gn,0 );
-  }
+  t->requiresVar( Task::OldDW, lb->vel_CCLabel,         ice_mss,    m_gac,1 );
 
   if( mpm_mss ){
     t->requiresVar( Task::NewDW,lb->vel_CCLabel,       mpm_mss,  m_gac,1 );
@@ -1645,92 +1287,6 @@ void ICE::scheduleComputeVel_FC(SchedulerP            & sched,
   t->computesVar( lb->grad_P_YFCLabel );
   t->computesVar( lb->grad_P_ZFCLabel );
   sched->addTask(t, patches, all_matls);
-}
-
-/* _____________________________________________________________________
-Task:     ICE::scheduleComputeCentralWeights--
-Purpose:  Compute the per-face Kurganov-Tadmor weights (alphaOwn, aSf)
-          and the blending function kappa (PDF Section 4).  Scheduled
-          after the equilibration pressure and before computeVel_FC,
-          which uses alphaOwn.
-_____________________________________________________________________*/
-void ICE::scheduleComputeCentralWeights(SchedulerP        & sched,
-                                        const PatchSet    * patches,
-                                        const MaterialSet * ice_matls)
-{
-  if( !d_useCentralUpwind ){
-    return;
-  }
-
-  printSchedule( patches, m_ice_tasks, " ICE::scheduleComputeCentralWeights" );
-
-  Task* t = scinew Task("ICE::computeCentralWeights",
-                  this, &ICE::computeCentralWeights);
-
-  // same vel_CC source (OldDW) that computeVel_FC uses for ICE matls
-  t->requiresVar( Task::OldDW, lb->delTLabel, getLevel(patches) );
-  t->requiresVar( Task::NewDW, lb->rho_CCLabel,        m_gac,2 );
-  t->requiresVar( Task::NewDW, lb->speedSound_CCLabel, m_gac,2 );
-  t->requiresVar( Task::OldDW, lb->vel_CCLabel,        m_gac,2 );
-
-  t->computesVar( lb->ktAlphaOwn_FCXLabel );
-  t->computesVar( lb->ktAlphaOwn_FCYLabel );
-  t->computesVar( lb->ktAlphaOwn_FCZLabel );
-  t->computesVar( lb->ktaSf_FCXLabel );
-  t->computesVar( lb->ktaSf_FCYLabel );
-  t->computesVar( lb->ktaSf_FCZLabel );
-  t->computesVar( lb->ktKappa_FCXLabel );
-  t->computesVar( lb->ktKappa_FCYLabel );
-  t->computesVar( lb->ktKappa_FCZLabel );
-
-  sched->addTask(t, patches, ice_matls);
-}
-
-/* _____________________________________________________________________
-Task:     ICE::scheduleComputeCentralFluxes--
-Purpose:  Compute the KT per-face mass fluxes (phiOwn, phiNei) and the
-          KT face velocity ktUvol_FC (PDF Section 5) from uvel_FCME and
-          the computeCentralWeights output.  Scheduled after
-          sched_AddExch_VelFC and before the pressure update.
-_____________________________________________________________________*/
-void ICE::scheduleComputeCentralFluxes(SchedulerP        & sched,
-                                       const PatchSet    * patches,
-                                       const MaterialSet * ice_matls)
-{
-  if( !d_useCentralUpwind ){
-    return;
-  }
-
-  printSchedule( patches, m_ice_tasks, " ICE::scheduleComputeCentralFluxes" );
-
-  Task* t = scinew Task("ICE::computeCentralFluxes",
-                  this, &ICE::computeCentralFluxes);
-
-  t->requiresVar( Task::NewDW, lb->uvel_FCMELabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->vvel_FCMELabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->wvel_FCMELabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCXLabel,m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCYLabel,m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCZLabel,m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktaSf_FCXLabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktaSf_FCYLabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktaSf_FCZLabel,     m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktKappa_FCXLabel,   m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktKappa_FCYLabel,   m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->ktKappa_FCZLabel,   m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->rho_CCLabel,        m_gac,2 );
-
-  t->computesVar( lb->ktPhiOwn_FCXLabel );
-  t->computesVar( lb->ktPhiOwn_FCYLabel );
-  t->computesVar( lb->ktPhiOwn_FCZLabel );
-  t->computesVar( lb->ktPhiNei_FCXLabel );
-  t->computesVar( lb->ktPhiNei_FCYLabel );
-  t->computesVar( lb->ktPhiNei_FCZLabel );
-  t->computesVar( lb->ktUvol_FCXLabel );
-  t->computesVar( lb->ktUvol_FCYLabel );
-  t->computesVar( lb->ktUvol_FCZLabel );
-
-  sched->addTask(t, patches, ice_matls);
 }
 
 /* _____________________________________________________________________
@@ -1875,16 +1431,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP            & sched,
   task->requiresVar( Task::NewDW, lb->uvel_FCMELabel,     m_gac,2 );
   task->requiresVar( Task::NewDW, lb->vvel_FCMELabel,     m_gac,2 );
   task->requiresVar( Task::NewDW, lb->wvel_FCMELabel,     m_gac,2 );
-
-  if( d_useCentralUpwind && d_ktPressureFlux ){
-    // KT acoustic-dissipation term for the pEqn's convective term: same
-    // ghost as uvel_FCME above, since computeCentralFluxes fills
-    // ktUvol_FC over the same face range as computeVel_FC/uvel_FCME.
-    task->requiresVar( Task::NewDW, lb->ktUvol_FCXLabel, m_gac,2 );
-    task->requiresVar( Task::NewDW, lb->ktUvol_FCYLabel, m_gac,2 );
-    task->requiresVar( Task::NewDW, lb->ktUvol_FCZLabel, m_gac,2 );
-  }
-
   task->requiresVar( Task::NewDW, lb->sp_vol_CCLabel,     m_gn );
   task->requiresVar( Task::NewDW, lb->rho_CCLabel,        m_gn );
   task->requiresVar( Task::NewDW, lb->speedSound_CCLabel, m_gn );
@@ -1928,21 +1474,8 @@ void ICE::scheduleComputePressFC( SchedulerP          & sched,
                      this, &ICE::computePressFC);
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-
-  // KT face pressure: the own/nei stencil reads press_CC two cells out,
-  // so use 2 ghost cells when it is on.  Must match the get() in
-  // ICE::computePressFC.
-  int pressCCGhostCells = ( d_useCentralUpwind && d_ktFacePress ) ? 2 : 1;
-  task->requiresVar( Task::NewDW,lb->press_CCLabel,   press_matl,oims, m_gac,pressCCGhostCells );
+  task->requiresVar( Task::NewDW,lb->press_CCLabel,   press_matl,oims, m_gac,1 );
   task->requiresVar( Task::NewDW,lb->sum_rho_CCLabel, press_matl,oims, m_gac,1 );
-
-  if( d_useCentralUpwind && d_ktFacePress ){
-    // ktAlphaOwn is an ICE-material variable while press_CC/press_FC use
-    // the pressure material, so it needs its own out-of-domain subset.
-    task->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCXLabel, d_ktICE_matl, oims, m_gn,0 );
-    task->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCYLabel, d_ktICE_matl, oims, m_gn,0 );
-    task->requiresVar( Task::NewDW, lb->ktAlphaOwn_FCZLabel, d_ktICE_matl, oims, m_gn,0 );
-  }
 
   task->computesVar( lb->pressX_FCLabel, press_matl, oims);
   task->computesVar( lb->pressY_FCLabel, press_matl, oims);
@@ -2278,299 +1811,6 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP        & sched,
   }
 }
 
-//__________________________________________________________________________
-//__________________________________________________________________________
-//  P I M P L E   O U T E R   L O O P   (sub-scheduler)
-//
-//  See phase6_spec.md.  scheduleFluidChain(sched, level, inOuterLoop=true)
-//  schedules ICE::pimpleCopyModelSources in place of
-//  ICE::scheduleComputeModelSources; ICE::schedulePimpleBlend and
-//  ICE::schedulePimpleResidual are additional sub-graph-only tasks
-//  scheduled by ICE::pimpleOuterLoop after scheduleFluidChain and
-//  scheduleConservedtoPrimitive_Vars, respectively.  ICE::pimpleOuterLoop
-//  itself (a hasSubScheduler() task in the MAIN graph) drives d_pimpleSched
-//  through nOuterCorrectors-1 outer iterations, exactly like
-//  Uintah_TS's ICE::sdcSweep drives d_sdcsched.
-/* _____________________________________________________________________
-Task:     ICE::schedulePimpleCopyModelSources--
-Purpose:  PIMPLE outer iterations k>=1 freeze the chemistry/model sources
-          at their k=0 value (reactingPimpleCentralFoam calls
-          reaction->correct() once, before pimple.loop()).  Scheduled by
-          scheduleFluidChain() in place of scheduleComputeModelSources()
-          when inOuterLoop==true: computes, in the sub-graph's own NewDW,
-          exactly the label set ICE::zeroModelSources() computes, by
-          copying from Task::ParentNewDW (the main graph's k=0 result).
-_____________________________________________________________________*/
-void ICE::schedulePimpleCopyModelSources(SchedulerP        & sched,
-                                         const LevelP      & level,
-                                         const MaterialSet * matls)
-{
-  if(d_models.size() != 0){
-
-    printSchedule( level, m_ice_tasks, " ICE::schedulePimpleCopyModelSources" );
-
-    Task* t = scinew Task("ICE::pimpleCopyModelSources",this,
-                          &ICE::pimpleCopyModelSources);
-
-    t->requiresVar( Task::ParentNewDW, lb->modelMass_srcLabel, m_gn,0 );
-    t->requiresVar( Task::ParentNewDW, lb->modelMom_srcLabel,  m_gn,0 );
-    t->requiresVar( Task::ParentNewDW, lb->modelEng_srcLabel,  m_gn,0 );
-    t->requiresVar( Task::ParentNewDW, lb->modelVol_srcLabel,  m_gn,0 );
-
-    t->computesVar( lb->modelMass_srcLabel );
-    t->computesVar( lb->modelMom_srcLabel );
-    t->computesVar( lb->modelEng_srcLabel );
-    t->computesVar( lb->modelVol_srcLabel );
-
-    //__________________________________
-    // Model with transported variables.
-    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
-                                          m_iter != d_models.end(); m_iter++){
-
-      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( *m_iter );
-
-      if( fb_model && fb_model->d_transVars.size() ){
-        for( auto& tvar : fb_model->d_transVars ){
-          if(tvar->src){
-            t->requiresVar( Task::ParentNewDW, tvar->src, tvar->matls, m_gn,0 );
-            t->computesVar( tvar->src, tvar->matls );
-          }
-        }
-      }
-    }
-
-    sched->addTask(t, level->eachPatch(), matls);
-  }
-}
-
-/* _____________________________________________________________________
-Task:     ICE::scheduleCapturePimpleAdv0--
-Purpose:  Snapshot the main graph's (k=0) advected conserved state into
-          the "*_adv0" labels right after scheduleAdvectAndAdvanceInTime,
-          so ICE::pimpleBlend can read it from ParentNewDW without also
-          modifying mass_adv/mom_adv/eng_adv/sp_vol_adv/tvar->var_adv (the
-          SAME labels) in the sub-graph's own NewDW.
-_____________________________________________________________________*/
-void ICE::scheduleCapturePimpleAdv0(SchedulerP        & sched,
-                                    const LevelP      & level,
-                                    const MaterialSet * matls)
-{
-  printSchedule( level, m_ice_tasks, " ICE::scheduleCapturePimpleAdv0" );
-
-  Task* t = scinew Task("ICE::capturePimpleAdv0", this, &ICE::capturePimpleAdv0);
-
-  t->requiresVar( Task::NewDW, lb->mass_advLabel,   m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->mom_advLabel,    m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->eng_advLabel,    m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->sp_vol_advLabel, m_gn,0 );
-
-  t->computesVar( lb->mass_adv0Label );
-  t->computesVar( lb->mom_adv0Label );
-  t->computesVar( lb->eng_adv0Label );
-  t->computesVar( lb->sp_vol_adv0Label );
-
-  int idx = 0;
-  for( auto& model : d_models ){
-    FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-    if( fb_model ){
-      for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
-        t->requiresVar( Task::NewDW, tvar->var_adv, tvar->matls, m_gn,0 );
-        t->computesVar( adv0, tvar->matls );
-      }
-    }
-  }
-
-  sched->addTask(t, level->eachPatch(), matls);
-}
-
-/* _____________________________________________________________________
-Task:     ICE::schedulePimpleBlend--
-Purpose:  PIMPLE outer iteration k (sub-graph only): combine the k=0
-          advected state with this iteration's freshly advected state
-          using the Crank-Nicolson theta blend
-            X^k = X^n + (1-theta)*(X_adv0 - X^n) + theta*(X_sub - X^{k-1})
-          (reactingPimpleCentralFoam, ddt CrankNicolson).  Total energy is
-          blended (not int_eng directly), to avoid creating/destroying
-          heat through the KE nonlinearity; see ICE::pimpleBlend.
-_____________________________________________________________________*/
-void ICE::schedulePimpleBlend(SchedulerP        & sched,
-                              const LevelP      & level,
-                              const MaterialSet * ice_matls)
-{
-  printSchedule( level, m_ice_tasks, " ICE::schedulePimpleBlend" );
-
-  const MaterialSubset* ice_mss = ice_matls->getUnion();
-
-  Task* t = scinew Task("ICE::pimpleBlend", this, &ICE::pimpleBlend);
-
-  // X^n : ParentOldDW primitives
-  t->requiresVar( Task::ParentOldDW, lb->rho_CCLabel,     ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentOldDW, lb->vel_CCLabel,     ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentOldDW, lb->temp_CCLabel,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentOldDW, lb->sp_vol_CCLabel,  ice_mss, m_gn,0 );
-
-  // X_adv0 : ParentNewDW captured k=0 advected conserved state
-  t->requiresVar( Task::ParentNewDW, lb->mass_adv0Label,     ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentNewDW, lb->mom_adv0Label,      ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentNewDW, lb->eng_adv0Label,      ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentNewDW, lb->sp_vol_adv0Label,   ice_mss, m_gn,0 );
-  t->requiresVar( Task::ParentNewDW, lb->specific_heatLabel, ice_mss, m_gn,0 );
-
-  // X^{k-1} : sub OldDW primitives (the previous outer iterate)
-  t->requiresVar( Task::OldDW, lb->rho_CCLabel,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->vel_CCLabel,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->temp_CCLabel,   ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->sp_vol_CCLabel, ice_mss, m_gn,0 );
-
-  // cv for THIS sub-graph iteration, pairs with the sub OldDW's temp_CC
-  // exactly as computeLagrangianValues pairs OldDW temp with NewDW cv.
-  t->requiresVar( Task::NewDW, lb->specific_heatLabel, ice_mss, m_gn,0 );
-
-  // X_sub : this iteration's raw advected result (computed earlier in
-  // this same sub-graph by ICE::advectAndAdvanceInTime) -- blended in place
-  t->modifiesVar( lb->mass_advLabel );
-  t->modifiesVar( lb->mom_advLabel );
-  t->modifiesVar( lb->eng_advLabel );
-  t->modifiesVar( lb->sp_vol_advLabel );
-
-  int idx = 0;
-  for( auto& model : d_models ){
-    FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-    if( fb_model ){
-      for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
-
-        t->requiresVar( Task::ParentOldDW, tvar->var, tvar->matls, m_gn,0 );
-        t->requiresVar( Task::ParentNewDW, adv0,      tvar->matls, m_gn,0 );
-        t->requiresVar( Task::OldDW,       tvar->var, tvar->matls, m_gn,0 );
-        t->modifiesVar( tvar->var_adv, tvar->matls );
-      }
-    }
-  }
-
-  sched->addTask(t, level->eachPatch(), ice_matls);
-}
-
-/* _____________________________________________________________________
-Task:     ICE::schedulePimpleResidual--
-Purpose:  PIMPLE outer iteration k (sub-graph only, scheduled after
-          conservedtoPrimitive_Vars): residual = max over interior cells
-          of max(|rho_new-rho_old|/rho_new, |T_new-T_old|/T_new), used for
-          the optional <outerTolerance> early exit.
-_____________________________________________________________________*/
-void ICE::schedulePimpleResidual(SchedulerP        & sched,
-                                 const LevelP      & level,
-                                 const MaterialSet * ice_matls)
-{
-  printSchedule( level, m_ice_tasks, " ICE::schedulePimpleResidual" );
-
-  Task* t = scinew Task("ICE::pimpleResidual", this, &ICE::pimpleResidual);
-
-  t->requiresVar( Task::OldDW, lb->rho_CCLabel,  m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->temp_CCLabel, m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->rho_CCLabel,  m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->temp_CCLabel, m_gn,0 );
-
-  t->computesVar( lb->pimpleResidualLabel );
-
-  sched->addTask(t, level->eachPatch(), ice_matls);
-}
-
-/* _____________________________________________________________________
-Task:     ICE::schedulePimpleOuterLoop--
-Purpose:  For nOuterCorrectors > 1, re-run the fluid chain in a
-          sub-scheduler for outer iterations k=1..nOuterCorrectors-1,
-          seeded from the main graph's own k=0 primitives, and copy the
-          final iterate's primitives back.  Scheduled in
-          scheduleTimeAdvance immediately after
-          scheduleConservedtoPrimitive_Vars.
-_____________________________________________________________________*/
-void ICE::schedulePimpleOuterLoop( SchedulerP & sched, const LevelP & level )
-{
-  if( d_pimpleOuter < 2 ){
-    return;
-  }
-
-  // compiling the outer taskgraph means the inner one must be recompiled too
-  d_recompilePimpleSched = true;
-
-  printSchedule( level, m_ice_tasks, " ICE::schedulePimpleOuterLoop" );
-
-  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-  const MaterialSet* all_matls = m_materialManager->allMaterials();
-  const MaterialSubset* ice_mss = ice_matls->getUnion();
-
-  Task* t = scinew Task("ICE::pimpleOuterLoop", this, &ICE::pimpleOuterLoop, level);
-  t->hasSubScheduler();
-
-  t->requiresVar( Task::OldDW, lb->timeStepLabel );
-  t->requiresVar( Task::OldDW, lb->simulationTimeLabel );
-  t->requiresVar( Task::OldDW, lb->delTLabel, level.get_rep() );
-
-  // u^n primitives, read inside the sub-graph via ParentOldDW
-  t->requiresVar( Task::OldDW, lb->rho_CCLabel,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->vel_CCLabel,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->temp_CCLabel,   ice_mss, m_gn,0 );
-  t->requiresVar( Task::OldDW, lb->sp_vol_CCLabel, ice_mss, m_gn,0 );
-
-  // X_adv0 (k=0 captured advected state), read inside the sub-graph via
-  // ParentNewDW
-  t->requiresVar( Task::NewDW, lb->mass_adv0Label,   ice_mss, m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->mom_adv0Label,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->eng_adv0Label,    ice_mss, m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->sp_vol_adv0Label, ice_mss, m_gn,0 );
-
-  // frozen model sources (copied every outer iteration by
-  // ICE::pimpleCopyModelSources, via ParentNewDW) -- require them here too
-  // so the scheduler doesn't scrub them before the sub-graph reads them
-  if( d_models.size() != 0 ){
-    t->requiresVar( Task::NewDW, lb->modelMass_srcLabel, m_gn,0 );
-    t->requiresVar( Task::NewDW, lb->modelMom_srcLabel,  m_gn,0 );
-    t->requiresVar( Task::NewDW, lb->modelEng_srcLabel,  m_gn,0 );
-    t->requiresVar( Task::NewDW, lb->modelVol_srcLabel,  m_gn,0 );
-  }
-
-  // k=0 seed material, from ParentNewDW (the main graph's own primitives)
-  t->requiresVar( Task::NewDW, lb->specific_heatLabel, ice_mss,      m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->speedSound_CCLabel, ice_mss,      m_gn,0 );
-  t->requiresVar( Task::NewDW, lb->press_CCLabel,      d_press_matl, m_gn,0 );
-
-  // rho/vel/temp/sp_vol/mach: already computed for k=0 by
-  // conservedtoPrimitive_Vars just before this task; overwritten with the
-  // outer loop's converged iterate.
-  t->modifiesVar( lb->rho_CCLabel );
-  t->modifiesVar( lb->vel_CCLabel );
-  t->modifiesVar( lb->temp_CCLabel );
-  t->modifiesVar( lb->sp_vol_CCLabel );
-  t->modifiesVar( lb->machLabel );
-
-  Task::MaterialDomainSpec oims = Task::OutOfDomain;
-  t->modifiesVar( lb->press_CCLabel, d_press_matl, oims );
-
-  int idx = 0;
-  for( auto& model : d_models ){
-    FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-    if( fb_model ){
-      for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
-
-        t->requiresVar( Task::OldDW, tvar->var, tvar->matls, m_gn,0 );
-        t->requiresVar( Task::NewDW, adv0,      tvar->matls, m_gn,0 );
-        if(tvar->src){
-          t->requiresVar( Task::NewDW, tvar->src, tvar->matls, m_gn,0 );
-        }
-        t->modifiesVar( tvar->var, tvar->matls );
-      }
-    }
-  }
-
-  // once per processor (like impICE's implicitPressureSolve): the sub-graph
-  // execute() is collective and must see every local patch seeded at once
-  const PatchSet * perProcPatches = m_loadBalancer->getPerProcessorPatchSet(level);
-  sched->addTask(t, perProcPatches, all_matls);
-}
-
 /* _____________________________________________________________________
  Task:     scheduleMaxMach_on_Lodi_BC_Faces--
  Purpose:  Compute the reducton variable max_mach_<face>
@@ -2683,17 +1923,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP     & sched,
   t->requiresVar( Task::NewDW, lb->mass_L_CCLabel,   m_gac,2 );
   t->requiresVar( Task::NewDW, lb->eng_L_ME_CCLabel, m_gac,2 );
   t->requiresVar( Task::NewDW, lb->sp_vol_L_CCLabel, m_gac,2 );
-
-  if( d_useCentralUpwind ){
-    // gac 2, like uvel_FCME: the last interior cell reads its high face
-    // (c+1), which belongs to the neighbor patch.
-    t->requiresVar( Task::NewDW, lb->ktPhiOwn_FCXLabel, m_gac,2 );
-    t->requiresVar( Task::NewDW, lb->ktPhiOwn_FCYLabel, m_gac,2 );
-    t->requiresVar( Task::NewDW, lb->ktPhiOwn_FCZLabel, m_gac,2 );
-    t->requiresVar( Task::NewDW, lb->ktPhiNei_FCXLabel, m_gac,2 );
-    t->requiresVar( Task::NewDW, lb->ktPhiNei_FCYLabel, m_gac,2 );
-    t->requiresVar( Task::NewDW, lb->ktPhiNei_FCZLabel, m_gac,2 );
-  }
 
   if(d_doRefluxing){
     computesRequires_AMR_Refluxing(t, ice_matls);
@@ -4124,268 +3353,11 @@ void ICE::computeTempFC(const ProcessorGroup  *,
 }
 
 /* _____________________________________________________________________
- Task:      ICE::computeCentralWeights
- Purpose:   Per-face Kurganov-Tadmor weights (alphaOwn, aSf) and the
-            blending function kappa.  PIMPLE_KT_method.pdf Section 4;
-            math in Core/CentralUpwind.h.
- _____________________________________________________________________  */
-void ICE::computeCentralWeights(const ProcessorGroup  *,
-                                const PatchSubset     * patches,
-                                const MaterialSubset  * /*matls*/,
-                                DataWarehouse         * old_dw,
-                                DataWarehouse         * new_dw)
-{
-  using namespace Uintah::centralUpwind;
-
-  for(int p = 0; p<patches->size(); p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch, m_ice_tasks, "ICE::computeCentralWeights" );
-
-    Vector dx = patch->dCell();
-    const Level* level = getLevel(patches);
-    IntVector lo, hi;
-    level->findCellIndexRange(lo, hi);
-    IntVector periodic = level->getPeriodicBoundaries();
-
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, level);
-
-    vector<IntVector> adj_offset(3);
-    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
-    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-
-    unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
-    for(unsigned int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m );
-      int indx = ice_matl->getDWIndex();
-
-      constCCVariable<double> rho_CC;
-      constCCVariable<double> speedSound;
-      constCCVariable<Vector> vel_CC;
-      new_dw->get( rho_CC,     lb->rho_CCLabel,        indx,patch,m_gac,2 );
-      new_dw->get( speedSound, lb->speedSound_CCLabel, indx,patch,m_gac,2 );
-      old_dw->get( vel_CC,     lb->vel_CCLabel,        indx,patch,m_gac,2 );
-
-      SFCXVariable<double> alphaOwnX, aSfX, kappaX;
-      SFCYVariable<double> alphaOwnY, aSfY, kappaY;
-      SFCZVariable<double> alphaOwnZ, aSfZ, kappaZ;
-
-      new_dw->allocateAndPut( alphaOwnX, lb->ktAlphaOwn_FCXLabel, indx,patch );
-      new_dw->allocateAndPut( alphaOwnY, lb->ktAlphaOwn_FCYLabel, indx,patch );
-      new_dw->allocateAndPut( alphaOwnZ, lb->ktAlphaOwn_FCZLabel, indx,patch );
-      new_dw->allocateAndPut( aSfX,      lb->ktaSf_FCXLabel,      indx,patch );
-      new_dw->allocateAndPut( aSfY,      lb->ktaSf_FCYLabel,      indx,patch );
-      new_dw->allocateAndPut( aSfZ,      lb->ktaSf_FCZLabel,      indx,patch );
-      new_dw->allocateAndPut( kappaX,    lb->ktKappa_FCXLabel,    indx,patch );
-      new_dw->allocateAndPut( kappaY,    lb->ktKappa_FCYLabel,    indx,patch );
-      new_dw->allocateAndPut( kappaZ,    lb->ktKappa_FCZLabel,    indx,patch );
-
-      // initialize the whole allocated array so no garbage remains where
-      // this patch's own face range (below) doesn't reach
-      IntVector lowIndex(patch->getExtraSFCXLowIndex());
-      alphaOwnX.initialize( 0.5, lowIndex, patch->getExtraSFCXHighIndex() );
-      alphaOwnY.initialize( 0.5, lowIndex, patch->getExtraSFCYHighIndex() );
-      alphaOwnZ.initialize( 0.5, lowIndex, patch->getExtraSFCZHighIndex() );
-      aSfX.initialize( 0.0, lowIndex, patch->getExtraSFCXHighIndex() );
-      aSfY.initialize( 0.0, lowIndex, patch->getExtraSFCYHighIndex() );
-      aSfZ.initialize( 0.0, lowIndex, patch->getExtraSFCZHighIndex() );
-      kappaX.initialize( 1.0, lowIndex, patch->getExtraSFCXHighIndex() );
-      kappaY.initialize( 1.0, lowIndex, patch->getExtraSFCYHighIndex() );
-      kappaZ.initialize( 1.0, lowIndex, patch->getExtraSFCZHighIndex() );
-
-      //__________________________________
-      //  X,Y,Z faces: identical to computeVelFace's face range/offset
-      //  (patch->getSFC{X,Y,Z}Iterator(), adj_offset) so this and
-      //  computeVel_FC agree on which cell owns which face.
-      for( int dir = 0; dir < 3; dir++ ){
-        CellIterator it = (dir==0) ? patch->getSFCXIterator() :
-                          (dir==1) ? patch->getSFCYIterator() :
-                                     patch->getSFCZIterator();
-        for(; !it.done(); it++){
-          IntVector N   = *it;                     // face index == "nei" cell
-          IntVector P   = N + adj_offset[dir];      // "own" cell
-          IntVector Pm1 = P + adj_offset[dir];
-          IntVector Np1 = N - adj_offset[dir];
-
-          bool firstOrderOwn, firstOrderNei;
-          ktStencilFlags(Pm1, Np1, dir, lo, hi, periodic,
-                        firstOrderOwn, firstOrderNei);
-
-          // When a side is first order, ownNei() ignores qm1/qp2, but the
-          // argument is still read before the call.  Pass P/N instead so
-          // the read stays inside the array.
-          const IntVector & Pm1Safe = firstOrderOwn ? P : Pm1;
-          const IntVector & Np1Safe = firstOrderNei ? N : Np1;
-
-          double uOwn, uNei, cOwn, cNei;
-          ownNei( vel_CC[Pm1Safe][dir], vel_CC[P][dir], vel_CC[N][dir], vel_CC[Np1Safe][dir],
-                 d_ktLimiter, firstOrderOwn, firstOrderNei, uOwn, uNei );
-          ownNei( speedSound[Pm1Safe], speedSound[P], speedSound[N], speedSound[Np1Safe],
-                 d_ktLimiter, firstOrderOwn, firstOrderNei, cOwn, cNei );
-
-          double alphaOwn, aSf, amax;
-          weights( uOwn, uNei, cOwn, cNei, d_ktScheme, alphaOwn, aSf, amax );
-
-          double alphaNei = 1.0 - alphaOwn;
-          const double tiny = 1.0e-100;         // matches d_SMALL_NUM
-          double maF  = std::fabs( alphaOwn*uOwn + alphaNei*uNei ) /
-                       std::max( alphaOwn*cOwn + alphaNei*cNei, tiny );
-          double coAc = amax*delT/dx[dir];
-          double kappaVal = kappa( maF, coAc, d_ktKappaMode );
-
-          if( dir == 0 ){
-            alphaOwnX[N] = alphaOwn;  aSfX[N] = aSf;  kappaX[N] = kappaVal;
-          } else if( dir == 1 ){
-            alphaOwnY[N] = alphaOwn;  aSfY[N] = aSf;  kappaY[N] = kappaVal;
-          } else {
-            alphaOwnZ[N] = alphaOwn;  aSfZ[N] = aSf;  kappaZ[N] = kappaVal;
-          }
-        }
-      }
-    } // matls loop
-  }  // patch loop
-}
-
-/* _____________________________________________________________________
- Task:      ICE::computeCentralFluxes
- Purpose:   Per-face KT mass fluxes (phiOwn, phiNei) and the KT face
-            velocity ktUvol_FC.  PIMPLE_KT_method.pdf Section 5.
- _____________________________________________________________________  */
-void ICE::computeCentralFluxes(const ProcessorGroup  *,
-                               const PatchSubset     * patches,
-                               const MaterialSubset  * /*matls*/,
-                               DataWarehouse         * /*old_dw*/,
-                               DataWarehouse         * new_dw)
-{
-  using namespace Uintah::centralUpwind;
-
-  for(int p = 0; p<patches->size(); p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch, m_ice_tasks, "ICE::computeCentralFluxes" );
-
-    vector<IntVector> adj_offset(3);
-    adj_offset[0] = IntVector(-1, 0, 0);
-    adj_offset[1] = IntVector(0, -1, 0);
-    adj_offset[2] = IntVector(0,  0, -1);
-
-    unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
-    for(unsigned int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m );
-      int indx = ice_matl->getDWIndex();
-
-      constSFCXVariable<double> uvel_FC, alphaOwnX, aSfX, kappaX;
-      constSFCYVariable<double> vvel_FC, alphaOwnY, aSfY, kappaY;
-      constSFCZVariable<double> wvel_FC, alphaOwnZ, aSfZ, kappaZ;
-      constCCVariable<double>   rho_CC;
-
-      new_dw->get( uvel_FC,   lb->uvel_FCMELabel,      indx,patch,m_gn,0 );
-      new_dw->get( vvel_FC,   lb->vvel_FCMELabel,      indx,patch,m_gn,0 );
-      new_dw->get( wvel_FC,   lb->wvel_FCMELabel,      indx,patch,m_gn,0 );
-      new_dw->get( alphaOwnX, lb->ktAlphaOwn_FCXLabel,  indx,patch,m_gn,0 );
-      new_dw->get( alphaOwnY, lb->ktAlphaOwn_FCYLabel,  indx,patch,m_gn,0 );
-      new_dw->get( alphaOwnZ, lb->ktAlphaOwn_FCZLabel,  indx,patch,m_gn,0 );
-      new_dw->get( aSfX,      lb->ktaSf_FCXLabel,       indx,patch,m_gn,0 );
-      new_dw->get( aSfY,      lb->ktaSf_FCYLabel,       indx,patch,m_gn,0 );
-      new_dw->get( aSfZ,      lb->ktaSf_FCZLabel,       indx,patch,m_gn,0 );
-      new_dw->get( kappaX,    lb->ktKappa_FCXLabel,     indx,patch,m_gn,0 );
-      new_dw->get( kappaY,    lb->ktKappa_FCYLabel,     indx,patch,m_gn,0 );
-      new_dw->get( kappaZ,    lb->ktKappa_FCZLabel,     indx,patch,m_gn,0 );
-      new_dw->get( rho_CC,    lb->rho_CCLabel,          indx,patch,m_gac,2 );
-
-      SFCXVariable<double> phiOwnX, phiNeiX, uVolX;
-      SFCYVariable<double> phiOwnY, phiNeiY, uVolY;
-      SFCZVariable<double> phiOwnZ, phiNeiZ, uVolZ;
-
-      new_dw->allocateAndPut( phiOwnX, lb->ktPhiOwn_FCXLabel, indx,patch );
-      new_dw->allocateAndPut( phiOwnY, lb->ktPhiOwn_FCYLabel, indx,patch );
-      new_dw->allocateAndPut( phiOwnZ, lb->ktPhiOwn_FCZLabel, indx,patch );
-      new_dw->allocateAndPut( phiNeiX, lb->ktPhiNei_FCXLabel, indx,patch );
-      new_dw->allocateAndPut( phiNeiY, lb->ktPhiNei_FCYLabel, indx,patch );
-      new_dw->allocateAndPut( phiNeiZ, lb->ktPhiNei_FCZLabel, indx,patch );
-      new_dw->allocateAndPut( uVolX,   lb->ktUvol_FCXLabel,   indx,patch );
-      new_dw->allocateAndPut( uVolY,   lb->ktUvol_FCYLabel,   indx,patch );
-      new_dw->allocateAndPut( uVolZ,   lb->ktUvol_FCZLabel,   indx,patch );
-
-      IntVector lowIndex(patch->getExtraSFCXLowIndex());
-      phiOwnX.initialize( 0.0, lowIndex, patch->getExtraSFCXHighIndex() );
-      phiOwnY.initialize( 0.0, lowIndex, patch->getExtraSFCYHighIndex() );
-      phiOwnZ.initialize( 0.0, lowIndex, patch->getExtraSFCZHighIndex() );
-      phiNeiX.initialize( 0.0, lowIndex, patch->getExtraSFCXHighIndex() );
-      phiNeiY.initialize( 0.0, lowIndex, patch->getExtraSFCYHighIndex() );
-      phiNeiZ.initialize( 0.0, lowIndex, patch->getExtraSFCZHighIndex() );
-      uVolX.initialize( 0.0, lowIndex, patch->getExtraSFCXHighIndex() );
-      uVolY.initialize( 0.0, lowIndex, patch->getExtraSFCYHighIndex() );
-      uVolZ.initialize( 0.0, lowIndex, patch->getExtraSFCZHighIndex() );
-
-      const Level* level = getLevel(patches);
-      IntVector lo, hi;
-      level->findCellIndexRange(lo, hi);
-      IntVector periodic = level->getPeriodicBoundaries();
-      const double tiny = 1.0e-100;             // matches d_SMALL_NUM
-
-      for( int dir = 0; dir < 3; dir++ ){
-        CellIterator it = (dir==0) ? patch->getSFCXIterator() :
-                          (dir==1) ? patch->getSFCYIterator() :
-                                     patch->getSFCZIterator();
-        for(; !it.done(); it++){
-          IntVector N   = *it;
-          IntVector P   = N + adj_offset[dir];
-          IntVector Pm1 = P + adj_offset[dir];
-          IntVector Np1 = N - adj_offset[dir];
-
-          bool firstOrderOwn, firstOrderNei;
-          ktStencilFlags(Pm1, Np1, dir, lo, hi, periodic,
-                        firstOrderOwn, firstOrderNei);
-
-          // see the Pm1Safe/Np1Safe comment in ICE::computeCentralWeights
-          const IntVector & Pm1Safe = firstOrderOwn ? P : Pm1;
-          const IntVector & Np1Safe = firstOrderNei ? N : Np1;
-
-          double rhoOwn, rhoNei;
-          ownNei( rho_CC[Pm1Safe], rho_CC[P], rho_CC[N], rho_CC[Np1Safe],
-                 d_ktLimiter, firstOrderOwn, firstOrderNei, rhoOwn, rhoNei );
-
-          double alphaOwn = (dir==0)? alphaOwnX[N] : (dir==1)? alphaOwnY[N] : alphaOwnZ[N];
-          double aSf      = (dir==0)? aSfX[N]      : (dir==1)? aSfY[N]      : aSfZ[N];
-          double kap      = (dir==0)? kappaX[N]     : (dir==1)? kappaY[N]     : kappaZ[N];
-          double u_f       = (dir==0)? uvel_FC[N]    : (dir==1)? vvel_FC[N]    : wvel_FC[N];
-          double alphaNei = 1.0 - alphaOwn;
-          double aphivOwn = alphaOwn*u_f - aSf;
-          double aphivNei = alphaNei*u_f + aSf;
-
-          double rhoUp = upwindValue( u_f, rhoOwn, rhoNei );
-          double rhoOwnEff = kap*rhoOwn + (1.0-kap)*rhoUp;
-          double rhoNeiEff = kap*rhoNei + (1.0-kap)*rhoUp;
-
-          double phiOwn = aphivOwn*rhoOwnEff;
-          double phiNei = aphivNei*rhoNeiEff;
-
-          phiOwn += (1.0-kap)*phiNei;     // updateKappa.H
-          phiNei *= kap;
-
-          double rhoF = kap*(alphaOwn*rhoOwn + alphaNei*rhoNei) + (1.0-kap)*rhoUp;
-          double uVol = (phiOwn + phiNei)/std::max(rhoF, tiny);
-
-          if( dir == 0 ){
-            phiOwnX[N] = phiOwn;  phiNeiX[N] = phiNei;  uVolX[N] = uVol;
-          } else if( dir == 1 ){
-            phiOwnY[N] = phiOwn;  phiNeiY[N] = phiNei;  uVolY[N] = uVol;
-          } else {
-            phiOwnZ[N] = phiOwn;  phiNeiZ[N] = phiNei;  uVolZ[N] = uVol;
-          }
-        }
-      }
-    } // matls loop
-  }  // patch loop
-}
-
-/* _____________________________________________________________________
  Function:  ICE::computeVelFace
  Purpose:   compute the face centered velocities minus the exchange
             contribution.
 _____________________________________________________________________*/
-template<class T, class AT> void ICE::computeVelFace(int dir,
+template<class T> void ICE::computeVelFace(int dir,
                                            CellIterator it,
                                            IntVector adj_offset,
                                            double dx,
@@ -4397,8 +3369,7 @@ template<class T, class AT> void ICE::computeVelFace(int dir,
                                            constCCVariable<double>& press_CC,
                                            T& vel_FC,
                                            T& grad_P_FC,
-                                           bool include_acc,
-                                           const KTFaceVelInfo<AT>* kt)
+                                           bool include_acc)
 {
   double inv_dx = 1.0/dx;
 
@@ -4422,33 +3393,8 @@ template<class T, class AT> void ICE::computeVelFace(int dir,
 
     //__________________________________
     // interpolation to the face
-    double term1;
-    if( kt ){
-     // KT face velocity (PDF Section 7): limited own/nei velocities
-      IntVector Pm1 = L + adj_offset;
-      IntVector Np1 = R - adj_offset;
-
-      bool firstOrderOwn, firstOrderNei;
-      ktStencilFlags( Pm1, Np1, dir, kt->lo, kt->hi, kt->periodic,
-                      firstOrderOwn, firstOrderNei );
-
-      // see the Pm1Safe/Np1Safe comment in ICE::computeCentralWeights
-      const IntVector & Pm1Safe = firstOrderOwn ? L : Pm1;
-      const IntVector & Np1Safe = firstOrderNei ? R : Np1;
-
-      double uOwn, uNei;
-      Uintah::centralUpwind::ownNei( vel_CC[Pm1Safe][dir], vel_CC[L][dir],
-                                     vel_CC[R][dir], vel_CC[Np1Safe][dir],
-                                     d_ktLimiter, firstOrderOwn, firstOrderNei,
-                                     uOwn, uNei );
-
-      double alphaOwn = (*kt->alphaOwn)[R];
-      term1 = alphaOwn*uOwn + (1.0 - alphaOwn)*uNei;
-    }
-    else {
-      term1 = (rho_CC[L] * vel_CC[L][dir] +
-              rho_CC[R] * vel_CC[R][dir])/(rho_FC);
-    }
+    double term1 = (rho_CC[L] * vel_CC[L][dir] +
+                    rho_CC[R] * vel_CC[R][dir])/(rho_FC);
     //__________________________________
     // pressure term
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
@@ -4490,14 +3436,6 @@ void ICE::computeVel_FC(const ProcessorGroup  *,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    // KT (Kurganov-Tadmor) central-upwind face velocity needs the level's
-    // cell index range/periodicity for the own/nei stencil validity test
-    // (ktStencilFlags); cheap, so just compute it once per patch.
-    const Level* level = getLevel(patches);
-    IntVector ktLo, ktHi;
-    level->findCellIndexRange(ktLo, ktHi);
-    IntVector ktPeriodic = level->getPeriodicBoundaries();
-
     // Compute the face centered velocities
     unsigned int numMatls = m_materialManager->getNumMatls();
     for(unsigned int m = 0; m < numMatls; m++) {
@@ -4507,32 +3445,13 @@ void ICE::computeVel_FC(const ProcessorGroup  *,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
-      // KT face velocity is only implemented for ICE materials (see
-      // problemSetup -- CentralUpwind requires a single ICE material).
-      // MPM materials keep the original density-weighted average.
-      bool useKT = d_useCentralUpwind && d_ktFaceVel && ice_matl;
-
       constCCVariable<double> rho_CC;
       constCCVariable<double> sp_vol_CC;
       constCCVariable<Vector> vel_CC;
 
-      constSFCXVariable<double> ktAlphaOwnX;
-      constSFCYVariable<double> ktAlphaOwnY;
-      constSFCZVariable<double> ktAlphaOwnZ;
-
       if(ice_matl){
         new_dw->get( rho_CC, lb->rho_CCLabel, indx,patch,m_gac,1 );
-        // widen to gac 2 only when the KT own/nei stencil (Pm1/Np1) needs
-        // the extra layer; keep the baseline gac 1 otherwise (must match
-        // the requiresVar ghost count in scheduleComputeVel_FC).
-        int velCCGhostCells = useKT ? 2 : 1;
-        old_dw->get( vel_CC, lb->vel_CCLabel, indx,patch,m_gac,velCCGhostCells );
-
-        if( useKT ){
-          new_dw->get( ktAlphaOwnX, lb->ktAlphaOwn_FCXLabel, indx,patch,m_gn,0 );
-          new_dw->get( ktAlphaOwnY, lb->ktAlphaOwn_FCYLabel, indx,patch,m_gn,0 );
-          new_dw->get( ktAlphaOwnZ, lb->ktAlphaOwn_FCZLabel, indx,patch,m_gn,0 );
-        }
+        old_dw->get( vel_CC, lb->vel_CCLabel, indx,patch,m_gac,1 );
       }
       else {
         new_dw->get( rho_CC, lb->rho_CCLabel, indx,patch,m_gac,1 );
@@ -4581,27 +3500,20 @@ void ICE::computeVel_FC(const ProcessorGroup  *,
 
       //__________________________________
       //  Compute vel_FC for each face
-      KTFaceVelInfo<constSFCXVariable<double> > ktInfoX{ &ktAlphaOwnX, ktLo, ktHi, ktPeriodic };
-      KTFaceVelInfo<constSFCYVariable<double> > ktInfoY{ &ktAlphaOwnY, ktLo, ktHi, ktPeriodic };
-      KTFaceVelInfo<constSFCZVariable<double> > ktInfoZ{ &ktAlphaOwnZ, ktLo, ktHi, ktPeriodic };
-
-      computeVelFace<SFCXVariable<double>, constSFCXVariable<double> >(0, XFC_iterator,
+      computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                        adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       uvel_FC, grad_P_XFC, include_acc,
-                                       useKT ? &ktInfoX : nullptr);
+                                       uvel_FC, grad_P_XFC, include_acc);
 
-      computeVelFace<SFCYVariable<double>, constSFCYVariable<double> >(1, YFC_iterator,
+      computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                        adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       vvel_FC, grad_P_YFC, include_acc,
-                                       useKT ? &ktInfoY : nullptr);
+                                       vvel_FC, grad_P_YFC, include_acc);
 
-      computeVelFace<SFCZVariable<double>, constSFCZVariable<double> >(2, ZFC_iterator,
+      computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                        adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       wvel_FC, grad_P_ZFC, include_acc,
-                                       useKT ? &ktInfoZ : nullptr);
+                                       wvel_FC, grad_P_ZFC, include_acc);
 
       //__________________________________
       // (*)vel_FC BC are updated in
@@ -4827,20 +3739,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
 
-      if( d_useCentralUpwind && d_ktPressureFlux ){
-        // KT acoustic-dissipation term: use the KT volumetric face
-        // velocity U_KT = u_f + kappa*aSf*(rhoNei-rhoOwn)/rhoF (see
-        // ICE::computeCentralFluxes) in place of the raw uvel_FCME, so
-        // the pEqn convective term picks up the central-upwind
-        // dissipation (explicit form).
-        new_dw->get( uvel_FC, lb->ktUvol_FCXLabel, indx,patch,m_gac,2 );
-        new_dw->get( vvel_FC, lb->ktUvol_FCYLabel, indx,patch,m_gac,2 );
-        new_dw->get( wvel_FC, lb->ktUvol_FCZLabel, indx,patch,m_gac,2 );
-      } else {
-        new_dw->get( uvel_FC, lb->uvel_FCMELabel,  indx,patch,m_gac,2 );
-        new_dw->get( vvel_FC, lb->vvel_FCMELabel,  indx,patch,m_gac,2 );
-        new_dw->get( wvel_FC, lb->wvel_FCMELabel,  indx,patch,m_gac,2 );
-      }
+      new_dw->get( uvel_FC,     lb->uvel_FCMELabel,     indx,patch,m_gac,2 );
+      new_dw->get( vvel_FC,     lb->vvel_FCMELabel,     indx,patch,m_gac,2 );
+      new_dw->get( wvel_FC,     lb->wvel_FCMELabel,     indx,patch,m_gac,2 );
       new_dw->get( vol_frac,    lb->vol_frac_CCLabel,   indx,patch,m_gac,2 );
       new_dw->get( rho_CC,      lb->rho_CCLabel,        indx,patch,m_gn,0 );
       new_dw->get( sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,m_gn,0 );
@@ -4947,48 +3848,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
  Function:  ICE::computePressFace--
  Purpose:   Driver function that is called by task computePressFC
   _____________________________________________________________________  */
-template <class T, class AT> void ICE::computePressFace(CellIterator iter,
-                                              int dir,
+template <class T> void ICE::computePressFace(CellIterator iter,
                                               IntVector adj_offset,
                                               constCCVariable<double>& sum_rho,
                                               constCCVariable<double>& press_CC,
-                                              T& press_FC,
-                                              const KTFacePressInfo<AT>* kt)
+                                              T& press_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;
     IntVector L = R + adj_offset;
 
-    if( kt ){
-      // KT face pressure (PDF Section 7): alphaOwn*pOwn + alphaNei*pNei,
-      // as in reactingPimpleCentralFoam pEqn.H.  This is not a Riemann p*
-      // (no impedance jump term); a dissipative p* can collapse a
-      // detonation induction zone.  If induction-zone problems appear,
-      // try <facePressure>false</facePressure> first.
-      IntVector Pm1 = L + adj_offset;
-      IntVector Np1 = R - adj_offset;
-
-      bool firstOrderOwn, firstOrderNei;
-      ktStencilFlags( Pm1, Np1, dir, kt->lo, kt->hi, kt->periodic,
-                      firstOrderOwn, firstOrderNei );
-
-      // see the Pm1Safe/Np1Safe comment in ICE::computeCentralWeights
-      const IntVector & Pm1Safe = firstOrderOwn ? L : Pm1;
-      const IntVector & Np1Safe = firstOrderNei ? R : Np1;
-
-      double pOwn, pNei;
-      Uintah::centralUpwind::ownNei( press_CC[Pm1Safe], press_CC[L],
-                                     press_CC[R], press_CC[Np1Safe],
-                                     d_ktLimiter, firstOrderOwn, firstOrderNei,
-                                     pOwn, pNei );
-
-      double alphaOwn = (*kt->alphaOwn)[R];
-      press_FC[R] = alphaOwn*pOwn + (1.0 - alphaOwn)*pNei;
-    }
-    else {
-      press_FC[R] = (press_CC[R] * sum_rho[L] + press_CC[L] * sum_rho[R])/
-        (sum_rho[R] + sum_rho[L]);
-    }
+    press_FC[R] = (press_CC[R] * sum_rho[L] + press_CC[L] * sum_rho[R])/
+      (sum_rho[R] + sum_rho[L]);
   }
 }
 
@@ -5013,31 +3884,8 @@ void ICE::computePressFC(const ProcessorGroup *,
     constCCVariable<double> press_CC;
     constCCVariable<double> sum_rho_CC;
 
-    // KT (Kurganov-Tadmor) central-upwind face pressure: the own/nei
-    // reconstruction stencil reads press_CC two cells out (Pm1/Np1), so
-    // widen the ghost count only when the flag is on -- must match the
-    // requiresVar ghost count in scheduleComputePressFC.
-    bool useKT = d_useCentralUpwind && d_ktFacePress;
-    int pressCCGhostCells = useKT ? 2 : 1;
-
-    new_dw->get( press_CC,  lb->press_CCLabel,   0,patch,m_gac,pressCCGhostCells );
+    new_dw->get( press_CC,  lb->press_CCLabel,   0,patch,m_gac,1 );
     new_dw->get( sum_rho_CC,lb->sum_rho_CCLabel, 0,patch,m_gac,1 );
-
-    constSFCXVariable<double> ktAlphaOwnX;
-    constSFCYVariable<double> ktAlphaOwnY;
-    constSFCZVariable<double> ktAlphaOwnZ;
-    IntVector ktLo, ktHi, ktPeriodic;
-
-    if( useKT ){
-      int iceIndx = m_materialManager->getMaterial( "ICE", 0 )->getDWIndex();
-      new_dw->get( ktAlphaOwnX, lb->ktAlphaOwn_FCXLabel, iceIndx,patch,m_gn,0 );
-      new_dw->get( ktAlphaOwnY, lb->ktAlphaOwn_FCYLabel, iceIndx,patch,m_gn,0 );
-      new_dw->get( ktAlphaOwnZ, lb->ktAlphaOwn_FCZLabel, iceIndx,patch,m_gn,0 );
-
-      const Level* level = getLevel(patches);
-      level->findCellIndexRange(ktLo, ktHi);
-      ktPeriodic = level->getPeriodicBoundaries();
-    }
 
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
@@ -5052,23 +3900,19 @@ void ICE::computePressFC(const ProcessorGroup *,
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
 
-    KTFacePressInfo<constSFCXVariable<double> > ktInfoX{ &ktAlphaOwnX, ktLo, ktHi, ktPeriodic };
-    KTFacePressInfo<constSFCYVariable<double> > ktInfoY{ &ktAlphaOwnY, ktLo, ktHi, ktPeriodic };
-    KTFacePressInfo<constSFCZVariable<double> > ktInfoZ{ &ktAlphaOwnZ, ktLo, ktHi, ktPeriodic };
-
     //__________________________________
     //  For each face compute the pressure
-    computePressFace<SFCXVariable<double>, constSFCXVariable<double> >(patch->getSFCXIterator(), 0,
+    computePressFace<SFCXVariable<double> >(patch->getSFCXIterator(),
                                        adj_offset[0], sum_rho_CC, press_CC,
-                                       pressX_FC, useKT ? &ktInfoX : nullptr);
+                                       pressX_FC);
 
-    computePressFace<SFCYVariable<double>, constSFCYVariable<double> >(patch->getSFCYIterator(), 1,
+    computePressFace<SFCYVariable<double> >(patch->getSFCYIterator(),
                                        adj_offset[1], sum_rho_CC, press_CC,
-                                       pressY_FC, useKT ? &ktInfoY : nullptr);
+                                       pressY_FC);
 
-    computePressFace<SFCZVariable<double>, constSFCZVariable<double> >(patch->getSFCZIterator(), 2,
+    computePressFace<SFCZVariable<double> >(patch->getSFCZIterator(),
                                        adj_offset[2], sum_rho_CC, press_CC,
-                                       pressZ_FC, useKT ? &ktInfoZ : nullptr);
+                                       pressZ_FC);
   }  // patch loop
 }
 
@@ -6598,18 +5442,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
       new_dw->get( sp_vol_L,    lb->sp_vol_L_CCLabel, indx,patch,m_gac,2 );
       new_dw->get( int_eng_L_ME,lb->eng_L_ME_CCLabel, indx,patch,m_gac,2 );
 
-      constSFCXVariable<double> ktPhiOwnX, ktPhiNeiX;
-      constSFCYVariable<double> ktPhiOwnY, ktPhiNeiY;
-      constSFCZVariable<double> ktPhiOwnZ, ktPhiNeiZ;
-      if( d_useCentralUpwind ){
-        new_dw->get( ktPhiOwnX, lb->ktPhiOwn_FCXLabel, indx,patch,m_gac,2 );
-        new_dw->get( ktPhiOwnY, lb->ktPhiOwn_FCYLabel, indx,patch,m_gac,2 );
-        new_dw->get( ktPhiOwnZ, lb->ktPhiOwn_FCZLabel, indx,patch,m_gac,2 );
-        new_dw->get( ktPhiNeiX, lb->ktPhiNei_FCXLabel, indx,patch,m_gac,2 );
-        new_dw->get( ktPhiNeiY, lb->ktPhiNei_FCYLabel, indx,patch,m_gac,2 );
-        new_dw->get( ktPhiNeiZ, lb->ktPhiNei_FCZLabel, indx,patch,m_gac,2 );
-      }
-
       new_dw->allocateAndPut( mass_adv,    lb->mass_advLabel,   indx,patch );
       new_dw->allocateAndPut( mom_adv,     lb->mom_advLabel,    indx,patch );
       new_dw->allocateAndPut( int_eng_adv, lb->eng_advLabel,    indx,patch );
@@ -6634,27 +5466,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
       varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
-
-      //  KT fluxes: set before any advect call so mass/mom/int_eng/KE/
-      //  sp_vol/transported-var advection all pick up the central-upwind
-      //  fluxes automatically (CentralUpwindAdvector::advectMass/advectQ
-      //  require vb->hasCentralFluxes).
-      if( d_useCentralUpwind ){
-        const SFCXVariable<double>& phiOwnXRef = ktPhiOwnX;
-        const SFCYVariable<double>& phiOwnYRef = ktPhiOwnY;
-        const SFCZVariable<double>& phiOwnZRef = ktPhiOwnZ;
-        const SFCXVariable<double>& phiNeiXRef = ktPhiNeiX;
-        const SFCYVariable<double>& phiNeiYRef = ktPhiNeiY;
-        const SFCZVariable<double>& phiNeiZRef = ktPhiNeiZ;
-
-        varBasket->hasCentralFluxes = true;
-        varBasket->phiOwnX = &phiOwnXRef;
-        varBasket->phiOwnY = &phiOwnYRef;
-        varBasket->phiOwnZ = &phiOwnZRef;
-        varBasket->phiNeiX = &phiNeiXRef;
-        varBasket->phiNeiY = &phiNeiYRef;
-        varBasket->phiNeiZ = &phiNeiZRef;
-      }
 
       //__________________________________
       //   Advection preprocessing
@@ -7024,601 +5835,6 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup  *,
     }  // ice_matls loop
   }  // patch loop
 }
-
-//__________________________________________________________________________
-//__________________________________________________________________________
-//  P I M P L E   O U T E R   L O O P   (sub-scheduler) -- callbacks
-/* _____________________________________________________________________
- Task:      ICE::pimpleCopyModelSources
- Purpose:   PIMPLE sub-graph: copy the (frozen) model sources computed by
-            the main graph's ICE::zeroModelSources + the models'
-            scheduleComputeModelSources out of Task::ParentNewDW, exactly
-            mirroring the label set ICE::zeroModelSources computes.
- _____________________________________________________________________  */
-void ICE::pimpleCopyModelSources(const ProcessorGroup  *,
-                                 const PatchSubset     * patches,
-                                 const MaterialSubset  * matls,
-                                 DataWarehouse         * /*old_dw*/,
-                                 DataWarehouse         * new_dw)
-{
-  DataWarehouse* pNewDW = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, m_ice_tasks, "ICE::pimpleCopyModelSources" );
-
-    for(int m=0;m<matls->size();m++){
-      int matl = matls->get(m);
-
-      constCCVariable<double> mass_src, energy_src, vol_src;
-      constCCVariable<Vector> mom_src;
-      pNewDW->get( mass_src,   lb->modelMass_srcLabel, matl, patch, m_gn,0 );
-      pNewDW->get( energy_src, lb->modelEng_srcLabel,  matl, patch, m_gn,0 );
-      pNewDW->get( mom_src,    lb->modelMom_srcLabel,  matl, patch, m_gn,0 );
-      pNewDW->get( vol_src,    lb->modelVol_srcLabel,  matl, patch, m_gn,0 );
-
-      CCVariable<double> mass_src_new, energy_src_new, vol_src_new;
-      CCVariable<Vector> mom_src_new;
-      new_dw->allocateAndPut( mass_src_new,   lb->modelMass_srcLabel, matl, patch );
-      new_dw->allocateAndPut( energy_src_new, lb->modelEng_srcLabel,  matl, patch );
-      new_dw->allocateAndPut( mom_src_new,    lb->modelMom_srcLabel,  matl, patch );
-      new_dw->allocateAndPut( vol_src_new,    lb->modelVol_srcLabel,  matl, patch );
-
-      mass_src_new.copyData(mass_src);
-      energy_src_new.copyData(energy_src);
-      mom_src_new.copyData(mom_src);
-      vol_src_new.copyData(vol_src);
-    }
-
-    //__________________________________
-    // Model with transported variables.
-    if(d_models.size()){
-      for( auto& model : d_models ){
-        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-
-        if( fb_model && fb_model->d_transVars.size() ){
-          for( auto& tvar : fb_model->d_transVars ){
-
-            if(!tvar->src){
-              continue;
-            }
-
-            for(int m=0;m<tvar->matls->size();m++){
-              int matl = tvar->matls->get(m);
-
-              constCCVariable<double> src_old;
-              pNewDW->get( src_old, tvar->src, matl, patch, m_gn,0 );
-
-              CCVariable<double> src_new;
-              new_dw->allocateAndPut( src_new, tvar->src, matl, patch );
-              src_new.copyData(src_old);
-            }
-          }
-        }
-      }
-    }
-  }  // patch loop
-}
-
-/* _____________________________________________________________________
- Task:      ICE::capturePimpleAdv0
- Purpose:   Snapshot the main graph's (k=0) mass_adv/mom_adv/eng_adv/
-            sp_vol_adv/tvar->var_adv into the "*_adv0" labels.
- _____________________________________________________________________  */
-void ICE::capturePimpleAdv0(const ProcessorGroup  *,
-                            const PatchSubset     * patches,
-                            const MaterialSubset  * matls,
-                            DataWarehouse         * /*old_dw*/,
-                            DataWarehouse         * new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, m_ice_tasks, "ICE::capturePimpleAdv0" );
-
-    for(int m=0;m<matls->size();m++){
-      int matl = matls->get(m);
-
-      constCCVariable<double> mass_adv, eng_adv, sp_vol_adv;
-      constCCVariable<Vector> mom_adv;
-      new_dw->get( mass_adv,   lb->mass_advLabel,   matl, patch, m_gn,0 );
-      new_dw->get( mom_adv,    lb->mom_advLabel,    matl, patch, m_gn,0 );
-      new_dw->get( eng_adv,    lb->eng_advLabel,    matl, patch, m_gn,0 );
-      new_dw->get( sp_vol_adv, lb->sp_vol_advLabel, matl, patch, m_gn,0 );
-
-      CCVariable<double> mass_adv0, eng_adv0, sp_vol_adv0;
-      CCVariable<Vector> mom_adv0;
-      new_dw->allocateAndPut( mass_adv0,   lb->mass_adv0Label,   matl, patch );
-      new_dw->allocateAndPut( mom_adv0,    lb->mom_adv0Label,    matl, patch );
-      new_dw->allocateAndPut( eng_adv0,    lb->eng_adv0Label,    matl, patch );
-      new_dw->allocateAndPut( sp_vol_adv0, lb->sp_vol_adv0Label, matl, patch );
-
-      mass_adv0.copyData(mass_adv);
-      mom_adv0.copyData(mom_adv);
-      eng_adv0.copyData(eng_adv);
-      sp_vol_adv0.copyData(sp_vol_adv);
-    }
-
-    int idx = 0;
-    for( auto& model : d_models ){
-      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-      if( fb_model ){
-        for( auto& tvar : fb_model->d_transVars ){
-          const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
-
-          for(int m=0;m<tvar->matls->size();m++){
-            int matl = tvar->matls->get(m);
-
-            constCCVariable<double> var_adv;
-            new_dw->get( var_adv, tvar->var_adv, matl, patch, m_gn,0 );
-
-            CCVariable<double> var_adv0;
-            new_dw->allocateAndPut( var_adv0, adv0, matl, patch );
-            var_adv0.copyData(var_adv);
-          }
-        }
-      }
-    }
-  }  // patch loop
-}
-
-/* _____________________________________________________________________
- Task:      ICE::pimpleBlend
- Purpose:   PIMPLE sub-graph, outer iteration k: Crank-Nicolson theta
-            blend of the conserved state,
-              X^k = X^n + (1-theta)*(X_adv0 - X^n) + theta*(X_sub - X^{k-1})
-            with energy blended as TOTAL energy (int_eng + kinetic) so the
-            blend doesn't create/destroy heat through the KE nonlinearity
-            (reactingPimpleCentralFoam, ddt CrankNicolson correspondence:
-            theta=0.5, nOuter=2 => Heun/SSP-RK2; theta=1 => Euler-implicit
-            Picard).
- _____________________________________________________________________  */
-void ICE::pimpleBlend(const ProcessorGroup  *,
-                      const PatchSubset     * patches,
-                      const MaterialSubset  * matls,
-                      DataWarehouse         * old_dw,
-                      DataWarehouse         * new_dw)
-{
-  DataWarehouse* pOldDW = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-  DataWarehouse* pNewDW = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-
-  const double th = d_pimpleTheta;
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, m_ice_tasks, "ICE::pimpleBlend" );
-
-    Vector dx  = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
-
-    for(int m=0;m<matls->size();m++){
-      int indx = matls->get(m);
-
-      constCCVariable<double> rho_n, temp_n, sp_vol_n;
-      constCCVariable<Vector> vel_n;
-      pOldDW->get( rho_n,    lb->rho_CCLabel,    indx, patch, m_gn,0 );
-      pOldDW->get( vel_n,    lb->vel_CCLabel,    indx, patch, m_gn,0 );
-      pOldDW->get( temp_n,   lb->temp_CCLabel,   indx, patch, m_gn,0 );
-      pOldDW->get( sp_vol_n, lb->sp_vol_CCLabel, indx, patch, m_gn,0 );
-
-      constCCVariable<double> mass_adv0, eng_adv0, sp_vol_adv0, cv_pNew;
-      constCCVariable<Vector> mom_adv0;
-      pNewDW->get( mass_adv0,   lb->mass_adv0Label,     indx, patch, m_gn,0 );
-      pNewDW->get( mom_adv0,    lb->mom_adv0Label,      indx, patch, m_gn,0 );
-      pNewDW->get( eng_adv0,    lb->eng_adv0Label,      indx, patch, m_gn,0 );
-      pNewDW->get( sp_vol_adv0, lb->sp_vol_adv0Label,   indx, patch, m_gn,0 );
-      pNewDW->get( cv_pNew,     lb->specific_heatLabel, indx, patch, m_gn,0 );
-
-      constCCVariable<double> rho_km1, temp_km1, sp_vol_km1, cv_new;
-      constCCVariable<Vector> vel_km1;
-      old_dw->get( rho_km1,    lb->rho_CCLabel,    indx, patch, m_gn,0 );
-      old_dw->get( vel_km1,    lb->vel_CCLabel,    indx, patch, m_gn,0 );
-      old_dw->get( temp_km1,   lb->temp_CCLabel,   indx, patch, m_gn,0 );
-      old_dw->get( sp_vol_km1, lb->sp_vol_CCLabel, indx, patch, m_gn,0 );
-      new_dw->get( cv_new,     lb->specific_heatLabel, indx, patch, m_gn,0 );
-
-      CCVariable<double> mass_sub, eng_sub, sp_vol_sub;
-      CCVariable<Vector> mom_sub;
-      new_dw->getModifiable( mass_sub,   lb->mass_advLabel,   indx, patch );
-      new_dw->getModifiable( mom_sub,    lb->mom_advLabel,    indx, patch );
-      new_dw->getModifiable( eng_sub,    lb->eng_advLabel,    indx, patch );
-      new_dw->getModifiable( sp_vol_sub, lb->sp_vol_advLabel, indx, patch );
-
-      //__________________________________
-      //  Does a model own this material's caloric EOS?  If so the
-      //  internal-energy carrier is the true sensible energy e_s(T,Y), not
-      //  cv*T (mirrors ICE::computeLagrangianValues's eosOwner lookup).
-      FluidsBasedModel* eosOwner = nullptr;
-      for( auto& model : d_models ){
-        FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-        if( fb_model && fb_model->ownsCaloricEOS( indx ) ){
-          eosOwner = fb_model;
-        }
-      }
-
-      CCVariable<double> es_n, es_km1;
-      if( eosOwner ){
-        new_dw->allocateTemporary(es_n,   patch);
-        new_dw->allocateTemporary(es_km1, patch);
-        // Y^n lives in ParentOldDW, Y^{k-1} lives in the sub old_dw -- both
-        // as tvar->var (mass-specific primitives), i.e. YForm::OldPrimitive.
-        eosOwner->computeSensibleEnergy( es_n, temp_n,
-                              patch->getCellIterator(), patch, pOldDW,
-                              FluidsBasedModel::YForm::OldPrimitive, indx );
-        eosOwner->computeSensibleEnergy( es_km1, temp_km1,
-                              patch->getCellIterator(), patch, old_dw,
-                              FluidsBasedModel::YForm::OldPrimitive, indx );
-      }
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-
-        double mass_n   = rho_n[c]   * vol;
-        double mass_km1 = rho_km1[c] * vol;
-        double mass_a0  = mass_adv0[c];
-        double mass_s   = mass_sub[c];
-
-        Vector mom_n   = vel_n[c]   * mass_n;
-        Vector mom_km1 = vel_km1[c] * mass_km1;
-        Vector mom_a0  = mom_adv0[c];
-        Vector mom_s   = mom_sub[c];
-
-        double spv_n   = sp_vol_n[c]   * mass_n;
-        double spv_km1 = sp_vol_km1[c] * mass_km1;
-        double spv_a0  = sp_vol_adv0[c];
-        double spv_s   = sp_vol_sub[c];
-
-        double ie_n   = eosOwner ? mass_n   * es_n[c]
-                                 : mass_n   * cv_pNew[c] * temp_n[c];
-        double ie_km1 = eosOwner ? mass_km1 * es_km1[c]
-                                 : mass_km1 * cv_new[c]  * temp_km1[c];
-        double ie_a0  = eng_adv0[c];
-        double ie_s   = eng_sub[c];
-
-        double E_n   = ie_n   + 0.5*mom_n.length2()   / mass_n;
-        double E_km1 = ie_km1 + 0.5*mom_km1.length2() / mass_km1;
-        double E_a0  = ie_a0  + 0.5*mom_a0.length2()  / mass_a0;
-        double E_s   = ie_s   + 0.5*mom_s.length2()   / mass_s;
-
-        double mass_k = mass_n + (1.0-th)*(mass_a0 - mass_n) + th*(mass_s - mass_km1);
-        Vector mom_k  = mom_n  + (mom_a0 - mom_n)*(1.0-th)    + (mom_s - mom_km1)*th;
-        double spv_k  = spv_n  + (1.0-th)*(spv_a0 - spv_n)    + th*(spv_s - spv_km1);
-        double E_k    = E_n    + (1.0-th)*(E_a0 - E_n)        + th*(E_s - E_km1);
-
-        mass_sub[c]   = mass_k;
-        mom_sub[c]    = mom_k;
-        sp_vol_sub[c] = spv_k;
-        // back out int_eng from the blended TOTAL energy and the blended
-        // momentum/mass (avoids creating/destroying heat through the KE
-        // nonlinearity -- see phase6_spec.md "Numerics").
-        eng_sub[c]    = E_k - 0.5*mom_k.length2()/mass_k;
-      }
-    }  // matl loop
-
-    //__________________________________
-    //  Species (transported variables): same theta blend, in the
-    //  extensive (mass-weighted) form mass*Y.
-    int idx = 0;
-    for( auto& model : d_models ){
-      FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-      if( fb_model ){
-        for( auto& tvar : fb_model->d_transVars ){
-          const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
-
-          for(int m=0;m<tvar->matls->size();m++){
-            int indx = tvar->matls->get(m);
-
-            constCCVariable<double> Y_n, Y_km1, var_adv0, rho_n2, rho_km1_2;
-            pOldDW->get( Y_n,       tvar->var,       indx, patch, m_gn,0 );
-            old_dw->get( Y_km1,     tvar->var,       indx, patch, m_gn,0 );
-            pNewDW->get( var_adv0,  adv0,            indx, patch, m_gn,0 );
-            pOldDW->get( rho_n2,    lb->rho_CCLabel, indx, patch, m_gn,0 );
-            old_dw->get( rho_km1_2, lb->rho_CCLabel, indx, patch, m_gn,0 );
-
-            CCVariable<double> var_sub;
-            new_dw->getModifiable( var_sub, tvar->var_adv, indx, patch );
-
-            for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-
-              double mass_n   = rho_n2[c]    * vol;
-              double mass_km1 = rho_km1_2[c] * vol;
-
-              double sp_n   = mass_n   * Y_n[c];
-              double sp_km1 = mass_km1 * Y_km1[c];
-              double sp_a0  = var_adv0[c];
-              double sp_s   = var_sub[c];
-
-              var_sub[c] = sp_n + (1.0-th)*(sp_a0 - sp_n) + th*(sp_s - sp_km1);
-            }
-          }
-        }
-      }
-    }
-  }  // patch loop
-}
-
-/* _____________________________________________________________________
- Task:      ICE::pimpleResidual
- Purpose:   PIMPLE sub-graph, after conservedtoPrimitive_Vars: residual =
-            max over interior cells of
-            max(|rho_new-rho_old|/rho_new, |T_new-T_old|/T_new).
- _____________________________________________________________________  */
-void ICE::pimpleResidual(const ProcessorGroup  *,
-                         const PatchSubset     * patches,
-                         const MaterialSubset  * matls,
-                         DataWarehouse         * old_dw,
-                         DataWarehouse         * new_dw)
-{
-  double residual = 0.0;
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, m_ice_tasks, "ICE::pimpleResidual" );
-
-    for(int m=0;m<matls->size();m++){
-      int indx = matls->get(m);
-
-      constCCVariable<double> rho_old, temp_old, rho_new, temp_new;
-      old_dw->get( rho_old,  lb->rho_CCLabel,  indx, patch, m_gn,0 );
-      old_dw->get( temp_old, lb->temp_CCLabel, indx, patch, m_gn,0 );
-      new_dw->get( rho_new,  lb->rho_CCLabel,  indx, patch, m_gn,0 );
-      new_dw->get( temp_new, lb->temp_CCLabel, indx, patch, m_gn,0 );
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-
-        double rRho  = std::fabs(rho_new[c]  - rho_old[c] ) / rho_new[c];
-        double rTemp = std::fabs(temp_new[c] - temp_old[c]) / temp_new[c];
-
-        residual = std::max( residual, std::max(rRho, rTemp) );
-      }
-    }
-  }
-
-  new_dw->put( max_vartype(residual), lb->pimpleResidualLabel );
-}
-
-/* _____________________________________________________________________
- Task:      ICE::pimpleOuterLoop
- Purpose:   Drive d_pimpleSched through outer iterations k=1..nOuter-1,
-            seeded from the main graph's own k=0 primitives, and copy the
-            final iterate's primitives back.  Follows the structure of
-            Uintah_TS's ICE::sdcSweep (DW slot mapping, recompile, seeding
-            slot 3 via setInitTimestep(true)+advanceDataWarehouse+
-            transferFrom, per-iteration advanceDataWarehouse, re-putting
-            timeStep/simTime/delT bracketed by setInitTimestep, ScrubNone,
-            recomputeTimeStep/abortTimeStep forwarding, copy-back).
- _____________________________________________________________________  */
-void
-ICE::pimpleOuterLoop( const ProcessorGroup * pg,
-                      const PatchSubset    * patches,
-                      const MaterialSubset * /*matls*/,
-                      DataWarehouse        * ParentOldDW,
-                      DataWarehouse        * ParentNewDW,
-                      LevelP                 level )
-{
-  if( d_pimpleOuter < 2 ){
-    return;
-  }
-
-  const GridP grid = level->getGrid();
-
-  DataWarehouse::ScrubMode ParentOldDW_scrubmode =
-                           ParentOldDW->setScrubbing(DataWarehouse::ScrubNone);
-  DataWarehouse::ScrubMode ParentNewDW_scrubmode =
-                           ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
-
-  const PatchSubset* patch_sub = patches;
-  const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-  const MaterialSet* all_matls = m_materialManager->allMaterials();
-  const MaterialSubset* ice_mss = ice_matls->getUnion();
-
-  d_pimpleSched->setParentDWs(ParentOldDW, ParentNewDW);
-  d_pimpleSched->advanceDataWarehouse(grid);
-
-  if( d_recompilePimpleSched ){
-    d_pimpleSched->initialize(3, 1);
-    // matches scheduleTimeAdvance's own ordering (maxMach BEFORE the
-    // chain): computesRequires_CustomBCs wires maxMach_<face> into several
-    // of scheduleFluidChain's own tasks when usingLodi, so it must be
-    // computed in THIS (sub-graph) NewDW every recompile, not reused from
-    // the main graph's k=0 value.
-    scheduleMaxMach_on_Lodi_BC_Faces(   d_pimpleSched, level,  ice_matls );
-    scheduleFluidChain(                 d_pimpleSched, level,  true );
-    schedulePimpleBlend(                d_pimpleSched, level,  ice_matls );
-    // "afterAdvection" (not a literal "pimpleOuterLoop" string):
-    // conservedtoPrimitive_Vars gates its computesVar(temp_CC/vel_CC/
-    // mach/species) on this exact string.
-    scheduleConservedtoPrimitive_Vars(  d_pimpleSched, level->eachPatch(),
-                                        ice_mss, all_matls, "afterAdvection" );
-    schedulePimpleResidual(             d_pimpleSched, level,  ice_matls );
-    d_pimpleSched->compile();
-    d_recompilePimpleSched = false;
-  }
-
-  // prime slot 3 and seed it with u^0 == u^n primitives (k=0 IS the main
-  // graph's own, already-computed result)
-  d_pimpleSched->setInitTimestep(true);
-  d_pimpleSched->advanceDataWarehouse(grid);
-
-  DataWarehouse* seedDW = d_pimpleSched->get_dw(3);
-
-  seedDW->transferFrom( ParentNewDW, lb->rho_CCLabel,        patch_sub, ice_mss );
-  seedDW->transferFrom( ParentNewDW, lb->vel_CCLabel,        patch_sub, ice_mss );
-  seedDW->transferFrom( ParentNewDW, lb->temp_CCLabel,       patch_sub, ice_mss );
-  seedDW->transferFrom( ParentNewDW, lb->sp_vol_CCLabel,     patch_sub, ice_mss );
-  seedDW->transferFrom( ParentNewDW, lb->press_CCLabel,      patch_sub, d_press_matl );
-  seedDW->transferFrom( ParentNewDW, lb->speedSound_CCLabel, patch_sub, ice_mss );
-  seedDW->transferFrom( ParentNewDW, lb->specific_heatLabel, patch_sub, ice_mss );
-
-  for( auto& model : d_models ){
-    FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-    if( fb_model ){
-      for( auto& tvar : fb_model->d_transVars ){
-        seedDW->transferFrom( ParentNewDW, tvar->var, patch_sub, tvar->matls );
-      }
-    }
-  }
-
-  d_pimpleSched->setInitTimestep(false);
-
-  double residual = 0.0;
-
-  for (int k = 1; k < d_pimpleOuter; k++) {
-
-    d_pimpleSched->advanceDataWarehouse(grid);
-
-    DataWarehouse* subOldDW = d_pimpleSched->get_dw(2);
-    DataWarehouse* subNewDW = d_pimpleSched->get_dw(3);
-
-    // re-put every outer iteration (does not survive rotation);
-    // DWDatabase::put needs the init flag to register a not-yet-known key,
-    // so bracket it as below.
-    timeStep_vartype timeStepVar;
-    simTime_vartype  simTimeVar;
-    delt_vartype     delTVar;
-    ParentOldDW->get( timeStepVar, lb->timeStepLabel );
-    ParentOldDW->get( simTimeVar,  lb->simulationTimeLabel );
-    ParentOldDW->get( delTVar,     lb->delTLabel, level.get_rep() );
-    d_pimpleSched->setInitTimestep(true);
-    subOldDW->put( timeStepVar, lb->timeStepLabel );
-    subOldDW->put( simTimeVar,  lb->simulationTimeLabel );
-    subOldDW->put( delTVar,     lb->delTLabel, level.get_rep() );
-    d_pimpleSched->setInitTimestep(false);
-
-    subOldDW->setScrubbing(DataWarehouse::ScrubNone);
-    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
-
-    d_pimpleSched->execute();
-
-    max_vartype residualVar;
-    subNewDW->get( residualVar, lb->pimpleResidualLabel );
-    residual = residualVar;
-
-    if( pg->myRank() == 0 ){
-      DOUT( m_ice_pimple, "  PIMPLE outer iteration " << k << " of "
-            << (d_pimpleOuter - 1) << "   timestep " << timeStepVar
-            << "   residual " << residual );
-    }
-
-    // forward a timestep-recompute request out of the sub-graph
-    bool_or_vartype recomputeVar(false);
-    if( subNewDW->exists( VarLabel::find(recomputeTimeStep_name) ) ){
-      subNewDW->get( recomputeVar, VarLabel::find(recomputeTimeStep_name) );
-      if( recomputeVar ){
-        ParentNewDW->put( bool_or_vartype(true),
-                          VarLabel::find(recomputeTimeStep_name) );
-        ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
-        ParentNewDW->setScrubbing(ParentNewDW_scrubmode);
-        return;
-      }
-    }
-
-    // forward an abort request out of the sub-graph
-    bool_or_vartype abortVar(false);
-    if( subNewDW->exists( VarLabel::find(abortTimeStep_name) ) ){
-      subNewDW->get( abortVar, VarLabel::find(abortTimeStep_name) );
-      if( abortVar ){
-        ParentNewDW->put( bool_or_vartype(true),
-                          VarLabel::find(abortTimeStep_name) );
-      }
-    }
-
-    if( d_pimpleTol > 0.0 && residual < d_pimpleTol ){
-      break;
-    }
-  }
-
-  // copy the final outer iterate's primitives back to the main graph
-  DataWarehouse* subNewDW = d_pimpleSched->get_dw(3);
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-
-    for (int m = 0; m < ice_mss->size(); m++) {
-      int indx = ice_mss->get(m);
-
-      constCCVariable<double> rho, temp, sp_vol, mach;
-      constCCVariable<Vector> vel;
-      subNewDW->get( rho,    lb->rho_CCLabel,    indx, patch, m_gn, 0 );
-      subNewDW->get( vel,    lb->vel_CCLabel,    indx, patch, m_gn, 0 );
-      subNewDW->get( temp,   lb->temp_CCLabel,   indx, patch, m_gn, 0 );
-      subNewDW->get( sp_vol, lb->sp_vol_CCLabel, indx, patch, m_gn, 0 );
-      subNewDW->get( mach,   lb->machLabel,      indx, patch, m_gn, 0 );
-
-      CCVariable<double> rho_out, temp_out, sp_vol_out, mach_out;
-      CCVariable<Vector> vel_out;
-      ParentNewDW->getModifiable( rho_out,    lb->rho_CCLabel,    indx, patch );
-      ParentNewDW->getModifiable( vel_out,    lb->vel_CCLabel,    indx, patch );
-      ParentNewDW->getModifiable( temp_out,   lb->temp_CCLabel,   indx, patch );
-      ParentNewDW->getModifiable( sp_vol_out, lb->sp_vol_CCLabel, indx, patch );
-      ParentNewDW->getModifiable( mach_out,   lb->machLabel,      indx, patch );
-
-      for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-        IntVector c = *iter;
-        rho_out[c]    = rho[c];
-        vel_out[c]    = vel[c];
-        temp_out[c]   = temp[c];
-        sp_vol_out[c] = sp_vol[c];
-        mach_out[c]   = mach[c];
-      }
-    }
-  }
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-
-    for (int m = 0; m < d_press_matl->size(); m++) {
-      int indx = d_press_matl->get(m);
-
-      constCCVariable<double> press;
-      subNewDW->get( press, lb->press_CCLabel, indx, patch, m_gn, 0 );
-
-      CCVariable<double> press_out;
-      ParentNewDW->getModifiable( press_out, lb->press_CCLabel, indx, patch );
-
-      for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-        IntVector c = *iter;
-        press_out[c] = press[c];
-      }
-    }
-  }
-
-  for( auto& model : d_models ){
-    FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
-    if( fb_model ){
-      for( auto& tvar : fb_model->d_transVars ){
-
-        for (int p = 0; p < patches->size(); p++) {
-          const Patch* patch = patches->get(p);
-
-          for (int mm = 0; mm < tvar->matls->size(); mm++) {
-            int tindx = tvar->matls->get(mm);
-
-            constCCVariable<double> var_sub;
-            subNewDW->get( var_sub, tvar->var, tindx, patch, m_gn, 0 );
-
-            CCVariable<double> var_out;
-            ParentNewDW->getModifiable( var_out, tvar->var, tindx, patch );
-
-            for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-              IntVector c = *iter;
-              var_out[c] = var_sub[c];
-            }
-          }
-        }
-      }
-    }
-  }
-
-  ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
-  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);
-}
-
 /*_______________________________________________________________________
  Task:      TestConservation--
  Purpose:   Test for conservation of mass, momentum, energy.

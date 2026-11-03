@@ -131,45 +131,12 @@ namespace Uintah {
     const VarLabel* tau_Y_FCLabel;
     const VarLabel* tau_Z_FCLabel;
 
-    //__________________________________
-    //   CentralUpwind (Kurganov-Tadmor) face variables
-    const VarLabel* ktAlphaOwn_FCXLabel;
-    const VarLabel* ktAlphaOwn_FCYLabel;
-    const VarLabel* ktAlphaOwn_FCZLabel;
-    const VarLabel* ktaSf_FCXLabel;
-    const VarLabel* ktaSf_FCYLabel;
-    const VarLabel* ktaSf_FCZLabel;
-    const VarLabel* ktKappa_FCXLabel;
-    const VarLabel* ktKappa_FCYLabel;
-    const VarLabel* ktKappa_FCZLabel;
-    const VarLabel* ktPhiOwn_FCXLabel;
-    const VarLabel* ktPhiOwn_FCYLabel;
-    const VarLabel* ktPhiOwn_FCZLabel;
-    const VarLabel* ktPhiNei_FCXLabel;
-    const VarLabel* ktPhiNei_FCYLabel;
-    const VarLabel* ktPhiNei_FCZLabel;
-    const VarLabel* ktUvol_FCXLabel;
-    const VarLabel* ktUvol_FCYLabel;
-    const VarLabel* ktUvol_FCZLabel;
-
     // Model support
     const VarLabel* modelMass_srcLabel;
     const VarLabel* modelMom_srcLabel;
     const VarLabel* modelEng_srcLabel;
     const VarLabel* modelVol_srcLabel;
-
-    // PIMPLE outer-loop support
-    //  *_adv0: the k=0 (main graph) advected conserved state, captured so
-    //          a later outer iteration can read it from ParentNewDW without
-    //          also modifying the same label in the sub-graph's own NewDW.
-    //  pimpleResidual: max(|drho|/rho, |dT|/T) over interior cells, used
-    //          for the optional <outerTolerance> early-exit.
-    const VarLabel* mass_adv0Label;
-    const VarLabel* mom_adv0Label;
-    const VarLabel* eng_adv0Label;
-    const VarLabel* sp_vol_adv0Label;
-    const VarLabel* pimpleResidualLabel;
-
+    
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
     const VarLabel* machLabel;

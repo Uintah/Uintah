@@ -55,17 +55,6 @@ namespace Uintah {
       const Level* level;
       bool doRefluxing;
       CCVariable<fflux> OFS;  // outflux slabs
-
-      //__________________________________
-      //  CentralUpwindAdvector (Kurganov-Tadmor): the per-face mass
-      //  fluxes computed by ICE::computeCentralFluxes.
-      bool hasCentralFluxes{false};
-      const SFCXVariable<double>* phiOwnX{nullptr};
-      const SFCYVariable<double>* phiOwnY{nullptr};
-      const SFCZVariable<double>* phiOwnZ{nullptr};
-      const SFCXVariable<double>* phiNeiX{nullptr};
-      const SFCYVariable<double>* phiNeiY{nullptr};
-      const SFCZVariable<double>* phiNeiZ{nullptr};
   };
   
   class Advector {

@@ -31,11 +31,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/ICE/Advection
 
-SRCS += $(SRCDIR)/Advector.cc              \
-	$(SRCDIR)/FirstOrderAdvector.cc    \
-	$(SRCDIR)/SecondOrderAdvector.cc   \
-	$(SRCDIR)/SecondOrderBase.cc       \
-	$(SRCDIR)/CentralUpwindAdvector.cc \
+SRCS += $(SRCDIR)/Advector.cc            \
+	$(SRCDIR)/FirstOrderAdvector.cc  \
+	$(SRCDIR)/SecondOrderAdvector.cc \
+	$(SRCDIR)/SecondOrderBase.cc     \
 	$(SRCDIR)/AdvectionFactory.cc
 
 PSELIBS := \
