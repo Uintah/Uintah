@@ -44,6 +44,7 @@
 
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/directory.hpp>
 
 #if defined( UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3)
   namespace bfs = boost::filesystem3;
@@ -309,7 +310,13 @@ Dir::copy( const Dir & destDir ) const
          throw InternalError(string("Dir::copy failed to copy: ") + name_, __FILE__, __LINE__);
        }
        // When a symbolic link, don't iterate it. Can cause infinite loop.
-       if (bfs::is_symlink(it->status())) it.no_push();
+       if ( bfs::is_symlink( it->symlink_status() ) ) {
+#if BOOST_VERSION >= 107200
+         it.disable_recursion_pending();
+#else
+         it.no_push();
+#endif
+       }
      
      }
      // Next directory entry

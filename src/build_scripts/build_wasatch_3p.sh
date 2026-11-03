@@ -12,9 +12,17 @@
 # $6 - whether Uintah is being built with static libraries or not ...
 # $7 - whether Uintah is being built with CUDA
 # $8 - CUDA SDK installation path
+# $9 - C compiler Uintah is built with (CC)
+# $10 - C++ compiler Uintah is built with (CXX)
+# $11 - C++ flags Uintah is built with (CXXFLAGS)
+#
+# The 3P libraries are built with the same compilers and C++ standard as
+# Uintah.  If $9-$11 are not given, CC, CXX and CXXFLAGS are taken from the
+# environment, then gcc/cc and g++/c++ are searched for (as configure does).
 #
 export GIT_SSL_NO_VERIFY=true
 BASE_BUILD_DIR=$1
+SCRIPT_DIR=$( cd "$( dirname "$0" )" && pwd )
 
 
 ################################
@@ -120,6 +128,36 @@ run()
 }
 
 ############################################################################
+# Args 9-11: Compilers and C++ flags.  Build the 3P with the same compilers
+# and C++ standard as Uintah.
+
+if test -n "$9"; then
+  CC=$9
+fi
+if test -n "${10}"; then
+  CXX=${10}
+fi
+if test -n "${11}"; then
+  CXXFLAGS=${11}
+fi
+if test -z "$CC"; then
+  CC=$(command -v gcc || command -v cc)
+fi
+if test -z "$CXX"; then
+  CXX=$(command -v g++ || command -v c++)
+fi
+if test -z "$CC" -o -z "$CXX"; then
+  show_error "no C (gcc, cc) or C++ (g++, c++) compiler found"
+fi
+
+CXX_STD=$( "$SCRIPT_DIR/cxx_std.sh" "$CXX" "$CXXFLAGS" )
+if test $? != 0; then
+  show_error "$SCRIPT_DIR/cxx_std.sh $CXX $CXXFLAGS"
+fi
+
+COMPILER_FLAGS="-DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
+
+############################################################################
 
 echo   ""
 echo   "------------------------------------------------------------------"
@@ -136,6 +174,8 @@ fi
 
 echo   ""
 echo   "  Using Cmake: "`which cmake`
+echo   "  Using C:     $CC"
+echo   "  Using C++:   $CXX  (C++$CXX_STD)"
 echo   ""
 echo   "------------------------------------------------------------------"
 
@@ -162,7 +202,7 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$SPATIAL_OPS_TAG
       
-      if [ $LOCAL = $REMOTE ]; then
+      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
           echo "SpatialOps is current - not rebuilding"
           needsrecompile=false
       else
@@ -177,6 +217,8 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
   if test ! -z $SPATIAL_OPS_TAG ; then
       run "cd SpatialOps"
       run "git reset --hard $SPATIAL_OPS_TAG"
+      # Build at Uintah's C++ standard (Boost.Math >= 1.82 requires C++14)
+      run "sed -i -e 's/set( *CMAKE_CXX_STANDARD [0-9]* *)/set( CMAKE_CXX_STANDARD $CXX_STD )/' CMakeLists.txt"
       run "cd .."
   fi
 
@@ -202,10 +244,12 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       -DENABLE_EXAMPLES=OFF \
       $BOOST_FLAGS \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+      $COMPILER_FLAGS \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       .."
 
     run "make -j4 install"
+    run "echo $CXX_STD > ${INSTALL_HERE}/.cxx_std"
 
     if test "$CUDA" != ""; then
 
@@ -241,7 +285,7 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$EXPR_LIB_TAG
 
-      if [ $LOCAL = $REMOTE ]; then
+      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/ExprLib/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
           echo "ExprLib is current - not rebuilding"
           needsrecompile=false
       else
@@ -256,6 +300,11 @@ if test "$BUILD_EXPRLIB" = "yes"; then
   if test ! -z $EXPR_LIB_TAG ; then
       run "cd ExprLib"
       run "git reset --hard $EXPR_LIB_TAG"
+      # Build at Uintah's C++ standard (Boost.Math >= 1.82 requires C++14)
+      run "sed -i -e 's/set( *CMAKE_CXX_STANDARD [0-9]* *)/set( CMAKE_CXX_STANDARD $CXX_STD )/' CMakeLists.txt"
+      # C++17 libstdc++ requires std::set comparators to be const-invocable
+      run "sed -i -e 's/\(bool operator()( const DepInfo& id1, const DepInfo& id2 )\){/\1 const {/' expression/ExpressionFactory.h"
+      run "sed -i -e 's/\(bool operator()( const SrcTermInfo& s1, const SrcTermInfo& s2 )\){/\1 const {/' expression/ExpressionBase.h"
       run "cd .."
   fi
   run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
@@ -280,10 +329,12 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       -DENABLE_UINTAH=ON \
       \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
+      $COMPILER_FLAGS \
       -DCMAKE_CXX_FLAGS="-fPIC"                         \
       .."
 
     run "make -j4 install"
+    run "echo $CXX_STD > ${INSTALL_HERE}/.cxx_std"
   fi
 
   run "cd ../../.."  # back to Wasatch3P
@@ -304,7 +355,7 @@ if test "$BUILD_TABPROPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$TAB_PROPS_TAG
 
-      if [ $LOCAL = $REMOTE ]; then
+      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/TabProps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
           echo "TabProps is current - not rebuilding"
           needsrecompile=false
       else
@@ -319,6 +370,8 @@ if test "$BUILD_TABPROPS" = "yes"; then
   if test ! -z $TAB_PROPS_TAG ; then
       run "cd TabProps"
       run "git reset --hard $TAB_PROPS_TAG"
+      # Build at Uintah's C++ standard (Boost.Math >= 1.82 requires C++14)
+      run "sed -i -e 's/set( *CMAKE_CXX_STANDARD [0-9]* *)/set( CMAKE_CXX_STANDARD $CXX_STD )/' CMakeLists.txt"
       run "cd .."
   fi
   run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
@@ -337,10 +390,12 @@ if test "$BUILD_TABPROPS" = "yes"; then
       -DTabProps_ENABLE_TESTING=OFF \
       $BOOST_FLAGS \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+      $COMPILER_FLAGS \
       -DCMAKE_CXX_FLAGS=-fPIC \
       .."
 
     run "make install"
+    run "echo $CXX_STD > ${INSTALL_HERE}/.cxx_std"
   fi
 
   run "cd ../../.."  # back to Wasatch3P
@@ -362,7 +417,7 @@ if test "$BUILD_RADPROPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$RAD_PROPS_TAG
 
-      if [ $LOCAL = $REMOTE ]; then
+      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/RadProps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
           echo "RadProps is current - not rebuilding"
           needsrecompile=false
       else
@@ -377,6 +432,8 @@ if test "$BUILD_RADPROPS" = "yes"; then
   if test ! -z $RAD_PROPS_TAG ; then
       run "cd RadProps"
       run "git reset --hard $RAD_PROPS_TAG"
+      # Build at Uintah's C++ standard (Boost.Math >= 1.82 requires C++14)
+      run "sed -i -e 's/set( *CMAKE_CXX_STANDARD [0-9]* *)/set( CMAKE_CXX_STANDARD $CXX_STD )/' CMakeLists.txt"
       run "cd .."
   fi
 
@@ -397,11 +454,13 @@ if test "$BUILD_RADPROPS" = "yes"; then
       -DRadProps_ENABLE_TESTING=OFF \
       -DRadProps_ENABLE_PREPROCESSOR=OFF \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+      $COMPILER_FLAGS \
       -DCMAKE_CXX_FLAGS=-fPIC \
       -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
       .."
 
     run "make -j4 install"
+    run "echo $CXX_STD > ${INSTALL_HERE}/.cxx_std"
   fi
 
   run "cd ../../.."  # back to Wasatch3P
@@ -423,7 +482,7 @@ if test "$BUILD_NSCBC" = "yes"; then
     #REMOTE=$(git rev-parse origin/master)
     REMOTE=$NSCBC_TAG
 
-    if [ $LOCAL = $REMOTE ]; then
+    if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/NSCBC/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
       echo "NSCBC is current - not rebuilding"
       needsrecompile=false
     else
@@ -438,6 +497,8 @@ if test "$BUILD_NSCBC" = "yes"; then
   if test ! -z $NSCBC_TAG ; then
     run "cd NSCBC"
     run "git reset --hard $NSCBC_TAG"
+    # Build at Uintah's C++ standard (Boost.Math >= 1.82 requires C++14)
+    run "sed -i -e 's/set( *CMAKE_CXX_STANDARD [0-9]* *)/set( CMAKE_CXX_STANDARD $CXX_STD )/' CMakeLists.txt"
     run "cd .."
   fi
   run "cd $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
@@ -451,11 +512,13 @@ if test "$BUILD_NSCBC" = "yes"; then
          $DEBUG \
          $STATIC \
          -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+         $COMPILER_FLAGS \
          -DCMAKE_CXX_FLAGS=-fPIC \
          -DExprLib_DIR=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib/share \
          .."
 
     run "make install"
+    run "echo $CXX_STD > ${INSTALL_HERE}/.cxx_std"
   fi
 
   run "cd ../../.."  # back to Wasatch3P
