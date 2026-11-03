@@ -43,9 +43,10 @@
   <CFD>
     <ICE                                spec="OPTIONAL NO_DATA" >
       <advection                        spec="REQUIRED NO_DATA"
-                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'"
+                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder, CentralUpwind'"
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
-                                          attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
+                                          attribute3="compatibleFluxes OPTIONAL BOOLEAN"
+                                          attribute4="limiter             OPTIONAL STRING 'vanAlbada, vanLeer, minmod, MC, upwind'" />
 
       <applyHydrostaticPressure         spec="OPTIONAL BOOLEAN" />
 
@@ -159,6 +160,21 @@
         <y_dir                          spec="OPTIONAL DOUBLE" />
         <z_dir                          spec="OPTIONAL DOUBLE" />
       </fixedPressureGradient>
+
+      <CentralUpwind                    spec="OPTIONAL NO_DATA" >
+        <fluxScheme                     spec="OPTIONAL STRING 'Kurganov, Tadmor'" />
+        <kappaFunction                  spec="OPTIONAL STRING 'MachToAcCourant, one'" />
+        <faceVelocity                   spec="OPTIONAL BOOLEAN" />
+        <facePressure                   spec="OPTIONAL BOOLEAN" />
+        <ktPressureFlux                 spec="OPTIONAL BOOLEAN" />
+      </CentralUpwind>
+
+      <PIMPLE                           spec="OPTIONAL NO_DATA" >
+        <nOuterCorrectors              spec="OPTIONAL INTEGER 'positive'" />
+        <nCorrectors                    spec="OPTIONAL INTEGER 'positive'" />
+        <theta                          spec="OPTIONAL DOUBLE 'positive'" />
+        <outerTolerance                 spec="OPTIONAL DOUBLE" />
+      </PIMPLE>
 
     </ICE>
   </CFD>

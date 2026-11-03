@@ -25,6 +25,8 @@
 #include <CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
 #include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+#include <CCA/Components/ICE/Advection/CentralUpwindAdvector.h>
+#include <CCA/Components/ICE/Core/CentralUpwind.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -65,9 +67,14 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
         d_useCompatibleFluxes = false;
         cout << "\n--------ICE::Warning:  You've turned off compatible fluxes.\n"<< endl;
      }
-  } 
-  
-  
+  }
+
+  //__________________________________
+  //  check for a limiter tag (CentralUpwind only)
+  if(advect_options.count("limiter")){
+     found = true;
+  }
+
   // bulletproofing
   if (advect_options.size() > 1 && found == false){
         string warn="\n\n ERROR: Advection operator flags: "
@@ -84,6 +91,21 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
   else if (advect_options["type"] == "SecondOrder"){
     d_OrderOfAdvection = 2;
     return(scinew SecondOrderAdvector());
+  }
+  else if (advect_options["type"] == "CentralUpwind"){
+    d_OrderOfAdvection = 2;
+
+    string limName = "vanAlbada";
+    if(advect_options.count("limiter")){
+      limName = advect_options["limiter"];
+    }
+
+    Uintah::centralUpwind::Limiter lim;
+    if(!Uintah::centralUpwind::limiterFromString(limName, lim)){
+      throw ProblemSetupException("Unknown CentralUpwind limiter ("+limName+")",
+                                  __FILE__, __LINE__);
+    }
+    return(scinew CentralUpwindAdvector(lim));
   }
   else {
     throw ProblemSetupException("Unknown advection Type R ("+advect_options["type"]+")",
