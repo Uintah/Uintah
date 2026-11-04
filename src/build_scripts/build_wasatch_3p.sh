@@ -18,11 +18,11 @@
 #
 # The 3P libraries are built with the same compilers and C++ standard as
 # Uintah.  If $9-$11 are not given, CC, CXX and CXXFLAGS are taken from the
-# environment, then gcc/cc and g++/c++ are searched for (as configure does).
+# environment; otherwise gcc and g++ are used (configure's first choices).
 #
 export GIT_SSL_NO_VERIFY=true
 BASE_BUILD_DIR=$1
-SCRIPT_DIR=$( cd "$( dirname "$0" )" && pwd )
+SCRIPT_DIR=$( dirname "$( readlink -f "$0" )" )
 
 
 ################################
@@ -141,13 +141,10 @@ if test -n "${11}"; then
   CXXFLAGS=${11}
 fi
 if test -z "$CC"; then
-  CC=$(command -v gcc || command -v cc)
+  CC=gcc
 fi
 if test -z "$CXX"; then
-  CXX=$(command -v g++ || command -v c++)
-fi
-if test -z "$CC" -o -z "$CXX"; then
-  show_error "no C (gcc, cc) or C++ (g++, c++) compiler found"
+  CXX=g++
 fi
 
 CXX_STD=$( "$SCRIPT_DIR/cxx_std.sh" "$CXX" "$CXXFLAGS" )
@@ -156,6 +153,18 @@ if test $? != 0; then
 fi
 
 COMPILER_FLAGS="-DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
+
+############################################################################
+# installed_std() prints the C++ standard a library was installed with
+# (from its .cxx_std stamp file), or nothing if it is not installed.
+
+installed_std()
+{
+    stamp=$BASE_BUILD_DIR/Wasatch3P/install/$1/.cxx_std
+    if [ -f $stamp ]; then
+        cat $stamp
+    fi
+}
 
 ############################################################################
 
@@ -202,9 +211,15 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$SPATIAL_OPS_TAG
       
-      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
+      INSTALLED_STD=$(installed_std SpatialOps)
+
+      if [ $LOCAL = $REMOTE ]; then
+        if [ "$INSTALLED_STD" = "$CXX_STD" ]; then
           echo "SpatialOps is current - not rebuilding"
           needsrecompile=false
+        else
+          echo "SpatialOps is not installed for C++$CXX_STD - rebuilding"
+        fi
       else
         echo "updating SpatialOps..."
         run "git pull"
@@ -285,9 +300,15 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$EXPR_LIB_TAG
 
-      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/ExprLib/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
+      INSTALLED_STD=$(installed_std ExprLib)
+
+      if [ $LOCAL = $REMOTE ]; then
+        if [ "$INSTALLED_STD" = "$CXX_STD" ]; then
           echo "ExprLib is current - not rebuilding"
           needsrecompile=false
+        else
+          echo "ExprLib is not installed for C++$CXX_STD - rebuilding"
+        fi
       else
         echo "updating ExprLib..."
         run "git pull"
@@ -355,9 +376,15 @@ if test "$BUILD_TABPROPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$TAB_PROPS_TAG
 
-      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/TabProps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
+      INSTALLED_STD=$(installed_std TabProps)
+
+      if [ $LOCAL = $REMOTE ]; then
+        if [ "$INSTALLED_STD" = "$CXX_STD" ]; then
           echo "TabProps is current - not rebuilding"
           needsrecompile=false
+        else
+          echo "TabProps is not installed for C++$CXX_STD - rebuilding"
+        fi
       else
         echo "updating TabProps..."
         run "git pull"
@@ -417,9 +444,15 @@ if test "$BUILD_RADPROPS" = "yes"; then
       #REMOTE=$(git rev-parse origin/master)
       REMOTE=$RAD_PROPS_TAG
 
-      if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/RadProps/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
+      INSTALLED_STD=$(installed_std RadProps)
+
+      if [ $LOCAL = $REMOTE ]; then
+        if [ "$INSTALLED_STD" = "$CXX_STD" ]; then
           echo "RadProps is current - not rebuilding"
           needsrecompile=false
+        else
+          echo "RadProps is not installed for C++$CXX_STD - rebuilding"
+        fi
       else
         echo "updating RadProps..."
         run "git pull"
@@ -482,9 +515,15 @@ if test "$BUILD_NSCBC" = "yes"; then
     #REMOTE=$(git rev-parse origin/master)
     REMOTE=$NSCBC_TAG
 
-    if [ $LOCAL = $REMOTE ] && [ "$(cat "$BASE_BUILD_DIR/Wasatch3P/install/NSCBC/.cxx_std" 2>/dev/null)" = "$CXX_STD" ]; then
-      echo "NSCBC is current - not rebuilding"
-      needsrecompile=false
+    INSTALLED_STD=$(installed_std NSCBC)
+
+    if [ $LOCAL = $REMOTE ]; then
+      if [ "$INSTALLED_STD" = "$CXX_STD" ]; then
+        echo "NSCBC is current - not rebuilding"
+        needsrecompile=false
+      else
+        echo "NSCBC is not installed for C++$CXX_STD - rebuilding"
+      fi
     else
       echo "updating NSCBC..."
       run "git pull"
