@@ -90,12 +90,6 @@ extern Uintah::MasterLock cerrLock;
 
 #define SET_CFI_BC 0
 
-//  Toggle between the consistent, face-pressure-operator-based flow work /
-//  advective KE dissipation formulation (1) and the original
-//  delP_Dilatate-based flow work with no advective KE dissipation fix (0).
-//  See accumulateEnergySourceSinks() and advectAndAdvanceInTime().
-#define newPressWork 0
-
 using namespace std;
 using namespace Uintah;
 using namespace ExchangeModels;
@@ -239,16 +233,28 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
 
   cfd_ps->require( "cfl",d_CFL );
 
-  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+  ProblemSpecP cfd_ice_ps = cfd_ps->findBlock( d_cfdBlockName );
   if(!cfd_ice_ps){
-    throw ProblemSetupException("\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);
+    throw ProblemSetupException("\n Could not find the <CFD> <" + d_cfdBlockName + "> section in the input file\n",__FILE__, __LINE__);
   }
 
   cfd_ice_ps->get( "max_iteration_equilibration",d_max_iter_equilibration );
   cfd_ice_ps->get( "ClampSpecificVolume",        d_clampSpecificVolume );
   cfd_ice_ps->get( "applyHydrostaticPressure",   d_applyHydrostaticPress );
 
-  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
+  if( d_advectorFactory ){
+    d_advector = d_advectorFactory(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
+  }
+  else {
+    // ice_spec.xml lists CentralUpwind because spice_spec.xml reuses it
+    ProblemSpecP advect_ps = cfd_ice_ps->findBlock("advection");
+    string advType;
+    if( advect_ps && advect_ps->getAttribute( "type", advType ) && advType == "CentralUpwind" ){
+      throw ProblemSetupException("\n ERROR: <advection type=\"CentralUpwind\"> requires "
+                                  "<SimulationComponent type=\"spice\">\n", __FILE__, __LINE__);
+    }
+    d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
+  }
   //__________________________________
   //  Pull out add heat section
   ProblemSpecP add_heat_ps = cfd_ice_ps->findBlock("ADD_HEAT");
@@ -893,6 +899,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
  Task:  ICE::scheduleTimeAdvance--
  Purpose:  Schedule all tasks for computing a single timestep
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void
 ICE::scheduleTimeAdvance( const LevelP & level,
                           SchedulerP   & sched)
@@ -1256,6 +1263,7 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
 Task:    ICE::scheduleComputeVel_FC--
 Purpose: Compute the face centered velocities
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleComputeVel_FC(SchedulerP            & sched,
                                 const PatchSet        * patches,
                                 const MaterialSubset  * ice_mss,
@@ -1409,6 +1417,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP           & sched,
             equilibration pressure.  Note there could be a change in pressure
             due to changes in mass.
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP            & sched,
                                                   const PatchSet        * patches,
                                                   const MaterialSubset  * press_matl,
@@ -1463,6 +1472,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP            & sched,
 Task:   ICE::scheduleComputePressFC--
 Purpose: Using the pressure compute the pressure at the cell faces
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleComputePressFC( SchedulerP          & sched,
                                   const PatchSet      * patches,
                                   const MaterialSubset* press_matl,
@@ -1596,6 +1606,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP           & sched,
  Task:     scheduleAccumulateEnergySourceSinks--
  Purpose:  Accumulate all of the energy sources and sinks
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP          & sched,
                                               const PatchSet      * patches,
                                               const MaterialSubset* ice_mss,
@@ -1613,27 +1624,18 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP          & sched,
 
   t->requiresVar( Task::OldDW, lb->simulationTimeLabel );
   t->requiresVar( Task::OldDW, lb->delTLabel, getLevel(patches) );
-#if newPressWork
-  t->requiresVar( Task::NewDW, lb->press_CCLabel,     press_mss,oims, m_gac,1 );
-  t->requiresVar( Task::NewDW, lb->sum_rho_CCLabel,   press_mss,oims, m_gac,1 );
-  t->requiresVar( Task::NewDW, lb->pressX_FCLabel,    press_mss,oims, m_gac,1 );
-  t->requiresVar( Task::NewDW, lb->pressY_FCLabel,    press_mss,oims, m_gac,1 );
-  t->requiresVar( Task::NewDW, lb->pressZ_FCLabel,    press_mss,oims, m_gac,1 );
-  t->requiresVar( Task::OldDW, lb->vel_CCLabel,       ice_mss, m_gac,1 );
-  t->requiresVar( Task::NewDW, lb->f_theta_CCLabel,            m_gn );
-#else
   t->requiresVar( Task::NewDW, lb->press_CCLabel,     press_mss,oims, m_gn );
   t->requiresVar( Task::NewDW, lb->delP_DilatateLabel,press_mss,oims, m_gn );
   t->requiresVar( Task::NewDW, lb->compressibilityLabel,              m_gn );
-  if(d_with_mpm){
-   t->requiresVar( Task::NewDW,lb->TMV_CCLabel,       press_mss,oims, m_gn);
-  }
-#endif
   t->requiresVar( Task::OldDW, lb->temp_CCLabel,      ice_mss, m_gac,1 );
   t->requiresVar( Task::NewDW, lb->thermalCondLabel,  ice_mss, m_gac,1 );
   t->requiresVar( Task::NewDW, lb->rho_CCLabel,                m_gac,1 );
   t->requiresVar( Task::NewDW, lb->sp_vol_CCLabel,             m_gac,1 );
   t->requiresVar( Task::NewDW, lb->vol_frac_CCLabel,           m_gac,1 );
+
+  if(d_with_mpm){
+   t->requiresVar( Task::NewDW,lb->TMV_CCLabel,       press_mss,oims, m_gn);
+  }
 
   t->computesVar( lb->int_eng_source_CCLabel );
   t->computesVar( lb->heatCond_src_CCLabel );
@@ -1904,6 +1906,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   Purpose:  Advect the conserved quantities, mass, momentum, energy
             specific volume and any passive scalar variables.
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP     & sched,
                                     const PatchSet      * patches,
                                     const MaterialSubset* ice_matlsub,
@@ -3357,6 +3360,7 @@ void ICE::computeTempFC(const ProcessorGroup  *,
  Purpose:   compute the face centered velocities minus the exchange
             contribution.
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 template<class T> void ICE::computeVelFace(int dir,
                                            CellIterator it,
                                            IntVector adj_offset,
@@ -3417,6 +3421,7 @@ template<class T> void ICE::computeVelFace(int dir,
    This function calculates the face centered velocities on all faces
    in the domain.
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::computeVel_FC(const ProcessorGroup  *,
                         const PatchSubset     * patches,
                         const MaterialSubset  * /*matls*/,
@@ -3671,6 +3676,7 @@ void ICE::updateVel_FC(const ProcessorGroup *,
  Note:  Units of delp_Dilatate and delP_MassX are [Pa]
  Reference:  Multimaterial Formalism eq. 1.5
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
                                           const PatchSubset     * patches,
                                           const MaterialSubset  * /*matls*/,
@@ -3848,6 +3854,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup  *,
  Function:  ICE::computePressFace--
  Purpose:   Driver function that is called by task computePressFC
   _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 template <class T> void ICE::computePressFace(CellIterator iter,
                                               IntVector adj_offset,
                                               constCCVariable<double>& sum_rho,
@@ -3870,6 +3877,7 @@ template <class T> void ICE::computePressFace(CellIterator iter,
     cell faces for every cell in the computational domain and a single
     layer of ghost cells.
   _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::computePressFC(const ProcessorGroup *,
                          const PatchSubset    * patches,
                          const MaterialSubset * /*matls*/,
@@ -4501,6 +4509,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup  *,
  Purpose:   This function accumulates all of the sources/sinks of energy
  Currently the kinetic energy isn't included.
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
                                       const PatchSubset     * patches,
                                       const MaterialSubset  * /*matls*/,
@@ -4521,178 +4530,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
     Vector dx = patch->dCell();
     double vol=dx.x()*dx.y()*dx.z();
 
-#if newPressWork
-    double areaX = dx.y() * dx.z();
-    double areaY = dx.x() * dx.z();
-    double areaZ = dx.x() * dx.y();
-
-    constCCVariable<double> sp_vol_CC;
-    constCCVariable<double> vol_frac;
-    constCCVariable<double> f_theta;
-    constCCVariable<double> press_CC;
-    constCCVariable<double> sum_rho_CC;
-    constCCVariable<double> rho_CC;
-
-    constSFCXVariable<double> pressX_FC;
-    constSFCYVariable<double> pressY_FC;
-    constSFCZVariable<double> pressZ_FC;
-
-    new_dw->get( press_CC,   lb->press_CCLabel,   0,patch,m_gac,1 );
-    new_dw->get( sum_rho_CC, lb->sum_rho_CCLabel, 0,patch,m_gac,1 );
-    new_dw->get( pressX_FC,  lb->pressX_FCLabel,  0,patch,m_gac,1 );
-    new_dw->get( pressY_FC,  lb->pressY_FCLabel,  0,patch,m_gac,1 );
-    new_dw->get( pressZ_FC,  lb->pressZ_FCLabel,  0,patch,m_gac,1 );
-
-    unsigned int numMatls = m_materialManager->getNumMatls();
-
-    //______________________________________________________________________
-    //  C O N S I S T E N T   P R E S S U R E   W O R K
-    //
-    //  Build the flow work from the same face pressure operator the momentum
-    //  equation uses (press<X,Y,Z>_FC) instead of from delP_Dilatate, so the
-    //  internal energy this task removes is exactly the kinetic energy
-    //  accumulateMomentumSourceSinks adds.  Without that pairing IE + KE is not
-    //  conserved discretely and the post shock temperature is underpredicted.
-    //
-    //      int_eng_source_m = f_theta_m * ( -delT*( TE_flux - KE_work ) )
-    //
-    //  KE_work is the exact discrete KE production of the pressure force summed
-    //  over ICE matls; it matches mom_source term for term.  TE_flux is the flux
-    //  of press*(mixture volumetric flux W), cross weighted by sum_rho_CC
-    //  exactly the way press_FC itself is (computePressFace).  That weighting is
-    //  what makes the sum_rho*W*press cross term in
-    //  upFlux[i+1/2] - W[i]*press_FC[i+1/2] cancel identically, leaving a clean
-    //  sum_rho*press*(dW) residual -- the discrete -press*div(W).  upFlux at
-    //  cell i for its right face is algebraically the same expression as at cell
-    //  i+1 for its left face, so the flux telescopes and the formulation is
-    //  globally conservative.
-    //
-    //  The mixture compresses as one at a single equilibrated pressure, so the
-    //  work is computed once for the mixture and split by
-    //  f_theta = vol_frac*kappa/sumKappa -- the same compressibility weighting
-    //  the delP_Dilatate form carried, since
-    //     TMV*vol_frac*kappa*press*delP_Dilatate
-    //       == f_theta * ( press * total mixture volume change ).
-    //  Keeping that weighting matters: in a stiff/compliant pair (water/air) the
-    //  compliant material must absorb nearly all of the compression work.
-    //
-    //  Reduces to the single material form identically: vol_frac and f_theta are
-    //  literally 1.0 there and sum_rho_CC is a one term sum.
-    //
-    //  KNOWN LIMITATION: a phase that is present only in trace amounts and is
-    //  far more compressible than its host (air suspended in water at
-    //  vol_frac ~ 1e-12) gets an f_theta share in which its own vol_frac
-    //  cancels, so kappa_m/sumKappa (~1e4 there) multiplies whatever residual
-    //  this operator leaves.  Because W is built from cell centred velocities
-    //  while ICE enforces its incompressibility constraint on the FACE
-    //  velocities, that residual does not vanish for incompressible flow and
-    //  the trace phase picks up a spurious temperature spike.  See the
-    //  waterAirOscillator case.
-    CCVariable<Vector> W;              // sum over ICE matls of vol_frac * vel_CC
-    CCVariable<double> KE_work;        // KE production by the pressure force
-    CCVariable<double> netPressWork;   // mixture pressure work, before the f_theta split
-
-    new_dw->allocateTemporary( W,            patch, m_gac, 1 );
-    new_dw->allocateTemporary( KE_work,      patch );
-    new_dw->allocateTemporary( netPressWork, patch );
-
-    W.initialize( Vector(0.0,0.0,0.0) );
-    KE_work.initialize( 0.0 );
-    netPressWork.initialize( 0.0 );
-
-    for(unsigned int m = 0; m < numMatls; m++) {
-      Material* matl        = m_materialManager->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-
-      if( !ice_matl ){          // MPM matls keep their own energy books
-        continue;
-      }
-      int indx = matl->getDWIndex();
-
-      constCCVariable<double> volFrac;
-      constCCVariable<double> rho;
-      constCCVariable<Vector> vel_CC;
-
-      new_dw->get( volFrac, lb->vol_frac_CCLabel, indx,patch,m_gac,1 );
-      new_dw->get( rho,     lb->rho_CCLabel,      indx,patch,m_gac,1 );
-      old_dw->get( vel_CC,  lb->vel_CCLabel,      indx,patch,m_gac,1 );
-
-      //  a gac,1 fill needs the matching ghost count on the iterator, otherwise
-      //  the layer at inter-patch faces is skipped and W is left zero there
-      for(CellIterator iter = patch->getExtraCellIterator(1); !iter.done(); iter++){
-        IntVector c = *iter;
-        W[c] += volFrac[c] * vel_CC[c];
-      }
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c     = *iter;
-        IntVector right = c + IntVector(1,0,0);
-        IntVector top   = c + IntVector(0,1,0);
-        IntVector front = c + IntVector(0,0,1);
-
-        //  the pressure part of mom_source, matching accumulateMomentumSourceSinks
-        //  term for term.  Gravity and the viscous source are deliberately left
-        //  out: they do real work on KE and must not be drained from IE.
-        double dp_X = ( pressX_FC[right] - pressX_FC[c] ) * areaX * volFrac[c];
-        double dp_Y = ( pressY_FC[top]   - pressY_FC[c] ) * areaY * volFrac[c];
-        double dp_Z = ( pressZ_FC[front] - pressZ_FC[c] ) * areaZ * volFrac[c];
-
-        //  The exact discrete KE change from the pressure force is
-        //  mom_source . u^{n+1/2}, NOT mom_source . u^n, because
-        //  mom_L = mass*u^n + mom_source.  Using u^n leaves a spurious
-        //  +|mom_source|^2/(2 mass) of heating every step: always positive,
-        //  growing as |grad p|^2, so it over-predicts the post-shock
-        //  temperature at strong shocks (and vanishes as delT -> 0).
-        double halfInvMass = 1.0/( 2.0 * rho[c] * vol );
-
-        double uHalf = vel_CC[c].x() - dp_X * delT * halfInvMass;
-        double vHalf = vel_CC[c].y() - dp_Y * delT * halfInvMass;
-        double wHalf = vel_CC[c].z() - dp_Z * delT * halfInvMass;
-
-        KE_work[c] += uHalf * dp_X + vHalf * dp_Y + wHalf * dp_Z;
-      }
-    }
-
-    //__________________________________
-    //  mixture pressure work:  -delT*( div(W press) - W.grad(press_FC) )
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c      = *iter;
-      IntVector right  = c + IntVector(1,0,0);
-      IntVector top    = c + IntVector(0,1,0);
-      IntVector front  = c + IntVector(0,0,1);
-      IntVector left   = c - IntVector(1,0,0);
-      IntVector bottom = c - IntVector(0,1,0);
-      IntVector back   = c - IntVector(0,0,1);
-
-      double upFlux_R = ( sum_rho_CC[right]*W[c].x()    *press_CC[c]
-                         + sum_rho_CC[c]    *W[right].x()*press_CC[right] )
-                       / ( sum_rho_CC[c] + sum_rho_CC[right] );
-      double upFlux_L = ( sum_rho_CC[c]   *W[left].x()*press_CC[left]
-                         + sum_rho_CC[left]*W[c].x()   *press_CC[c] )
-                       / ( sum_rho_CC[left] + sum_rho_CC[c] );
-
-      double upFlux_T = ( sum_rho_CC[top]*W[c].y()  *press_CC[c]
-                         + sum_rho_CC[c]  *W[top].y()*press_CC[top] )
-                       / ( sum_rho_CC[c] + sum_rho_CC[top] );
-      double upFlux_B = ( sum_rho_CC[c]     *W[bottom].y()*press_CC[bottom]
-                         + sum_rho_CC[bottom]*W[c].y()     *press_CC[c] )
-                       / ( sum_rho_CC[bottom] + sum_rho_CC[c] );
-
-      double upFlux_F  = ( sum_rho_CC[front]*W[c].z()    *press_CC[c]
-                          + sum_rho_CC[c]    *W[front].z()*press_CC[front] )
-                        / ( sum_rho_CC[c] + sum_rho_CC[front] );
-      double upFlux_Bk = ( sum_rho_CC[c]   *W[back].z()*press_CC[back]
-                          + sum_rho_CC[back]*W[c].z()   *press_CC[c] )
-                        / ( sum_rho_CC[back] + sum_rho_CC[c] );
-
-      double TE_flux =
-          ( upFlux_R - upFlux_L  ) * areaX
-        + ( upFlux_T - upFlux_B  ) * areaY
-        + ( upFlux_F - upFlux_Bk ) * areaZ;
-
-      netPressWork[c] = -delT * (TE_flux - KE_work[c]);
-    }
-#else
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> kappa;
     constCCVariable<double> vol_frac;
@@ -4716,7 +4553,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
     }
 
     unsigned int numMatls = m_materialManager->getNumMatls();
-#endif
 
     for(unsigned int m = 0; m < numMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
@@ -4728,12 +4564,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
 
       new_dw->get( sp_vol_CC,  lb->sp_vol_CCLabel,      indx,patch,m_gac,1 );
       new_dw->get( rho_CC,     lb->rho_CCLabel,         indx,patch,m_gac,1 );
-      new_dw->get( vol_frac,   lb->vol_frac_CCLabel,    indx,patch,m_gac,1 );
-#if newPressWork
-      new_dw->get( f_theta,    lb->f_theta_CCLabel,     indx,patch,m_gn,0 );
-#else
       new_dw->get( kappa,      lb->compressibilityLabel,indx,patch,m_gn,0 );
-#endif
+      new_dw->get( vol_frac,   lb->vol_frac_CCLabel,    indx,patch,m_gac,1 );
 
       new_dw->allocateAndPut( int_eng_source,
                                lb->int_eng_source_CCLabel,indx,patch);
@@ -4759,17 +4591,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
         }
 
         //__________________________________
-        //   Flow work
-#if newPressWork
-        //  netPressWork is the mixture pressure work computed above; f_theta is
-        //  this material's compressibility weighted share of it.
-        if( ice_matl->getIncludeFlowWork() ){
-          for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            int_eng_source[c] += f_theta[c] * netPressWork[c] + heatCond_src[c];
-          }
-        }
-#else
         //   Compute source from volume dilatation
         //   Exclude contribution from delP_MassX
         if( ice_matl->getIncludeFlowWork() ){
@@ -4779,7 +4600,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup  *,
             int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
           }
         }
-#endif
       }
 
       //__________________________________
@@ -5382,6 +5202,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup *,
    This task calculates the The cell-centered, time n+1, mass, momentum
    internal energy, sp_vol
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
                                  const PatchSubset    * patches,
                                  const MaterialSubset * /*matls*/,
@@ -5412,14 +5233,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
 
     unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
 
-#if newPressWork
-    Vector dx  = patch->dCell();
-    double vol = dx.x() * dx.y() * dx.z();
-#endif
-
     for (unsigned int m = 0; m < numMatls; m++ ) {
-      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE",  m );
-      int indx = ice_matl->getDWIndex();
+      Material* matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE",  m );
+      int indx = matl->getDWIndex();
 
       CCVariable<double> mass_adv;
       CCVariable<double> int_eng_adv;
@@ -5504,48 +5320,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
         int_eng_adv[c] = (int_eng_L_ME[c] + q_advected[c]) ;
       }
 
-      //__________________________________
-      //  Advective KE dissipation -> heat  (DeBar-style fix)
-      //  Upwind advection of momentum is diffusive: the KE of the advected
-      //  momentum, |mom_adv|^2/(2 mass_adv), is less than the KE the same
-      //  advection operator transports conservatively.  Physically that
-      //  deficit is the irreversible shock heating (entropy production);
-      //  without it the post-shock temperature is underpredicted, and the
-      //  error grows with shock strength.  Advect the Lagrangian KE
-      //  conservatively and return the deficit to the internal energy so
-      //  IE + KE is conserved jointly across the advection step.
-      //  Companion to the consistent pressure-work formulation in
-      //  accumulateEnergySourceSinks.
-#if newPressWork
-      {
-        CCVariable<double> KE_L;
-        new_dw->allocateTemporary(KE_L, patch, m_gac, 2);
-
-        //  a material can be all but absent from a multi-material cell, so floor
-        //  the mass the same way computeLagrangianValues does
-        double minMass = ice_matl->getTinyRho() * vol;
-
-        int NGC = 2;  // number of ghostCells
-        for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++){
-          IntVector c = *iter;
-          KE_L[c] = 0.5 * mom_L_ME[c].length2()/std::max( mass_L[c], minMass );
-        }
-
-        varBasket->is_Q_massSpecific = true;
-        varBasket->desc = "KE";
-        bool saveDoRefluxing = varBasket->doRefluxing;
-        varBasket->doRefluxing = false;   // auxiliary qty: no reflux labels
-        advector->advectQ(KE_L, mass_L, q_advected, varBasket);
-        varBasket->doRefluxing = saveDoRefluxing;
-
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          double KE_adv     = KE_L[c] + q_advected[c];
-          double KE_fromMom = 0.5 * mom_adv[c].length2()/std::max( mass_adv[c], minMass );
-          int_eng_adv[c] += KE_adv - KE_fromMom;
-        }
-      }
-#endif
 
       //__________________________________
       // sp_vol[m] * mass

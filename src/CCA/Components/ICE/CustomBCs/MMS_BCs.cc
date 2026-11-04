@@ -88,7 +88,12 @@ bool read_MMS_BC_inputs(const ProblemSpecP& prob_spec,
       ice_ps->require("dynamic_viscosity",  lvb->viscosity);
       ice_ps->require("specific_heat",lvb->cv);
 
-      ProblemSpecP cfd_ice_ps = prob_spec->findBlock("CFD")->findBlock("ICE");
+      // SPICE reads the ICE options from <CFD><SPICE>
+      ProblemSpecP cfd_ps     = prob_spec->findBlock("CFD");
+      ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+      if( !cfd_ice_ps ){
+        cfd_ice_ps = cfd_ps->findBlock("SPICE");
+      }
       ProblemSpecP c_init_ps  = cfd_ice_ps->findBlock("customInitialization");
       ProblemSpecP mms_ps     = c_init_ps->findBlock("manufacturedSolution");
       mms_ps->require("A", lvb->A);

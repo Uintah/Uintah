@@ -454,6 +454,7 @@
                                                 smpm, shellmpm, SHELLMPM,
                                                 solvertest2, SOLVERTEST2,
                                                 solvertest, SOLVERTEST,
+                                                spice, SPICE,
                                                 switcher,
                                                 unifiedschedulertest, UNIFIEDSCHEDULERTEST,
                                                 wasatch,
@@ -776,6 +777,7 @@
     <cfl               spec="OPTIONAL DOUBLE '0,1'" />
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
+    <include href="spice_spec.xml"  section="CFD/SPICE" />
     <include href="arches_spec.xml" section="CFD/ARCHES" />
 
   </CFD>

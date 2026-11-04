@@ -9,7 +9,7 @@ import importlib
 #  that don't have a corresponding entry in the <component.py> file
 #______________________________________________________________________
 
-components = [ "ARCHES", "ICE", "IMPM", "Examples", "Models", "MPMICE", "MPM", "UCF", "Wasatch" ]
+components = [ "ARCHES", "ICE", "IMPM", "Examples", "Models", "MPMICE", "MPM", "SPICE", "UCF", "Wasatch" ]
 #components = [ "ICE" ]
 
 whichTests = "NIGHTLYTESTS"

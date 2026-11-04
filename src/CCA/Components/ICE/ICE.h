@@ -58,6 +58,7 @@
 #include <Core/Math/UintahMiscMath.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <functional>
 #include <vector>
 #include <string>
 
@@ -338,6 +339,23 @@ using namespace ExchangeModels;
 
        void setWithRigidMPM() {
          d_with_rigid_mpm = true;
+       };
+
+       //__________________________________
+       //  Hooks for a parent component (SPICE) that reads its CFD options
+       //  from its own <CFD> block and supplies advection operators that
+       //  ICE's AdvectionFactory does not know.  Plain ICE never calls them.
+       //  Both must be set before problemSetup().
+       typedef std::function<Advector*( ProblemSpecP & cfd_ps,
+                                        bool & useCompatibleFluxes,
+                                        int  & orderOfAdvection )> AdvectorFactoryFn;
+
+       void setCFDBlockName( const std::string & name ) {
+         d_cfdBlockName = name;
+       };
+
+       void setAdvectorFactory( const AdvectorFactoryFn & factory ) {
+         d_advectorFactory = factory;
        };
 
 
@@ -757,6 +775,7 @@ using namespace ExchangeModels;
       friend class MPMICE;
       friend class AMRICE;
       friend class impAMRICE;
+      friend class SPICE;
 
       ICELabel* lb;
       SchedulerP d_subsched;
@@ -777,6 +796,11 @@ using namespace ExchangeModels;
       // Misc
       customBC_globalVars* d_BC_globalVars;
       customInitialize_basket* d_customInitialize_basket;
+
+      // <CFD><d_cfdBlockName> holds the ICE options; d_advectorFactory, when
+      // set, replaces AdvectionFactory::create.  See setCFDBlockName().
+      std::string       d_cfdBlockName{"ICE"};
+      AdvectorFactoryFn d_advectorFactory;
 
       Advector* d_advector;
       int  d_OrderOfAdvection;

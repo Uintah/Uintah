@@ -54,6 +54,7 @@ PSELIBS := \
         $(ICE)                             \
         $(MPM)                             \
         $(MPMICE)                          \
+        $(SPICE)                           \
         $(PHASEFIELD)                      \
         $(WASATCH)                         \
         $(COMPONENTS)/Application          \
