@@ -45,7 +45,7 @@ fi
 #__________________________________
 # do both udas have dat files?
 
-diff "$test_uda" "$gs_uda" | grep -E 'Only.*dat' > $tmpFile
+diff "$test_uda" "$gs_uda" | grep -E '^Only in .*: .*\.dat$' > $tmpFile
 
 missing_dats=$( wc --lines < $tmpFile )
 

@@ -65,6 +65,7 @@
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
+#include <CCA/Components/SPICE/SPICE.h>
 #endif
 
 #ifndef NO_MPM
@@ -248,6 +249,17 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "rigidmpmice ";
+  }
+#endif
+
+  //----------------------------
+
+#ifndef NO_ICE
+  if (sim_comp == "spice" || sim_comp == "SPICE") {
+    return scinew SPICE(myworld, materialManager, doAMR);
+  }
+  else {
+    turned_on_options += "spice ";
   }
 #endif
 

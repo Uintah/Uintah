@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+<!--________________________________________________________________________-->
+<!-- SPICE shock tube with the gasCombustion model supplying the            -->
+<!-- thermodynamic data (calorically imperfect air, no chemistry),          -->
+<!-- Kurganov-Tadmor advection with every option on.                        -->
+<!--________________________________________________________________________-->
+
+   <Meta>
+       <title>SPICE shock tube with dynamic properties (KT), x direction</title>
+   </Meta>    
+
+   <SimulationComponent type="spice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0003      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <end_at_max_time_exactly>true</end_at_max_time_exactly>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YAR"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YO2"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-YAR"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "y+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]          </lower>
+              <upper>        [1,0.001,0.001]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [4,1,1]    </patches>
+              <resolution>   [1600,1,1]  </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  T  P  U  T     V  A  R  I  A  B  L  E  S                -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>
+      <filebase>riemann_gc_x.uda</filebase>
+      <outputTimestepInterval> 50 </outputTimestepInterval>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="sp_vol_CC"/> 
+      <save label="mach"/>
+      <save label="scalar-YO2"/>
+      <save label="specific_heat"/>
+      <save label="gamma"/>
+      <!-- needed for regression tester dat comparisons -->       
+      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>
+      <checkpoint timestepInterval="75" cycle="2"/>
+      <!--  <checkpoint interval="0.0005" cycle="2"/> -->
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    S  P  I  C  E     P  A  R  A  M  E  T  E  R  S                  -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.25</cfl>
+       <SPICE>
+        <advection type = "CentralUpwind" limiter = "vanAlbada" />
+        <CentralUpwind>
+          <fluxScheme>Kurganov</fluxScheme>
+          <kappaFunction>MachToAcCourant</kappaFunction>
+          <faceVelocity>true</faceVelocity>
+          <facePressure>true</facePressure>
+          <ktPressureFlux>true</ktPressureFlux>
+        </CentralUpwind>
+        <!-- PIMPLE is off (1 pass); SPICE.py turns it on with modUPS -->
+        <PIMPLE>
+          <nOuterCorrectors>1</nOuterCorrectors>
+          <theta>0.5</theta>
+          <outerTolerance>0</outerTolerance>
+        </PIMPLE>
+      </SPICE>        
+    </CFD>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          720.7             </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           <geom_object>
+             <difference>
+                <box label="wholegrid">
+                    <min>           [-1.0, -1.0, -1.0 ]   </min>
+                    <max>           [ 2.0,  2.0, 2.0 ]   </max>
+                </box> 
+                
+                <box label="rightpartition">          
+                    <min>           [ 0.5,-1.0, -1.0 ]   </min>
+                    <max>           [ 2.0, 2.0,  2.0 ]   </max>
+                </box>
+              </difference>
+               <res>                  [2,2,2]            </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    500.0                   </temperature>
+               <density>        0.7031903695629453      </density>
+               <pressure>       101325.0                </pressure>
+           </geom_object>
+           
+           
+           <geom_object>
+                <box label="rightpartition">            </box>
+                <res>           [2,2,2]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    500.0                   </temperature>
+               <density>        0.007031903695629453    </density>
+               <pressure>       1013.250                </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>  
+    <Models>
+    <Model type="gasCombustion">
+      <gasCombustion>
+        
+        <!-- ideal air (O2:1 N2:3.76) -->
+        <Y_init> [0.23299972, 0.0] </Y_init>
+        <material>source</material>
+        <closureSpecies> N2 </closureSpecies>
+        <mechanismFile> inputs/SPICE/idealAir.xml </mechanismFile> 
+
+        <doChemistry> false  </doChemistry>
+        <doDiffusion> false </doDiffusion>         
+      </gasCombustion>
+    </Model>
+  </Models>    
+    <DataAnalysis>
+    <Module name="lineExtract">
+
+      <material>0</material>
+      <samplingFrequency> 1e5 </samplingFrequency>   
+      <timeStart>          0   </timeStart>
+      <timeStop>          100  </timeStop>
+
+      <Variables>
+        <analyze label="temp_CC"/>
+        <analyze label="vel_CC"/>
+        <analyze label="rho_CC"/>
+        <analyze label="press_CC" matl = '0'/>
+        <analyze label="specific_heat"/>
+        <analyze label="gamma"/>
+        <analyze label="scalar-YO2"/>
+      </Variables>
+
+      <lines>
+        <line name="domain">
+          <startingPt>  [0.0, 0.0, 0.0]  </startingPt>
+          <endingPt>    [1.0, 0.0, 0.0]  </endingPt>
+        </line>
+      </lines>
+    </Module>
+  </DataAnalysis>
+</Uintah_specification>

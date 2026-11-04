@@ -42,10 +42,13 @@
   <!--________________________________________________________________________________________________________-->
   <CFD>
     <ICE                                spec="OPTIONAL NO_DATA" >
+      <!-- CentralUpwind and limiter are SPICE only (spice_spec.xml reuses this
+           section); ICE's own AdvectionFactory rejects CentralUpwind -->
       <advection                        spec="REQUIRED NO_DATA"
-                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'"
+                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder, CentralUpwind'"
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
-                                          attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
+                                          attribute3="compatibleFluxes OPTIONAL BOOLEAN"
+                                          attribute4="limiter             OPTIONAL STRING 'vanAlbada, vanLeer, minmod, MC, upwind'" />
 
       <applyHydrostaticPressure         spec="OPTIONAL BOOLEAN" />
 

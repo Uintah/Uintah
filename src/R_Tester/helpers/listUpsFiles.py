@@ -9,7 +9,7 @@ import importlib
 #  This is useful if you want to run sed/grep on all the ups files
 #______________________________________________________________________
 
-components = [ "ARCHES", "ICE", "IMPM", "Examples", "Models", "MPMICE", "MPM", "UCF", "Wasatch" ]
+components = [ "ARCHES", "ICE", "IMPM", "Examples", "Models", "MPMICE", "MPM", "SPICE", "UCF", "Wasatch" ]
 components = [ "Wasatch" ]
 
 whichTests = "NIGHTLYTESTS"

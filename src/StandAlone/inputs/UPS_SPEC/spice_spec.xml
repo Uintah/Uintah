@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <!--________________________________________________________________________________________________________-->
+  <!--  SPICE (Semi-implicit Pressure Iterated Compressible EOS)                                               -->
+  <!--  <CFD><SPICE> takes every stock ICE CFD option (included from ice_spec.xml, so new ICE options work in   -->
+  <!--  SPICE automatically) plus the Kurganov-Tadmor and PIMPLE options below.  See CCA/Components/SPICE.     -->
+  <CFD>
+    <SPICE                              spec="OPTIONAL NO_DATA" >
+
+      <include href="ice_spec.xml" section="CFD/ICE" excludeSectionTag="true" />
+
+      <!-- requires <advection type="CentralUpwind"> -->
+      <CentralUpwind                    spec="OPTIONAL NO_DATA" >
+        <fluxScheme                     spec="OPTIONAL STRING 'Kurganov, Tadmor'" />
+        <kappaFunction                  spec="OPTIONAL STRING 'MachToAcCourant, one'" />
+        <faceVelocity                   spec="OPTIONAL BOOLEAN" />
+        <facePressure                   spec="OPTIONAL BOOLEAN" />
+        <ktPressureFlux                 spec="OPTIONAL BOOLEAN" />
+      </CentralUpwind>
+
+      <!-- nOuterCorrectors > 1 turns the outer loop on -->
+      <PIMPLE                           spec="OPTIONAL NO_DATA" >
+        <nOuterCorrectors               spec="OPTIONAL INTEGER 'positive'" />
+        <nCorrectors                    spec="OPTIONAL INTEGER 'positive'" />
+        <theta                          spec="OPTIONAL DOUBLE 'positive'" />
+        <outerTolerance                 spec="OPTIONAL DOUBLE" />
+      </PIMPLE>
+
+    </SPICE>
+  </CFD>
+
+</Uintah_Include>

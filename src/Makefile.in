@@ -136,6 +136,17 @@ ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
 	$(MPMICE_DIR)/Core
 endif
 
+# SPICE (builds on ICE)
+ifeq ($(BUILD_ICE),yes)
+  SPICE_LIB = $(COMPONENTS)/SPICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  SPICE_DIR = $(COMPONENTS)/SPICE
+  SPICE_SUB_LIBS = \
+	$(SPICE_DIR)/Advection \
+	$(SPICE_DIR)/Core
+endif
+
 # Phase Field
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD_LIB = $(COMPONENTS)/PhaseField
@@ -195,6 +206,8 @@ ALL_PSE_LIBS =                              \
         $(MPM_SUB_LIBS)                     \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
+        $(SPICE_LIB)                        \
+        $(SPICE_SUB_LIBS)                   \
         $(PHASEFIELD_LIB)                   \
 	$(WASATCH_LIB)
 
@@ -217,6 +230,8 @@ ALL_STATIC_PSE_LIBS =                   \
     $(ARCHES_SUB_LIBS)                  \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \
+    $(SPICE_LIB)                        \
+    $(SPICE_SUB_LIBS)                   \
     $(ICE_LIB)                          \
     $(ICE_SUB_LIBS)                     \
     $(MPMICE_LIB)                       \

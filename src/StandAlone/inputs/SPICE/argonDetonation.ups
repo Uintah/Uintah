@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--______________________________________________________________________
+ SPICE: gas-only 1D argon-diluted CJ detonation.  gasCombustion with chemistry,
+ Kurganov-Tadmor advection and the PIMPLE outer loop (2 passes).  Regression
+ test: capped at 500 timesteps (~4 us, the front moves ~6 mm).
+   run from opt/StandAlone (relative paths):  sus inputs/SPICE/argonDetonation.ups
+
+ 2H2 + O2 + 7Ar, 6.67 kPa, 300 K, Burke2012Argon (1D H2-N2 detonations are
+ unstable in every code; argon dilution with the argon third-body mechanism is not).
+ SDToolbox (make_argon_znd_profile.py):  D_CJ 1615.52 m/s, ZND induction length
+ 1.533 mm (15 cells at dx 0.1 mm), CJ 103.8 kPa / 2797.6 K, u_CJ 712.4 m/s.
+ Init: lab-frame ZND profile (argonDetonationProfile.dat), shock at x = 4 cm moving
+ +x into gas at rest.  x- is a LODI face (as detonationChannel.ups), but the burned gas
+ there flows IN at 956 m/s, just under its sound speed (979 m/s), so it holds roughly
+ the ZND state 4 cm behind the shock.  Its signals (u+c ~ 1935 m/s) reach the front
+ only after ~125 us, so within the run the ZND wave travels freely; the ZND recombination tail
+ is cm long at this pressure, so the burned end of the profile is not yet CJ.
+ Full run (remove max_Timesteps): stable (non-pulsating) front, speed within 1% of
+ D_CJ, induction length within ~10% of ZND.  The shock reaches x = 0.108 m at 42 us;
+ x+ is a closed end.
+______________________________________________________________________-->
+<Uintah_specification>
+
+  <Meta>
+    <title>SPICE gas-only argon detonation (KT + PIMPLE)</title>
+  </Meta>
+
+  <SimulationComponent type="spice" />
+
+  <Time>
+    <maxTime>             4.2e-5  </maxTime>
+    <initTime>            0.0     </initTime>
+    <delt_min>            0.0     </delt_min>
+    <delt_max>            1.0e-7  </delt_max>
+    <delt_init>           1.0e-10 </delt_init>
+    <max_delt_increase>   1.0     </max_delt_increase>
+    <timestep_multiplier> 1.0     </timestep_multiplier>
+    <max_Timesteps>       500     </max_Timesteps>
+  </Time>
+
+  <Grid>
+    <BoundaryConditions>
+      <LODI>
+        <press_infinity>  103821.6 </press_infinity>   <!-- CJ pressure -->
+        <sigma>           0.54     </sigma>
+        <material>        gas      </material>
+      </LODI>
+      <Face side="x-">
+        <BCType id="0" label="Pressure"     var="LODI">               <value> 0.0 </value>        </BCType>
+        <BCType id="0" label="Velocity"     var="LODI">               <value> [0.0,0.,0.] </value> </BCType>
+        <BCType id="0" label="Temperature"  var="LODI">               <value> 0.0 </value>        </BCType>
+        <BCType id="0" label="Density"      var="LODI">               <value> 0.0 </value>        </BCType>
+        <BCType id="0" label="SpecificVol"  var="computeFromDensity"> <value> 0.0 </value>        </BCType>
+        <BCType id="0" label="scalar-YH"    var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YH2"   var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YO"    var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YOH"   var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YH2O"  var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YO2"   var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YHO2"  var="Neumann"> <value> 0.0 </value> </BCType>
+        <BCType id="0" label="scalar-YH2O2" var="Neumann"> <value> 0.0 </value> </BCType>
+      </Face>
+      <Face side="x+"><BCType id="0" label="Symmetric" var="symmetry"/></Face>
+      <Face side="y-"><BCType id="0" label="Symmetric" var="symmetry"/></Face>
+      <Face side="y+"><BCType id="0" label="Symmetric" var="symmetry"/></Face>
+      <Face side="z-"><BCType id="0" label="Symmetric" var="symmetry"/></Face>
+      <Face side="z+"><BCType id="0" label="Symmetric" var="symmetry"/></Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="domain">
+        <lower>        [0.0,  0.0,    0.0   ] </lower>
+        <upper>        [0.12, 0.0001, 0.0001] </upper>
+        <extraCells>   [1,1,1]                </extraCells>
+        <patches>      [4,1,1]                </patches>
+        <resolution>   [1200,1,1]             </resolution>
+      </Box>
+    </Level>
+  </Grid>
+
+  <DataArchiver>
+    <filebase>argonDetonation.uda</filebase>
+    <outputTimestepInterval> 50 </outputTimestepInterval>
+    <checkpoint cycle = "2" timestepInterval = "150"/>
+    <save label="press_CC"/>
+    <save label="temp_CC"/>
+    <save label="rho_CC"/>
+    <save label="vel_CC"/>
+    <save label="HeatReleaseRate"/>
+    <save label="scalar-YOH"/>
+    <save label="scalar-YH2O"/>
+  </DataArchiver>
+
+  <CFD>
+    <cfl> 0.2 </cfl>
+    <SPICE>
+      <advection type="CentralUpwind" limiter="vanAlbada"/>
+      <PIMPLE>
+        <nOuterCorrectors> 2 </nOuterCorrectors>
+      </PIMPLE>
+    </SPICE>
+  </CFD>
+
+  <PhysicalConstants>
+    <gravity>            [0.0, 0.0, 0.0] </gravity>
+    <reference_pressure> 6670.0          </reference_pressure>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <ICE>
+      <!-- fresh 2H2+O2+7Ar at 300 K: (gamma-1) cv = R_mix = 263.3826; initProfile overwrites the state -->
+      <material name="gas">
+        <EOS type="ideal_gas"/>
+        <dynamic_viscosity>     0.0       </dynamic_viscosity>
+        <thermal_conductivity>  0.0       </thermal_conductivity>
+        <specific_heat>         473.4165  </specific_heat>
+        <gamma>                 1.556344  </gamma>
+        <geom_object>
+          <box label="domain">
+            <min> [-1.0, -1.0, -1.0] </min>
+            <max> [ 1.0,  1.0,  1.0] </max>
+          </box>
+          <res>         [2,2,2]          </res>
+          <velocity>    [0.0,0.0,0.0]    </velocity>
+          <temperature> 300.0            </temperature>
+          <density>     0.0844145796     </density>
+          <pressure>    6670.0           </pressure>
+        </geom_object>
+      </material>
+    </ICE>
+  </MaterialProperties>
+
+  <Models>
+    <Model type="gasCombustion">
+      <gasCombustion>
+        <!-- [H, H2, O, OH, H2O, O2, HO2, H2O2], closure AR (fresh mixture) -->
+        <Y_init> [0.0, 0.012772427775, 0.0, 0.0, 0.0, 0.101362138875, 0.0, 0.0] </Y_init>
+        <material>       gas </material>
+        <closureSpecies> AR  </closureSpecies>
+        <mechanismFile>  inputs/SPICE/Burke2012Argon.xml </mechanismFile>
+        <doChemistry>    true  </doChemistry>
+        <doDiffusion>    false </doDiffusion>
+        <rtol>   1e-9  </rtol>
+        <atol_Y> 1e-11 </atol_Y>
+        <atol_T> 1e-5  </atol_T>
+        <initProfile>
+          <filename> inputs/SPICE/argonDetonationProfile.dat </filename>
+          <axis> x </axis>
+        </initProfile>
+      </gasCombustion>
+    </Model>
+  </Models>
+
+</Uintah_specification>
