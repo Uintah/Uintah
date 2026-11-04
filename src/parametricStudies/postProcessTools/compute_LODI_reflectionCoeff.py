@@ -34,6 +34,8 @@
 #  Usage:
 #      compute_LODI_reflectionCoeff.py -o <outputFile> -uda <udaName>
 #                                       [-dir x|y|z] [-probe <cellIndex>]
+#                                       [-time <name>] [-press <name>]
+#                                       [-vel <name>]
 #
 #  -dir   selects which axis the 1D domain and its LODI x+/y+/z+-style
 #         boundary runs along (default: x). A y- or z-direction variant of
@@ -59,6 +61,14 @@
 #         two axes -- e.g. the 2D x-y plane test's probe sits at a
 #         specific y cell, not y=0. -dir still selects which velocity
 #         component feeds the Riemann decomposition.
+#
+#  -time, -press, -vel  select the columns of the lineExtract file by their
+#         header descriptor instead of by column number. Defaults are
+#         "Time[s]", "press_CC_0" and "vel_CC_0"; -vel names the Vector
+#         variable and the .x/.y/.z suffix is appended for you. Use these if
+#         the .ups extracts a different material (e.g. press_CC_1) or the
+#         columns are ordered differently. If a name isn't found, the
+#         descriptors that are in the file's header are listed.
 #
 #  References:
 #  [1] J.C. Sutherland, C.A. Kennedy, "Improved boundary conditions for
@@ -103,6 +113,11 @@ GAMMA         = 1.289
 CV            = 652.9                # specific_heat in the .ups is cv (p = rho*(gamma-1)*cv*T)
 T0            = 300.0
 
+# default lineExtract column descriptors (header text, whitespace removed)
+DEFAULT_TIME_COL  = "Time[s]"
+DEFAULT_PRESS_COL = "press_CC_0"
+DEFAULT_VEL_COL   = "vel_CC_0"       # ".x", ".y", ".z" appended
+
 # the x+ reflection arrives later for larger sigma (the relaxation term
 # acts like a softer spring); this window comfortably covers sigma in
 # [0, 2] while staying well clear of the incident peak (~1.5e-3 s) and
@@ -120,6 +135,9 @@ def parse_args(argv):
     probe     = DEFAULT_PROBE
     window    = REFLECTION_WINDOW
     index     = None
+    time_col  = DEFAULT_TIME_COL
+    press_col = DEFAULT_PRESS_COL
+    vel_col   = DEFAULT_VEL_COL
     i = 0
     while i < len( argv ):
         if argv[i] == "-o" and i + 1 < len( argv ):
@@ -140,9 +158,19 @@ def parse_args(argv):
         elif argv[i] == "-index" and i + 3 < len( argv ):
             index = ( int( argv[i + 1] ), int( argv[i + 2] ), int( argv[i + 3] ) )
             i += 4
+        elif argv[i] == "-time" and i + 1 < len( argv ):
+            time_col = argv[i + 1]
+            i += 2
+        elif argv[i] == "-press" and i + 1 < len( argv ):
+            press_col = argv[i + 1]
+            i += 2
+        elif argv[i] == "-vel" and i + 1 < len( argv ):
+            vel_col = argv[i + 1]
+            i += 2
         else:
             i += 1
-    return out_file, uda, direction, probe, window, index
+    return ( out_file, uda, direction, probe, window, index,
+             time_col, press_col, vel_col )
 
 
 #______________________________________________________________________
@@ -162,31 +190,71 @@ def probe_index(direction, probe):
 
 
 #______________________________________________________________________
+#  parse_header -- returns the column descriptors from the lineExtract
+#  header line (the one containing "Timestep"), e.g.
+#    X_CC Y_CC Z_CC Timestep Time[s] press_CC_0 vel_CC_0.x vel_CC_0.y vel_CC_0.z
+#  "Time [s]" contains a space so it is joined into "Time[s]".
+#______________________________________________________________________
+def parse_header(line):
+    text = line.lstrip( "#" ).replace( "Time [s]", "Time[s]" )
+    return text.split()
+
+
+#______________________________________________________________________
+#  find_column -- returns the index of descriptor 'name' in 'header'
+#______________________________________________________________________
+def find_column(header,
+                name,
+                path):
+    if name not in header:
+        sys.stderr.write( "compute_LODI_reflectionCoeff.py: column '%s' not "
+                           "found in %s\n  available columns: %s\n"
+                           % (name, path, " ".join( header )) )
+        sys.exit( 1 )
+    return header.index( name )
+
+
+#______________________________________________________________________
 #  read_probe_file -- parses the lineExtract output at
 #
-#  uda/<LINE_NAME>/L-<LEVEL_INDEX>/i<i>_j<j>_k<k>. Column order (fixed by
-#
-#  CCA/Components/OnTheFlyAnalysis/lineExtract.cc's printHeader/doAnalysis):
-#    1 X_CC  2 Y_CC  3 Z_CC  4 Timestep  5 Time[s]   6 press_CC_0  7 vel_CC_0.x  8 vel_CC_0.y  9 vel_CC_0.z
+#  uda/<LINE_NAME>/L-<LEVEL_INDEX>/i<i>_j<j>_k<k>. Columns are located by
+#  the descriptors in the file's header (see parse_header), not by position.
 #  Returns a list of (t, press, vx, vy, vz) tuples.
 #______________________________________________________________________
-def read_probe_file(path):
+def read_probe_file(path,
+                    time_col,
+                    press_col,
+                    vel_col):
     if not os.path.exists( path ):
         sys.stderr.write( "compute_LODI_reflectionCoeff.py: probe file not "
                            "found: %s\n" % path )
         sys.exit( 1 )
 
-    data = []
+    header = None
+    data   = []
     with open( path ) as f:
         for line in f:
-            if line.startswith( "#" ) or not line.strip():
+            if not line.strip():
                 continue
+            if line.startswith( "#" ):
+                if "Timestep" in line:
+                    header = parse_header( line )
+                    i_t    = find_column( header, time_col,          path )
+                    i_p    = find_column( header, press_col,         path )
+                    i_vx   = find_column( header, vel_col + ".x",    path )
+                    i_vy   = find_column( header, vel_col + ".y",    path )
+                    i_vz   = find_column( header, vel_col + ".z",    path )
+                continue
+            if header is None:
+                sys.stderr.write( "compute_LODI_reflectionCoeff.py: no column "
+                                   "header line found in %s\n" % path )
+                sys.exit( 1 )
             cols = line.split()
-            t     = float( cols[4] )
-            press = float( cols[5] )
-            vx    = float( cols[6] )
-            vy    = float( cols[7] )
-            vz    = float( cols[8] )
+            t     = float( cols[i_t] )
+            press = float( cols[i_p] )
+            vx    = float( cols[i_vx] )
+            vy    = float( cols[i_vy] )
+            vz    = float( cols[i_vz] )
             data.append( (t, press, vx, vy, vz) )
     return data
 
@@ -206,7 +274,8 @@ def peak_amplitude(series):
 #  main
 #______________________________________________________________________
 def main():
-    out_file, uda, direction, probe, window, index_override = parse_args( sys.argv[1:] )
+    ( out_file, uda, direction, probe, window, index_override,
+      time_col, press_col, vel_col ) = parse_args( sys.argv[1:] )
 
     if uda is None:
         sys.stderr.write( "compute_LODI_reflectionCoeff.py: -uda is required\n" )
@@ -219,7 +288,10 @@ def main():
     i, j, k = cell_index
 
     probe_path = "%s/%s/L-%i/i%i_j%i_k%i" % (uda, LINE_NAME, LEVEL_INDEX, i, j, k)
-    samples = read_probe_file( probe_path )
+    samples = read_probe_file( probe_path,
+                               time_col,
+                               press_col,
+                               vel_col )
 
     c0 = math.sqrt( GAMMA * CV * (GAMMA - 1.0) * T0 )
     vel_index = axis + 2                # sample = (t, press, vx, vy, vz)
