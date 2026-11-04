@@ -44,7 +44,11 @@
 
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/directory.hpp>
+
+// Boost >= 1.72 moved the directory iterators into directory.hpp
+#if BOOST_VERSION >= 107200
+#  include <boost/filesystem/directory.hpp>
+#endif
 
 #if defined( UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3)
   namespace bfs = boost::filesystem3;
