@@ -48,8 +48,6 @@ ifeq ($(BUILD_ICE),yes)
        $(SRCDIR)/AdiabaticTable.cc     \
        $(SRCDIR)/ConstantSources.cc    \
        $(SRCDIR)/flameSheet_rxn.cc     \
-       $(SRCDIR)/ethyleneDetonation.cc \
-       $(SRCDIR)/hydrogenBurke.cc      \
        $(SRCDIR)/gasCombustion.cc      \
        $(SRCDIR)/gasCombustionMechanism.cc \
        $(SRCDIR)/MaterialProperties.cc \
