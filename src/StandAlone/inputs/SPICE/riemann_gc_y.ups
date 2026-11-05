@@ -211,7 +211,7 @@
         <Y_init> [0.23299972, 0.0] </Y_init>
         <material>source</material>
         <closureSpecies> N2 </closureSpecies>
-        <mechanismFile> inputs/SPICE/idealAir.xml </mechanismFile> 
+        <mechanismFile> inputs/SPICE/RX_MODELS/idealAir.xml </mechanismFile> 
 
         <doChemistry> false  </doChemistry>
         <doDiffusion> false </doDiffusion>         

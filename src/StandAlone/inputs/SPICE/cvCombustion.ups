@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 <Uintah_specification>
-<!-- SPICE version of inputs/ICE/RX_MODELS/cvHydrogen1.ups -->
 
   <Meta>
-    <title>Hydrogen Detonation validation phi = 1 T0 = 1000</title>
+    <title>Hydrogen Detonation validation </title>
   </Meta>
 
-  <SimulationComponent type="spice" />
+  <SimulationComponent type="ice" />
 
   <!--==================== TIME ====================-->
   <Time>
@@ -74,25 +73,22 @@
     <save label="rho_CC"/>
     <save label="press_CC"/>
     <save label="specific_heat"/>
-    <save label="viscosity"/>
-    <save label="thermalCond"/>
 
     <!-- Source Terms-->
     <save label="modelEng_src"/>
     <save label="modelMom_src"/>
     <save label="modelMass_src"/>
-    <save label="HeatReleaseRate"/>
-    
     <save label="dt_chemistry"/>
-    <checkpoint interval="0.0001" cycle="2"/>
+    <save label="HeatReleaseRate"/>
+    <save label="dt_chemistry_limiter"/>
   </DataArchiver>
 
   <!--==================== ICE SETUP ====================-->
   <CFD>
-    <cfl>0.5</cfl>
-    <SPICE>
+    <cfl>0.1</cfl>
+    <ICE>
       <advection type="SecondOrder"/>
-    </SPICE>
+    </ICE>
   </CFD>
 
   <!--==================== CONSTANTS ====================-->
@@ -133,11 +129,12 @@
   <Models>
     <Model type="gasCombustion">
       <gasCombustion>
+        
         <!-- Stoichometric Hydrogen-Air -->
         <Y_init> [0.0, 0.028522387527567396, 0.0, 0.0, 0.0, 0.22635400697103147, 0.0, 0.0] </Y_init>
         <material>source</material>
         <closureSpecies> N2 </closureSpecies>
-        <mechanismFile> inputs/ICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
+        <mechanismFile> inputs/SPICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
       </gasCombustion>
     </Model>
   </Models>

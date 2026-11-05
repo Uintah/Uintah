@@ -137,14 +137,14 @@ ______________________________________________________________________-->
         <Y_init> [0.0, 0.012772427775, 0.0, 0.0, 0.0, 0.101362138875, 0.0, 0.0] </Y_init>
         <material>       gas </material>
         <closureSpecies> AR  </closureSpecies>
-        <mechanismFile>  inputs/SPICE/Burke2012Argon.xml </mechanismFile>
+        <mechanismFile>  inputs/SPICE/RX_MODELS/Burke2012Argon.xml </mechanismFile>
         <doChemistry>    true  </doChemistry>
         <doDiffusion>    false </doDiffusion>
         <rtol>   1e-9  </rtol>
         <atol_Y> 1e-11 </atol_Y>
         <atol_T> 1e-5  </atol_T>
         <initProfile>
-          <filename> inputs/SPICE/argonDetonationProfile.dat </filename>
+          <filename> inputs/SPICE/RX_MODELS/argonDetonationProfile.dat </filename>
           <axis> x </axis>
         </initProfile>
       </gasCombustion>

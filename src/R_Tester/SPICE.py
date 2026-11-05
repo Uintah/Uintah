@@ -74,13 +74,13 @@ riemann_gc_x_PIMPLE_ups      = modUPS( the_dir, "riemann_gc_x.ups",
 #______________________________________________________________________
 
 #  gasCombustion chemistry: 0D constant-volume ignition (stationary, so no KT or PIMPLE)
-CHEMISTRY  = [   ("cvHydrogen1",              "cvHydrogen1.ups",               1,  "ALL", ["exactComparison"]),
-                 ("cvHydrogen2",              "cvHydrogen2.ups",               1,  "ALL", ["exactComparison"])
+CHEMISTRY  = [   ("cvHydrogen1",              "RX_MODELS/cvHydrogen1.ups",               1,  "ALL", ["exactComparison"]),
+                 ("cvHydrogen2",              "RX_MODELS/cvHydrogen2.ups",               1,  "ALL", ["exactComparison"])
              ]
 
 #  chemistry + species and heat diffusion + LODI: 1D laminar flames
-DIFFUSION  = [   ("hydrogenFlame1_KT_PIMPLE", "hydrogenFlame1_KT_PIMPLE.ups", 12,  "ALL", ["exactComparison", "no_dbg"]),
-                 ("hydrogenFlame2",           "hydrogenFlame2.ups",           10,  "ALL", ["exactComparison", "no_dbg"])
+DIFFUSION  = [   ("hydrogenFlame1_KT_PIMPLE", "RX_MODELS/hydrogenFlame1_KT_PIMPLE.ups", 12,  "ALL", ["exactComparison", "no_dbg"]),
+                 ("hydrogenFlame2",           "RX_MODELS/hydrogenFlame2.ups",           10,  "ALL", ["exactComparison", "no_dbg"])
              ]
 
 #  Kurganov-Tadmor advection with every option on, along each axis, plus option variants
@@ -94,7 +94,7 @@ KT         = [   ("riemann_gc_x",             "riemann_gc_x.ups",              4
              ]
 
 #  Kurganov-Tadmor advection + the PIMPLE outer loop
-KT_PIMPLE  = [   ("argonDetonation",          "argonDetonation.ups",           4,  "ALL", ["exactComparison"]),
+KT_PIMPLE  = [   ("argonDetonation",          "RX_MODELS/argonDetonation.ups",           4,  "ALL", ["exactComparison"]),
                  ("riemann_gc_x_PIMPLE",      riemann_gc_x_PIMPLE_ups,         4,  "ALL", ["exactComparison"])
              ]
 
