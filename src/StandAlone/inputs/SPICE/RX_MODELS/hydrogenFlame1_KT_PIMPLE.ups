@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <Uintah_specification>
 <!--______________________________________________________________________-->
-<!--   SPICE version of inputs/ICE/RX_MODELS/hydrogenFlame2.ups: 1D rich  -->
-<!--   (phi = 1.68) H2-air laminar flame, chemistry + diffusion, LODI     -->
-<!--   outflow, stock advection.  Capped at 1000 timesteps for            -->
-<!--   regression testing.                                                -->
+<!--   SPICE version of inputs/ICE/RX_MODELS/hydrogenFlame1.ups with      -->
+<!--   Kurganov-Tadmor advection and the PIMPLE outer loop: 1D H2-air     -->
+<!--   laminar flame, chemistry + diffusion, LODI outflow.  Capped at     -->
+<!--   1000 timesteps for regression testing.                             -->
 <!--______________________________________________________________________-->
  
 <!--Please use a consistent set of units, (mks, cgs,...)-->
@@ -38,8 +38,8 @@
     <BoundaryConditions>
       <LODI>
            <press_infinity> 1.01325e+05          </press_infinity>
-           <vel_infinity>   [3.06886730, 0., 0.] </vel_infinity>
-           <rho_infinity>   0.72091222           </rho_infinity>
+           <vel_infinity>   [2.33140215, 0., 0.] </vel_infinity>
+           <rho_infinity>   0.84947211           </rho_infinity>
            <sigma>          0.54          </sigma>
            <material>       source        </material>
       </LODI>
@@ -60,10 +60,10 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-YH2" var = "Dirichlet">
-                              <value> 0.04700592 </value>
+                              <value> 0.028522387527567396 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-YO2"   var = "Dirichlet">
-                              <value> 0.22204735 </value>
+                              <value> 0.22635400697100733 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-YH2O"   var = "Neumann">
                               <value> 0.0</value>
@@ -145,10 +145,10 @@
        <Level>
            <Box label="domain">
               <lower>        [0.0,0.0,0.0]          </lower>
-              <upper>        [0.1,0.01,0.01]    </upper>
+              <upper>        [0.06,0.01,0.01]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [20,1,1]    </patches>
-              <resolution>   [5000,1,1]  </resolution>
+              <patches>      [12,1,1]    </patches>
+              <resolution>   [3000,1,1]  </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -156,7 +156,7 @@
     <!--      O  U  T  P  U  T     V  A  R  I  A  B  L  E  S                -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>hydrogenFlame2.uda</filebase>
+      <filebase>hydrogenFlame1_KT_PIMPLE.uda</filebase>
       <outputTimestepInterval> 100 </outputTimestepInterval>
         <!-- Species passive scalars -->
         <save label="scalar-YH2"/>
@@ -201,7 +201,19 @@
     <CFD>
        <cfl>0.5</cfl>
        <SPICE>
-        <advection type = "SecondOrder" />
+        <advection type = "CentralUpwind" limiter = "vanAlbada" />
+        <CentralUpwind>
+          <fluxScheme>     Kurganov        </fluxScheme>
+          <kappaFunction>  MachToAcCourant </kappaFunction>
+          <faceVelocity>   true            </faceVelocity>
+          <facePressure>   true            </facePressure>
+          <ktPressureFlux> true            </ktPressureFlux>
+        </CentralUpwind>
+        <PIMPLE>
+          <nOuterCorrectors> 2   </nOuterCorrectors>
+          <theta>            0.5 </theta>
+          <outerTolerance>   0.0 </outerTolerance>
+        </PIMPLE>
       </SPICE>   
     </CFD>
 
@@ -231,9 +243,9 @@
               </box> 
               <res>            [2,2,2]                 </res>
               <velocity>       [0.0,0.0,0.0]    </velocity>
-              <temperature>    300.0                   </temperature>
-              <density>        1.0             </density>
-              <pressure>       101325.0                </pressure>
+              <temperature>    300.0            </temperature>
+              <density>        1.0              </density>
+              <pressure>       101325.0         </pressure>
 
            </geom_object>
          </material>
@@ -244,17 +256,17 @@
     <Model type="gasCombustion">
       <gasCombustion>
         
-        <!-- Rich Hydrogen-Air - Peak flame speed-->
-        <Y_init> [0.0, 0.04700592, 0.0, 0.0, 0.0, 0.22204735, 0.0, 0.0] </Y_init>
+        <!-- Stoichometric Hydrogen-Air -->
+        <Y_init> [0.0, 0.028522387527567396, 0.0, 0.0, 0.0, 0.22635400697103147, 0.0, 0.0] </Y_init>
         <material>source</material>
         <closureSpecies> N2 </closureSpecies>
-        <mechanismFile> inputs/ICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
+        <mechanismFile> inputs/SPICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
 
         <rtol> 1e-9 </rtol>
         <atol_Y> 1e-11 </atol_Y>
         <atol_T> 1e-5 </atol_T>
         <initProfile>
-          <filename> inputs/ICE/RX_MODELS/laminarFlameProfile_phi1.68.dat </filename>
+          <filename> inputs/SPICE/RX_MODELS/laminarFlameProfile_phi1.00.dat </filename>
           <axis> x </axis>
         </initProfile>     
 

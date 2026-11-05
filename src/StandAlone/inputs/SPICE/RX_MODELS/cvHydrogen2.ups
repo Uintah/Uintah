@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 <Uintah_specification>
+<!-- SPICE version of inputs/ICE/RX_MODELS/cvHydrogen2.ups -->
 
   <Meta>
-    <title>Ethylene Detonation validation </title>
+    <title>Hydrogen Detonation validation phi = 1, T0 = 1500</title>
   </Meta>
 
-  <SimulationComponent type="ice" />
+  <SimulationComponent type="spice" />
 
   <!--==================== TIME ====================-->
   <Time>
     <maxTime>            0.001     </maxTime>
     <initTime>           0.0     </initTime>
     <delt_min>           0.0     </delt_min>
-    <delt_max>           1.0e-9  </delt_max>
+    <delt_max>           1.0e-7  </delt_max>
     <delt_init>          1.0e-9  </delt_init>
     <max_delt_increase>  1.0     </max_delt_increase>
-    <max_Timesteps>      20       </max_Timesteps>
     <timestep_multiplier> 1      </timestep_multiplier>
   </Time>
 
@@ -45,49 +45,60 @@
 
   <!--==================== OUTPUTS ====================-->
   <DataArchiver>
-    <filebase>detonationArchValid.uda</filebase>
-    <outputInterval>1e-7</outputInterval>
+    <filebase>cvHydrogen.uda</filebase>
+    <outputInterval>1e-6</outputInterval>
 
     <!-- Species passive scalars -->
-    <save label="scalar-YC2H4"/>
+    <save label="scalar-YH2"/>
     <save label="scalar-YO2"/>
-    <save label="scalar-YCO"/>
-    <save label="scalar-YCO2"/>
     <save label="scalar-YH2O"/>
     <save label="scalar-YH"/>
+    <save label="scalar-YO"/>
+    <save label="scalar-YOH"/>
+    <save label="scalar-YHO2"/>
+    <save label="scalar-YH2O2"/>
 
     <!-- Species source terms -->
-    <save label="scalar_YC2H4_src"/>
+    <save label="scalar_YH2_src"/>
     <save label="scalar_YO2_src"/>
-    <save label="scalar_YCO_src"/>
-    <save label="scalar_YCO2_src"/>
     <save label="scalar_YH2O_src"/>
     <save label="scalar_YH_src"/>
+    <save label="scalar_YO_src"/>
+    <save label="scalar_YOH_src"/>
+    <save label="scalar_YHO2_src"/>
+    <save label="scalar_YH2O2_src"/>
 
     <!-- Thermodynamic fields -->
     <save label="temp_CC"/>
     <save label="vel_CC"/>
     <save label="rho_CC"/>
     <save label="press_CC"/>
+    <save label="specific_heat"/>
+    <save label="viscosity"/>
+    <save label="thermalCond"/>
 
     <!-- Source Terms-->
     <save label="modelEng_src"/>
     <save label="modelMom_src"/>
     <save label="modelMass_src"/>
+    <save label="HeatReleaseRate"/>
+
+    <save label="dt_chemistry"/>
+    <checkpoint interval="0.0001" cycle="2"/>
   </DataArchiver>
 
   <!--==================== ICE SETUP ====================-->
   <CFD>
-    <cfl>0.2</cfl>
-    <ICE>
+    <cfl>0.5</cfl>
+    <SPICE>
       <advection type="SecondOrder"/>
-    </ICE>
+    </SPICE>
   </CFD>
 
   <!--==================== CONSTANTS ====================-->
   <PhysicalConstants>
     <gravity>            [0.0, 0.0, 0.0] </gravity>
-    <reference_pressure> 1000000.0        </reference_pressure>
+    <reference_pressure> 101325.0        </reference_pressure>
   </PhysicalConstants>
 
   <!--==================== MATERIAL ====================-->
@@ -96,10 +107,10 @@
       <material name="source">
         <EOS type="ideal_gas"/>
 
-        <dynamic_viscosity>     0.0    </dynamic_viscosity>
-        <thermal_conductivity>  0.0    </thermal_conductivity>
-        <specific_heat>         718.0  </specific_heat>
-        <gamma>                 1.4    </gamma>
+        <dynamic_viscosity>     0.0                      </dynamic_viscosity>
+        <thermal_conductivity>  0.0                      </thermal_conductivity>
+        <specific_heat>         862.8158241063314       </specific_heat>
+        <gamma>                 1.3340070181445187       </gamma>
 
         <geom_object>
           <box label="domain_box">
@@ -109,9 +120,10 @@
 
           <res> [2,2,2] </res>
           <velocity> [0.0,0.0,0.0] </velocity>
-          <density>  1.74094708   </density>
-          <pressure> 1e7           </pressure>
-          <temperature> 2000.1     </temperature>
+          <density>     0.1698944217103173 </density>
+          <pressure>    101325.0             </pressure>
+          <temperature> 1500.0               </temperature>
+          
         </geom_object>
       </material>
     </ICE>
@@ -119,13 +131,14 @@
 
   <!--==================== MODEL ====================-->
   <Models>
-    <Model type="ethyleneDetonation">
-      <ethyleneDetonation>
-
+    <Model type="gasCombustion">
+      <gasCombustion>
+        <!-- Stoichometric Hydrogen-Air -->
+        <Y_init> [0.0, 0.028522387527567396, 0.0, 0.0, 0.0, 0.22635400697103147, 0.0, 0.0] </Y_init>
         <material>source</material>
-        <debug>false</debug>
-
-      </ethyleneDetonation>
+        <closureSpecies> N2 </closureSpecies>
+        <mechanismFile> inputs/SPICE/RX_MODELS/Burke2012Modified.xml </mechanismFile>
+      </gasCombustion>
     </Model>
   </Models>
 
