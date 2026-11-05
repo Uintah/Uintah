@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+      <title>CMC_Tensile_Test</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>2.e-6</delt_min>
+       <delt_max>2.e-4</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   
+   <DataArchiver>
+       <filebase>CMCTensileTest.uda</filebase>
+       <outputInterval>.01</outputInterval>
+       <save label="p.x"/>
+       <save label="g.velocity_star"/>
+       <save label="p.volume"/>
+       <save label="p.stress"/>
+       <save label="p.scalefactor"/>
+       <save label="p.deformationMeasure"/>
+       <save label="p.particleID"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>linear</interpolator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e9</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>12.e6</G>
+                 <K>32.e6</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "rigid">
+                     <min>[10.0,5.0,0.0]</min>
+                     <max>[11.0,12.5,0.1]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[.3,0.0,0.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+              <constitutive_model type="ceramic_fiber_damage">
+                <E_matrix> 140.0e9 </E_matrix>
+                <nu_matrix> 0.2 </nu_matrix>
+                <E_fiber_transverse> 74.1e9 </E_fiber_transverse>
+                <E_fiber_longitudinal> 185.0e9 </E_fiber_longitudinal>
+                <G_fiber_longitudinal> 80.0e9 </G_fiber_longitudinal>
+                <K_fiber> 45.0e9 </K_fiber>
+                <nu_fiber> 0.16 </nu_fiber>
+                <fiber_volume_fraction> 0.42 </fiber_volume_fraction>
+                <porosity> .2362 </porosity>
+                <pore_aspect_ratio> 1 </pore_aspect_ratio>
+                <alpha_matrix> 2.02e-6 </alpha_matrix>
+                <sigma_o> 51.1e6 </sigma_o>
+                <rho_o> 0.0 </rho_o>
+                <rho_c> 0.059 </rho_c>
+                <rho_n> 0.96 </rho_n>
+                <nu_o> 0 </nu_o>
+                <nu_n> 0.28 </nu_n>
+                <E_fiber_damage> 185.0e9 </E_fiber_damage>
+                <residual_stress> 0.0 </residual_stress>
+                <T_reference> 300.0 </T_reference>
+                <psi_c> -0.693 </psi_c>
+                <psi_n> 5.5 </psi_n>
+                <eps_o> 0.0162 </eps_o>
+                <eps_f> 0.0157 </eps_f>
+                <sig_x3_max> 18.5e6 </sig_x3_max>
+              </constitutive_model>
+<!--
+              <constitutive_model type="UCNH">
+                <usePlasticity> true </usePlasticity>
+	        <bulk_modulus>100.e6</bulk_modulus>
+        	<shear_modulus>79.e6</shear_modulus>
+        	<yield_stress>1.e4</yield_stress>
+        	<hardening_modulus>1.e4</hardening_modulus>
+              </constitutive_model>
+-->
+              <density>2180.14</density>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              
+              <geom_object>
+                   <box label = "bar">
+                     <min>[0.0,5.0,0.0]</min>
+                     <max>[10.0,12.5,0.1]</max>
+                   </box>
+                 <res>[2,2,2]</res>
+                 <velocity>[0.0,0.0,0.0]</velocity>
+                 <temperature>294</temperature>
+               </geom_object>
+
+           </material>
+
+           <contact>
+             <type>rigid</type>
+             <materials>[1,0]</materials>
+              <stop_time>10.0</stop_time>
+              <direction>[1,0,0]</direction>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+
+     <Grid>
+       <BoundaryConditions>
+       
+         <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+
+          <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+
+         <Face side = "y-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+          </Face>
+
+          <Face side = "y+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+            </BCType>
+           </Face>
+
+          <Face side = "z-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+            </BCType>
+           </Face>
+
+         <Face side = "z+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+            </BCType>
+          </Face>
+        </BoundaryConditions>
+
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,-0.1]</lower>
+              <upper>[26.0,30.0,0.2]</upper>
+               <resolution>[52,60,3]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+
+</Uintah_specification>
+
