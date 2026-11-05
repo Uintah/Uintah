@@ -122,6 +122,59 @@ static double eshelbyS(const char* sub, double vm, double a)
 }
 
 // ---------------------------------------------------------------------------
+// Return the stress concentration factor k = sig_22_out / sig_22 at the
+// equator of a pore under remote uniaxial tension, following the Python
+// getPorousStressConcentration(). Depends only on the non-porous matrix
+// properties and the pore geometry, so it can be computed once at setup.
+// ---------------------------------------------------------------------------
+static double getPorousStressConcentration(double Em, double vm, double c,
+                                           double a)
+{
+  if (a < 0.0) a = 1.0;  // default: spherical pores
+
+  double Gm = Em / (2*(1+vm));
+
+  const double sig22 = 1.0e6;          // arbitrary reference stress
+  const double theta = M_PI/2.0;       // equator of the pore
+
+  // Remote (applied) strains for uniaxial sig22
+  double epso11 = -vm*(sig22/Em);
+  double epso22 =      sig22/Em;
+  double epso33 = -vm*(sig22/Em);
+
+  // Eshelby components (note the axis relabeling used in the Python)
+  double s2222 = eshelbyS("1111", vm, a);
+  double s2233 = eshelbyS("1122", vm, a);
+  double s1122 = eshelbyS("3311", vm, a);
+  double s2211 = eshelbyS("1133", vm, a);
+  double s1111 = eshelbyS("3333", vm, a);
+
+  double a1 = (1-c)*(s2222 + s2233 - 1.0);
+  double a2 = (1-c)*s1122;
+  double a3 = -(1-c)*s2211;
+  double a4 = (1-c)*(s1111 - 1.0);
+  double a5 = 1.0/((1-c)*(s2233 - s2222 + 1.0));
+
+  double omc2 = (1-c)*(1-c);
+  double A = -omc2 + omc2*(s1111 + s2222 + s2233)
+           - omc2*(s1111*(s2222 + s2233) - 2.0*s1122*s2211);
+
+  // Equivalent-inclusion strains
+  double eps11 = (a1*epso11 - a2*(epso22 + epso33))/A;
+  double eps22 = (2*a3*epso11 + (a4 + a5*A)*epso22 + (a4 - a5*A)*epso33)/(2*A);
+  double eps33 = (2*a3*epso11 + (a4 - a5*A)*epso22 + (a4 + a5*A)*epso33)/(2*A);
+  double eps12 = 0.0;
+
+  double st = std::sin(theta), ct = std::cos(theta);
+
+  double sig22out = (2*Gm)/(1 - vm) *
+                    (st*st*(eps11*ct*ct + eps22*st*st + vm*eps33)
+                     - 2.0*eps12*ct*st*st*st);
+
+  return sig22out / sig22;
+}
+
+// ---------------------------------------------------------------------------
 // Return effective elastiscity moduli of the pourus matrix.
 // Uses the method given in the paper:
 // The Effect of Aspect Ratio of Inclusions on the Elastic Properties of
@@ -182,8 +235,9 @@ static bool getPorousMatrixElasticity(double Em, double vm, double c,
   double G12 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("1212", vm, a)));
   double G13 = Gm*(1 + c/((-1.0) + 2*(1-c)*eshelbyS("1313", vm, a)));
 
-  // Iterative solve for plane-strain bulk modulus K12
-  double K12 = 13e10;
+  // Iterative solve for plane-strain bulk modulus K12,
+  // seeded with the non-porous matrix value (matches Python)
+  double K12 = Km;
   const double tol  = 0.01;
   const int maxIter = 20000;
 
@@ -510,15 +564,14 @@ CeramicFiberDamage::CeramicFiberDamage(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("rho_n",               d_initialData.rhoN);
   ps->require("nu_o",                d_initialData.nuO);
   ps->require("nu_n",                d_initialData.nuN);
-  ps->require("v_f_eff",             d_initialData.vFEff);
   ps->require("E_fiber_damage",      d_initialData.EFiber);
-  ps->require("E_matrix_damage",     d_initialData.EMatrix);
   ps->require("residual_stress",     d_initialData.residualStress);
   ps->require("T_reference",         d_initialData.TRef);
   ps->require("psi_c",               d_initialData.psiC);
   ps->require("psi_n",               d_initialData.psiN);
   ps->require("eps_o",               d_initialData.epsO);
   ps->require("eps_f",               d_initialData.epsF);
+  ps->require("sig_x3_max",          d_initialData.sigX3Max);
 
   // Precompute undamaged cross-ply moduli
   const CMData& d = d_initialData;
@@ -530,6 +583,24 @@ CeramicFiberDamage::CeramicFiberDamage(ProblemSpecP& ps, MPMFlags* Mflag)
       "CeramicFiberDamage: micromechanics initialization failed.",
       __FILE__, __LINE__);
   }
+
+  // Derived damage-model quantities (match the Python driver):
+  // Half the fibers run in each in-plane direction of the cross-ply weave.
+  d_initialData.vFLong = d.fiberVF / 2.0;
+
+  // Effective matrix modulus back-calculated from the undamaged composite
+  // E_11: E_m_eff = (E_11 - E_fl*v_f_long) / (1 - v_f_long)
+  d_initialData.EmEff = (d_initialData.moduli[0] - d.Efl*d_initialData.vFLong)
+                        / (1.0 - d_initialData.vFLong);
+
+  // Pore stress concentration factor applied to the fiber stress
+  d_initialData.kConc = getPorousStressConcentration(d.Em, d.vm, d.porosity,
+                                                     d.poreAspectRatio);
+
+  // Fiber strength stresses: sig_fo from the minimum failure strain,
+  // sig_fm from the median failure strain
+  d_initialData.sigFo = d.epsO * d.Efl;
+  d_initialData.sigFm = d.epsF * d.Efl;
 
   // Effective bulk modulus for EOS from undamaged stiffness
   double C[6][6];
@@ -553,6 +624,11 @@ CeramicFiberDamage::CeramicFiberDamage(ProblemSpecP& ps, MPMFlags* Mflag)
       ParticleVariable<Vector>::getTypeDescription());
   pFiberFractureLabel_preReloc = VarLabel::create("p.fiberFracture+",
       ParticleVariable<Vector>::getTypeDescription());
+
+  pX3FailedLabel = VarLabel::create("p.x3Failed",
+      ParticleVariable<double>::getTypeDescription());
+  pX3FailedLabel_preReloc = VarLabel::create("p.x3Failed+",
+      ParticleVariable<double>::getTypeDescription());
 }
 
 CeramicFiberDamage::~CeramicFiberDamage()
@@ -563,6 +639,8 @@ CeramicFiberDamage::~CeramicFiberDamage()
   VarLabel::destroy(pCrackOpeningLabel_preReloc);
   VarLabel::destroy(pFiberFractureLabel);
   VarLabel::destroy(pFiberFractureLabel_preReloc);
+  VarLabel::destroy(pX3FailedLabel);
+  VarLabel::destroy(pX3FailedLabel_preReloc);
 }
 
 void CeramicFiberDamage::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
@@ -590,15 +668,14 @@ void CeramicFiberDamage::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("rho_n",                d.rhoN);
   cm_ps->appendElement("nu_o",                 d.nuO);
   cm_ps->appendElement("nu_n",                 d.nuN);
-  cm_ps->appendElement("v_f_eff",              d.vFEff);
   cm_ps->appendElement("E_fiber_damage",       d.EFiber);
-  cm_ps->appendElement("E_matrix_damage",      d.EMatrix);
   cm_ps->appendElement("residual_stress",      d.residualStress);
   cm_ps->appendElement("T_reference",          d.TRef);
   cm_ps->appendElement("psi_c",                d.psiC);
   cm_ps->appendElement("psi_n",                d.psiN);
   cm_ps->appendElement("eps_o",                d.epsO);
   cm_ps->appendElement("eps_f",                d.epsF);
+  cm_ps->appendElement("sig_x3_max",           d.sigX3Max);
 }
 
 CeramicFiberDamage* CeramicFiberDamage::clone()
@@ -615,15 +692,18 @@ void CeramicFiberDamage::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<Vector> pCrackDensity, pCrackOpening, pFiberFracture;
+  ParticleVariable<double> pX3Failed;
   new_dw->allocateAndPut(pCrackDensity, pCrackDensityLabel, pset);
   new_dw->allocateAndPut(pCrackOpening, pCrackOpeningLabel, pset);
   new_dw->allocateAndPut(pFiberFracture, pFiberFractureLabel, pset);
+  new_dw->allocateAndPut(pX3Failed, pX3FailedLabel, pset);
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
     particleIndex idx = *iter;
     pCrackDensity[idx] = Vector(0.0, 0.0, 0.0);  // rho_o initial (overridden by d.rhoO in stress)
     pCrackOpening[idx] = Vector(0.0, 0.0, 0.0);  // nu_o initial
-    pFiberFracture[idx] = Vector(1.0, 1.0, 0.0); // psi: 1 = fully intact
+    pFiberFracture[idx] = Vector(0.0, 0.0, 0.0); // psi: 0 = fully intact, 1 = fully fractured
+    pX3Failed[idx] = 0.0;                        // 0 = intact, 1 = transthickness-failed
   }
 
   computeStableTimeStep(patch, matl, new_dw);
@@ -638,6 +718,8 @@ void CeramicFiberDamage::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pCrackOpeningLabel_preReloc);
   from.push_back(pFiberFractureLabel);
   to.push_back(pFiberFractureLabel_preReloc);
+  from.push_back(pX3FailedLabel);
+  to.push_back(pX3FailedLabel_preReloc);
 }
 
 void CeramicFiberDamage::computeStableTimeStep(const Patch* patch,
@@ -697,6 +779,7 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double>  pmass, pvolume_new, ptemperature;
     constParticleVariable<Vector>  pvelocity;
     constParticleVariable<Vector>  pCrackDensity, pCrackOpening, pFiberFracture;
+    constParticleVariable<double>  pX3Failed;
     constParticleVariable<Matrix3> pStress_old;
 
     old_dw->get(pDefGrad_old,   lb->pDeformationMeasureLabel,          pset);
@@ -706,6 +789,7 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pCrackDensity,  pCrackDensityLabel,                    pset);
     old_dw->get(pCrackOpening,  pCrackOpeningLabel,                    pset);
     old_dw->get(pFiberFracture, pFiberFractureLabel,                   pset);
+    old_dw->get(pX3Failed,      pX3FailedLabel,                        pset);
 
     new_dw->get(pDefGrad_new,   lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->get(pvolume_new,    lb->pVolumeLabel_preReloc,             pset);
@@ -715,6 +799,7 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pStress_new;
     ParticleVariable<double>  pdTdt, p_q;
     ParticleVariable<Vector>  pCrackDensity_new, pCrackOpening_new, pFiberFracture_new;
+    ParticleVariable<double>  pX3Failed_new;
 
     new_dw->allocateAndPut(pStress_new,        lb->pStressLabel_preReloc,       pset);
     new_dw->allocateAndPut(pdTdt,              lb->pdTdtLabel,                  pset);
@@ -722,6 +807,7 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pCrackDensity_new,  pCrackDensityLabel_preReloc,     pset);
     new_dw->allocateAndPut(pCrackOpening_new,  pCrackOpeningLabel_preReloc,     pset);
     new_dw->allocateAndPut(pFiberFracture_new, pFiberFractureLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pX3Failed_new,      pX3FailedLabel_preReloc,         pset);
 
     // Undamaged P-wave modulus for wave speed
     double C_undamaged[6][6];
@@ -745,47 +831,104 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
       double nu[2]  = { pCrackOpening[idx].x(),   pCrackOpening[idx].y()  };
       double psi[2] = { pFiberFracture[idx].x(),  pFiberFracture[idx].y() };
 
-      // Copy undamaged moduli; only moduli[0] and moduli[1] are updated by damage
+      // Copy undamaged moduli; only moduli[0], moduli[1] and moduli[2] are
+      // updated by damage
       double m[9];
       for (int k = 0; k < 9; k++) m[k] = d.moduli[k];
       double Ec[2] = { m[0], m[1] };  // undamaged E_c (never changes)
 
+      // Transthickness (X3) failure is sticky: once the previous step's
+      // 2nd-PK stress exceeded sigX3Max, E_33 stays collapsed forever after
+      // (matches Python: damage['X3']['failed'])
+      bool x3Failed = pX3Failed[idx] > 0.5;
+      if (x3Failed) {
+        m[2] = 1.0;
+      }
+
       double T = ptemperature[idx];
       double eps_dir[2] = { EGL(0,0), EGL(1,1) };
+      double modifier[2];
 
       for (int i = 0; i < 2; i++) {
-        double sigM = d.EMatrix*(eps_dir[i] - d.alphaM*(T - d.TRef)) + d.residualStress;
+        double sigM = (d.EmEff*(eps_dir[i] - d.alphaM*(T - d.TRef)) + d.residualStress) * d.kConc;
 
-        // Crack-opening fraction (monotonically non-decreasing)
-	double nu_new  = 0.0;
-	double rho_new = 0.0;
+        // Crack-density and crack-geometry parameters
+        // (both monotonically non-decreasing)
+        double nu_new = 0.0;
+        if (sigM >= 0.0 && d.sigO > 0.0) {
+          double x = sigM / d.sigO;
+          nu_new = d.nuO + (1.0 - d.nuO) *
+                   (1.0 - std::exp(-0.693 * std::pow(x, d.nuN)));
+        }
+        nu[i] = std::max(nu[i], nu_new);
 
-	if (sigM > 0.0 && d.sigO > 0.0) {
-	  double x = sigM / d.sigO;
+        double rho_new = 0.0;
+        if (nu[i] > 0.0 && sigM >= 0.0 && d.sigO > 0.0) {
+          double x = sigM / d.sigO;
+          rho_new = d.rhoO + (1.0 - d.rhoO) *
+                    (1.0 - std::exp(-d.rhoC * std::pow(x, d.rhoN)));
+        }
+        rho[i] = std::max(rho[i], rho_new);
 
-	  nu_new = d.nuO + (1.0 - d.nuO) *
-		   (1.0 - std::exp(-0.693 * std::pow(x, d.nuN)));
+        // ---------------------------------------------------------------
+        // Fiber stress from the U / B1 / B2 cell partition
+        // (Santhosh & Ahmad 2012; matches the Python UpdateStiffness)
+        // ---------------------------------------------------------------
+        double psi_old = psi[i];
 
-	  rho_new = d.rhoO + (1.0 - d.rhoO) *
-		    (1.0 - std::exp(-d.rhoC * std::pow(x, d.rhoN)));
-	}
-	nu[i]  = std::max(nu[i],  nu_new);
-	rho[i] = std::max(rho[i], rho_new);
+        // Surviving axial-fiber volume fraction
+        double VfSurv = std::max(d.vFLong*(1.0 - psi_old), 1.0e-12);
 
-        // Fiber fracture factor (monotonically non-increasing)
-        if (eps_dir[i] >= d.epsO && std::abs(d.epsF - d.epsO) > 1e-15) {
-          double xi = (eps_dir[i] - d.epsO) / (d.epsF - d.epsO);
-          double psi_new = std::exp(d.psiC*std::pow(xi, d.psiN));
-          psi[i] = std::min(psi_new, psi[i]);
+        // U cell: surviving fibers and matrix in parallel
+        double E_U = VfSurv*d.EFiber + (1.0 - d.vFLong)*d.EmEff;
+
+        // B2 region: surviving fibers only
+        double E_B2 = VfSurv*d.EFiber;
+
+        // B1 and B2 regions in series
+        double E_B = 1.0 / ((1.0 - rho[i])/E_U + rho[i]/E_B2);
+
+        double sigmaB = E_B * eps_dir[i];
+
+        // sigmaB is the B-cell composite stress; divide by the surviving
+        // fiber volume fraction to obtain the fiber constituent stress.
+        double sigfB2 = sigmaB / VfSurv;
+
+        double sigF = d.kConc * sigfB2;
+
+        // Fiber fracture fraction (0 = intact, monotonically non-decreasing)
+        if (sigF >= d.sigFm && std::abs(d.sigFo - d.sigFm) > 1e-15) {
+          double xi = (sigF - d.sigFm) / (d.sigFo - d.sigFm);
+          double psi_new = 1.0 - std::exp(d.psiC*std::pow(xi, d.psiN));
+          psi[i] = std::max(psi_new, psi[i]);
         }
 
         // Damaged effective modulus in direction i
-        double vfl = d.vFEff * psi[i];
-        double denom = (1-rho[i])*vfl*d.EFiber + rho[i]*Ec[i];
-        if (std::abs(denom) < 1e-30) denom = 1e-30;
-        m[i] = (1 - nu[i])*Ec[i]
-              + nu[i]*((vfl*d.EFiber*Ec[i]) / denom);
+        double E_bar;
+        if (psi[i] > 0.99) {
+          // Direction fully failed: kill the stiffness (matches Python)
+          E_bar = 1.0;
+        } else {
+          double vfEff = d.vFLong * (1.0 - psi[i]);
+          double denom = (1-rho[i])*vfEff*d.EFiber + rho[i]*Ec[i];
+          if (std::abs(denom) < 1e-30) denom = 1e-30;
+          E_bar = (1 - nu[i])*Ec[i]
+                + nu[i]*((vfEff*d.EFiber*Ec[i]) / denom);
+        }
+
+        // Degrade the associated Poisson's ratio in proportion to the
+        // stiffness loss: v13 (m[7]) for X1, v23 (m[8]) for X2.
+        // The E_33/moduli[2] ratio folds in the transthickness (X3)
+        // failure collapse, matching Python UpdateStiffness.
+        modifier[i] = std::sqrt((E_bar / Ec[i]) / (m[2] / d.moduli[2]));
+        m[7 + i] *= modifier[i];
+
+        m[i] = E_bar;
       }
+
+      // Degrade the in-plane Poisson's ratio v12 (m[6]) in proportion to
+      // the relative X1/X2 stiffness loss (matches Python UpdateStiffness)
+      m[6] *= modifier[0] / modifier[1];
 
       // Build damaged Voigt stiffness from updated moduli
       double C[6][6];
@@ -802,6 +945,11 @@ void CeramicFiberDamage::computeStressTensor(const PatchSubset* patches,
       for (int i = 0; i < 6; i++)
         for (int j = 0; j < 6; j++)
           sv[i] += C[i][j]*eps[j];
+
+      // Transthickness (X3) failure check: sv[2] is the 2nd-PK stress
+      // component S_33, the same quantity Python checks (stress_v[2,2])
+      // against Failure_stress_x3. Sticky once tripped.
+      pX3Failed_new[idx] = (x3Failed || sv[2] >= d.sigX3Max) ? 1.0 : 0.0;
 
       // Assemble 2nd PK stress tensor S
       // Voigt ordering [11,22,33,23,13,12] → indices [0,1,2,3,4,5]
@@ -866,20 +1014,25 @@ void CeramicFiberDamage::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     constParticleVariable<Vector> pCrackDensity, pCrackOpening, pFiberFracture;
+    constParticleVariable<double> pX3Failed;
     old_dw->get(pCrackDensity,  pCrackDensityLabel,  pset);
     old_dw->get(pCrackOpening,  pCrackOpeningLabel,  pset);
     old_dw->get(pFiberFracture, pFiberFractureLabel, pset);
+    old_dw->get(pX3Failed,      pX3FailedLabel,      pset);
 
     ParticleVariable<Vector> pCrackDensity_new, pCrackOpening_new, pFiberFracture_new;
+    ParticleVariable<double> pX3Failed_new;
     new_dw->allocateAndPut(pCrackDensity_new,  pCrackDensityLabel_preReloc,  pset);
     new_dw->allocateAndPut(pCrackOpening_new,  pCrackOpeningLabel_preReloc,  pset);
     new_dw->allocateAndPut(pFiberFracture_new, pFiberFractureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pX3Failed_new,      pX3FailedLabel_preReloc,      pset);
 
     for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
       particleIndex idx = *iter;
       pCrackDensity_new[idx]  = pCrackDensity[idx];
       pCrackOpening_new[idx]  = pCrackOpening[idx];
       pFiberFracture_new[idx] = pFiberFracture[idx];
+      pX3Failed_new[idx]      = pX3Failed[idx];
     }
 
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
@@ -903,10 +1056,12 @@ void CeramicFiberDamage::addComputesAndRequires(Task* task,
   task->requiresVar(Task::OldDW, pCrackDensityLabel,     matlset, gnone);
   task->requiresVar(Task::OldDW, pCrackOpeningLabel,     matlset, gnone);
   task->requiresVar(Task::OldDW, pFiberFractureLabel,    matlset, gnone);
+  task->requiresVar(Task::OldDW, pX3FailedLabel,         matlset, gnone);
 
   task->computesVar(pCrackDensityLabel_preReloc,  matlset);
   task->computesVar(pCrackOpeningLabel_preReloc,  matlset);
   task->computesVar(pFiberFractureLabel_preReloc, matlset);
+  task->computesVar(pX3FailedLabel_preReloc,      matlset);
 }
 
 void CeramicFiberDamage::addComputesAndRequires(Task* task,

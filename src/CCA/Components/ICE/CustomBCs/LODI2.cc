@@ -40,6 +40,13 @@
 
 #define d_SMALL_NUM 1e-100
 
+// Boundary cells whose LODI-material vol_frac is below this (e.g. the trace
+// gas inside an MPM solid in MPMICE) get a zero-gradient BC instead of the
+// characteristic one.  The characteristic relations divide by rho_CC and by
+// the normal velocity, both ~0 there, and blow up.  Single-material ICE has
+// vol_frac = 1 everywhere, so it never takes this branch.
+#define d_MIN_VOL_FRAC 1e-3
+
 //#define DELT_METHOD
 #undef DELT_METHOD
 
@@ -443,6 +450,15 @@ void addRequires_Lodi(Task* t,
   if(setLODI_bcs){
   
     cout_doing<< "Doing addRequires_Lodi: \t\t" <<t->getName() << " " << where << endl;
+
+    // previous time step's vol_frac: available in every LODI task, including
+    // EqPress where the new one is computed by the task itself.
+    // implicitPressureSolve never calls preprocess_Lodi_BCs, so it doesn't need it.
+    if (where != "implicitPressureSolve") {
+      Task::WhichDW oldDW = (where == "imp_update_press_CC") ? Task::ParentOldDW : Task::OldDW;
+      t->requiresVar(oldDW, lb->vol_frac_CCLabel, ice_matls, gn);
+    }
+
     vector<Patch::FaceType>::iterator f ;
     for( f = global->LodiFaces.begin();
          f !=global->LodiFaces.end(); ++f) {
@@ -578,6 +594,8 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   //__________________________________
   //compute Li at boundary cells
   if(setLodiBcs){
+    old_dw->get(lv->vol_frac, lb->vol_frac_CCLabel, indx, patch, gn, 0);
+
     // Skip the Li computation entirely on interior patches
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
@@ -1196,6 +1214,12 @@ int FaceDensity_LODI(const Patch* patch,
   for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
+
+    if (lv->vol_frac[in] < d_MIN_VOL_FRAC) {   // trace material: zero gradient
+      rho_CC[c] = rho_CC[in];
+      continue;
+    }
+
     double vel_norm = vel_CC[in][P_dir];
     double C        = speedSound[in];
     
@@ -1308,6 +1332,12 @@ int FaceVel_LODI(const Patch* patch,
   for( ; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
+
+    if (lv->vol_frac[in] < d_MIN_VOL_FRAC) {   // trace material: zero gradient
+      vel_CC[c] = vel_CC[in];
+      continue;
+    }
+
     double vel_norm = vel_CC[in][P_dir];
     double C = speedSound[in];
     
@@ -1424,6 +1454,12 @@ int FaceTemp_LODI(const Patch* patch,
   for(; !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
+
+    if (lv->vol_frac[in] < d_MIN_VOL_FRAC) {   // trace material: zero gradient
+      temp_CC[c] = temp_CC[in];
+      continue;
+    }
+
     double C        = speedSound[in];
     double vel_norm = vel_CC[in][P_dir];
     
@@ -1535,6 +1571,12 @@ int FacePress_LODI(const Patch* patch,
 
     IntVector c = *iter;
     IntVector in = c - offset;  
+
+    if (lv->vol_frac[in] < d_MIN_VOL_FRAC) {   // trace LODI matl: zero gradient
+      press_CC[c] = press_CC[in];
+      continue;
+    }
+
     double vel_norm = lv->vel_CC[in][P_dir];
     double C = lv->speedSound[in];
     

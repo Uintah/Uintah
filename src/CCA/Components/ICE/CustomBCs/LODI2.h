@@ -101,6 +101,7 @@ namespace Uintah {
     constCCVariable<Vector> vel_CC;
     constCCVariable<double> press_CC;        
     constCCVariable<double> temp_CC;            
+    constCCVariable<double> vol_frac; 
     std::vector<CCVariable<Vector> > Li;
 /*`==========TESTING==========*/
     double delT; 

@@ -134,15 +134,16 @@
     <rho_n                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <nu_o                 spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <nu_n                 spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
-    <v_f_eff              spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <v_f_eff              spec="OPTIONAL DOUBLE" need_applies_to="type ceramic_fiber_damage" />    <!-- unused: computed internally as fiber_volume_fraction/2, kept optional for backward compatibility with existing .ups files -->
     <E_fiber_damage       spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
-    <E_matrix_damage      spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <E_matrix_damage      spec="OPTIONAL DOUBLE" need_applies_to="type ceramic_fiber_damage" />    <!-- unused: not read anywhere in CeramicFiberDamage.cc -->
     <residual_stress      spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <T_reference          spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <psi_c                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <psi_n                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <eps_o                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
     <eps_f                spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
+    <sig_x3_max           spec="REQUIRED DOUBLE" need_applies_to="type ceramic_fiber_damage" />
 
     <!--For TransIsoHypoFrictional Model-->
     <E_t           spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
