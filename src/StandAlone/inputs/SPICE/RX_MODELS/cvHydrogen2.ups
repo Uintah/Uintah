@@ -46,7 +46,7 @@
   <!--==================== OUTPUTS ====================-->
   <DataArchiver>
     <filebase>cvHydrogen.uda</filebase>
-    <outputInterval>1e-6</outputInterval>
+    <outputInterval>1e-5</outputInterval>
 
     <!-- Species passive scalars -->
     <save label="scalar-YH2"/>
