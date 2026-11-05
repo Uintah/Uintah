@@ -75,7 +75,7 @@ riemann_gc_x_PIMPLE_ups      = modUPS( the_dir, "riemann_gc_x.ups",
 
 #  gasCombustion chemistry: 0D constant-volume ignition (stationary, so no KT or PIMPLE)
 CHEMISTRY  = [   ("cvHydrogen1",              "RX_MODELS/cvHydrogen1.ups",               1,  "ALL", ["exactComparison"]),
-                 ("cvHydrogen2",              "RX_MODELS/cvHydrogen2.ups",               1,  "ALL", ["exactComparison"])
+                 ("cvHydrogen2",              "RX_MODELS/cvHydrogen2.ups",               1,  "ALL", ["exactComparison", "no_dbg"])
              ]
 
 #  chemistry + species and heat diffusion + LODI: 1D laminar flames
@@ -99,9 +99,9 @@ KT_PIMPLE  = [   ("argonDetonation",          "RX_MODELS/argonDetonation.ups",  
              ]
 
 #  no KT or PIMPLE: ICE's tasks with SPICE's pressure work
-ICE_ONLY   = [   ("rayleigh_dx",              "rayleigh_dx.ups",               1,  "ALL", ["exactComparison"]),
-                 ("rayleigh_dy",              "rayleigh_dy.ups",               1,  "ALL", ["exactComparison"]),
-                 ("rayleigh_dz",              "rayleigh_dz.ups",               1,  "ALL", ["exactComparison"]),
+ICE_ONLY   = [   ("rayleigh_dx",              "rayleigh_dx.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
+                 ("rayleigh_dy",              "rayleigh_dy.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
+                 ("rayleigh_dz",              "rayleigh_dz.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
                  ("impHotBlob",               "impHotBlob.ups",                1,  "ALL", ["exactComparison"]),
                  ("mms_1",                    "mms_1.ups",                     1,  "ALL", ["exactComparison", "no_restart"])
              ]
