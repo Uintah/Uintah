@@ -59,6 +59,8 @@ struct Tag {
   const char * tag;
 #ifdef USE_TAG_LINENUM
   int          linenum;
+#else
+  size_t       pad;       // keeps sizeof(Tag) + sizeof(Sentinel) a multiple of 16
 #endif
   Tag        * next;
   Tag        * prev;
@@ -94,6 +96,8 @@ struct Allocator {
   void free( void* );
 
   void* realloc( void* p, size_t size );
+
+  size_t usable_size( void* p );
 
   inline AllocBin* get_bin( size_t size );
 

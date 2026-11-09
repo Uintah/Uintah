@@ -52,8 +52,12 @@
 
 // irix64 KCC stuff
 #include <strings.h>
+#include <cerrno>
+#include <unistd.h>
+
+// glibc declares these with throw(); noexcept is equivalent and valid in C++20
 #ifdef __GNUG__
-#  define THROWCLAUSE throw()
+#  define THROWCLAUSE noexcept
 #else
 #  define THROWCLAUSE
 #endif
@@ -71,6 +75,13 @@
        void* realloc(void* p, size_t s) THROWCLAUSE;
        void* memalign(size_t, size_t) THROWCLAUSE;
        void* valloc(size_t) THROWCLAUSE;
+
+       // glibc requires a malloc replacement to also provide these.  Without
+       // them, memory from glibc's allocator is later passed to our free().
+       int    posix_memalign(void** memptr, size_t alignment, size_t size) THROWCLAUSE;
+       void*  aligned_alloc(size_t alignment, size_t size) THROWCLAUSE;
+       void*  pvalloc(size_t size) THROWCLAUSE;
+       size_t malloc_usable_size(void* ptr) THROWCLAUSE;
      }
 #  endif
 #endif
@@ -159,6 +170,55 @@ valloc(size_t size) THROWCLAUSE
     MakeDefaultAllocator();
   }
   return default_allocator->memalign(getpagesize(), size, "Unknown - valloc");
+}
+
+int
+posix_memalign(void** memptr, size_t alignment, size_t size) THROWCLAUSE
+{
+  // alignment must be a power of two and a multiple of sizeof(void*)
+  if( alignment % sizeof(void*) != 0 ) {
+    return EINVAL;
+  }
+  if( (alignment & (alignment - 1)) != 0 ) {
+    return EINVAL;
+  }
+
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  *memptr = default_allocator->memalign(alignment, size, "Unknown - posix_memalign");
+  return 0;
+}
+
+void*
+aligned_alloc(size_t alignment, size_t size) THROWCLAUSE
+{
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->memalign(alignment, size, "Unknown - aligned_alloc");
+}
+
+void*
+pvalloc(size_t size) THROWCLAUSE
+{
+  // Like valloc, but the size is rounded up to a whole number of pages
+  size_t pagesize = getpagesize();
+  size_t rounded  = (size + pagesize - 1) / pagesize * pagesize;
+
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->memalign(pagesize, rounded, "Unknown - pvalloc");
+}
+
+size_t
+malloc_usable_size(void* ptr) THROWCLAUSE
+{
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->usable_size(ptr);
 }
 
 #endif

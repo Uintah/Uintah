@@ -103,6 +103,12 @@ namespace Uintah {
 
 #define OVERHEAD             (sizeof(Tag)+sizeof(Sentinel)+sizeof(Sentinel))
 
+// malloc and operator new must return 16-byte aligned memory (x86-64 ABI).
+// The user data starts right after the Tag and the first Sentinel, and every
+// object starts on a 16-byte boundary (see fill_bin), so this must hold:
+static_assert( (sizeof(Uintah::Tag) + sizeof(Uintah::Sentinel)) % s_allocator_align == 0,
+               "sci-malloc: Tag + Sentinel must be a multiple of 16 bytes" );
+
 #define OBJFREE              1
 #define OBJINUSE             2
 #define OBJFREEING           3
@@ -779,6 +785,25 @@ Allocator::realloc( void* dobj, size_t newsize )
   dd -= sizeof(Tag);
   Tag* oldobj = (Tag*)dd;
 
+  // Objects from memalign/posix_memalign (bin == nullptr) can't be resized
+  // in place: allocate a new object, copy, and free the old one.
+  if (!oldobj->bin) {
+    if (!lazy) {
+      audit(oldobj, OBJMEMALIGNFREEING);
+    }
+
+    size_t minsize = newsize;
+    if (oldobj->reqsize < newsize) {
+      minsize = oldobj->reqsize;
+    }
+
+    void* nobj = alloc(newsize, "realloc", 0);
+    bcopy(dobj, nobj, minsize);
+    free(dobj);
+
+    return nobj;
+  }
+
   // Make sure that it is still intact...
   if (!lazy) {
     audit(oldobj, OBJFREEING);
@@ -826,7 +851,8 @@ Allocator::realloc( void* dobj, size_t newsize )
 void*
 Allocator::memalign(size_t alignment, size_t size, const char* ctag)
 {
-  if (alignment <= 8) {
+  // alloc() already returns 16-byte aligned memory
+  if (alignment <= s_allocator_align) {
     return alloc(size, ctag, 0);
   }
 
@@ -850,6 +876,34 @@ Allocator::memalign(size_t alignment, size_t size, const char* ctag)
   m += sizeof(Sentinel);
   sent1->first_word = sent1->second_word = SENT_VAL_INUSE;
   return m;
+}
+
+//______________________________________________________________________________
+//  Returns the number of bytes the caller may use in an allocated object
+//  (used by malloc_usable_size).  This is the requested size, not the bin
+//  size: in strict mode the bytes past reqsize are checked for corruption.
+size_t
+Allocator::usable_size( void* dobj )
+{
+  if (!dobj) {
+    return 0;
+  }
+
+  char* dd = (char*)dobj;
+  dd -= sizeof(Sentinel);
+  dd -= sizeof(Tag);
+  Tag* obj = (Tag*)dd;
+
+  if (!lazy) {
+    if (obj->bin) {
+      audit(obj, OBJINUSE);
+    }
+    else {
+      audit(obj, OBJMEMALIGNFREEING);   // memalign object: only the head sentinel exists
+    }
+  }
+
+  return obj->reqsize;
 }
 
 //______________________________________________________________________________
@@ -950,8 +1004,10 @@ void Allocator::fill_bin( AllocBin* bin )
 {
   nfillbin++;
   if (bin->maxsize <= MEDIUM_THRESHOLD) {
+    // Round the object size up so every object starts on a 16-byte boundary
     size_t tsize;
     tsize = bin->maxsize + OVERHEAD;
+    tsize = (tsize + s_allocator_align - 1) / s_allocator_align * s_allocator_align;
     unsigned int nalloc = (unsigned int)(SMALLEST_ALLOCSIZE / tsize);
     if (nalloc < 1) {
       nalloc = 1;

@@ -179,7 +179,7 @@ AllocatorResetDefaultTagLineNumber()
 
 void*
 operator
-new( size_t size ) throw( std::bad_alloc )
+new( size_t size )
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -196,7 +196,7 @@ new( size_t size ) throw( std::bad_alloc )
 
 void*
 operator
-new[]( size_t size ) throw( std::bad_alloc )
+new[]( size_t size )
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -213,7 +213,7 @@ new[]( size_t size ) throw( std::bad_alloc )
 
 void*
 operator
-new( size_t size, const std::nothrow_t& ) throw()
+new( size_t size, const std::nothrow_t& ) noexcept
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -229,7 +229,7 @@ new( size_t size, const std::nothrow_t& ) throw()
 
 void*
 operator
-new[]( size_t size, const std::nothrow_t& ) throw()
+new[]( size_t size, const std::nothrow_t& ) noexcept
 {
   if(!default_allocator) {
     MakeDefaultAllocator();
@@ -246,7 +246,7 @@ new[]( size_t size, const std::nothrow_t& ) throw()
 
 void
 operator
-delete(void* ptr) throw()
+delete(void* ptr) noexcept
 {
   //  printf("delete called %p\n", ptr);
   if( !default_allocator ) {
@@ -257,7 +257,7 @@ delete(void* ptr) throw()
 
 void
 operator
-delete[](void* ptr) throw()
+delete[](void* ptr) noexcept
 {
   //  printf("delete [] called %p\n", ptr);
   if( !default_allocator ) {
