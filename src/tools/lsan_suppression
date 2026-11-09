@@ -20,3 +20,14 @@
 #type  :  location
 leak:libcudart.so
 leak:getMPIType
+
+#__________________________________
+#  One-time allocations made inside the MPI stack (MPI_Init / MPI_Finalize)
+#  that are never freed.  Seen with Open MPI 5.0.8 + PMIx; UCX is listed
+#  for builds that use it.
+leak:libmpi.so
+leak:libopen-pal.so
+leak:libpmix.so
+leak:libucs.so
+leak:libucp.so
+leak:libuct.so

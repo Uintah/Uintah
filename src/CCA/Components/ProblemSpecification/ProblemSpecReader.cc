@@ -2429,7 +2429,8 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       d_upsFilename.push_back( filename_strPtr );
 
       // Nodes to be included from the file
-      xmlNode * incNodes = nullptr;
+      xmlNode * incNodes    = nullptr;
+      xmlNode * sectionCopy = nullptr;   // copy made by recursiveFindElementTag(); must be freed
 
       //__________________________________
       // If the user has a "section" specified find that node.
@@ -2442,7 +2443,8 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       if( section != "" ) {
 
         xmlNode * includeFileNodes = include->children;
-        incNodes = recursiveFindElementTag( includeFileNodes, nodeAttributes, 0 );
+        incNodes    = recursiveFindElementTag( includeFileNodes, nodeAttributes, 0 );
+        sectionCopy = incNodes;
 
         if ( incNodes == nullptr ){
           std::ostringstream error;
@@ -2492,8 +2494,11 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       xmlUnlinkNode( node );
       xmlFreeNode(   node );
 
-      xmlUnlinkNode( incNodes );
-      xmlFreeNode(   incNodes );
+      // Free the section copy and all of its children.  Nodes that belong to
+      // the include document itself are freed by xmlFreeDoc() below.
+      if( sectionCopy != nullptr ) {
+        xmlFreeNode( sectionCopy );
+      }
 
       // Once all the 'included' tags have been added to the parent, and the <include>
       // has been removed, we need to start parsing at the first included tag.
