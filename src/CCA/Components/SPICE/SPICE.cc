@@ -3096,11 +3096,21 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
     ParentOldDW->get( timeStepVar, lb->timeStepLabel );
     ParentOldDW->get( simTimeVar,  lb->simulationTimeLabel );
     ParentOldDW->get( delTVar,     lb->delTLabel, level.get_rep() );
+    // for k >= 2, subOldDW is the previous iteration's NewDW, finalized by execute()
+    const bool subOldDW_wasFinalized = subOldDW->isFinalized();
+    if( subOldDW_wasFinalized ){
+      subOldDW->unfinalize();
+    }
+
     d_pimpleSched->setInitTimestep(true);
     subOldDW->put( timeStepVar, lb->timeStepLabel );
     subOldDW->put( simTimeVar,  lb->simulationTimeLabel );
     subOldDW->put( delTVar,     lb->delTLabel, level.get_rep() );
     d_pimpleSched->setInitTimestep(false);
+
+    if( subOldDW_wasFinalized ){
+      subOldDW->refinalize();
+    }
 
     subOldDW->setScrubbing(DataWarehouse::ScrubNone);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
