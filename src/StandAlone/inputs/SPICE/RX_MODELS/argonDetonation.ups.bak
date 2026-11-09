@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--______________________________________________________________________
  SPICE: gas-only 1D argon-diluted CJ detonation.  gasCombustion with chemistry,
- Kurganov-Tadmor advection and the PIMPLE outer loop (2 passes).  Regression
+ Kurganov-Tadmor advection and the PITCH outer loop (2 passes).  Regression
  test: capped at 500 timesteps (~4 us, the front moves ~6 mm).
    run from opt/StandAlone (relative paths):  sus inputs/SPICE/argonDetonation.ups
 
@@ -22,7 +22,7 @@ ______________________________________________________________________-->
 <Uintah_specification>
 
   <Meta>
-    <title>SPICE gas-only argon detonation (KT + PIMPLE)</title>
+    <title>SPICE gas-only argon detonation (KT + PITCH)</title>
   </Meta>
 
   <SimulationComponent type="spice" />
@@ -95,9 +95,9 @@ ______________________________________________________________________-->
     <cfl> 0.2 </cfl>
     <SPICE>
       <advection type="CentralUpwind" limiter="vanAlbada"/>
-      <PIMPLE>
+      <PITCH>
         <nOuterCorrectors> 2 </nOuterCorrectors>
-      </PIMPLE>
+      </PITCH>
     </SPICE>
   </CFD>
 

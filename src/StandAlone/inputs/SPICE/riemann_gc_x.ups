@@ -144,12 +144,12 @@
           <facePressure>true</facePressure>
           <ktPressureFlux>true</ktPressureFlux>
         </CentralUpwind>
-        <!-- PIMPLE is off (1 pass); SPICE.py turns it on with modUPS -->
-        <PIMPLE>
+        <!-- PITCH is off (1 pass); SPICE.py turns it on with modUPS -->
+        <PITCH>
           <nOuterCorrectors>1</nOuterCorrectors>
           <theta>0.5</theta>
           <outerTolerance>0</outerTolerance>
-        </PIMPLE>
+        </PITCH>
       </SPICE>        
     </CFD>
     <!--____________________________________________________________________-->

@@ -28,7 +28,7 @@
 # Makefile fragment for this subdirectory 
 #
 # SPICE (Semi-implicit Pressure Iterated Compressible EOS): owns an ICE
-# object and schedules its tasks, plus the PIMPLE / Kurganov-Tadmor tasks.
+# object and schedules its tasks, plus the PITCH / Kurganov-Tadmor tasks.
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 

@@ -66,12 +66,12 @@ SPICELabel::SPICELabel()
   ktUvol_FCZLabel = VarLabel::create( "ktUvol_FCZ", SFCZ_double );
 
   //__________________________________
-  //  PIMPLE outer loop
+  //  PITCH outer loop
   mass_adv0Label      = VarLabel::create( "mass_adv0",      CC_double );
   mom_adv0Label       = VarLabel::create( "mom_adv0",       CC_Vector );
   eng_adv0Label       = VarLabel::create( "eng_adv0",       CC_double );
   sp_vol_adv0Label    = VarLabel::create( "sp_vol_adv0",    CC_double );
-  pimpleResidualLabel = VarLabel::create( "pimpleResidual", max_variable );
+  pitchResidualLabel = VarLabel::create( "pitchResidual", max_variable );
 }
 
 SPICELabel::~SPICELabel()
@@ -99,5 +99,5 @@ SPICELabel::~SPICELabel()
   VarLabel::destroy( mom_adv0Label );
   VarLabel::destroy( eng_adv0Label );
   VarLabel::destroy( sp_vol_adv0Label );
-  VarLabel::destroy( pimpleResidualLabel );
+  VarLabel::destroy( pitchResidualLabel );
 }

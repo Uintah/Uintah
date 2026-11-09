@@ -2,7 +2,7 @@
 
 <Uintah_specification>
   <Meta>
-    <title>   SPICE gas-only argon detonation (KT + PIMPLE)   </title>
+    <title>   SPICE gas-only argon detonation (KT + PITCH)   </title>
   </Meta>
 
   <SimulationComponent type = "spice"/>
@@ -112,9 +112,9 @@
     <cfl>   0.2   </cfl>
     <SPICE>
       <advection type = "CentralUpwind" limiter = "vanAlbada"/>
-      <PIMPLE>
+      <PITCH>
         <nOuterCorrectors>   2   </nOuterCorrectors>
-      </PIMPLE>
+      </PITCH>
     </SPICE>
   </CFD>
 

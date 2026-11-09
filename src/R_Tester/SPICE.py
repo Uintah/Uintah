@@ -30,16 +30,16 @@ riemann_gc_x_Tadmor_ups      = modUPS( the_dir, "riemann_gc_x.ups",
                                         "<kappaFunction>  one    </kappaFunction>",
                                         "<filebase>riemann_gc_x_Tadmor.uda</filebase>"] )
 
-#  PIMPLE with 3 passes (the only test that carries one outer iterate into the
+#  PITCH with 3 passes (the only test that carries one outer iterate into the
 #  next) and an outerTolerance that ends about a third of the timesteps after
 #  the 2nd pass (the only test of the early exit).  theta = 1 is not used: it
 #  diverges on this shock tube in the first timestep, in SPICE and in the
 #  original in-ICE PIMPLE code alike.
-riemann_gc_x_PIMPLE_ups      = modUPS( the_dir, "riemann_gc_x.ups",
+riemann_gc_x_PITCH_ups       = modUPS( the_dir, "riemann_gc_x.ups",
                                        ["<nOuterCorrectors> 3    </nOuterCorrectors>",
                                         "<theta>            0.5  </theta>",
                                         "<outerTolerance>   1e-2 </outerTolerance>",
-                                        "<filebase>riemann_gc_x_PIMPLE.uda</filebase>"] )
+                                        "<filebase>riemann_gc_x_PITCH.uda</filebase>"] )
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
@@ -73,13 +73,13 @@ riemann_gc_x_PIMPLE_ups      = modUPS( the_dir, "riemann_gc_x.ups",
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-#  gasCombustion chemistry: 0D constant-volume ignition (stationary, so no KT or PIMPLE)
+#  gasCombustion chemistry: 0D constant-volume ignition (stationary, so no KT or PITCH)
 CHEMISTRY  = [   ("cvHydrogen1",              "RX_MODELS/cvHydrogen1.ups",               1,  "ALL", ["exactComparison"]),
                  ("cvHydrogen2",              "RX_MODELS/cvHydrogen2.ups",               1,  "ALL", ["exactComparison", "no_dbg"])
              ]
 
 #  chemistry + species and heat diffusion + LODI: 1D laminar flames
-DIFFUSION  = [   ("hydrogenFlame1_KT_PIMPLE", "RX_MODELS/hydrogenFlame1_KT_PIMPLE.ups", 12,  "ALL", ["exactComparison", "no_dbg"]),
+DIFFUSION  = [   ("hydrogenFlame1_KT_PITCH",  "RX_MODELS/hydrogenFlame1_KT_PITCH.ups",  12,  "ALL", ["exactComparison", "no_dbg"]),
                  ("hydrogenFlame2",           "RX_MODELS/hydrogenFlame2.ups",           10,  "ALL", ["exactComparison", "no_dbg"])
              ]
 
@@ -93,12 +93,12 @@ KT         = [   ("riemann_gc_x",             "riemann_gc_x.ups",              4
                  ("riemann_gc_x_Tadmor",      riemann_gc_x_Tadmor_ups,         4,  "ALL", ["exactComparison"])
              ]
 
-#  Kurganov-Tadmor advection + the PIMPLE outer loop
-KT_PIMPLE  = [   ("argonDetonation",          "RX_MODELS/argonDetonation.ups",           4,  "ALL", ["exactComparison"]),
-                 ("riemann_gc_x_PIMPLE",      riemann_gc_x_PIMPLE_ups,         4,  "ALL", ["exactComparison"])
+#  Kurganov-Tadmor advection + the PITCH outer loop
+KT_PITCH   = [   ("argonDetonation",          "RX_MODELS/argonDetonation.ups",           4,  "ALL", ["exactComparison"]),
+                 ("riemann_gc_x_PITCH",       riemann_gc_x_PITCH_ups,          4,  "ALL", ["exactComparison"])
              ]
 
-#  no KT or PIMPLE: ICE's tasks with SPICE's pressure work
+#  no KT or PITCH: ICE's tasks with SPICE's pressure work
 ICE_ONLY   = [   ("rayleigh_dx",              "rayleigh_dx.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
                  ("rayleigh_dy",              "rayleigh_dy.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
                  ("rayleigh_dz",              "rayleigh_dz.ups",               1,  "ALL", ["exactComparison", "no_dbg"]),
@@ -108,12 +108,12 @@ ICE_ONLY   = [   ("rayleigh_dx",              "rayleigh_dx.ups",               1
 
 #  multiple dimensions
 MULTI_D    = [   ("advect_periodic_KT",       "advect_periodic_KT.ups",        8,  "ALL", ["exactComparison"]),
-                 ("riemann3D_KT_PIMPLE",      "riemann3D_KT_PIMPLE.ups",       8,  "ALL", ["exactComparison"])
+                 ("riemann3D_KT_PITCH",       "riemann3D_KT_PITCH.ups",        8,  "ALL", ["exactComparison"])
              ]
 
 DEBUGTESTS   = []
 
-NIGHTLYTESTS = CHEMISTRY + DIFFUSION + KT + KT_PIMPLE + ICE_ONLY + MULTI_D
+NIGHTLYTESTS = CHEMISTRY + DIFFUSION + KT + KT_PITCH + ICE_ONLY + MULTI_D
 
 #__________________________________
 ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
@@ -122,7 +122,7 @@ ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or rela
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: BUILDBOTTESTS CHEMISTRY DEBUGTESTS DIFFUSION ICE_ONLY KT KT_PIMPLE LOCALTESTS MULTI_D NIGHTLYTESTS
+#LIST: BUILDBOTTESTS CHEMISTRY DEBUGTESTS DIFFUSION ICE_ONLY KT KT_PITCH LOCALTESTS MULTI_D NIGHTLYTESTS
 #__________________________________
 
 
@@ -134,8 +134,8 @@ def getTestList(me) :
     TESTS = DIFFUSION
   elif me == "KT":
     TESTS = KT
-  elif me == "KT_PIMPLE":
-    TESTS = KT_PIMPLE
+  elif me == "KT_PITCH":
+    TESTS = KT_PITCH
   elif me == "ICE_ONLY":
     TESTS = ICE_ONLY
   elif me == "MULTI_D":

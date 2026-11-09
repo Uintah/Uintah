@@ -64,17 +64,17 @@ namespace Uintah {
     const VarLabel* ktUvol_FCZLabel;
 
     //__________________________________
-    //  PIMPLE outer loop
+    //  PITCH outer loop
     //  *_adv0: the k=0 (main graph) advected conserved state, captured so
     //          a later outer iteration can read it from ParentNewDW without
     //          also modifying the same label in the sub-graph's own NewDW.
-    //  pimpleResidual: max(|drho|/rho, |dT|/T) over interior cells, used
+    //  pitchResidual: max(|drho|/rho, |dT|/T) over interior cells, used
     //          for the optional <outerTolerance> early exit.
     const VarLabel* mass_adv0Label;
     const VarLabel* mom_adv0Label;
     const VarLabel* eng_adv0Label;
     const VarLabel* sp_vol_adv0Label;
-    const VarLabel* pimpleResidualLabel;
+    const VarLabel* pitchResidualLabel;
   };
 
 } // end namespace Uintah

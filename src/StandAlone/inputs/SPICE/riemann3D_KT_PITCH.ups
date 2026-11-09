@@ -5,7 +5,7 @@
 <Uintah_specification>
 <!--______________________________________________________________________-->
 <!--   SPICE version of inputs/ICE/riemann3D.ups with Kurganov-Tadmor     -->
-<!--   advection and the PIMPLE outer loop, reduced to 40^3 cells on      -->
+<!--   advection and the PITCH outer loop, reduced to 40^3 cells on      -->
 <!--   2x2x2 patches and capped for regression testing.                   -->
 <!--______________________________________________________________________-->
  
@@ -146,7 +146,7 @@
     <!--      O  U  T  P  U  T     V  A  R  I  A  B  L  E  S                -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>riemann3D_KT_PIMPLE.uda</filebase>
+      <filebase>riemann3D_KT_PITCH.uda</filebase>
       <outputTimestepInterval> 20 </outputTimestepInterval>
       <checkpoint cycle = "2" timestepInterval = "40"/>
       <save label="delP_Dilatate"/>
@@ -171,11 +171,11 @@
           <facePressure>   true            </facePressure>
           <ktPressureFlux> true            </ktPressureFlux>
         </CentralUpwind>
-        <PIMPLE>
+        <PITCH>
           <nOuterCorrectors> 2   </nOuterCorrectors>
           <theta>            0.5 </theta>
           <outerTolerance>   0.0 </outerTolerance>
-        </PIMPLE>
+        </PITCH>
       </SPICE>        
     </CFD>
 

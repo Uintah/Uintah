@@ -61,14 +61,15 @@ namespace Uintah {
  (d_ice), lets ICE parse the input and schedule every task SPICE does not
  change, and implements the new and modified tasks itself:
 
-   - the PIMPLE outer loop (a sub-scheduler that re-runs the fluid chain
-     with a Crank-Nicolson theta blend of the conserved state)
+   - the PITCH outer loop (Picard ITeration of the fluid CHain): a
+     sub-scheduler that re-runs the fluid chain with a Crank-Nicolson
+     theta blend of the conserved state
    - Kurganov-Tadmor (KT, "CentralUpwind") face fluxes, face velocity,
      face pressure and advection
    - the consistent pressure-work formulation (always on in SPICE)
 
  Input: <CFD><SPICE> holds every stock ICE CFD option plus <CentralUpwind>
- and <PIMPLE>.  See StandAlone/inputs/UPS_SPEC/spice_spec.xml and
+ and <PITCH>.  See StandAlone/inputs/UPS_SPEC/spice_spec.xml and
  Docs/PIMPLE_KT_method.pdf.
 
  Tasks SPICE owns, copied from ICE and then modified.  ICE marks each
@@ -82,7 +83,7 @@ namespace Uintah {
 
  Limitations: single level (no AMR), exactly one ICE material and no MPM
  materials (a single-fluid code; species are transported scalars, e.g.
- gasCombustion).  PIMPLE does not support impICE or a turbulence model;
+ gasCombustion).  PITCH does not support impICE or a turbulence model;
  KT does not support impICE.
 ______________________________________________________________________*/
 
@@ -124,7 +125,7 @@ ______________________________________________________________________*/
     //__________________________________
     //  The fluid-dynamics portion of one timestep, from the thermo/transport
     //  properties through advection.  Called once for the main graph and,
-    //  with inOuterLoop = true, to build the PIMPLE sub-graph.
+    //  with inOuterLoop = true, to build the PITCH sub-graph.
     void scheduleFluidChain( SchedulerP   & sched,
                              const LevelP & level,
                              const bool     inOuterLoop );
@@ -172,23 +173,23 @@ ______________________________________________________________________*/
 
     //__________________________________
     //  P I M P L E   outer loop (sub-scheduler)
-    void schedulePimpleCopyModelSources( SchedulerP        & sched,
+    void schedulePitchCopyModelSources( SchedulerP        & sched,
                                          const LevelP      & level,
                                          const MaterialSet * matls );
 
-    void scheduleCapturePimpleAdv0( SchedulerP        & sched,
+    void scheduleCapturePitchAdv0( SchedulerP        & sched,
                                     const LevelP      & level,
                                     const MaterialSet * matls );
 
-    void schedulePimpleBlend( SchedulerP        & sched,
+    void schedulePitchBlend( SchedulerP        & sched,
                               const LevelP      & level,
                               const MaterialSet * ice_matls );
 
-    void schedulePimpleResidual( SchedulerP        & sched,
+    void schedulePitchResidual( SchedulerP        & sched,
                                  const LevelP      & level,
                                  const MaterialSet * ice_matls );
 
-    void schedulePimpleOuterLoop( SchedulerP   & sched,
+    void schedulePitchOuterLoop( SchedulerP   & sched,
                                   const LevelP & level );
 
   protected:
@@ -237,31 +238,31 @@ ______________________________________________________________________*/
                                  DataWarehouse        *,
                                  DataWarehouse        * );
 
-    void pimpleCopyModelSources( const ProcessorGroup *,
+    void pitchCopyModelSources( const ProcessorGroup *,
                                  const PatchSubset    * patches,
                                  const MaterialSubset * matls,
                                  DataWarehouse        * old_dw,
                                  DataWarehouse        * new_dw );
 
-    void capturePimpleAdv0( const ProcessorGroup *,
+    void capturePitchAdv0( const ProcessorGroup *,
                             const PatchSubset    * patches,
                             const MaterialSubset * matls,
                             DataWarehouse        * old_dw,
                             DataWarehouse        * new_dw );
 
-    void pimpleBlend( const ProcessorGroup *,
+    void pitchBlend( const ProcessorGroup *,
                       const PatchSubset    * patches,
                       const MaterialSubset * matls,
                       DataWarehouse        * old_dw,
                       DataWarehouse        * new_dw );
 
-    void pimpleResidual( const ProcessorGroup *,
+    void pitchResidual( const ProcessorGroup *,
                          const PatchSubset    * patches,
                          const MaterialSubset * matls,
                          DataWarehouse        * old_dw,
                          DataWarehouse        * new_dw );
 
-    void pimpleOuterLoop( const ProcessorGroup * pg,
+    void pitchOuterLoop( const ProcessorGroup * pg,
                           const PatchSubset    * patches,
                           const MaterialSubset * matls,
                           DataWarehouse        * ParentOldDW,
@@ -324,9 +325,9 @@ ______________________________________________________________________*/
     //  The per-transported-variable "*_adv0" labels, indexed in the nested
     //  (model, transported variable) order every loop over d_ice->d_models
     //  uses.
-    const VarLabel* pimpleTvarAdv0Label( int & idx ) const
+    const VarLabel* pitchTvarAdv0Label( int & idx ) const
     {
-      return d_pimpleTvarAdv0Labels.at(idx++);
+      return d_pitchTvarAdv0Labels.at(idx++);
     }
 
     //__________________________________
@@ -358,20 +359,20 @@ ______________________________________________________________________*/
     MaterialSubset * d_ktICE_matl{nullptr};
 
     //__________________________________
-    //  PIMPLE outer-loop options, <CFD><SPICE><PIMPLE>
-    int    d_pimpleOuter{1};       // nOuterCorrectors; 1 = PIMPLE off
-    int    d_pimpleNCorr{1};       // nCorrectors (impICE only, future)
-    double d_pimpleTheta{0.5};     // Crank-Nicolson weight
-    double d_pimpleTol{0.0};       // 0 = fixed iteration count
+    //  PITCH outer-loop options, <CFD><SPICE><PITCH>
+    int    d_pitchOuter{1};       // nOuterCorrectors; 1 = PITCH off
+    int    d_pitchNCorr{1};       // nCorrectors (impICE only, future)
+    double d_pitchTheta{0.5};     // Crank-Nicolson weight
+    double d_pitchTol{0.0};       // 0 = fixed iteration count
 
     // Re-runs the fluid chain once per outer iteration.  Created in
-    // problemSetup only when d_pimpleOuter > 1.
-    SchedulerP d_pimpleSched;
-    bool       d_recompilePimpleSched{true};
+    // problemSetup only when d_pitchOuter > 1.
+    SchedulerP d_pitchSched;
+    bool       d_recompilePitchSched{true};
 
     // One "<tvar>_adv0" label per transported variable (see
-    // pimpleTvarAdv0Label()).
-    std::vector<const VarLabel*> d_pimpleTvarAdv0Labels;
+    // pitchTvarAdv0Label()).
+    std::vector<const VarLabel*> d_pitchTvarAdv0Labels;
   };
 
 } // End namespace Uintah

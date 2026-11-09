@@ -86,7 +86,7 @@ using namespace ExchangeModels;
 
 namespace {
   Dout m_spice_tasks(  "SPICE_tasks",  "SPICE", "Print task scheduling & execution", false );
-  Dout m_spice_pimple( "SPICE_PIMPLE", "SPICE", "Print PIMPLE outer-loop iteration residual", false );
+  Dout m_spice_pitch( "SPICE_PITCH", "SPICE", "Print PITCH outer-loop iteration residual", false );
 }
 
 //______________________________________________________________________
@@ -106,14 +106,14 @@ SPICE::SPICE( const ProcessorGroup  * myworld,
 //
 SPICE::~SPICE()
 {
-  //  the PIMPLE sub-graph holds tasks bound to both SPICE and d_ice
-  d_pimpleSched = nullptr;
+  //  the PITCH sub-graph holds tasks bound to both SPICE and d_ice
+  d_pitchSched = nullptr;
 
   if( d_ktICE_matl && d_ktICE_matl->removeReference() ){
     delete d_ktICE_matl;
   }
 
-  for( auto label : d_pimpleTvarAdv0Labels ){
+  for( auto label : d_pitchTvarAdv0Labels ){
     VarLabel::destroy( label );
   }
 
@@ -273,31 +273,31 @@ void SPICE::problemSetup( const ProblemSpecP & prob_spec,
   }
 
   //__________________________________
-  //  Optional <PIMPLE> block
-  ProblemSpecP pimple_ps = cfd_spice_ps->findBlock("PIMPLE");
-  if( pimple_ps ){
-    pimple_ps->getWithDefault( "nOuterCorrectors", d_pimpleOuter, 1 );
-    if( d_pimpleOuter < 1 ){
+  //  Optional <PITCH> block
+  ProblemSpecP pitch_ps = cfd_spice_ps->findBlock("PITCH");
+  if( pitch_ps ){
+    pitch_ps->getWithDefault( "nOuterCorrectors", d_pitchOuter, 1 );
+    if( d_pitchOuter < 1 ){
       throw ProblemSetupException(
-        "\n ERROR: <PIMPLE><nOuterCorrectors> must be >= 1\n", __FILE__, __LINE__);
+        "\n ERROR: <PITCH><nOuterCorrectors> must be >= 1\n", __FILE__, __LINE__);
     }
 
-    pimple_ps->getWithDefault( "nCorrectors", d_pimpleNCorr, 1 );
-    if( d_pimpleNCorr < 1 ){
+    pitch_ps->getWithDefault( "nCorrectors", d_pitchNCorr, 1 );
+    if( d_pitchNCorr < 1 ){
       throw ProblemSetupException(
-        "\n ERROR: <PIMPLE><nCorrectors> must be >= 1\n", __FILE__, __LINE__);
+        "\n ERROR: <PITCH><nCorrectors> must be >= 1\n", __FILE__, __LINE__);
     }
 
-    pimple_ps->getWithDefault( "theta", d_pimpleTheta, 0.5 );
-    if( d_pimpleTheta <= 0.0 || d_pimpleTheta > 1.0 ){
+    pitch_ps->getWithDefault( "theta", d_pitchTheta, 0.5 );
+    if( d_pitchTheta <= 0.0 || d_pitchTheta > 1.0 ){
       throw ProblemSetupException(
-        "\n ERROR: <PIMPLE><theta> must satisfy 0 < theta <= 1\n", __FILE__, __LINE__);
+        "\n ERROR: <PITCH><theta> must satisfy 0 < theta <= 1\n", __FILE__, __LINE__);
     }
 
-    pimple_ps->getWithDefault( "outerTolerance", d_pimpleTol, 0.0 );
-    if( d_pimpleTol < 0.0 ){
+    pitch_ps->getWithDefault( "outerTolerance", d_pitchTol, 0.0 );
+    if( d_pitchTol < 0.0 ){
       throw ProblemSetupException(
-        "\n ERROR: <PIMPLE><outerTolerance> must be >= 0\n", __FILE__, __LINE__);
+        "\n ERROR: <PITCH><outerTolerance> must be >= 0\n", __FILE__, __LINE__);
     }
   }
 
@@ -310,7 +310,7 @@ void SPICE::problemSetup( const ProblemSpecP & prob_spec,
 
   //  SPICE is a single-fluid code: one ICE material, with any species carried
   //  as transported scalars (e.g. gasCombustion), as in reactingPimpleCentralFoam.
-  //  The KT face reconstruction and the PIMPLE blend are single-material, and
+  //  The KT face reconstruction and the PITCH blend are single-material, and
   //  the multi-material f_theta split of the pressure work is untested here.
   //  Use ICE for multi-material problems.
   if( m_materialManager->getNumMatls( "ICE" ) != 1 ){
@@ -320,19 +320,19 @@ void SPICE::problemSetup( const ProblemSpecP & prob_spec,
     throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }
 
-  if( d_pimpleOuter > 1 ){
+  if( d_pitchOuter > 1 ){
     if( d_ice->d_impICE ){
       throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop with the implicit pressure solve is not supported yet\n",
+        "\n ERROR: PITCH outer loop with the implicit pressure solve is not supported yet\n",
         __FILE__, __LINE__);
     }
 
-    // The PIMPLE sub-graph re-runs scheduleFluidChain() and recomputes the
+    // The PITCH sub-graph re-runs scheduleFluidChain() and recomputes the
     // LODI maxMach_<face> values, but not the turbulence variance, which
     // scheduleTimeAdvance computes outside the fluid chain.
     if( d_ice->d_turbulence ){
       throw ProblemSetupException(
-        "\n ERROR: PIMPLE outer loop with a turbulence model is not "
+        "\n ERROR: PITCH outer loop with a turbulence model is not "
         "supported yet (the sub-graph never recomputes the scalar variance "
         "that scheduleViscousShearStress reads)\n", __FILE__, __LINE__);
     }
@@ -363,33 +363,33 @@ void SPICE::problemSetup( const ProblemSpecP & prob_spec,
               << " facePressure: "   << d_ktFacePress
               << " ktPressureFlux: " << d_ktPressureFlux << "\n";
   }
-  if( d_pimpleOuter > 1 ){
-    proc0cout << " PIMPLE outer loop: "
-              << " nOuterCorrectors: " << d_pimpleOuter
-              << " nCorrectors: "      << d_pimpleNCorr
-              << " theta: "            << d_pimpleTheta
-              << " outerTolerance: "   << d_pimpleTol << "\n";
+  if( d_pitchOuter > 1 ){
+    proc0cout << " PITCH outer loop: "
+              << " nOuterCorrectors: " << d_pitchOuter
+              << " nCorrectors: "      << d_pitchNCorr
+              << " theta: "            << d_pitchTheta
+              << " outerTolerance: "   << d_pitchTol << "\n";
   }
   proc0cout << "__________________________________ \n";
 
   //__________________________________
-  //  PIMPLE outer-loop sub-scheduler, created exactly like ICE's implicit
+  //  PITCH outer-loop sub-scheduler, created exactly like ICE's implicit
   //  pressure sub-scheduler.
-  if( d_pimpleOuter > 1 ){
-    d_pimpleSched = m_scheduler->createSubScheduler();
-    d_pimpleSched->initialize(3,1);
-    d_pimpleSched->clearMappings();
-    d_pimpleSched->mapDataWarehouse( Task::ParentOldDW, 0 );
-    d_pimpleSched->mapDataWarehouse( Task::ParentNewDW, 1 );
-    d_pimpleSched->mapDataWarehouse( Task::OldDW,       2 );
-    d_pimpleSched->mapDataWarehouse( Task::NewDW,       3 );
+  if( d_pitchOuter > 1 ){
+    d_pitchSched = m_scheduler->createSubScheduler();
+    d_pitchSched->initialize(3,1);
+    d_pitchSched->clearMappings();
+    d_pitchSched->mapDataWarehouse( Task::ParentOldDW, 0 );
+    d_pitchSched->mapDataWarehouse( Task::ParentNewDW, 1 );
+    d_pitchSched->mapDataWarehouse( Task::OldDW,       2 );
+    d_pitchSched->mapDataWarehouse( Task::NewDW,       3 );
     // single-level convention (matches SchedulerCommon's own default
     // mapping): Coarse == Old/New so getSubCycleProgress() degenerates
     // safely.
-    d_pimpleSched->mapDataWarehouse( Task::CoarseOldDW, 2 );
-    d_pimpleSched->mapDataWarehouse( Task::CoarseNewDW, 3 );
+    d_pitchSched->mapDataWarehouse( Task::CoarseOldDW, 2 );
+    d_pitchSched->mapDataWarehouse( Task::CoarseNewDW, 3 );
 
-    d_recompilePimpleSched = true;
+    d_recompilePitchSched = true;
 
     //  One "*_adv0" capture label per transported variable, in the nested
     //  (model, transported variable) order every loop over d_models uses.
@@ -397,7 +397,7 @@ void SPICE::problemSetup( const ProblemSpecP & prob_spec,
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
       if( fb_model ){
         for( auto& tvar : fb_model->d_transVars ){
-          d_pimpleTvarAdv0Labels.push_back(
+          d_pitchTvarAdv0Labels.push_back(
             VarLabel::create( tvar->var->getName() + "_adv0",
                               tvar->var->typeDescription() ) );
         }
@@ -471,34 +471,34 @@ SPICE::scheduleTimeAdvance( const LevelP & level,
 
   scheduleFluidChain( sched, level, false );
 
-  if( d_pimpleOuter > 1 ){
+  if( d_pitchOuter > 1 ){
     // snapshot the k=0 (main graph) advected conserved state so the outer
     // loop's sub-graph can read it from ParentNewDW without also modifying
     // the same label (mass_adv/mom_adv/eng_adv/sp_vol_adv/tvar->var_adv)
     // in its own NewDW
-    scheduleCapturePimpleAdv0(             sched, level,   ice_matls);
+    scheduleCapturePitchAdv0(             sched, level,   ice_matls);
   }
 
   d_ice->scheduleConservedtoPrimitive_Vars(sched, patches, ice_mss,
                                                            all_matls,
                                                            "afterAdvection");
 
-  if( d_pimpleOuter > 1 ){
-    schedulePimpleOuterLoop(               sched, level );
+  if( d_pitchOuter > 1 ){
+    schedulePitchOuterLoop(               sched, level );
   }
 }
 /* _____________________________________________________________________
  Task:  SPICE::scheduleFluidChain--
  Purpose:  Schedule the fluid-dynamics portion of a single timestep, from
            the thermo/transport properties through the advection step,
-           so it can be scheduled again for the PIMPLE outer loop.
+           so it can be scheduled again for the PITCH outer loop.
 
            ICE tasks are scheduled through d_ice.  The tasks SPICE owns are
            scheduled here; computeVel_FC, computePressFC and
            computeDelPressAndUpdatePressCC use the SPICE copy only when the
            Kurganov-Tadmor option that changes them is on, and ICE's
            otherwise.  The flags are fixed at problemSetup, so the main
-           graph and the PIMPLE sub-graph always choose the same way.
+           graph and the PITCH sub-graph always choose the same way.
 _____________________________________________________________________*/
 void
 SPICE::scheduleFluidChain( SchedulerP   & sched,
@@ -534,14 +534,14 @@ SPICE::scheduleFluidChain( SchedulerP   & sched,
 
   if( !inOuterLoop ){
     // chemistry/model sources are evaluated once per timestep, before the
-    // PIMPLE outer loop (reactingPimpleCentralFoam: reaction->correct()
+    // PITCH outer loop (reactingPimpleCentralFoam: reaction->correct()
     // precedes pimple.loop())
     d_ice->scheduleComputeModelSources(          sched, level,   all_matls);
   }
   else {
-    // PIMPLE outer iterations k>=1: model sources are FROZEN at the k=0
+    // PITCH outer iterations k>=1: model sources are FROZEN at the k=0
     // value -- copy them from ParentNewDW instead of recomputing them.
-    schedulePimpleCopyModelSources(              sched, level,   all_matls);
+    schedulePitchCopyModelSources(              sched, level,   all_matls);
   }
 
   d_ice->scheduleUpdateVolumeFraction(           sched, level,   press_matl,
@@ -575,7 +575,7 @@ SPICE::scheduleFluidChain( SchedulerP   & sched,
   // scheduleComputeCentralWeights.
   scheduleComputeCentralFluxes(                  sched, patches, ice_matls);
 
-  if(d_ice->d_impICE) {        //  I M P L I C I T  (KT and PIMPLE refuse impICE)
+  if(d_ice->d_impICE) {        //  I M P L I C I T  (KT and PITCH refuse impICE)
 
     d_ice->scheduleSetupRHS(                     sched, patches, one_matl,
                                                                  all_matls,
@@ -953,8 +953,8 @@ void SPICE::scheduleAccumulateEnergySourceSinks(SchedulerP          & sched,
 }
 
 /* _____________________________________________________________________
-Task:     SPICE::schedulePimpleCopyModelSources--
-Purpose:  PIMPLE outer iterations k>=1 freeze the chemistry/model sources
+Task:     SPICE::schedulePitchCopyModelSources--
+Purpose:  PITCH outer iterations k>=1 freeze the chemistry/model sources
           at their k=0 value (reactingPimpleCentralFoam calls
           reaction->correct() once, before pimple.loop()).  Scheduled by
           scheduleFluidChain() in place of scheduleComputeModelSources()
@@ -962,16 +962,16 @@ Purpose:  PIMPLE outer iterations k>=1 freeze the chemistry/model sources
           exactly the label set ICE::zeroModelSources() computes, by
           copying from Task::ParentNewDW (the main graph's k=0 result).
 _____________________________________________________________________*/
-void SPICE::schedulePimpleCopyModelSources(SchedulerP        & sched,
+void SPICE::schedulePitchCopyModelSources(SchedulerP        & sched,
                                          const LevelP      & level,
                                          const MaterialSet * matls)
 {
   if(d_ice->d_models.size() != 0){
 
-    printSchedule( level, m_spice_tasks, " SPICE::schedulePimpleCopyModelSources" );
+    printSchedule( level, m_spice_tasks, " SPICE::schedulePitchCopyModelSources" );
 
-    Task* t = scinew Task("SPICE::pimpleCopyModelSources",this,
-                          &SPICE::pimpleCopyModelSources);
+    Task* t = scinew Task("SPICE::pitchCopyModelSources",this,
+                          &SPICE::pitchCopyModelSources);
 
     t->requiresVar( Task::ParentNewDW, lb->modelMass_srcLabel, m_gn,0 );
     t->requiresVar( Task::ParentNewDW, lb->modelMom_srcLabel,  m_gn,0 );
@@ -1005,20 +1005,20 @@ void SPICE::schedulePimpleCopyModelSources(SchedulerP        & sched,
 }
 
 /* _____________________________________________________________________
-Task:     SPICE::scheduleCapturePimpleAdv0--
+Task:     SPICE::scheduleCapturePitchAdv0--
 Purpose:  Snapshot the main graph's (k=0) advected conserved state into
           the "*_adv0" labels right after scheduleAdvectAndAdvanceInTime,
-          so SPICE::pimpleBlend can read it from ParentNewDW without also
+          so SPICE::pitchBlend can read it from ParentNewDW without also
           modifying mass_adv/mom_adv/eng_adv/sp_vol_adv/tvar->var_adv (the
           SAME labels) in the sub-graph's own NewDW.
 _____________________________________________________________________*/
-void SPICE::scheduleCapturePimpleAdv0(SchedulerP        & sched,
+void SPICE::scheduleCapturePitchAdv0(SchedulerP        & sched,
                                     const LevelP      & level,
                                     const MaterialSet * matls)
 {
-  printSchedule( level, m_spice_tasks, " SPICE::scheduleCapturePimpleAdv0" );
+  printSchedule( level, m_spice_tasks, " SPICE::scheduleCapturePitchAdv0" );
 
-  Task* t = scinew Task("SPICE::capturePimpleAdv0", this, &SPICE::capturePimpleAdv0);
+  Task* t = scinew Task("SPICE::capturePitchAdv0", this, &SPICE::capturePitchAdv0);
 
   t->requiresVar( Task::NewDW, lb->mass_advLabel,   m_gn,0 );
   t->requiresVar( Task::NewDW, lb->mom_advLabel,    m_gn,0 );
@@ -1035,7 +1035,7 @@ void SPICE::scheduleCapturePimpleAdv0(SchedulerP        & sched,
     FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
     if( fb_model ){
       for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
+        const VarLabel* adv0 = pitchTvarAdv0Label(idx);
         t->requiresVar( Task::NewDW, tvar->var_adv, tvar->matls, m_gn,0 );
         t->computesVar( adv0, tvar->matls );
       }
@@ -1046,24 +1046,24 @@ void SPICE::scheduleCapturePimpleAdv0(SchedulerP        & sched,
 }
 
 /* _____________________________________________________________________
-Task:     SPICE::schedulePimpleBlend--
-Purpose:  PIMPLE outer iteration k (sub-graph only): combine the k=0
+Task:     SPICE::schedulePitchBlend--
+Purpose:  PITCH outer iteration k (sub-graph only): combine the k=0
           advected state with this iteration's freshly advected state
           using the Crank-Nicolson theta blend
             X^k = X^n + (1-theta)*(X_adv0 - X^n) + theta*(X_sub - X^{k-1})
           (reactingPimpleCentralFoam, ddt CrankNicolson).  Total energy is
           blended (not int_eng directly), to avoid creating/destroying
-          heat through the KE nonlinearity; see SPICE::pimpleBlend.
+          heat through the KE nonlinearity; see SPICE::pitchBlend.
 _____________________________________________________________________*/
-void SPICE::schedulePimpleBlend(SchedulerP        & sched,
+void SPICE::schedulePitchBlend(SchedulerP        & sched,
                               const LevelP      & level,
                               const MaterialSet * ice_matls)
 {
-  printSchedule( level, m_spice_tasks, " SPICE::schedulePimpleBlend" );
+  printSchedule( level, m_spice_tasks, " SPICE::schedulePitchBlend" );
 
   const MaterialSubset* ice_mss = ice_matls->getUnion();
 
-  Task* t = scinew Task("SPICE::pimpleBlend", this, &SPICE::pimpleBlend);
+  Task* t = scinew Task("SPICE::pitchBlend", this, &SPICE::pitchBlend);
 
   // X^n : ParentOldDW primitives
   t->requiresVar( Task::ParentOldDW, lb->rho_CCLabel,     ice_mss, m_gn,0 );
@@ -1100,7 +1100,7 @@ void SPICE::schedulePimpleBlend(SchedulerP        & sched,
     FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
     if( fb_model ){
       for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
+        const VarLabel* adv0 = pitchTvarAdv0Label(idx);
 
         t->requiresVar( Task::ParentOldDW, tvar->var, tvar->matls, m_gn,0 );
         t->requiresVar( Task::ParentNewDW, adv0,      tvar->matls, m_gn,0 );
@@ -1114,32 +1114,32 @@ void SPICE::schedulePimpleBlend(SchedulerP        & sched,
 }
 
 /* _____________________________________________________________________
-Task:     SPICE::schedulePimpleResidual--
-Purpose:  PIMPLE outer iteration k (sub-graph only, scheduled after
+Task:     SPICE::schedulePitchResidual--
+Purpose:  PITCH outer iteration k (sub-graph only, scheduled after
           conservedtoPrimitive_Vars): residual = max over interior cells
           of max(|rho_new-rho_old|/rho_new, |T_new-T_old|/T_new), used for
           the optional <outerTolerance> early exit.
 _____________________________________________________________________*/
-void SPICE::schedulePimpleResidual(SchedulerP        & sched,
+void SPICE::schedulePitchResidual(SchedulerP        & sched,
                                  const LevelP      & level,
                                  const MaterialSet * ice_matls)
 {
-  printSchedule( level, m_spice_tasks, " SPICE::schedulePimpleResidual" );
+  printSchedule( level, m_spice_tasks, " SPICE::schedulePitchResidual" );
 
-  Task* t = scinew Task("SPICE::pimpleResidual", this, &SPICE::pimpleResidual);
+  Task* t = scinew Task("SPICE::pitchResidual", this, &SPICE::pitchResidual);
 
   t->requiresVar( Task::OldDW, lb->rho_CCLabel,  m_gn,0 );
   t->requiresVar( Task::OldDW, lb->temp_CCLabel, m_gn,0 );
   t->requiresVar( Task::NewDW, lb->rho_CCLabel,  m_gn,0 );
   t->requiresVar( Task::NewDW, lb->temp_CCLabel, m_gn,0 );
 
-  t->computesVar( Slb->pimpleResidualLabel );
+  t->computesVar( Slb->pitchResidualLabel );
 
   sched->addTask(t, level->eachPatch(), ice_matls);
 }
 
 /* _____________________________________________________________________
-Task:     SPICE::schedulePimpleOuterLoop--
+Task:     SPICE::schedulePitchOuterLoop--
 Purpose:  For nOuterCorrectors > 1, re-run the fluid chain in a
           sub-scheduler for outer iterations k=1..nOuterCorrectors-1,
           seeded from the main graph's own k=0 primitives, and copy the
@@ -1147,22 +1147,22 @@ Purpose:  For nOuterCorrectors > 1, re-run the fluid chain in a
           scheduleTimeAdvance immediately after
           scheduleConservedtoPrimitive_Vars.
 _____________________________________________________________________*/
-void SPICE::schedulePimpleOuterLoop( SchedulerP & sched, const LevelP & level )
+void SPICE::schedulePitchOuterLoop( SchedulerP & sched, const LevelP & level )
 {
-  if( d_pimpleOuter < 2 ){
+  if( d_pitchOuter < 2 ){
     return;
   }
 
   // compiling the outer taskgraph means the inner one must be recompiled too
-  d_recompilePimpleSched = true;
+  d_recompilePitchSched = true;
 
-  printSchedule( level, m_spice_tasks, " SPICE::schedulePimpleOuterLoop" );
+  printSchedule( level, m_spice_tasks, " SPICE::schedulePitchOuterLoop" );
 
   const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
   const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* ice_mss = ice_matls->getUnion();
 
-  Task* t = scinew Task("SPICE::pimpleOuterLoop", this, &SPICE::pimpleOuterLoop, level);
+  Task* t = scinew Task("SPICE::pitchOuterLoop", this, &SPICE::pitchOuterLoop, level);
   t->hasSubScheduler();
 
   t->requiresVar( Task::OldDW, lb->timeStepLabel );
@@ -1183,7 +1183,7 @@ void SPICE::schedulePimpleOuterLoop( SchedulerP & sched, const LevelP & level )
   t->requiresVar( Task::NewDW, Slb->sp_vol_adv0Label, ice_mss, m_gn,0 );
 
   // frozen model sources (copied every outer iteration by
-  // SPICE::pimpleCopyModelSources, via ParentNewDW) -- require them here too
+  // SPICE::pitchCopyModelSources, via ParentNewDW) -- require them here too
   // so the scheduler doesn't scrub them before the sub-graph reads them
   if( d_ice->d_models.size() != 0 ){
     t->requiresVar( Task::NewDW, lb->modelMass_srcLabel, m_gn,0 );
@@ -1215,7 +1215,7 @@ void SPICE::schedulePimpleOuterLoop( SchedulerP & sched, const LevelP & level )
     FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
     if( fb_model ){
       for( auto& tvar : fb_model->d_transVars ){
-        const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
+        const VarLabel* adv0 = pitchTvarAdv0Label(idx);
 
         t->requiresVar( Task::OldDW, tvar->var, tvar->matls, m_gn,0 );
         t->requiresVar( Task::NewDW, adv0,      tvar->matls, m_gn,0 );
@@ -2637,13 +2637,13 @@ void SPICE::advectAndAdvanceInTime(const ProcessorGroup * /*pg*/,
   }  // patch loop
 }
 /* _____________________________________________________________________
- Task:      SPICE::pimpleCopyModelSources
- Purpose:   PIMPLE sub-graph: copy the (frozen) model sources computed by
+ Task:      SPICE::pitchCopyModelSources
+ Purpose:   PITCH sub-graph: copy the (frozen) model sources computed by
             the main graph's ICE::zeroModelSources + the models'
             scheduleComputeModelSources out of Task::ParentNewDW, exactly
             mirroring the label set ICE::zeroModelSources computes.
  _____________________________________________________________________  */
-void SPICE::pimpleCopyModelSources(const ProcessorGroup  *,
+void SPICE::pitchCopyModelSources(const ProcessorGroup  *,
                                  const PatchSubset     * patches,
                                  const MaterialSubset  * matls,
                                  DataWarehouse         * /*old_dw*/,
@@ -2654,7 +2654,7 @@ void SPICE::pimpleCopyModelSources(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_spice_tasks, "SPICE::pimpleCopyModelSources" );
+    printTask(patches, patch, m_spice_tasks, "SPICE::pitchCopyModelSources" );
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2710,11 +2710,11 @@ void SPICE::pimpleCopyModelSources(const ProcessorGroup  *,
 }
 
 /* _____________________________________________________________________
- Task:      SPICE::capturePimpleAdv0
+ Task:      SPICE::capturePitchAdv0
  Purpose:   Snapshot the main graph's (k=0) mass_adv/mom_adv/eng_adv/
             sp_vol_adv/tvar->var_adv into the "*_adv0" labels.
  _____________________________________________________________________  */
-void SPICE::capturePimpleAdv0(const ProcessorGroup  *,
+void SPICE::capturePitchAdv0(const ProcessorGroup  *,
                             const PatchSubset     * patches,
                             const MaterialSubset  * matls,
                             DataWarehouse         * /*old_dw*/,
@@ -2723,7 +2723,7 @@ void SPICE::capturePimpleAdv0(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_spice_tasks, "SPICE::capturePimpleAdv0" );
+    printTask(patches, patch, m_spice_tasks, "SPICE::capturePitchAdv0" );
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -2753,7 +2753,7 @@ void SPICE::capturePimpleAdv0(const ProcessorGroup  *,
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
       if( fb_model ){
         for( auto& tvar : fb_model->d_transVars ){
-          const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
+          const VarLabel* adv0 = pitchTvarAdv0Label(idx);
 
           for(int m=0;m<tvar->matls->size();m++){
             int matl = tvar->matls->get(m);
@@ -2772,8 +2772,8 @@ void SPICE::capturePimpleAdv0(const ProcessorGroup  *,
 }
 
 /* _____________________________________________________________________
- Task:      SPICE::pimpleBlend
- Purpose:   PIMPLE sub-graph, outer iteration k: Crank-Nicolson theta
+ Task:      SPICE::pitchBlend
+ Purpose:   PITCH sub-graph, outer iteration k: Crank-Nicolson theta
             blend of the conserved state,
               X^k = X^n + (1-theta)*(X_adv0 - X^n) + theta*(X_sub - X^{k-1})
             with energy blended as TOTAL energy (int_eng + kinetic) so the
@@ -2782,7 +2782,7 @@ void SPICE::capturePimpleAdv0(const ProcessorGroup  *,
             theta=0.5, nOuter=2 => Heun/SSP-RK2; theta=1 => Euler-implicit
             Picard).
  _____________________________________________________________________  */
-void SPICE::pimpleBlend(const ProcessorGroup  *,
+void SPICE::pitchBlend(const ProcessorGroup  *,
                       const PatchSubset     * patches,
                       const MaterialSubset  * matls,
                       DataWarehouse         * old_dw,
@@ -2791,12 +2791,12 @@ void SPICE::pimpleBlend(const ProcessorGroup  *,
   DataWarehouse* pOldDW = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   DataWarehouse* pNewDW = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
 
-  const double th = d_pimpleTheta;
+  const double th = d_pitchTheta;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_spice_tasks, "SPICE::pimpleBlend" );
+    printTask(patches, patch, m_spice_tasks, "SPICE::pitchBlend" );
 
     Vector dx  = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();
@@ -2913,7 +2913,7 @@ void SPICE::pimpleBlend(const ProcessorGroup  *,
       FluidsBasedModel* fb_model = dynamic_cast<FluidsBasedModel*>( model );
       if( fb_model ){
         for( auto& tvar : fb_model->d_transVars ){
-          const VarLabel* adv0 = pimpleTvarAdv0Label(idx);
+          const VarLabel* adv0 = pitchTvarAdv0Label(idx);
 
           for(int m=0;m<tvar->matls->size();m++){
             int indx = tvar->matls->get(m);
@@ -2949,12 +2949,12 @@ void SPICE::pimpleBlend(const ProcessorGroup  *,
 }
 
 /* _____________________________________________________________________
- Task:      SPICE::pimpleResidual
- Purpose:   PIMPLE sub-graph, after conservedtoPrimitive_Vars: residual =
+ Task:      SPICE::pitchResidual
+ Purpose:   PITCH sub-graph, after conservedtoPrimitive_Vars: residual =
             max over interior cells of
             max(|rho_new-rho_old|/rho_new, |T_new-T_old|/T_new).
  _____________________________________________________________________  */
-void SPICE::pimpleResidual(const ProcessorGroup  *,
+void SPICE::pitchResidual(const ProcessorGroup  *,
                          const PatchSubset     * patches,
                          const MaterialSubset  * matls,
                          DataWarehouse         * old_dw,
@@ -2965,7 +2965,7 @@ void SPICE::pimpleResidual(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_spice_tasks, "SPICE::pimpleResidual" );
+    printTask(patches, patch, m_spice_tasks, "SPICE::pitchResidual" );
 
     for(int m=0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -2987,12 +2987,12 @@ void SPICE::pimpleResidual(const ProcessorGroup  *,
     }
   }
 
-  new_dw->put( max_vartype(residual), Slb->pimpleResidualLabel );
+  new_dw->put( max_vartype(residual), Slb->pitchResidualLabel );
 }
 
 /* _____________________________________________________________________
- Task:      SPICE::pimpleOuterLoop
- Purpose:   Drive d_pimpleSched through outer iterations k=1..nOuter-1,
+ Task:      SPICE::pitchOuterLoop
+ Purpose:   Drive d_pitchSched through outer iterations k=1..nOuter-1,
             seeded from the main graph's own k=0 primitives, and copy the
             final iterate's primitives back.  Follows the structure of
             Uintah_TS's ICE::sdcSweep (DW slot mapping, recompile, seeding
@@ -3002,14 +3002,14 @@ void SPICE::pimpleResidual(const ProcessorGroup  *,
             recomputeTimeStep/abortTimeStep forwarding, copy-back).
  _____________________________________________________________________  */
 void
-SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
+SPICE::pitchOuterLoop( const ProcessorGroup * pg,
                       const PatchSubset    * patches,
                       const MaterialSubset * /*matls*/,
                       DataWarehouse        * ParentOldDW,
                       DataWarehouse        * ParentNewDW,
                       LevelP                 level )
 {
-  if( d_pimpleOuter < 2 ){
+  if( d_pitchOuter < 2 ){
     return;
   }
 
@@ -3025,35 +3025,35 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
   const MaterialSet* all_matls = m_materialManager->allMaterials();
   const MaterialSubset* ice_mss = ice_matls->getUnion();
 
-  d_pimpleSched->setParentDWs(ParentOldDW, ParentNewDW);
-  d_pimpleSched->advanceDataWarehouse(grid);
+  d_pitchSched->setParentDWs(ParentOldDW, ParentNewDW);
+  d_pitchSched->advanceDataWarehouse(grid);
 
-  if( d_recompilePimpleSched ){
-    d_pimpleSched->initialize(3, 1);
+  if( d_recompilePitchSched ){
+    d_pitchSched->initialize(3, 1);
     // matches scheduleTimeAdvance's own ordering (maxMach BEFORE the
     // chain): computesRequires_CustomBCs wires maxMach_<face> into several
     // of scheduleFluidChain's own tasks when usingLodi, so it must be
     // computed in THIS (sub-graph) NewDW every recompile, not reused from
     // the main graph's k=0 value.
-    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(  d_pimpleSched, level,  ice_matls );
-    scheduleFluidChain(                       d_pimpleSched, level,  true );
-    schedulePimpleBlend(                      d_pimpleSched, level,  ice_matls );
-    // "afterAdvection" (not a literal "pimpleOuterLoop" string):
+    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(  d_pitchSched, level,  ice_matls );
+    scheduleFluidChain(                       d_pitchSched, level,  true );
+    schedulePitchBlend(                      d_pitchSched, level,  ice_matls );
+    // "afterAdvection" (not a literal "pitchOuterLoop" string):
     // conservedtoPrimitive_Vars gates its computesVar(temp_CC/vel_CC/
     // mach/species) on this exact string.
-    d_ice->scheduleConservedtoPrimitive_Vars( d_pimpleSched, level->eachPatch(),
+    d_ice->scheduleConservedtoPrimitive_Vars( d_pitchSched, level->eachPatch(),
                                               ice_mss, all_matls, "afterAdvection" );
-    schedulePimpleResidual(             d_pimpleSched, level,  ice_matls );
-    d_pimpleSched->compile();
-    d_recompilePimpleSched = false;
+    schedulePitchResidual(             d_pitchSched, level,  ice_matls );
+    d_pitchSched->compile();
+    d_recompilePitchSched = false;
   }
 
   // prime slot 3 and seed it with u^0 == u^n primitives (k=0 IS the main
   // graph's own, already-computed result)
-  d_pimpleSched->setInitTimestep(true);
-  d_pimpleSched->advanceDataWarehouse(grid);
+  d_pitchSched->setInitTimestep(true);
+  d_pitchSched->advanceDataWarehouse(grid);
 
-  DataWarehouse* seedDW = d_pimpleSched->get_dw(3);
+  DataWarehouse* seedDW = d_pitchSched->get_dw(3);
 
   seedDW->transferFrom( ParentNewDW, lb->rho_CCLabel,        patch_sub, ice_mss );
   seedDW->transferFrom( ParentNewDW, lb->vel_CCLabel,        patch_sub, ice_mss );
@@ -3076,16 +3076,16 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
     }
   }
 
-  d_pimpleSched->setInitTimestep(false);
+  d_pitchSched->setInitTimestep(false);
 
   double residual = 0.0;
 
-  for (int k = 1; k < d_pimpleOuter; k++) {
+  for (int k = 1; k < d_pitchOuter; k++) {
 
-    d_pimpleSched->advanceDataWarehouse(grid);
+    d_pitchSched->advanceDataWarehouse(grid);
 
-    DataWarehouse* subOldDW = d_pimpleSched->get_dw(2);
-    DataWarehouse* subNewDW = d_pimpleSched->get_dw(3);
+    DataWarehouse* subOldDW = d_pitchSched->get_dw(2);
+    DataWarehouse* subNewDW = d_pitchSched->get_dw(3);
 
     // re-put every outer iteration (does not survive rotation);
     // DWDatabase::put needs the init flag to register a not-yet-known key,
@@ -3102,11 +3102,11 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
       subOldDW->unfinalize();
     }
 
-    d_pimpleSched->setInitTimestep(true);
+    d_pitchSched->setInitTimestep(true);
     subOldDW->put( timeStepVar, lb->timeStepLabel );
     subOldDW->put( simTimeVar,  lb->simulationTimeLabel );
     subOldDW->put( delTVar,     lb->delTLabel, level.get_rep() );
-    d_pimpleSched->setInitTimestep(false);
+    d_pitchSched->setInitTimestep(false);
 
     if( subOldDW_wasFinalized ){
       subOldDW->refinalize();
@@ -3115,15 +3115,15 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
     subOldDW->setScrubbing(DataWarehouse::ScrubNone);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
 
-    d_pimpleSched->execute();
+    d_pitchSched->execute();
 
     max_vartype residualVar;
-    subNewDW->get( residualVar, Slb->pimpleResidualLabel );
+    subNewDW->get( residualVar, Slb->pitchResidualLabel );
     residual = residualVar;
 
     if( pg->myRank() == 0 ){
-      DOUT( m_spice_pimple, "  PIMPLE outer iteration " << k << " of "
-            << (d_pimpleOuter - 1) << "   timestep " << timeStepVar
+      DOUT( m_spice_pitch, "  PITCH outer iteration " << k << " of "
+            << (d_pitchOuter - 1) << "   timestep " << timeStepVar
             << "   residual " << residual );
     }
 
@@ -3150,13 +3150,13 @@ SPICE::pimpleOuterLoop( const ProcessorGroup * pg,
       }
     }
 
-    if( d_pimpleTol > 0.0 && residual < d_pimpleTol ){
+    if( d_pitchTol > 0.0 && residual < d_pitchTol ){
       break;
     }
   }
 
   // copy the final outer iterate's primitives back to the main graph
-  DataWarehouse* subNewDW = d_pimpleSched->get_dw(3);
+  DataWarehouse* subNewDW = d_pitchSched->get_dw(3);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

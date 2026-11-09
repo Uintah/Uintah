@@ -2,7 +2,7 @@
 <Uintah_specification>
 <!--______________________________________________________________________-->
 <!--   SPICE version of inputs/ICE/RX_MODELS/hydrogenFlame1.ups with      -->
-<!--   Kurganov-Tadmor advection and the PIMPLE outer loop: 1D H2-air     -->
+<!--   Kurganov-Tadmor advection and the PITCH outer loop: 1D H2-air     -->
 <!--   laminar flame, chemistry + diffusion, LODI outflow.  Capped at     -->
 <!--   1000 timesteps for regression testing.                             -->
 <!--______________________________________________________________________-->
@@ -156,7 +156,7 @@
     <!--      O  U  T  P  U  T     V  A  R  I  A  B  L  E  S                -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>hydrogenFlame1_KT_PIMPLE.uda</filebase>
+      <filebase>hydrogenFlame1_KT_PITCH.uda</filebase>
       <outputTimestepInterval> 100 </outputTimestepInterval>
         <!-- Species passive scalars -->
         <save label="scalar-YH2"/>
@@ -209,11 +209,11 @@
           <facePressure>   true            </facePressure>
           <ktPressureFlux> true            </ktPressureFlux>
         </CentralUpwind>
-        <PIMPLE>
+        <PITCH>
           <nOuterCorrectors> 2   </nOuterCorrectors>
           <theta>            0.5 </theta>
           <outerTolerance>   0.0 </outerTolerance>
-        </PIMPLE>
+        </PITCH>
       </SPICE>   
     </CFD>
 

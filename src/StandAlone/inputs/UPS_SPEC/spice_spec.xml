@@ -4,7 +4,7 @@
   <!--________________________________________________________________________________________________________-->
   <!--  SPICE (Semi-implicit Pressure Iterated Compressible EOS)                                               -->
   <!--  <CFD><SPICE> takes every stock ICE CFD option (included from ice_spec.xml, so new ICE options work in   -->
-  <!--  SPICE automatically) plus the Kurganov-Tadmor and PIMPLE options below.  See CCA/Components/SPICE.     -->
+  <!--  SPICE automatically) plus the Kurganov-Tadmor and PITCH options below.  See CCA/Components/SPICE.     -->
   <CFD>
     <SPICE                              spec="OPTIONAL NO_DATA" >
 
@@ -19,13 +19,13 @@
         <ktPressureFlux                 spec="OPTIONAL BOOLEAN" />
       </CentralUpwind>
 
-      <!-- nOuterCorrectors > 1 turns the outer loop on -->
-      <PIMPLE                           spec="OPTIONAL NO_DATA" >
+      <!-- PITCH (Picard ITeration of the fluid CHain); nOuterCorrectors > 1 turns the outer loop on -->
+      <PITCH                            spec="OPTIONAL NO_DATA" >
         <nOuterCorrectors               spec="OPTIONAL INTEGER 'positive'" />
         <nCorrectors                    spec="OPTIONAL INTEGER 'positive'" />
         <theta                          spec="OPTIONAL DOUBLE 'positive'" />
         <outerTolerance                 spec="OPTIONAL DOUBLE" />
-      </PIMPLE>
+      </PITCH>
 
     </SPICE>
   </CFD>
