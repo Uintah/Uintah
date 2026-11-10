@@ -1575,6 +1575,7 @@ void ICE::scheduleViscousShearStress(SchedulerP        & sched,
 Task:     ICE::scheduleAccumulateMomentumSourceSinks--
 Purpose:  Sum up all of the momentum sources or sinks
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void
 ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP           & sched,
                                            const PatchSet       * patches,
@@ -1700,6 +1701,7 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP        & sched,
  Task:     scheduleComputeLagrangianSpecificVolume--
  Purpose:
 _____________________________________________________________________*/
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP            & sched,
                                                   const PatchSet        * patches,
                                                   const MaterialSubset  * ice_mss,
@@ -4384,6 +4386,7 @@ void ICE::viscousShearStress(const ProcessorGroup *,
  Task:      ICE::accumulateMomentumSourceSinks
  Purpose:   accumulate all of the sources/sinks of momentum
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::accumulateMomentumSourceSinks(const ProcessorGroup  *,
                                         const PatchSubset     * patches,
                                         const MaterialSubset  * /*matls*/,
@@ -4827,6 +4830,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup  *,
   Task:  computeLagrangianSpecificVolume--
   purpose:  Compute the larganginan specific volume  mass * spec_vol
  _____________________________________________________________________  */
+//  SPICE owns a modified copy of this function (CCA/Components/SPICE/SPICE.cc).  Port fixes there too.
 void ICE::computeLagrangianSpecificVolume(const ProcessorGroup  *,
                                           const PatchSubset     * patches,
                                           const MaterialSubset  * /*matls*/,

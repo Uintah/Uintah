@@ -394,6 +394,9 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   // compute the value of q_CC at the slab q_OAFS 
   qAverageFlux<double>( compatible, q_CC, d_notUsed_D, patch, q_OAFS, 
                         q_grad_x, q_grad_y, q_grad_z);
+
+  // let a derived advector adjust the slab values (default: no-op)
+  adjustSlabs( q_OAFS, patch );
         
   advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
                       q_XFC, q_YFC, q_ZFC, save_q_FC(), varBasket);

@@ -44,11 +44,13 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <functional>
 #include <string>
 #include <vector>
 
 namespace Uintah {
 
+  class Advector;
   class ICE;
   class ICELabel;
   class SPICELabel;
@@ -75,16 +77,27 @@ namespace Uintah {
  Tasks SPICE owns, copied from ICE and then modified.  ICE marks each
  original with "SPICE owns a modified copy"; port ICE fixes to both.
    accumulateEnergySourceSinks      always (new pressure work)
+   accumulateMomentumSourceSinks    always (<interfaceShear> model)
+   computeLagrangianSpecificVolume  always (thermal expansion scaled by TMV)
    advectAndAdvanceInTime           always (total-energy advection, KT fluxes)
    computeVel_FC                    KT with <faceVelocity> on
    computePressFC                   KT with <facePressure> on
    computeDelPressAndUpdatePressCC  KT on
  Every other task is ICE's, scheduled through d_ice.
 
- Limitations: single level (no AMR), exactly one ICE material and no MPM
- materials (a single-fluid code; species are transported scalars, e.g.
- gasCombustion).  PITCH does not support impICE or a turbulence model;
- KT does not support impICE.
+ MPM materials: the tasks above also carry the gas-solid interface models
+ FSPICE (SPICE + MPM) uses: KT next to solid cells (ktOpen face weights),
+ no-penetration transport (<interfaceTransport> donorAcceptor), the
+ particle-aware exchange (SPICE/Exchange), interface conduction and wall
+ shear, and the frozen-solid PITCH restart.  All of it is inert without
+ MPM materials.  The stand-alone SPICE component rejects MPM materials;
+ FSPICE runs SPICE "hosted" (setHostedByFSPICE) on its own ICE setup.
+ See Docs/PIMPLE_KT_method.pdf.
+
+ Limitations: single level (no AMR), exactly one ICE material (a
+ single-fluid code; species are transported scalars, e.g. gasCombustion).
+ PITCH does not support impICE or a turbulence model; KT does not
+ support impICE.
 ______________________________________________________________________*/
 
   class SPICE : public ApplicationCommon {
@@ -159,6 +172,20 @@ ______________________________________________________________________*/
                                  const MaterialSubset*,
                                  const MaterialSet   * );
 
+    void scheduleAccumulateMomentumSourceSinks( SchedulerP          &,
+                                                const PatchSet      *,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSet   * );
+
+    void scheduleComputeLagrangianSpecificVolume( SchedulerP          &,
+                                                  const PatchSet      *,
+                                                  const MaterialSubset*,
+                                                  const MaterialSubset*,
+                                                  const MaterialSubset*,
+                                                  const MaterialSet   * );
+
     void scheduleAccumulateEnergySourceSinks( SchedulerP          &,
                                               const PatchSet      *,
                                               const MaterialSubset*,
@@ -191,6 +218,22 @@ ______________________________________________________________________*/
 
     void schedulePitchOuterLoop( SchedulerP   & sched,
                                   const LevelP & level );
+
+    //__________________________________
+    //  Used by FSPICE (SPICE + MPM).  Both must be called before problemSetup.
+    //  setHostedByFSPICE: allow MPM materials.  The PITCH hooks replace the
+    //  sub-graph's fluid chain with FSPICE's gas-only chain (MPM solid frozen
+    //  at k=0) and add the frozen-solid requires to the outer-loop task.
+    void setHostedByFSPICE() {
+      d_hostedByFSPICE = true;
+    };
+
+    void setPitchHooks( const std::function<void(SchedulerP&, const LevelP&)> & chain,
+                         const std::function<void(Task*)>                       & requiresHook )
+    {
+      d_pitchChainHook    = chain;
+      d_pitchRequiresHook = requiresHook;
+    };
 
   protected:
 
@@ -225,6 +268,38 @@ ______________________________________________________________________*/
                          const MaterialSubset * matls,
                          DataWarehouse        *,
                          DataWarehouse        * );
+
+    void accumulateMomentumSourceSinks( const ProcessorGroup *,
+                                        const PatchSubset    * patches,
+                                        const MaterialSubset * matls,
+                                        DataWarehouse        *,
+                                        DataWarehouse        * );
+
+    void computeLagrangianSpecificVolume( const ProcessorGroup *,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset * matls,
+                                          DataWarehouse        *,
+                                          DataWarehouse        * );
+
+    //  <interfaceExchange> conduction (MPM materials): heat conducted across
+    //  the gas/solid interface, as energy sources (J per step) for the gas
+    //  and for each MPM material (in MPM material order)
+    void interfaceConduction( const Patch                       * patch,
+                              DataWarehouse                     * old_dw,
+                              DataWarehouse                     * new_dw,
+                              const double                        delT,
+                              CCVariable<double>                & gasSrc,
+                              std::vector< CCVariable<double> > & solidSrc );
+
+    //  <interfaceShear> model (MPM materials): wall shear between the gas and
+    //  each MPM material (momentum per step) and the heat it dissipates
+    void interfaceShear( const Patch                       * patch,
+                         DataWarehouse                     * old_dw,
+                         DataWarehouse                     * new_dw,
+                         const double                        delT,
+                         CCVariable<Vector>                & gasMom,
+                         std::vector< CCVariable<Vector> > & solidMom,
+                         CCVariable<double>                * gasHeat );
 
     void accumulateEnergySourceSinks( const ProcessorGroup *,
                                       const PatchSubset    * patches,
@@ -262,6 +337,14 @@ ______________________________________________________________________*/
                          DataWarehouse        * old_dw,
                          DataWarehouse        * new_dw );
 
+    //  MPM materials: reset the gas in solid cells of the sub OldDW to time n
+    //  before each outer iteration (the solid is frozen at n)
+    void pitchRestartSolidCells( const PatchSubset    * patches,
+                                  const MaterialSubset * ice_mss,
+                                  DataWarehouse        * pOldDW,
+                                  DataWarehouse        * pNewDW,
+                                  DataWarehouse        * subOldDW );
+
     void pitchOuterLoop( const ProcessorGroup * pg,
                           const PatchSubset    * patches,
                           const MaterialSubset * matls,
@@ -282,6 +365,7 @@ ______________________________________________________________________*/
       IntVector  lo;
       IntVector  hi;
       IntVector  periodic;
+      const AT * open{nullptr};   // ktOpen_FC (MPM materials only), else nullptr
     };
 
     template<class AT>
@@ -290,6 +374,7 @@ ______________________________________________________________________*/
       IntVector  lo;
       IntVector  hi;
       IntVector  periodic;
+      const AT * open{nullptr};   // ktOpen_FC (MPM materials only), else nullptr
     };
 
     template<class T, class AT> void computeVelFace( int dir, CellIterator it,
@@ -349,6 +434,21 @@ ______________________________________________________________________*/
     bool        d_ktFacePress{true};
     bool        d_ktPressureFlux{true};
 
+    //  KT next to MPM solids, <CFD><SPICE><CentralUpwind>.  Read only when
+    //  MPM materials exist; the defaults then are donorAcceptor, conduction
+    //  and model (see problemSetup).
+    double d_ktSolidCellFrac{1.0e-3};   // <solidCellFrac>: MPM solid vol-fraction above which a cell counts as solid (KT off on its faces)
+    bool   d_ktInterfaceDA{false};      // <interfaceTransport> donorAcceptor: no-penetration gas transport at gas/solid faces
+    double d_ktCoveredSolid{0.9};       // solid fraction (solidVolFracP_CC) at or above which a cell counts as covered by the solid
+    bool   d_ktInterfaceExch{false};    // <interfaceExchange> particles: no gas-MPM heat exchange where no particles are
+    bool   d_ktInterfaceCond{false};    // <interfaceExchange> conduction: particles + conduction across the gas/solid interface
+    bool   d_ktInterfaceSlip{false};    // <interfaceShear> slip: no tangential gas-MPM momentum exchange where no particles are
+    bool   d_ktInterfaceShear{false};   // <interfaceShear> model: slip + the wall shear of SPICE::interfaceShear
+
+    //  KT with MPM materials: the MPM materials' vol_frac in the pressure
+    //  equation keeps a SecondOrder advector (the KT one is for the gas only)
+    Advector * d_mpmAdvector{nullptr};
+
     centralUpwind::Limiter    d_ktLimiter{centralUpwind::Limiter::vanAlbada};
     centralUpwind::FluxScheme d_ktScheme{centralUpwind::FluxScheme::Kurganov};
     centralUpwind::KappaMode  d_ktKappaMode{centralUpwind::KappaMode::MachToAcCourant};
@@ -373,6 +473,14 @@ ______________________________________________________________________*/
     // One "<tvar>_adv0" label per transported variable (see
     // pitchTvarAdv0Label()).
     std::vector<const VarLabel*> d_pitchTvarAdv0Labels;
+
+    //__________________________________
+    //  FSPICE: MPM materials allowed, and the PITCH hooks (setPitchHooks)
+    bool d_hostedByFSPICE{false};
+    std::function<void(SchedulerP&, const LevelP&)> d_pitchChainHook;
+    std::function<void(Task*)>                       d_pitchRequiresHook;
+
+    friend class FSPICE;
   };
 
 } // End namespace Uintah

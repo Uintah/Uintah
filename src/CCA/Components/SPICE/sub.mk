@@ -61,6 +61,13 @@ PSELIBS := \
 	Core/ProblemSpec   \
 	Core/Util
 
+# the gas-solid interface exchange model needs MPM (FSPICE)
+ifeq ($(BUILD_MPM),yes)
+  PSELIBS += $(SRCDIR)/Exchange          \
+             CCA/Components/MPM/Core      \
+             CCA/Components/MPM/Materials
+endif
+
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 ifeq ($(HAVE_HYPRE),yes)
@@ -75,6 +82,10 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 SUBDIRS := \
 	$(SRCDIR)/Advection \
 	$(SRCDIR)/Core
+
+ifeq ($(BUILD_MPM),yes)
+  SUBDIRS += $(SRCDIR)/Exchange
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

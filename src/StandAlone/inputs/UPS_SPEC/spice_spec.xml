@@ -17,6 +17,13 @@
         <faceVelocity                   spec="OPTIONAL BOOLEAN" />
         <facePressure                   spec="OPTIONAL BOOLEAN" />
         <ktPressureFlux                 spec="OPTIONAL BOOLEAN" />
+        <!-- gas-solid interface (FSPICE, MPM materials only).  With MPM materials
+             the defaults are donorAcceptor, conduction and model; without them
+             upwind, stock and stock.  See CCA/Components/FSPICE/FSPICE.h -->
+        <solidCellFrac                  spec="OPTIONAL DOUBLE 'positive'" />
+        <interfaceTransport             spec="OPTIONAL STRING 'upwind, donorAcceptor'" />
+        <interfaceExchange              spec="OPTIONAL STRING 'stock, particles, conduction'" />
+        <interfaceShear                 spec="OPTIONAL STRING 'stock, slip, model'" />
       </CentralUpwind>
 
       <!-- PITCH (Picard ITeration of the fluid CHain); nOuterCorrectors > 1 turns the outer loop on -->

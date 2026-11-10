@@ -395,6 +395,17 @@ void CentralUpwindAdvector::advectQ_massSpecific( const CCVariable<T>&      q_CC
     ownNei( qSpec[Pm1Safe], qSpec[P], qSpec[N], qSpec[Np1Safe],
            d_limiter, firstOrderOwn, firstOrderNei, qOwn, qNei );
 
+    //  FSPICE no-penetration face: the donor's own specific value
+    if( d_interfaceFaceX ){
+      const double marker = (dir==0) ? (*d_interfaceFaceX)[N] :
+                            (dir==1) ? (*d_interfaceFaceY)[N] :
+                                       (*d_interfaceFaceZ)[N];
+      if( marker >= 0.0 ){
+        qOwn = qSpec[P];
+        qNei = qSpec[N];
+      }
+    }
+
     double phiOwn = (dir==0) ? (*d_phiOwnX)[N] :
                     (dir==1) ? (*d_phiOwnY)[N] :
                                (*d_phiOwnZ)[N];
@@ -496,6 +507,16 @@ void CentralUpwindAdvector::advectQ(const CCVariable<double>& q_CC,
     double u_f = (dir==0) ? (*d_uvel_FC)[N] :
                  (dir==1) ? (*d_vvel_FC)[N] :
                             (*d_wvel_FC)[N];
+
+    //  FSPICE no-penetration face partition (SPICE::computeDelPressAndUpdatePressCC)
+    if( d_faceFracX ){
+      const double ovr = (dir==0) ? (*d_faceFracX)[N] :
+                         (dir==1) ? (*d_faceFracY)[N] :
+                                    (*d_faceFracZ)[N];
+      if( ovr >= 0.0 ){
+        return ovr;
+      }
+    }
 
     return upwindValue( u_f, qOwn, qNei );
   };

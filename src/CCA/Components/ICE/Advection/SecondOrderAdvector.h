@@ -82,6 +82,16 @@ namespace Uintah {
                             CCVariable<double>& q_advected,
                             advectVarBasket* vb);
 
+  protected:
+    //  Hook for a derived advector (SPICE's InterfaceSecondOrderAdvector).
+    //  Called only by the face-value advectQ (vol_frac), after the slab
+    //  values q_OAFS are computed and before they are advected.  The
+    //  default leaves them unchanged.
+    virtual void adjustSlabs( CCVariable<facedata<double> > & /*q_OAFS*/,
+                              const Patch * /*patch*/ )
+    {
+    };
+
   private:
     CCVariable<facedata<double> > d_mass_slabs;  // outflux slabs
 

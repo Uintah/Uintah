@@ -101,6 +101,33 @@ namespace Uintah {
                            const SFCYVariable<double>* phiNeiY,
                            const SFCZVariable<double>* phiNeiZ );
 
+    //  FSPICE + <interfaceTransport> donorAcceptor (MPM materials).  Same
+    //  lifetime rules as setCentralFluxes; unset (the default) = stock KT.
+    //  setFaceFractions: per-face override of the face value used by the
+    //  intensive (vol_frac) advectQ; a value >= 0 replaces the advector's
+    //  own face value, < 0 leaves it alone (SPICE::computeDelPressAndUpdatePressCC).
+    //  setInterfaceFaces: gasFaceFrac_FC from SPICE::computeCentralFluxes,
+    //  used as a marker by the mass-specific advectQ: a value >= 0 marks a
+    //  no-penetration face, which transports the donor cell's own specific
+    //  value (first order) (SPICE::advectAndAdvanceInTime).
+    void setFaceFractions( const SFCXVariable<double>* faceFracX,
+                           const SFCYVariable<double>* faceFracY,
+                           const SFCZVariable<double>* faceFracZ )
+    {
+      d_faceFracX = faceFracX;
+      d_faceFracY = faceFracY;
+      d_faceFracZ = faceFracZ;
+    };
+
+    void setInterfaceFaces( const SFCXVariable<double>* interfaceFaceX,
+                            const SFCYVariable<double>* interfaceFaceY,
+                            const SFCZVariable<double>* interfaceFaceZ )
+    {
+      d_interfaceFaceX = interfaceFaceX;
+      d_interfaceFaceY = interfaceFaceY;
+      d_interfaceFaceZ = interfaceFaceZ;
+    };
+
   private:
 
     centralUpwind::Limiter d_limiter{ centralUpwind::Limiter::vanAlbada };
@@ -130,6 +157,14 @@ namespace Uintah {
     const SFCXVariable<double>* d_phiNeiX{ nullptr };
     const SFCYVariable<double>* d_phiNeiY{ nullptr };
     const SFCZVariable<double>* d_phiNeiZ{ nullptr };
+
+    // Set by setFaceFractions() / setInterfaceFaces()
+    const SFCXVariable<double>* d_faceFracX{ nullptr };
+    const SFCYVariable<double>* d_faceFracY{ nullptr };
+    const SFCZVariable<double>* d_faceFracZ{ nullptr };
+    const SFCXVariable<double>* d_interfaceFaceX{ nullptr };
+    const SFCYVariable<double>* d_interfaceFaceY{ nullptr };
+    const SFCZVariable<double>* d_interfaceFaceZ{ nullptr };
 
     void checkNoRefluxing( const advectVarBasket* vb ) const;
 

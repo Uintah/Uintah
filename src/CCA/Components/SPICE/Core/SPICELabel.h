@@ -64,6 +64,26 @@ namespace Uintah {
     const VarLabel* ktUvol_FCZLabel;
 
     //__________________________________
+    //  KT next to MPM solids (FSPICE; computed only with MPM materials)
+    const VarLabel* ktOpen_FCXLabel;    // KT open-face weight: 1 between gas cells, 0 at a solid cell
+    const VarLabel* ktOpen_FCYLabel;
+    const VarLabel* ktOpen_FCZLabel;
+
+    const VarLabel* volFlux_FCXLabel;   // the pressure equation's mixture face volume flux
+    const VarLabel* volFlux_FCYLabel;   //   sum_m volFrac_FC*u_f [m/s] (PressureWorkFix.md)
+    const VarLabel* volFlux_FCZLabel;
+    // <interfaceTransport> donorAcceptor: gas share of each interface face's
+    // volume flux (-1 where the face is not an interface face)
+    const VarLabel* gasFaceFrac_FCXLabel;
+    const VarLabel* gasFaceFrac_FCYLabel;
+    const VarLabel* gasFaceFrac_FCZLabel;
+    // the part of each cell where the nodal particle solid volume fraction
+    // exceeds 1/2 (FSPICE::computeSolidVolFracP), stored with the ICE matl
+    const VarLabel* solidVolFracP_CCLabel;
+    // 1 where all 8 nodes of the cell carry MPM mass (inside the solid)
+    const VarLabel* solidInteriorP_CCLabel;
+
+    //__________________________________
     //  PITCH outer loop
     //  *_adv0: the k=0 (main graph) advected conserved state, captured so
     //          a later outer iteration can read it from ParentNewDW without
