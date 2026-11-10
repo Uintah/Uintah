@@ -3,7 +3,7 @@
 from sys import argv, exit
 from os import environ, system
 from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, getInputsDir
-from helpers.modUPS import modUPS
+from helpers.modUPS import modUPS, modUPS2
 
 
 the_dir = "%s/%s" % ( getInputsDir(),"SPICE" )
@@ -40,6 +40,33 @@ riemann_gc_x_PITCH_ups       = modUPS( the_dir, "riemann_gc_x.ups",
                                         "<theta>            0.5  </theta>",
                                         "<outerTolerance>   1e-2 </outerTolerance>",
                                         "<filebase>riemann_gc_x_PITCH.uda</filebase>"] )
+
+#______________________________________________________________________
+#  Performance tests.  The tester turns off output and checkpoints for these
+#  and times the whole sus run, so each one is sized to run about 10-20 s.
+#  The DataAnalysis modules are removed because they write files.
+#  riemann_gc_x has a checkpoint tag inside a comment.  The tester's
+#  sed for checkpoints would break that comment, so it is deleted too.
+
+#  shock tube, Kurganov-Tadmor, no PITCH (1 pass).  Runs to maxTime (~2600 timesteps)
+riemann_gc_x_perf_ups        = modUPS2( the_dir, "riemann_gc_x.ups",
+                                        [("delete", "/Uintah_specification/DataAnalysis"),
+                                         ("delete", "/Uintah_specification/DataArchiver/comment()")] )
+
+#  the same shock tube with 3 PITCH passes every timestep (outerTolerance = 0,
+#  no early exit), so its run time compared to riemann_gc_x_perf is the cost of PITCH
+riemann_gc_x_PITCH_perf_ups  = modUPS2( the_dir, "riemann_gc_x.ups",
+                                        [("delete", "/Uintah_specification/DataAnalysis"),
+                                         ("delete", "/Uintah_specification/DataArchiver/comment()"),
+                                         ("update", "/Uintah_specification/CFD/SPICE/PITCH/nOuterCorrectors :3")] )
+
+#  3D shocks, KT + PITCH, on a grid large enough for the solver to dominate the run time
+riemann3D_KT_PITCH_perf_ups  = modUPS2( the_dir, "riemann3D_KT_PITCH.ups",
+                                        [("update", "/Uintah_specification/Grid/Level/Box/resolution :[80,80,80]")] )
+
+#  1D H2-air flame: chemistry, species and heat diffusion, KT + PITCH
+hydrogenFlame1_perf_ups      = modUPS2( the_dir, "RX_MODELS/hydrogenFlame1_KT_PITCH.ups",
+                                        [("update", "/Uintah_specification/Time/max_Timesteps :500")] )
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
@@ -111,9 +138,16 @@ MULTI_D    = [   ("advect_periodic_KT",       "advect_periodic_KT.ups",        8
                  ("riemann3D_KT_PITCH",       "riemann3D_KT_PITCH.ups",        8,  "ALL", ["exactComparison"])
              ]
 
+#  run time only, no uda comparisons (opt builds only)
+PERFORMANCE = [  ("hydrogenFlame1_perf",      hydrogenFlame1_perf_ups,        12,  "ALL", ["do_performance_test"]),
+                 ("riemann_gc_x_perf",        riemann_gc_x_perf_ups,           4,  "ALL", ["do_performance_test"]),
+                 ("riemann_gc_x_PITCH_perf",  riemann_gc_x_PITCH_perf_ups,     4,  "ALL", ["do_performance_test"]),
+                 ("riemann3D_KT_PITCH_perf",  riemann3D_KT_PITCH_perf_ups,     8,  "ALL", ["do_performance_test"])
+              ]
+
 DEBUGTESTS   = []
 
-NIGHTLYTESTS = CHEMISTRY + DIFFUSION + KT + KT_PITCH + ICE_ONLY + MULTI_D
+NIGHTLYTESTS = CHEMISTRY + DIFFUSION + KT + KT_PITCH + ICE_ONLY + MULTI_D + PERFORMANCE
 
 #__________________________________
 ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or relative path from the StandAlone directory
@@ -122,7 +156,7 @@ ADDTL_PATH=[]           # preprocessing cmd path.  It can be an absolute or rela
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: BUILDBOTTESTS CHEMISTRY DEBUGTESTS DIFFUSION ICE_ONLY KT KT_PITCH LOCALTESTS MULTI_D NIGHTLYTESTS
+#LIST: BUILDBOTTESTS CHEMISTRY DEBUGTESTS DIFFUSION ICE_ONLY KT KT_PITCH LOCALTESTS MULTI_D NIGHTLYTESTS PERFORMANCE
 #__________________________________
 
 
@@ -140,6 +174,8 @@ def getTestList(me) :
     TESTS = ICE_ONLY
   elif me == "MULTI_D":
     TESTS = MULTI_D
+  elif me == "PERFORMANCE":
+    TESTS = PERFORMANCE
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "LOCALTESTS":
