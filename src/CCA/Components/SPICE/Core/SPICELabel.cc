@@ -66,6 +66,21 @@ SPICELabel::SPICELabel()
   ktUvol_FCZLabel = VarLabel::create( "ktUvol_FCZ", SFCZ_double );
 
   //__________________________________
+  //  KT next to MPM solids (FSPICE)
+  ktOpen_FCXLabel        = VarLabel::create( "ktOpen_FCX",        SFCX_double );
+  ktOpen_FCYLabel        = VarLabel::create( "ktOpen_FCY",        SFCY_double );
+  ktOpen_FCZLabel        = VarLabel::create( "ktOpen_FCZ",        SFCZ_double );
+
+  volFlux_FCXLabel       = VarLabel::create( "volFlux_FCX",       SFCX_double );
+  volFlux_FCYLabel       = VarLabel::create( "volFlux_FCY",       SFCY_double );
+  volFlux_FCZLabel       = VarLabel::create( "volFlux_FCZ",       SFCZ_double );
+  gasFaceFrac_FCXLabel   = VarLabel::create( "gasFaceFrac_FCX",   SFCX_double );
+  gasFaceFrac_FCYLabel   = VarLabel::create( "gasFaceFrac_FCY",   SFCY_double );
+  gasFaceFrac_FCZLabel   = VarLabel::create( "gasFaceFrac_FCZ",   SFCZ_double );
+  solidVolFracP_CCLabel  = VarLabel::create( "solidVolFracP_CC",  CC_double );
+  solidInteriorP_CCLabel = VarLabel::create( "solidInteriorP_CC", CC_double );
+
+  //__________________________________
   //  PITCH outer loop
   mass_adv0Label      = VarLabel::create( "mass_adv0",      CC_double );
   mom_adv0Label       = VarLabel::create( "mom_adv0",       CC_Vector );
@@ -94,6 +109,19 @@ SPICELabel::~SPICELabel()
   VarLabel::destroy( ktUvol_FCXLabel );
   VarLabel::destroy( ktUvol_FCYLabel );
   VarLabel::destroy( ktUvol_FCZLabel );
+
+  VarLabel::destroy( ktOpen_FCXLabel );
+  VarLabel::destroy( ktOpen_FCYLabel );
+  VarLabel::destroy( ktOpen_FCZLabel );
+
+  VarLabel::destroy( volFlux_FCXLabel );
+  VarLabel::destroy( volFlux_FCYLabel );
+  VarLabel::destroy( volFlux_FCZLabel );
+  VarLabel::destroy( gasFaceFrac_FCXLabel );
+  VarLabel::destroy( gasFaceFrac_FCYLabel );
+  VarLabel::destroy( gasFaceFrac_FCZLabel );
+  VarLabel::destroy( solidVolFracP_CCLabel );
+  VarLabel::destroy( solidInteriorP_CCLabel );
 
   VarLabel::destroy( mass_adv0Label );
   VarLabel::destroy( mom_adv0Label );
