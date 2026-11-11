@@ -20,8 +20,8 @@ from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 #       do_performance_test:        - Run the performance test, log and plot simulation runtime.
 #                                     (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:                - Checks if a test successfully runs
-#       abs_tolerance=[double]      - absolute tolerance used in comparison
-#       rel_tolerance=[double]      - relative tolerance used in comparison
+#       abs_tolerance=[double]      - absolute tolerance used in comparisons
+#       rel_tolerance=[double]      - relative tolerance used in comparisons
 #       exactComparison             - set absolute/relative tolerance = 0  for uda comparisons
 #       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
 #       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)

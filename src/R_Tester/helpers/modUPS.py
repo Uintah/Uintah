@@ -5,15 +5,12 @@ from sys import exit
 
 #______________________________________________________________________
 def bulletProofInputs(inputsDir, org_filename):
-  try:
-    path.exists(inputsDir)
-  except Exception:
+
+  if not path.exists(inputsDir):
     print(" ERROR: modUPS: the inputs directory (%s) does not exist" % inputsDir)
     exit(1)
 
-  try:
-    path.exists(org_filename)
-  except Exception:
+  if not path.exists(org_filename):
     print(" ERROR: modUPS: the orginal ups file (%s) does not exist" % org_filename)
     exit(1)
 

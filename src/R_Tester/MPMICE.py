@@ -13,7 +13,7 @@ advectSlipExchOn_ups = modUPS( inputs, \
                                ["<useSlipCoeffs>  true </useSlipCoeffs>"] )
 
 #______________________________________________________________________
-#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2",...])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #
 #  OS:  Linux, Darwin, or ALL
 #

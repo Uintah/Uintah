@@ -3,7 +3,7 @@
 def writeDividerLine( filename ):
     file = open( filename, 'a')
     file.write("______________________________________________________________________\n")
-    file.close  
+    file.close()  
 
 
 def appendFile( filename, msg ):

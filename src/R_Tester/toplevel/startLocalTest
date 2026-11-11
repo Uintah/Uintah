@@ -31,7 +31,7 @@ if [ "$#" != 4 ]; then
   echo "           <is_debug_build>     : 'yes' or 'no'"
   echo "           <sci_malloc_enabled> : 'yes' or 'no'"
   echo ""
-  exit
+  exit -1
 fi
 
 BUILD_DIR="$1"
@@ -133,14 +133,14 @@ else
     echo "ERROR: startLocalTest requires a fully functional terminal... you have '$TERM'."
     echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
     echo
-    exit                                                                                    
+    exit -1                                                                               
   fi  
   if test "$EMACS" == "t"; then
     echo
     echo "ERROR: startLocalTest cannot be run from within emacs..."
     echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
     echo
-    exit                                                                                    
+    exit -1                                                                                 
   fi
   #__________________________________
   # Have the user pick a component
@@ -162,7 +162,7 @@ else
     echo ""
     echo "Cancel selected... Goodbye."                                                                  
     echo ""
-    exit                                                                                    
+    exit  -1                                                                               
   fi
   
   #__________________________________
@@ -196,13 +196,13 @@ else
         echo ""
         echo "Cancel selected... Goodbye."                                                                  
         echo ""
-        exit                                                                                    
+        exit  -1                                                                                
       fi
       if [ ${#selectedSubset[@]} != 1 ] ; then
         echo ""
         echo "ERROR: You selected more than one set of tests to run."
         echo "...now exiting"
-        exit  
+        exit  -1
       fi
       
       WHICH_TESTS[$n]=$selectedSubset

@@ -169,13 +169,13 @@ def generateGS() :
     try :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
-      try:
-        MPIRUN = shutil.which("mpirun")
-      except:
-        print( "ERROR:generateGoldStandards.py ")
-        print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
-        print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
-        exit (1)
+      MPIRUN = shutil.which("mpirun")
+
+    if MPIRUN is None:
+      print( "ERROR:generateGoldStandards.py ")
+      print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
+      print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
+      exit (1)
 
     print( "Using mpirun: %s " % MPIRUN )
     print( "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable" )
@@ -229,13 +229,19 @@ def generateGS() :
     # Exit if the component hasn't been compiled.  Note, not all components
     # are listed in the configVars.mk file
     configVars = options.build_directory + "/configVars.mk"
+
+    if not os.path.isfile( configVars ) :
+        print( "\n ERROR: configVars.mk not found here: '%s'\n" % configVars )
+        exit( 1 )
+
     for component in components :
 
       searchString = "BUILD_%s=no" % component.upper()  # search for BUILD_<COMPONENT>=no
-      for line in open(configVars):
-        if searchString in line:
-          print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
-          exit( 1 )
+      with open(configVars) as configFile :
+        for line in configFile :
+          if searchString in line:
+            print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
+            exit( 1 )
 
     # Warn user if directories already exist
     some_dirs_already_exist = False

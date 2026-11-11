@@ -15,6 +15,30 @@ import platform
 import re         # regular expressions
 
 #______________________________________________________________________
+# os.system()/system() encodes a shell exit code as (exit_code << 8).
+# Each helper script below has its own exit-code convention, so the same
+# raw number means different things depending on which one produced it.
+
+# sus itself, killed for exceeding resource.setrlimit(RLIMIT_CPU, ...)
+SUS_KILLED_SIGKILL = 137 * 256   # exit 137 = 128 + SIGKILL
+SUS_KILLED_SIGTERM = 143 * 256   # exit 143 = 128 + SIGTERM
+
+# performance_check
+PERF_NO_TIMESTAMP_FILE = 5 * 256
+PERF_FAILED            = 2 * 256
+
+# mem_leak_check
+MEM_MISSING_MALLOC_STATS = 5 * 256
+MEM_FAILED_LEAK_TEST     = 1 * 256
+MEM_FAILED_HIGHWATER     = 2 * 256
+
+# compare_sus_runs
+COMPUDA_INPUT_DIFFERS    = 10 * 256
+COMPUDA_TOLERANCE_FAILED = 1 * 256
+COMPUDA_ABORTED          = 5 * 256
+COMPUDA_NO_DAT_FILES     = 65280   # -1, wrapped to 255
+
+#______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
 # can be added after print statements:
 #
@@ -461,7 +485,7 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
     if dbg_opt == "opt" :
       do_memory = 0
 
-    if environ['SCI_MALLOC_ENABLED'] != "yes" :
+    if environ.get('SCI_MALLOC_ENABLED', 'no') != "yes" :
       do_memory = 0
 
     if has_gpu == 1:                                 #HACK:  TURN OFF ALL MEMORY CHECKS IS THE CODE WAS COMPILED WITH CUDA.  MALLOC STATS CAN'T BE TRUSTED
@@ -593,17 +617,16 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
       print( "Updating the git revision file %s" %git_revision )
       git_file = "%s/%s/%s/git_revision" % (gold_standard,application,testname)
       system( "echo 'This test last passed with Revision: %s'> %s" %(git_revision, git_file))
+      
     #__________________________________
     # end of test loop
 
   #______________________________________________________________________
   # change the group and permissons on the results directory to a common group name
   chdir("..")
-  try:
-    common_group = "%s" % (environ['COMMON_GROUP'])
+  common_group = environ.get('COMMON_GROUP')
+  if common_group is not None:
     system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, results_dir) )
-  except:
-    pass
 
   system("chmod -R g+rwX %s > /dev/null 2>&1" % results_dir)
 
@@ -719,13 +742,13 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   try :
     MPIRUN = environ['MPIRUN']    # first try the environmental variable
   except :
-    try:
-      MPIRUN = shutil.which("mpirun")
-    except:
-      print( "ERROR:runSusTests.py ")
-      print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
-      print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
-      exit (1)
+    MPIRUN = shutil.which("mpirun")
+
+  if MPIRUN is None:
+    print( "ERROR:runSusTests.py ")
+    print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
+    print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
+    exit (1)
 
   MPIHEAD="%s -n" % MPIRUN       #default
 
@@ -837,20 +860,22 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
   # when source code line was that prints the exception is changed.)
   # Did sus run to completion.
-  exception = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
+  exception = system("grep 'Caught exception' sus.log.txt | grep -qv cout");
 
   try:
-    file = open('sus.log.txt', 'r')
-    lines = file.read()
+    with open('sus.log.txt', 'r') as file:
+      lines = file.read()
     susSuccess = re.findall("Sus: going down successfully", lines)
   except Exception:
-    pass
+    susSuccess = []
 
   if exception == 0:
     print( "\t*** An exception was thrown ***" )
     rc = -9
 
-  (nTimeSteps,err,rc) = cmdline("grep -c 'Timestep [0-9]' sus.log.txt")
+  # NOTE: must not reuse "rc" here -- it still holds sus's own exit code
+  # (or the -9 exception sentinel above), which the checks below need.
+  (nTimeSteps,err,grep_rc) = cmdline("grep -c 'Timestep [0-9]' sus.log.txt")
 
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace this test's goldStandards run:\n\t    "
@@ -867,7 +892,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   #__________________________________
   #  Error checking
   return_code = 0
-  if rc == 35072 or rc == 36608 :
+  if rc == SUS_KILLED_SIGKILL or rc == SUS_KILLED_SIGTERM :
     print( "\t*** Test %s exceeded maximum allowable run time\n" % (testname) )
     system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     return_code = 1
@@ -916,7 +941,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
                              (testname, do_plots, ts_file, compare_root, helperspath, "sus.log.txt"))
       try:
         short_message_file = open("performance_shortmessage.txt", 'r+', 500)
-        short_message = rstrip(short_message_file.readline(500))
+        short_message = short_message_file.readline(500).rstrip()
       except Exception:
         short_message = ""
 
@@ -925,10 +950,10 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
         if short_message != "":
           print( "\t%s" % (short_message)     )
 
-      elif performance_RC == 5 * 256:
+      elif performance_RC == PERF_NO_TIMESTAMP_FILE:
         print( "\t* Warning, no timestamp file created.  No performance test performed." )
 
-      elif performance_RC == 2*256:
+      elif performance_RC == PERF_FAILED:
         print( "\t*** Warning, test %s failed performance test." % (testname) )
         if short_message != "":
           print( "\t%s" % (short_message) )
@@ -948,7 +973,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
       try:
         short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
-        short_message = rstrip(short_message_file.readline(500))
+        short_message = short_message_file.readline(500).rstrip()
       except Exception:
         short_message = ""
 
@@ -957,16 +982,17 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
           if short_message != "":
             print( "\t%s" % (short_message) )
 
-      elif memory_RC == 5 * 256:
+      elif memory_RC == MEM_MISSING_MALLOC_STATS:
           print( "\t*** ERROR, missing malloc_stats files.  No memory tests performed." )
 
-      elif memory_RC == 256:
+      elif memory_RC == MEM_FAILED_LEAK_TEST:
           print( "\t*** ERROR, test %s failed memory leak test." % (testname) )
           print( memory_msg )
-          # check that all VarLabels were deleted
-          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
+          # check that all VarLabels were deleted -- mem_leak_checkVarLabels always
+          # exits 0
+          system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")
 
-      elif memory_RC == 2*256:
+      elif memory_RC == MEM_FAILED_HIGHWATER:
           print( "\t*** ERROR, test %s failed memory highwater test." % (testname) )
           if short_message != "":
             print( "\t%s" % (short_message) )
@@ -991,14 +1017,14 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
                           (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs, compareUda_options))
 
       if compUda_RC != 0:
-        if compUda_RC == 10 * 256:
+        if compUda_RC == COMPUDA_INPUT_DIFFERS:
           print( "\t*** Input file(s) differs from the goldstandard" )
 
-        elif compUda_RC == 1 * 256:
+        elif compUda_RC == COMPUDA_TOLERANCE_FAILED:
           print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) )
           print(compare_msg)
 
-        elif compUda_RC == 5*256:
+        elif compUda_RC == COMPUDA_ABORTED:
           print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) )
           print(compare_msg)
 
@@ -1010,7 +1036,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
             print( "\n\n%s\n" % out )
             #print( "%s" % replace_msg )
 
-        elif compUda_RC == 65280: # (-1 return code)
+        elif compUda_RC == COMPUDA_NO_DAT_FILES:
           print( "\tComparison tests passed.  (Note: No dat files to compare.)" )
 
         else:
@@ -1023,15 +1049,15 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     #__________________________________
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
-    if compUda_RC == 5*256 or compUda_RC == 1*256:
+    if compUda_RC == COMPUDA_ABORTED or compUda_RC == COMPUDA_TOLERANCE_FAILED:
       system("echo '  :%s: \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 
-    if performance_RC == 2*256:
+    if performance_RC == PERF_FAILED:
       system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 
-    if memory_RC == 1*256 or memory_RC == 2*256 or memory_RC == 5*256:
+    if memory_RC == MEM_FAILED_LEAK_TEST or memory_RC == MEM_FAILED_HIGHWATER or memory_RC == MEM_MISSING_MALLOC_STATS:
       system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
       return_code = 2;
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from os import symlink,environ, system
-from sys import argv,exit,platform
+from sys import argv,exit
 from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS
 

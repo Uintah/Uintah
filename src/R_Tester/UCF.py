@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from os import chdir,getcwd,mkdir,system,environ
-from sys import argv,exit,platform
+from sys import argv,exit
 from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 from helpers.modUPS import modUPS
 
@@ -9,6 +9,9 @@ from helpers.modUPS import modUPS
 #Performance and other UCF related tests
 
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
+#
+#  OS:  Linux, Darwin, or ALL
+#
 #  flags:
 #       gpu:                        - run test if machine is gpu enabled
 #       no_uda_comparison:          - skip the uda comparisons

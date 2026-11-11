@@ -37,7 +37,7 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
                                ] )
 
 #______________________________________________________________________
-#  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
+#  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #
 #  OS:  Linux, Darwin, or ALL
 #
