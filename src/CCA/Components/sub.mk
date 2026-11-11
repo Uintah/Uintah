@@ -72,6 +72,11 @@ ifeq ($(BUILD_ICE),yes)
   SPICE := $(SRCDIR)/SPICE
 endif
 
+# FSPICE (SPICE + MPM)
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  FSPICE := $(SRCDIR)/FSPICE
+endif
+
 # PhaseField
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD := $(SRCDIR)/PhaseField
@@ -89,6 +94,7 @@ SUBDIRS := \
         $(MPM)                         \
         $(MPMICE)                      \
         $(SPICE)                       \
+        $(FSPICE)                      \
         $(PARENT)                      \
         $(PHASEFIELD)                  \
         $(WASATCH)

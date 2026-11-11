@@ -147,6 +147,19 @@ ifeq ($(BUILD_ICE),yes)
 	$(SPICE_DIR)/Core
 endif
 
+# FSPICE (SPICE + MPM)
+ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
+  FSPICE_LIB = $(COMPONENTS)/FSPICE
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+  FSPICE_DIR = $(COMPONENTS)/FSPICE
+  FSPICE_SUB_LIBS = \
+	$(FSPICE_DIR)/Core
+  # SPICE's gas-solid exchange model (FSPICE) needs MPM
+  SPICE_SUB_LIBS += \
+	$(SPICE_DIR)/Exchange
+endif
+
 # Phase Field
 ifeq ($(BUILD_PHASEFIELD),yes)
   PHASEFIELD_LIB = $(COMPONENTS)/PhaseField
@@ -208,6 +221,8 @@ ALL_PSE_LIBS =                              \
         $(MPMICE_SUB_LIBS)                  \
         $(SPICE_LIB)                        \
         $(SPICE_SUB_LIBS)                   \
+        $(FSPICE_LIB)                       \
+        $(FSPICE_SUB_LIBS)                  \
         $(PHASEFIELD_LIB)                   \
 	$(WASATCH_LIB)
 
@@ -228,6 +243,8 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
+    $(FSPICE_LIB)                       \
+    $(FSPICE_SUB_LIBS)                  \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \
     $(SPICE_LIB)                        \

@@ -776,6 +776,7 @@ using namespace ExchangeModels;
       friend class AMRICE;
       friend class impAMRICE;
       friend class SPICE;
+      friend class FSPICE;
 
       ICELabel* lb;
       SchedulerP d_subsched;

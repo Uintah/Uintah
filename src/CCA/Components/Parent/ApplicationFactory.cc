@@ -80,6 +80,7 @@
 
 #if !defined(NO_MPM) && !defined(NO_ICE)
 #include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/FSPICE/FSPICE.h>
 #endif
 
 #ifndef NO_PHASEFIELD
@@ -249,6 +250,21 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "rigidmpmice ";
+  }
+
+  //  FSPICE: SPICE + MPM (single level; FSPICE/SPICE refuse AMR)
+  if (sim_comp == "fspice" || sim_comp == "FSPICE") {
+    return scinew FSPICE(myworld, materialManager, FSPICE::STANDARD_MPM);
+  }
+  else {
+    turned_on_options += "fspice ";
+  }
+
+  if (sim_comp == "rfspice" || sim_comp == "rigidfspice" || sim_comp == "RIGIDFSPICE") {
+    return scinew FSPICE(myworld, materialManager, FSPICE::RIGID_MPM);
+  }
+  else {
+    turned_on_options += "rigidfspice ";
   }
 #endif
 
