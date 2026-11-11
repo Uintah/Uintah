@@ -641,6 +641,239 @@ pEqn Laplacian, \code{nCorrectors} & not implemented (would need impICE) \\
 
 %======================================================================
 \clearpage
+\section{Coupling to MPM: FSPICE}\label{sec:fspice}
+%======================================================================
+
+\subsection{The FSPICE component}
+
+FSPICE (\code{<SimulationComponent type="fspice"/>}, or \code{"rfspice"} with rigid MPM)
+schedules ICE, MPM and SPICE tasks the way MPMICE schedules ICE and MPM. It owns a SPICE
+object, which owns the ICE object, and an MPM object, and it carries its own copies of the
+MPMICE tasks: the MPMICE of the PIMPLE/KT development merged with the public MPMICE changes
+since (MPM reduction subsets, \code{scheduleConservedQtys}). MPMICE itself is neither used
+nor modified. The input is the \code{<CFD><SPICE>} block of this note plus an \code{<MPM>}
+block. With no MPM materials FSPICE runs exactly as SPICE.
+
+The gas-solid interface models live in SPICE's tasks (Table~\ref{tab:fspice-tasks}); without
+MPM materials every one of them is inert, and the stand-alone SPICE component refuses MPM
+materials. FSPICE adds the tasks that need the particles: the sharp solid fraction
+\code{computeSolidVolFracP}, the frozen-solid capture and copy tasks of the outer loop, and
+its copy of MPMICE's equilibration pressure.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Task} & \textbf{With MPM materials} \\
+\midrule
+\code{computeCentralWeights} & open-face weight \code{ktOpen\_FC*}; $\kappa \to w\kappa$ \\
+\code{computeVel\_FC}, \code{computePressFC} & KT face velocity / pressure blended to the stock forms by $w$ \\
+\code{computeCentralFluxes} & donor--acceptor transport on faces with $w<1$, \code{gasFaceFrac\_FC*} \\
+\code{computeDelPressAndUpdatePressCC} & MPM \code{vol\_frac} with a SecondOrder advector; complementary face partition \\
+\code{accumulateEnergySourceSinks} & mixture pressure work over all matls; placeholder gas; interface conduction and shear heat \\
+\code{accumulateMomentumSourceSinks} & interface shear \\
+\code{computeLagrangianSpecificVolume} & thermal-expansion term scaled by $\mathrm{TMV}$ (Section~\ref{sec:tmv}) \\
+\code{advectAndAdvanceInTime} & donor values on no-penetration faces \\
+\code{pimpleOuterLoop} & gas-only chain, solid cells restart from time $n$ \\
+exchange (\file{SPICE/Exchange}) & particle-aware heat exchange, tangential slip \\
+\bottomrule
+\end{tabularx}
+\caption{SPICE tasks that carry the FSPICE gas-solid models.}\label{tab:fspice-tasks}
+\end{table}
+
+\subsection{KT next to solids}
+
+A cell whose gas volume fraction is below $1-s$ is a solid cell ($s$ = \code{solidCellFrac},
+default $10^{-3}$). Each face gets an open weight
+\begin{equation}
+  w = \mathrm{clamp}\!\left(\frac{\min(f_L,f_R) - (1-10s)}{9s},\,0,\,1\right),
+\end{equation}
+which is 1 between open-gas cells and 0 on any face touching trace gas. $\kappa$ is multiplied
+by $w$, which turns the face into the stock upwind flux with the ICE face velocity, and the KT
+face velocity and face pressure are blended with the stock density-weighted forms by the same
+$w$. Without this, KT's $a_{Sf}$ term moves trace gas in and out of the solid at the sound
+speed. In the pressure equation the MPM materials keep the stock SecondOrder advector; only
+the gas uses the KT advector. With the KT advector, gas stayed trapped inside a moving piston.
+
+\subsection{The frozen-solid outer loop}
+
+MPM runs once per step, in the $k=0$ pass. The outer iterations re-run the gas tasks only
+(\code{FSPICE::scheduleGasChainForPimple}, handed to SPICE through its PIMPLE hooks). The
+solid inputs are copies of the $k=0$ pass: cell-centred velocity, temperature and specific
+volume captured right after \code{interpolateNCToCC\_0}, plus density and Lagrangian mass,
+momentum and energy. Solid cells restart from time $n$ in every outer iteration, so they get
+$(1-\theta)X^0 + \theta X_\text{sub}$: conservative and positive for any $\theta$, and first
+order in time as in stock MPMICE. The residual skips them. Their pressure restarts from time
+$n$ too: in a solid cell the equilibration pressure is essentially the one it starts from, so
+starting from the $k=0$ result added the solid's dilatation pressure change once per outer
+iteration (a deforming wall's cell-pressure swing doubled at $N=2$ and collapsed on
+unloading). If the $k=0$ pass asks for a recompute or abort the outer loop is skipped, with
+all ranks agreeing. The outer loop requires the scalar exchange model without convective heat
+transfer. Known imbalance: the solid keeps the $k=0$ exchange while the gas gets the
+$\theta$-blended one.
+
+\subsection{No-penetration transport (\code{interfaceTransport donorAcceptor})}
+
+\paragraph{Why}
+Gas leaks into MPM solids even with the $10^{15}$ drag when gas and solid share one face
+velocity: a rigid wall's first cell fills to 0.3 gas. Every scheme, stock SecondOrder too,
+carries the \emph{donor cell's average composition} through a face; the driver is either a
+small face velocity into the wall from the gas-to-wall-cell pressure jump, or wall
+deformation. A drag or slip exchange model cannot stop this, since there is no relative
+velocity to remove: the no-penetration condition has to decide \emph{which material crosses a
+face}. KT made it worse: vanAlbada is far less compressive at a steep front than SecondOrder's
+Barth--Jespersen gradient, and the gas (KT) and MPM (SecondOrder) face fractions in the
+pressure equation did not sum to one.
+
+\paragraph{The solid fraction}
+\code{FSPICE::computeSolidVolFracP} locates the solid with a sharp field. The nodal solid
+volume fraction $r_n = 2^{f}\sum_m g\mathrm{Volume}_m / V_\text{cell}$ ($f$ the number of
+non-periodic domain faces the node lies on) is 1 inside the solid at any compression,
+$\tfrac12$ at a face-aligned surface and 0 in the gas. A cell's solid fraction is the part of
+it where the trilinear interpolant of $r$ exceeds $\tfrac12$. EqPress's \code{vol\_frac} is not
+used: it inherits the node-averaged cell mass and smears a sharp surface over about two
+cells. Particle boxes (the first version) were dropped: MPM's deformation gradient drifts
+from the particle spacing and opened holes inside a stretched wall.
+
+\paragraph{What it does}
+On faces with $w<1$, \code{SPICE::computeCentralFluxes} applies the Hirt--Nichols (1981)
+donor--acceptor rule with that solid fraction:
+\begin{enumerate}[leftmargin=*]
+  \item Geometry: the acceptor's or the donor's solid fraction $s_X$, chosen by the dominant
+        component of $\nabla s$ at the donor, gives the gas volume
+        $V_g = (1-s_X)V_f + \max(s_X V_f - s_D V,\,0)$. Gas enters a solid acceptor only once
+        the donor's solid is used up; trace gas in a solid donor leaves toward the gas first;
+        between two gas cells this is exactly upwind.
+  \item Acceptor: a cell its particles cover ($s\ge 0.9$) takes no gas; a trace-gas cell the
+        surface is receding from takes gas only from a particle-free donor and only into the
+        volume its particles have left; a cell with a real gas pocket stays compressible.
+  \item No trace gas moves between two trace-gas cells inside the solid (all 8 nodes carry
+        MPM mass).
+  \item At most half a donor's gas leaves per step, never below the material's
+        \code{tiny\_rho}.
+  \item Momentum, energy, species and \code{sp\_vol} on these faces use the donor's own
+        specific values (first order).
+\end{enumerate}
+Each test is a linear ramp, not a switch: with switches a round-off difference opened a cell
+one step early and a 3D periodic detonation left its 1D twin by $4\times10^{-2}$ in gas
+fraction; with the ramps the two agree to round-off. The gas share of each face,
+\code{gasFaceFrac\_FC*}, also sets the face partition in the pressure equation: gas $V_g/V_f$,
+each MPM material its part of the rest.
+
+\paragraph{Placeholder trace gas}
+Trace gas in a cell inside the solid (all 8 nodes carry MPM mass) is a placeholder in
+\code{FSPICE::computeEquilibrationPressure}: it takes no part in the Newton iteration, its
+micro density stays at its start-of-step value, and it deforms with its host. When a solid in
+tension drove its cell pressure to the $10^{-12}$ clamp, the ideal-gas volume inflated and its
+$f_\theta$ share of the solid's pressure work grew to $10^4$ times its own energy per step.
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+T2, KT & before & \code{donorAcceptor} \\
+\midrule
+gas 2--3 cells into the wall & 0.17 / 0.10 & $10^{-12}$ \\
+rigid wall, first wall cell & 0.33 & $10^{-12}$ \\
+wall stretched to $\lambda=1.5$ & crash at 28\,\textmu s & runs 1.4\,ms \\
+T3, H$_2$ autoignition: gas inside the wall & $2.5\times10^{-2}$ & $10^{-12}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Heat exchange and pressure work next to solids (\code{interfaceExchange particles})}
+
+\paragraph{Why}
+The gas-side cell of a wall holds about 20\% node-averaged ``solid'' and no particles, and the
+stock $10^{15}$ exchange still acts there: the gas is held at the wall temperature (the
+near-wall density overshoot, which KT spreads over about four cells) and at the wall's speed
+(the reflected shock forms one cell early).
+
+\paragraph{What it does}
+\begin{enumerate}[leftmargin=*]
+  \item No gas--solid heat exchange in a particle-free cell (\code{solidVolFracP\_CC} below
+        0.1 and not inside the solid), ramped over 0.05--0.15. Cell-centred momentum exchange
+        stays stock: removing the drag there let the smear's velocity crush the wall's front
+        particle layer.
+  \item No gas--solid face momentum exchange between two particle-free cells: there the lock
+        held the gas at the smear's face velocity and gas could not refill a cell the wall
+        cooled.
+  \item Pressure work in the conservative face form for all gas, none for placeholder trace
+        gas, whose host's cell pressure is $\sim150\times$ its own.
+  \item EqPress in cells without solid: the gas pressure from its mass over its volume, as in
+        pure ICE. Stock MPMICE normalizes the material volumes by their total, so even in a
+        cell holding only gas the pressure followed the advected specific volume, not the mass.
+\end{enumerate}
+Metal walls need the time step to resolve the solid's sound speed: MPMICE's CFL counts only
+the gas, and steel or aluminium walls next to 1500\,K gas stopped within 1\,\textmu s at
+\code{timestep\_multiplier} 1.0 and ran at 0.5.
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+T2, KT & stock & \code{donorAcceptor} & + \code{particles} \\
+\midrule
+heat 0: gas $T$ next to the wall (exact 492\,K) & --- & 824\,K & 473\,K \\
+heat 0: reflected shock / interface $T$ vs exact & --- & +9.3\% / $-$5.3\% & +0.9\% / $-$0.2\% \\
+$10^{15}$: reflected shock / interface $p$ vs exact & +2.6\% / $-$2.1\% & +2.6\% / $-$2.2\% & +0.9\% / $-$0.8\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Conduction across the interface (\code{interfaceExchange conduction})}
+
+Everything \code{particles} does, plus: no gas--solid heat exchange in any cell (the
+\code{<heat>} coefficient is not used for gas--MPM pairs) and heat conducted across the
+interface located by \code{solidVolFracP\_CC} instead (\code{SPICE::interfaceConduction}),
+between the gas and solid temperature nodes nearest it, with $k_g$ = \code{thermalCond\_CC} and
+$k_s$ the MPM \code{thermal\_conductivity}. It conducts only when the gas material's
+\code{<thermal\_conductivity>} is nonzero. Each side delivers the flux its near-interface
+profile implies: the one-sided second-order gradient when the thermal layer spans the first
+cell, and otherwise the heat-balance integral of an erfc layer,
+\begin{equation}
+  \delta = \frac{\pi}{2}\,w\,\frac{T_2-T_1}{T_2-T_i},\qquad q = k\,\frac{T_2-T_i}{\delta},
+\end{equation}
+exact for a semi-infinite body and without stored history. The interface temperature $T_i$
+makes the two fluxes equal. Each pair is point implicit,
+$\Delta E = G\,\dt\,\Delta T/(1+\dt\sum G_g/C_g+\dt\sum G_s/C_s)$, and the gas loses exactly
+what the solid gains. Inputs are start-of-step values, so every outer iteration books the same
+energy, and the result does not depend on the patch layout. Two semi-infinite bodies (gas
+330\,K, wall 300\,K): heat into the wall 1.025 / 1.024 / 1.022 of exact at 0.2 / 0.5 / 1\,ms,
+wall surface 307.27\,K (exact 307.52\,K).
+
+\subsection{Tangential momentum at the interface (\code{interfaceShear})}
+
+With \code{stock}, the $10^{15}$ cell-centred exchange holds the gas in front of a solid at the
+solid's velocity in every direction: a no-slip wall half a cell off the surface at any
+viscosity. \code{slip} keeps that exchange only along the surface normal
+$\mathbf n=\nabla s/|\nabla s|$ in cells without particles, so the gas slides freely.
+\code{model} adds the wall shear from the near-wall velocity profile
+(\code{SPICE::interfaceShear}): the conduction layer model with interface value 0 (no slip at
+the surface), $k\to\mu$ and $\alpha\to\nu$, point implicit; the kinetic energy it dissipates is
+heat in the gas cell. Air viscosity at 100\,m/s over steel: momentum to the wall +1 to +3\% and
+shear +3 to +5\% of Stokes' solution, against +85\% and $-$65 to $-$28\% with \code{stock}.
+\code{slip} and \code{model} are for walls aligned with the grid: where the surface is a
+staircase, gas sliding along it crosses into locked cut cells and the face-form pressure work
+books compression their gas does not undergo.
+
+\subsection{Thermal expansion in the Lagrangian specific volume}\label{sec:tmv}
+
+In \code{computeLagrangianSpecificVolume} the thermal-expansion term is a fraction of the
+material's own volume $m\,v = f\,\mathrm{TMV}$ (MPMICE normalizes \code{vol\_frac} by the total
+material volume; pure ICE has $\mathrm{TMV}=V$). With $V$ in its place the change was scaled by
+$V/\mathrm{TMV}$, and gas cooled by a wall in a cell with $\mathrm{TMV}<V$ lost more than its
+whole volume. With $\mathrm{TMV}$ an ideal gas gives $v_L/v_\text{old}=T_\text{new}/T_\text{old}$,
+always positive. The compression term keeps $V$.
+
+\subsection{Defaults and limitations}
+
+With KT on and MPM materials present the interface options default to \code{donorAcceptor},
+\code{conduction} and \code{model}; KT and PIMPLE themselves stay opt-in. FSPICE requires one
+level and exactly one ICE material; \code{rfspice} uses rigid MPM. The interface options need
+the scalar exchange model, and the outer loop with MPM materials needs it without convective
+heat transfer.
+
+%======================================================================
+\clearpage
 \section{Input reference}
 %======================================================================
 
@@ -660,6 +893,10 @@ pEqn Laplacian, \code{nCorrectors} & not implemented (would need impICE) \\
 \code{faceVelocity} & \code{true} & KT term1 in the face velocity \\
 \code{facePressure} & \code{true} & $\alpha$-weighted face pressure \\
 \code{ktPressureFlux} & \code{true} & $U_{KT}$ in the pressure update \\
+\code{solidCellFrac} & \code{1e-3} & FSPICE: gas fraction below $1-s$ is a solid cell; $0<s<0.1$ \\
+\code{interfaceTransport} & see text & FSPICE: \code{upwind} or \code{donorAcceptor} \\
+\code{interfaceExchange} & see text & FSPICE: \code{stock}, \code{particles} or \code{conduction} \\
+\code{interfaceShear} & see text & FSPICE: \code{stock}, \code{slip} or \code{model} \\
 \midrule
 \multicolumn{3}{@{}l}{\sffamily\color{Ink}\code{<CFD><SPICE><PIMPLE>} (optional)}\\
 \code{nOuterCorrectors} & \code{1} & total passes per step; 1 = loop off; the reference uses 2 \\
@@ -673,6 +910,9 @@ pEqn Laplacian, \code{nCorrectors} & not implemented (would need impICE) \\
 \paragraph{Enforced at start-up}
 SPICE runs on a single level (no AMR) with exactly one ICE material and no MPM materials: like
 reactingPimpleCentralFoam it is a single-fluid code, with species carried as transported scalars.
+MPM materials need FSPICE (Section~\ref{sec:fspice}), whose interface options default to
+\code{donorAcceptor}, \code{conduction} and \code{model} when KT is on and MPM materials exist,
+and to \code{upwind}, \code{stock} and \code{stock} otherwise.
 The outer loop requires explicit ICE and no turbulence model. CentralUpwind requires explicit ICE.
 
 \paragraph{Provided inputs} In \file{StandAlone/inputs/SPICE/}:
@@ -756,6 +996,9 @@ here so it is not rediscovered.
 \file{ICE/Core/ICELabel.\{h,cc\}} & \code{kt*\_FC*}, \code{*\_adv0}, \code{pimpleResidual} labels \\
 \file{StandAlone/inputs/UPS\_SPEC/ice\_spec.xml} & new tags \\
 \file{ICE/PIMPLE\_KT.md} & short usage note \\
+\file{SPICE/Exchange/InterfaceScalarExch.\{h,cc\}} & FSPICE: particle-aware exchange, tangential slip \\
+\file{SPICE/Advection/InterfaceSecondOrderAdvector.\{h,cc\}} & FSPICE: MPM \code{vol\_frac} with the face partition \\
+\file{FSPICE/FSPICE.\{h,cc\}} & FSPICE: SPICE + MPM, the MPMICE task copies, solid fraction, frozen-solid outer loop \\
 \bottomrule
 \end{tabularx}
 \end{center}
