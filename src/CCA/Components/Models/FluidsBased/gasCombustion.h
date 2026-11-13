@@ -33,6 +33,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -108,7 +109,10 @@ public:
   virtual void modifyThermoTransportProperties(const ProcessorGroup*, const PatchSubset*,
                                                const MaterialSubset*, DataWarehouse*, DataWarehouse*);
 
-  virtual void scheduleComputeStableTimeStep(SchedulerP&, const LevelP&) {}
+  virtual void scheduleComputeStableTimeStep(SchedulerP&, const LevelP&);
+  virtual void computeStableTimeStep(const ProcessorGroup*, const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw, DataWarehouse* new_dw);
   virtual void computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int) {}
   virtual void scheduleErrorEstimate(const LevelP&, SchedulerP&) {}
 
@@ -137,6 +141,14 @@ public:
 private:
   gasCombustion(const gasCombustion&) = delete;
   gasCombustion& operator=(const gasCombustion&) = delete;
+
+  // Mixture-averaged D_k for one cell, stored in diffCoef[k][c] in user units.
+  // T_SI [K] and rho_SI [kg/m^3]; Yall holds all-species mass fractions.
+  void computeCellDiffCoefs(const IntVector& c, double T_SI, double rho_SI,
+                            const std::vector<double>& Yall,
+                            ReactionMech::Workspace& w,
+                            std::vector<double>& Dk,
+                            std::vector<CCVariable<double>>& diffCoef) const;
 
   //------------------------------------------------------------------
   // Mechanism: species set, thermo, kinetics, transport (parsed once
@@ -304,6 +316,19 @@ private:
   bool d_doDiffusion{true};
   bool d_debug{false};
   IntVector d_debugCell=IntVector(-9);   // cell for debugging output
+
+  //__________________________________
+  // Reject-and-retry on negative mass fractions.  computeStableTimeStep
+  // checks the end-of-step Y; any Y < -d_negYTol requests a recompute
+  // (Uintah redoes the step with ICE::recomputeDelT = 0.75*delT).  The
+  // rejected delT is remembered so the following steps are capped at
+  // 0.75*delT_rejected * d_dtCapGrowth^(steps since rejection) instead
+  // of jumping straight back to the size that failed.
+  double d_negYTol{1e-15};        // also the hard-fail threshold in computeModelSources
+  double d_dtCapGrowth{1.05};     // cap growth per accepted step after a rejection
+  double d_rejectDelT{-1.0};      // delT of the last rejected step (< 0: none yet)
+  int    d_rejectTimeStep{-1};    // timestep index of that rejection
+  std::mutex d_rejectMutex;       // tasks on different patches may run concurrently
 };
 
 } // namespace Uintah

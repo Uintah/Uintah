@@ -25,6 +25,7 @@
 
 #include <CCA/Components/Models/FluidsBased/gasCombustion.h>
 
+#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/ICE/Core/Diffusion.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
@@ -112,6 +113,12 @@ double parseUnit(ProblemSpecP& units_ps,
   return it->second;
 }
 
+// Multi-material runs: cells where the gas is only a trace (vol_frac below
+// this, e.g. inside an MPM solid) skip the diffusion coefficients, which are
+// output and timestep-limit only; the diffusion flux recomputes them at each
+// face.  Same threshold as LODI2.cc.
+constexpr double traceVolFrac = 1.0e-3;
+
 } // anonymous namespace
 
 // Constructor / Destructor
@@ -184,6 +191,8 @@ void gasCombustion::outputProblemSpec(ProblemSpecP& ps)
   gc_ps->appendElement("safety", d_safety);
   gc_ps->appendElement("max_grow", d_max_grow);
   gc_ps->appendElement("max_shrink", d_max_shrink);
+  gc_ps->appendElement("negativeY_tol", d_negYTol);
+  gc_ps->appendElement("dtCap_growth",  d_dtCapGrowth);
 
   ProblemSpecP units_ps = gc_ps->appendChild("units");
   units_ps->appendElement("length",      d_lenUnit);
@@ -262,6 +271,12 @@ void gasCombustion::problemSetup(GridP&, const bool)
   gc_ps->getWithDefault("safety",      d_safety, 0.9);
   gc_ps->getWithDefault("max_grow",    d_max_grow, 2.0);
   gc_ps->getWithDefault("max_shrink",  d_max_shrink, 0.1);
+  gc_ps->getWithDefault("negativeY_tol", d_negYTol,     1e-15);
+  gc_ps->getWithDefault("dtCap_growth",  d_dtCapGrowth, 1.2);
+  if (d_negYTol < 0.0 || d_dtCapGrowth < 1.0) {
+    throw ProblemSetupException("gasCombustion: negativeY_tol must be >= 0 and dtCap_growth >= 1",
+                                __FILE__, __LINE__);
+  }
 
   //__________________________________
   // Unit system.  The ups (and hence the DataWarehouse) is in the user's
@@ -513,6 +528,10 @@ void gasCombustion::scheduleInitialize(SchedulerP   & sched,
   for (auto* lbl : d_Y_labels) {
     t->computesVar(lbl);
   }
+  // Needed by the stable-timestep task, which also runs in the initialization graph
+  for (auto* lbl : d_diffCoef_labels) {
+    t->computesVar(lbl);
+  }
 
   if (d_profileInit.isActive) {
     MaterialSubset* press_matl = scinew MaterialSubset();
@@ -531,6 +550,10 @@ void gasCombustion::scheduleInitialize(SchedulerP   & sched,
     press_matl->removeReference();
   } else {
     t->requiresVar(Task::NewDW, Ilb->temp_CCLabel, d_gn, 0);
+    t->requiresVar(Task::NewDW, Ilb->rho_CCLabel,  d_gn, 0);
+    if (m_materialManager->getNumMatls() > 1) {
+      t->requiresVar(Task::NewDW, Ilb->vol_frac_CCLabel, d_gn, 0);   // skip diffCoef in trace cells
+    }
   }
   t->modifiesVar(Ilb->specific_heatLabel);
   t->modifiesVar(Ilb->gammaLabel);
@@ -565,7 +588,17 @@ void gasCombustion::initialize(const ProcessorGroup *,
 
       // per-cell workspace (reused; no per-cell allocation)
       std::vector<double> Yall(d_nAll);
-      std::vector<double> cpS;
+      std::vector<double> cpS, Dk;
+      ReactionMech::Workspace w;
+
+      // Diffusion coefficients for the initial stable timestep; left at 0
+      // in trace cells and when diffusion is off (as in modifyThermoTransportProperties)
+      const bool multiMatl = (m_materialManager->getNumMatls() > 1);
+      std::vector<CCVariable<double>> diffCoef(d_nAll);
+      for (int k = 0; k < d_nAll; k++) {
+        new_dw->allocateAndPut(diffCoef[k], d_diffCoef_labels[k], indx, patch);
+        diffCoef[k].initialize(0.0);
+      }
 
       if (d_profileInit.isActive) {
         const ProfileInit& pi = d_profileInit;
@@ -684,6 +717,10 @@ void gasCombustion::initialize(const ProcessorGroup *,
           sp_vol[c]       = 1.0 / rho_val;
           press_eq[c]     = pres_eos / d_pressConv;
           speedSound[c]   = std::sqrt(gamma_cc[c] * pres_eos / rho_SI) / d_velConv;
+
+          if (d_doDiffusion && (!multiMatl || volFrac >= traceVolFrac)) {
+            computeCellDiffCoefs(c, T_SI, d_rhoConv * rho_CC[c], Yall, w, Dk, diffCoef);
+          }
         }
 
       } else {
@@ -699,8 +736,12 @@ void gasCombustion::initialize(const ProcessorGroup *,
         }
 
         // Correct cv and gamma from mixture species for the first timestep.
-        constCCVariable<double> temp_CC;
+        constCCVariable<double> temp_CC, rho_CC, vol_frac;
         new_dw->get(temp_CC, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
+        new_dw->get(rho_CC,  Ilb->rho_CCLabel,  indx, patch, d_gn, 0);
+        if (multiMatl) {
+          new_dw->get(vol_frac, Ilb->vol_frac_CCLabel, indx, patch, d_gn, 0);
+        }
 
         CCVariable<double> cv, gamma_cc;
         new_dw->getModifiable(cv,       Ilb->specific_heatLabel, indx, patch);
@@ -727,6 +768,10 @@ void gasCombustion::initialize(const ProcessorGroup *,
           double cv_tmp = cp_mix - R_mix;
           cv[c]         = cv_tmp / d_cvConv;
           gamma_cc[c]   = cp_mix / cv_tmp;
+
+          if (d_doDiffusion && (!multiMatl || vol_frac[c] >= traceVolFrac)) {
+            computeCellDiffCoefs(c, T, d_rhoConv * rho_CC[c], Yall, w, Dk, diffCoef);
+          }
         }
       }
     }
@@ -934,7 +979,7 @@ void gasCombustion::computeModelSources(const ProcessorGroup  *,
         //__________________________________
         // Bulletproofing: check mass fraction species vector
         for (int j = 0; j < d_nAll; j++) {
-          if (Y[j] < -1e-15) {
+          if (Y[j] < -d_negYTol) {
             std::ostringstream warn;
             warn << "gasCombustion: negative mass fraction Y[" << j << "]=" << Y[j]
                  << " (" << d_mech.name(j) << ") at cell " << c;
@@ -1562,12 +1607,8 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
       old_dw->get( temp, Ilb->temp_CCLabel, indx, patch, d_gn, 0);
       old_dw->get( rho , Ilb->rho_CCLabel,  indx, patch, d_gn, 0);
 
-      // Multi-material runs: cells where this material is only a trace
-      // (vol_frac below traceVolFrac, e.g. inside an MPM solid) skip the
-      // diffusion coefficients, which are output only; the diffusion flux
-      // recomputes them at each face.  Same threshold as LODI2.cc.
-      const bool   multiMatl    = (m_materialManager->getNumMatls() > 1);
-      const double traceVolFrac = 1.0e-3;
+      // Trace cells skip the diffusion coefficients (see traceVolFrac)
+      const bool multiMatl = (m_materialManager->getNumMatls() > 1);
       constCCVariable<double> vol_frac;
       if (multiMatl) {
         old_dw->get( vol_frac, Ilb->vol_frac_CCLabel, indx, patch, d_gn, 0);
@@ -1675,10 +1716,7 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
         // (left at 0 in trace cells)
         //-------------------------------------------------------------------------
         if (!multiMatl || vol_frac[c] >= traceVolFrac) {
-          d_mech.mixtureAvgDiffCoeffs(T, d_rhoConv * rho[c], Y, w, Dk);
-          for (int k = 0; k < d_nAll; k++){
-            diffCoef[k][c] = Dk[k] / d_diffConv;
-          }
+          computeCellDiffCoefs(c, T, d_rhoConv * rho[c], Y, w, Dk, diffCoef);
         }
       } // cell iterator
 
@@ -1705,4 +1743,177 @@ void gasCombustion::modifyThermoTransportProperties( const ProcessorGroup*,
       }
     } // matl loop
   } // patches
+}
+
+//______________________________________________________________________
+//  Mixture-averaged diffusion coefficients for one cell [user units]
+void gasCombustion::computeCellDiffCoefs(const IntVector& c, double T_SI, double rho_SI,
+                                         const std::vector<double>& Yall,
+                                         ReactionMech::Workspace& w,
+                                         std::vector<double>& Dk,
+                                         std::vector<CCVariable<double>>& diffCoef) const
+{
+  d_mech.mixtureAvgDiffCoeffs(T_SI, rho_SI, Yall, w, Dk);
+  for (int k = 0; k < d_nAll; k++) {
+    diffCoef[k][c] = Dk[k] / d_diffConv;
+  }
+}
+
+void gasCombustion::scheduleComputeStableTimeStep(SchedulerP& sched,
+                                                  const LevelP& level)
+{
+  printSchedule( level, dout_models_gasComb, " gasCombustion::scheduleComputeStableTimeStep" );
+
+  Task* t = scinew Task("gasCombustion::computeStableTimeStep",
+                        this, &gasCombustion::computeStableTimeStep);
+
+  for (int k = 0; k < d_nTracked; k++) {
+    t->requiresVar(Task::NewDW, d_Y_labels[k], d_gn, 0);
+  }
+  if (d_doDiffusion) {
+    for (int k = 0; k < d_nAll; k++) {
+      t->requiresVar(Task::NewDW, d_diffCoef_labels[k], d_gn, 0);
+    }
+  }
+  t->requiresVar(Task::OldDW, Ilb->timeStepLabel);
+  t->requiresVar(Task::OldDW, Ilb->delTLabel, level.get_rep());
+
+  t->computesVar(Ilb->delTLabel, level.get_rep());   // reduced (min) with ICE's value
+  t->computesVar(VarLabel::find(recomputeTimeStep_name));
+
+  sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+
+//______________________________________________________________________
+//
+void gasCombustion::computeStableTimeStep(const ProcessorGroup*,
+                                          const PatchSubset*    patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*        old_dw,
+                                          DataWarehouse*        new_dw)
+{
+  const Level* level = getLevel(patches);
+
+  // The initialization graph has no OldDW: nothing to reject or cap there
+  const bool isInit = (old_dw == nullptr);
+  int    timeStep   = -1;
+  double delT       = -1.0;
+  if (!isInit) {
+    timeStep_vartype timeStepVar;
+    delt_vartype     delTVar;
+    old_dw->get(timeStepVar, Ilb->timeStepLabel);
+    old_dw->get(delTVar,     Ilb->delTLabel, level);
+    timeStep = timeStepVar;
+    delT     = delTVar;
+  }
+
+  //__________________________________
+  // Cap after a rejection: 0.75 (= ICE::recomputeDelT) times the rejected
+  // delT, grown by dtCap_growth for every step accepted since then
+  double dtCap = 1000.0;
+  {
+    std::lock_guard<std::mutex> lock(d_rejectMutex);
+    if (!isInit && d_rejectDelT > 0.0 && timeStep >= d_rejectTimeStep) {
+      int nAccepted = timeStep - d_rejectTimeStep + 1;
+      dtCap = 0.75 * d_rejectDelT * std::pow(d_dtCapGrowth, nAccepted);
+    }
+  }
+
+  double deltDiffMin = 1000.0;
+  bool   reject      = false;
+
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    printTask( patches, patch, dout_models_gasComb, " gasCombustion::computeStableTimeStep" );
+
+    Vector dx = patch->dCell();
+    double invSumInvDxSqr = 1.0 / ( 1.0/(dx.x()*dx.x())
+                                  + 1.0/(dx.y()*dx.y())
+                                  + 1.0/(dx.z()*dx.z()) );
+    double deltDiff = 1000.0;
+
+    for (int m = 0; m < matls->size(); m++) {
+      int indx = matls->get(m);
+
+      //__________________________________
+      // Positivity of the end-of-step mass fractions (closure by difference)
+      std::vector<constCCVariable<double>> Y(d_nTracked);
+      for (int k = 0; k < d_nTracked; k++) {
+        new_dw->get( Y[k], d_Y_labels[k], indx, patch, d_gn, 0 );
+      }
+
+      IntVector worstCell(0, 0, 0);
+      int    worstSpecies = -1;           // all-species index
+      double worstY       = -d_negYTol;
+
+      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        double Ysum = 0.0;
+        for (int k = 0; k < d_nTracked; k++) {
+          Ysum += Y[k][c];
+          if (Y[k][c] < worstY) {
+            worstY       = Y[k][c];
+            worstSpecies = d_mech.trackedToAll(k);
+            worstCell    = c;
+          }
+        }
+        if (1.0 - Ysum < worstY) {
+          worstY       = 1.0 - Ysum;
+          worstSpecies = d_closure;
+          worstCell    = c;
+        }
+      }
+
+      if (worstSpecies >= 0 && !isInit) {
+        reject = true;
+        std::cout << "gasCombustion: REJECTING timestep " << timeStep << " (delT = " << delT
+                  << "): Y_" << d_mech.name(worstSpecies) << " = " << worstY
+                  << " at cell " << worstCell << " (rank " << Uintah::Parallel::getMPIRank()
+                  << ", patch " << patch->getID() << ")" << std::endl;
+      }
+
+      //__________________________________
+      // Explicit species-diffusion limit
+      if (d_doDiffusion) {
+        std::vector<constCCVariable<double>> diffCoef(d_nAll);
+        for (int k = 0; k < d_nAll; k++) {
+          new_dw->get( diffCoef[k], d_diffCoef_labels[k], indx, patch, d_gn, 0 );
+        }
+
+        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+          IntVector c = *iter;
+          double maxDiffCoef = 0.0;
+          for (int k = 0; k < d_nAll; k++) {
+            maxDiffCoef = std::max(maxDiffCoef, diffCoef[k][c]);
+          }
+          // explicit diffusion limit: dt <= 1 / (2 D sum(1/dx^2))
+          double A = 0.5 * invSumInvDxSqr / (maxDiffCoef + 1e-100);
+          deltDiff = std::min(A, deltDiff);
+        } // cell loop
+      }
+    } // matl loop
+
+    new_dw->put(delt_vartype(std::min(deltDiff, dtCap)), Ilb->delTLabel, level);
+    deltDiffMin = std::min(deltDiff, deltDiffMin);
+  } // patches
+
+  //__________________________________
+  // Request the recompute and remember the rejected delT for the cap.
+  // A retried step keeps its timestep index, so a second rejection of
+  // the same step lowers the remembered delT further.
+  if (reject) {
+    new_dw->put(bool_or_vartype(true), VarLabel::find(recomputeTimeStep_name));
+
+    std::lock_guard<std::mutex> lock(d_rejectMutex);
+    if (timeStep != d_rejectTimeStep || delT < d_rejectDelT) {
+      d_rejectDelT     = delT;
+      d_rejectTimeStep = timeStep;
+    }
+  }
+
+  // if (d_doDiffusion) {
+  //   std::cout << "gasCombustion: species diffusion delT = " << deltDiffMin
+  //             << "  (rank " << Uintah::Parallel::getMPIRank()
+  //             << ", L-" << level->getIndex() << ")" << std::endl;
+  // }
 }
