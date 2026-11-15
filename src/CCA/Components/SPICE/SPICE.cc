@@ -1570,6 +1570,7 @@ void SPICE::schedulePitchOuterLoop( SchedulerP & sched, const LevelP & level )
 
   Task* t = scinew Task("SPICE::pitchOuterLoop", this, &SPICE::pitchOuterLoop, level);
   t->hasSubScheduler();
+  t->setType( Task::OncePerProc );
 
   t->requiresVar( Task::OldDW, lb->timeStepLabel );
   t->requiresVar( Task::OldDW, lb->simulationTimeLabel );
