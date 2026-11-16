@@ -833,17 +833,20 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     perf_msg    = '\t<A href=\"%s/performance_check.log.txt\">See performance_check.log</a> for more comparison information.' % (logpath)
   else:
     logpath     = "%s/%s-results/%s"  %  (startpath,application,testname)
+    if startFrom == "restart":
+      logpath   = logpath + "/restart"
+
     sus_log_msg = '\tSee %s/sus.log.txt for details' % (logpath)
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
     perf_msg    = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
 
   #__________________________________
-  #  run preprocess command on ups file
-
-  rc=runPreProcessCmd( preProcess_cmd, inputxml, 'sus.log.txt', sus_log_msg )
-  if rc==1:
-    return 1;
+  #  run preprocess command on ups file.  Ignore on a restart.
+  if startFrom != "restart":
+    rc=runPreProcessCmd( preProcess_cmd, inputxml, 'sus.log.txt', sus_log_msg )
+    if rc==1:
+      return 1;
 
   #__________________________________
   # actually run the test!
