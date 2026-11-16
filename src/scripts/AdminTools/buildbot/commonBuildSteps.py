@@ -104,7 +104,7 @@ def compile( factory, numProcs, wrkDir=None ):
     workDir = getValue( wrkDir, 'wrkDir' )
 
     runMake = steps.Compile(
-                     command        = ["python", "../src/scripts/buildbot/make.py", str( numProcs )],
+                     command        = ["python", "../src/scripts/AdminTools/buildbot/make.py", str( numProcs )],
                      workdir        = workDir,
                      logEnviron     = False,
                      warnOnFailure  = True,
