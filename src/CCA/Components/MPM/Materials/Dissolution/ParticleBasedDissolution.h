@@ -53,6 +53,7 @@ WARNING
 
         // Dissolution rate
         double d_dLdt;
+        double d_rate;  // dM/dt
 
       public:
          // Constructor

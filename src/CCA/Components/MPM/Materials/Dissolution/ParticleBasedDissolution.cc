@@ -48,6 +48,7 @@ ParticleBasedDissolution::ParticleBasedDissolution(const ProcessorGroup* myworld
   lb = Mlb;
 
   ps->require("dLdt",        d_dLdt);
+  ps->require("rate",        d_rate);
 }
 
 ParticleBasedDissolution::~ParticleBasedDissolution()
@@ -59,6 +60,7 @@ void ParticleBasedDissolution::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
   dissolution_ps->appendElement("type",         "particleBasedDissolution");
   dissolution_ps->appendElement("dLdt",          d_dLdt);
+  dissolution_ps->appendElement("rate",          d_rate);
 }
 
 void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
@@ -87,7 +89,7 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
     constParticleVariable<double> pmass, psurf, pvolume;
     constParticleVariable<Matrix3> psize, pcursize;
     constParticleVariable<Point> px;
-    ParticleVariable<double> pdeltaMass;
+    ParticleVariable<double> pdeltaMassInt,pdeltaMassSurf;
     constNCVariable<Vector> gSurfNorm;
 
     for(int m=0;m<matls->size();m++){
@@ -104,7 +106,8 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->get(psurf,              lb->pSurfLabel_preReloc,       pset);
       new_dw->get(gSurfNorm,          lb->gSurfNormLabel, dwi,patch,gac,2);
 
-      new_dw->getModifiable(pdeltaMass,lb->pDeltaMassSurfLabel,      pset);
+      new_dw->getModifiable(pdeltaMassSurf,lb->pDeltaMassSurfLabel,  pset);
+      new_dw->getModifiable(pdeltaMassInt, lb->pDeltaMassIntLabel,   pset);
 
       // For the 1-D test case
       // dMdt = dL_dt*area*density
@@ -192,10 +195,11 @@ void ParticleBasedDissolution::computeMassBurnFraction(const ProcessorGroup*,
                                      L[0].z(), L[1].z(), L[2].z());
 
           double massRatio = psizeNew.Determinant()/psize[idx].Determinant();
-          pdeltaMass[idx] = pmass[idx]*(1. - massRatio);
+          pdeltaMassSurf[idx] = pmass[idx]*(1. - massRatio);
           //cout << "pdeltaMassNewWay = " << pdeltaMass[idx] << endl;
         } else {
-          pdeltaMass[idx] = 0.0;
+          pdeltaMassInt[idx] = d_rate*delT;
+          //pdeltaMass[idx] = 0.0;
         }
       } // loop over particles
     } // materials
@@ -222,6 +226,7 @@ void ParticleBasedDissolution::addComputesAndRequiresMassBurnFrac(SchedulerP & s
 
 
   t->modifiesVar(lb->pDeltaMassSurfLabel);
+  t->modifiesVar(lb->pDeltaMassIntLabel);
 
   sched->addTask(t, patches, ms);
 }
