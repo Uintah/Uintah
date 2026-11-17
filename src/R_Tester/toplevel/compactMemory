@@ -1,0 +1,69 @@
+#!/bin/bash
+#______________________________________________________________________
+#  compactMemory
+#
+#  Drops the page cache and compacts memory so the next process can get
+#  transparent huge pages (2 MB).  On uintah-build, when memory is
+#  fragmented, sus falls back to 4 KB pages and ice_perf_test runs ~16%
+#  slower (153 s vs 132 s), which fails its performance check.
+#
+#  The regression tester calls it before each performance test when
+#  COMPACT_MEMORY_BEFORE_PERF=yes (see helpers/runSusTests_git.py):
+#      sudo -n /usr/local/sbin/compactMemory
+#
+#  Usage:         compactMemory          (no arguments, must run as root)
+#  Install:       see "Compacting memory before performance tests" in
+#                 src/R_Tester/readme.txt
+#  Dependencies:  Linux /proc/sys/vm/drop_caches and compact_memory
+#
+#  Do NOT add this file to checkout_scripts: the installed copy runs as
+#  root and must be root-owned and installed by hand.
+#______________________________________________________________________
+
+main()
+{
+  local dropCaches="/proc/sys/vm/drop_caches"
+  local compact="/proc/sys/vm/compact_memory"
+
+  #__________________________________
+  # Bulletproofing
+  if [[ $# -ne 0 ]]; then
+    echo "  ERROR: compactMemory takes no arguments" >&2
+    exit 1
+  fi
+
+  if [[ "$EUID" -ne 0 ]]; then
+    echo "  ERROR: compactMemory must be run as root (sudo)" >&2
+    exit 1
+  fi
+
+  if [[ ! -w "$dropCaches" || ! -w "$compact" ]]; then
+    echo "  ERROR: $dropCaches or $compact is not available" >&2
+    exit 1
+  fi
+
+  #__________________________________
+  # flush dirty pages, drop the page cache, then compact
+  sync
+
+  echo 3 > "$dropCaches"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "  ERROR: writing to $dropCaches failed (return code $rc)" >&2
+    exit $rc
+  fi
+
+  echo 1 > "$compact"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "  ERROR: writing to $compact failed (return code $rc)" >&2
+    exit $rc
+  fi
+
+  exit 0
+}
+
+#______________________________________________________________________
+#______________________________________________________________________
+
+main "$@"

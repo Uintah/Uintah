@@ -14,6 +14,7 @@ OS=$(uname -s)                                      # operating sytem
 PARALLELISM=0                                       # number of cores to use
 REPLY_TO="uintah-developers@lists.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
+COMPACT_MEMORY_BEFORE_PERF="yes"                    # sudo -n /usr/local/sbin/compactMemory before each performance test
 AUTO_UPDATE_GIT_STAMP="yes"                         # Automatically update the git hash when a test passes
 
 SEND_MAIL_TO=""                                     # array of email names to send mail to
@@ -191,7 +192,7 @@ fi
 
 
 PATH=:"$MPIRUN_PATH":"$PATH":"$SCRIPT_DIR":.
-export PATH BUILDONLY COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS AUTO_UPDATE_PERF_GS AUTO_UPDATE_GIT_STAMP
+export PATH BUILDONLY COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS AUTO_UPDATE_PERF_GS COMPACT_MEMORY_BEFORE_PERF AUTO_UPDATE_GIT_STAMP
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then

@@ -26,7 +26,7 @@ fi
 
 #__________________________________
 # bulletproof the inputs
-if [ "AUTO_UPDATE_PERF_GS" = "" ]; then
+if [[ -z "$AUTO_UPDATE_PERF_GS" ]]; then
   echo "ERROR: performance_check  One of the environmental variables (AUTO_UPDATE_PERF_GS) has not been set"
   exit -1
 fi
@@ -55,7 +55,7 @@ if [ $makeplots -eq "1" ]; then
 
   simRunTimeHistory="$compare_root/$test/simRunTimeHistory"
 
-  if [ ! -f $here ]; then
+  if [[ ! -f "$simRunTimeHistory" ]]; then
     echo "#date Run Time(sec)" > $simRunTimeHistory
   fi
 

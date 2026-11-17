@@ -3,6 +3,10 @@ Environmental Flags that control the regression tester:
 * TEST_COMPONENTS: MPM, Wasatch, Arches… specifies which component to run.
 * WHICH_TESTS: LOCALTESTS, etc…, specifies which suite of tests to run.
 Note that the test suite is component-specific.
+* COMPACT_MEMORY_BEFORE_PERF: yes/no (default: unset = no).  When "yes",
+  runs "sudo -n /usr/local/sbin/compactMemory" before each performance
+  test.  Set to "yes" in startTester and startTester.git; requires the
+  setup in "Compacting memory before performance tests" below.
 
 Example:
 in a bash shell
@@ -97,7 +101,43 @@ __________________________________
     setenv t_opt    $RT/opt/
 
 __________________________________
--To enable core dumps (recommended for debugging) 
+
+- Compacting memory before performance tests (optional, needs root)
+
+Performance tests such as ice_perf_test run ~16% slower when memory is
+fragmented, because sus can't get transparent huge pages.  When
+COMPACT_MEMORY_BEFORE_PERF=yes (set in startTester and startTester.git),
+runSusTests_git.py runs
+
+    sudo -n /usr/local/sbin/compactMemory
+
+before each performance test.  If the script or the sudo rule is missing,
+it prints a warning and runs the test anyway.  Local tests (startLocalTest)
+don't set the variable, so they never call sudo.
+
+Install, as root:
+
+    install -o root -g root -m 755 src/R_Tester/toplevel/compactMemory /usr/local/sbin/compactMemory
+
+    echo 'rt ALL=(root) NOPASSWD: /usr/local/sbin/compactMemory' > /etc/sudoers.d/rt-compactMemory
+    chmod 440 /etc/sudoers.d/rt-compactMemory
+    visudo -cf /etc/sudoers.d/rt-compactMemory      # must report "parsed OK"
+
+Test, as rt (must not prompt for a password):
+
+    sudo -n /usr/local/sbin/compactMemory ; echo $?   # expect 0
+    cat /proc/buddyinfo        # the last two columns should be non-zero
+
+Notes:
+  - Keep /usr/local/sbin/compactMemory root-owned and not writable by rt,
+    otherwise rt could run anything as root.
+  - Never grant rt "sudo sh", "sudo tee" or "sudo bash -c" for this; each
+    lets rt write any file as root.
+  - Don't add compactMemory to checkout_scripts.  Reinstall it by hand if
+    the repository copy changes.
+
+__________________________________
+-To enable core dumps (recommended for debugging)
 edit 
 /etc/security/limints.conf
 rt               soft    core            unlimited

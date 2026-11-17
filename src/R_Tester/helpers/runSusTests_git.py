@@ -679,6 +679,34 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
   return failcode
 
 #______________________________________________________________________
+# compact_memory_for_perf_test()
+# Opt-in: only runs when COMPACT_MEMORY_BEFORE_PERF=yes (set in the nightly
+# startTester scripts on uintah-build).  Drops the page cache and compacts
+# memory so sus can get transparent huge pages.  Without them,
+# ice_perf_test runs ~16% slower and fails its performance check.
+#
+# Requires a root-owned script and a sudoers rule, e.g.
+#   rt ALL=(root) NOPASSWD: /usr/local/sbin/compactMemory
+# sudo -n never prompts for a password; if the rule is missing, a warning is
+# printed and the test runs as usual.
+
+COMPACT_MEMORY_SCRIPT = "/usr/local/sbin/compactMemory"
+
+def compact_memory_for_perf_test():
+
+  if getenv( "COMPACT_MEMORY_BEFORE_PERF" ) != "yes":
+    return
+
+  rc = system( "sudo -n %s > /dev/null 2>&1" % COMPACT_MEMORY_SCRIPT )
+
+  if rc != 0:
+    print( "\tWARNING: 'sudo -n %s' failed (return code %s); running performance test without compacting memory." % (COMPACT_MEMORY_SCRIPT, rc) )
+  else:
+    print( "\tCompacted memory before the performance test." )
+
+  return
+
+#______________________________________________________________________
 # runSusTest()
 # parameters are basically strings, except for tests_to_do which is a list of
 # 3 ints stating whether to do comparison, memory, and performance tests
@@ -783,6 +811,11 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
   command = "/usr/bin/time -p %s %s %s %s/sus %s %s " % (MPIHEAD, int(np), mpirun_options, susdir, sus_options, GIT_OPTIONS)
   mpimsg = " (mpi %s proc)" % (int(np))
+
+  #__________________________________
+  # opt-in: free and compact memory so sus can get huge pages
+  if do_performance_test == 1:
+    compact_memory_for_perf_test()
 
   time0 =time()  #timer
 
