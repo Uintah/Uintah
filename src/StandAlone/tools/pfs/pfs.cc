@@ -179,8 +179,20 @@ main(int argc, char *argv[])
               
               vector<vector<pair<Point,vector<double> > > > points(level->numPatches());
               Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
+
+              std::string line;
+              int line_count = 0;
+
+              while (std::getline(source, line)) {
+                  ++line_count;
+              }
+
+              // Rewind to the beginning
+              source.clear();
+              source.seekg(0, std::ios::beg);
               
               double x,y,z;
+              int nrows = 0;
               while (source >> x >> y >> z) {
                 vector<double> cols;
                 for(int ic=0;ic<ncols;ic++){
@@ -188,6 +200,7 @@ main(int argc, char *argv[])
                   source >> v;
                   cols.push_back(v);
                 }
+                nrows++;
                 
                 Point pp(x,y,z);
                 if(level->containsPointIncludingExtraCells(pp)){
@@ -198,6 +211,20 @@ main(int argc, char *argv[])
                   max = Max(pp,max);
                   points[pid].push_back(pair<Point,vector<double> >(pp,cols));
                 }
+              } // end while
+
+              if(nrows>line_count){
+               cerr << "line_count = " << line_count << endl;
+               cerr << "nrows = " << nrows << endl;
+               throw ProblemSetupException("There is more data than expected in '"+f_name+"'",
+                                           __FILE__, __LINE__);
+              }
+
+              if(nrows<line_count){
+               cerr << "line_count = " << line_count << endl;
+               cerr << "nrows = " << nrows << endl;
+               throw ProblemSetupException("There is less data than expected in '"+f_name+"'",
+                                           __FILE__, __LINE__);
               }
               
               source.close();
