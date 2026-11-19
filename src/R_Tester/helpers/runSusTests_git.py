@@ -679,11 +679,42 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
   return failcode
 
 #______________________________________________________________________
+# warm_sus_page_cache()
+# After compactMemory drops the page cache, sus and its ~90 shared
+# libraries (~200 MB) would be read from disk inside the timed run, adding
+# ~0.3 s.  That is noise for long tests but ~10% for 3 s tests such as
+# ARCHES/OFC4 and ICE/advectAMR_perf.  Read them back into the cache first.
+
+def warm_sus_page_cache( susdir ):
+
+  sus   = path.realpath( "%s/sus" % susdir )
+  files = [ sus ]
+
+  ldd_out = getoutput( "ldd %s" % sus )
+
+  for line in ldd_out.splitlines():
+    fields = line.split()
+    if "=>" in fields and len( fields ) >= 3 and fields[2].startswith( "/" ):
+      files.append( fields[2] )
+
+  for f in files:
+    try:
+      with open( f, "rb" ) as fh:
+        while fh.read( 1 << 20 ):
+          pass
+    except OSError as e:
+      print( "\tWARNING: could not pre-read %s (%s)" % (f, e) )
+
+  return
+
+#______________________________________________________________________
 # compact_memory_for_perf_test()
 # Opt-in: only runs when COMPACT_MEMORY_BEFORE_PERF=yes (set in the nightly
 # startTester scripts on uintah-build).  Drops the page cache and compacts
 # memory so sus can get transparent huge pages.  Without them,
 # ice_perf_test runs ~16% slower and fails its performance check.
+# Afterwards sus and its shared libraries are read back into the page cache
+# so short tests don't pay for loading them from disk.
 #
 # Requires a root-owned script and a sudoers rule, e.g.
 #   rt ALL=(root) NOPASSWD: /usr/local/sbin/compactMemory
@@ -692,7 +723,7 @@ def runSusTests(argv, TESTS, application, addtlpath = None, callback = nullCallb
 
 COMPACT_MEMORY_SCRIPT = "/usr/local/sbin/compactMemory"
 
-def compact_memory_for_perf_test():
+def compact_memory_for_perf_test( susdir ):
 
   if getenv( "COMPACT_MEMORY_BEFORE_PERF" ) != "yes":
     return
@@ -702,7 +733,8 @@ def compact_memory_for_perf_test():
   if rc != 0:
     print( "\tWARNING: 'sudo -n %s' failed (return code %s); running performance test without compacting memory." % (COMPACT_MEMORY_SCRIPT, rc) )
   else:
-    print( "\tCompacted memory before the performance test." )
+    warm_sus_page_cache( susdir )
+    print( "\tCompacted memory and pre-loaded sus before the performance test." )
 
   return
 
@@ -815,7 +847,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   #__________________________________
   # opt-in: free and compact memory so sus can get huge pages
   if do_performance_test == 1:
-    compact_memory_for_perf_test()
+    compact_memory_for_perf_test( susdir )
 
   time0 =time()  #timer
 

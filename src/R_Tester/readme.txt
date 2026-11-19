@@ -111,7 +111,10 @@ runSusTests_git.py runs
 
     sudo -n /usr/local/sbin/compactMemory
 
-before each performance test.  If the script or the sudo rule is missing,
+before each performance test.  Because this empties the page cache, sus and
+its shared libraries (~200 MB) are then read back into the cache; otherwise
+loading them from disk adds ~0.3 s to the timed run, ~10% of short tests
+like ARCHES/OFC4.  If the script or the sudo rule is missing,
 it prints a warning and runs the test anyway.  Local tests (startLocalTest)
 don't set the variable, so they never call sudo.
 
