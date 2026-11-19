@@ -13,6 +13,7 @@ import socket
 import resource
 import platform
 import re         # regular expressions
+import csv
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -129,6 +130,46 @@ def cmdline(command):
 def build_root():
     opt_dbg = path.normpath(path.join(getcwd(), "../"))
     return opt_dbg
+
+#______________________________________________________________________
+# append_test_time()
+# Appends one row for a test to <results_dir>/test_times.csv so the test
+# times can be analysed without parsing summary_log.  The header row is
+# written when the file is first created.  Columns:
+#   component   application name, e.g. ARCHES
+#   build       dbg or opt
+#   test        test name
+#   start_from  inputFile, checkpoint or postProcessUda
+#   seconds     wall time of the test, including its restart run (if any)
+#   elapsed     the same time as hh:mm:ss (matches "Test Timer:")
+#   finished    date and time the test finished
+# A failure to write the file is reported but never stops the tests.
+def append_test_time( results_dir,
+                      application,
+                      dbg_opt,
+                      testname,
+                      start_from,
+                      seconds ):
+
+  csv_file = "%s/test_times.csv" % results_dir
+  new_file = not path.exists( csv_file )
+
+  elapsed  = strftime( "%H:%M:%S",
+                       gmtime( seconds ) )
+  finished = strftime( "%Y-%m-%d %H:%M:%S" )
+
+  try:
+    with open( csv_file,
+               "a",
+               newline = "" ) as f:
+      writer = csv.writer( f )
+
+      if new_file:
+        writer.writerow( [ "component", "build", "test", "start_from", "seconds", "elapsed", "finished" ] )
+
+      writer.writerow( [ application, dbg_opt, testname, start_from, "%.1f" % seconds, elapsed, finished ] )
+  except Exception as e:
+    print( "WARNING: could not write the test time to %s (%s)" % (csv_file, e) )
 
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
@@ -361,6 +402,9 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
           abs_tolerance     = 0.0
           rel_tolerance     = 0.0
 
+    # remember how the test starts; startFrom is changed to "restart"
+    # later if a restart run follows
+    start_from = startFrom
 
     #Warnings
     if dbg_opt == "dbg" and do_performance == 1:
@@ -509,6 +553,13 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     # timer
     test_timer = time() - test_time0
     print( "Test Timer: %s" % strftime("%H:%M:%S",gmtime(test_timer)) )
+
+    append_test_time( results_dir,
+                      application,
+                      dbg_opt,
+                      testname,
+                      start_from,
+                      test_timer )
 
     #__________________________________
     # If the test passed put an svn revision stamp in the goldstandard
@@ -705,7 +756,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     restart_text = " "
 
   if startFrom == "postProcessUda":
-    print( "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
+    print( "Running test postProcessUda ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S")) )
     susinput     = "-postProcessUda %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,application,testname)
     restart_text = " "
 
