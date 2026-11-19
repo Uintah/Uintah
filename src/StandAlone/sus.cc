@@ -101,6 +101,7 @@
 #include <cstdio>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -118,6 +119,30 @@ Uintah::MasterLock cerr_mutex{};
 Dout g_stack_debug(       "ExceptionStack" , "sus", "sus exception stack debug stream"                     , true  );
 Dout g_wait_for_debugger( "WaitForDebugger", "sus", "halt program, print out pid and attach a debugger"    , false );
 Dout g_show_env(          "ShowEnv"        , "sus", "sus show environment (the SCI env that was built up)" , false );
+
+//______________________________________________________________________
+// Write 'text' to std::cerr with "(Proc <rank>) " at the start of every
+// line.  When several MPI ranks fail at once their output can be
+// interleaved; the prefix lets each line be matched to its rank, e.g.
+//    grep "(Proc 3)" sus.log
+// The whole block is built first and written with one call, which keeps
+// a rank's lines together as far as possible.  std::cerr is unbuffered,
+// so the text is out before MPI_Abort can stop this process.
+void printWithRank( const std::string & text )
+{
+  const std::string prefix = "(Proc " + std::to_string( Uintah::Parallel::getMPIRank() ) + ") ";
+
+  std::istringstream in( text );
+  std::ostringstream out;
+  std::string        line;
+
+  out << '\n';                      // blank line to separate the block
+  while ( std::getline( in, line ) ) {
+    out << prefix << line << '\n';
+  }
+
+  std::cerr << out.str() << std::flush;
+}
 
 }
 
@@ -1181,48 +1206,61 @@ int main( int argc, char *argv[], char *env[] )
 
   }
 
+  // Every message below is written by printWithRank(), which starts each
+  // line with "(Proc <rank>) " so interleaved output from several MPI
+  // ranks can be sorted out with grep.
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
+    printWithRank( std::string( "Caught: " ) + e.message() );
     thrownException = true;
   }
   catch (Exception& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
-    if(e.stackTrace()) {
-      DOUT(g_stack_debug, "Stack trace: " << e.stackTrace());
+
+    // Message and stack trace go out together, on stderr, so the trace
+    // is not lost in stdout's buffer if MPI_Abort stops this rank.
+    std::string text = std::string( "Caught exception: " ) + e.message();
+
+    // most messages already end with a newline; add one only if needed
+    if ( text.back() != '\n' ) {
+      text += '\n';
     }
+
+    if ( e.stackTrace() && g_stack_debug.active() ) {
+      text += std::string( "Stack trace: " ) + e.stackTrace();
+    }
+    printWithRank( text );
     thrownException = true;
   }
   catch (std::bad_alloc& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
+    printWithRank( std::string( "Caught std exception 'bad_alloc': " ) + e.what() );
     thrownException = true;
   }
   catch (std::bad_exception& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
+    printWithRank( std::string( "Caught std exception: 'bad_exception'" ) + e.what() );
     thrownException = true;
   }
   catch (std::ios_base::failure& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
+    printWithRank( std::string( "Caught std exception 'ios_base::failure': " ) + e.what() );
     thrownException = true;
   }
   catch (std::runtime_error& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
+    printWithRank( std::string( "Caught std exception 'runtime_error': " ) + e.what() );
     thrownException = true;
   }
   catch (std::exception& e) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
+    printWithRank( std::string( "Caught std exception: " ) + e.what() );
     thrownException = true;
   }
   catch(...) {
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
-    std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
+    printWithRank( "Caught unknown exception" );
     thrownException = true;
   }
 

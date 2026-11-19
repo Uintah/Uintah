@@ -66,15 +66,21 @@ namespace Uintah {
     virtual ~Exception();
     virtual const char* message() const=0;
     virtual const char* type() const=0;
-    const char* stackTrace() const {
-      return stacktrace_;
-    }
+
+    // The backtrace from where the exception was created.  The constructor
+    // only saves the return addresses; the text (function names, file:line)
+    // is built the first time this is called, so exceptions that are caught
+    // and never printed cost very little.
+    const char* stackTrace() const;
 
     static void sci_throw(const Exception& exc);
     static bool alwaysFalse();
   protected:
-    const char* stacktrace_;
+    mutable std::string stacktrace_;       // formatted backtrace, built by stackTrace()
   private:
+    static const int MAXSTACK = 100;
+    void * addresses_[MAXSTACK];           // return addresses saved by the constructor
+    int    naddresses_;
     Exception& operator=(const Exception&);
   };
 
