@@ -25,10 +25,39 @@ Web UI: <http://uintah-build.chpc.utah.edu:8010/>
 
 Ports: 8010 web UI, 9989 worker connection, 8031 try server.
 
+## Credentials
+
+The worker and try-server passwords are not in git. `master.cfg` reads them
+from `/var/lib/buildbot/masters/buildbot_credentials.ini` (override with the
+`BUILDBOT_CREDENTIALS` environment variable). The file must be owned by the
+user the master runs as, with mode 600, or the master refuses to start.
+
+```
+[worker]
+password = <must match passwd in /var/lib/buildbot/worker/buildbot.tac>
+
+[try]
+username = buildbot_try
+password = <the try password given to developers>
+```
+
+Developers put the try login in their own `~/.buildbot/options` (mode 600),
+which `buildbot try` reads; `buildbot_try.sh` prints the exact lines if it is
+missing:
+
+```
+try_username = 'buildbot_try'
+try_password = '<the try password>'
+```
+
+To change a password: edit the credentials file, update `buildbot.tac` (worker)
+or tell developers (try), then restart the master and worker through systemd.
+
 ## Deploying a change
 
 1. Copy `master.cfg`, `commonBuildSteps.py` and `emailFormatters.py` into
-   `/var/lib/buildbot/masters`.
+   `/var/lib/buildbot/masters`. The credentials file stays there and is never
+   copied from the repository.
 2. Check it: `cd /var/lib/buildbot/masters ; buildbot checkconfig master.cfg`
    should print only `Config file is good!`.
 3. Restart through systemd:
