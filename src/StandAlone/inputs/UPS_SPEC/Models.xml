@@ -593,6 +593,13 @@
             <phase      spec="OPTIONAL DOUBLE"/>
           </perturbation>
         </initProfile>
+        <!-- initProfile2D: 2D field (.dat or .npz) on <plane>, copied along the
+             perpendicular axis.  Format: gasCombustionInitialization.h -->
+        <initProfile2D spec="OPTIONAL NO_DATA">
+          <filename     spec="REQUIRED STRING"/>
+          <plane        spec="REQUIRED STRING 'xy, xz, yz, XY, XZ, YZ'"/>
+          <solidVolFrac spec="OPTIONAL DOUBLE"/>
+        </initProfile2D>
         <!-- Unit system of the ups file; the model converts to SI for the
              chemistry and back.  Absolute temperature scales only. -->
         <units spec="OPTIONAL NO_DATA">

@@ -27,12 +27,14 @@
 
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/Models/FluidsBased/gasCombustionMechanism.h>
+#include <CCA/Components/Models/FluidsBased/gasCombustionInitialization.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -226,42 +228,6 @@ private:
   };
 
   //------------------------------------------------------------------
-  // 1D profile initialization from a .dat file (e.g. from Cantera/SD Toolbox).
-  // File columns: x  T  u  rho  press  (in the ups <units> system; SI default)
-  //               then nTracked mass fraction columns in tracked order
-  //               (mechanism species order, closure species omitted).
-  // Lines beginning with '#' are ignored.  Values are linearly interpolated
-  // onto cell centres; cells outside the profile range are clamped.
-  //------------------------------------------------------------------
-  struct ProfileInit {
-    bool        isActive {false};
-    int         axis     {0};
-    std::string filename;
-
-    // Cells whose gas vol_frac is at or below this (e.g. cut cells at an MPM
-    // surface holding only trace gas) are treated as solid: they keep ICE's
-    // T, vel, rho and the background Y_init instead of the profile values.
-    double solidVolFrac {1.0e-3};
-
-    std::vector<double>              x;
-    std::vector<double>              T;
-    std::vector<double>              u;
-    std::vector<double>              rho;
-    std::vector<double>              press;
-    std::vector<std::vector<double>> Y;   // rows sized nTracked
-
-    // Optional sinusoidal perturbation of the front position, used to seed
-    // cellular structure: the profile is sampled at (x - shift) instead of
-    // x, where shift = amplitude * sin(2*pi*(transverse coord)/wavelength
-    // + phase).  transverse coord is read along perturbAxis (!= axis).
-    bool   perturbActive    {false};
-    int    perturbAxis      {1};
-    double perturbAmplitude {0.0};
-    double perturbWavelength{1.0};
-    double perturbPhase     {0.0};
-  };
-
-  //------------------------------------------------------------------
   // Chemistry ODE sub-integration (constant volume).  ChemStepResult
   // doubles as reusable workspace: create two outside the cell loop,
   // pass them to chemStep every call -- no per-cell allocation.
@@ -310,7 +276,8 @@ private:
   // Geometry regions for initialization
   std::vector<Region*> d_regions;
 
-  ProfileInit d_profileInit;
+  // File-based initial gas state (gasCombustionInitialization.h); nullptr if none
+  std::unique_ptr<gasCombustionInit> d_init;
 
   bool d_doChemistry{true};
   bool d_doDiffusion{true};

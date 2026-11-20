@@ -381,102 +381,12 @@ void gasCombustion::problemSetup(GridP&, const bool)
   }
 
   //----------------------------------------------------------------
-  // 1D profile initialization from .dat file. When present, the profile fills
-  // every gas cell except those inside a geom_object region, which keep the
-  // region's Y and the T, vel and rho_micro that ICE set there.
+  // File-based initialization (<initProfile>, <initProfile2D>, ...; see
+  // gasCombustionInitialization.h).  When present it fills every gas cell
+  // except those inside a geom_object region, which keep the region's Y
+  // and the T, vel and rho_micro that ICE set there.
   //----------------------------------------------------------------
-  ProblemSpecP prof_ps = gc_ps->findBlock("initProfile");
-  if (prof_ps) {
-    ProfileInit pi;
-
-    std::string axis;
-    prof_ps->require("filename", pi.filename);
-    prof_ps->require("axis",     axis);
-
-    std::string axisUpper = string_toupper(axis);
-    pi.axis = (axisUpper == "X") ? 0 : (axisUpper == "Y") ? 1 : 2;
-
-    prof_ps->getWithDefault("solidVolFrac", pi.solidVolFrac, 1.0e-3);
-    std::ifstream infile(pi.filename);
-    if (!infile.is_open()) {
-      throw ProblemSetupException(
-          "gasCombustion initProfile: cannot open file: " + pi.filename,
-          __FILE__, __LINE__);
-    }
-
-    std::string line;
-    int lineNum = 0;
-    while (std::getline(infile, line)) {
-      ++lineNum;
-      if (line.empty() || line[0] == '#') continue;
-
-      std::istringstream iss(line);
-      double xv, Tv, uv, rhov, pv;
-      std::vector<double> Yv(d_nTracked);
-
-      if (!(iss >> xv >> Tv >> uv >> rhov >> pv)) {
-        throw ProblemSetupException(
-            "gasCombustion initProfile: parse error at line " + std::to_string(lineNum)
-            + " in file: " + pi.filename, __FILE__, __LINE__);
-      }
-      for (int k = 0; k < d_nTracked; k++) {
-        if (!(iss >> Yv[k])) {
-          throw ProblemSetupException(
-              "gasCombustion initProfile: not enough species columns at line "
-              + std::to_string(lineNum) + " in file: " + pi.filename,
-              __FILE__, __LINE__);
-        }
-      }
-      pi.x.push_back(xv);
-      pi.T.push_back(Tv);
-      pi.u.push_back(uv);
-      pi.rho.push_back(rhov);
-      pi.press.push_back(pv);
-      pi.Y.push_back(Yv);
-    }
-
-    if (pi.x.size() < 2) {
-      throw ProblemSetupException(
-          "gasCombustion initProfile: file must contain at least 2 data rows: " + pi.filename,
-          __FILE__, __LINE__);
-    }
-
-    //--------------------------------------------------------------
-    // Optional front perturbation: sample the 1D profile at
-    // (x - amplitude*sin(2*pi*x_t/wavelength + phase)) instead of x,
-    // where x_t is the coordinate along <perturbation><axis>.  Seeds
-    // cellular structure by giving the initially-planar front a
-    // sinusoidal corrugation.
-    //--------------------------------------------------------------
-    ProblemSpecP pert_ps = prof_ps->findBlock("perturbation");
-    if (pert_ps) {
-      std::string paxis;
-      pert_ps->require("axis",       paxis);
-      pert_ps->require("amplitude",  pi.perturbAmplitude);
-      pert_ps->require("wavelength", pi.perturbWavelength);
-      pert_ps->getWithDefault("phase", pi.perturbPhase, 0.0);
-
-      std::string paxisUpper = string_toupper(paxis);
-      pi.perturbAxis = (paxisUpper == "X") ? 0 : (paxisUpper == "Y") ? 1 : 2;
-
-      if (pi.perturbAxis == pi.axis) {
-        throw ProblemSetupException(
-            "gasCombustion initProfile/perturbation: <perturbation><axis> must differ from "
-            "<initProfile><axis> (perturbation is transverse to the profile direction)",
-            __FILE__, __LINE__);
-      }
-      if (pi.perturbWavelength <= 0.0) {
-        throw ProblemSetupException(
-            "gasCombustion initProfile/perturbation: <wavelength> must be > 0",
-            __FILE__, __LINE__);
-      }
-
-      pi.perturbActive = true;
-    }
-
-    pi.isActive    = true;
-    d_profileInit  = std::move(pi);
-  }
+  d_init = createGasCombustionInit(gc_ps, d_mech);
 
   std::string mechName = d_mechFile;
   const std::string xmlExt = ".xml";
@@ -486,8 +396,8 @@ void gasCombustion::problemSetup(GridP&, const bool)
   }
 
   std::string initPath;
-  if (d_profileInit.isActive) {
-    initPath = "1D Profile (" + d_profileInit.filename + ")";
+  if (d_init) {
+    initPath = d_init->describe();
   } else if (!d_regions.empty()) {
     initPath = std::to_string(d_regions.size()) +
                " geom_object region(s) + uniform background (Y_init)";
@@ -533,7 +443,7 @@ void gasCombustion::scheduleInitialize(SchedulerP   & sched,
     t->computesVar(lbl);
   }
 
-  if (d_profileInit.isActive) {
+  if (d_init) {
     MaterialSubset* press_matl = scinew MaterialSubset();
     press_matl->add(0);
     press_matl->addReference();
@@ -600,15 +510,16 @@ void gasCombustion::initialize(const ProcessorGroup *,
         diffCoef[k].initialize(0.0);
       }
 
-      if (d_profileInit.isActive) {
-        const ProfileInit& pi = d_profileInit;
+      if (d_init) {
+        gcInitState state;
+        state.Y.resize(d_nTracked);
 
         constCCVariable<double> vol_frac;
         new_dw->get(vol_frac, Ilb->vol_frac_CCLabel, indx, patch, d_gn, 0);
         // ICE::actuallyInitialize recomputes vol_frac = rho_CC*sp_vol, which floors it
         // at tiny_rho rather than 0, so the tolerance can never go below that floor.
         const double tinyRho  = dynamic_cast<ICEMaterial*>(d_matl)->getTinyRho();
-        const double solidTol = std::max(pi.solidVolFrac, 2.0 * tinyRho);
+        const double solidTol = std::max(d_init->solidVolFrac(), 2.0 * tinyRho);
 
         CCVariable<double> temp_CC, rho_micro, rho_CC, sp_vol, speedSound, press_eq;
         CCVariable<Vector> vel_CC;
@@ -626,30 +537,6 @@ void gasCombustion::initialize(const ProcessorGroup *,
 
         for (CellIterator iter(patch->getExtraCellIterator()); !iter.done(); ++iter) {
           IntVector c = *iter;
-          double xq = patch->cellPosition(c)(pi.axis);
-
-          if (pi.perturbActive) {
-            double xt = patch->cellPosition(c)(pi.perturbAxis);
-            xq -= pi.perturbAmplitude
-                * std::sin(2.0 * M_PI * xt / pi.perturbWavelength + pi.perturbPhase);
-          }
-
-          // Find bracketing index and interpolation fraction (clamped at endpoints)
-          size_t i = 0;
-          double frac = 0.0;
-          if (xq <= pi.x.front()) {
-            i = 0; frac = 0.0;
-          } else if (xq >= pi.x.back()) {
-            i = pi.x.size() - 2; frac = 1.0;
-          } else {
-            auto it = std::lower_bound(pi.x.begin(), pi.x.end(), xq);
-            i = static_cast<size_t>(it - pi.x.begin()) - 1;
-            frac = (xq - pi.x[i]) / (pi.x[i+1] - pi.x[i]);
-          }
-
-          auto lerp = [&](const std::vector<double>& v) {
-            return v[i] + frac * (v[i+1] - v[i]);
-          };
 
           // Cells with no gas (vol_frac = 0, e.g. inside an MPM solid) keep the
           // T, vel and rho_micro that ICE set there and the background Y_init.
@@ -670,22 +557,21 @@ void gasCombustion::initialize(const ProcessorGroup *,
           }
           bool useProfile = (!solidCell && !inRegion);
 
-          double T        = useProfile ? lerp(pi.T)   : temp_CC[c];
-          double rho_val  = useProfile ? lerp(pi.rho) : rho_micro[c];
-          double pres_val = lerp(pi.press);
-          (void) pres_val;   // pressure re-derived from EOS below
+          // Gas state from the initialization method
+          if (useProfile) {
+            d_init->sample(pt, state);
+          }
+
+          double T        = useProfile ? state.T   : temp_CC[c];
+          double rho_val  = useProfile ? state.rho : rho_micro[c];
 
           if (useProfile) {
-            double u = lerp(pi.u);
-
             for (int k = 0; k < d_nTracked; k++) {
-              Y[k][c] = pi.Y[i][k] + frac * (pi.Y[i+1][k] - pi.Y[i][k]);
+              Y[k][c] = state.Y[k];
             }
 
             temp_CC[c] = T;
-            Vector vel_val(0, 0, 0);
-            vel_val[pi.axis] = u;
-            vel_CC[c] = vel_val;
+            vel_CC[c]  = state.vel;
           }
 
           double Ysum = 0.0;

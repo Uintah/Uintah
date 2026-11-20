@@ -49,6 +49,7 @@ ifeq ($(BUILD_ICE),yes)
        $(SRCDIR)/ConstantSources.cc    \
        $(SRCDIR)/flameSheet_rxn.cc     \
        $(SRCDIR)/gasCombustion.cc      \
+       $(SRCDIR)/gasCombustionInitialization.cc \
        $(SRCDIR)/gasCombustionMechanism.cc \
        $(SRCDIR)/MaterialProperties.cc \
        $(SRCDIR)/Mixing.cc             \
