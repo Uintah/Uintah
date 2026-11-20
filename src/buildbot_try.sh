@@ -226,31 +226,83 @@ fi
 
 
 #__________________________________
+# The try-server login is read by "buildbot try" from ~/.buildbot/options,
+# so the password is not in this script or on the command line (where
+# other users could see it with ps).
+
+optionsFile="$HOME/.buildbot/options"
+
+# The client's output is saved here to check whether the job was delivered.
+# Remove it, and the patch made by createPatch, however the script exits.
+tryLog=$( mktemp "${TMPDIR:-/tmp}/buildbot_try.XXXXXX" )
+rc=$?
+if [[ $rc -ne 0 ]]; then
+  echo "  ERROR: mktemp failed (return code $rc)" >&2
+  exit 1
+fi
+
+cleanUp()
+{
+  /bin/rm -f "$tryLog"
+  if [[ "$CREATE_PATCH" == "true" ]]; then
+    /bin/rm -f buildbot_patch.txt
+  fi
+}
+trap cleanUp EXIT
+
+loginFound="no"
+if [[ -f "$optionsFile" ]]; then
+  grep -qE "^[[:space:]]*try_password[[:space:]]*=" "$optionsFile"
+  rc=$?
+  if [[ $rc -eq 0 ]]; then
+    loginFound="yes"
+  fi
+fi
+
+if [[ "$loginFound" != "yes" ]]; then
+  cat >&2 << EOF
+  ERROR: no try-server login found in $optionsFile
+  Ask the buildbot admin for the try password, then run:
+
+    mkdir -p ~/.buildbot
+    cat >> ~/.buildbot/options << 'END'
+try_username = 'buildbot_try'
+try_password = '<the try password>'
+END
+    chmod 600 ~/.buildbot/options
+EOF
+  exit 1
+fi
+
+#__________________________________
 
 buildbot --verbose try \
          --connect=pb \
          --master=uintah-build.chpc.utah.edu:8031 \
          --branch="${BRANCH}" \
          --repository='https://github.com/Uintah/Uintah.git' \
-         --username=buildbot_try \
-         --passwd=try_buildbot \
          --property=test_components="${TESTCOMPONENTS}" \
          --vc=git \
          --who="${EMAIL}" \
-         "${PATCH[@]}" "${BUILDERS[@]}"
+         "${PATCH[@]}" "${BUILDERS[@]}" 2>&1 | tee "$tryLog"
+rc=${PIPESTATUS[0]}       # buildbot's return code, not tee's
 
-rc=$?
-echo $rc
+#__________________________________
+# "buildbot try" exits 0 even when the server refuses the login, so only
+# call it a success if the client reports that the job was delivered.
 
-if [ $rc -eq 0 ]; then
+grep -q "job has been delivered" "$tryLog"
+delivered=$?
+
+if [[ $rc -eq 0 && $delivered -eq 0 ]]; then
   echo "  Success.  Check http://uintah-build.chpc.utah.edu:8010/#/builders for status"
 else
-  echo "  Failed"
-fi
-
-# cleanup
-if [ "$CREATE_PATCH" == "true" ]; then
-  /bin/rm -rf buildbot_patch.txt > /dev/null 2>&1
+  echo "  ERROR: the try server did not accept the job (buildbot return code $rc)." >&2
+  echo "         Most likely cause: a wrong try_username/try_password in $optionsFile," >&2
+  echo "         or the server is unreachable.  Nothing was queued." >&2
+  if [[ $rc -eq 0 ]]; then
+    rc=1
+  fi
 fi
 
 exit $rc
