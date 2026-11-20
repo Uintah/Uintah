@@ -6,6 +6,11 @@
 # usage
 #_____________________________________________________________________.
 
+# bash + pipefail: a failed local tar (left of the pipe to ssh) fails the
+# step, so the file is not stamped as sent and make stops.
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+
 FILES      := $(shell cat $(PSCP_FILES))
 TAR_FILES  := $(wildcard *.tar)
           

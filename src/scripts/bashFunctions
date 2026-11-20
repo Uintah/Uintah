@@ -55,6 +55,31 @@ commandExists ()
 }
 
 #______________________________________________________________________
+#  Echo a command, run it, and exit with its return code if it fails.
+#  The arguments are run exactly as given (no eval), so spaces and shell
+#  characters in them are passed through safely, not re-parsed as code.
+#
+#  Usage:  run <command> [args...]       e.g.  run tar -xzf "$file"
+#
+#  Pipes, redirects and && are NOT supported in the arguments; wrap
+#  them in a function and pass that instead:  run myPipeline
+#  The echoed line goes to stdout, so don't use run inside $( ... ).
+
+run()
+{
+  local rc
+
+  echo "$@"
+  "$@"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echoerr "  ERROR: command failed (return code $rc): $*"
+    exit $rc
+  fi
+  return 0
+}
+
+#______________________________________________________________________
 #  returns 0 if an integer otherwise returns 1
 
 isInteger()
@@ -66,6 +91,53 @@ isInteger()
       return 1
   fi
 }
+#______________________________________________________________________
+#  Create a private (mode 700), per-run scratch directory under $TMPDIR
+#  (default /tmp) and remove it when the calling script exits.  Use it
+#  for temporary files instead of predictable names in the shared /tmp.
+#  The path is returned in the exported global SCRATCH_DIR.
+#
+#  Usage:  makeScratchDir <prefix>
+#
+#  Note: this sets an EXIT trap, replacing any EXIT trap the caller set.
+
+makeScratchDir()
+{
+  local prefix="${1:-scratch}"
+  local rc
+
+  SCRATCH_DIR=$( mktemp -d "${TMPDIR:-/tmp}/${prefix}.XXXXXX" )
+  rc=$?
+  if [[ $rc -ne 0 || ! -d "${SCRATCH_DIR}" ]]; then
+    end_die "  ERROR: mktemp -d failed (return code $rc)"
+  fi
+  export SCRATCH_DIR
+  trap '/bin/rm -rf "${SCRATCH_DIR}"' EXIT
+}
+
+#______________________________________________________________________
+#  A directory at a predictable name in a shared location (e.g. /tmp) is
+#  only trusted if it is a real directory (not a symlink) owned by you;
+#  otherwise another user could have planted it.  Returns 0 if the path
+#  does not exist or passes, else prints an error and exits 1.
+#  Call it before creating the directory and again after.
+#
+#  Usage:  checkOwnedDir <dir>
+
+checkOwnedDir()
+{
+  local dir="$1"
+
+  if [[ ! -e "${dir}" && ! -L "${dir}" ]]; then
+    return 0
+  fi
+
+  if [[ -L "${dir}" || ! -d "${dir}" || ! -O "${dir}" ]]; then
+    end_die "  ERROR: ${dir} exists but is not a directory owned by $(whoami).\n         Refusing to use it.  Inspect and remove it, then run this script again."
+  fi
+  return 0
+}
+
 #______________________________________________________________________
 #  remove the directory either immediately or through an at job
 function cleanUp()

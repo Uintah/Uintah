@@ -1,7 +1,14 @@
 #!/bin/bash
 
-helpersPath=$( dirname "${BASH_SOURCE[0]}" | sed 's/parallelTarUdas.*//g')
-source "${helpersPath}"/bashFunctions
+#__________________________________
+#   Shared helpers (end_die, isInteger, makeScratchDir, checkOwnedDir) from scripts/bashFunctions
+helpersFile="$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" )/../bashFunctions"
+
+if [[ ! -f "${helpersFile}" ]]; then
+  echo "  ERROR: cannot find ${helpersFile} (pTarUda must be run from the Uintah scripts tree)" >&2
+  exit 1
+fi
+source "${helpersFile}"
 
 #
 #______________________________________________________________________
@@ -155,7 +162,8 @@ main()
     fi
   fi
 
-  PTAR_FILES=/tmp/ptar_$(basename "${uda}")_${user}
+  makeScratchDir pTarUda
+  PTAR_FILES="${SCRATCH_DIR}/ptar_$(basename "${uda}")_${user}"
 
   export TAR PTAR_FILES createExtract deleteOrgTimesteps
 
@@ -191,7 +199,9 @@ main()
     export STAMP_DIR
 
     printf " \t %s \n"  "Placing it in ${STAMP_DIR} instead."
+    checkOwnedDir "${STAMP_DIR}"
     validateTarredFilesDir ${continueTarring}
+    checkOwnedDir "${STAMP_DIR}"
   fi
 
   if [[ ! -d "${STAMP_DIR}" ]]; then
@@ -223,8 +233,15 @@ main()
   touch "${PTAR_RECORD}"
 
   # Can't write to that directory... just place it in tmp for now.
+  # mktemp creates a new file only you can write, so it can't be a planted symlink
   if [[ ! -f "${PTAR_RECORD}" ]]; then
-    PTAR_RECORD=/tmp/${recordName}_${user}
+    PTAR_RECORD=$( mktemp "${TMPDIR:-/tmp}/${recordName}_${user}.XXXXXX" )
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "  ERROR: mktemp failed (return code $rc)" >&2
+      exit 1
+    fi
+    echo "  Can't write to ${uda}... placing the record in ${PTAR_RECORD} for now."
   fi
 
   echo "--------------------------------" >> "${PTAR_RECORD}"
@@ -252,7 +269,7 @@ main()
 
 
   #remove "./checkpoints" from PTAR_FILES
-  sed -i /"checkpoints$"/d "${PTAR_FILES}"
+  run sed -i "/checkpoints$/d" "${PTAR_FILES}"
 
   #more "${PTAR_FILES}"
 
@@ -267,7 +284,7 @@ main()
   # You must break up the list of files into smaller files
   (( nLines=nproc*10 ))
 
-  split --lines=$nLines --suffix-length=3 --numeric-suffixes "${PTAR_FILES}" "${PTAR_FILES}".
+  run split --lines="${nLines}" --suffix-length=3 --numeric-suffixes "${PTAR_FILES}" "${PTAR_FILES}".
 
   chmod ug+rw "${PTAR_FILES}"*
 
@@ -282,10 +299,27 @@ main()
     PTAR_FILES_N="$X"
     export PTAR_FILES_N
     $MAKE  -s -f "$pTardir"/pTarUda_driver_${OS} -j "$nproc" | tee -a "${PTAR_RECORD}"
+    rc=${PIPESTATUS[0]}       # make's return code, not tee's
+
+    # On failure stop now, before the clean step below removes the stamp
+    # directory, so a rerun with -continueTarring can pick up where this left off.
+    if [[ $rc -ne 0 ]]; then
+      echo "FAILED on $(date): make returned $rc on $X" >> "${PTAR_RECORD}"
+      echoerr "  ERROR: make failed (return code $rc) while processing the directories in $X"
+      echoerr "         Details are in ${PTAR_RECORD}"
+      echoerr "         Fix the problem, then rerun with -continueTarring to finish the remaining directories."
+      exit $rc
+    fi
   done
 
   # remove the .tarred/stamp directory
   $MAKE  -s -f "$pTardir"/pTarUda_driver_${OS} clean | tee -a "${PTAR_RECORD}"
+  rc=${PIPESTATUS[0]}
+
+  if [[ $rc -ne 0 ]]; then
+    echoerr "  ERROR: make clean failed (return code $rc); remove ${STAMP_DIR} by hand."
+    exit $rc
+  fi
 
   echo | tee -a "${PTAR_RECORD}"
   echo -n "Ending at: " | tee -a "${PTAR_RECORD}"
@@ -348,7 +382,7 @@ validateTarredFilesDir()
     fi
   else
     echo "  Making the stamp directory $STAMP_DIR"
-    mkdir "${STAMP_DIR}"
+    mkdir -m 700 "${STAMP_DIR}"
   fi
 }
 #______________________________________________________________________

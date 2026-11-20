@@ -10,10 +10,20 @@
 #______________________________________________________________________
 #echo $argv
 #
+#__________________________________
+#   Shared helpers (makeScratchDir, checkOwnedDir) from scripts/bashFunctions
+helpersFile="$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" )/../bashFunctions"
+
+if [[ ! -f "$helpersFile" ]]; then
+  echo "  ERROR: cannot find $helpersFile (pscp2 must be run from the Uintah scripts tree)" >&2
+  exit 1
+fi
+source "$helpersFile"
+#
 #______________________________________________________________________
 #   Function that removes any unwanted chatter from the ssh command
 function silent_ssh {
-  local tmpFile="/tmp/.psp2SSH"
+  local tmpFile="$SCRATCH_DIR/sshOutput"
   local connectionString="$1"
   local commands="$2"
 
@@ -72,7 +82,7 @@ validateTransferredFilesDir()
       exit
     fi
   else
-    mkdir "$STAMP_DIR"
+    mkdir -m 700 "$STAMP_DIR"
   fi
 }
 #______________________________________________________________________
@@ -131,7 +141,9 @@ main()
   export REMOTEDIR=$REMOTEDIR_PARENT/$(basename "$localDir")
 
   localDirTag=$(basename "$localDir")_$(whoami)
-  export PSCP_FILES=/tmp/pscp_files_$localDirTag
+
+  makeScratchDir pscp2
+  export PSCP_FILES="$SCRATCH_DIR/pscp_files_$localDirTag"
 
   #determing the remote parent group
   export GROUP=$(silent_ssh "$LOGIN" "cd $REMOTEDIR_PARENT && stat . --format %G")
@@ -165,7 +177,9 @@ main()
     export STAMP_DIR=/tmp/.transferred_files_$localDirTag
     echo "           Placing it in $STAMP_DIR instead."
     echo ""
+    checkOwnedDir "$STAMP_DIR"
     validateTransferredFilesDir
+    checkOwnedDir "$STAMP_DIR"
   fi
 
   #__________________________________
@@ -265,8 +279,14 @@ main()
   touch "$DATA_TRANSFER_RECORD"
 
   if test ! -f "$DATA_TRANSFER_RECORD"; then
-    echo  "  Can't write to that directory... just place it in tmp for now."
-    DATA_TRANSFER_RECORD=/tmp/data_transfer_record_$(whoami)
+    # mktemp creates a new file only you can write, so it can't be a planted symlink
+    DATA_TRANSFER_RECORD=$( mktemp "${TMPDIR:-/tmp}/data_transfer_record_$(whoami).XXXXXX" )
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "  ERROR: mktemp failed (return code $rc)" >&2
+      exit 1
+    fi
+    echo  "  Can't write to that directory... placing the record in $DATA_TRANSFER_RECORD for now."
   fi
 
   echo "--------------------------------" >> "$DATA_TRANSFER_RECORD"
@@ -330,6 +350,14 @@ main()
   echo "Group permission on remote directory will be changed to $GROUP"
 
   /usr/bin/time -p "$MAKE" TAR=tar -f "$pscp2dir/pscp2_driver_$OS" -j "$nproc" | tee -a "$DATA_TRANSFER_RECORD"
+  rc=${PIPESTATUS[0]}       # make's return code (passed through by time), not tee's
+
+  if [[ $rc -ne 0 ]]; then
+    echo "FAILED on $(date): make returned $rc" >> "$DATA_TRANSFER_RECORD"
+    echoerr "  ERROR: the transfer failed (make returned $rc).  Details are in $DATA_TRANSFER_RECORD"
+    echoerr "         Fix the problem and run pscp2 again; files already sent are listed in $STAMP_DIR/stamp"
+    exit $rc
+  fi
 
   echo | tee -a "$DATA_TRANSFER_RECORD"
   echo -n "Ending at: " | tee -a "$DATA_TRANSFER_RECORD"

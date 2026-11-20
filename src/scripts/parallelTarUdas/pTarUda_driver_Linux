@@ -38,8 +38,14 @@ $(STAMP_DIR)/stamp/checkpoints/% :
 #        __________________________________                                   \
 	  if test ${createExtract} == "create"; then                           \
 	    ${TAR} checkpoints/$(@F).tar.gz checkpoints/$(@F);                 \
+	    rc=$$?;                                                           \
+	    if test "$$rc" != "0"; then                                       \
+	      echo "  ERROR: tar failed (return code $$rc) on checkpoints/$(@F); not marked as done" >&2;\
+	      /bin/rm -f checkpoints/$(@F).tar.gz;                            \
+	      exit 1;                                                         \
+	    fi;                                                               \
 #                                                                             \
-	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	    if test $(deleteOrgTimesteps) == "Y"; then                        \
 	       echo "    Deleting original timestep (checkpoints/$(@F))";      \
 	       /bin/rm -rf checkpoints/$(@F);                                  \
 	    fi;                                                                \
@@ -48,6 +54,11 @@ $(STAMP_DIR)/stamp/checkpoints/% :
 #        __________________________________                                   \
 	  if test ${createExtract} == "extract"; then                          \
 	    ${TAR} checkpoints/$(@F);	                                    \
+	    rc=$$?;                                                           \
+	    if test "$$rc" != "0"; then                                       \
+	      echo "  ERROR: tar failed (return code $$rc) on checkpoints/$(@F); not marked as done" >&2;\
+	      exit 1;                                                         \
+	    fi;                                                               \
 	  fi;					                                    \
 	  echo "  Finished ${createExtract}: checkpoints/$(@F)";               \
 	  touch $(STAMP_DIR)/stamp/checkpoints/$(@F);                          \
@@ -68,8 +79,14 @@ $(STAMP_DIR)/stamp/% :
 #        __________________________________                                   \
 	  if test ${createExtract} == "create"; then                           \
 	   ${TAR} $(@F).tar.gz $(@F);                                          \
+	    rc=$$?;                                                           \
+	    if test "$$rc" != "0"; then                                       \
+	      echo "  ERROR: tar failed (return code $$rc) on $(@F); not marked as done" >&2;\
+	      /bin/rm -f $(@F).tar.gz;                                        \
+	      exit 1;                                                         \
+	    fi;                                                               \
 #                                                                             \
-	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	    if test $(deleteOrgTimesteps) == "Y"; then                        \
 	       echo "    Deleting original timestep ($(@F))";                  \
 	       /bin/rm -rf $(@F);                                              \
 	    fi;                                                                \
@@ -78,6 +95,11 @@ $(STAMP_DIR)/stamp/% :
 #        __________________________________                                   \
 	  if test ${createExtract} == "extract"; then                          \
 	    ${TAR} $(@F);                                                      \
+	    rc=$$?;                                                           \
+	    if test "$$rc" != "0"; then                                       \
+	      echo "  ERROR: tar failed (return code $$rc) on $(@F); not marked as done" >&2;\
+	      exit 1;                                                         \
+	    fi;                                                               \
 	  fi;                                                                  \
 	  echo "  Finished ${createExtract}: $(@F)";                           \
 	  touch $(STAMP_DIR)/stamp/$(@F);                                      \
